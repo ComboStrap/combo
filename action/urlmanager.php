@@ -2,7 +2,6 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
-use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\UrlCanonical;
 use ComboStrap\UrlManagerBestEndPage;
@@ -62,10 +61,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
 
     /**
-     * @var
-     */
-    private $sqlite;
-    /**
      * @var UrlCanonical
      */
     private $canonicalManager;
@@ -108,18 +103,15 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     function _handle404(&$event, $param)
     {
 
-        // We are instantiating them here and not in the constructor
-        // because otherwise the sqlite plugin would become mandatory for all test
-        // because dokuwiki instantiate all action class first
-        if ($this->sqlite == null) {
-            $this->sqlite = Sqlite::getSqlite();
-            if ($this->sqlite == null) {
-                return false;
-            } else {
-                $this->canonicalManager = new UrlCanonical($this->sqlite);
-                $this->pageRules = new PageRules($this->sqlite);
-            }
+
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite == null) {
+            return false;
+        } else {
+            $this->canonicalManager = new UrlCanonical();
+            $this->pageRules = new PageRules();
         }
+
 
         global $INFO;
         if ($INFO['exists']) {
@@ -196,9 +188,9 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
                 case self::GO_TO_BEST_END_PAGE_NAME:
 
-                    list($page,$method) = UrlManagerBestEndPage::process($ID);
-                    if ($page !=null){
-                        if ($method==self::REDIRECT_HTTP){
+                    list($page, $method) = UrlManagerBestEndPage::process($ID);
+                    if ($page != null) {
+                        if ($method == self::REDIRECT_HTTP) {
                             $this->httpRedirect($page, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                         } else {
                             $this->IdRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
@@ -444,7 +436,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         // No message can be shown because this is an external URL
 
         // Log the redirections
-        $this->logRedirection($ID, $target, $targetOrigin,self::REDIRECT_HTTP);
+        $this->logRedirection($ID, $target, $targetOrigin, self::REDIRECT_HTTP);
 
         // Notify
         action_plugin_combo_urlmessage::notify($ID, $targetOrigin);
@@ -593,7 +585,8 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             "TYPE" => $algorithmic,
             "METHOD" => $method
         );
-        $res = $this->sqlite->storeEntry('redirections_log', $row);
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->storeEntry('redirections_log', $row);
 
         if (!$res) {
             LogUtility::msg("An error occurred");
@@ -629,17 +622,17 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             if (preg_match($regexpPattern, $ID, $matches)) {
                 $calculatedTarget = $ruleTarget;
                 foreach ($matches as $key => $match) {
-                    if ($key == 0){
+                    if ($key == 0) {
                         continue;
                     } else {
-                        $calculatedTarget = str_replace('$'.$key, $match, $calculatedTarget);
+                        $calculatedTarget = str_replace('$' . $key, $match, $calculatedTarget);
                     }
                 }
                 break;
             }
         }
 
-        if ($calculatedTarget==null){
+        if ($calculatedTarget == null) {
             return false;
         }
 
@@ -668,7 +661,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
     }
-
 
 
 }

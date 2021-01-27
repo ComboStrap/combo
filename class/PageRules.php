@@ -21,20 +21,7 @@ class PageRules
     const TIMESTAMP_NAME = 'TIMESTAMP';
 
 
-    /** @var helper_plugin_sqlite $sqlite */
-    private $sqlite;
 
-    /**
-     * UrlRewrite constructor.
-     * The sqlite path is dependent of the dokuwiki data
-     * and for each new class, the dokuwiki helper just delete it
-     * We need to pass it then
-     * @param helper_plugin_sqlite $sqlite
-     */
-    public function __construct($sqlite)
-    {
-        $this->sqlite = $sqlite;
-    }
 
 
     /**
@@ -44,11 +31,12 @@ class PageRules
     function deleteRule($ruleId)
     {
 
-        $res = $this->sqlite->query('delete from PAGE_RULES where id = ?', $ruleId);
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query('delete from PAGE_RULES where id = ?', $ruleId);
         if (!$res) {
             LogUtility::msg("Something went wrong when deleting the redirections");
         }
-        $this->sqlite->res_close($res);
+        $sqlite->res_close($res);
 
 
     }
@@ -64,14 +52,15 @@ class PageRules
         $id = strtolower($id);
 
 
-        $res = $this->sqlite->query("SELECT count(*) FROM PAGE_RULES where ID = ?", $id);
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("SELECT count(*) FROM PAGE_RULES where ID = ?", $id);
         $exists = null;
-        if ($this->sqlite->res2single($res) == 1) {
+        if ($sqlite->res2single($res) == 1) {
             $exists = true;
         } else {
             $exists = false;
         }
-        $this->sqlite->res_close($res);
+        $sqlite->res_close($res);
         return $exists;
 
 
@@ -86,14 +75,15 @@ class PageRules
     {
 
 
-        $res = $this->sqlite->query("SELECT count(*) FROM PAGE_RULES where MATCHER = ?", $pattern);
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("SELECT count(*) FROM PAGE_RULES where MATCHER = ?", $pattern);
         $exists = null;
-        if ($this->sqlite->res2single($res) == 1) {
+        if ($sqlite->res2single($res) == 1) {
             $exists = true;
         } else {
             $exists = false;
         }
-        $this->sqlite->res_close($res);
+        $sqlite->res_close($res);
         return $exists;
 
 
@@ -132,12 +122,13 @@ class PageRules
             'priority' => $priority
         );
 
-        $res = $this->sqlite->storeEntry('PAGE_RULES', $entry);
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->storeEntry('PAGE_RULES', $entry);
         if (!$res) {
             LogUtility::msg("There was a problem during insertion");
         }
-        $lastInsertId = $this->sqlite->getAdapter()->getDb()->lastInsertId();
-        $this->sqlite->res_close($res);
+        $lastInsertId = $sqlite->getAdapter()->getDb()->lastInsertId();
+        $sqlite->res_close($res);
         return $lastInsertId;
 
     }
@@ -171,11 +162,12 @@ class PageRules
     function deleteAll()
     {
 
-        $res = $this->sqlite->query("delete from PAGE_RULES");
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("delete from PAGE_RULES");
         if (!$res) {
             LogUtility::msg('Errors during delete of all redirections');
         }
-        $this->sqlite->res_close($res);
+        $sqlite->res_close($res);
 
     }
 
@@ -186,12 +178,13 @@ class PageRules
     function count()
     {
 
-        $res = $this->sqlite->query("select count(1) from PAGE_RULES");
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("select count(1) from PAGE_RULES");
         if (!$res) {
             LogUtility::msg('Errors during delete of all redirections');
         }
-        $value = $this->sqlite->res2single($res);
-        $this->sqlite->res_close($res);
+        $value = $sqlite->res2single($res);
+        $sqlite->res_close($res);
         return $value;
 
     }
@@ -203,21 +196,23 @@ class PageRules
     function getRules()
     {
 
-        $res = $this->sqlite->query("select * from PAGE_RULES order by PRIORITY asc");
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("select * from PAGE_RULES order by PRIORITY asc");
         if (!$res) {
-            throw new RuntimeException('Errors during select of all redirections');
+            throw new \RuntimeException('Errors during select of all redirections');
         }
-        return $this->sqlite->res2arr($res);
+        return $sqlite->res2arr($res);
 
 
     }
 
     public function getRule($id)
     {
-        $res = $this->sqlite->query("SELECT * FROM PAGE_RULES where ID = ?", $id);
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("SELECT * FROM PAGE_RULES where ID = ?", $id);
 
-        $array = $this->sqlite->res2row($res);
-        $this->sqlite->res_close($res);
+        $array = $sqlite->res2row($res);
+        $sqlite->res_close($res);
         return $array;
 
     }

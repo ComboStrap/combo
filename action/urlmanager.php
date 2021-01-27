@@ -3,7 +3,7 @@
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
 use ComboStrap\Sqlite;
-use ComboStrap\UrlCanonical;
+use ComboStrap\Page;
 use ComboStrap\UrlManagerBestEndPage;
 use ComboStrap\UrlUtility;
 
@@ -15,7 +15,7 @@ if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
 // require_once(DOKU_PLUGIN . 'action.php');
 
 require_once(__DIR__ . '/../class/PageRules.php');
-require_once(__DIR__ . '/../class/UrlCanonical.php');
+require_once(__DIR__ . '/../class/Page.php');
 require_once(__DIR__ . '/../class/UrlUtility.php');
 require_once(__DIR__ . '/../class/Sqlite.php');
 require_once(__DIR__ . '/../class/UrlManagerBestEndPage.php');
@@ -61,10 +61,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
 
     /**
-     * @var UrlCanonical
-     */
-    private $canonicalManager;
-    /**
      * @var PageRules
      */
     private $pageRules;
@@ -103,21 +99,27 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     function _handle404(&$event, $param)
     {
 
-
+        /**
+         * Without SQLite, this module does not work
+         */
         $sqlite = Sqlite::getSqlite();
         if ($sqlite == null) {
             return false;
         } else {
-            $this->canonicalManager = new UrlCanonical();
             $this->pageRules = new PageRules();
         }
 
+        global $ID;
+        $targetPage = Page::createFromCanonical($ID);
 
-        global $INFO;
-        if ($INFO['exists']) {
+
+        /**
+         * If the page exists
+         * return
+         */
+        if ($targetPage->existInFs()) {
             action_plugin_combo_urlmessage::unsetNotification();
-            // Check if there is a canonical meta
-            $this->canonicalManager->processCanonicalMeta();
+            $targetPage->processAndPersistInDb();
             return false;
         }
 
@@ -127,20 +129,13 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
 
         // Global variable needed in the process
-        global $ID;
         global $conf;
 
         // Do we have a canonical ?
-        $targetPage = $this->canonicalManager->getPageIdFromCanonical($ID);
-        if ($targetPage) {
-
-            if (page_exists($targetPage)) {
-                $this->IdRedirect($targetPage, self::TARGET_ORIGIN_CANONICAL);
-                return true;
-            } else {
-                LogUtility::msg("The canonical page ({$targetPage}) from the ID ({$ID}) does not exist", LogUtility::LVL_MSG_WARNING);
-            }
-
+        $targetPage = Page::createFromCanonical($ID);
+        if ($targetPage->existInFs()) {
+            $this->performIdRedirect($targetPage->getId(), self::TARGET_ORIGIN_CANONICAL);
+            return true;
         }
 
         // If there is a redirection defined in the page rules
@@ -193,7 +188,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                         if ($method == self::REDIRECT_HTTP) {
                             $this->httpRedirect($page, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                         } else {
-                            $this->IdRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
+                            $this->performIdRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                         }
                         return true;
                     }
@@ -393,7 +388,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
      * @throws Exception
      */
     private
-    function IdRedirect($targetPage, $targetOrigin)
+    function performIdRedirect($targetPage, $targetOrigin)
     {
 
         //If the user have right to see the target page
@@ -650,7 +645,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             // This is DokuWiki Id and should always be lowercase
             // The page rule may have change that
             $calculatedTarget = strtolower($calculatedTarget);
-            $this->IdRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES);
+            $this->performIdRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES);
             return true;
 
         } else {

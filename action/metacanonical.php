@@ -2,7 +2,7 @@
 
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\UrlCanonical;
+use ComboStrap\Page;
 
 if (!defined('DOKU_INC')) die();
 
@@ -78,7 +78,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
          * {@link wl()} use the constant DOKU_URL that is set before any test via getBaseURL(true)
          */
 
-        $canonical = MetadataUtility::getMeta(UrlCanonical::CANONICAL_PROPERTY);
+        $canonical = MetadataUtility::getMeta(Page::CANONICAL_PROPERTY);
 
         /**
          * The last part of the id as canonical
@@ -100,10 +100,10 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
                 $names = array_slice($names, 0, $namesLength - 1);
             }
             $canonical = implode(":", $names);
-            p_set_metadata($ID, array(UrlCanonical::CANONICAL_PROPERTY => $canonical));
+            p_set_metadata($ID, array(Page::CANONICAL_PROPERTY => $canonical));
         }
 
-        $canonicalUrl = UrlCanonical::getUrl($canonical);
+        $canonicalUrl = Page::getUrl($canonical);
 
         /**
          * Replace the meta entry

@@ -2,18 +2,31 @@
 
 namespace ComboStrap;
 
-use helper_plugin_sqlite;
+
+use http\Exception\RuntimeException;
 
 /**
  * Class urlCanonical with all canonical methodology
  */
 require_once(__DIR__ . '/PluginUtility.php');
 
-class UrlCanonical
+class Page
 {
     const CANONICAL_PROPERTY = 'canonical';
+    private $id;
+    private $canonical;
 
-
+    /**
+     * Page constructor.
+     * @param $id - the id of the page
+     */
+    public function __construct($id)
+    {
+        $this->id = $id;
+        if (strtolower($id) !== $id) {
+            throw new \RuntimeException("The page id should be in lowercase");
+        }
+    }
 
 
     /**
@@ -36,24 +49,21 @@ class UrlCanonical
                 $canonicalUrl = DOKU_URL;
             }
         }
-        return$canonicalUrl;
+        return $canonicalUrl;
     }
 
 
     /**
      * Does the page is known in the pages table
-     * @param string $id
      * @return array
      */
-    function getPage($id)
+    function getRow()
     {
-        $id = strtolower($id);
-
 
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT * FROM pages where id = ?", $id);
+        $res = $sqlite->query("SELECT * FROM pages where id = ?", $this->id);
         if (!$res) {
-            throw new RuntimeException("An exception has occurred with the select pages query");
+            throw new \RuntimeException("An exception has occurred with the select pages query");
         }
         $res2arr = $sqlite->res2row($res);
         $sqlite->res_close($res);
@@ -64,12 +74,11 @@ class UrlCanonical
 
     /**
      * Delete Page
-     * @param string $id
      */
-    function deletePage($id)
+    function deleteInDb()
     {
 
-        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $id);
+        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->id);
         if (!$res) {
             LogUtility::msg("Something went wrong when deleting a page");
         }
@@ -78,18 +87,25 @@ class UrlCanonical
 
     /**
      * Does the page is known in the pages table
-     * @param string $id
      * @return int
      */
-    function pageExist($id)
+    function existInDb()
     {
-        $id = strtolower($id);
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $id);
+        $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $this->id);
         $count = $sqlite->res2single($res);
         $sqlite->res_close($res);
         return $count;
 
+    }
+
+    /**
+     * Exist in FS
+     * @return bool
+     */
+    function existInFs()
+    {
+        return page_exists($this->id);
     }
 
     private function persistPageAlias($canonical, $alias)
@@ -105,7 +121,7 @@ class UrlCanonical
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query("select count(*) from pages_alias where CANONICAL = ? and ALIAS = ?", $row);
         if (!$res) {
-            throw new RuntimeException("An exception has occurred with the alia selection query");
+            throw new \RuntimeException("An exception has occurred with the alia selection query");
         }
         $aliasInDb = $sqlite->res2single($res);
         $sqlite->res_close($res);
@@ -119,11 +135,16 @@ class UrlCanonical
 
     }
 
+    static function createFromId($id)
+    {
+        return new Page($id);
+    }
+
     /**
      * @param $canonical
-     * @return string|bool - an id of an existent page
+     * @return Page - an id of an existing page
      */
-    function getPageIdFromCanonical($canonical)
+    static function createFromCanonical($canonical)
     {
 
         // Canonical
@@ -136,9 +157,7 @@ class UrlCanonical
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            if (page_exists($id)) {
-                return $id;
-            }
+            return self::createFromId($id)->setCanonical($canonical);
         }
 
 
@@ -153,25 +172,22 @@ class UrlCanonical
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            if (page_exists($id)) {
-                return $id;
-            }
+
+            return self::createFromId($id)
+                ->setCanonical($canonical);
         }
 
-
-        return false;
+        return self::createFromId($canonical);
 
     }
 
     /**
      * Process metadata
      */
-    function processCanonicalMeta()
+    function processAndPersistInDb()
     {
 
-
-        global $ID;
-        $canonical = p_get_metadata($ID, "canonical");
+        $canonical = p_get_metadata($this->id, "canonical");
         if ($canonical != "") {
 
             // Do we have a page attached to this canonical
@@ -182,7 +198,7 @@ class UrlCanonical
             }
             $idInDb = $sqlite->res2single($res);
             $sqlite->res_close($res);
-            if ($idInDb && $idInDb != $ID) {
+            if ($idInDb && $idInDb != $this->id) {
                 // If the page does not exist anymore we delete it
                 if (!page_exists($idInDb)) {
                     $res = $sqlite->query("delete from pages where ID = ?", $idInDb);
@@ -192,13 +208,13 @@ class UrlCanonical
                     $sqlite->res_close($res);
 
                 } else {
-                    LogUtility::msg("The page ($ID) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
+                    LogUtility::msg("The page ($$this->id) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
                 }
                 $this->persistPageAlias($canonical, $idInDb);
             }
 
             // Do we have a canonical on this page
-            $res = $sqlite->query("select canonical from pages where ID = ?", $ID);
+            $res = $sqlite->query("select canonical from pages where ID = ?", $this->id);
             if (!$res) {
                 LogUtility::msg("An exception has occurred with the query");
             }
@@ -207,12 +223,12 @@ class UrlCanonical
 
             $row = array(
                 "CANONICAL" => $canonical,
-                "ID" => $ID
+                "ID" => $this->id
             );
             if ($canonicalInDb && $canonicalInDb != $canonical) {
 
                 // Persist alias
-                $this->persistPageAlias($canonical, $ID);
+                $this->persistPageAlias($canonical, $this->id);
 
                 // Update
                 $statement = 'update pages set canonical = ? where id = ?';
@@ -243,21 +259,33 @@ class UrlCanonical
      * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
      * @return string - a dokuwiki Id hello:my:lord
      */
-    static function toDokuWikiId($url)
+    static function createFromUrl($url)
     {
         // Replace / by : and suppress the first : because the global $ID does not have it
-        $parsedQuery = parse_url($url,PHP_URL_QUERY);
+        $parsedQuery = parse_url($url, PHP_URL_QUERY);
         $parsedQueryArray = [];
-        parse_str($parsedQuery,$parsedQueryArray);
+        parse_str($parsedQuery, $parsedQueryArray);
         $queryId = 'id';
-        if (array_key_exists($queryId,$parsedQueryArray)){
+        if (array_key_exists($queryId, $parsedQueryArray)) {
             // Doku form (ie doku.php?id=)
-            return $parsedQueryArray[$queryId];
+            $id = $parsedQueryArray[$queryId];
         } else {
             // Slash form ie (/my/id)
             $urlPath = parse_url($url, PHP_URL_PATH);
-            return substr(str_replace("/", ":", $urlPath), 1);
+            $id = substr(str_replace("/", ":", $urlPath), 1);
         }
+        return self::createFromId($id);
+    }
+
+    private function setCanonical($canonical)
+    {
+        $this->canonical = $canonical;
+        return $this;
+    }
+
+    public function getId()
+    {
+        return $this->id;
     }
 
 

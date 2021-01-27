@@ -7,7 +7,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Sqlite;
 use ComboStrap\Text;
-use ComboStrap\UrlCanonical;
+use ComboStrap\Page;
 use dokuwiki\ChangeLog\PageChangeLog;
 
 require_once(__DIR__ . '/../class/Text.php');
@@ -185,7 +185,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * A canonical should be present
          */
-        if (empty($this->metadata[UrlCanonical::CANONICAL_PROPERTY])) {
+        if (empty($this->metadata[Page::CANONICAL_PROPERTY])) {
             $qualityScores[self::RULE_CANONICAL_PRESENT] = 0;
             $ruleResults[self::RULE_CANONICAL_PRESENT] = self::FAILED;
             $ruleInfo[self::RULE_CANONICAL_PRESENT] = "A canonical is not present in the frontmatter";
@@ -495,7 +495,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             /**
              * Sqlite Plugin installed
              */
-            $canonical = $this->metadata[UrlCanonical::CANONICAL_PROPERTY];
+            $canonical = $this->metadata[Page::CANONICAL_PROPERTY];
             if (empty($canonical)) {
                 $canonical = $ID; // not null constraint unfortunately
             }

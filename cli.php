@@ -12,6 +12,8 @@
 if (!defined('DOKU_INC')) die();
 
 use ComboStrap\Analytics;
+use ComboStrap\Page;
+use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
 
 require_once(__DIR__ . '/class/Analytics.php');
@@ -42,6 +44,8 @@ ini_set('memory_limit', '256M');
  */
 class cli_plugin_combo extends DokuWiki_CLI_Plugin
 {
+    const ANALYTICS = "analytics";
+    const SYNC = "sync";
 
     /**
      * register options and arguments
@@ -49,12 +53,19 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
      */
     protected function setup(Options $options)
     {
-        $options->setHelp('Run the analytics process');
+        $options->setHelp(
+            "Manage the analytics database\n\n" .
+            "analytics\n" .
+            "sync"
+        );
         $options->registerOption('version', 'print version', 'v');
-        $options->registerArgument(
+        $options->registerCommand(self::ANALYTICS, "Update the analytics data");
+        $options->registerOption(
             'namespaces',
             "If no namespace is given, the root namespace is assumed.",
-            false);
+            'n',
+            true
+        );
         $options->registerOption(
             'output',
             "Optional, where to store the analytical data as csv eg. a filename.",
@@ -63,6 +74,11 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
             'cache',
             "Optional, returns from the cache if set",
             'c', false);
+        $options->registerOption(
+            'dry',
+            "Optional, dry-run",
+            'd', false);
+        $options->registerCommand(self::SYNC, "Sync the database");
 
     }
 
@@ -76,25 +92,32 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
         $namespaces = array_map('cleanID', $options->getArgs());
         if (!count($namespaces)) $namespaces = array(''); //import from top
 
-        $output = $options->getOpt('output', '');
-        //if ($output == '-') $output = 'php://stdout';
         $cache = $options->getOpt('cache', false);
-
-
-        $this->process($namespaces, $output, $cache);
+        $depth = $options->getOpt('depth', 0);
+        switch ($options->getCmd()) {
+            case self::ANALYTICS:
+                $output = $options->getOpt('output', '');
+                //if ($output == '-') $output = 'php://stdout';
+                $this->updateAnalyticsData($namespaces, $output, $cache, $depth);
+                break;
+            case self::SYNC:
+                $this->syncPages();
+                break;
+            default:
+                throw new \RuntimeException("Command unknown (" . $options->getCmd() . ")");
+        }
 
 
     }
 
     /**
-     * @param $namespaces
+     * @param array $namespaces
      * @param $output
      * @param bool $cache
      * @param int $depth recursion depth. 0 for unlimited
      */
-    private function process($namespaces, $output, $cache = false, $depth = 0)
+    private function updateAnalyticsData($namespaces = array(), $output = null, $cache = false, $depth = 0)
     {
-        global $conf;
 
         $fileHandle = null;
         if (!empty($output)) {
@@ -102,42 +125,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
             if (!$fileHandle) $this->fatal("Failed to open $output");
         }
 
-        // find pages
-        $pages = array();
-        foreach ($namespaces as $ns) {
-
-            search(
-                $pages,
-                $conf['datadir'],
-                'search_universal',
-                array(
-                    'depth' => $depth,
-                    'listfiles' => true,
-                    'listdirs' => false,
-                    'pagesonly' => true,
-                    'skipacl' => true,
-                    'firsthead' => false,
-                    'meta' => false,
-                ),
-                str_replace(':', '/', $ns)
-            );
-
-            // add the ns start page
-            if ($ns && page_exists($ns)) {
-                $pages[] = array(
-                    'id' => $ns,
-                    'ns' => getNS($ns),
-                    'title' => p_get_first_heading($ns, false),
-                    'size' => filesize(wikiFN($ns)),
-                    'mtime' => filemtime(wikiFN($ns)),
-                    'perm' => 16,
-                    'type' => 'f',
-                    'level' => 0,
-                    'open' => 1,
-                );
-            }
-
-        }
+        $pages = $this->findPages($namespaces, $depth);
 
 
         if (!empty($fileHandle)) {
@@ -170,7 +158,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
             $USERINFO['grps'] = array('admin');
 
 
-            echo 'Processing the page ' . $id ."\n";
+            echo 'Processing the page ' . $id . "\n";
 
             $data = Analytics::getDataAsArray($id, $cache);
             if (!empty($fileHandle)) {
@@ -199,6 +187,75 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
         if (!empty($fileHandle)) {
             fclose($fileHandle);
         }
+
+    }
+
+    /**
+     * Find the pages in the tree
+     * @param $namespaces
+     * @param $depth
+     * @return array
+     */
+    private function findPages($namespaces = array(), $depth = 0)
+    {
+        global $conf;
+        $datadir = $conf['datadir'];
+
+        $pages = array();
+        foreach ($namespaces as $ns) {
+
+            search(
+                $pages,
+                $datadir,
+                'search_universal',
+                array(
+                    'depth' => $depth,
+                    'listfiles' => true,
+                    'listdirs' => false,
+                    'pagesonly' => true,
+                    'skipacl' => true,
+                    'firsthead' => false,
+                    'meta' => false,
+                ),
+                str_replace(':', '/', $ns)
+            );
+
+            // add the ns start page
+            if ($ns && page_exists($ns)) {
+                $pages[] = array(
+                    'id' => $ns,
+                    'ns' => getNS($ns),
+                    'title' => p_get_first_heading($ns, false),
+                    'size' => filesize(wikiFN($ns)),
+                    'mtime' => filemtime(wikiFN($ns)),
+                    'perm' => 16,
+                    'type' => 'f',
+                    'level' => 0,
+                    'open' => 1,
+                );
+            }
+
+        }
+        return $pages;
+    }
+
+    private function syncPages()
+    {
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("select ID from pages");
+        if (!$res) {
+            throw new \RuntimeException("An exception has occurred with the alias selection query");
+        }
+        $res2arr = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        foreach ($res2arr as $row) {
+            $id = $row['ID'];
+            if (!page_exists($id)){
+                echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
+                Page::createFromId($id)->deleteInDb();
+            }
+        }
+
 
     }
 }

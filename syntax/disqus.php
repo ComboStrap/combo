@@ -3,7 +3,7 @@
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\UrlCanonical;
+use ComboStrap\Page;
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
@@ -136,7 +136,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                         $disqusIdentifier = PluginUtility::getPageId();
                     }
 
-                    $canonical = MetadataUtility::getMeta(UrlCanonical::CANONICAL_PROPERTY);
+                    $canonical = MetadataUtility::getMeta(Page::CANONICAL_PROPERTY);
                     if (!empty($canonical)) {
                         $disqusIdentifier = $canonical;
                     }
@@ -147,7 +147,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 $url = $attributes[self::ATTRIBUTE_URL];
                 if (empty($url)) {
                     if (!empty($canonical)) {
-                        $url = UrlCanonical::getUrl($canonical);
+                        $url = Page::getUrl($canonical);
                     }
                 }
 

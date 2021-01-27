@@ -23,7 +23,7 @@
 use ComboStrap\Analytics;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\UrlCanonical;
+use ComboStrap\Page;
 
 require_once(__DIR__ . '/../class/Analytics.php');
 
@@ -154,8 +154,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 }
 
                 // Canonical should be lowercase
-                if ($key == UrlCanonical::CANONICAL_PROPERTY) {
-                    $result[UrlCanonical::CANONICAL_PROPERTY] = $value;
+                if ($key == Page::CANONICAL_PROPERTY) {
+                    $result[Page::CANONICAL_PROPERTY] = $value;
                     $value = strtolower($value);
                 }
 
@@ -206,8 +206,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 if (array_key_exists("description", $data)) {
                     $renderer->setMeta("description", $data["description"]);
                 }
-                if (array_key_exists(UrlCanonical::CANONICAL_PROPERTY, $data)) {
-                    $renderer->setMeta(UrlCanonical::CANONICAL_PROPERTY, $data[UrlCanonical::CANONICAL_PROPERTY]);
+                if (array_key_exists(Page::CANONICAL_PROPERTY, $data)) {
+                    $renderer->setMeta(Page::CANONICAL_PROPERTY, $data[Page::CANONICAL_PROPERTY]);
                 }
                 break;
 
@@ -231,7 +231,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
          * because it's already managed by dokuwiki in description['abstract']
          */
         $managedMeta = [
-            UrlCanonical::CANONICAL_PROPERTY,
+            Page::CANONICAL_PROPERTY,
             action_plugin_combo_metatitle::TITLE_META_KEY,
             syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER
         ];

@@ -22,12 +22,6 @@ class Sqlite
     protected static $sqlite;
 
     /**
-     * Init the data store
-     * Sqlite cannot be static because
-     * between two test classes
-     * the data dir where the database is saved is deleted.
-     *
-     * You need to store the variable in your plugin
      *
      * @return helper_plugin_sqlite $sqlite
      */

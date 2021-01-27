@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\PluginUtility;
-use ComboStrap\UrlCanonical;
+use ComboStrap\Page;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;

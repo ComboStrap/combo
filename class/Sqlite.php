@@ -106,9 +106,18 @@ class Sqlite
     public static function printInfo(helper_plugin_sqlite $sqlite)
     {
         $dbFile = $sqlite->getAdapter()->getDbFile();
-        echo "DbFile: ". $dbFile;
-        echo "Permission ".substr(sprintf('%o', fileperms($dbFile)), -4);
+        fwrite(STDERR, "DbFile: " . $dbFile);
+        if (file_exists($dbFile)) {
+            fwrite(STDERR, "File exists: " . true);
+            fwrite(STDERR, "Permission " . substr(sprintf('%o', fileperms($dbFile)), -4));
+        } else {
+            fwrite(STDERR, "File exists: " . false);
+        }
+
         global $conf;
-        echo "MetaDir ".$conf['metadir'];
+        $metadir = $conf['metadir'];
+        fwrite(STDERR, "MetaDir: " . $metadir);
+        fwrite(STDERR, "Subdirectory: ". strpos($dbFile, $metadir) === 0);
+
     }
 }

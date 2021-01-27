@@ -53,11 +53,13 @@ class Sqlite
         $init = true;
         if (self::$sqlite != null) {
             $dbFile = self::$sqlite->getAdapter()->getDbFile();
-            if (strpos($dbFile, $metaDir) === 0) {
-                $init = false;
-            } else {
-                self::$sqlite->getAdapter()->closedb();
-                self::$sqlite = null;
+            if (file_exists($dbFile)) {
+                if (strpos($dbFile, $metaDir) === 0) {
+                    $init = false;
+                } else {
+                    self::$sqlite->getAdapter()->closedb();
+                    self::$sqlite = null;
+                }
             }
         }
         if ($init) {
@@ -112,22 +114,23 @@ class Sqlite
     public static function printInfo(helper_plugin_sqlite $sqlite)
     {
         $dbFile = $sqlite->getAdapter()->getDbFile();
-        fwrite(STDERR, "Stderr DbFile: " . $dbFile);
-        fwrite(STDOUT, "Stdout DbFile: " . $dbFile);
-        echo "Echo DbFile: " . $dbFile;
-        print_r("Printr DbFile: " . $dbFile);
-
+        fwrite(STDERR, "Stderr DbFile: " . $dbFile."\n");
         if (file_exists($dbFile)) {
-            fwrite(STDERR, "File exists: " . true);
-            fwrite(STDERR, "Permission " . substr(sprintf('%o', fileperms($dbFile)), -4));
+            fwrite(STDERR, "File does exists\n");
+            fwrite(STDERR, "Permission " . substr(sprintf('%o', fileperms($dbFile)), -4)."\n");
         } else {
-            fwrite(STDERR, "File exists: " . false);
+            fwrite(STDERR, "File does not exist\n");
         }
 
         global $conf;
         $metadir = $conf['metadir'];
-        fwrite(STDERR, "MetaDir: " . $metadir);
-        fwrite(STDERR, "Subdirectory: ". strpos($dbFile, $metadir) === 0);
+        fwrite(STDERR, "MetaDir: " . $metadir."\n");
+        $subdir = strpos($dbFile, $metadir) === 0;
+        if ($subdir) {
+            fwrite(STDERR, "Meta is a subdirectory of the db \n");
+        } else {
+            fwrite(STDERR, "Meta is a not subdirectory of the db \n");
+        }
 
     }
 }

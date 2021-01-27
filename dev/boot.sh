@@ -21,18 +21,18 @@ echo "Cloning Additional Plugin Dependency"
 REQUIRE="$BASE/requirements.txt"
 if [ -f "$REQUIRE" ]; then
     grep -v '^#' "$REQUIRE" | \
-    while read -r LINE
+    while read -r DEPENDENCY_URL DEPENDENCY_DIR_TARGET
     do
-        if [ -n "$LINE" ]; then
-            echo ">Cloning Dependency: $LINE"
-            git clone "$LINE"
+        if [ -n "$DEPENDENCY_URL" ]; then
+            echo ">Cloning Dependency: $DEPENDENCY_URL into $DEPENDENCY_DIR_TARGET"
+            git clone "$DEPENDENCY_URL" "$DEPENDENCY_DIR_TARGET"
         fi
     done
 fi
 
 echo "Cloning ComboDev"
 git clone https://"${TOKEN}"@github.com/ComboStrap/combo_dev.git combo_dev
-ln -s combo_dev/combo_test lib/plugins/combo/_test
+mv combo_dev/combo_test $BASE/_test
 
 echo "Download phpunit"
 cd _test

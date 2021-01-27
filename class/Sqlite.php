@@ -30,7 +30,7 @@ class Sqlite
         /**
          * sqlite is stored in a static variable
          * because when we run the {@link cli_plugin_combo},
-         * we will run in
+         * we will run in the error:
          * ``
          * failed to open stream: Too many open files
          * ``
@@ -38,7 +38,7 @@ class Sqlite
          * which means that if there is more than 1024 pages, you fail.
          *
          * In test, we are running in different context (ie different root
-         * directory for Dokuwiki and therefore different $conf
+         * directory for DokuWiki and therefore different $conf
          * and therefore different metadir where sqlite is stored)
          * Because a sql file may be deleted, we may get:
          * ```
@@ -101,5 +101,14 @@ class Sqlite
         }
         return self::$sqlite;
 
+    }
+
+    public static function printInfo(helper_plugin_sqlite $sqlite)
+    {
+        $dbFile = $sqlite->getAdapter()->getDbFile();
+        echo "DbFile: ". $dbFile;
+        echo "Permission ".substr(sprintf('%o', fileperms($dbFile)), -4);
+        global $conf;
+        echo "MetaDir ".$conf['metadir'];
     }
 }

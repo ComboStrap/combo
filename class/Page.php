@@ -241,7 +241,12 @@ class Page
             } else {
 
                 if ($canonicalInDb == false) {
-                    $res = $sqlite->storeEntry('pages', $row);
+                    try {
+                        $res = $sqlite->storeEntry('pages', $row);
+                    } catch (\RuntimeException $e){
+                        Sqlite::printInfo($sqlite);
+                        throw $e;
+                    }
                     if (!$res) {
                         LogUtility::msg("There was a problem during pages insertion");
                     }

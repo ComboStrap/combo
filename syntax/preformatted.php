@@ -127,7 +127,9 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data)
     {
-        $renderer->doc .= trim($data[0]);
+        if ($format=="xhtml") {
+            $renderer->doc .= $data[0];
+        }
         return false;
     }
 

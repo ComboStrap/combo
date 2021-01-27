@@ -103,10 +103,20 @@ class Sqlite
 
     }
 
+    /**
+     * Print debug info to the console in order to resolve
+     * RuntimeException: HY000 8 attempt to write a readonly database
+     * https://phpunit.readthedocs.io/en/latest/writing-tests-for-phpunit.html#error-output
+     * @param helper_plugin_sqlite $sqlite
+     */
     public static function printInfo(helper_plugin_sqlite $sqlite)
     {
         $dbFile = $sqlite->getAdapter()->getDbFile();
-        fwrite(STDERR, "DbFile: " . $dbFile);
+        fwrite(STDERR, "Stderr DbFile: " . $dbFile);
+        fwrite(STDOUT, "Stdout DbFile: " . $dbFile);
+        echo "Echo DbFile: " . $dbFile;
+        print_r("Printr DbFile: " . $dbFile);
+
         if (file_exists($dbFile)) {
             fwrite(STDERR, "File exists: " . true);
             fwrite(STDERR, "Permission " . substr(sprintf('%o', fileperms($dbFile)), -4));

@@ -242,6 +242,7 @@ class Page
 
                 if ($canonicalInDb == false) {
                     try {
+                        Sqlite::printInfo($sqlite);
                         $res = $sqlite->storeEntry('pages', $row);
                     } catch (\RuntimeException $e){
                         Sqlite::printInfo($sqlite);

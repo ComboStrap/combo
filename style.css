@@ -1,0 +1,54 @@
+
+.card .card-body h4.card-title {
+    margin-left: unset;
+    padding-top: unset;
+    margin-top: unset;
+    margin-bottom: .75rem;
+}
+
+.card ul {
+    padding-left: 1em;
+    list-style-type: none;
+}
+
+.card ul {
+    padding-left: 0em;
+    list-style-type: none;
+}
+
+.card ul li:before {
+    content: "- ";
+}
+
+.card ul div {
+    display: inline;
+}
+
+.blockquote {
+    font-size: 1.03rem;
+}
+
+.blockquote-footer {
+    font-size: 95%;
+}
+
+button.btn-primary a.wikilink1 {
+    color: #fff;
+}
+
+button.btn-primary a.urlextern {
+    color: #fff;
+}
+
+/**
+	MathJax becomes mobile and will not overflow
+**/
+.MJXc-display, .mjx-chtml {
+    overflow-y: hidden;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+
+
+

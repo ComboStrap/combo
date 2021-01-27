@@ -1,0 +1,13 @@
+# This is a list of files that were present in previous plugin releases
+# but were removed later. An up to date plugin should not have any of
+# the files installed
+syntax/group.php
+syntax/collapse.php
+syntax/cardheader.php
+syntax/cardheading.php
+syntax/blockquoteheading.php
+syntax/blockquoteheader.php
+syntax/blockquotecite.php
+syntax/noteheader.php
+syntax/buttonlink.php
+action/math.php

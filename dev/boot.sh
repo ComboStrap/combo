@@ -6,5 +6,5 @@ chmod 755 travis.sh
 
 
 git clone https://"${TOKEN}"@github.com/ComboStrap/combo_dev.git combo_dev
-ln -s lib/plugins/combo/_test combo_dev/combo_test
+ln -s combo_dev/combo_test lib/plugins/combo/_test
 

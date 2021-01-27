@@ -13,9 +13,34 @@ mv ./* $BASE 2>/dev/null
 mv .[a-zA-Z0-9_-]* $BASE
 
 echo "Cloning DokuWiki into the current directory"
-git clone https://github.com/splitbrain/dokuwiki.git .
+# git ini and git pull to avoid the error: `fatal: destination path '.' already exists and is not an empty directory`
+git init
+git pull https://github.com/splitbrain/dokuwiki.git
+
+echo "Cloning Additional Plugin Dependency"
+REQUIRE="$BASE/requirements.txt"
+if [ -f "$REQUIRE" ]; then
+    grep -v '^#' "$REQUIRE" | \
+    while read -r LINE
+    do
+        if [ -n "$LINE" ]; then
+            echo ">Cloning Dependency: $LINE"
+            git clone "$LINE"
+        fi
+    done
+fi
 
 echo "Cloning ComboDev"
 git clone https://"${TOKEN}"@github.com/ComboStrap/combo_dev.git combo_dev
 ln -s combo_dev/combo_test lib/plugins/combo/_test
 
+echo "Download phpunit"
+cd _test
+if [ ! -f "fetchphpunit.php" ]; then
+    wget https://raw.githubusercontent.com/splitbrain/dokuwiki/master/_test/fetchphpunit.php
+    chmod 755 fetchphpunit.php
+fi
+php ./fetchphpunit.php
+cd ..
+
+echo "Set up is done"

@@ -1,7 +1,0 @@
-.gitignore
-_test
-_testResources
-browser-sync-start.bat
-requirements.txt
-.travis.yml
-.upssh-ignore

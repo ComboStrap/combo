@@ -1,0 +1,27 @@
+language: php
+# Taken from OVH
+# https://www.ovh.nl/shared-hosting/persoonlijke-shared-hosting.xml
+# and https://github.com/splitbrain/dokuwiki-travis
+php:
+  - "7.4"
+  - "7.3"
+  - "7.2"
+  - "7.1"
+  - "7.0"
+  - "5.6"
+
+env:
+  - DOKUWIKI=stable
+
+before_install:
+  - wget https://raw.github.com/ComboStrap/combo/master/dev/boot.sh
+
+install:
+  - sh boot.sh
+
+script:
+  - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug
+
+notifications:
+  email:
+    - support@combostrap.com

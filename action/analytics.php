@@ -24,8 +24,6 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     public function register(Doku_Event_Handler $controller)
     {
         /**
-         * Called on every page view
-         * https://www.dokuwiki.org/devel:event:indexer_tasks_run
          * Called on every page write
          * https://www.dokuwiki.org/devel:event:io_wikipage_write
          * On update to an existing page this event is called twice,

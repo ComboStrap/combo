@@ -16,14 +16,20 @@ namespace ComboStrap;
 class TemplateUtility
 {
 
-    static function render($pageTemplate,$pageId, $pageTitle){
+    static function render($pageTemplate, $pageId)
+    {
 
         /**
-         * Hack: Replace every " by a ' to be able to detect the title on a pipeline
+         * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
          * @see {@link \syntax_plugin_combo_pipeline}
          */
-        $pageTitle = str_replace('"',"'",$pageTitle);
+
+        $pageTitle = TitleUtility::getPageTitle($pageId);
+        $pageTitle = str_replace('"', "'", $pageTitle);
         $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
+        $h1Title = TitleUtility::getPageH1($pageId);
+        $h1Title = str_replace('"', "'", $h1Title);
+        $tpl = str_replace("\$h1", $h1Title, $tpl);
         return str_replace("\$id", $pageId, $tpl);
 
     }

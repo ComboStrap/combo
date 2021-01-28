@@ -83,4 +83,14 @@ class TitleUtility
         return $name;
     }
 
+    public static function getPageH1($pageId)
+    {
+        $h1 = p_get_metadata(cleanID($pageId), 'h1', METADATA_DONT_RENDER);
+        if (empty($h1)){
+            return self::getPageTitle($pageId);
+        } else {
+            return $h1;
+        }
+    }
+
 }

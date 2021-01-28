@@ -241,13 +241,7 @@ class Page
             } else {
 
                 if ($canonicalInDb == false) {
-                    try {
-                        Sqlite::printInfo($sqlite);
-                        $res = $sqlite->storeEntry('pages', $row);
-                    } catch (\RuntimeException $e){
-                        Sqlite::printInfo($sqlite);
-                        throw $e;
-                    }
+                    $res = $sqlite->storeEntry('pages', $row);
                     if (!$res) {
                         LogUtility::msg("There was a problem during pages insertion");
                     }
@@ -292,6 +286,62 @@ class Page
     public function getId()
     {
         return $this->id;
+    }
+
+    public function isBar()
+    {
+        global $conf;
+        $barsName = array($conf['sidebar']);
+        $strapTemplateName = 'strap';
+        if ($conf['template'] === $strapTemplateName) {
+            $barsName[] = $conf['tpl'][$strapTemplateName]['headerbar'];
+            $barsName[] = $conf['tpl'][$strapTemplateName]['footerbar'];
+            $barsName[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
+        }
+        return in_array($this->getName(), $barsName);
+    }
+
+    private function getName()
+    {
+        $names = $this->getNames();
+        return $names[sizeOf($names) - 1];
+    }
+
+    public function getNames()
+    {
+        return preg_split("/:/", $this->id);
+    }
+
+    public function isStartPage()
+    {
+        global $conf;
+        return $this->getName() == $conf['start'];
+    }
+
+    /**
+     * Return a canonical if set
+     * otherwise derive it from the id
+     * by taking the last two parts
+     *
+     * @return string
+     */
+    public function getCanonical()
+    {
+        if (!empty($this->canonical)) {
+            return $this->canonical;
+        } else {
+            $names = $this->getNames();
+            $namesLength = sizeof($names);
+            if ($namesLength == 1) {
+
+                return $this->id;
+
+            } else {
+
+                return join(":", array_slice($names, $namesLength - 2));
+
+            }
+        }
     }
 
 

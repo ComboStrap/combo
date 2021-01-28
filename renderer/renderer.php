@@ -99,6 +99,13 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
     function header($text, $level, $pos)
     {
 
+        /**
+         * Capture the h1
+         */
+        if ($level==1){
+            global $ID;
+            p_set_metadata($ID,array("h1"=>$text));
+        }
 
         // We are going from 2 to 3
         // The parent is 2

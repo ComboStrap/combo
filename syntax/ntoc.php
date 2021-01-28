@@ -296,8 +296,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                      */
                     $pageIndex = FsWikiUtility::getIndex($nameSpacePath);
                     if ($pageIndex != null && $headerTemplate != null) {
-                        $pageTitle = TitleUtility::getPageTitle($pageIndex);
-                        $tpl = TemplateUtility::render($headerTemplate, $pageIndex, $pageTitle);
+                        $tpl = TemplateUtility::render($headerTemplate, $pageIndex);
                         if (sizeof($headerAttributes) == 0) {
                             $headerAttributes["background-color"] = "light";
                             PluginUtility::addStyleProperty("border-bottom", "1px solid #e5e5e5", $headerAttributes);

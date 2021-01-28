@@ -108,8 +108,6 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
 
         switch ($format) {
             case 'xhtml':
-
-            default:
                 $renderer->doc .= $data[PluginUtility::PAYLOAD];
                 break;
 

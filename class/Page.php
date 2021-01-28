@@ -3,6 +3,8 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Cache\CacheInstructions;
+use dokuwiki\Cache\CacheRenderer;
 use http\Exception\RuntimeException;
 
 /**
@@ -24,7 +26,7 @@ class Page
     {
         $this->id = $id;
         if (strtolower($id) !== $id) {
-            throw new \RuntimeException("The page id should be in lowercase");
+            throw new \RuntimeException("The page id ({$id}) is not in lowercase");
         }
     }
 
@@ -342,6 +344,179 @@ class Page
 
             }
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAnalytics()
+    {
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->id);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the pages selection query");
+        }
+        $jsonString = $sqlite->res2single($res);
+        $sqlite->res_close($res);
+        if (!empty($jsonString)){
+            return json_decode($jsonString,true);
+        } else {
+            return array();
+        }
+
+    }
+
+    /**
+     * Return the metadata stored in the file system
+     * @return array|array[]
+     */
+    public function getMetadata()
+    {
+        /**
+         * Read / not get (get can trigger a rendering of the meta again)
+         */
+        return p_read_metadata($$this->id);
+    }
+
+    /**
+     *
+     * @return mixed the internal links
+     */
+    public function getInternalLinks()
+    {
+        $metadata = $this->getMetadata();
+        return $metadata['current']['relation']['references'];
+    }
+
+    public function saveAnalytics(array $analytics)
+    {
+
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite != null) {
+            /**
+             * Sqlite Plugin installed
+             */
+
+            $json = json_encode($analytics, JSON_PRETTY_PRINT);
+            $entry = array(
+                'CANONICAL' => $this->getCanonical(),
+                'ANALYTICS' => $json,
+                'ID' => $this->getId()
+            );
+            $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
+            if ($sqlite->res2single($res) == 1) {
+                // Upset not supported on all version
+                //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
+                $update = 'update PAGES SET CANONICAL = ?, ANALYTICS = ? where ID=?';
+                $res = $sqlite->query($update, $entry);
+            } else {
+                $res = $sqlite->storeEntry('PAGES', $entry);
+            }
+            if (!$res) {
+                LogUtility::msg("There was a problem during the upsert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            }
+            $sqlite->res_close($res);
+        }
+
+    }
+
+    public function deleteCache($mode = "xhtml")
+    {
+        if ($this->existInFs()) {
+
+            $file = wikiFN($this->id);
+
+            /**
+             * Output of {@link DokuWiki_Syntax_Plugin::handle}
+             */
+            $cache = new CacheInstructions($this->id, $file);
+            $cache->removeCache();
+
+            /**
+             * Output of {@link DokuWiki_Syntax_Plugin::render()}
+             */
+            $cache = new CacheRenderer($this->id, $file, $mode);
+            $cache->removeCache();
+
+        }
+    }
+
+    public function deleteAnalyticsCache()
+    {
+        $this->deleteCache(Analytics::RENDERER_NAME_MODE);
+
+    }
+
+    public function isAnalyticsCached()
+    {
+        $file = wikiFN($this->id);
+        $cache = new CacheRenderer($this->id, $file, Analytics::RENDERER_NAME_MODE);
+        return file_exists($cache->cache);
+    }
+
+    /**
+     *
+     * @return string - the full path to the meta file
+     */
+    public function getMetaFile(){
+        return metaFN($this->id, '.meta');
+    }
+
+    public function askAnalyticsRefresh()
+    {
+        $this->deleteAnalyticsCache();
+        $sqlite = Sqlite::getSqlite();
+        $entry = array(
+            "ID"=>$this->id,
+            "TIMESTAMP"=> date('Y-m-d H:i:s',time())
+        );
+        $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
+        if (!$res) {
+            LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $sqlite->res_close($res);
+
+    }
+
+    public function isAnalyticsStale()
+    {
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
+        if (!$res) {
+            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $value = $sqlite->res2single($res);
+        $sqlite->res_close($res);
+        return $value === "1";
+
+    }
+
+    public function refreshAnalytics()
+    {
+
+        /**
+         * Refresh and cache
+         * (The delete is normally not needed, just to be sure)
+         */
+        $this->deleteAnalyticsCache();
+        Analytics::process($this->id);
+
+        /**
+         * Delete from the table
+         */
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("DELETE FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
+        if (!$res) {
+            LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $sqlite->res_close($res);
+
+        $refreshLog = array(
+            "ID"=>$this->id,
+            "TIMESTAMP"=> date('Y-m-d H:i:s',time())
+        );
+        $res = $sqlite->storeEntry('ANALYTICS_REFRESHED',$refreshLog);
+
     }
 
 

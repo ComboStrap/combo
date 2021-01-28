@@ -46,7 +46,7 @@ class Analytics
      * The format returned by the renderer
      */
     const RENDERER_FORMAT = "analytics";
-    const RENDERER_NAME = "combo_".self::RENDERER_FORMAT;
+    const RENDERER_NAME_MODE = "combo_".self::RENDERER_FORMAT;
 
 
     /**
@@ -63,6 +63,11 @@ class Analytics
 
     }
 
+    /**
+     * @param $pageId
+     * @param bool $cache - if true, the analytics will be cached or retrieved from cache
+     * @return bool|string|null
+     */
     private static function getDataAsString($pageId, $cache = false)
     {
 
@@ -74,12 +79,12 @@ class Analytics
             if (file_exists($file)) {
                 $content = file_get_contents($file);
                 $instructions = RenderUtility::getInstructions($content,false);
-                return p_render(self::RENDERER_NAME, $instructions, $info);
+                return p_render(self::RENDERER_NAME_MODE, $instructions, $info);
             } else {
                 return false;
             }
         } else {
-            $result = p_cached_output(wikiFN($pageId, 0), self::RENDERER_NAME, $pageId);
+            $result = p_cached_output(wikiFN($pageId, 0), self::RENDERER_NAME_MODE, $pageId);
         }
         $ID = $oldId;
         return $result;
@@ -93,9 +98,14 @@ class Analytics
 
     }
 
-    public static function process($pageId)
+    /**
+     * Process the analytics
+     * @param $pageId
+     * @param bool $cache - if true (default), the output will be cached
+     */
+    public static function process($pageId,$cache=true)
     {
-        self::getDataAsJson($pageId, false);
+        self::getDataAsJson($pageId, $cache);
     }
 
 }

@@ -1,7 +1,9 @@
 <?php
 
 use ComboStrap\Analytics;
+use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\Sqlite;
 
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
@@ -36,6 +38,8 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_update_analytics', array());
 
+        $controller->register_hook('INDEXER_TASKS_RUN', 'BEFORE', $this, 'handle_refresh_analytics', array());
+
     }
 
     public function handle_update_analytics(Doku_Event $event, $param)
@@ -44,9 +48,27 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         $rev = $event->data[3];
         if ($rev===false){
             $id = $event->data[2];
-            Analytics::process($id);
+            $page = new Page($id);
+            $page->refreshAnalytics();
         }
 
+
+    }
+
+    public function handle_refresh_analytics(Doku_Event $event, $param)
+    {
+
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("SELECT ID FROM ANALYTICS_TO_REFRESH");
+        if (!$res) {
+            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $rows = $sqlite->res2arr($res,true);
+        $sqlite->res_close($res);
+        foreach($rows as $row){
+            $page = new Page($row['ID']);
+            $page->refreshAnalytics();
+        }
 
     }
 }

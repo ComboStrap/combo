@@ -102,10 +102,14 @@ class action_plugin_combo_metadata extends DokuWiki_Action_Plugin
              * because we want that the quality process will be running
              */
             $addedPage = new Page($changedLink);
-            $addedPage->deleteAnalyticsCache();
+            $addedPage->askAnalyticsRefresh();
+
         }
 
     }
+
+
+
 }
 
 

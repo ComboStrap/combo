@@ -52,24 +52,8 @@ class action_plugin_combo_cachebursting extends DokuWiki_Action_Plugin
          * Delete the cache for the sidebar if they exists
          */
         foreach ($sidebars as $sidebar) {
-            $id = "$namespace:$sidebar";
-            if (page_exists($id)) {
-
-                $file = wikiFN($id);
-
-                /**
-                 * Output of {@link DokuWiki_Syntax_Plugin::handle}
-                 */
-                $cache = new CacheInstructions($id, $file);
-                $cache->removeCache();
-
-                /**
-                 * Output of {@link DokuWiki_Syntax_Plugin::render()}
-                 */
-                $cache = new CacheRenderer($id, $file, 'xhtml');
-                $cache->removeCache();
-
-            }
+            $id = new Page("$namespace:$sidebar");
+            $id->deleteCache();
         }
 
     }

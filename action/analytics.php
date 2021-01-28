@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Analytics;
 use ComboStrap\Page;
 
 /**
@@ -13,6 +14,8 @@ use ComboStrap\Page;
  *
  */
 
+require_once(__DIR__ . '/../class/'.'Analytics.php');
+
 /**
  * Class action_plugin_combo_analytics
  * Update the analytics data
@@ -23,6 +26,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
     public function register(Doku_Event_Handler $controller)
     {
+
         /**
          * Called on every page write
          * https://www.dokuwiki.org/devel:event:io_wikipage_write
@@ -30,26 +34,18 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * once for the transfer of the old version to the attic (rev will have a value)
          * and once to write the new version of the page into the wiki (rev is false)
          */
-        if (false) {
-            $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_update_analytics', array());
-        }
+        $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_update_analytics', array());
+
     }
 
-    public function handle_new_page(Doku_Event $event, $param){
+    public function handle_update_analytics(Doku_Event $event, $param)
+    {
 
-        global $ID;
-        $page = new Page($ID);
-        $canonical = $page->getCanonical();
-        $event->data["tpl"] = <<<EOF
----json
-{
-    "canonical":"{$canonical}",
-    "title":"A title to show on the Search Engine Result Pages",
-    "description":"A description show on the Search Engine Result Pages"
-}
----
-This content was created by the [[https://combostrap.com/frontmatter|frontmatter component]].
-EOF;
+        $rev = $event->data[3];
+        if ($rev===false){
+            $id = $event->data[2];
+            Analytics::process($id);
+        }
 
 
     }

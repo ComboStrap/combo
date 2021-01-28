@@ -88,6 +88,21 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     protected $formattingBracket = 0;
     protected $tableopen = false;
     private $plainTextId = 0;
+    /**
+     * @var Page
+     */
+    private $page;
+
+    public function document_start()
+    {
+        global $ID;
+        $this->page = new Page($ID);
+        $analytics = $this->page->getAnalytics();
+        if (!empty($analytics)){
+            $this->internalLinkBefore = $analytics[Analytics::STATISTICS];
+        }
+
+    }
 
 
     /**
@@ -470,12 +485,12 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * Building the Top JSON in order
          */
         global $ID;
-        $json = array();
-        $json["id"] = $ID;
-        $json['metadata'] = $this->metadata;
+        $finalStats = array();
+        $finalStats["id"] = $ID;
+        $finalStats['metadata'] = $this->metadata;
         ksort($statExport);
-        $json[Analytics::STATISTICS] = $statExport;
-        $json[Analytics::QUALITY] = $quality; // Quality after the sort to get them at the end
+        $finalStats[Analytics::STATISTICS] = $statExport;
+        $finalStats[Analytics::QUALITY] = $quality; // Quality after the sort to get them at the end
 
 
         /**
@@ -488,36 +503,10 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         p_set_metadata($ID, array("format" =>
             array("combo_" . $this->getPluginComponent() => array("Content-Type" => 'application/json'))
         ));
-        $json_encoded = json_encode($json, JSON_PRETTY_PRINT);
+        $json_encoded = json_encode($finalStats, JSON_PRETTY_PRINT);
 
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-            /**
-             * Sqlite Plugin installed
-             */
-            $canonical = $this->metadata[Page::CANONICAL_PROPERTY];
-            if (empty($canonical)) {
-                $canonical = $ID; // not null constraint unfortunately
-            }
-            $entry = array(
-                'CANONICAL' => $canonical,
-                'ANALYTICS' => $json_encoded,
-                'ID' => $ID
-            );
-            $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $ID);
-            if ($sqlite->res2single($res) == 1) {
-                // Upset not supported on all version
-                //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-                $update = 'update PAGES SET CANONICAL = ?, ANALYTICS = ? where ID=?';
-                $res = $sqlite->query($update, $entry);
-            } else {
-                $res = $sqlite->storeEntry('PAGES', $entry);
-            }
-            if (!$res) {
-                LogUtility::msg("There was a problem during the upsert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $sqlite->res_close($res);
-        }
+        $page = new Page($ID);
+        $page->saveAnalytics($finalStats);
         $this->doc .= $json_encoded;
 
     }

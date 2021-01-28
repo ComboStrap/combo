@@ -10,6 +10,7 @@ require_once (__DIR__.'/../class/MetadataUtility.php');
 
 /**
  * Class syntax_plugin_combo_metadata
+ * Add the metadata box
  */
 class syntax_plugin_combo_metadata extends DokuWiki_Syntax_Plugin
 {

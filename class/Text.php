@@ -29,8 +29,9 @@ class Text
         $text = str_replace(">", ">\n", $text);
         // \s shorthand for whitespace
         // | the table and links are separated with a |
+        // / to take into account expression such as and/or
         // /u for unicode support (https://www.php.net/manual/en/reference.pcre.pattern.modifiers.php)
-        $wordSeparator = '/[\s|]/u';
+        $wordSeparator = '/[\s|\/]/u';
         $preg_split = preg_split($wordSeparator, $text);
         $wordsWithoutEmpty = array_filter($preg_split, 'self::isWord');
         return count($wordsWithoutEmpty);

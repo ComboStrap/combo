@@ -44,31 +44,19 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
         global $ID;
         global $conf;
 
-        /**
-         * Split the id by :
-         */
-        $names = preg_split("/:/", $ID);
-        $namesLength = sizeOf($names);
 
         /**
          * No canonical for bars
          */
-        $bars = array($conf['sidebar']);
-        $strapTemplateName = 'strap';
-        if ($conf['template'] === $strapTemplateName) {
-            $bars[] = $conf['tpl'][$strapTemplateName]['headerbar'];
-            $bars[] = $conf['tpl'][$strapTemplateName]['footerbar'];
-            $bars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
-        }
-        if (in_array($names[$namesLength - 1], $bars)) {
+        $page = new Page($ID);
+
+        if ($page->isBar()) {
             return;
         }
 
         /**
          * Where do we pick the canonical URL
          */
-
-
         /**
          * Canonical from meta
          *
@@ -89,6 +77,8 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
             /**
              * Takes the last names part
              */
+            $names = $page->getNames();
+            $namesLength = sizeof($names);
             if ($namesLength > $canonicalLastNamesCount) {
                 $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
             }
@@ -96,7 +86,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
              * If this is a start page, delete the name
              * ie javascript:start will become javascript
              */
-            if ($names[$namesLength - 1] == $conf['start']) {
+            if ($page->isStartPage()) {
                 $names = array_slice($names, 0, $namesLength - 1);
             }
             $canonical = implode(":", $names);

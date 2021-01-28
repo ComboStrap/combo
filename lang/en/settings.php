@@ -92,5 +92,9 @@ $lang[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = PluginUti
 $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = PluginUtility::getUrl("lqpp", "Low quality page protection")." - If enabled, a low quality page will no more be discoverable by search engine or anonymous user.";
 $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = PluginUtility::getUrl("lqpp", "Low quality page protection mode")." - Choose the protection mode. Hidden (but still accessible) vs Acl (User should log in)";
 
+/**
+ * Autofrontamtter
+ */
+$lang[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = PluginUtility::getUrl("frontmatter", "Frontmatter")." - If enabled, a new page will be created with a frontmatter)";
 
 ?>

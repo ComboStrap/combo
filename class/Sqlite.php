@@ -111,7 +111,7 @@ class Sqlite
      * https://phpunit.readthedocs.io/en/latest/writing-tests-for-phpunit.html#error-output
      * @param helper_plugin_sqlite $sqlite
      */
-    public static function printInfo(helper_plugin_sqlite $sqlite)
+    public static function printDbInfoAtConsole(helper_plugin_sqlite $sqlite)
     {
         $dbFile = $sqlite->getAdapter()->getDbFile();
         fwrite(STDERR, "Stderr DbFile: " . $dbFile."\n");

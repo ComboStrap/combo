@@ -131,3 +131,7 @@ $conf['preformattedEnable'] = 0;
  */
 $conf['mandatoryQualityRules'] = 'words_min,internal_backlinks_min,internal_links_min';
 
+/**
+ * {@link action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE}
+ */
+$conf['autoFrontMatterEnable'] = 1;

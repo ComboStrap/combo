@@ -30,33 +30,15 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     {
 
         /**
-         * Called on every page write
-         * https://www.dokuwiki.org/devel:event:io_wikipage_write
-         * On update to an existing page this event is called twice,
-         * once for the transfer of the old version to the attic (rev will have a value)
-         * and once to write the new version of the page into the wiki (rev is false)
-         */
-        //$controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_update_analytics', array());
-
-        /**
          * Analytics to refresh because they have lost or gain a backlinks
          * are done via Sqlite table (The INDEXER_TASKS_RUN gives a way to
          * manipulate this queue)
+         *
+         * There is no need to do it at page write
+         * https://www.dokuwiki.org/devel:event:io_wikipage_write
+         * because after the page is written, the page is shown and trigger the index tasks run
          */
         $controller->register_hook('INDEXER_TASKS_RUN', 'BEFORE', $this, 'handle_refresh_analytics', array());
-
-    }
-
-    public function handle_update_analytics(Doku_Event $event, $param)
-    {
-
-        $rev = $event->data[3];
-        if ($rev===false){
-            $id = $event->data[2];
-            $page = new Page($id);
-            $page->refreshAnalytics();
-        }
-
 
     }
 

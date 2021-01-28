@@ -352,6 +352,9 @@ class Page
     public function getAnalytics()
     {
         $sqlite = Sqlite::getSqlite();
+        if ($sqlite==null){
+            return array();
+        }
         $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->id);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the pages selection query");
@@ -505,17 +508,19 @@ class Page
          * Delete from the table
          */
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("DELETE FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
-        if (!$res) {
-            LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $sqlite->res_close($res);
+        if ($sqlite!=null) {
+            $res = $sqlite->query("DELETE FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
+            if (!$res) {
+                LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            }
+            $sqlite->res_close($res);
 
-        $refreshLog = array(
-            "ID"=>$this->id,
-            "TIMESTAMP"=> date('Y-m-d H:i:s',time())
-        );
-        $res = $sqlite->storeEntry('ANALYTICS_REFRESHED',$refreshLog);
+            $refreshLog = array(
+                "ID" => $this->id,
+                "TIMESTAMP" => date('Y-m-d H:i:s', time())
+            );
+            $sqlite->storeEntry('ANALYTICS_REFRESHED', $refreshLog);
+        }
 
     }
 

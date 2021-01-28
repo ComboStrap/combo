@@ -156,7 +156,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= "<footer class=\"blockquote-footer\"><cite";
                         if (sizeof($attributes) > 0) {
                             $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
-                            $renderer->doc .= $inlineAttributes . '>';
+                            $renderer->doc .= " $inlineAttributes>";
                         } else {
                             $renderer->doc .= '>';
                         }
@@ -178,7 +178,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT :
 
                     $renderer->doc .= '</cite>';
-                    $parent = $data [PluginUtility::PARENT_TAG];
+                    $parent = $data[PluginUtility::PARENT_TAG];
                     if (!empty($parent) && in_array($parent, ["card", "blockquote"])) {
                         $renderer->doc .= '</footer>' . DOKU_LF;
                     } else {

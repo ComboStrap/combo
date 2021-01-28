@@ -36,8 +36,13 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * once for the transfer of the old version to the attic (rev will have a value)
          * and once to write the new version of the page into the wiki (rev is false)
          */
-        $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_update_analytics', array());
+        //$controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_update_analytics', array());
 
+        /**
+         * Analytics to refresh because they have lost or gain a backlinks
+         * are done via Sqlite table (The INDEXER_TASKS_RUN gives a way to
+         * manipulate this queue)
+         */
         $controller->register_hook('INDEXER_TASKS_RUN', 'BEFORE', $this, 'handle_refresh_analytics', array());
 
     }
@@ -58,6 +63,16 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     public function handle_refresh_analytics(Doku_Event $event, $param)
     {
 
+        /**
+         * Check that the actual page has analytics data
+         * (if there is a cache, it's pretty quick)
+         */
+        global $ID;
+        Analytics::process($ID,true);
+
+        /**
+         * Check the analytics to refresh
+         */
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query("SELECT ID FROM ANALYTICS_TO_REFRESH");
         if (!$res) {

@@ -98,7 +98,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         global $ID;
         $this->page = new Page($ID);
         $analytics = $this->page->getAnalytics();
-        if (!empty($analytics)){
+        if (!empty($analytics)) {
             $this->internalLinkBefore = $analytics[Analytics::STATISTICS];
         }
 
@@ -229,7 +229,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if ($treeError > 0 || $headersCount == 0) {
             $qualityScores['correct_outline'] = 0;
             $ruleResults[self::RULE_OUTLINE_STRUCTURE] = self::FAILED;
-            if ($headersCount==0){
+            if ($headersCount == 0) {
                 $ruleInfo[self::RULE_OUTLINE_STRUCTURE] = "There is no header";
             }
         } else {
@@ -458,7 +458,11 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Metadata
          */
-        $this->metadata[Analytics::TITLE] = $meta['title'];
+        $title = $meta['title'];
+        $this->metadata[Analytics::TITLE] = $title;
+        if ($title!=$meta['h1']) {
+            $this->metadata[Analytics::H1] = $meta['h1'];
+        }
         $timestampCreation = $meta['date']['created'];
         $this->metadata[self::DATE_CREATED] = date('Y-m-d h:i:s', $timestampCreation);
         $timestampModification = $meta['date']['modified'];
@@ -487,6 +491,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         global $ID;
         $finalStats = array();
         $finalStats["id"] = $ID;
+        $finalStats["date"] = date('Y-m-d H:i:s', time());
         $finalStats['metadata'] = $this->metadata;
         ksort($statExport);
         $finalStats[Analytics::STATISTICS] = $statExport;

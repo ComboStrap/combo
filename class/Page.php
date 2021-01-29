@@ -349,7 +349,7 @@ class Page
     /**
      * @return mixed
      */
-    public function getAnalytics()
+    public function getAnalyticsFromDb()
     {
         $sqlite = Sqlite::getSqlite();
         if ($sqlite==null){
@@ -507,6 +507,9 @@ class Page
 
     }
 
+    /**
+     * @return mixed analytics as array
+     */
     public function refreshAnalytics()
     {
 
@@ -515,7 +518,7 @@ class Page
          * (The delete is normally not needed, just to be sure)
          */
         $this->deleteAnalyticsCache();
-        Analytics::process($this->id);
+        $analytics = Analytics::processAndGetDataAsArray($this->getId());
 
         /**
          * Delete from the table
@@ -534,6 +537,7 @@ class Page
             );
             $sqlite->storeEntry('ANALYTICS_REFRESHED', $refreshLog);
         }
+        return $analytics;
 
     }
 

@@ -160,7 +160,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
 
             echo 'Processing the page ' . $id . "\n";
 
-            $data = Analytics::getDataAsArray($id, $cache);
+            $data = Analytics::processAndGetDataAsArray($id, $cache);
             if (!empty($fileHandle)) {
                 $statistics = $data[Analytics::STATISTICS];
                 $row = array(

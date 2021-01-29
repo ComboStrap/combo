@@ -102,9 +102,16 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         /**
          * Capture the h1
          */
-        if ($level==1){
-            global $ID;
-            p_set_metadata($ID,array("h1"=>$text));
+        if ($level == 1) {
+            /**
+             * $ACT == 'show'
+             * Otherwise we get the title of the admin page ...
+             */
+            global $ACT;
+            if ($ACT == 'show') {
+                global $ID;
+                p_set_metadata($ID, array("h1" => $text));
+            }
         }
 
         // We are going from 2 to 3

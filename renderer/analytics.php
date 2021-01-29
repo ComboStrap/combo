@@ -97,7 +97,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     {
         global $ID;
         $this->page = new Page($ID);
-        $analytics = $this->page->getAnalytics();
+        $analytics = $this->page->getAnalyticsFromDb();
         if (!empty($analytics)) {
             $this->internalLinkBefore = $analytics[Analytics::STATISTICS];
         }
@@ -335,7 +335,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if ($internalLinksCount == 0) {
             $qualityScores[Analytics::INTERNAL_LINKS_COUNT] = 0;
             $ruleResults[self::RULE_INTERNAL_LINKS_MIN] = self::FAILED;
-            $ruleInfo[self::RULE_INTERNAL_BACKLINKS_MIN] = "There is no internal links";
+            $ruleInfo[self::RULE_INTERNAL_LINKS_MIN] = "There is no internal links";
         } else {
             $ruleResults[self::RULE_INTERNAL_LINKS_MIN] = self::PASSED;
             $qualityScores[Analytics::INTERNAL_LINKS_COUNT] = $countBacklinks * $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_LINK_FACTOR, 1);;
@@ -348,7 +348,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if ($brokenLinksCount > 2) {
             $qualityScores['no_' . Analytics::INTERNAL_LINKS_BROKEN_COUNT] = 0;
             $ruleResults[self::RULE_INTERNAL_BROKEN_LINKS_MAX] = self::FAILED;
-            $ruleInfo[self::RULE_INTERNAL_BACKLINKS_MIN] = "There is {$brokenLinksCount} broken links";
+            $ruleInfo[self::RULE_INTERNAL_BROKEN_LINKS_MAX] = "There is {$brokenLinksCount} broken links";
         } else {
             $qualityScores['no_' . Analytics::INTERNAL_LINKS_BROKEN_COUNT] = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_LINK_BROKEN_FACTOR, 2);;;
             $ruleResults[self::RULE_INTERNAL_BROKEN_LINKS_MAX] = self::PASSED;

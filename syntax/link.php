@@ -206,8 +206,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                  *
                  * @var renderer_plugin_combo_analytics $renderer
                  */
-                $id = $data[PluginUtility::ATTRIBUTES][LinkUtility::ATTRIBUTE_ID];
-                LinkUtility::processInternalLinkStats($id, $renderer->stats);
+                $attributes = $data[PluginUtility::ATTRIBUTES];
+                LinkUtility::processLinkStats($attributes, $renderer->stats);
                 break;
 
         }

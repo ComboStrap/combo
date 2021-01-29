@@ -58,10 +58,10 @@ class Analytics
      * The p_render function was stolen from the {@link p_cached_output} function
      * used the in the switch of the {@link \dokuwiki\Action\Export::preProcess()} function
      */
-    public static function getDataAsJson($pageId, $cache = false)
+    public static function processAndGetDataAsJson($pageId, $cache = false)
     {
 
-        return json_decode(self::getDataAsString($pageId, $cache));
+        return json_decode(self::processAndGetDataAsString($pageId, $cache));
 
     }
 
@@ -70,7 +70,7 @@ class Analytics
      * @param bool $cache - if true, the analytics will be cached or retrieved from cache
      * @return bool|string|null
      */
-    private static function getDataAsString($pageId, $cache = false)
+    static function processAndGetDataAsString($pageId, $cache = false)
     {
 
         global $ID;
@@ -93,21 +93,13 @@ class Analytics
 
     }
 
-    public static function getDataAsArray($pageId, $cache = false)
+    public static function processAndGetDataAsArray($pageId, $cache = false)
     {
 
-        return json_decode(self::getDataAsString($pageId, $cache),true);
+        return json_decode(self::processAndGetDataAsString($pageId, $cache),true);
 
     }
 
-    /**
-     * Process the analytics
-     * @param $pageId
-     * @param bool $cache - if true (default), the output will be cached
-     */
-    public static function process($pageId,$cache=true)
-    {
-        self::getDataAsJson($pageId, $cache);
-    }
+
 
 }

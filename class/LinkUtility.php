@@ -165,8 +165,21 @@ class LinkUtility
     static function handleMetadata($metaDataRenderer, array $attributes)
     {
 
-        if ($attributes[self::ATTRIBUTE_TYPE] == self::TYPE_INTERNAL) {
-            $metaDataRenderer->internallink($attributes[self::ATTRIBUTE_ID]);
+        $id = $attributes[self::ATTRIBUTE_ID];
+        $type = $attributes[self::ATTRIBUTE_TYPE];
+        if ($type == self::TYPE_INTERNAL) {
+            $metaDataRenderer->internallink($id);
+        } else {
+            $name = $attributes[self::ATTRIBUTE_TITLE];
+            if ($type == self::TYPE_EXTERNAL) {
+                $metaDataRenderer->externallink($id, $attributes[self::ATTRIBUTE_TITLE]);
+            } else if ($type == self::TYPE_LOCAL) {
+                $metaDataRenderer->locallink($id, $name);
+            } else if ($type == self::TYPE_EMAIL) {
+                $metaDataRenderer->emaillink($id, $name);
+            } else {
+                LogUtility::msg("The link ({$id}) with the type " . $type . " was not processed into the metadata");
+            }
         }
     }
 
@@ -246,49 +259,76 @@ class LinkUtility
     }
 
     /**
-     * @param $id
+     * @param array $attribute
      * @param array $stats
      * Calculate internal link statistics
      */
+    public static function processLinkStats($attribute, array &$stats)
+    {
+        $id = $attribute[LinkUtility::ATTRIBUTE_ID];
+        $type = $attribute[self::ATTRIBUTE_TYPE];
+
+        if ($type == self::TYPE_INTERNAL) {
+            /**
+             * If this a query string, this is the same page
+             */
+            global $ID;
+            if (strpos($id, '?') !== false) {
+                $urlParts = preg_split("/\?/", $id);
+                if (sizeof($urlParts) == 1) {
+                    $id = $ID;
+                } else {
+                    $id = $urlParts[0];
+                }
+            }
+
+            /**
+             * Internal link count
+             */
+            $stats[Analytics::INTERNAL_LINKS_COUNT]++;
+
+            /**
+             * Broken link ?
+             */
+            resolve_pageid(getNS($ID), $id, $exists);
+            if (!$exists) {
+                $stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT]++;
+                $stats[Analytics::INFO][] = "The internal link `{$id}` does not exist";
+            }
+
+
+            /**
+             * Calculate link distance
+             */
+            $a = explode(':', getNS($ID));
+            $b = explode(':', getNS($id));
+            while (isset($a[0]) && $a[0] == $b[0]) {
+                array_shift($a);
+                array_shift($b);
+            }
+            $length = count($a) + count($b);
+            $stats[Analytics::INTERNAL_LINK_DISTANCE][] = $length;
+
+        } else if ($type == self::TYPE_EXTERNAL) {
+
+            $stats[Analytics::EXTERNAL_LINKS_COUNT]++;
+
+        } else {
+
+            LogUtility::msg("The link `{$id}` with the type (" . $type . ")  is not taken into account into the statistics");
+
+        }
+
+
+    }
+
     public static function processInternalLinkStats($id, array &$stats)
     {
-        /**
-         * Internal link count
-         */
-        $stats[Analytics::INTERNAL_LINKS_COUNT]++;
-
-
-        /**
-         * If this a query string, this is the same page
-         */
-        global $ID;
-        if (strpos($id, '?') === 0) {
-            $id = $ID;
-        }
-
-        /**
-         * Broken link ?
-         */
-        resolve_pageid(getNS($ID), $id, $exists);
-        if (!$exists) {
-            $stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT]++;
-            $stats[Analytics::INFO][] = "The internal link {$id} does not exist.";
-        }
-
-
-        /**
-         * Calculate link distance
-         */
-        $a = explode(':', getNS($ID));
-        $b = explode(':', getNS($id));
-        while (isset($a[0]) && $a[0] == $b[0]) {
-            array_shift($a);
-            array_shift($b);
-        }
-        $length = count($a) + count($b);
-        $stats[Analytics::INTERNAL_LINK_DISTANCE][] = $length;
-
-
+        $attribute = array(
+            self::ATTRIBUTE_ID => $id,
+            self::ATTRIBUTE_TYPE => self::TYPE_INTERNAL
+        );
+        self::processLinkStats($attribute, $stats);
     }
 
 }

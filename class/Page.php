@@ -55,6 +55,11 @@ class Page
         return $canonicalUrl;
     }
 
+    public static function createFromEnvironment()
+    {
+        return new Page(PluginUtility::getPageId());
+    }
+
 
     /**
      * Does the page is known in the pages table
@@ -535,6 +540,11 @@ class Page
         }
         return $analytics;
 
+    }
+
+    public function getAnalyticsFromFs($cache = true)
+    {
+        return Analytics::processAndGetDataAsArray($this->id,$cache);
     }
 
 

@@ -71,6 +71,8 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     const CONF_QUALITY_SCORE_CHANGES_FACTOR = 'qualityScoreChangesFactor';
     const CONF_QUALITY_SCORE_DESCRIPTION_PRESENT = 'qualityScoreDescriptionPresent';
     const CONF_QUALITY_SCORE_CANONICAL_PRESENT = 'qualityScoreCanonicalPresent';
+    const SCORING = "scoring";
+    const SCORE = "score";
 
 
     /**
@@ -190,42 +192,45 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * A title should be present
          */
+        $titleScore = $this->getConf(self::CONF_QUALITY_SCORE_TITLE_PRESENT, 10);
         if (empty($this->metadata[Analytics::TITLE])) {
             $ruleResults[self::RULE_TITLE_PRESENT] = self::FAILED;
-            $ruleInfo[self::RULE_TITLE_PRESENT] = "A title is not present in the frontmatter";
+            $ruleInfo[self::RULE_TITLE_PRESENT] = "Add a title in the frontmatter for {$titleScore} points";
             $this->metadata[Analytics::TITLE] = $meta[Analytics::TITLE];
             $qualityScores[self::RULE_TITLE_PRESENT] = 0;
         } else {
-            $qualityScores[self::RULE_TITLE_PRESENT] = $this->getConf(self::CONF_QUALITY_SCORE_TITLE_PRESENT, 10);;
+            $qualityScores[self::RULE_TITLE_PRESENT] = $titleScore;;
             $ruleResults[self::RULE_TITLE_PRESENT] = self::PASSED;
         }
 
         /**
          * A description should be present
          */
+        $descScore = $this->getConf(self::CONF_QUALITY_SCORE_DESCRIPTION_PRESENT, 8);
         if (empty($this->metadata[self::DESCRIPTION])) {
             $ruleResults[self::RULE_DESCRIPTION_PRESENT] = self::FAILED;
-            $ruleInfo[self::RULE_DESCRIPTION_PRESENT] = "A description is not present in the frontmatter";
+            $ruleInfo[self::RULE_DESCRIPTION_PRESENT] = "Add a description in the frontmatter for {$descScore} points";
             $this->metadata[self::DESCRIPTION] = $meta[self::DESCRIPTION]["abstract"];
             $qualityScores[self::RULE_DESCRIPTION_PRESENT] = 0;
         } else {
-            $qualityScores[self::RULE_DESCRIPTION_PRESENT] = $this->getConf(self::CONF_QUALITY_SCORE_DESCRIPTION_PRESENT, 8);;
+            $qualityScores[self::RULE_DESCRIPTION_PRESENT] = $descScore;;
             $ruleResults[self::RULE_DESCRIPTION_PRESENT] = self::PASSED;
         }
 
         /**
          * A canonical should be present
          */
+        $canonicalScore = $this->getConf(self::CONF_QUALITY_SCORE_CANONICAL_PRESENT, 5);
         if (empty($this->metadata[Page::CANONICAL_PROPERTY])) {
             global $conf;
             $root = $conf['start'];
             if ($ID!=$root) {
                 $qualityScores[self::RULE_CANONICAL_PRESENT] = 0;
                 $ruleResults[self::RULE_CANONICAL_PRESENT] = self::FAILED;
-                $ruleInfo[self::RULE_CANONICAL_PRESENT] = "A canonical is not present in the frontmatter";
+                $ruleInfo[self::RULE_CANONICAL_PRESENT] = "Add a canonical in the frontmatter for {$canonicalScore} points";
             }
         } else {
-            $qualityScores[self::RULE_CANONICAL_PRESENT] = $this->getConf(self::CONF_QUALITY_SCORE_CANONICAL_PRESENT, 5);;
+            $qualityScores[self::RULE_CANONICAL_PRESENT] = $canonicalScore;;
             $ruleResults[self::RULE_CANONICAL_PRESENT] = self::PASSED;
         }
 
@@ -264,22 +269,25 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $minimalWordCount = 50;
         $maximalWordCount = 1500;
         $correctContentLength = true;
-        if ($statExport[Analytics::WORDS_COUNT] < $minimalWordCount) {
+        $correctLengthScore = $this->getConf(self::CONF_QUALITY_SCORE_CORRECT_CONTENT, 10);
+        $missingWords = $minimalWordCount - $statExport[Analytics::WORDS_COUNT];
+        if ($missingWords>0) {
             $ruleResults[self::RULE_WORDS_MINIMAL] = self::FAILED;
             $correctContentLength = false;
-            $ruleInfo[self::RULE_WORDS_MINIMAL] = "The number of words is less than {$minimalWordCount}";
+            $ruleInfo[self::RULE_WORDS_MINIMAL] = "Add {$missingWords} words to get {$correctLengthScore} points";
         } else {
             $ruleResults[self::RULE_WORDS_MINIMAL] = self::PASSED;
         }
-        if ($statExport[Analytics::WORDS_COUNT] > $maximalWordCount) {
+        $tooMuchWords = $statExport[Analytics::WORDS_COUNT] - $maximalWordCount;
+        if ($tooMuchWords>0) {
             $ruleResults[self::RULE_WORDS_MAXIMAL] = self::FAILED;
-            $ruleInfo[self::RULE_WORDS_MAXIMAL] = "The number of words is more than {$maximalWordCount}";
+            $ruleInfo[self::RULE_WORDS_MAXIMAL] = "Delete {$tooMuchWords} words to get {$correctLengthScore} points";
             $correctContentLength = false;
         } else {
             $ruleResults[self::RULE_WORDS_MAXIMAL] = self::PASSED;
         }
         if ($correctContentLength) {
-            $qualityScores['correct_content_length'] = $this->getConf(self::CONF_QUALITY_SCORE_CORRECT_CONTENT, 10);
+            $qualityScores['correct_content_length'] = $correctLengthScore;
         } else {
             $qualityScores['correct_content_length'] = 0;
         }
@@ -309,7 +317,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
                 if ($avgWordsCountBySection < $wordsByHeaderMin) {
                     $ruleResults[self::RULE_AVERAGE_WORDS_BY_SECTION_MIN] = self::FAILED;
                     $correctAverageWordsBySection = false;
-                    $ruleInfo[self::RULE_AVERAGE_WORDS_BY_SECTION_MAX] = "The number of words by section is less than {$wordsByHeaderMin}";
+                    $ruleInfo[self::RULE_AVERAGE_WORDS_BY_SECTION_MIN] = "The number of words by section is less than {$wordsByHeaderMin}";
                 } else {
                     $ruleResults[self::RULE_AVERAGE_WORDS_BY_SECTION_MIN] = self::PASSED;
                 }
@@ -387,7 +395,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         ksort($qualityScores);
         $qualityScoring = array();
-        $qualityScoring["score"] = array_sum($qualityScores);
+        $qualityScoring[self::SCORE] = array_sum($qualityScores);
         $qualityScoring["scores"] = $qualityScores;
 
 
@@ -431,7 +439,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             ksort($mandatoryRulesBroken);
             $quality['failed_mandatory_rules'] = $mandatoryRulesBroken;
         }
-        $quality["scoring"] = $qualityScoring;
+        $quality[self::SCORING] = $qualityScoring;
         $quality[Analytics::RULES][self::RESULT] = $qualityResult;
         if (!empty($ruleInfo)) {
             $quality[Analytics::RULES]["info"] = $ruleInfo;

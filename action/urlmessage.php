@@ -3,6 +3,7 @@
 use ComboStrap\LogUtility;
 use ComboStrap\PagesIndex;
 use ComboStrap\PluginUtility;
+use dokuwiki\Extension\ActionPlugin;
 
 if (!defined('DOKU_INC')) die();
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
@@ -22,7 +23,7 @@ require_once(__DIR__ . '/../class/message.model.php');
  */
 
 
-class action_plugin_combo_urlmessage extends DokuWiki_Action_Plugin
+class action_plugin_combo_urlmessage extends ActionPlugin
 {
 
     // a class can not start with a number then webcomponent is not a valid class name
@@ -88,7 +89,10 @@ class action_plugin_combo_urlmessage extends DokuWiki_Action_Plugin
 
 
         // Message
-        $message = new Message();
+        $message = new Message($this);
+        $message->setClass(action_plugin_combo_urlmessage::REDIRECT_MANAGER_BOX_CLASS);
+        $message->setSignatureCanonical(action_plugin_combo_urlmanager::CANONICAL);
+        $message->setSignatureName("Url Manager");
 
         list($pageIdOrigin, $redirectSource) = self::getMessageSessionProperties();
         if ($pageIdOrigin == null) {
@@ -148,7 +152,7 @@ class action_plugin_combo_urlmessage extends DokuWiki_Action_Plugin
 
         if ($event->data == 'show' || $event->data == 'edit' || $event->data == 'search') {
 
-            $this->printMessage($message);
+            $message->printMessage();
 
         }
 
@@ -207,31 +211,6 @@ class action_plugin_combo_urlmessage extends DokuWiki_Action_Plugin
                 }
                 $message->addContent('</ul>');
             }
-        }
-    }
-
-    /**
-     * Print a message to show that the user was redirected
-     * @param $message
-     */
-    private
-    function printMessage($message)
-    {
-        if ($message->getContent() <> "") {
-
-            $pluginInfo = $this->getInfo();
-
-            if ($message->getType() == Message::TYPE_CLASSIC) {
-                ptln('<div class="alert alert-success ' . self::REDIRECT_MANAGER_BOX_CLASS . '" role="alert">');
-            } else {
-                ptln('<div class="alert alert-warning ' . self::REDIRECT_MANAGER_BOX_CLASS . '" role="alert">');
-            }
-
-            print $message->getContent();
-
-            print '<div class="managerreference">' . $this->lang['message_come_from'] . ' <a href="' . PluginUtility::$URL_BASE . '/'.action_plugin_combo_urlmanager::CANONICAL.'" class="urlextern" title="' . $pluginInfo['desc'] . '" >Url Manager</a>.</div>';
-            print('</div>');
-
         }
     }
 

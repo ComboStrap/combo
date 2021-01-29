@@ -392,20 +392,7 @@ class PluginUtility
      */
     public static function runAsAdmin($request)
     {
-        global $conf;
-        $conf['useacl'] = 1;
-        $user = 'admin';
-        $conf['superuser'] = $user;
-
-        // $_SERVER[] = $user;
-        $request->setServer('REMOTE_USER', $user);
-
-
-        // global $USERINFO;
-        // $USERINFO['grps'] = array('admin', 'user');
-
-        // global $INFO;
-        // $INFO['ismanager'] = true;
+        Auth::becomeSuperUser($request);
 
     }
 

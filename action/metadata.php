@@ -54,7 +54,8 @@ class action_plugin_combo_metadata extends DokuWiki_Action_Plugin
     {
 
         $pageId = $event->data['page'];
-        $links = $event->data['current']['relation']['references'];
+        $page = new Page($pageId);
+        $links = $page->getInternalLinksFromMeta();
         if ($links !== null) {
             $this->linksBeforeByPage[$pageId] = $links;
         } else {

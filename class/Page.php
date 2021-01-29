@@ -378,17 +378,28 @@ class Page
         /**
          * Read / not get (get can trigger a rendering of the meta again)
          */
-        return p_read_metadata($$this->id);
+        return p_read_metadata($this->id);
     }
 
     /**
      *
-     * @return mixed the internal links
+     * @return mixed the internal links or null
      */
-    public function getInternalLinks()
+    public function getInternalLinksFromMeta()
     {
         $metadata = $this->getMetadata();
-        return $metadata['current']['relation']['references'];
+        if (key_exists('current',$metadata)){
+            $current = $metadata['current'];
+            if (key_exists('relation',$current)){
+                $relation = $current['relation'];
+                if (is_array($relation)) {
+                    if (key_exists('references', $relation)) {
+                        return $relation['references'];
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public function saveAnalytics(array $analytics)

@@ -39,11 +39,26 @@ class Auth
 
     /**
      * @param TestRequest $request
+     * @param null $user
      */
-    public static function becomeSuperUser(&$request)
+    public static function becomeSuperUser(&$request,$user = null)
     {
         global $conf;
+        $conf['useacl'] = 1;
+        if ($user!=null) {
+            $user = 'admin';
+            $conf['superuser'] = $user;
+        }
+
+        // $_SERVER[] = $user;
         $request->setServer('REMOTE_USER', $conf['superuser']);
+
+        // global $USERINFO;
+        // $USERINFO['grps'] = array('admin', 'user');
+
+        // global $INFO;
+        // $INFO['ismanager'] = true;
+
     }
 
     /**

@@ -44,7 +44,6 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
      * @param $pos
      * @param $plugin
      * @param helper_plugin_move_handler $handler
-     * @return bool
      */
     public function rewrite_combo($match, $state, $pos, $plugin, helper_plugin_move_handler $handler)
     {
@@ -53,7 +52,6 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          * that supports Link rewriting
          */
         $handler->internallink($match, $state, $pos);
-        return '';
 
     }
 

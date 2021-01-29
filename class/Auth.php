@@ -46,4 +46,15 @@ class Auth
         $request->setServer('REMOTE_USER', $conf['superuser']);
     }
 
+    /**
+     * @param $request
+     * @param string $user - the user to login
+     */
+    public static function logIn(&$request, $user='defaultUser')
+    {
+
+        $request->setServer('REMOTE_USER', $user);
+
+    }
+
 }

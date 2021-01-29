@@ -1,6 +1,8 @@
 <?php
 
 use ComboStrap\Analytics;
+use Combostrap\AnalyticsMenuItem;
+use ComboStrap\Auth;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\Sqlite;
@@ -17,6 +19,8 @@ use ComboStrap\Sqlite;
  */
 
 require_once(__DIR__ . '/../class/'.'Analytics.php');
+require_once(__DIR__ . '/../class/'.'Auth.php');
+require_once(__DIR__ . '/../class/'.'AnalyticsMenuItem.php');
 
 /**
  * Class action_plugin_combo_analytics
@@ -39,6 +43,12 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * because after the page is written, the page is shown and trigger the index tasks run
          */
         $controller->register_hook('INDEXER_TASKS_RUN', 'BEFORE', $this, 'handle_refresh_analytics', array());
+
+        /**
+         * Add a icon in the page tools menu
+         * https://www.dokuwiki.org/devel:event:menu_items_assembly
+         */
+        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'handle_page_tools');
 
     }
 
@@ -66,6 +76,27 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
             $page = new Page($row['ID']);
             $page->refreshAnalytics();
         }
+
+    }
+
+    public function handle_page_tools(Doku_Event $event, $param){
+
+        if (!Auth::isLoggedIn()){
+            return;
+        }
+
+        /**
+         * The `view` property defines the menu that is currently built
+         * https://www.dokuwiki.org/devel:menus
+         * If this is not the page menu, return
+         */
+        if($event->data['view'] != 'page') return;
+
+        global $INFO;
+        if(!$INFO['exists']) {
+            return;
+        }
+        array_splice($event->data['items'], -1, 0, array(new AnalyticsMenuItem()));
 
     }
 }

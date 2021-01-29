@@ -93,30 +93,28 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
      * Inspiration comes from <a href="https://github.com/splitbrain/dokuwiki-plugin-notfound/blob/master/action.php">Not Found Plugin</a>
      * @param $event Doku_Event
      * @param $param
-     * @return bool not required
      * @throws Exception
      */
     function _handle404(&$event, $param)
     {
 
+        global $ID;
+
         /**
-         * Without SQLite, this module does not work
+         * Without SQLite, this module does not work further
          */
         $sqlite = Sqlite::getSqlite();
         if ($sqlite == null) {
-            return false;
+            return;
         } else {
             $this->pageRules = new PageRules();
         }
-
-        global $ID;
-        $targetPage = Page::createFromCanonical($ID);
-
 
         /**
          * If the page exists
          * return
          */
+        $targetPage = new Page($ID);
         if ($targetPage->existInFs()) {
             action_plugin_combo_urlmessage::unsetNotification();
             $targetPage->processAndPersistInDb();
@@ -125,17 +123,19 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
 
         global $ACT;
-        if ($ACT != 'show') return false;
+        if ($ACT != 'show') return;
 
 
         // Global variable needed in the process
         global $conf;
 
-        // Do we have a canonical ?
+        /**
+         * Page Id is a Canonical ?
+         */
         $targetPage = Page::createFromCanonical($ID);
         if ($targetPage->existInFs()) {
             $this->performIdRedirect($targetPage->getId(), self::TARGET_ORIGIN_CANONICAL);
-            return true;
+            return;
         }
 
         // If there is a redirection defined in the page rules
@@ -143,7 +143,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         if ($result) {
             // A redirection has occurred
             // finish the process
-            return true;
+            return;
         }
 
         /**
@@ -155,7 +155,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
             $this->gotToEditMode($event);
             // Stop here
-            return true;
+            return;
 
         }
 
@@ -163,7 +163,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          *  We are still a reader, the redirection does not exist the user is not allowed to edit the page (public of other)
          */
         if ($this->getConf('ActionReaderFirst') == self::NOTHING) {
-            return true;
+            return;
         }
 
         // We are reader and their is no redirection set, we apply the algorithm
@@ -178,7 +178,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             switch ($readerAlgorithms[$i]) {
 
                 case self::NOTHING:
-                    return true;
+                    return;
                     break;
 
                 case self::GO_TO_BEST_END_PAGE_NAME:
@@ -190,7 +190,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                         } else {
                             $this->performIdRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                         }
-                        return true;
+                        return;
                     }
                     break;
 
@@ -200,14 +200,14 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                     $startPage = getNS($ID) . ':' . $conf['start'];
                     if (page_exists($startPage)) {
                         $this->httpRedirect($startPage, self::TARGET_ORIGIN_START_PAGE);
-                        return true;
+                        return;
                     }
 
                     // Start page with the same name than the namespace
                     $startPage = getNS($ID) . ':' . curNS($ID);
                     if (page_exists($startPage)) {
                         $this->httpRedirect($startPage, self::TARGET_ORIGIN_START_PAGE);
-                        return true;
+                        return;
                     }
                     break;
 
@@ -231,7 +231,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                         } else {
                             $this->httpRedirect($bestNamespaceId, self::TARGET_ORIGIN_BEST_PAGE_NAME);
                         }
-                        return true;
+                        return;
                     }
                     break;
 
@@ -243,7 +243,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
                     if ($score > 0) {
                         $this->httpRedirect($bestNamespaceId, self::TARGET_ORIGIN_BEST_NAMESPACE);
-                        return true;
+                        return;
                     }
                     break;
 
@@ -251,7 +251,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
                     $this->redirectToSearchEngine();
 
-                    return true;
+                    return;
                     break;
 
                 // End Switch Action
@@ -262,7 +262,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
         // End if not connected
 
-        return true;
+        return;
 
     }
 

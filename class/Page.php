@@ -184,7 +184,7 @@ class Page
     }
 
     /**
-     * Process metadata
+     * Persist a page in the database
      */
     function processAndPersistInDb()
     {
@@ -469,15 +469,17 @@ class Page
     {
         $this->deleteAnalyticsCache();
         $sqlite = Sqlite::getSqlite();
-        $entry = array(
-            "ID"=>$this->id,
-            "TIMESTAMP"=> date('Y-m-d H:i:s',time())
-        );
-        $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
-        if (!$res) {
-            LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        if ($sqlite!=null) {
+            $entry = array(
+                "ID" => $this->id,
+                "TIMESTAMP" => date('Y-m-d H:i:s', time())
+            );
+            $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
+            if (!$res) {
+                LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            }
+            $sqlite->res_close($res);
         }
-        $sqlite->res_close($res);
 
     }
 

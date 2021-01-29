@@ -50,6 +50,7 @@ class Analytics
     const H1 = "h1";
 
 
+
     /**
      * @param $pageId
      * @param bool $cache - if true, the data is returned from the cache

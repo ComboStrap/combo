@@ -30,6 +30,7 @@ class Analytics
     const INTERNAL_LINKS_BROKEN_COUNT = 'internal_broken_links_count';
     const TITLE = 'title';
     const INTERNAL_LINKS_COUNT = 'internal_links_count';
+    const LOCAL_LINKS_COUNT = "local_links_count"; // ie fragment #hallo
     const EXTERNAL_MEDIAS = 'external_medias_count';
     const CHARS_COUNT = 'chars_count';
     const INTERNAL_MEDIAS_COUNT = 'internal_medias_count';
@@ -37,11 +38,11 @@ class Analytics
     const HEADERS_COUNT = 'headers_count';
     const QUALITY = 'quality';
     const STATISTICS = "statistics";
+
     /**
      * An array of info for errors mostly
      */
     const INFO = "info";
-
     /**
      * The format returned by the renderer
      */
@@ -101,6 +102,7 @@ class Analytics
         return json_decode(self::processAndGetDataAsString($pageId, $cache),true);
 
     }
+
 
 
 

@@ -72,4 +72,14 @@ class Auth
 
     }
 
+    /**
+     * @return bool if edit auth
+     */
+    public static function isWriter()
+    {
+
+        return auth_quickaclcheck(PluginUtility::getPageId()) >= AUTH_EDIT;
+
+    }
+
 }

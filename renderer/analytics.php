@@ -347,12 +347,14 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $backlinks = idx_get_indexer()->lookupKey('relation_references', $ID);
         $countBacklinks = count($backlinks);
         $statExport[Analytics::INTERNAL_BACKLINKS_COUNT] = $countBacklinks;
+        $backlinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_BACKLINK_FACTOR, 1);
         if ($countBacklinks == 0) {
             $qualityScores[Analytics::INTERNAL_BACKLINKS_COUNT] = 0;
             $ruleResults[self::RULE_INTERNAL_BACKLINKS_MIN] = self::FAILED;
-            $ruleInfo[self::RULE_INTERNAL_BACKLINKS_MIN] = "There is no backlinks";
+            $ruleInfo[self::RULE_INTERNAL_BACKLINKS_MIN] = "Add backlinks for {$backlinkScore} point each";
         } else {
-            $qualityScores[Analytics::INTERNAL_BACKLINKS_COUNT] = $countBacklinks * $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_BACKLINK_FACTOR, 1);
+
+            $qualityScores[Analytics::INTERNAL_BACKLINKS_COUNT] = $countBacklinks * $backlinkScore;
             $ruleResults[self::RULE_INTERNAL_BACKLINKS_MIN] = self::PASSED;
         }
 
@@ -360,25 +362,27 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * Internal links
          */
         $internalLinksCount = $this->stats[Analytics::INTERNAL_LINKS_COUNT];
+        $internalLinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_LINK_FACTOR, 1);
         if ($internalLinksCount == 0) {
             $qualityScores[Analytics::INTERNAL_LINKS_COUNT] = 0;
             $ruleResults[self::RULE_INTERNAL_LINKS_MIN] = self::FAILED;
-            $ruleInfo[self::RULE_INTERNAL_LINKS_MIN] = "There is no internal links";
+            $ruleInfo[self::RULE_INTERNAL_LINKS_MIN] = "Add internal links for {$internalLinkScore} point each";
         } else {
             $ruleResults[self::RULE_INTERNAL_LINKS_MIN] = self::PASSED;
-            $qualityScores[Analytics::INTERNAL_LINKS_COUNT] = $countBacklinks * $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_LINK_FACTOR, 1);;
+            $qualityScores[Analytics::INTERNAL_LINKS_COUNT] = $countBacklinks * $internalLinkScore;
         }
 
         /**
          * Broken Links
          */
+        $brokenLinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_LINK_BROKEN_FACTOR, 2);
         $brokenLinksCount = $this->stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT];
         if ($brokenLinksCount > 2) {
             $qualityScores['no_' . Analytics::INTERNAL_LINKS_BROKEN_COUNT] = 0;
             $ruleResults[self::RULE_INTERNAL_BROKEN_LINKS_MAX] = self::FAILED;
-            $ruleInfo[self::RULE_INTERNAL_BROKEN_LINKS_MAX] = "There is {$brokenLinksCount} broken links";
+            $ruleInfo[self::RULE_INTERNAL_BROKEN_LINKS_MAX] = "Delete the {$brokenLinksCount} broken links and add {$brokenLinkScore} points";
         } else {
-            $qualityScores['no_' . Analytics::INTERNAL_LINKS_BROKEN_COUNT] = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_LINK_BROKEN_FACTOR, 2);;;
+            $qualityScores['no_' . Analytics::INTERNAL_LINKS_BROKEN_COUNT] = $brokenLinkScore;
             $ruleResults[self::RULE_INTERNAL_BROKEN_LINKS_MAX] = self::PASSED;
         }
 

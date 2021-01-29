@@ -41,8 +41,11 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * There is no need to do it at page write
          * https://www.dokuwiki.org/devel:event:io_wikipage_write
          * because after the page is written, the page is shown and trigger the index tasks run
+         *
+         * We do it after because if there is an error
+         * We will not stop the Dokuwiki Processing
          */
-        $controller->register_hook('INDEXER_TASKS_RUN', 'BEFORE', $this, 'handle_refresh_analytics', array());
+        $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_refresh_analytics', array());
 
         /**
          * Add a icon in the page tools menu
@@ -60,7 +63,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * (if there is a cache, it's pretty quick)
          */
         global $ID;
-        Analytics::process($ID,true);
+        Analytics::processAndGetDataAsArray($ID,true);
 
         /**
          * Check the analytics to refresh
@@ -81,7 +84,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
     public function handle_page_tools(Doku_Event $event, $param){
 
-        if (!Auth::isLoggedIn()){
+        if (!Auth::isWriter()){
             return;
         }
 

@@ -1,10 +1,10 @@
 <?php
 
+namespace ComboStrap;
 
-use ComboStrap\PluginUtility;
 use dokuwiki\Extension\Plugin;
 
-class Message
+class Note
 {
 
 
@@ -29,26 +29,6 @@ class Message
         $this->plugin = $plugin;
     }
 
-    /**
-     * Print a message
-     */
-    public function printMessage()
-    {
-        if ($this->getContent() <> "") {
-
-            if ($this->getType() == Message::TYPE_CLASSIC) {
-                ptln('<div class="alert alert-success combo-message ' . $this->class . '" role="alert">');
-            } else {
-                ptln('<div class="alert alert-warning combo-message ' . $this->class . '" role="alert">');
-            }
-
-            print $this->getContent();
-
-            print '<div class="signature">' . $this->plugin->getLang('message_come_from') . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName) . '</div>';
-            print('</div>');
-
-        }
-    }
 
     public function addContent($message)
     {
@@ -83,6 +63,26 @@ class Message
     public function setSignatureName($signatureName)
     {
         $this->signatureName = $signatureName;
+    }
+
+    public function getHtml()
+    {
+        $message = "";
+        if ($this->getContent() <> "") {
+
+            if ($this->getType() == Note::TYPE_CLASSIC) {
+                $message .='<div class="alert alert-success combo-message ' . $this->class . '" role="alert">';
+            } else {
+                $message .='<div class="alert alert-warning combo-message ' . $this->class . '" role="alert">';
+            }
+
+            $message .= $this->getContent();
+
+            $message .='<div class="signature">' . $this->plugin->getLang('message_come_from') . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName) . '</div>';
+            $message .='</div>';
+
+        }
+        return $message;
     }
 
 }

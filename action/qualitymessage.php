@@ -1,7 +1,9 @@
 <?php
 
 use ComboStrap\Analytics;
+use ComboStrap\Auth;
 use ComboStrap\LogUtility;
+use ComboStrap\Note;
 use ComboStrap\Page;
 use ComboStrap\PagesIndex;
 use ComboStrap\PluginUtility;
@@ -11,7 +13,7 @@ if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
 
 
 require_once(__DIR__ . '/../class/Page.php');
-require_once(__DIR__ . '/../class/message.model.php');
+require_once(__DIR__ . '/../class/Note.php');
 
 /**
  *
@@ -57,7 +59,31 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     function _displayQualityMessage(&$event, $param)
     {
         if ($event->data == 'show') {
-            $page = Page::createFromEnvironment();
+
+            /**
+             * Quality is just for the writers
+             */
+            if (!Auth::isWriter()) {
+                return;
+            }
+
+            $note = $this->getQualityNote(PluginUtility::getPageId(), $this);
+            if ($note != null) {
+                ptln($note->getHtml());
+            }
+        }
+
+    }
+
+    /**
+     * @param $pageId
+     * @param $plugin - Plugin
+     * @return Note|null
+     */
+    static public function getQualityNote($pageId, $plugin)
+    {
+        $page = new Page($pageId);
+        if ($page->existInFs()) {
             $analytics = $page->getAnalyticsFromFs();
             $qualityInfoRules = $analytics[Analytics::QUALITY][Analytics::RULES][Analytics::INFO];
 
@@ -75,8 +101,8 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             if (sizeof($qualityInfoRules) > 0) {
 
                 $qualityScore = $analytics[Analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
-                $message = new Message($this);
-                $message->addContent("<p>Well played, you got a quality score of {$qualityScore} !</p>");
+                $message = new Note($plugin);
+                $message->addContent("<p>Well played, you got a " . PluginUtility::getUrl("quality:score", "quality score") . " of {$qualityScore} !</p>");
                 $message->addContent("<p>You can still win a couple of points.</p>");
                 $message->addContent("<ul>");
                 foreach ($qualityInfoRules as $qualityRule => $qualityInfo) {
@@ -86,16 +112,16 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 }
                 $message->addContent("</ul>");
 
-                $message->setSignatureCanonical("quality");
-                $message->setSignatureName("Quality module");
-                $message->setType(Message::TYPE_CLASSIC);
+                $message->setSignatureCanonical("quality:dynamic_monitoring");
+                $message->setSignatureName("Quality Dynamic Monitoring Feature");
+                $message->setType(Note::TYPE_CLASSIC);
                 $message->setClass(self::QUALITY_BOX_CLASS);
+                return $message;
 
-                $message->printMessage();
 
             }
         }
-
+        return null;
     }
 
 

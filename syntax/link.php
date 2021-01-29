@@ -77,26 +77,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        /**
-         * Without the low quality page module enabled
-         * we take over only on a subset of component
-         */
-        if (!$this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE)) {
-            // Only inside the following component
-            $authorizedMode =
-                [
-                    PluginUtility::getModeForComponent(syntax_plugin_combo_button::TAG),
-                    PluginUtility::getModeForComponent(syntax_plugin_combo_cite::TAG),
-                    PluginUtility::getModeForComponent(syntax_plugin_combo_dropdown::TAG),
-                    PluginUtility::getModeForComponent(syntax_plugin_combo_listitem::TAG),
-                    PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
-                ];
-            if (in_array($mode, $authorizedMode)) {
-                $this->Lexer->addSpecialPattern(LinkUtility::LINK_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-            }
-        } else {
-            $this->Lexer->addSpecialPattern(LinkUtility::LINK_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
+
+        $this->Lexer->addSpecialPattern(LinkUtility::LINK_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
     }
 
 
@@ -170,10 +153,23 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     && $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE)
                     && LowQualityPage::isPageToExclude($id)
                 ) {
+
                     $htmlLink = LinkUtility::renderLowQualityProtectedLink($attributes);
+
                 } else {
+
                     $htmlLink = LinkUtility::renderAsAnchorElement($renderer, $attributes);
-                    $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                    $parentClassWithoutClass = array(
+                        syntax_plugin_combo_button::TAG,
+                        syntax_plugin_combo_cite::TAG,
+                        syntax_plugin_combo_dropdown::TAG,
+                        syntax_plugin_combo_listitem::TAG,
+                        syntax_plugin_combo_preformatted::TAG
+                    );
+                    if (page_exists($id) && in_array($data[PluginUtility::PARENT_TAG], $parentClassWithoutClass)) {
+                        $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                    }
+
                     if ($data[PluginUtility::PARENT_TAG] == syntax_plugin_combo_button::TAG) {
                         // We could also apply the class ie btn-secondary ...
                         $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);

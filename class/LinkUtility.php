@@ -313,6 +313,10 @@ class LinkUtility
 
             $stats[Analytics::EXTERNAL_LINKS_COUNT]++;
 
+        } else if ($type == self::TYPE_LOCAL) {
+
+            $stats[Analytics::LOCAL_LINKS_COUNT]++;
+
         } else {
 
             LogUtility::msg("The link `{$id}` with the type (" . $type . ")  is not taken into account into the statistics");
@@ -321,7 +325,6 @@ class LinkUtility
 
 
     }
-
 
 
 }

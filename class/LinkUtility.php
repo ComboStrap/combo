@@ -322,13 +322,6 @@ class LinkUtility
 
     }
 
-    public static function processInternalLinkStats($id, array &$stats)
-    {
-        $attribute = array(
-            self::ATTRIBUTE_ID => $id,
-            self::ATTRIBUTE_TYPE => self::TYPE_INTERNAL
-        );
-        self::processLinkStats($attribute, $stats);
-    }
+
 
 }

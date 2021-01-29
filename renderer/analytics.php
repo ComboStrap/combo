@@ -111,10 +111,31 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function document_end() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         /**
+         * The exported object
+         */
+        $statExport = $this->stats;
+
+        /**
          * The metadata
          */
         global $ID;
         $meta = p_get_metadata($ID);
+
+        /**
+         * Edit author stats
+         */
+        $changelog = new PageChangeLog($ID);
+        $revs = $changelog->getRevisions(0, 10000);
+        array_push($revs, $meta['last_change']['date']);
+        $statExport[Analytics::EDITS_COUNT] = count($revs);
+        foreach ($revs as $rev) {
+            $info = $changelog->getRevisionInfo($rev);
+            if ($info['user']) {
+                $statExport['authors'][$info['user']] += 1;
+            } else {
+                $statExport['authors']['*'] += 1;
+            }
+        }
 
         /**
          * Word and chars count
@@ -123,13 +144,8 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * Therefore the node and attribute are not taken in the count
          */
         $text = rawWiki($ID);
-        $this->stats[Analytics::CHARS_COUNT] = strlen($text);
-        $this->stats[Analytics::WORDS_COUNT] = Text::getWordCount($text);
-
-        /**
-         * The exported object
-         */
-        $statExport = $this->stats;
+        $statExport[Analytics::CHARS_COUNT] = strlen($text);
+        $statExport[Analytics::WORDS_COUNT] = Text::getWordCount($text);
 
 
         /**
@@ -201,9 +217,13 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * A canonical should be present
          */
         if (empty($this->metadata[Page::CANONICAL_PROPERTY])) {
-            $qualityScores[self::RULE_CANONICAL_PRESENT] = 0;
-            $ruleResults[self::RULE_CANONICAL_PRESENT] = self::FAILED;
-            $ruleInfo[self::RULE_CANONICAL_PRESENT] = "A canonical is not present in the frontmatter";
+            global $conf;
+            $root = $conf['start'];
+            if ($ID!=$root) {
+                $qualityScores[self::RULE_CANONICAL_PRESENT] = 0;
+                $ruleResults[self::RULE_CANONICAL_PRESENT] = self::FAILED;
+                $ruleInfo[self::RULE_CANONICAL_PRESENT] = "A canonical is not present in the frontmatter";
+            }
         } else {
             $qualityScores[self::RULE_CANONICAL_PRESENT] = $this->getConf(self::CONF_QUALITY_SCORE_CANONICAL_PRESENT, 5);;
             $ruleResults[self::RULE_CANONICAL_PRESENT] = self::PASSED;
@@ -244,14 +264,14 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $minimalWordCount = 50;
         $maximalWordCount = 1500;
         $correctContentLength = true;
-        if ($this->stats[Analytics::WORDS_COUNT] < $minimalWordCount) {
+        if ($statExport[Analytics::WORDS_COUNT] < $minimalWordCount) {
             $ruleResults[self::RULE_WORDS_MINIMAL] = self::FAILED;
             $correctContentLength = false;
             $ruleInfo[self::RULE_WORDS_MINIMAL] = "The number of words is less than {$minimalWordCount}";
         } else {
             $ruleResults[self::RULE_WORDS_MINIMAL] = self::PASSED;
         }
-        if ($this->stats[Analytics::WORDS_COUNT] > $maximalWordCount) {
+        if ($statExport[Analytics::WORDS_COUNT] > $maximalWordCount) {
             $ruleResults[self::RULE_WORDS_MAXIMAL] = self::FAILED;
             $ruleInfo[self::RULE_WORDS_MAXIMAL] = "The number of words is more than {$maximalWordCount}";
             $correctContentLength = false;
@@ -360,42 +380,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $qualityScores[Analytics::EDITS_COUNT] = $this->stats[Analytics::EDITS_COUNT] * $this->getConf(self::CONF_QUALITY_SCORE_CHANGES_FACTOR, 0.25);;;
 
 
-        /**
-         * Rules that comes from the qc plugin
-         * but are not yet fully implemented
-         */
 
-//        // 2 points for lot's of formatting
-//        if ($this->stats[self::PLAINTEXT] && $this->stats['chars'] / $this->stats[self::PLAINTEXT] < 3) {
-//            $ruleResults['manyformat'] = 2;
-//        }
-//
-//        // 1/2 points for deeply nested quotations
-//        if ($this->stats['quote_nest'] > 2) {
-//            $ruleResults['deepquote'] += $this->stats['quote_nest'] / 2;
-//        }
-//
-//        // 1/2 points for too many hr
-//        if ($this->stats['hr'] > 2) {
-//            $ruleResults['manyhr'] = ($this->stats['hr'] - 2) / 2;
-//        }
-//
-//        // 1 point for too many line breaks
-//        if ($this->stats['linebreak'] > 2) {
-//            $ruleResults['manybr'] = $this->stats['linebreak'] - 2;
-//        }
-//
-//        // 1 point for single author only
-//        if (!$this->getConf('single_author_only') && count($this->stats['authors']) == 1) {
-//            $ruleResults['singleauthor'] = 1;
-//        }
-
-        // Too much cdata (plaintext), see cdata
-        // if ($len > 500) $statExport[self::QUALITY][self::ERROR]['plaintext']++;
-        // if ($len > 500) $statExport[self::QUALITY][self::ERROR]['plaintext']++;
-        //
-        // // 1 point for formattings longer than 500 chars
-        // $statExport[self::QUALITY][self::ERROR]['multiformat']
 
         /**
          * Quality Score
@@ -441,26 +426,26 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Building the quality object in order
          */
-        $quality["low"] = $lowLevel;
+        $quality[Analytics::LOW] = $lowLevel;
         if (sizeof($mandatoryRulesBroken) > 0) {
             ksort($mandatoryRulesBroken);
             $quality['failed_mandatory_rules'] = $mandatoryRulesBroken;
         }
         $quality["scoring"] = $qualityScoring;
-        $quality["rules"][self::RESULT] = $qualityResult;
+        $quality[Analytics::RULES][self::RESULT] = $qualityResult;
         if (!empty($ruleInfo)) {
-            $quality["rules"]["info"] = $ruleInfo;
+            $quality[Analytics::RULES]["info"] = $ruleInfo;
         }
 
         ksort($ruleResults);
-        $quality["rules"]['details'] = $ruleResults;
+        $quality[Analytics::RULES][Analytics::DETAILS] = $ruleResults;
 
         /**
          * Metadata
          */
         $title = $meta['title'];
         $this->metadata[Analytics::TITLE] = $title;
-        if ($title!=$meta['h1']) {
+        if ($title != $meta['h1']) {
             $this->metadata[Analytics::H1] = $meta['h1'];
         }
         $timestampCreation = $meta['date']['created'];
@@ -471,19 +456,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $this->metadata['age_modification'] = round((time() - $timestampModification) / 60 / 60 / 24);
 
 
-        // get author info
-        $changelog = new PageChangeLog($ID);
-        $revs = $changelog->getRevisions(0, 10000);
-        array_push($revs, $meta['last_change']['date']);
-        $this->stats[Analytics::EDITS_COUNT] = count($revs);
-        foreach ($revs as $rev) {
-            $info = $changelog->getRevisionInfo($rev);
-            if ($info['user']) {
-                $this->stats['authors'][$info['user']] += 1;
-            } else {
-                $this->stats['authors']['*'] += 1;
-            }
-        }
+
 
         /**
          * Building the Top JSON in order
@@ -526,13 +499,22 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function internallink($id, $name = null, $search = null, $returnonly = false, $linktype = 'content')
     {
 
-        LinkUtility::processInternalLinkStats($id, $this->stats);
+        $attribute = array(
+            LinkUtility::ATTRIBUTE_ID => $id,
+            LinkUtility::ATTRIBUTE_TYPE => LinkUtility::TYPE_INTERNAL
+        );
+        LinkUtility::processLinkStats($attribute, $this->stats);
 
     }
 
     public function externallink($url, $name = null)
     {
-        $this->stats[Analytics::EXTERNAL_LINKS_COUNT]++;
+        $attribute = array(
+            LinkUtility::ATTRIBUTE_ID => $url,
+            LinkUtility::ATTRIBUTE_TYPE => LinkUtility::TYPE_EXTERNAL,
+            LinkUtility::ATTRIBUTE_TITLE => $name
+        );
+        LinkUtility::processLinkStats($attribute, $this->stats);
     }
 
     public function header($text, $level, $pos)

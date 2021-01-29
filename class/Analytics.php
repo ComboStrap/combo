@@ -48,7 +48,9 @@ class Analytics
     const RENDERER_FORMAT = "analytics";
     const RENDERER_NAME_MODE = "combo_".self::RENDERER_FORMAT;
     const H1 = "h1";
-
+    const LOW = "low";
+    const RULES = "rules";
+    const DETAILS = 'details';
 
 
     /**

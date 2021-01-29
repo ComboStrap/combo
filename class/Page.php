@@ -15,6 +15,7 @@ require_once(__DIR__ . '/PluginUtility.php');
 class Page
 {
     const CANONICAL_PROPERTY = 'canonical';
+    const TITLE_PROPERTY = 'title';
     private $id;
     private $canonical;
 
@@ -531,11 +532,6 @@ class Page
             }
             $sqlite->res_close($res);
 
-            $refreshLog = array(
-                "ID" => $this->id,
-                "TIMESTAMP" => date('Y-m-d H:i:s', time())
-            );
-            $sqlite->storeEntry('ANALYTICS_REFRESHED', $refreshLog);
         }
         return $analytics;
 

@@ -13,6 +13,9 @@
 namespace ComboStrap;
 
 
+use Doku_Renderer_xhtml;
+use syntax_plugin_combo_tooltip;
+
 require_once(__DIR__ . '/../class/Auth.php');
 
 /**
@@ -29,6 +32,19 @@ class LowQualityPage
     const ACL = "acl";
     const HIDDEN = "hidden";
 
+    /**
+     * The class of the span
+     * element created in place of the link
+     * See {@link LowQualityPage::renderLowQualityLink()}
+     */
+    const LOW_QUALITY_LINK_CLASS = "lqpp";
+
+    /**
+     * A javascript indicator
+     * to know if the user is logged in or not
+     * (ie public or not)
+     */
+    const JS_INDICATOR = "lqpp_public";
 
 
     /**
@@ -61,6 +77,58 @@ class LowQualityPage
             return false;
         }
 
+    }
+
+    /**
+     * Add the HTML snippet
+     * @param Doku_Renderer_xhtml $renderer
+     */
+    static function addLowQualityPageHtmlSnippet(Doku_Renderer_xhtml $renderer)
+    {
+        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded($renderer);
+        $lowQualityPageClass = self::LOW_QUALITY_LINK_CLASS;
+        $jsIndicator = self::JS_INDICATOR;
+        $jsClass = self::LOW_QUALITY_LINK_CLASS;
+        if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, "lqpp")) {
+            $renderer->doc .= <<<EOF
+<style>
+.{$lowQualityPageClass} {
+    color:#a829dc
+}
+</style>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded', function () {
+
+    jQuery("span.{$jsClass}").each(function() {
+        if (JSINFO["{$jsIndicator}"]==false){
+            jQuery(this).replaceWith( "<a class=\"{$lowQualityPageClass}\" href=\""+DOKU_BASE+jQuery(this).attr("data-wiki-id").replace(":","/")+"\">"+jQuery(this).text()+"</a>" )
+        }
+    })
+
+})
+</script>
+EOF;
+        }
+
+    }
+
+    /**
+     * Render a link as a span element
+     * This is used when a public page links to a low quality page
+     * to render a span element
+     * The span element is then modified as link by javascript if the user is not anonymous
+     * @param string $id
+     * @param string $title
+     * @return string the html
+     */
+    public static function renderLowQualityLink($id, $title)
+    {
+        if (empty($title)) {
+            $title = $id;
+        }
+        $lowQualityPageClass = self::LOW_QUALITY_LINK_CLASS;
+        $qualifiedLink = LinkUtility::toQualifiedLink($id);
+        return "<span class=\"{$lowQualityPageClass}\" data-wiki-id=\"{$qualifiedLink}\" data-toggle=\"tooltip\" title=\"To follow this link ({$qualifiedLink}), you need to log in (" . LowQualityPage::ACRONYM . ")\">{$title}</span>";
     }
 
 

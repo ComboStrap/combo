@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\Auth;
 use ComboStrap\LowQualityPage;
 
 require_once(__DIR__ . '/../class/LowQualityPage.php');
@@ -43,6 +44,11 @@ class action_plugin_combo_lowqualitypage extends DokuWiki_Action_Plugin
              * https://www.dokuwiki.org/devel:event:feed_data_process
              */
             $controller->register_hook('FEED_DATA_PROCESS', 'AFTER', $this, 'handleRssFeed', array());
+
+            /**
+             * Add logged in
+             */
+            $controller->register_hook('DOKUWIKI_STARTED', 'AFTER', $this, 'handleAnonymousJsIndicator');
         }
 
     }
@@ -129,5 +135,12 @@ class action_plugin_combo_lowqualitypage extends DokuWiki_Action_Plugin
 
     }
 
+    function handleAnonymousJsIndicator(&$event, $param)
+    {
+        global $JSINFO;
+        $JSINFO[LowQualityPage::JS_INDICATOR] = !Auth::isLoggedIn();
+
+
+    }
 
 }

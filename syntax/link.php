@@ -159,9 +159,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      * If this is a low quality internal page,
                      * print a shallow link for the anonymous user
                      */
-                    global $ID;
-                    $qualifiedPageId = $id;
-                    resolve_pageid(getNS($ID), $qualifiedPageId, $exists);
+                    $qualifiedPageId = LinkUtility::toQualifiedLink($id);
                     $page = new Page($qualifiedPageId);
                     if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE)
                         && $page->isLowQualityPage()) {

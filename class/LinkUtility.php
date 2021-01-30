@@ -140,8 +140,9 @@ class LinkUtility
                 break;
             default:
                 if ($lowLink) {
-                    syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded($renderer);
-                    $html = LinkUtility::renderLowQualityLink($id, $title);
+
+                    LowQualityPage::addLowQualityPageHtmlSnippet($renderer);
+                    $html = LowQualityPage::renderLowQualityLink($id, $title);
                 } else {
                     $urlQuery = null;
                     $html = $renderer->internallink($id, $title, $urlQuery, $returnOnly);
@@ -251,22 +252,7 @@ class LinkUtility
         return HtmlUtility::deleteClassValue($htmlLink, "wikilink1");
     }
 
-    /**
-     * Render a link as a span element
-     * This is used when a public page links to a low quality page
-     * to render a span element
-     * The span element is then modified as link by javascript if the user is not anonymous
-     * @param string $id
-     * @param string $title
-     * @return string the html
-     */
-    public static function renderLowQualityLink($id, $title)
-    {
-        if (empty($title)) {
-            $title = $id;
-        }
-        return "<span class=\"low-quality\" data-wiki-id=\"{$id}\" data-toggle=\"tooltip\" title=\"To follow this link, you need to log in (" . LowQualityPage::ACRONYM . ")\">{$title}</span>";
-    }
+
 
     /**
      * @param array $attribute
@@ -341,6 +327,14 @@ class LinkUtility
         }
 
 
+    }
+
+    public static function toQualifiedLink($id)
+    {
+        global $ID;
+        $qualifiedPageId = $id;
+        resolve_pageid(getNS($ID), $qualifiedPageId, $exists);
+        return $qualifiedPageId;
     }
 
 

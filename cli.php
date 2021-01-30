@@ -13,6 +13,7 @@ if (!defined('DOKU_INC')) die();
 
 use ComboStrap\Analytics;
 use ComboStrap\Page;
+use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
 
@@ -152,11 +153,6 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
         while ($page = array_shift($pages)) {
             $id = $page['id'];
 
-            // Run as admin to overcome the fact that
-            // anonymous user cannot set all links and backlinnks
-            global $USERINFO;
-            $USERINFO['grps'] = array('admin');
-
 
             echo 'Processing the page ' . $id . "\n";
 
@@ -198,8 +194,21 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
      */
     private function findPages($namespaces = array(), $depth = 0)
     {
+        // Run as admin to overcome the fact that
+        // anonymous user cannot set all links and backlinnks
+
+
         global $conf;
         $datadir = $conf['datadir'];
+
+        /**
+         * Run as admin to overcome the fact that
+         * anonymous user cannot see all links and backlinnks
+         */
+        global $USERINFO;
+        $USERINFO['grps'] = array('admin');
+        global $INPUT;
+        $INPUT->server->set('REMOTE_USER', "cli");
 
         $pages = array();
         foreach ($namespaces as $ns) {
@@ -250,7 +259,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            if (!page_exists($id)){
+            if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
                 Page::createFromId($id)->deleteInDb();
             }

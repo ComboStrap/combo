@@ -8,6 +8,7 @@ class Note
 {
 
 
+    const SIGNATURE_CLASS = "signature";
     private $content = "";
     private $type = self::TYPE_CLASSIC;
 
@@ -78,7 +79,7 @@ class Note
 
             $message .= $this->getContent();
 
-            $message .='<div class="signature">' . $this->plugin->getLang('message_come_from') . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName) . '</div>';
+            $message .='<div class="'.self::SIGNATURE_CLASS.'">' . $this->plugin->getLang('message_come_from') . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName) . '</div>';
             $message .='</div>';
 
         }

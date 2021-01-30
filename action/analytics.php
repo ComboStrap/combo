@@ -18,9 +18,9 @@ use ComboStrap\Sqlite;
  *
  */
 
-require_once(__DIR__ . '/../class/'.'Analytics.php');
-require_once(__DIR__ . '/../class/'.'Auth.php');
-require_once(__DIR__ . '/../class/'.'AnalyticsMenuItem.php');
+require_once(__DIR__ . '/../class/' . 'Analytics.php');
+require_once(__DIR__ . '/../class/' . 'Auth.php');
+require_once(__DIR__ . '/../class/' . 'AnalyticsMenuItem.php');
 
 /**
  * Class action_plugin_combo_analytics
@@ -63,28 +63,22 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * (if there is a cache, it's pretty quick)
          */
         global $ID;
-        Analytics::processAndGetDataAsArray($ID,true);
-
-        /**
-         * Check the analytics to refresh
-         */
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT ID FROM ANALYTICS_TO_REFRESH");
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $rows = $sqlite->res2arr($res,true);
-        $sqlite->res_close($res);
-        foreach($rows as $row){
-            $page = new Page($row['ID']);
+        $page = new Page($ID);
+        if ($page->shouldAnalyticsProcessOccurs()) {
             $page->processAnalytics();
         }
 
+        /**
+         * Process the analytics to refresh
+         */
+        $this->analyticsBatchBackgroundRefresh();
+
     }
 
-    public function handle_page_tools(Doku_Event $event, $param){
+    public function handle_page_tools(Doku_Event $event, $param)
+    {
 
-        if (!Auth::isWriter()){
+        if (!Auth::isWriter()) {
             return;
         }
 
@@ -93,13 +87,45 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * https://www.dokuwiki.org/devel:menus
          * If this is not the page menu, return
          */
-        if($event->data['view'] != 'page') return;
+        if ($event->data['view'] != 'page') return;
 
         global $INFO;
-        if(!$INFO['exists']) {
+        if (!$INFO['exists']) {
             return;
         }
         array_splice($event->data['items'], -1, 0, array(new AnalyticsMenuItem()));
+
+    }
+
+    private function analyticsBatchBackgroundRefresh()
+    {
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("SELECT ID FROM ANALYTICS_TO_REFRESH");
+        if (!$res) {
+            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $rows = $sqlite->res2arr($res, true);
+        $sqlite->res_close($res);
+
+        /**
+         * In case of a start or if there is a recursive bug
+         * We don't want to take all the resources
+         */
+        $maxRefresh = 5;
+        $maxRefreshLow = 2;
+        if (sizeof($rows) > $maxRefresh) {
+            LogUtility::msg("There is more than {$maxRefresh} page to refresh in the queue (table `ANALYTICS_TO_REFRESH`). Batch background Analytics refresh was reduced to {$maxRefreshLow} page to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
+            $maxRefresh = $maxRefreshLow;
+        }
+        $refreshCounter = 0;
+        foreach ($rows as $row) {
+            $page = new Page($row['ID']);
+            $page->processAnalytics();
+            $refreshCounter++;
+            if ($refreshCounter>=$maxRefresh){
+                break;
+            }
+        }
 
     }
 }

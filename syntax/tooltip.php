@@ -19,6 +19,15 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
     const SCRIPT_ID = "combo_tooltip";
 
 
+    public static function addToolTipSnippetIfNeeded(Doku_Renderer_xhtml $renderer)
+    {
+        if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::TAG)) {
+            $renderer->doc .= "<script id=\"" . self::SCRIPT_ID . "\">" . DOKU_LF
+                . "window.addEventListener('load', function () { jQuery('[data-toggle=\"tooltip\"]').tooltip() })" . DOKU_LF
+                . "</script>" . DOKU_LF;
+        }
+    }
+
 
     /**
      * Syntax Type.
@@ -105,7 +114,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                 $html = "";
                 if (isset($attributes[self::TEXT_ATTRIBUTE])) {
                     $position = "top";
-                    if (isset($attributes[self::POSITION_ATTRIBUTE])){
+                    if (isset($attributes[self::POSITION_ATTRIBUTE])) {
                         $position = $attributes[self::POSITION_ATTRIBUTE];
                     }
                     $html = "<span class=\"d-inline-block\" tabindex=\"0\" data-toggle=\"tooltip\" data-placement=\"${position}\" title=\"" . $attributes[self::TEXT_ATTRIBUTE] . "\">" . DOKU_LF;
@@ -166,10 +175,9 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT:
                     $html = $data[PluginUtility::PAYLOAD];
-                    if (!empty($html) && !PluginUtility::htmlSnippetAlreadyAdded($renderer->info,$this->getPluginComponent())) {
-                        $html .= "<script id=\"".self::SCRIPT_ID."\">" . DOKU_LF
-                            . "window.addEventListener('load', function () { jQuery('[data-toggle=\"tooltip\"]').tooltip() })" . DOKU_LF
-                            . "</script>".DOKU_LF;
+                    if (!empty($html)) {
+
+                        self::addToolTipSnippetIfNeeded($renderer);
                     }
                     $renderer->doc .= $html;
 

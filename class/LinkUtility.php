@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
+use syntax_plugin_combo_tooltip;
 
 /**
  * Class LinkUtility
@@ -92,14 +93,16 @@ class LinkUtility
     }
 
     /**
-     * @param Doku_Renderer_xhtml - $renderer
+     * @param Doku_Renderer_xhtml $renderer
      * @param array $attributes
+     * @param $lowLink
      * @return mixed
      */
-    public static function renderAsAnchorElement($renderer, array $attributes)
+    public static function renderLinkDefault($renderer, array $attributes, $lowLink = false)
     {
         $id = $attributes[self::ATTRIBUTE_ID];
         $title = $attributes[self::ATTRIBUTE_TITLE];
+        $type = $attributes[self::ATTRIBUTE_TYPE];
 
         /**
          * To allow {@link \syntax_plugin_combo_pipeline}
@@ -114,7 +117,7 @@ class LinkUtility
         $returnOnly = true;
 
         // The HTML created by DokuWiki
-        switch (self::getType($id)) {
+        switch ($type) {
             case self::TYPE_INTERWIKI:
                 // Interwiki
                 $interWiki = explode('>', $id, 2);
@@ -136,8 +139,13 @@ class LinkUtility
                 $html = $renderer->locallink(substr($id, 1), $title, $returnOnly);
                 break;
             default:
-                $urlQuery = null;
-                $html = $renderer->internallink($id, $title, $urlQuery, $returnOnly);
+                if ($lowLink) {
+                    syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded($renderer);
+                    $html = LinkUtility::renderLowQualityLink($id, $title);
+                } else {
+                    $urlQuery = null;
+                    $html = $renderer->internallink($id, $title, $urlQuery, $returnOnly);
+                }
                 break;
         }
 
@@ -248,17 +256,16 @@ class LinkUtility
      * This is used when a public page links to a low quality page
      * to render a span element
      * The span element is then modified as link by javascript if the user is not anonymous
-     * @param array $attributes
-     * @return string
+     * @param string $id
+     * @param string $title
+     * @return string the html
      */
-    public static function renderLowQualityProtectedLink(array $attributes)
+    public static function renderLowQualityLink($id, $title)
     {
-        $id = $attributes[self::ATTRIBUTE_ID];
-        $title = $attributes[self::ATTRIBUTE_TITLE];
         if (empty($title)) {
             $title = $id;
         }
-        return "<a href=\"#\" class=\"low-quality\" data-wiki-id=\"{$id}\" data-toggle=\"tooltip\" title=\"To follow this link, you need to log in (" . LowQualityPage::ACRONYM . ")\">{$title}</a>";
+        return "<span class=\"low-quality\" data-wiki-id=\"{$id}\" data-toggle=\"tooltip\" title=\"To follow this link, you need to log in (" . LowQualityPage::ACRONYM . ")\">{$title}</span>";
     }
 
     /**
@@ -323,6 +330,9 @@ class LinkUtility
         } else if ($type == self::TYPE_INTERWIKI) {
 
             $stats[Analytics::INTERWIKI_LINKS_COUNT]++;
+        } else if ($type == self::TYPE_EMAIL) {
+
+            $stats[Analytics::EMAILS_COUNT]++;
 
         } else {
 

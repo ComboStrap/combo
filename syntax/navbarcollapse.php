@@ -216,7 +216,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
                         /**
                          * Shortcut for a link in a {@link syntax_plugin_combo_navbargroup}
                          */
-                        $html = LinkUtility::renderAsAnchorElement($renderer,$payload);
+                        $html = LinkUtility::renderLinkDefault($renderer,$payload);
                         $renderer->doc .= '<div class="navbar-nav">'.NavBarUtility::switchDokuwiki2BootstrapClass($html).'</div>';
                         break;
 

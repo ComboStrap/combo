@@ -8,6 +8,8 @@ require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
 use ComboStrap\LinkUtility;
+use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Tag;
@@ -134,7 +136,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
 
                 /**
-                 * Cache problem
+                 * Cache problem may occurs while releasing
                  */
                 if (isset($data[PluginUtility::ATTRIBUTES])) {
                     $attributes = $data[PluginUtility::ATTRIBUTES];
@@ -144,44 +146,64 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
                 $type = $attributes[LinkUtility::ATTRIBUTE_TYPE];
                 $id = $attributes[LinkUtility::ATTRIBUTE_ID];
+
                 /**
-                 * If this is a low quality internal page,
-                 * print a shallow link for the anonymous user
+                 * Email are also link for Dokuwiki
+                 * And there is no notion of page.
+                 * For the low quality page functionality,
+                 * we split the process of the internal link
                  */
-                if (
-                    $type == "internal"
-                    && $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE)
-                    && LowQualityPage::isPageToExclude($id)
-                ) {
+                $lowLink = false;
+                if ($type == LinkUtility::TYPE_INTERNAL) {
+                    /**
+                     * If this is a low quality internal page,
+                     * print a shallow link for the anonymous user
+                     */
+                    global $ID;
+                    $qualifiedPageId = $id;
+                    resolve_pageid(getNS($ID), $qualifiedPageId, $exists);
+                    $page = new Page($qualifiedPageId);
+                    if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE)
+                        && $page->isLowQualityPage()) {
 
-                    $htmlLink = LinkUtility::renderLowQualityProtectedLink($attributes);
-
-                } else {
-
-                    $htmlLink = LinkUtility::renderAsAnchorElement($renderer, $attributes);
-                    $parentClassWithoutClass = array(
-                        syntax_plugin_combo_button::TAG,
-                        syntax_plugin_combo_cite::TAG,
-                        syntax_plugin_combo_dropdown::TAG,
-                        syntax_plugin_combo_listitem::TAG,
-                        syntax_plugin_combo_preformatted::TAG
-                    );
-                    if (page_exists($id) && in_array($data[PluginUtility::PARENT_TAG], $parentClassWithoutClass)) {
-                        $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
-                    }
-
-                    if ($data[PluginUtility::PARENT_TAG] == syntax_plugin_combo_button::TAG) {
-                        // We could also apply the class ie btn-secondary ...
-                        $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
+                        $lowLink = true;
                     }
                 }
+
+                /**
+                 * Render the link
+                 */
+                $htmlLink = LinkUtility::renderLinkDefault($renderer, $attributes, $lowLink);
+
+                /**
+                 * Extra styling
+                 */
+                $parentClassWithoutClass = array(
+                    syntax_plugin_combo_button::TAG,
+                    syntax_plugin_combo_cite::TAG,
+                    syntax_plugin_combo_dropdown::TAG,
+                    syntax_plugin_combo_listitem::TAG,
+                    syntax_plugin_combo_preformatted::TAG
+                );
+                if (page_exists($id) && in_array($data[PluginUtility::PARENT_TAG], $parentClassWithoutClass)) {
+                    $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                }
+
+                if ($data[PluginUtility::PARENT_TAG] == syntax_plugin_combo_button::TAG) {
+                    // We could also apply the class ie btn-secondary ...
+                    $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
+                }
+
+                /**
+                 * Add it to the rendering
+                 */
                 $renderer->doc .= $htmlLink;
 
                 return true;
                 break;
 
-
-            case 'metadata':
+            case
+            'metadata':
 
                 /**
                  * Keep track of the backlinks ie meta['relation']['references']

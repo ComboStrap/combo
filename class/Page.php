@@ -548,9 +548,18 @@ class Page
 
     }
 
+    /**
+     * @param bool $cache
+     * @return mixed
+     *
+     */
     public function getAnalyticsFromFs($cache = true)
     {
         if ($cache) {
+            /**
+             * Note for dev: because cache is off in dev environment,
+             * you will get it always processed
+             */
             return Analytics::processAndGetDataAsArray($this->id, $cache);
         } else {
             /**
@@ -562,15 +571,15 @@ class Page
 
     /**
      * Set the page quality
-     * @param $boolean true if this is a low quality page rank false otherwise
+     * @param $newIndicator true if this is a low quality page rank false otherwise
      */
 
-    public function setLowQualityIndicator($boolean)
+    public function setLowQualityIndicator($newIndicator)
     {
-        $indicator = $this->getLowQualityIndicator();
-        if ($indicator != $boolean) {
+        $actualIndicator = $this->getLowQualityIndicator();
+        if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
 
-            p_set_metadata($this->id, array("quality" => array("low" => $boolean)));
+            p_set_metadata($this->id, array("quality" => array("low" => $newIndicator)));
 
             /**
              * Delete the cache to rewrite the link
@@ -615,13 +624,25 @@ class Page
     function isLowQualityPage()
     {
 
-        return $this->getLowQualityIndicator() == true;
+        return $this->getLowQualityIndicator() === true;
 
     }
 
-    private function getLowQualityIndicator()
+
+    public function getLowQualityIndicator()
     {
-        return p_get_metadata($this->id, "quality")["low"];
+
+        $meta = p_get_metadata($this->id, "quality");
+        if ($meta === null) {
+            return null;
+        }
+        $low = $meta["low"];
+        if ($low === null) {
+            return null;
+        } else {
+            return filter_var($low, FILTER_VALIDATE_BOOLEAN);
+        }
+
     }
 
     /**
@@ -677,7 +698,7 @@ class Page
 
     public function __toString()
     {
-        return $this->id . " ({$this->getH1()})";
+        return $this->id; //. " ({$this->getH1()})";
     }
 
     private function getH1()

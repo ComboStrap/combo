@@ -39,6 +39,7 @@ class Analytics
     const HEADERS_COUNT = 'headers_count';
     const QUALITY = 'quality';
     const STATISTICS = "statistics";
+    const EMAILS_COUNT = "emails_count";
 
     /**
      * An array of info for errors mostly

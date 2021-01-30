@@ -202,7 +202,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_MATCHED:
 
-                    $html = LinkUtility::renderAsAnchorElement($renderer, $payload);
+                    $html = LinkUtility::renderLinkDefault($renderer, $payload);
                     $renderer->doc .= '<li class="nav-item">'.NavBarUtility::switchDokuwiki2BootstrapClass($html).'</li>';
                     break;
 

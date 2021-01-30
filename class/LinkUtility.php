@@ -177,6 +177,9 @@ class LinkUtility
                 $metaDataRenderer->locallink($id, $name);
             } else if ($type == self::TYPE_EMAIL) {
                 $metaDataRenderer->emaillink($id, $name);
+            } else if ($type == self::TYPE_INTERWIKI) {
+                $interWikiSplit = preg_split("/>/", $id);
+                $metaDataRenderer->interwikilink($id, $name, $interWikiSplit[0], $interWikiSplit[1]);
             } else {
                 LogUtility::msg("The link ({$id}) with the type " . $type . " was not processed into the metadata");
             }
@@ -316,6 +319,10 @@ class LinkUtility
         } else if ($type == self::TYPE_LOCAL) {
 
             $stats[Analytics::LOCAL_LINKS_COUNT]++;
+
+        } else if ($type == self::TYPE_INTERWIKI) {
+
+            $stats[Analytics::INTERWIKI_LINKS_COUNT]++;
 
         } else {
 

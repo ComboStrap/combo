@@ -26,6 +26,7 @@ class Analytics
     const INTERNAL_BACKLINKS_COUNT = "internal_backlinks_count";
     const WORDS_COUNT = 'words_count';
     const INTERNAL_LINK_DISTANCE = 'internal_links_distance';
+    const INTERWIKI_LINKS_COUNT = "interwiki_links_count";
     const EDITS_COUNT = 'edits_count';
     const INTERNAL_LINKS_BROKEN_COUNT = 'internal_broken_links_count';
     const TITLE = 'title';
@@ -52,6 +53,7 @@ class Analytics
     const LOW = "low";
     const RULES = "rules";
     const DETAILS = 'details';
+
 
 
     /**

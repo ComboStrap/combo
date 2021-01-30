@@ -77,7 +77,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         $sqlite->res_close($res);
         foreach($rows as $row){
             $page = new Page($row['ID']);
-            $page->refreshAnalytics();
+            $page->processAnalytics();
         }
 
     }

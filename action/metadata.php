@@ -79,7 +79,7 @@ class action_plugin_combo_metadata extends DokuWiki_Action_Plugin
             $linksAfter = array();
         }
         $linksBefore = $this->linksBeforeByPage[$pageId];
-        unset($pageId, $this->linksBeforeByPage);
+        unset($this->linksBeforeByPage[$pageId]);
         $addedLinks = array();
         foreach ($linksAfter as $linkAfter => $exist) {
             if (array_key_exists($linkAfter, $linksBefore)) {
@@ -92,18 +92,19 @@ class action_plugin_combo_metadata extends DokuWiki_Action_Plugin
         /**
          * Process to update the backlinks
          */
-        $linksChanged = $addedLinks;
+        $linksChanged = array_fill_keys($addedLinks,"deleted");
         foreach ($linksBefore as $deletedLink => $deletedLinkPageExists) {
-            $linksChanged[] = $deletedLink;
+            $linksChanged[$deletedLink] = 'deleted';
         }
-        foreach ($linksChanged as $changedLink) {
+        foreach ($linksChanged as  $changedLink => $status) {
             /**
              * We delete the cache
              * We don't update the analytics
-             * because we want that the quality process will be running
+             * because we want speed
              */
             $addedPage = new Page($changedLink);
-            $addedPage->askAnalyticsRefresh();
+            $reason = "The backlink {$changedLink} from the page {$pageId} was {$status}";
+            $addedPage->deleteCacheAndAskAnalyticsRefresh($reason);
 
         }
 

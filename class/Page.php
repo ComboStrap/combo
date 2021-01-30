@@ -5,7 +5,8 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
-use http\Exception\RuntimeException;
+use RuntimeException;
+
 
 /**
  * Class urlCanonical with all canonical methodology
@@ -27,7 +28,7 @@ class Page
     {
         $this->id = $id;
         if (strtolower($id) !== $id) {
-            throw new \RuntimeException("The page id ({$id}) is not in lowercase");
+            throw new RuntimeException("The page id ({$id}) is not in lowercase");
         }
     }
 
@@ -71,7 +72,7 @@ class Page
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query("SELECT * FROM pages where id = ?", $this->id);
         if (!$res) {
-            throw new \RuntimeException("An exception has occurred with the select pages query");
+            throw new RuntimeException("An exception has occurred with the select pages query");
         }
         $res2arr = $sqlite->res2row($res);
         $sqlite->res_close($res);
@@ -129,7 +130,7 @@ class Page
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query("select count(*) from pages_alias where CANONICAL = ? and ALIAS = ?", $row);
         if (!$res) {
-            throw new \RuntimeException("An exception has occurred with the alia selection query");
+            throw new RuntimeException("An exception has occurred with the alia selection query");
         }
         $aliasInDb = $sqlite->res2single($res);
         $sqlite->res_close($res);
@@ -174,7 +175,7 @@ class Page
         // Canonical
         $res = $sqlite->query("select p.ID from pages p, PAGES_ALIAS pa where p.CANONICAL = pa.CANONICAL and pa.ALIAS = ? ", $canonical);
         if (!$res) {
-            throw new \RuntimeException("An exception has occurred with the alias selection query");
+            throw new RuntimeException("An exception has occurred with the alias selection query");
         }
         $res2arr = $sqlite->res2arr($res);
         $sqlite->res_close($res);
@@ -358,7 +359,7 @@ class Page
     public function getAnalyticsFromDb()
     {
         $sqlite = Sqlite::getSqlite();
-        if ($sqlite==null){
+        if ($sqlite == null) {
             return array();
         }
         $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->id);
@@ -367,8 +368,8 @@ class Page
         }
         $jsonString = $sqlite->res2single($res);
         $sqlite->res_close($res);
-        if (!empty($jsonString)){
-            return json_decode($jsonString,true);
+        if (!empty($jsonString)) {
+            return json_decode($jsonString, true);
         } else {
             return array();
         }
@@ -394,9 +395,9 @@ class Page
     public function getInternalLinksFromMeta()
     {
         $metadata = $this->getMetadata();
-        if (key_exists('current',$metadata)){
+        if (key_exists('current', $metadata)) {
             $current = $metadata['current'];
-            if (key_exists('relation',$current)){
+            if (key_exists('relation', $current)) {
                 $relation = $current['relation'];
                 if (is_array($relation)) {
                     if (key_exists('references', $relation)) {
@@ -461,11 +462,6 @@ class Page
         }
     }
 
-    public function deleteAnalyticsCache()
-    {
-        $this->deleteCache(Analytics::RENDERER_NAME_MODE);
-
-    }
 
     public function isAnalyticsCached()
     {
@@ -478,18 +474,23 @@ class Page
      *
      * @return string - the full path to the meta file
      */
-    public function getMetaFile(){
+    public function getMetaFile()
+    {
         return metaFN($this->id, '.meta');
     }
 
-    public function askAnalyticsRefresh()
+    /**
+     * @param $reason - a string with the reason
+     */
+    public function deleteCacheAndAskAnalyticsRefresh($reason)
     {
-        $this->deleteAnalyticsCache();
+        $this->deleteCache(Analytics::RENDERER_NAME_MODE);
         $sqlite = Sqlite::getSqlite();
-        if ($sqlite!=null) {
+        if ($sqlite != null) {
             $entry = array(
                 "ID" => $this->id,
-                "TIMESTAMP" => date('Y-m-d H:i:s', time())
+                "TIMESTAMP" => date('Y-m-d H:i:s', time()),
+                "REASON" => $reason
             );
             $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
             if (!$res) {
@@ -514,23 +515,27 @@ class Page
     }
 
     /**
+     * Delete the cache, process the analytics
+     * and return it
+     * If you want the analytics from the cache use {@link Page::getAnalyticsFromFs()}
+     * instead
      * @return mixed analytics as array
      */
-    public function refreshAnalytics()
+    public function processAnalytics()
     {
 
         /**
          * Refresh and cache
          * (The delete is normally not needed, just to be sure)
          */
-        $this->deleteAnalyticsCache();
+        $this->deleteCache(Analytics::RENDERER_NAME_MODE);
         $analytics = Analytics::processAndGetDataAsArray($this->getId());
 
         /**
          * Delete from the table
          */
         $sqlite = Sqlite::getSqlite();
-        if ($sqlite!=null) {
+        if ($sqlite != null) {
             $res = $sqlite->query("DELETE FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
             if (!$res) {
                 LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
@@ -544,7 +549,98 @@ class Page
 
     public function getAnalyticsFromFs($cache = true)
     {
-        return Analytics::processAndGetDataAsArray($this->id,$cache);
+        if ($cache) {
+            return Analytics::processAndGetDataAsArray($this->id, $cache);
+        } else {
+            /**
+             * Process analytics delete at the same a asked refresh
+             */
+            return $this->processAnalytics();
+        }
+    }
+
+    /**
+     * Set the page quality
+     * @param $boolean true if this is a low quality page rank false otherwise
+     */
+
+    public function setLowQualityIndicator($boolean)
+    {
+        $indicator = $this->getLowQualityIndicator();
+        if ($indicator != $boolean) {
+            p_set_metadata($this->id, array("quality" => array("low" => $boolean)));
+            $source = $indicator === true ? "low" : "high";
+            $new = $boolean === true ? "low" : "high";
+            $reason = "Neighbor Page {$this->id} indicator has changed from {$source} to {$new}";
+            foreach ($this->getBacklinks() as $backlink) {
+                $backlink->deleteCache("xhtml");
+                $backlink->deleteCacheAndAskAnalyticsRefresh($reason);
+            }
+        }
+
+
+    }
+
+    /**
+     * @return Page[] the backlinks
+     */
+    public function getBacklinks()
+    {
+        $backlinks = array();
+        foreach (ft_backlinks($this->id) as $backlinkId) {
+            $backlinks[] = new Page($backlinkId);
+        }
+        return $backlinks;
+    }
+
+    /**
+     * @return int - An AUTH_ value for this page for the current logged user
+     *
+     */
+    public function getAuthAclValue()
+    {
+        return auth_quickaclcheck($this->id);
+    }
+
+    /**
+     * Low page quality
+     * @return bool true if this is a low internal page rank
+     */
+    function isLowQualityPage()
+    {
+
+        return $this->getLowQualityIndicator() == true;
+
+    }
+
+    private function getLowQualityIndicator()
+    {
+        return p_get_metadata($this->id, "quality")["low"];
+    }
+
+    public function shouldAnalyticsRefresh()
+    {
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite != null) {
+            $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
+            if (!$res) {
+                LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            }
+            $count = $sqlite->res2single($res);
+            $sqlite->res_close($res);
+            return $count >= 1;
+        }
+        return null;
+    }
+
+    public function __toString()
+    {
+        return $this->id." ({$this->getH1()})";
+    }
+
+    private function getH1()
+    {
+        return p_get_metadata($this->id,Analytics::H1,METADATA_RENDER_USING_SIMPLE_CACHE);
     }
 
 

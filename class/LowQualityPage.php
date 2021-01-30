@@ -29,29 +29,7 @@ class LowQualityPage
     const ACL = "acl";
     const HIDDEN = "hidden";
 
-    /**
-     * Low page quality
-     * @param $id
-     * @return bool true if this is a low internal page rank
-     */
-    static function isLowQualityPage($id)
-    {
 
-        return p_get_metadata($id, "quality")["low"] == true;
-
-    }
-
-    /**
-     * Set the page quality
-     * @param $id
-     * @param $boolean true if this is a low quality page rank false otherwise
-     */
-    static function setLowQualityPage($id, $boolean)
-    {
-
-        p_set_metadata($id, array("quality" => array("low" => $boolean)));
-
-    }
 
     /**
      * If low page rank and not logged in,
@@ -63,7 +41,8 @@ class LowQualityPage
     public static function isPageToExclude($id, $user = '')
     {
         if (!Auth::isLoggedIn($user)) {
-            if (self::isLowQualityPage($id)) {
+            $page = new Page($id);
+            if ($page->isLowQualityPage()) {
                 /**
                  * Low quality page should not
                  * be public and readable for the search engine

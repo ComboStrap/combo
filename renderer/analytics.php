@@ -3,14 +3,11 @@
 
 use ComboStrap\Analytics;
 use ComboStrap\LinkUtility;
-use ComboStrap\LogUtility;
-use ComboStrap\LowQualityPage;
-use ComboStrap\Sqlite;
-use ComboStrap\Text;
+use ComboStrap\StringUtility;
+
 use ComboStrap\Page;
 use dokuwiki\ChangeLog\PageChangeLog;
 
-require_once(__DIR__ . '/../class/Text.php');
 require_once(__DIR__ . '/../class/LowQualityPage.php');
 require_once(__DIR__ . '/../class/Analytics.php');
 
@@ -22,6 +19,7 @@ require_once(__DIR__ . '/../class/Analytics.php');
  */
 class renderer_plugin_combo_analytics extends Doku_Renderer
 {
+
     const DATE_CREATED = 'date_created';
     const PLAINTEXT = 'formatted';
     const RESULT = "result";
@@ -97,12 +95,9 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
     public function document_start()
     {
+        $this->reset();
         global $ID;
         $this->page = new Page($ID);
-        $analytics = $this->page->getAnalyticsFromDb();
-        if (!empty($analytics)) {
-            $this->internalLinkBefore = $analytics[Analytics::STATISTICS];
-        }
 
     }
 
@@ -147,7 +142,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         $text = rawWiki($ID);
         $statExport[Analytics::CHARS_COUNT] = strlen($text);
-        $statExport[Analytics::WORDS_COUNT] = Text::getWordCount($text);
+        $statExport[Analytics::WORDS_COUNT] = StringUtility::getWordCount($text);
 
 
         /**
@@ -186,7 +181,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             $qualityScores['no_' . self::FIXME] = 0;
         } else {
             $ruleResults[self::RULE_FIXME] = self::PASSED;
-            $qualityScores['no_' . self::FIXME] = $this->getConf(self::CONF_QUALITY_SCORE_NO_FIXME, 1);;
+            $qualityScores['no_' . self::FIXME] = $this->getConf(self::CONF_QUALITY_SCORE_NO_FIXME, 1);
         }
 
         /**
@@ -199,7 +194,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             $this->metadata[Analytics::TITLE] = $meta[Analytics::TITLE];
             $qualityScores[self::RULE_TITLE_PRESENT] = 0;
         } else {
-            $qualityScores[self::RULE_TITLE_PRESENT] = $titleScore;;
+            $qualityScores[self::RULE_TITLE_PRESENT] = $titleScore;
             $ruleResults[self::RULE_TITLE_PRESENT] = self::PASSED;
         }
 
@@ -213,7 +208,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             $this->metadata[self::DESCRIPTION] = $meta[self::DESCRIPTION]["abstract"];
             $qualityScores[self::RULE_DESCRIPTION_PRESENT] = 0;
         } else {
-            $qualityScores[self::RULE_DESCRIPTION_PRESENT] = $descScore;;
+            $qualityScores[self::RULE_DESCRIPTION_PRESENT] = $descScore;
             $ruleResults[self::RULE_DESCRIPTION_PRESENT] = self::PASSED;
         }
 
@@ -224,13 +219,13 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if (empty($this->metadata[Page::CANONICAL_PROPERTY])) {
             global $conf;
             $root = $conf['start'];
-            if ($ID!=$root) {
+            if ($ID != $root) {
                 $qualityScores[self::RULE_CANONICAL_PRESENT] = 0;
                 $ruleResults[self::RULE_CANONICAL_PRESENT] = self::FAILED;
                 $ruleInfo[self::RULE_CANONICAL_PRESENT] = "Add a canonical in the frontmatter for {$canonicalScore} points";
             }
         } else {
-            $qualityScores[self::RULE_CANONICAL_PRESENT] = $canonicalScore;;
+            $qualityScores[self::RULE_CANONICAL_PRESENT] = $canonicalScore;
             $ruleResults[self::RULE_CANONICAL_PRESENT] = self::PASSED;
         }
 
@@ -271,7 +266,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $correctContentLength = true;
         $correctLengthScore = $this->getConf(self::CONF_QUALITY_SCORE_CORRECT_CONTENT, 10);
         $missingWords = $minimalWordCount - $statExport[Analytics::WORDS_COUNT];
-        if ($missingWords>0) {
+        if ($missingWords > 0) {
             $ruleResults[self::RULE_WORDS_MINIMAL] = self::FAILED;
             $correctContentLength = false;
             $ruleInfo[self::RULE_WORDS_MINIMAL] = "Add {$missingWords} words to get {$correctLengthScore} points";
@@ -279,7 +274,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             $ruleResults[self::RULE_WORDS_MINIMAL] = self::PASSED;
         }
         $tooMuchWords = $statExport[Analytics::WORDS_COUNT] - $maximalWordCount;
-        if ($tooMuchWords>0) {
+        if ($tooMuchWords > 0) {
             $ruleResults[self::RULE_WORDS_MAXIMAL] = self::FAILED;
             $ruleInfo[self::RULE_WORDS_MAXIMAL] = "Delete {$tooMuchWords} words to get {$correctLengthScore} points";
             $correctContentLength = false;
@@ -389,9 +384,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Changes, the more changes the better
          */
-        $qualityScores[Analytics::EDITS_COUNT] = $this->stats[Analytics::EDITS_COUNT] * $this->getConf(self::CONF_QUALITY_SCORE_CHANGES_FACTOR, 0.25);;;
-
-
+        $qualityScores[Analytics::EDITS_COUNT] = $this->stats[Analytics::EDITS_COUNT] * $this->getConf(self::CONF_QUALITY_SCORE_CHANGES_FACTOR, 0.25);
 
 
         /**
@@ -433,7 +426,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if (sizeof($mandatoryRulesBroken) > 0) {
             $lowLevel = true;
         }
-        LowQualityPage::setLowQualityPage($ID, $lowLevel);
+        $this->page->setLowQualityIndicator($lowLevel);
 
         /**
          * Building the quality object in order
@@ -468,8 +461,6 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $this->metadata['age_modification'] = round((time() - $timestampModification) / 60 / 60 / 24);
 
 
-
-
         /**
          * Building the Top JSON in order
          */
@@ -486,17 +477,18 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * The result can be seen with
          * doku.php?id=somepage&do=export_combo_analysis
+         *
+         * Set the header temporarily for the export.php file
          */
-        /**
-         * Set the header for the export.php file
-         */
-        p_set_metadata($ID, array("format" =>
-            array("combo_" . $this->getPluginComponent() => array("Content-Type" => 'application/json'))
-        ));
+        p_set_metadata(
+            $ID,
+            array("format" => array("combo_" . $this->getPluginComponent() => array("Content-Type" => 'application/json'))),
+            false,
+            false // Persistence is not needed, this is just in case this is an export
+        );
         $json_encoded = json_encode($finalStats, JSON_PRETTY_PRINT);
 
-        $page = new Page($ID);
-        $page->saveAnalytics($finalStats);
+        $this->page->saveAnalytics($finalStats);
         $this->doc .= $json_encoded;
 
     }

@@ -504,7 +504,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     {
 
         $attribute = array(
-            LinkUtility::ATTRIBUTE_ID => $id,
+            LinkUtility::ATTRIBUTE_REF => $id,
             LinkUtility::ATTRIBUTE_TYPE => LinkUtility::TYPE_INTERNAL
         );
         LinkUtility::processLinkStats($attribute, $this->stats);
@@ -514,7 +514,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function externallink($url, $name = null)
     {
         $attribute = array(
-            LinkUtility::ATTRIBUTE_ID => $url,
+            LinkUtility::ATTRIBUTE_REF => $url,
             LinkUtility::ATTRIBUTE_TYPE => LinkUtility::TYPE_EXTERNAL,
             LinkUtility::ATTRIBUTE_NAME => $name
         );

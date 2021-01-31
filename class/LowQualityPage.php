@@ -128,7 +128,7 @@ EOF;
 
         $name = $link->getName();
         if (empty($name)) {
-            $name = $link->getId();
+            $name = $link->getRef();
             if (useHeading('content')) {
                 $page = $link->getInternalPage();
                 $h1 = $page->getH1();

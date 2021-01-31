@@ -9,6 +9,7 @@ require_once(__DIR__ . "/../class/HtmlUtility.php");
 use ComboStrap\Analytics;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
+use ComboStrap\NavBarUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\LowQualityPage;
@@ -143,11 +144,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 } else {
                     $attributes = $data;
                 }
-                $id = $attributes[LinkUtility::ATTRIBUTE_ID];
+                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
                 $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
                 $type = $attributes[LinkUtility::ATTRIBUTE_TYPE];
-                $link = new LinkUtility($id);
-                if ($name!=null) {
+                $link = new LinkUtility($ref);
+                if ($name != null) {
                     $link->setName($name);
                 }
                 $link->setType($type);
@@ -160,24 +161,31 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 /**
                  * Extra styling for internal link
                  */
-                if ($link->getType()==LinkUtility::TYPE_INTERNAL) {
-                    $parentClassWithoutClass = array(
-                        syntax_plugin_combo_button::TAG,
-                        syntax_plugin_combo_cite::TAG,
-                        syntax_plugin_combo_dropdown::TAG,
-                        syntax_plugin_combo_listitem::TAG,
-                        syntax_plugin_combo_preformatted::TAG
-                    );
-                    $internalPage = $link->getInternalPage();
-                    if ($internalPage->existInFs() && in_array($data[PluginUtility::PARENT_TAG], $parentClassWithoutClass)) {
-                        $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
-                    }
+                $parentTag = $data[PluginUtility::PARENT_TAG];
+                switch ($parentTag) {
+                    case syntax_plugin_combo_button::TAG:
+                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
+                            if ($link->getInternalPage()->existInFs()) {
+                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                            }
+                        }
+                        $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
+                        break;
+                    case syntax_plugin_combo_cite::TAG:
+                    case syntax_plugin_combo_dropdown::TAG:
+                    case syntax_plugin_combo_listitem::TAG:
+                    case syntax_plugin_combo_preformatted::TAG:
+                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
+                            if ($link->getInternalPage()->existInFs()) {
+                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                            }
+                        }
+                        break;
+                    case syntax_plugin_combo_navbarcollapse::COMPONENT:
+                        $htmlLink = '<div class="navbar-nav">' . NavBarUtility::switchDokuwiki2BootstrapClass($htmlLink) . '</div>';
+                        break;
                 }
 
-                if ($data[PluginUtility::PARENT_TAG] == syntax_plugin_combo_button::TAG) {
-                    // We could also apply the class ie btn-secondary ...
-                    $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
-                }
 
                 /**
                  * Add it to the rendering
@@ -199,7 +207,14 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 } else {
                     $attributes = $data;
                 }
-                LinkUtility::handleMetadata($renderer, $attributes);
+                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+
+                $link = new LinkUtility($ref);
+                $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
+                if ($name != null) {
+                    $link->setName($name);
+                }
+                $link->handleMetadata($renderer);
 
                 return true;
                 break;
@@ -210,7 +225,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                  * @var renderer_plugin_combo_analytics $renderer
                  */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                LinkUtility::processLinkStats($attributes, $renderer->stats);
+                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+                $link = new LinkUtility($ref);
+                $link->processLinkStats($renderer->stats);
                 break;
 
         }

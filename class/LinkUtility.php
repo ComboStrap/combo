@@ -45,7 +45,7 @@ class LinkUtility
     /**
      * The key of the array for the handle cache
      */
-    const ATTRIBUTE_ID = 'id';
+    const ATTRIBUTE_REF = 'ref';
     const ATTRIBUTE_NAME = 'name';
     const ATTRIBUTE_IMAGE = 'image';
     const ATTRIBUTE_TYPE = 'type';
@@ -63,7 +63,7 @@ class LinkUtility
     /**
      * @var mixed
      */
-    private $id;
+    private $ref;
     /**
      * @var mixed
      */
@@ -79,7 +79,9 @@ class LinkUtility
      */
     public function __construct($id)
     {
-        $this->id = $id;
+
+        $this->ref = $id;
+
     }
 
     /**
@@ -122,7 +124,7 @@ class LinkUtility
         // Id
         $id = trim($linkArray[0]);
         $linkObject = new LinkUtility($id);
-        $attributes[self::ATTRIBUTE_ID] = $id;
+        $attributes[self::ATTRIBUTE_REF] = $id;
 
         // Type
         $attributes[self::ATTRIBUTE_TYPE] = $linkObject->getType();
@@ -168,23 +170,23 @@ class LinkUtility
         switch ($this->getType()) {
             case self::TYPE_INTERWIKI:
                 // Interwiki
-                $interWiki = explode('>', $this->id, 2);
+                $interWiki = explode('>', $this->ref, 2);
                 $wikiName = strtolower($interWiki[0]);
                 $wikiUri = $interWiki[1];
-                $html = $renderer->interwikilink($this->id, $name, $wikiName, $wikiUri, $returnOnly);
+                $html = $renderer->interwikilink($this->ref, $name, $wikiName, $wikiUri, $returnOnly);
                 break;
             case self::TYPE_WINDOWS_SHARE:
-                $html = $renderer->windowssharelink($this->id, $name);
+                $html = $renderer->windowssharelink($this->ref, $name);
                 break;
             case self::TYPE_EXTERNAL:
-                $html = $renderer->externallink($this->id, $name, $returnOnly);
+                $html = $renderer->externallink($this->ref, $name, $returnOnly);
                 break;
             case self::TYPE_EMAIL:
                 // E-Mail (pattern above is defined in inc/mail.php)
-                $html = $renderer->emaillink($this->id, $name, $returnOnly);
+                $html = $renderer->emaillink($this->ref, $name, $returnOnly);
                 break;
             case self::TYPE_LOCAL:
-                $html = $renderer->locallink(substr($this->id, 1), $name, $returnOnly);
+                $html = $renderer->locallink(substr($this->ref, 1), $name, $returnOnly);
                 break;
             case self::TYPE_INTERNAL:
 
@@ -209,11 +211,11 @@ class LinkUtility
 
                 } else {
                     $urlQuery = null;
-                    $html = $renderer->internallink($this->id, $name, $urlQuery, $returnOnly);
+                    $html = $renderer->internallink($this->ref, $name, $urlQuery, $returnOnly);
                 }
                 break;
             default:
-                LogUtility::msg("The link ({$this->id}) with the type " . $this->type . " was not rendered because it's not taken into account");
+                LogUtility::msg("The link ({$this->ref}) with the type " . $this->type . " was not rendered because it's not taken into account");
         }
 
         /**
@@ -224,7 +226,7 @@ class LinkUtility
         if (!XmlUtility::isXml($html)) {
             $html = "<span>$html</span>";
             if (!XmlUtility::isXml($html)) {
-                LogUtility::msg("The link ($this->id) could not be transformed as valid XML");
+                LogUtility::msg("The link ($this->ref) could not be transformed as valid XML");
             }
         }
         return $html;
@@ -237,21 +239,25 @@ class LinkUtility
      */
     public function handleMetadata($metaDataRenderer)
     {
-        if ($this->type == self::TYPE_INTERNAL) {
-            $metaDataRenderer->internallink($this->id);
-        } else {
-            if ($this->type == self::TYPE_EXTERNAL) {
-                $metaDataRenderer->externallink($this->id, $this->name);
-            } else if ($this->type == self::TYPE_LOCAL) {
-                $metaDataRenderer->locallink($this->id, $this->name);
-            } else if ($this->type == self::TYPE_EMAIL) {
-                $metaDataRenderer->emaillink($this->id, $this->name);
-            } else if ($this->type == self::TYPE_INTERWIKI) {
-                $interWikiSplit = preg_split("/>/", $this->id);
-                $metaDataRenderer->interwikilink($this->id, $this->name, $interWikiSplit[0], $interWikiSplit[1]);
-            } else {
-                LogUtility::msg("The link ({$this->id}) with the type " . $this->type . " was not processed into the metadata");
-            }
+        switch ($this->getType()) {
+            case self::TYPE_INTERNAL:
+                $metaDataRenderer->internallink($this->ref);
+                break;
+            case self::TYPE_EXTERNAL:
+                $metaDataRenderer->externallink($this->ref, $this->name);
+                break;
+            case self::TYPE_LOCAL:
+                $metaDataRenderer->locallink($this->ref, $this->name);
+                break;
+            case self::TYPE_EMAIL:
+                $metaDataRenderer->emaillink($this->ref, $this->name);
+                break;
+            case self::TYPE_INTERWIKI:
+                $interWikiSplit = preg_split("/>/", $this->ref);
+                $metaDataRenderer->interwikilink($this->ref, $this->name, $interWikiSplit[0], $interWikiSplit[1]);
+                break;
+            default:
+                LogUtility::msg("The link ({$this->ref}) with the type " . $this->type . " was not processed into the metadata");
         }
     }
 
@@ -261,7 +267,8 @@ class LinkUtility
      * @return string a `TYPE_xxx` constant
      * Code adapted from {@link Doku_Handler}->internallink($match,$state,$pos)
      */
-    public function getType()
+    public
+    function getType()
     {
         if ($this->type == null) {
             /**
@@ -270,15 +277,15 @@ class LinkUtility
             $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
             $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
 
-            if (link_isinterwiki($this->id)) {
+            if (link_isinterwiki($this->ref)) {
                 $this->type = self::TYPE_INTERWIKI;
-            } elseif (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $this->id)) {
+            } elseif (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $this->ref)) {
                 $this->type = self::TYPE_WINDOWS_SHARE;
-            } elseif (preg_match('#^([a-z0-9\-\.+]+?)://#i', $this->id)) {
+            } elseif (preg_match('#^([a-z0-9\-\.+]+?)://#i', $this->ref)) {
                 $this->type = self::TYPE_EXTERNAL;
-            } elseif (preg_match('<' . $emailPattern . '>', $this->id)) {
+            } elseif (preg_match('<' . $emailPattern . '>', $this->ref)) {
                 $this->type = self::TYPE_EMAIL;
-            } elseif (preg_match('!^#.+!', $this->id)) {
+            } elseif (preg_match('!^#.+!', $this->ref)) {
                 $this->type = self::TYPE_LOCAL;
             } else {
                 $this->type = self::TYPE_INTERNAL;
@@ -294,7 +301,8 @@ class LinkUtility
      * @param $htmlLink
      * @return bool|false|string
      */
-    public static function inheritColorFromParent($htmlLink)
+    public
+    static function inheritColorFromParent($htmlLink)
     {
         /**
          * The extra style for the link
@@ -308,7 +316,8 @@ class LinkUtility
      * @param $htmlLink
      * @return bool|false|string
      */
-    public static function deleteDokuWikiClass($htmlLink)
+    public
+    static function deleteDokuWikiClass($htmlLink)
     {
         // only wikilink1 (wikilink2 shows a red link if the page does not exist)
         return HtmlUtility::deleteClassValue($htmlLink, "wikilink1");
@@ -319,7 +328,8 @@ class LinkUtility
      * @param array $stats
      * Calculate internal link statistics
      */
-    public function processLinkStats(array &$stats)
+    public
+    function processLinkStats(array &$stats)
     {
 
         if ($this->getType() == self::TYPE_INTERNAL) {
@@ -327,8 +337,8 @@ class LinkUtility
              * If this a query string, this is the same page
              */
             global $ID;
-            if (strpos($this->id, '?') !== false) {
-                $urlParts = preg_split("/\?/", $this->id);
+            if (strpos($this->ref, '?') !== false) {
+                $urlParts = preg_split("/\?/", $this->ref);
                 if (sizeof($urlParts) == 1) {
                     $id = $ID;
                 } else {
@@ -379,7 +389,7 @@ class LinkUtility
 
         } else {
 
-            LogUtility::msg("The link `{$this->id}` with the type (" . $this->getType() . ")  is not taken into account into the statistics");
+            LogUtility::msg("The link `{$this->ref}` with the type (" . $this->getType() . ")  is not taken into account into the statistics");
 
         }
 
@@ -389,13 +399,31 @@ class LinkUtility
     /**
      * @return string - the internal absolute page id
      */
-    public function getAbsoluteId()
+    public
+    function getAbsoluteId()
     {
         if ($this->getType() == self::TYPE_INTERNAL) {
             global $ID;
-            $qualifiedPageId = $this->id;
-            resolve_pageid(getNS($ID), $qualifiedPageId, $exists);
-            return $qualifiedPageId;
+            /**
+             * The id may have a fragment #
+             */
+            $id = $this->ref;
+            $link = preg_split("/#/", $id);
+            if (sizeof($link) > 1) {
+                $id = $link[0];
+            }
+            /**
+             * or a query string
+             */
+            $link = preg_split("/\?/", $id);
+            if (sizeof($link) > 1) {
+                $id = $link[0];
+            }
+            /**
+             * Make him absolute
+             */
+            resolve_pageid(getNS($ID), $id, $exists);
+            return $id;
         } else {
             throw new \RuntimeException("You can't ask an absolute id from a link that is not an internal one");
         }
@@ -404,7 +432,8 @@ class LinkUtility
     /**
      * @return Page - the internal page or an error if the link is not an internal one
      */
-    public function getInternalPage()
+    public
+    function getInternalPage()
     {
         if ($this->linkedPage == null) {
             if ($this->getType() == self::TYPE_INTERNAL) {
@@ -420,12 +449,14 @@ class LinkUtility
         return $this->linkedPage;
     }
 
-    public function getId()
+    public
+    function getRef()
     {
-        return $this->id;
+        return $this->ref;
     }
 
-    public function getName()
+    public
+    function getName()
     {
         return $this->name;
     }

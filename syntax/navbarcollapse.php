@@ -108,7 +108,6 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
         if ($mode == PluginUtility::getModeForComponent(syntax_plugin_combo_navbar::TAG)) {
             $pattern = PluginUtility::getContainerTagPattern(self::TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
-            $this->Lexer->addPattern(LinkUtility::LINK_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
 
     }
@@ -147,10 +146,6 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
 
                 return array($state, $match);
 
-            case DOKU_LEXER_MATCHED:
-
-                $linkAttributes = LinkUtility::getAttributes($match);
-                return array($state, $linkAttributes);
 
             case DOKU_LEXER_EXIT :
 
@@ -211,14 +206,6 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= NavBarUtility::text(PluginUtility::escape($payload));
                         break;
 
-                    case DOKU_LEXER_MATCHED:
-
-                        /**
-                         * Shortcut for a link in a {@link syntax_plugin_combo_navbargroup}
-                         */
-                        $html = LinkUtility::renderLinkDefault($renderer,$payload);
-                        $renderer->doc .= '<div class="navbar-nav">'.NavBarUtility::switchDokuwiki2BootstrapClass($html).'</div>';
-                        break;
 
                     case DOKU_LEXER_EXIT :
 
@@ -226,17 +213,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
                         break;
                 }
                 return true;
-            case 'metadata':
 
-                /**
-                 * Keep track of the backlinks ie meta['relation']['references']
-                 * @var Doku_Renderer_metadata $renderer
-                 */
-                if ($state == DOKU_LEXER_SPECIAL) {
-                    LinkUtility::handleMetadata($renderer, $data);
-                }
-                return true;
-                break;
         }
         return false;
     }

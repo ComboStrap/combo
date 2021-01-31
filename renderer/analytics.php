@@ -43,6 +43,20 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     const RULE_FIXME = "fixme_min";
     const RULE_TITLE_PRESENT = "title_present";
     const RULE_CANONICAL_PRESENT = "canonical_present";
+    const QUALITY_RULES = [
+        self::RULE_CANONICAL_PRESENT,
+        self::RULE_DESCRIPTION_PRESENT,
+        self::RULE_FIXME,
+        self::RULE_INTERNAL_BACKLINKS_MIN,
+        self::RULE_INTERNAL_BROKEN_LINKS_MAX,
+        self::RULE_INTERNAL_LINKS_MIN,
+        self::RULE_OUTLINE_STRUCTURE,
+        self::RULE_TITLE_PRESENT,
+        self::RULE_WORDS_MINIMAL,
+        self::RULE_WORDS_MAXIMAL,
+        self::RULE_AVERAGE_WORDS_BY_SECTION_MIN,
+        self::RULE_AVERAGE_WORDS_BY_SECTION_MAX
+    ];
 
     /**
      * The default man
@@ -71,6 +85,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     const CONF_QUALITY_SCORE_CANONICAL_PRESENT = 'qualityScoreCanonicalPresent';
     const SCORING = "scoring";
     const SCORE = "score";
+
 
 
     /**

@@ -156,12 +156,8 @@ class LinkUtility
         /**
          * To allow {@link \syntax_plugin_combo_pipeline}
          */
-        $name = $this->name;
-        if (strpos($this->name, "<pipeline>") !== false) {
-            $name = str_replace("<pipeline>", "", $name);
-            $name = str_replace("</pipeline>", "", $name);
-            $name = PipelineUtility::execute($name);
-        }
+        $name = $this->getName();
+
 
         // Always return the string
         $returnOnly = true;
@@ -458,7 +454,13 @@ class LinkUtility
     public
     function getName()
     {
-        return $this->name;
+        $name = $this->name;
+        if (strpos($this->name, "<pipeline>") !== false) {
+            $name = str_replace("<pipeline>", "", $name);
+            $name = str_replace("</pipeline>", "", $name);
+            $name = PipelineUtility::execute($name);
+        }
+        return $name;
     }
 
 

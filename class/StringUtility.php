@@ -123,6 +123,13 @@ class StringUtility
      */
     public static function getWordCount($text)
     {
+        /**
+         * Delete the frontmatter
+         */
+        $text = preg_replace("/^---(json)?$.*^---$/Ums","",$text);
+        /**
+         * New line for node
+         */
         $text = str_replace("<", "\n<", $text);
         $text = str_replace(">", ">\n", $text);
         // \s shorthand for whitespace

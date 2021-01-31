@@ -97,4 +97,8 @@ $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = PluginUtility::ge
  */
 $lang[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = PluginUtility::getUrl("frontmatter", "Frontmatter")." - If enabled, a new page will be created with a frontmatter)";
 
+/**
+ * Excluded rules
+ */
+$lang[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring")." - If chosen, the quality rules will not be monitored.)";
 ?>

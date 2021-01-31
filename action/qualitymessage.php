@@ -28,6 +28,12 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     // a class can not start with a number
     const QUALITY_BOX_CLASS = "quality-message";
 
+    /**
+     * The quality rules that will not show
+     * up in the messages
+     */
+    const CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING = "excludedQualityRulesFromDynamicMonitoring";
+
 
     function __construct()
     {
@@ -83,18 +89,35 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     static public function getQualityNote($pageId, $plugin)
     {
         $page = new Page($pageId);
+
+        if ($page->isBar()) {
+            return null;
+        }
         if ($page->existInFs()) {
             $analytics = $page->getAnalyticsFromFs();
-            $qualityInfoRules = $analytics[Analytics::QUALITY][Analytics::RULES][Analytics::INFO];
+            $rules = $analytics[Analytics::QUALITY][Analytics::RULES];
 
-            // Excluded rules
-            $excludedRules = array(
-                renderer_plugin_combo_analytics::RULE_AVERAGE_WORDS_BY_SECTION_MIN,
-                renderer_plugin_combo_analytics::RULE_AVERAGE_WORDS_BY_SECTION_MAX
-            );
-            foreach ($excludedRules as $filter) {
-                if (array_key_exists($filter, $qualityInfoRules)) {
-                    unset($qualityInfoRules[$filter]);
+            /**
+             * If there is no info, nothing to show
+             */
+            if (!array_key_exists(Analytics::INFO, $rules)) {
+                return null;
+            }
+
+            /**
+             * The error info
+             */
+            $qualityInfoRules = $rules[Analytics::INFO];
+
+            /**
+             * Excluding the excluded rules
+             */
+            global $conf;
+            $excludedRulesConf = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][self::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING];
+            $excludedRules = preg_split("/,/", $excludedRulesConf);
+            foreach ($excludedRules as $excludedRule) {
+                if (array_key_exists($excludedRule, $qualityInfoRules)) {
+                    unset($qualityInfoRules[$excludedRule]);
                 }
             }
 
@@ -110,7 +133,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                     $lqPageUrl = PluginUtility::getUrl("low_quality_page", "low quality page");
                     $message->addContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");
                     $message->addContent("<ul style='margin-bottom: 0'>");
-                    foreach ($mandatoryFailedRules as $mandatoryFailedRule){
+                    foreach ($mandatoryFailedRules as $mandatoryFailedRule) {
                         $message->addContent("<li>{$mandatoryFailedRule}</li>");
                     }
                     $message->addContent("</ul>");

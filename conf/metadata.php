@@ -105,9 +105,14 @@ $meta[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE] = array('onoff
 /**
  * The mandatory rules
  */
-$meta[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES_DEFAULT_VALUE);
+$meta[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);
 
 /**
  * Autofrontmatter mode enable
  */
 $meta[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = array('onoff');
+
+/**
+ * The quality rules excluded from monitoring
+ */
+$meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);

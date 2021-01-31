@@ -31,6 +31,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "group";
+    const COMPONENT = "navbargroup";
 
     /**
      * Syntax Type.
@@ -99,7 +100,6 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
             $pattern = PluginUtility::getContainerTagPattern(self::TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-            $this->Lexer->addPattern(LinkUtility::LINK_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
         }
 
@@ -138,10 +138,6 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_UNMATCHED:
                 return array($state, $match);
 
-            case DOKU_LEXER_MATCHED:
-
-                $linkAttributes = LinkUtility::getAttributes($match);
-                return array($state, $linkAttributes);
 
             case DOKU_LEXER_EXIT :
 
@@ -196,14 +192,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= "<ul {$inlineAttributes}>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :
-
                     $renderer->doc .= NavBarUtility::text(PluginUtility::escape($payload));
-                    break;
-
-                case DOKU_LEXER_MATCHED:
-
-                    $html = LinkUtility::renderLinkDefault($renderer, $payload);
-                    $renderer->doc .= '<li class="nav-item">'.NavBarUtility::switchDokuwiki2BootstrapClass($html).'</li>';
                     break;
 
                 case DOKU_LEXER_EXIT :
@@ -211,15 +200,6 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
                     break;
             }
             return true;
-        } else if ($format == 'metadata' && $state == DOKU_LEXER_MATCHED) {
-
-            /**
-             * Keep track of the backlinks ie meta['relation']['references']
-             * @var Doku_Renderer_metadata $renderer
-             */
-            LinkUtility::handleMetadata($renderer, $payload);
-            return true;
-
         }
         return false;
     }

@@ -68,11 +68,12 @@ class XmlUtility
      */
     public static function addAttributeValue($attName, $attValue, SimpleXMLElement $xml)
     {
-        $actualWidthValue = (string)$xml[$attName];
-        if ($actualWidthValue != "") {
-            $xml[$attName] .= " $attValue";
-        } else {
+
+        $actualAttValue = $xml[$attName];
+        if ($actualAttValue==null){
             $xml->addAttribute($attName, $attValue);
+        } else {
+            $xml[$attName]=(string)$actualAttValue." $attValue";
         }
     }
 

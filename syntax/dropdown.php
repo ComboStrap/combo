@@ -9,7 +9,6 @@ use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 
 
-
 require_once(__DIR__ . '/../class/PluginUtility.php');
 require_once(__DIR__ . '/../class/LinkUtility.php');
 require_once(__DIR__ . '/../class/HtmlUtility.php');
@@ -34,23 +33,23 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
      * Syntax Type.
      *
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
+     * @see https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
      * @see DokuWiki_Syntax_Plugin::getType()
      */
     function getType()
     {
-        return 'formatting';
+        return 'container';
     }
 
     /**
      * @return array
      * Allow which kind of plugin inside
      *
-     * No one of array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
-     * because we manage self the content and we call self the parser
+     * An array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
      */
     public function getAllowedTypes()
     {
-        return array('formatting');
+        return array('formatting', 'substition');
     }
 
     /**
@@ -89,9 +88,6 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
 
         $pattern = PluginUtility::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-
-        // Link
-        $this->Lexer->addPattern(LinkUtility::LINK_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
 
     }
@@ -133,10 +129,6 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                 // Normally we don't get any here
                 return array($state, $match);
 
-            case DOKU_LEXER_MATCHED :
-
-                $linkAttributes = LinkUtility::getAttributes($match);
-                return array($state, $linkAttributes);
 
             case DOKU_LEXER_EXIT :
 
@@ -176,9 +168,9 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                     if (array_key_exists("name", $payload)) {
                         $name = $payload["name"];
                     }
-                    $renderer->doc .= '<li class="nav-item dropdown">'
-                        . DOKU_TAB . '<a id="' . $dropDownId . '" href="#" class="nav-link dropdown-toggle active" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="Title">' . $name . '</a>'
-                        . DOKU_TAB . '<div class="dropdown-menu" aria-labelledby="' . $dropDownId . '">';
+                    $renderer->doc .= '<li class="nav-item dropdown">' . DOKU_LF
+                        . '<a id="' . $dropDownId . '" href="#" class="nav-link dropdown-toggle active" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="Title">' . $name . '</a>' . DOKU_LF
+                        . '<div class="dropdown-menu" aria-labelledby="' . $dropDownId . '">' . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -186,13 +178,6 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= PluginUtility::escape($payload);
                     break;
 
-                case DOKU_LEXER_MATCHED:
-
-                    $html = LinkUtility::renderLinkDefault($renderer, $payload);
-                    $html = HtmlUtility::addAttributeValue($html, "class", "dropdown-item");
-                    $html = LinkUtility::deleteDokuWikiClass($html);
-                    $renderer->doc .= $html;
-                    break;
 
                 case DOKU_LEXER_EXIT :
 
@@ -203,15 +188,6 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                     break;
             }
             return true;
-        } else if ($format == 'metadata' && $state == DOKU_LEXER_MATCHED) {
-
-            /**
-             * Keep track of the backlinks ie meta['relation']['references']
-             * @var Doku_Renderer_metadata $renderer
-             */
-            LinkUtility::handleMetadata($renderer, $payload);
-            return true;
-
         }
         return false;
     }

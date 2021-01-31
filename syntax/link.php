@@ -7,6 +7,7 @@ require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
+use ComboStrap\HtmlUtility;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\NavBarUtility;
@@ -172,7 +173,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
                         break;
                     case syntax_plugin_combo_cite::TAG:
-                    case syntax_plugin_combo_dropdown::TAG:
                     case syntax_plugin_combo_listitem::TAG:
                     case syntax_plugin_combo_preformatted::TAG:
                         if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
@@ -181,9 +181,21 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             }
                         }
                         break;
+                    case syntax_plugin_combo_dropdown::TAG:
+                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
+                            if ($link->getInternalPage()->existInFs()) {
+                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                            }
+                        }
+                        $htmlLink = HtmlUtility::addAttributeValue($htmlLink, "class", "dropdown-item");
+                        break;
                     case syntax_plugin_combo_navbarcollapse::COMPONENT:
                         $htmlLink = '<div class="navbar-nav">' . NavBarUtility::switchDokuwiki2BootstrapClass($htmlLink) . '</div>';
                         break;
+                    case syntax_plugin_combo_navbargroup::COMPONENT:
+                        $htmlLink = '<li class="nav-item">' . NavBarUtility::switchDokuwiki2BootstrapClass($htmlLink) . '</li>';
+                        break;
+
                 }
 
 

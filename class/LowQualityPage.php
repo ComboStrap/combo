@@ -101,7 +101,8 @@ window.addEventListener('DOMContentLoaded', function () {
 
     jQuery("span.{$jsClass}").each(function() {
         if (JSINFO["{$jsIndicator}"]==false){
-            jQuery(this).replaceWith( "<a class=\"{$lowQualityPageClass}\" href=\""+DOKU_BASE+jQuery(this).attr("data-wiki-id").replace(":","/")+"\">"+jQuery(this).text()+"</a>" )
+            let actualClass = jQuery(this).attr("class");
+            jQuery(this).replaceWith( "<a class=\""+actualClass+"\" href=\""+DOKU_BASE+jQuery(this).attr("data-wiki-id").replace(":","/")+"\">"+jQuery(this).text()+"</a>" )
         }
     })
 

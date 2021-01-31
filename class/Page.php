@@ -6,6 +6,7 @@ namespace ComboStrap;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use RuntimeException;
+use const PHPSTORM_META\ANY_ARGUMENT;
 
 
 /**
@@ -624,7 +625,17 @@ class Page
     function isLowQualityPage()
     {
 
-        return $this->getLowQualityIndicator() === true;
+        $lowQualityIndicator = $this->getLowQualityIndicator();
+        if ($lowQualityIndicator == null) {
+            /**
+             * By default, if a file has not been through
+             * a {@link \renderer_plugin_combo_analytics}
+             * analysis, this is not a low page
+             */
+            return false;
+        } else {
+            return $lowQualityIndicator === true;
+        }
 
     }
 
@@ -701,9 +712,31 @@ class Page
         return $this->id; //. " ({$this->getH1()})";
     }
 
-    private function getH1()
+    public function getH1()
     {
-        return p_get_metadata($this->id, Analytics::H1, METADATA_RENDER_USING_SIMPLE_CACHE);
+
+        $heading = p_get_metadata(cleanID($this->id), Analytics::H1, METADATA_RENDER_USING_SIMPLE_CACHE);
+        if (!blank($heading)) {
+            return PluginUtility::escape($heading);
+        } else {
+            return $heading;
+        }
+
+    }
+
+    /**
+     * Return the Title
+     */
+    public function getTitle()
+    {
+
+        $title = p_get_metadata(cleanID($this->id), Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
+        if (!blank($heading)) {
+            return PluginUtility::escape($title);
+        } else {
+            return $title;
+        }
+
     }
 
 

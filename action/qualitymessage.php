@@ -103,6 +103,19 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 $qualityScore = $analytics[Analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
                 $message = new Note($plugin);
                 $message->addContent("<p>Well played, you got a " . PluginUtility::getUrl("quality:score", "quality score") . " of {$qualityScore} !</p>");
+                if ($page->isLowQualityPage()) {
+                    $analytics = $page->getAnalyticsFromFs(true);
+                    $mandatoryFailedRules = $analytics[Analytics::QUALITY][Analytics::FAILED_MANDATORY_RULES];
+                    $rulesUrl = PluginUtility::getUrl("quality:rule", "rules");
+                    $lqPageUrl = PluginUtility::getUrl("low_quality_page", "low quality page");
+                    $message->addContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");
+                    $message->addContent("<ul style='margin-bottom: 0'>");
+                    foreach ($mandatoryFailedRules as $mandatoryFailedRule){
+                        $message->addContent("<li>{$mandatoryFailedRule}</li>");
+                    }
+                    $message->addContent("</ul>");
+                    $message->addContent("</div>");
+                }
                 $message->addContent("<p>You can still win a couple of points.</p>");
                 $message->addContent("<ul>");
                 foreach ($qualityInfoRules as $qualityRule => $qualityInfo) {

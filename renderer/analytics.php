@@ -434,7 +434,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $quality[Analytics::LOW] = $lowLevel;
         if (sizeof($mandatoryRulesBroken) > 0) {
             ksort($mandatoryRulesBroken);
-            $quality['failed_mandatory_rules'] = $mandatoryRulesBroken;
+            $quality[Analytics::FAILED_MANDATORY_RULES] = $mandatoryRulesBroken;
         }
         $quality[self::SCORING] = $qualityScoring;
         $quality[Analytics::RULES][self::RESULT] = $qualityResult;
@@ -516,7 +516,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $attribute = array(
             LinkUtility::ATTRIBUTE_ID => $url,
             LinkUtility::ATTRIBUTE_TYPE => LinkUtility::TYPE_EXTERNAL,
-            LinkUtility::ATTRIBUTE_TITLE => $name
+            LinkUtility::ATTRIBUTE_NAME => $name
         );
         LinkUtility::processLinkStats($attribute, $this->stats);
     }

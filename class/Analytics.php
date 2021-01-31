@@ -54,7 +54,7 @@ class Analytics
     const LOW = "low";
     const RULES = "rules";
     const DETAILS = 'details';
-
+    const FAILED_MANDATORY_RULES = 'failed_mandatory_rules';
 
 
     /**

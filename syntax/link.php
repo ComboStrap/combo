@@ -143,48 +143,35 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 } else {
                     $attributes = $data;
                 }
-
-                $type = $attributes[LinkUtility::ATTRIBUTE_TYPE];
                 $id = $attributes[LinkUtility::ATTRIBUTE_ID];
-
-                /**
-                 * Email are also link for Dokuwiki
-                 * And there is no notion of page.
-                 * For the low quality page functionality,
-                 * we split the process of the internal link
-                 */
-                $lowLink = false;
-                if ($type == LinkUtility::TYPE_INTERNAL) {
-                    /**
-                     * If this is a low quality internal page,
-                     * print a shallow link for the anonymous user
-                     */
-                    $qualifiedPageId = LinkUtility::toQualifiedLink($id);
-                    $page = new Page($qualifiedPageId);
-                    if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE)
-                        && $page->isLowQualityPage()) {
-
-                        $lowLink = true;
-                    }
+                $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
+                $type = $attributes[LinkUtility::ATTRIBUTE_TYPE];
+                $link = new LinkUtility($id);
+                if ($name!=null) {
+                    $link->setName($name);
                 }
+                $link->setType($type);
 
                 /**
                  * Render the link
                  */
-                $htmlLink = LinkUtility::renderLinkDefault($renderer, $attributes, $lowLink);
+                $htmlLink = $link->render($renderer);
 
                 /**
-                 * Extra styling
+                 * Extra styling for internal link
                  */
-                $parentClassWithoutClass = array(
-                    syntax_plugin_combo_button::TAG,
-                    syntax_plugin_combo_cite::TAG,
-                    syntax_plugin_combo_dropdown::TAG,
-                    syntax_plugin_combo_listitem::TAG,
-                    syntax_plugin_combo_preformatted::TAG
-                );
-                if (page_exists($id) && in_array($data[PluginUtility::PARENT_TAG], $parentClassWithoutClass)) {
-                    $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                if ($link->getType()==LinkUtility::TYPE_INTERNAL) {
+                    $parentClassWithoutClass = array(
+                        syntax_plugin_combo_button::TAG,
+                        syntax_plugin_combo_cite::TAG,
+                        syntax_plugin_combo_dropdown::TAG,
+                        syntax_plugin_combo_listitem::TAG,
+                        syntax_plugin_combo_preformatted::TAG
+                    );
+                    $internalPage = $link->getInternalPage();
+                    if ($internalPage->existInFs() && in_array($data[PluginUtility::PARENT_TAG], $parentClassWithoutClass)) {
+                        $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                    }
                 }
 
                 if ($data[PluginUtility::PARENT_TAG] == syntax_plugin_combo_button::TAG) {

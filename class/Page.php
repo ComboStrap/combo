@@ -719,7 +719,7 @@ class Page
         if (!blank($heading)) {
             return PluginUtility::escape($heading);
         } else {
-            return $heading;
+            return null;
         }
 
     }

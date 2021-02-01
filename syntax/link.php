@@ -30,6 +30,7 @@ if (!defined('DOKU_INC')) die();
 class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 {
     const TAG = 'link';
+    const COMPONENT = 'combo_link';
 
 
     /**

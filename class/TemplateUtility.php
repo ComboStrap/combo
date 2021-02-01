@@ -24,14 +24,71 @@ class TemplateUtility
          * @see {@link \syntax_plugin_combo_pipeline}
          */
 
-        $pageTitle = TitleUtility::getPageTitle($pageId);
+        $pageTitle = self::getPageTitle($pageId);
         $pageTitle = str_replace('"', "'", $pageTitle);
         $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
-        $h1Title = TitleUtility::getPageH1($pageId);
+        $h1Title = self::getPageH1($pageId);
         $h1Title = str_replace('"', "'", $h1Title);
         $tpl = str_replace("\$h1", $h1Title, $tpl);
         return str_replace("\$id", $pageId, $tpl);
 
     }
+
+    public static function getPageH1($pageId)
+    {
+        $h1 = p_get_metadata(cleanID($pageId), 'h1', METADATA_DONT_RENDER);
+        if (empty($h1)){
+            return self::getPageTitle($pageId);
+        } else {
+            return $h1;
+        }
+    }
+
+    /**
+     * This function is used on a lot of place
+     *
+     * Due to error with the title rendering, we have refactored
+     *
+     * @param $pageId
+     * @return array|mixed|null
+     */
+    public static function getPageTitle($pageId)
+    {
+        $name = $pageId;
+        // The title of the page
+        if (useHeading('navigation')) {
+
+            // $title = $page['title'] can not be used to retrieve the title
+            // because it didn't encode the HTML tag
+            // for instance if <math></math> is used, the output must have &lgt ...
+            // otherwise browser may add quote and the math plugin will not work
+            // May be a solution was just to encode the output
+
+            /**
+             * Bug:
+             * PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 98570240 bytes)
+             * in inc/Cache/CacheInstructions.php on line 44
+             * It was caused by a recursion in the rendering, it seems in {@link p_get_metadata()}
+             * The parameter METADATA_DONT_RENDER stops the recursion
+             *
+             * Don't use the below procedures, they all call the same function and render the meta
+             *   * $name = tpl_pagetitle($pageId, true);
+             *   * $title = p_get_first_heading($page['id']);
+             *
+             * In the <a href="https://www.dokuwiki.org/devel:metadata">documentation</a>,
+             * the rendering mode that they advertised for the title is `METADATA_RENDER_SIMPLE_CACHE`
+             *
+             * We have chosen METADATA_DONT_RENDER (0)
+             * because when we asks for the title of the directory,
+             * it will render the whole tree (the directory of the directory)
+             *
+             *
+             */
+            $name = p_get_metadata(cleanID($pageId), 'title', METADATA_DONT_RENDER);
+
+        }
+        return $name;
+    }
+
 
 }

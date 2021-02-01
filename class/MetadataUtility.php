@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\Plugin;
 
-require_once(__DIR__ . '/../class/TitleUtility.php');
 /**
  * Class MetadataUtility
  * @package ComboStrap

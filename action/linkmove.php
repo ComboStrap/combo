@@ -31,10 +31,10 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
     function handle_move(Doku_Event $event, $params)
     {
         /**
-         * 'combo_link' refers to the {@link syntax_plugin_combo_link} handler
-         * 'rewrite_combo' to the below method
+         * The handlers is the name of the component (ie refers to the {@link syntax_plugin_combo_link} handler)
+         * and 'rewrite_combo' to the below method
          */
-        $event->data['handlers']['combo_link'] = array($this, 'rewrite_combo');
+        $event->data['handlers'][syntax_plugin_combo_link::COMPONENT] = array($this, 'rewrite_combo');
     }
 
     /**

@@ -3,19 +3,29 @@
 
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
-use ComboStrap\TitleUtility;
 use ComboStrap\PluginUtility;
 
-require_once(__DIR__ . '/../class/TitleUtility.php');
 
 if (!defined('DOKU_INC')) die();
 
-
+/**
+ * Class syntax_plugin_combo_title
+ * Title in container component
+ */
 class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 {
 
 
     const TAG = "title";
+
+    /**
+     * Header pattern that we expect in a card (teaser) ie  ==== Hello =====
+     * Found in {@link \dokuwiki\Parsing\ParserMode\Header}
+     */
+    const HEADING_PATTERN = '[ \t]*={2,}[^\n]+={2,}[ \t]*(?=\n)';
+
+    const TITLE = 'title';
+    const LEVEL = 'level';
 
     /**
      * @param $parentTag
@@ -24,7 +34,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
      */
     private static function renderClosingTag($parentTag, $attributes)
     {
-        $level = $attributes[TitleUtility::LEVEL];
+        $level = $attributes[self::LEVEL];
         $html = "</h$level>" . DOKU_LF;
         if ($parentTag == syntax_plugin_combo_blockquote::TAG) {
             $html .= syntax_plugin_combo_blockquote::BLOCKQUOTE_OPEN_TAG;
@@ -82,7 +92,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
             PluginUtility::getModeForComponent(syntax_plugin_combo_tabpanel::TAG),
         ];
         if (in_array($mode, $modes)) {
-            $this->Lexer->addSpecialPattern(TitleUtility::HEADING_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(self::HEADING_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
         $this->Lexer->addEntryPattern(PluginUtility::getContainerTagPattern(self::TAG), $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
     }
@@ -147,14 +157,14 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_SPECIAL :
 
-                $attributes = TitleUtility::parseHeading($match);
+                $attributes = self::parseHeading($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
                 $parentTag = $tag->getParent();
                 if ($parentTag!=null) {
                     $parentTag = $parentTag->getName();
                 }
                 $html = self::renderOpeningTag($parentTag, $attributes);
-                $title = $attributes[TitleUtility::TITLE];
+                $title = $attributes[self::TITLE];
                 $html .= PluginUtility::escape($title);
                 $html .= self::renderClosingTag($parentTag, $attributes);
                 return array(
@@ -222,11 +232,11 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
         if ($type != 0){
             PluginUtility::addClass2Attributes("display-".$type,$attributes);
         }
-        if (isset($attributes[TitleUtility::TITLE])){
-            unset($attributes[TitleUtility::TITLE]);
+        if (isset($attributes[self::TITLE])){
+            unset($attributes[self::TITLE]);
         }
-        $level = $attributes[TitleUtility::LEVEL];
-        unset($attributes[TitleUtility::LEVEL]);
+        $level = $attributes[self::LEVEL];
+        unset($attributes[self::LEVEL]);
         $html = '<h' . $level;
         if (sizeof($attributes)>0) {
             $html .= ' '.PluginUtility::array2HTMLAttributes($attributes);
@@ -235,6 +245,17 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
         return $html. '>';
     }
 
+    public static function parseHeading($match)
+    {
+        $title = trim($match);
+        $level = 7 - strspn($title, '=');
+        if ($level < 1) $level = 1;
+        $title = trim($title, '=');
+        $title = trim($title);
+        $parameters[self::TITLE] = $title;
+        $parameters[self::LEVEL] = $level;
+        return $parameters;
+    }
 
 }
 

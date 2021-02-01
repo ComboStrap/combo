@@ -313,8 +313,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                             if (!empty($nsTemplate)) {
                                 $pageId = FsWikiUtility::getIndex($page['id']);
                                 if ($pageId != null) {
-                                    $pageTitle = TitleUtility::getPageTitle($pageId);
-                                    $tpl = TemplateUtility::render($nsTemplate, $pageId, $pageTitle);
+                                    $tpl = TemplateUtility::render($nsTemplate, $pageId);
                                     $list .= '<li>' . $tpl . '</li>';
                                 }
                             }
@@ -325,8 +324,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                                 $pageNum++;
                                 $pageId = $page['id'];
                                 if (":" . $pageId != $pageIndex && $pageId != $pageIndex ) {
-                                    $pageTitle = TitleUtility::getPageTitle($pageId);
-                                    $tpl = TemplateUtility::render($pageTemplate, $pageId, $pageTitle);
+                                    $tpl = TemplateUtility::render($pageTemplate, $pageId);
                                     $list .= '<li>' . $tpl . '</li>';
                                 }
                             }

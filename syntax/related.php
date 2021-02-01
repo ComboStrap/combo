@@ -4,8 +4,8 @@
  *
  */
 
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\TitleUtility;
 
 
 require_once(DOKU_INC . 'inc/parserutils.php');
@@ -125,7 +125,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
                 // Parse the parameters
                 $match = substr($match, strlen(self::getElementName()), -1);
-                $parameters=array();
+                $parameters = array();
 
                 // /i not case sensitive
                 $attributePattern = "\\s*(\w+)\\s*=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*";
@@ -189,9 +189,16 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
                 foreach ($relatedPages as $backlink) {
                     $backlinkId = $backlink[self::RELATED_PAGE_ID_PROP];
-                    $name = TitleUtility::getPageTitle($backlinkId);
+                    $backlinkPage = new Page($backlinkId);
+                    $name = $backlinkPage->getH1();
+                    /**
+                     * Hack, moving title to h1
+                     * in case if the page was not still analyzed
+                     * the h1 is saved in title by dokuwiki
+                     */
                     if (empty($name)) {
-                        $name = $backlinkId;
+                        $name = $backlinkPage->getTitle();
+                        $name = substr($name, 0, 50);
                     }
                     $renderer->doc .= '<li>';
                     if ($backlinkId != self::MORE_PAGE_ID) {

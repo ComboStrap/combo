@@ -73,7 +73,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 return;
             }
 
-            $note = $this->getQualityNote(PluginUtility::getPageId(), $this);
+            $note = $this->createQualityNote(PluginUtility::getPageId(), $this);
             if ($note != null) {
                 ptln($note->getHtml());
             }
@@ -86,7 +86,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
      * @param $plugin - Plugin
      * @return Note|null
      */
-    static public function getQualityNote($pageId, $plugin)
+    static public function createQualityNote($pageId, $plugin)
     {
         $page = new Page($pageId);
 
@@ -133,8 +133,9 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                     $lqPageUrl = PluginUtility::getUrl("low_quality_page", "low quality page");
                     $message->addContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");
                     $message->addContent("<ul style='margin-bottom: 0'>");
+
                     foreach ($mandatoryFailedRules as $mandatoryFailedRule) {
-                        $message->addContent("<li>{$mandatoryFailedRule}</li>");
+                        $message->addContent("<li>".PluginUtility::getUrl("quality:rule#list", $mandatoryFailedRule)."</li>");
                     }
                     $message->addContent("</ul>");
                     $message->addContent("</div>");

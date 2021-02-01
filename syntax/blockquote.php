@@ -15,7 +15,6 @@ if (!defined('DOKU_INC')) {
 }
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
-require_once(__DIR__ . '/../class/TitleUtility.php');
 require_once(__DIR__ . '/../class/StringUtility.php');
 require_once(__DIR__ . '/../class/Tag.php');
 

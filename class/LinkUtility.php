@@ -15,8 +15,8 @@ namespace ComboStrap;
 
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
-use http\Exception\RuntimeException;
-use syntax_plugin_combo_tooltip;
+
+require_once(__DIR__ . '/../../combo/class/' . 'TemplateUtility.php');
 
 /**
  * Class LinkUtility
@@ -455,13 +455,26 @@ class LinkUtility
     function getName()
     {
         $name = $this->name;
+
+        /**
+         * Templating
+         */
+        if ($this->getType() == self::TYPE_INTERNAL) {
+            $name = TemplateUtility::render($name, $this->getAbsoluteId());
+        }
+
+        /**
+         * Pipeline
+         */
         if (strpos($this->name, "<pipeline>") !== false) {
             $name = str_replace("<pipeline>", "", $name);
             $name = str_replace("</pipeline>", "", $name);
             $name = PipelineUtility::execute($name);
         }
+
         return $name;
     }
+
 
 
 }

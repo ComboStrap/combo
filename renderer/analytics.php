@@ -528,12 +528,12 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
     public function externallink($url, $name = null)
     {
-        $attribute = array(
-            LinkUtility::ATTRIBUTE_REF => $url,
-            LinkUtility::ATTRIBUTE_TYPE => LinkUtility::TYPE_EXTERNAL,
-            LinkUtility::ATTRIBUTE_NAME => $name
-        );
-        LinkUtility::processLinkStats($attribute, $this->stats);
+        $link = new LinkUtility($url);
+        $link->setType(LinkUtility::TYPE_EXTERNAL);
+        if($name !=null) {
+            $link->setName($name);
+        }
+        $link->processLinkStats( $this->stats);
     }
 
     public function header($text, $level, $pos)

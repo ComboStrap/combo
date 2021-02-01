@@ -261,14 +261,15 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
                 }
             }
         }
+        $outlinePoints = $this->getConf(self::CONF_QUALITY_SCORE_CORRECT_HEADER_STRUCTURE, 3);
         if ($treeError > 0 || $headersCount == 0) {
             $qualityScores['correct_outline'] = 0;
             $ruleResults[self::RULE_OUTLINE_STRUCTURE] = self::FAILED;
             if ($headersCount == 0) {
-                $ruleInfo[self::RULE_OUTLINE_STRUCTURE] = "There is no header";
+                $ruleInfo[self::RULE_OUTLINE_STRUCTURE] = "Add headings to create a document outline for {$outlinePoints} points";
             }
         } else {
-            $qualityScores['correct_outline'] = $this->getConf(self::CONF_QUALITY_SCORE_CORRECT_HEADER_STRUCTURE, 3);
+            $qualityScores['correct_outline'] = $outlinePoints;
             $ruleResults[self::RULE_OUTLINE_STRUCTURE] = self::PASSED;
         }
 

@@ -34,6 +34,11 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
      */
     const CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING = "excludedQualityRulesFromDynamicMonitoring";
 
+    /**
+     * Key in the frontmatter that disable the message
+     */
+    const DISABLE_INDICATOR = "dynamic_quality_monitoring";
+
 
     function __construct()
     {
@@ -91,6 +96,10 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         $page = new Page($pageId);
 
         if ($page->isBar()) {
+            return null;
+        }
+
+        if (!$page->isQualityMonitored()) {
             return null;
         }
 

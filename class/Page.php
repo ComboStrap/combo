@@ -3,10 +3,12 @@
 namespace ComboStrap;
 
 
+
+use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use RuntimeException;
-use const PHPSTORM_META\ANY_ARGUMENT;
+
 
 
 /**
@@ -761,6 +763,20 @@ class Page
             return $title;
         }
 
+    }
+
+    /**
+     * If true, the page is quality monitored (a note is shown to the writer)
+     * @return bool|mixed
+     */
+    public function isQualityMonitored()
+    {
+        $dynamicQualityIndicator = p_get_metadata(cleanID($this->id), action_plugin_combo_qualitymessage::DISABLE_INDICATOR,METADATA_RENDER_USING_SIMPLE_CACHE);
+        if ($dynamicQualityIndicator === null) {
+            return true;
+        } else {
+            return filter_var($dynamicQualityIndicator, FILTER_VALIDATE_BOOLEAN);
+        }
     }
 
 

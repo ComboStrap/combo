@@ -24,16 +24,15 @@ class ArrayUtility
 
         $content .= '<ul>';
         foreach ($toPrint as $key => $value) {
-            $keyProcessed = str_replace("_", " ", ucfirst($key));
             if (is_array ( $value )){
-                $content .= '<li>' . $keyProcessed . ' : ' ;
+                $content .= '<li>' . $key . ' : ' ;
                 self::formatAsHtmlList($value, $content );
                 $content .= '</li>';
             } else {
                 if (preg_match('/date|created|modified/i',  $key ) && is_numeric($value)){
                     $value = date(DateTime::ISO8601, $value);
                 }
-                $content .= '<li>' . $keyProcessed . ' : ' . $value . '</li>';
+                $content .= '<li>' . $key . ' : ' . $value . '</li>';
             }
         }
         $content .= '</ul>';

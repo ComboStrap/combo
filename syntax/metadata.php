@@ -90,8 +90,7 @@ class syntax_plugin_combo_metadata extends DokuWiki_Syntax_Plugin
          * because of the connect to
          */
 
-        $attributes = PluginUtility::getTagAttributes($match);
-        return $attributes;
+        return PluginUtility::getTagAttributes($match);
 
     }
 

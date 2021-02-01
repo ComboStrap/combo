@@ -120,6 +120,8 @@ EOF;
      * The span element is then modified as link by javascript if the user is not anonymous
      * @param LinkUtility $link
      * @return string the html
+     *
+     * TODO: It could also have a `rel="nofollow"`
      */
     public static function renderLowQualityLink($link)
     {

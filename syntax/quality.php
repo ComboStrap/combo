@@ -1,10 +1,8 @@
 <?php
 
 
-use ComboStrap\AdsUtility;
 use ComboStrap\PluginUtility;
 
-require_once(__DIR__ . '/../class/AdsUtility.php');
 
 /**
  * Show the dynamic quality message

@@ -74,6 +74,11 @@ class LinkUtility
     private $linkedPage;
 
     /**
+     * @var string The value of the title attribute of an anchor
+     */
+    private $title;
+
+    /**
      * Link constructor.
      * @param $id
      */
@@ -475,6 +480,21 @@ class LinkUtility
         return $name;
     }
 
+    /**
+     * @param $title -the value of the title attribute of the anchor
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+    }
+
+    /**
+     * @return string the title of the link
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
 
 
 }

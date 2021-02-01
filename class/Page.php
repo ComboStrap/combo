@@ -327,6 +327,9 @@ class Page
 
     private function getName()
     {
+        /**
+         * See also {@link noNSorNS}
+         */
         $names = $this->getNames();
         return $names[sizeOf($names) - 1];
     }

@@ -18,6 +18,17 @@ class Page
 {
     const CANONICAL_PROPERTY = 'canonical';
     const TITLE_PROPERTY = 'title';
+
+    /**
+     * An indicator in the meta
+     * that set a boolean to true or false
+     * to categorize a page as low quality
+     * It can be set manually via the {@link \syntax_plugin_combo_frontmatter front matter}
+     * otherwise the {@link \renderer_plugin_combo_analytics}
+     * will do it
+     */
+    const LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
+
     private $id;
     private $canonical;
 
@@ -489,16 +500,33 @@ class Page
         $this->deleteCache(Analytics::RENDERER_NAME_MODE);
         $sqlite = Sqlite::getSqlite();
         if ($sqlite != null) {
-            $entry = array(
-                "ID" => $this->id,
-                "TIMESTAMP" => date('Y-m-d H:i:s', time()),
-                "REASON" => $reason
-            );
-            $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
+
+            /**
+             * Check if exists
+             */
+            $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->id));
             if (!$res) {
                 LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
             }
+            $result = $sqlite->res2single($res);
             $sqlite->res_close($res);
+
+            /**
+             * If not insert
+             */
+            if ($result != 1) {
+                $entry = array(
+                    "ID" => $this->id,
+                    "TIMESTAMP" => date('Y-m-d H:i:s', time()),
+                    "REASON" => $reason
+                );
+                $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
+                if (!$res) {
+                    LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+                }
+                $sqlite->res_close($res);
+            }
+
         }
 
     }
@@ -580,10 +608,10 @@ class Page
         $actualIndicator = $this->getLowQualityIndicator();
         if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
 
-            p_set_metadata($this->id, array("quality" => array("low" => $newIndicator)));
+            p_set_metadata($this->id, array(self::LOW_QUALITY_PAGE_INDICATOR => $newIndicator));
 
             /**
-             * Delete the cache to rewrite the link
+             * Delete the cache to rewrite the links
              * if the protection is on
              */
             if (PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1) {
@@ -643,11 +671,7 @@ class Page
     public function getLowQualityIndicator()
     {
 
-        $meta = p_get_metadata($this->id, "quality");
-        if ($meta === null) {
-            return null;
-        }
-        $low = $meta["low"];
+        $low = p_get_metadata($this->id, self::LOW_QUALITY_PAGE_INDICATOR);
         if ($low === null) {
             return null;
         } else {

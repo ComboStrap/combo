@@ -93,6 +93,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         if ($page->isBar()) {
             return null;
         }
+
         if ($page->existInFs()) {
             $analytics = $page->getAnalyticsFromFs();
             $rules = $analytics[Analytics::QUALITY][Analytics::RULES];

@@ -169,9 +169,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
                             if ($link->getInternalPage()->existInFs()) {
                                 $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
+                                $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
                             }
+                        } else {
+                            $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
                         }
-                        $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
                         break;
                     case syntax_plugin_combo_cite::TAG:
                     case syntax_plugin_combo_listitem::TAG:

@@ -32,6 +32,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
     // Property key
     const ORIGIN_PAGE = 'redirectId';
     const ORIGIN_TYPE = 'redirectOrigin';
+    const CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE = 'ShowPageNameIsNotUnique';
 
     function __construct()
     {
@@ -167,7 +168,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
     function addToMessagePagesWithSameName($message, $pageId)
     {
 
-        if ($this->getConf('ShowPageNameIsNotUnique') == 1 ) {
+        if ($this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1 ) {
 
             global $ID;
             // The page name
@@ -176,7 +177,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
 
             if (count($pagesWithSameName) > 0) {
 
-                $message->setType(Message::TYPE_WARNING);
+                $message->setType(Note::TYPE_WARNING);
 
                 // Assign the value to a variable to be able to use the construct .=
                 if ($message->getContent() <> '') {

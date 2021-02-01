@@ -429,6 +429,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
         /**
          * Low level
+         * If not set manually
          */
         $mandatoryRules = preg_split("/,/", $this->getConf(self::CONF_MANDATORY_QUALITY_RULES));
         $mandatoryRulesBroken = [];
@@ -437,11 +438,15 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
                 $mandatoryRulesBroken[] = $lowLevelRule;
             }
         }
-        $lowLevel = false;
-        if (sizeof($mandatoryRulesBroken) > 0) {
-            $lowLevel = true;
+        if (empty($this->metadata[Page::LOW_QUALITY_PAGE_INDICATOR])) {
+            $lowLevel = false;
+            if (sizeof($mandatoryRulesBroken) > 0) {
+                $lowLevel = true;
+            }
+            $this->page->setLowQualityIndicator($lowLevel);
+        } else {
+            $lowLevel = $this->metadata[Page::LOW_QUALITY_PAGE_INDICATOR];
         }
-        $this->page->setLowQualityIndicator($lowLevel);
 
         /**
          * Building the quality object in order
@@ -518,11 +523,9 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function internallink($id, $name = null, $search = null, $returnonly = false, $linktype = 'content')
     {
 
-        $attribute = array(
-            LinkUtility::ATTRIBUTE_REF => $id,
-            LinkUtility::ATTRIBUTE_TYPE => LinkUtility::TYPE_INTERNAL
-        );
-        LinkUtility::processLinkStats($attribute, $this->stats);
+        $link = new LinkUtility($id);
+        $link->setType(LinkUtility::TYPE_INTERNAL);
+        $link->processLinkStats($this->stats);
 
     }
 

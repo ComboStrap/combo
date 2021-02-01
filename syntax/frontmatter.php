@@ -154,12 +154,20 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 }
 
                 /**
-                 * Pass the title to the metadat
+                 * Pass the title to the metadata
                  * to advertise that it's in the front-matter
                  * for the quality rules
                  */
                 if ($key == Page::TITLE_PROPERTY) {
                     $result[Page::TITLE_PROPERTY] = $value;
+                }
+
+                /**
+                 * Pass the low quality indicator
+                 * to advertise that it's in the front-matter
+                 */
+                if ($key == Page::LOW_QUALITY_PAGE_INDICATOR) {
+                    $result[Page::LOW_QUALITY_PAGE_INDICATOR] = $value;
                 }
 
                 // Canonical should be lowercase
@@ -220,6 +228,9 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 }
                 if (array_key_exists(Page::TITLE_PROPERTY, $data)) {
                     $renderer->setMeta(Page::TITLE_PROPERTY, $data[Page::TITLE_PROPERTY]);
+                }
+                if (array_key_exists(Page::LOW_QUALITY_PAGE_INDICATOR, $data)) {
+                    $renderer->setMeta(Page::LOW_QUALITY_PAGE_INDICATOR, $data[Page::LOW_QUALITY_PAGE_INDICATOR]);
                 }
                 break;
 

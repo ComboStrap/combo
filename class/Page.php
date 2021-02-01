@@ -40,7 +40,7 @@ class Page
     {
         $this->id = $id;
         if (strtolower($id) !== $id) {
-            throw new RuntimeException("The page id ({$id}) is not in lowercase");
+            LogUtility::msg("The page id ({$id}) is not in lowercase");
         }
     }
 

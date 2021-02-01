@@ -52,24 +52,27 @@ class PipelineUtility
                 $commandArgs,
                 array_fill(0,sizeof($commandArgs),"\"")
             );
-            switch ($commandName){
-                case "replace":
-                    $value = self::replace($commandArgs,$value);
-                    break;
-                case "head":
-                    $value = self::head($commandArgs,$value);
-                    break;
-                case "tail":
-                    $value = self::tail($commandArgs,$value);
-                    break;
-                case "rconcat":
-                    $value = self::concat($commandArgs,$value,"right");
-                    break;
-                case "lconcat":
-                    $value = self::concat($commandArgs,$value,"left");
-                    break;
-                default:
-                    LogUtility::msg("command ($commandName) is unknown",LogUtility::LVL_MSG_ERROR,"pipeline");
+            $commandName = trim($commandName);
+            if (!empty($commandName)) {
+                switch ($commandName) {
+                    case "replace":
+                        $value = self::replace($commandArgs, $value);
+                        break;
+                    case "head":
+                        $value = self::head($commandArgs, $value);
+                        break;
+                    case "tail":
+                        $value = self::tail($commandArgs, $value);
+                        break;
+                    case "rconcat":
+                        $value = self::concat($commandArgs, $value, "right");
+                        break;
+                    case "lconcat":
+                        $value = self::concat($commandArgs, $value, "left");
+                        break;
+                    default:
+                        LogUtility::msg("command ($commandName) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
+                }
             }
         }
         return $value;

@@ -150,11 +150,12 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
             );
             fwrite($fileHandle, implode(",", $header) . PHP_EOL);
         }
+        $pageCounter = 0;
         while ($page = array_shift($pages)) {
             $id = $page['id'];
 
-
-            echo 'Processing the page ' . $id . "\n";
+            $pageCounter++;
+            echo "Processing the page {$id} ($pageCounter)\n";
 
             $data = Analytics::processAndGetDataAsArray($id, $cache);
             if (!empty($fileHandle)) {

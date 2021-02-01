@@ -41,8 +41,9 @@ class Page
     public function __construct($id)
     {
         $this->id = $id;
-        if (strtolower($id) !== $id) {
-            LogUtility::msg("The page id ({$id}) is not in lowercase");
+        $idLowerCase = strtolower($id);
+        if ($idLowerCase !== $id) {
+            LogUtility::msg("The page id ({$id}) is not equal in lowercase (ie equal to `{$idLowerCase}`)");
         }
     }
 

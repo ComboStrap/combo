@@ -127,9 +127,19 @@ class action_plugin_combo_lowqualitypage extends DokuWiki_Action_Plugin
     function excludeLowQualityPageFromSearch(&$event)
     {
 
-        foreach (array_keys($event->result) as $idx) {
-            if (LowQualityPage::isPageToExclude($idx)) {
-                unset($event->result[$idx]);
+        $result = $event->result;
+        /**
+         * The value is always an array
+         * but as we got this error:
+         * ```
+         * array_keys() expects parameter 1 to be array
+         * ```
+         */
+        if (is_array($result)) {
+            foreach (array_keys($result) as $idx) {
+                if (LowQualityPage::isPageToExclude($idx)) {
+                    unset($result[$idx]);
+                }
             }
         }
 

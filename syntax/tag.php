@@ -8,6 +8,7 @@ require_once(__DIR__ . '/../class/Tag.php');
 
 /**
  * Just a node to test the {@link Tag} context
+ * This is not public
  */
 class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
 {

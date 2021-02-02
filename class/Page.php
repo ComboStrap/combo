@@ -614,6 +614,11 @@ class Page
         $actualIndicator = $this->getLowQualityIndicator();
         if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
 
+            /**
+             * Don't change the type of the value to a string
+             * otherwise dokuwiki will not see a change
+             * between true and a string and will not persist the value
+             */
             p_set_metadata($this->id, array(self::LOW_QUALITY_PAGE_INDICATOR => $newIndicator));
 
             /**

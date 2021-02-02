@@ -461,17 +461,17 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             }
         }
         /**
-         * If not set manually
+         * If the low level is not set manually
          */
         if (empty($this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR])) {
             $lowLevel = false;
             if (sizeof($mandatoryRulesBroken) > 0) {
                 $lowLevel = true;
             }
-            $this->page->setLowQualityIndicator($lowLevel);
         } else {
-            $lowLevel = $this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR];
+            $lowLevel = filter_var($this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR], FILTER_VALIDATE_BOOLEAN);
         }
+        $this->page->setLowQualityIndicator($lowLevel);
 
         /**
          * Building the quality object in order

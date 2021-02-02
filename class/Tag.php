@@ -166,7 +166,12 @@ class Tag
      */
     private static function getStateFromCall($call)
     {
-        return $call[1][2];
+        $returnedArray = $call[1];
+        if (!array_key_exists(2, $returnedArray)) {
+            return null;
+        } else {
+            return $returnedArray[2];
+        }
     }
 
     public function isChildOf($tag)

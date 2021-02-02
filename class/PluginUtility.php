@@ -236,7 +236,7 @@ class PluginUtility
         }
 
         // Suppress the / for a leaf tag
-        if ($match[strlen($match)] == "/") {
+        if ($match[strlen($match)-1] == "/") {
             $match = substr($match, 0, strlen($match) - 1);
         }
 

@@ -236,6 +236,8 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
+                    // The attributes are used in the exit
+                    break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= $data[PluginUtility::PAYLOAD];
                     break;

@@ -163,7 +163,7 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
                     if (array_key_exists("class", $attributes)) {
                         $attributes["class"] .= ' ' . $class;
                     } else {
-                        $attributes["class"] .= $class;
+                        $attributes["class"] = $class;
                     }
 
                     if (!array_key_exists("background-color", $attributes)) {

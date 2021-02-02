@@ -21,8 +21,6 @@ require_once(__DIR__ . '/../class/Note.php');
  *
  *
  */
-
-
 class action_plugin_combo_urlmessage extends ActionPlugin
 {
 
@@ -57,7 +55,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
         if ($origin != null) {
             $returnValues = array(
                 $origin,
-                $INPUT->str(self::ORIGIN_TYPE,null)
+                $INPUT->str(self::ORIGIN_TYPE, null)
             );
         }
         return $returnValues;
@@ -95,10 +93,18 @@ class action_plugin_combo_urlmessage extends ActionPlugin
         $message->setSignatureCanonical(action_plugin_combo_urlmanager::CANONICAL);
         $message->setSignatureName("Url Manager");
 
-        list($pageIdOrigin, $redirectSource) = self::getMessageSessionProperties();
-        if ($pageIdOrigin == null) {
-            list($pageIdOrigin, $redirectSource) = self::getMessageQueryStringProperties();
+        $pageIdOrigin = null;
+        $redirectSource = null;
+        $messageSessionProperties = self::getMessageSessionProperties();
+        if (!empty($messageSessionProperties)) {
+            list($pageIdOrigin, $redirectSource) = $messageSessionProperties;
+        } else {
+            $messageQueryStringProperties = self::getMessageQueryStringProperties();
+            if(!empty($messageQueryStringProperties)) {
+                list($pageIdOrigin, $redirectSource) = $messageQueryStringProperties;
+            }
         }
+
 
         // Are we a test call
         // The redirection does not exist the process otherwise the test fails
@@ -168,7 +174,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
     function addToMessagePagesWithSameName($message, $pageId)
     {
 
-        if ($this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1 ) {
+        if ($this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1) {
 
             global $ID;
             // The page name

@@ -52,10 +52,11 @@ class LinkUtility
 
     /**
      * Style to cancel the dokuwiki styling
+     * when the page linked exists
      * Is a constant to be able to use it in the test
      * background is transparent, otherwise, you may see a rectangle with a link in button
      */
-    const STYLE_VALUE = ";background-color:transparent;border-color:inherit;color:inherit;background-image:unset;padding:unset";
+    const STYLE_VALUE_WHEN_EXIST = ";background-color:transparent;border-color:inherit;color:inherit;background-image:unset;padding:unset";
     /**
      * @var mixed
      */
@@ -308,7 +309,7 @@ class LinkUtility
         /**
          * The extra style for the link
          */
-        return HtmlUtility::addAttributeValue($htmlLink, "style", self::STYLE_VALUE);
+        return HtmlUtility::addAttributeValue($htmlLink, "style", self::STYLE_VALUE_WHEN_EXIST);
 
     }
 
@@ -350,7 +351,12 @@ class LinkUtility
             /**
              * Internal link count
              */
-            $stats[Analytics::INTERNAL_LINKS_COUNT]++;
+            if (array_key_exists(Analytics::INTERNAL_LINKS_COUNT, $stats)) {
+                $stats[Analytics::INTERNAL_LINKS_COUNT]++;
+            } else {
+                $stats[Analytics::INTERNAL_LINKS_COUNT] = 0;
+            }
+
 
             /**
              * Broken link ?
@@ -360,12 +366,11 @@ class LinkUtility
                 $stats[Analytics::INFO][] = "The internal link `{$this->getInternalPage()->getId()}` does not exist";
             }
 
-
             /**
              * Calculate link distance
              */
             $a = explode(':', getNS($ID));
-            $b = explode(':', getNS($id));
+            $b = explode(':', getNS($ID));
             while (isset($a[0]) && $a[0] == $b[0]) {
                 array_shift($a);
                 array_shift($b);
@@ -375,15 +380,25 @@ class LinkUtility
 
         } else if ($this->getType() == self::TYPE_EXTERNAL) {
 
+            if (!array_key_exists(Analytics::EXTERNAL_LINKS_COUNT,$stats)){
+                $stats[Analytics::EXTERNAL_LINKS_COUNT]=0;
+            }
             $stats[Analytics::EXTERNAL_LINKS_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_LOCAL) {
 
+            if (!array_key_exists(Analytics::LOCAL_LINKS_COUNT,$stats)){
+                $stats[Analytics::LOCAL_LINKS_COUNT]=0;
+            }
             $stats[Analytics::LOCAL_LINKS_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_INTERWIKI) {
 
+            if (!array_key_exists(Analytics::INTERWIKI_LINKS_COUNT,$stats)){
+                $stats[Analytics::INTERWIKI_LINKS_COUNT]=0;
+            }
             $stats[Analytics::INTERWIKI_LINKS_COUNT]++;
+
         } else if ($this->getType() == self::TYPE_EMAIL) {
 
             $stats[Analytics::EMAILS_COUNT]++;

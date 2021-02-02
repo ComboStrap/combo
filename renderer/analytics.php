@@ -85,7 +85,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     const CONF_QUALITY_SCORE_CANONICAL_PRESENT = 'qualityScoreCanonicalPresent';
     const SCORING = "scoring";
     const SCORE = "score";
-
+    const HEADER_STRUCT = 'header_struct';
 
 
     /**
@@ -142,11 +142,24 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $statExport[Analytics::EDITS_COUNT] = count($revs);
         foreach ($revs as $rev) {
             $info = $changelog->getRevisionInfo($rev);
-            if ($info['user']) {
-                $statExport['authors'][$info['user']] += 1;
-            } else {
-                $statExport['authors']['*'] += 1;
+
+            /**
+             * Init the authors array
+             */
+            if (!array_key_exists('authors', $statExport)) {
+                $statExport['authors'] = [];
             }
+            /**
+             * Analytics by users
+             */
+            $user = "*";
+            if (array_key_exists('user', $info)) {
+                $user = $info['user'];
+            }
+            if (!array_key_exists('authors', $statExport['authors'])) {
+                $statExport['authors'][$user] = 0;
+            }
+            $statExport['authors'][$user] += 1;
         }
 
         /**
@@ -189,14 +202,16 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * No fixme
          */
-        $fixmeCount = $this->stats[self::FIXME];
-        $statExport[self::FIXME] = $fixmeCount == null ? 0 : $fixmeCount;
-        if ($fixmeCount != 0) {
-            $ruleResults[self::RULE_FIXME] = self::FAILED;
-            $qualityScores['no_' . self::FIXME] = 0;
-        } else {
-            $ruleResults[self::RULE_FIXME] = self::PASSED;
-            $qualityScores['no_' . self::FIXME] = $this->getConf(self::CONF_QUALITY_SCORE_NO_FIXME, 1);
+        if (array_key_exists(self::FIXME, $this->stats)) {
+            $fixmeCount = $this->stats[self::FIXME];
+            $statExport[self::FIXME] = $fixmeCount == null ? 0 : $fixmeCount;
+            if ($fixmeCount != 0) {
+                $ruleResults[self::RULE_FIXME] = self::FAILED;
+                $qualityScores['no_' . self::FIXME] = 0;
+            } else {
+                $ruleResults[self::RULE_FIXME] = self::PASSED;
+                $qualityScores['no_' . self::FIXME] = $this->getConf(self::CONF_QUALITY_SCORE_NO_FIXME, 1);
+            }
         }
 
         /**
@@ -253,13 +268,14 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             $headersCount = count($this->stats[Analytics::HEADER_POSITION]);
             unset($statExport[Analytics::HEADER_POSITION]);
             for ($i = 1; $i < $headersCount; $i++) {
-                $currentHeaderLevel = $this->stats['header_struct'][$i];
-                $previousHeaderLevel = $this->stats['header_struct'][$i - 1];
+                $currentHeaderLevel = $this->stats[self::HEADER_STRUCT][$i];
+                $previousHeaderLevel = $this->stats[self::HEADER_STRUCT][$i - 1];
                 if ($currentHeaderLevel - $previousHeaderLevel > 1) {
                     $treeError += 1;
                     $ruleInfo[self::RULE_OUTLINE_STRUCTURE] = "The " . $i . " header (h" . $currentHeaderLevel . ") has a level bigger than its precedent (" . $previousHeaderLevel . ")";
                 }
             }
+            unset($statExport[self::HEADER_STRUCT]);
         }
         $outlinePoints = $this->getConf(self::CONF_QUALITY_SCORE_CORRECT_HEADER_STRUCTURE, 3);
         if ($treeError > 0 || $headersCount == 0) {
@@ -387,7 +403,10 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * Broken Links
          */
         $brokenLinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_LINK_BROKEN_FACTOR, 2);
-        $brokenLinksCount = $this->stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT];
+        $brokenLinksCount = 0;
+        if (array_key_exists(Analytics::INTERNAL_LINKS_BROKEN_COUNT, $this->stats)) {
+            $brokenLinksCount = $this->stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT];
+        }
         if ($brokenLinksCount > 2) {
             $qualityScores['no_' . Analytics::INTERNAL_LINKS_BROKEN_COUNT] = 0;
             $ruleResults[self::RULE_INTERNAL_BROKEN_LINKS_MAX] = self::FAILED;
@@ -400,7 +419,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Changes, the more changes the better
          */
-        $qualityScores[Analytics::EDITS_COUNT] = $this->stats[Analytics::EDITS_COUNT] * $this->getConf(self::CONF_QUALITY_SCORE_CHANGES_FACTOR, 0.25);
+        $qualityScores[Analytics::EDITS_COUNT] = $statExport[Analytics::EDITS_COUNT] * $this->getConf(self::CONF_QUALITY_SCORE_CHANGES_FACTOR, 0.25);
 
 
         /**
@@ -471,7 +490,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         $title = $meta['title'];
         $this->metadata[Analytics::TITLE] = $title;
-        if ($title != $meta['h1']) {
+        if ($title != @$meta['h1']) {
             $this->metadata[Analytics::H1] = $meta['h1'];
         }
         $timestampCreation = $meta['date']['created'];
@@ -534,17 +553,37 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     {
         $link = new LinkUtility($url);
         $link->setType(LinkUtility::TYPE_EXTERNAL);
-        if($name !=null) {
+        if ($name != null) {
             $link->setName($name);
         }
-        $link->processLinkStats( $this->stats);
+        $link->processLinkStats($this->stats);
     }
 
     public function header($text, $level, $pos)
     {
-        $this->stats[Analytics::HEADERS_COUNT]['h' . $level]++;
+        if (!array_key_exists(Analytics::HEADERS_COUNT, $this->stats)) {
+            $this->stats[Analytics::HEADERS_COUNT] = [];
+        }
+        $heading = 'h' . $level;
+        if (!array_key_exists(
+            $heading,
+            $this->stats[Analytics::HEADERS_COUNT])) {
+            $this->stats[Analytics::HEADERS_COUNT][$heading] = 0;
+        }
+        $this->stats[Analytics::HEADERS_COUNT][$heading]++;
+
         $this->headerId++;
-        $this->stats[Analytics::HEADER_POSITION][$this->headerId] = 'h' . $level;
+        $this->stats[Analytics::HEADER_POSITION][$this->headerId] = $heading;
+
+        /**
+         * Store the level of each heading
+         * They should only go from low to highest value
+         * for a good outline
+         */
+        if (!array_key_exists(Analytics::HEADERS_COUNT, $this->stats)) {
+            $this->stats[self::HEADER_STRUCT] = [];
+        }
+        $this->stats[self::HEADER_STRUCT][] = $level;
 
     }
 

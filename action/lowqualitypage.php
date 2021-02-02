@@ -62,8 +62,7 @@ class action_plugin_combo_lowqualitypage extends DokuWiki_Action_Plugin
     {
 
         $id = $event->data['id'];
-        $user = $event->data['user'];
-        if (LowQualityPage::isPageToExclude($id, $user)) {
+        if (LowQualityPage::isPageToExclude($id)) {
             $event->data['hidden'] = true;
         }
 

@@ -102,7 +102,7 @@ window.addEventListener('DOMContentLoaded', function () {
     jQuery("span.{$jsClass}").each(function() {
         if (JSINFO["{$jsIndicator}"]==false){
             let actualClass = jQuery(this).attr("class");
-            jQuery(this).replaceWith( "<a class=\""+actualClass+"\" href=\""+DOKU_BASE+jQuery(this).attr("data-wiki-id").replace(":","/")+"\">"+jQuery(this).text()+"</a>" )
+            jQuery(this).replaceWith( "<a class=\""+actualClass+"\" href=\""+DOKU_BASE+jQuery(this).attr("data-wiki-id")+"\">"+jQuery(this).text()+"</a>" )
         }
     })
 
@@ -149,6 +149,12 @@ EOF;
                     }
                 }
             }
+        }
+
+        // https://www.dokuwiki.org/config:useslash
+        global $conf;
+        if ($conf['useslash']){
+            $qualifiedLink = str_replace(":","/",$qualifiedLink);
         }
         return "<span class=\"{$lowQualityPageClass}\" data-wiki-id=\"{$qualifiedLink}\" data-toggle=\"tooltip\" title=\"To follow this link ({$qualifiedLink}), you need to log in (" . LowQualityPage::ACRONYM . ")\">{$name}</span>";
     }

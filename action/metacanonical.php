@@ -126,9 +126,15 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
         $canonicalOgKeyKey = "";
         $canonicalPropertyKey = "og:url";
         $canonicalOgArray = array("property" => $canonicalPropertyKey, "content" => $canonicalUrl);
+        // Search if the canonical property is already present
         foreach ($event->data['meta'] as $key => $meta) {
-            if ($meta["property"] == $canonicalPropertyKey) {
-                $canonicalOgKeyKey = $key;
+            if (array_key_exists("property",$meta)) {
+                /**
+                 * We may have several properties
+                 */
+                if ($meta["property"] == $canonicalPropertyKey) {
+                    $canonicalOgKeyKey = $key;
+                }
             }
         }
         if ($canonicalOgKeyKey != "") {

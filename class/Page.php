@@ -614,13 +614,7 @@ class Page
         $actualIndicator = $this->getLowQualityIndicator();
         if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
 
-            if ($newIndicator) {
-                $stringValue = "true";
-            } else {
-                $stringValue = "false";
-            }
-            p_set_metadata($this->id, array(self::LOW_QUALITY_PAGE_INDICATOR => $stringValue));
-
+            p_set_metadata($this->id, array(self::LOW_QUALITY_PAGE_INDICATOR => $newIndicator));
 
             /**
              * Delete the cache to rewrite the links

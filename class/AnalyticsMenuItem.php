@@ -47,5 +47,10 @@ class AnalyticsMenuItem extends AbstractItem {
         return $linkAttributes;
     }
 
+    public function getTitle()
+    {
+        return "Show the ComboStrap analytics";
+    }
+
 
 }

@@ -93,7 +93,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
      * that should be {@link  renderer_plugin_combo_analysis::reset()}
      */
     public $stats = array(); // the stats
-    protected $metadata = array(); // the metadata
+    protected $analyticsMetadata = array(); // the metadata
     protected $headerId = 0; // the id of the header on the page (first, second, ...)
 
     /**
@@ -131,14 +131,14 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * The metadata
          */
         global $ID;
-        $meta = p_get_metadata($ID);
+        $dokuWikiMetadata = p_get_metadata($ID);
 
         /**
          * Edit author stats
          */
         $changelog = new PageChangeLog($ID);
         $revs = $changelog->getRevisions(0, 10000);
-        array_push($revs, $meta['last_change']['date']);
+        array_push($revs, $dokuWikiMetadata['last_change']['date']);
         $statExport[Analytics::EDITS_COUNT] = count($revs);
         foreach ($revs as $rev) {
 
@@ -221,10 +221,10 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * A title should be present
          */
         $titleScore = $this->getConf(self::CONF_QUALITY_SCORE_TITLE_PRESENT, 10);
-        if (empty($this->metadata[Analytics::TITLE])) {
+        if (empty($this->analyticsMetadata[Analytics::TITLE])) {
             $ruleResults[self::RULE_TITLE_PRESENT] = self::FAILED;
             $ruleInfo[self::RULE_TITLE_PRESENT] = "Add a title in the frontmatter for {$titleScore} points";
-            $this->metadata[Analytics::TITLE] = $meta[Analytics::TITLE];
+            $this->analyticsMetadata[Analytics::TITLE] = $dokuWikiMetadata[Analytics::TITLE];
             $qualityScores[self::RULE_TITLE_PRESENT] = 0;
         } else {
             $qualityScores[self::RULE_TITLE_PRESENT] = $titleScore;
@@ -235,10 +235,10 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * A description should be present
          */
         $descScore = $this->getConf(self::CONF_QUALITY_SCORE_DESCRIPTION_PRESENT, 8);
-        if (empty($this->metadata[self::DESCRIPTION])) {
+        if (empty($this->analyticsMetadata[self::DESCRIPTION])) {
             $ruleResults[self::RULE_DESCRIPTION_PRESENT] = self::FAILED;
             $ruleInfo[self::RULE_DESCRIPTION_PRESENT] = "Add a description in the frontmatter for {$descScore} points";
-            $this->metadata[self::DESCRIPTION] = $meta[self::DESCRIPTION]["abstract"];
+            $this->analyticsMetadata[self::DESCRIPTION] = $dokuWikiMetadata[self::DESCRIPTION]["abstract"];
             $qualityScores[self::RULE_DESCRIPTION_PRESENT] = 0;
         } else {
             $qualityScores[self::RULE_DESCRIPTION_PRESENT] = $descScore;
@@ -249,7 +249,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * A canonical should be present
          */
         $canonicalScore = $this->getConf(self::CONF_QUALITY_SCORE_CANONICAL_PRESENT, 5);
-        if (empty($this->metadata[Page::CANONICAL_PROPERTY])) {
+        if (empty($this->analyticsMetadata[Page::CANONICAL_PROPERTY])) {
             global $conf;
             $root = $conf['start'];
             if ($ID != $root) {
@@ -451,8 +451,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         }
 
         /**
-         * Low level
-         * If not set manually
+         * Low level Computation
          */
         $mandatoryRules = preg_split("/,/", $this->getConf(self::CONF_MANDATORY_QUALITY_RULES));
         $mandatoryRulesBroken = [];
@@ -461,14 +460,17 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
                 $mandatoryRulesBroken[] = $lowLevelRule;
             }
         }
-        if (empty($this->metadata[Page::LOW_QUALITY_PAGE_INDICATOR])) {
+        /**
+         * If not set manually
+         */
+        if (empty($this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR])) {
             $lowLevel = false;
             if (sizeof($mandatoryRulesBroken) > 0) {
                 $lowLevel = true;
             }
             $this->page->setLowQualityIndicator($lowLevel);
         } else {
-            $lowLevel = $this->metadata[Page::LOW_QUALITY_PAGE_INDICATOR];
+            $lowLevel = $this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR];
         }
 
         /**
@@ -491,17 +493,17 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Metadata
          */
-        $title = $meta['title'];
-        $this->metadata[Analytics::TITLE] = $title;
-        if ($title != @$meta['h1']) {
-            $this->metadata[Analytics::H1] = $meta['h1'];
+        $title = $dokuWikiMetadata['title'];
+        $this->analyticsMetadata[Analytics::TITLE] = $title;
+        if ($title != @$dokuWikiMetadata['h1']) {
+            $this->analyticsMetadata[Analytics::H1] = $dokuWikiMetadata['h1'];
         }
-        $timestampCreation = $meta['date']['created'];
-        $this->metadata[self::DATE_CREATED] = date('Y-m-d h:i:s', $timestampCreation);
-        $timestampModification = $meta['date']['modified'];
-        $this->metadata[Analytics::DATE_MODIFIED] = date('Y-m-d h:i:s', $timestampModification);
-        $this->metadata['age_creation'] = round((time() - $timestampCreation) / 60 / 60 / 24);
-        $this->metadata['age_modification'] = round((time() - $timestampModification) / 60 / 60 / 24);
+        $timestampCreation = $dokuWikiMetadata['date']['created'];
+        $this->analyticsMetadata[self::DATE_CREATED] = date('Y-m-d h:i:s', $timestampCreation);
+        $timestampModification = $dokuWikiMetadata['date']['modified'];
+        $this->analyticsMetadata[Analytics::DATE_MODIFIED] = date('Y-m-d h:i:s', $timestampModification);
+        $this->analyticsMetadata['age_creation'] = round((time() - $timestampCreation) / 60 / 60 / 24);
+        $this->analyticsMetadata['age_modification'] = round((time() - $timestampModification) / 60 / 60 / 24);
 
 
         /**
@@ -511,7 +513,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $finalStats = array();
         $finalStats["id"] = $ID;
         $finalStats["date"] = date('Y-m-d H:i:s', time());
-        $finalStats['metadata'] = $this->metadata;
+        $finalStats['metadata'] = $this->analyticsMetadata;
         ksort($statExport);
         $finalStats[Analytics::STATISTICS] = $statExport;
         $finalStats[Analytics::QUALITY] = $quality; // Quality after the sort to get them at the end
@@ -705,13 +707,13 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function reset()
     {
         $this->stats = array();
-        $this->metadata = array();
+        $this->analyticsMetadata = array();
         $this->headerId = 0;
     }
 
     public function setMeta($key, $value)
     {
-        $this->metadata[$key] = $value;
+        $this->analyticsMetadata[$key] = $value;
     }
 
 

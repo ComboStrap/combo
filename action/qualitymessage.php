@@ -143,9 +143,16 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                     $lqPageUrl = PluginUtility::getUrl("low_quality_page", "low quality page");
                     $message->addContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");
                     $message->addContent("<ul style='margin-bottom: 0'>");
-
-                    foreach ($mandatoryFailedRules as $mandatoryFailedRule) {
-                        $message->addContent("<li>".PluginUtility::getUrl("quality:rule#list", $mandatoryFailedRule)."</li>");
+                    /**
+                     * A low quality page should have
+                     * failed mandatory rules
+                     * but due to the asycn nature, sometimes
+                     * we don't have an array
+                     */
+                    if (is_array($mandatoryFailedRules)) {
+                        foreach ($mandatoryFailedRules as $mandatoryFailedRule) {
+                            $message->addContent("<li>" . PluginUtility::getUrl("quality:rule#list", $mandatoryFailedRule) . "</li>");
+                        }
                     }
                     $message->addContent("</ul>");
                     $message->addContent("</div>");

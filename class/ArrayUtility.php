@@ -32,7 +32,8 @@ class ArrayUtility
                 if (preg_match('/date|created|modified/i',  $key ) && is_numeric($value)){
                     $value = date(DateTime::ISO8601, $value);
                 }
-                $content .= '<li>' . $key . ' : ' . $value . '</li>';
+                $stringValue = var_export($value, true);
+                $content .= '<li>' . $key . ' : ' . $stringValue . '</li>';
             }
         }
         $content .= '</ul>';

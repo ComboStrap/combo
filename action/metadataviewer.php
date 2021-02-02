@@ -18,7 +18,7 @@ require_once (__DIR__.'/../class/MetadataUtility.php');
  *
  *
  */
-class action_plugin_combo_metaviewer extends DokuWiki_Action_Plugin
+class action_plugin_combo_metadataviewer extends DokuWiki_Action_Plugin
 {
 
 

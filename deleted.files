@@ -11,3 +11,4 @@ syntax/blockquotecite.php
 syntax/noteheader.php
 syntax/buttonlink.php
 action/math.php
+action/metaviewer.php

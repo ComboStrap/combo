@@ -606,7 +606,7 @@ class Page
 
     /**
      * Set the page quality
-     * @param $newIndicator true if this is a low quality page rank false otherwise
+     * @param boolean $newIndicator true if this is a low quality page rank false otherwise
      */
 
     public function setLowQualityIndicator($newIndicator)
@@ -614,7 +614,13 @@ class Page
         $actualIndicator = $this->getLowQualityIndicator();
         if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
 
-            p_set_metadata($this->id, array(self::LOW_QUALITY_PAGE_INDICATOR => $newIndicator));
+            if ($newIndicator) {
+                $stringValue = "true";
+            } else {
+                $stringValue = "false";
+            }
+            p_set_metadata($this->id, array(self::LOW_QUALITY_PAGE_INDICATOR => $stringValue));
+
 
             /**
              * Delete the cache to rewrite the links

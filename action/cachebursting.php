@@ -1,10 +1,6 @@
 <?php
 
-use ComboStrap\PluginUtility;
 use ComboStrap\Page;
-use dokuwiki\Cache\CacheInstructions;
-use dokuwiki\Cache\CacheParser;
-use dokuwiki\Cache\CacheRenderer;
 
 if (!defined('DOKU_INC')) die();
 

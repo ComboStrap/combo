@@ -5,6 +5,8 @@ use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
 
+require_once(__DIR__ . '/../class/' . 'PluginUtility.php');
+
 /**
  * Class action_plugin_combo_css
  * Delete Backend CSS for front-end

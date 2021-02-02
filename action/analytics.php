@@ -1,6 +1,5 @@
 <?php
 
-use ComboStrap\Analytics;
 use Combostrap\AnalyticsMenuItem;
 use ComboStrap\Auth;
 use ComboStrap\LogUtility;

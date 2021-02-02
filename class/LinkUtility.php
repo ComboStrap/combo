@@ -335,42 +335,32 @@ class LinkUtility
     {
 
         if ($this->getType() == self::TYPE_INTERNAL) {
-            /**
-             * If this a query string, this is the same page
-             */
-            global $ID;
-            if (strpos($this->ref, '?') !== false) {
-                $urlParts = preg_split("/\?/", $this->ref);
-                if (sizeof($urlParts) == 1) {
-                    $id = $ID;
-                } else {
-                    $id = $urlParts[0];
-                }
-            }
+
 
             /**
              * Internal link count
              */
-            if (array_key_exists(Analytics::INTERNAL_LINKS_COUNT, $stats)) {
-                $stats[Analytics::INTERNAL_LINKS_COUNT]++;
-            } else {
+            if (!array_key_exists(Analytics::INTERNAL_LINKS_COUNT, $stats)) {
                 $stats[Analytics::INTERNAL_LINKS_COUNT] = 0;
             }
+            $stats[Analytics::INTERNAL_LINKS_COUNT]++;
 
 
             /**
              * Broken link ?
              */
+            $id = $this->getInternalPage()->getId();
             if (!$this->getInternalPage()->existInFs()) {
                 $stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT]++;
-                $stats[Analytics::INFO][] = "The internal link `{$this->getInternalPage()->getId()}` does not exist";
+                $stats[Analytics::INFO][] = "The internal link `{$id}` does not exist";
             }
 
             /**
              * Calculate link distance
              */
+            global $ID;
             $a = explode(':', getNS($ID));
-            $b = explode(':', getNS($ID));
+            $b = explode(':', getNS($id));
             while (isset($a[0]) && $a[0] == $b[0]) {
                 array_shift($a);
                 array_shift($b);
@@ -380,22 +370,22 @@ class LinkUtility
 
         } else if ($this->getType() == self::TYPE_EXTERNAL) {
 
-            if (!array_key_exists(Analytics::EXTERNAL_LINKS_COUNT,$stats)){
-                $stats[Analytics::EXTERNAL_LINKS_COUNT]=0;
+            if (!array_key_exists(Analytics::EXTERNAL_LINKS_COUNT, $stats)) {
+                $stats[Analytics::EXTERNAL_LINKS_COUNT] = 0;
             }
             $stats[Analytics::EXTERNAL_LINKS_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_LOCAL) {
 
-            if (!array_key_exists(Analytics::LOCAL_LINKS_COUNT,$stats)){
-                $stats[Analytics::LOCAL_LINKS_COUNT]=0;
+            if (!array_key_exists(Analytics::LOCAL_LINKS_COUNT, $stats)) {
+                $stats[Analytics::LOCAL_LINKS_COUNT] = 0;
             }
             $stats[Analytics::LOCAL_LINKS_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_INTERWIKI) {
 
-            if (!array_key_exists(Analytics::INTERWIKI_LINKS_COUNT,$stats)){
-                $stats[Analytics::INTERWIKI_LINKS_COUNT]=0;
+            if (!array_key_exists(Analytics::INTERWIKI_LINKS_COUNT, $stats)) {
+                $stats[Analytics::INTERWIKI_LINKS_COUNT] = 0;
             }
             $stats[Analytics::INTERWIKI_LINKS_COUNT]++;
 

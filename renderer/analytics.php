@@ -141,7 +141,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         array_push($revs, $meta['last_change']['date']);
         $statExport[Analytics::EDITS_COUNT] = count($revs);
         foreach ($revs as $rev) {
-            $info = $changelog->getRevisionInfo($rev);
+
 
             /**
              * Init the authors array
@@ -152,14 +152,17 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             /**
              * Analytics by users
              */
-            $user = "*";
-            if (array_key_exists('user', $info)) {
-                $user = $info['user'];
+            $info = $changelog->getRevisionInfo($rev);
+            if (is_array($info)) {
+                $user = "*";
+                if (array_key_exists('user', $info)) {
+                    $user = $info['user'];
+                }
+                if (!array_key_exists('authors', $statExport['authors'])) {
+                    $statExport['authors'][$user] = 0;
+                }
+                $statExport['authors'][$user] += 1;
             }
-            if (!array_key_exists('authors', $statExport['authors'])) {
-                $statExport['authors'][$user] = 0;
-            }
-            $statExport['authors'][$user] += 1;
         }
 
         /**

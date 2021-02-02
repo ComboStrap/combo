@@ -77,7 +77,6 @@ class PluginUtility
     public static $PLUGIN_NAME;
 
 
-
     /**
      * Initiate the static variable
      * See the call after this class
@@ -202,8 +201,9 @@ class PluginUtility
 
     }
 
-    public static function getTagAttributes($match){
-        return self::getQualifiedTagAttributes($match,false, "");
+    public static function getTagAttributes($match)
+    {
+        return self::getQualifiedTagAttributes($match, false, "");
     }
 
     /**
@@ -221,7 +221,7 @@ class PluginUtility
         // Until the first >
         $pos = strpos($match, ">");
         if ($pos == false) {
-            LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_WARNING);
             return array();
         }
         $match = substr($match, 0, $pos);
@@ -594,20 +594,11 @@ class PluginUtility
 
         $icon = "";
         if ($withIcon) {
-            global $conf;
-            $icon = "";
-            if ($conf['template'] === 'strap') {
-                $logo = tpl_incdir() . 'images/logo.svg';
-                if (file_exists($logo)) {
-                    $icon = IconUtility::renderFileIcon($logo, array(
-                        "width" => "16px",
-                        "height" => "16px",
-                        "color" => "#075EBB"
-                    ));
-                }
-            }
+
+            $icon = "<img src=\"https://combostrap.com/_media/favicon-16x16.png\" />";
+
         }
-        return $icon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
+        return $icon.' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
     }
 
     /**
@@ -875,8 +866,8 @@ class PluginUtility
         if (array_key_exists($collapse, $attributes)) {
             $targetId = $attributes[$collapse];
             unset($attributes[$collapse]);
-            $attributes['data-toggle']="collapse";
-            $attributes['data-target']=$targetId;
+            $attributes['data-toggle'] = "collapse";
+            $attributes['data-target'] = $targetId;
         }
     }
 

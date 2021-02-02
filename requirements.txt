@@ -2,3 +2,4 @@
 https://github.com/ComboStrap/dokuwiki-template-strap   lib/tpl/strap
 https://github.com/cosmocode/sqlite.git   lib/plugins/sqlite
 https://github.com/michitux/dokuwiki-plugin-move   lib/plugins/move
+https://github.com/gerardnico/dokuwiki-plugin-webcode   lib/plugins/webcode

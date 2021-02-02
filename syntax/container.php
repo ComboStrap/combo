@@ -167,7 +167,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
                     if (array_key_exists("class", $attributes)) {
                         $attributes["class"] .= " " . self::TAG;
                     } else {
-                        $attributes["class"] .= self::TAG;
+                        $attributes["class"] = self::TAG;
                     }
                     $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
                     $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;

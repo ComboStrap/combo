@@ -12,3 +12,9 @@ syntax/noteheader.php
 syntax/buttonlink.php
 action/math.php
 action/metaviewer.php
+class/message.model.php
+class/PageUtility.php
+class/TestUtility.php
+class/Text.php
+class/TitleUtility.php
+class/UrlCanonical.php

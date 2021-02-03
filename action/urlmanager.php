@@ -188,7 +188,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                         if ($method == self::REDIRECT_HTTP) {
                             $this->httpRedirect($page, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                         } else {
-                            $this->performIdRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
+                            $this->performIdRedirect($targetPage->getId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                         }
                         return;
                     }
@@ -382,20 +382,35 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
      *   * on the same domain
      *   * no HTTP redirect
      *   * id rewrite
-     * @param string $targetPage - target page id or an URL
-     * @param string $targetOrigin - the source of the target (redirect)
+     * @param string $targetPageId - target page id or an URL
+     * @param string $targetOriginId - the source of the target (redirect)
      * @return bool - return true if the user has the permission and that the redirect was done
      * @throws Exception
      */
     private
-    function performIdRedirect($targetPage, $targetOrigin)
+    function performIdRedirect($targetPageId, $targetOriginId)
     {
+        /**
+         * Because we set the ID globally for the ID redirect
+         * we make sure that this is not a {@link Page}
+         * object otherwise we got an error in the {@link \ComboStrap\AnalyticsMenuItem}
+         * because the constructor takes it {@link \dokuwiki\Menu\Item\AbstractItem}
+         */
+        if (is_object($targetPageId)) {
+            $class = get_class($targetPageId);
+            LogUtility::msg("The parameters targetPageId ($targetPageId) is an object of the class ($class) and it should be a page id");
+        }
+
+        if (is_object($targetOriginId)) {
+            $class = get_class($targetOriginId);
+            LogUtility::msg("The parameters targetOriginId ($targetOriginId) is an object of the class ($class) and it should be a page id");
+        }
 
         //If the user have right to see the target page
         if ($_SERVER['REMOTE_USER']) {
-            $perm = auth_quickaclcheck($targetPage);
+            $perm = auth_quickaclcheck($targetPageId);
         } else {
-            $perm = auth_aclcheck($targetPage, '', null);
+            $perm = auth_aclcheck($targetPageId, '', null);
         }
         if ($perm <= AUTH_NONE) {
             return false;
@@ -405,12 +420,12 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         global $ID;
         global $INFO;
         $sourceId = $ID;
-        $ID = $targetPage;
+        $ID = $targetPageId;
         // Change the info id for the sidebar
-        $INFO['id'] = $targetPage;
+        $INFO['id'] = $targetPageId;
 
         // Redirection
-        $this->logRedirection($sourceId, $targetPage, $targetOrigin, self::REDIRECT_ID);
+        $this->logRedirection($sourceId, $targetPageId, $targetOriginId, self::REDIRECT_ID);
 
         return true;
 

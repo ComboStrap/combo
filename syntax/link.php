@@ -166,6 +166,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $parentTag = $data[PluginUtility::PARENT_TAG];
                 switch ($parentTag) {
                     case syntax_plugin_combo_button::TAG:
+                    case syntax_plugin_combo_badge::TAG:
                         if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
                             if ($link->getInternalPage()->existInFs()) {
                                 $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);

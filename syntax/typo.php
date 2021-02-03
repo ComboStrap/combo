@@ -8,6 +8,9 @@ if (!defined('DOKU_INC')) die();
 
 /**
  * Class syntax_plugin_combo_typo
+ *
+ * TODO: https://github.com/typekit/webfontloader
+ * https://www.dokuwiki.org/plugin:typography
  */
 class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
 {

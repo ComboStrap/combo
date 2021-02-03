@@ -470,7 +470,14 @@ class LinkUtility
          * Templating
          */
         if ($this->getType() == self::TYPE_INTERNAL) {
-            $name = TemplateUtility::render($name, $this->getAbsoluteId());
+            if (!empty($name)) {
+                $name = TemplateUtility::render($name, $this->getAbsoluteId());
+            } else {
+                /**
+                 * If the name is null, Dokuwiki print the title
+                 */
+                $name = $this->getInternalPage()->getH1();
+            }
         }
 
         /**

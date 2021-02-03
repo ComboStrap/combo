@@ -107,6 +107,16 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             $analytics = $page->getAnalyticsFromFs();
             $rules = $analytics[Analytics::QUALITY][Analytics::RULES];
 
+
+            /**
+             * We may got null
+             * array_key_exists() expects parameter 2 to be array,
+             * null given in /opt/www/datacadamia.com/lib/plugins/combo/action/qualitymessage.php on line 113
+             */
+            if ($rules==null){
+                return null;
+            }
+
             /**
              * If there is no info, nothing to show
              */

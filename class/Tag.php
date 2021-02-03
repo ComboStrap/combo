@@ -311,7 +311,16 @@ class Tag
             default:
                 $component = $call[1][0];
                 $componentNames = explode("_", $component);
-                $tagName = $componentNames[sizeof($componentNames) - 1];
+                /**
+                 * To take care of
+                 * PHP Warning:  sizeof(): Parameter must be an array or an object that implements Countable
+                 * in lib/plugins/combo/class/Tag.php on line 314
+                 */
+                if (is_array($componentNames)) {
+                    $tagName = $componentNames[sizeof($componentNames) - 1];
+                } else {
+                    $tagName = $component;
+                }
         }
         return $tagName;
 

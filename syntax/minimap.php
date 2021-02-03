@@ -469,8 +469,11 @@ EOF;
                         }
                     } else {
                         $startLink = new LinkUtility($startId);
-                        $startLink->setTitle($startId);
-
+                        $startLink->setName($startId);
+                        $h1 = $startLink->getInternalPage()->getH1();
+                        if ($h1!=null){
+                            $startLink->setName($h1);
+                        }
                         $panelHeaderContent = $startLink->render($renderer);
                         // We are not counting the header page
                         $pageNum--;

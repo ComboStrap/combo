@@ -138,13 +138,20 @@ class Tag
             $attributes = $data[PluginUtility::ATTRIBUTES];
         }
 
+        $name = self::getTagNameFromCall($call);
+        $state = self::getStateFromCall($call);
+
         /**
+         * Getting attributes
          * If we don't have already the attributes
          * in the returned array of the handler,
          * (ie the full HTML was given for instance)
          * we parse the match again
          */
-        if ($attributes == null && self::getStateFromCall($call) == DOKU_LEXER_ENTER) {
+        if ($attributes == null
+            && self::getStateFromCall($call) == DOKU_LEXER_ENTER
+            && $name != 'preformatted' // preformatted does not have any attributes
+        ) {
             $match = self::getMatchFromCall($call);
             /**
              * If this is not a combo element, we got no match
@@ -153,8 +160,7 @@ class Tag
                 $attributes = PluginUtility::getTagAttributes($match);
             }
         }
-        $name = self::getTagNameFromCall($call);
-        $state = self::getStateFromCall($call);
+
         return new Tag($name, $attributes, $state, $this->calls, $position);
     }
 

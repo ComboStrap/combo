@@ -258,6 +258,9 @@ class LinkUtility
                 $interWikiSplit = preg_split("/>/", $this->ref);
                 $metaDataRenderer->interwikilink($this->ref, $this->name, $interWikiSplit[0], $interWikiSplit[1]);
                 break;
+            case SELF::TYPE_WINDOWS_SHARE:
+                $metaDataRenderer->windowssharelink($this->ref, $this->name);
+                break;
             default:
                 LogUtility::msg("The link ({$this->ref}) with the type " . $this->type . " was not processed into the metadata");
         }

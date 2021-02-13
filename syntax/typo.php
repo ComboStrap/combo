@@ -11,6 +11,8 @@ if (!defined('DOKU_INC')) die();
  *
  * TODO: https://github.com/typekit/webfontloader
  * https://www.dokuwiki.org/plugin:typography
+ * https://stackoverflow.design/email/base/typography/
+ * http://kyleamathews.github.io/typography.js/
  */
 class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
 {

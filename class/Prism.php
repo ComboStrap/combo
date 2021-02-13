@@ -250,6 +250,10 @@ EOD;
         if ($language == "dos"){
             $language = "batch";
         }
+        if ($language == "apache"){
+            $language = "apacheconf";
+        }
+
         StringUtility::addEolIfNotPresent($renderer->doc);
         PluginUtility::addClass2Attributes('language-' . $language, $attributes);
         if (array_key_exists("line-numbers", $attributes)) {

@@ -34,6 +34,8 @@ if (!defined('DOKU_INC')) {
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
  * need to inherit from this class
+ *
+ * For a list of meta, see also https://ghost.org/docs/publishing/#api-data
  */
 class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 {

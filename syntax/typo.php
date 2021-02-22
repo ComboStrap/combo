@@ -13,6 +13,7 @@ if (!defined('DOKU_INC')) die();
  * https://www.dokuwiki.org/plugin:typography
  * https://stackoverflow.design/email/base/typography/
  * http://kyleamathews.github.io/typography.js/
+ * https://docs.gitbook.com/features/advanced-branding (Roboto, Roboto Slab, Open Sans, Source Sans Pro, Lato, Ubuntu, Raleway, Merriweather)
  */
 class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
 {

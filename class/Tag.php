@@ -117,6 +117,12 @@ class Tag
     }
 
     /**
+     * The lexer state
+     *   DOKU_LEXER_ENTER = 1
+     *   DOKU_LEXER_MATCHED = 2
+     *   DOKU_LEXER_UNMATCHED = 3
+     *   DOKU_LEXER_EXIT = 4
+     *   DOKU_LEXER_SPECIAL = 5
      * @return mixed
      */
     public function getState()

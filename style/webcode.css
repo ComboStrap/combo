@@ -1,0 +1,57 @@
+/*
+ * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the GPL license found in the
+ * COPYING  file in the root directory of this source tree.
+ *
+ * @license  GPL 3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
+ * @author   ComboStrap <support@combostrap.com>
+ *
+ */
+
+div.webcode{
+    position: relative;
+}
+
+div.webcode>.webcode-bar {
+    position: absolute;
+    top: .3em;
+    right: .2em;
+    transition: opacity .3s ease-in-out;
+    opacity: 0;
+}
+
+div.webcode>.webcode-bar .webcode-bar-item {
+    display: inline-block;
+}
+
+div.webcode>.webcode-bar a, div.webcode>.webcode-bar button {
+    color: #bbb;
+    font-size: .8em;
+    padding: 0 .5em;
+    background: #f5f2f0;
+    background: rgba(224,224,224,.2);
+    box-shadow: 0 2px 0 0 rgba(0,0,0,.2);
+    border-radius: .5em;
+    cursor: pointer;
+}
+
+div.webcode>.webcode-bar button {
+    background: 0 0;
+    border: 0;
+    line-height: normal;
+    overflow: visible;
+}
+
+div.webcode:hover>.webcode-bar {
+    opacity: 1
+}
+
+div.webcode-bar:focus-within>.webcode-bar {
+    opacity: 1
+}
+
+div.webcode>.webcode-bar a:focus, div.webcode>.webcode-bar a:hover, div.webcode>.webcode-bar button:focus, div.webcode>.webcode-bar button:hover {
+    text-decoration: none;
+    color: black;
+}

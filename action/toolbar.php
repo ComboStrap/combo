@@ -13,26 +13,29 @@ if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
 
-class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin {
+class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
+{
 
     /**
      * register the event handlers
      *
      * @author Nicolas GERARD
      */
-    function register(Doku_Event_Handler $controller){
-        $controller->register_hook('TOOLBAR_DEFINE', 'AFTER', $this, 'handle_toolbar', array ());
+    function register(Doku_Event_Handler $controller)
+    {
+        $controller->register_hook('TOOLBAR_DEFINE', 'AFTER', $this, 'handle_toolbar', array());
     }
 
-    function handle_toolbar(&$event, $param) {
+    function handle_toolbar(&$event, $param)
+    {
 
 
         $unit = array(
-            'type'   => 'format',
-            'title'  => 'Insert an unit test',
-            'icon'   => '../../plugins/'. PluginUtility::PLUGIN_BASE_NAME .'/images/unit-doc-block.png',
-            'open'   => '<unit name="default">\n<file lang path>\n</file>\n\t<code lang>',
-            'close'  => '\n\t</code>\n\tt<console>\n\t</console></unit>\n',
+            'type' => 'format',
+            'title' => 'Insert an unit test',
+            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/unit-doc-block.png',
+            'open' => '<unit name="default">\n<file lang path>\n</file>\n\t<code lang>',
+            'close' => '\n\t</code>\n\tt<console>\n\t</console></unit>\n',
             // 'key'    => $unitShortcutKey
         );
 
@@ -54,9 +57,9 @@ EOF;
         $frontmatter = array(
             'type' => 'insert',
             'title' => 'Insert a frontmatter',
-            'icon' =>  '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/table-of-contents.svg',
+            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/table-of-contents.svg',
             'insert' => $frontmatter,
-            'block'  => true
+            'block' => true
         );
 
 
@@ -70,10 +73,19 @@ EOF;
         );
 
         $event->data[] = array(
-            'type'   => 'picker',
-            'title'  => "Choose comboStrap component",
-            'icon'   => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/logo.svg',
-            'list'   => array($frontmatter,$blockquote,$unit)
+            'type' => 'picker',
+            'title' => "Choose comboStrap component",
+            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/logo.svg',
+            'list' => array($frontmatter, $blockquote, $unit)
+        );
+
+        $event->data[] = array(
+            'type' => 'format',
+            'title' => 'webcode',
+            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/webcode.png',
+            'open' => '<webcode name="Default" frameborder=0\n',
+            'close' => '\n</webcode>\n'
+            //'key' => $webCodeShortcutKey
         );
 
         return true;

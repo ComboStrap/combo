@@ -97,6 +97,15 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
 
     }
 
+    public function accepts($mode)
+    {
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
+    }
+
     public function postConnect()
     {
 

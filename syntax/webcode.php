@@ -83,6 +83,15 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     }
 
 
+    public function accepts($mode)
+    {
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
+    }
+
     /**
      * @see Doku_Parser_Mode::getSort()
      * The mode (plugin) with the lowest sort number will win out
@@ -325,6 +334,11 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     if (sizeof($codes) == 0) {
                         return false;
                     }
+
+
+                    if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::TAG)){
+                        $renderer->doc .= PluginUtility::getTagStyle(self::TAG);
+                    }
                     // Dokuwiki Code ?
                     if (array_key_exists('dw', $codes)) {
 
@@ -332,11 +346,12 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                     } else {
 
+
                         // Js, Html, Css
-                        $htmlContent = '<html><head>';
-                        $htmlContent .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
-                        $htmlContent .= '<title>Made by Webcode</title>';
-                        $htmlContent .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">';
+                        $iframeHtml = '<html><head>';
+                        $iframeHtml .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
+                        $iframeHtml .= '<title>Made by Webcode</title>';
+                        $iframeHtml .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">';
 
 
                         // External Resources such as css stylesheet or js
@@ -360,49 +375,47 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $fileExtension = $pathInfo['extension'];
                             switch ($fileExtension) {
                                 case 'css':
-                                    $htmlContent .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '">';
+                                    $iframeHtml .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '">';
                                     break;
                                 case 'js':
-                                    $htmlContent .= '<script type="text/javascript" src="' . $externalResource . '"></script>';
+                                    $iframeHtml .= '<script type="text/javascript" src="' . $externalResource . '"></script>';
                                     break;
                             }
                         }
 
 
                         // WebConsole style sheet
-                        $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
-                        if ($useConsole) {
-                            $htmlContent .= '<link rel="stylesheet" type="text/css" href="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode.css?ver=' . self::WEB_CSS_VERSION . '"/>';
-                        }
+                        $iframeHtml .= '<link rel="stylesheet" type="text/css" href="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-iframe.css?ver=' . self::WEB_CSS_VERSION . '"/>';
 
                         if (array_key_exists('css', $codes)) {
-                            $htmlContent .= '<!-- The CSS code -->';
-                            $htmlContent .= '<style>' . $codes['css'] . '</style>';
+                            $iframeHtml .= '<!-- The CSS code -->';
+                            $iframeHtml .= '<style>' . $codes['css'] . '</style>';
                         };
-                        $htmlContent .= '</head><body style="margin:10px">';
+                        $iframeHtml .= '</head><body style="margin:10px">';
                         if (array_key_exists('html', $codes)) {
-                            $htmlContent .= '<!-- The HTML code -->';
-                            $htmlContent .= $codes['html'];
+                            $iframeHtml .= '<!-- The HTML code -->';
+                            $iframeHtml .= $codes['html'];
                         }
                         // The javascript console area is based at the end of the HTML document
-                        if ($this->useConsole) {
-                            $htmlContent .= '<!-- WebCode Console -->';
-                            $htmlContent .= '<div><p class=\'webConsoleTitle\'>Console Output:</p>';
-                            $htmlContent .= '<div id=\'webCodeConsole\'/>';
-                            $htmlContent .= '<script type=\'text/javascript\' src=\'' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '\'></script>';
-                            $htmlContent .= '</div>';
+                        $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
+                        if ($useConsole) {
+                            $iframeHtml .= '<!-- WebCode Console -->';
+                            $iframeHtml .= '<div><p class=\'webConsoleTitle\'>Console Output:</p>';
+                            $iframeHtml .= '<div id=\'webCodeConsole\'></div>';
+                            $iframeHtml .= '<script type=\'text/javascript\' src=\'' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '\'></script>';
+                            $iframeHtml .= '</div>';
                         }
                         // The javascript comes at the end because it may want to be applied on previous HTML element
                         // as the page load in the IO order, javascript must be placed at the end
                         if (array_key_exists('javascript', $codes)) {
-                            $htmlContent .= '<!-- The Javascript code -->';
-                            $htmlContent .= '<script type="text/javascript">' . $codes['javascript'] . '</script>';
+                            $iframeHtml .= '<!-- The Javascript code -->';
+                            $iframeHtml .= '<script type="text/javascript">' . $codes['javascript'] . '</script>';
                         }
                         if (array_key_exists('babel', $codes)) {
-                            $htmlContent .= '<!-- The Babel code -->';
-                            $htmlContent .= '<script type="text/babel">' . $codes['babel'] . '</script>';
+                            $iframeHtml .= '<!-- The Babel code -->';
+                            $iframeHtml .= '<script type="text/babel">' . $codes['babel'] . '</script>';
                         }
-                        $htmlContent .= '</body></html>';
+                        $iframeHtml .= '</body></html>';
 
                         // Here the magic from the plugin happens
                         // We add the Iframe and the JsFiddleButton
@@ -425,11 +438,11 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                                 $iFrameHtml .= ' ' . $attribute . '=' . $value;
                             }
                         }
-                        $iFrameHtml .= ' srcdoc="' . htmlentities($htmlContent) . '" ></iframe>';//
+                        $iFrameHtml .= ' srcdoc="' . htmlentities($iframeHtml) . '" ></iframe>';//
 
                         // Credits bar
                         $bar = '<div class="webcode-bar">';
-                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Made With Webcode") . '</div>';
+                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by Webcode") . '</div>';
                         $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $this->attributes) . '</div>';
                         $bar .= '</div>';
                         $renderer->doc .= '<div class="webcode">' . $iFrameHtml . $bar . '</div>';

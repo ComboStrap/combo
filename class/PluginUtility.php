@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use helper_plugin_sqlite;
+use syntax_plugin_combo_preformatted;
 use TestConstant;
 use TestRequest;
 
@@ -236,7 +237,7 @@ class PluginUtility
         }
 
         // Suppress the / for a leaf tag
-        if ($match[strlen($match)-1] == "/") {
+        if ($match[strlen($match) - 1] == "/") {
             $match = substr($match, 0, strlen($match) - 1);
         }
 
@@ -508,7 +509,7 @@ class PluginUtility
         $elevation = "elevation";
         if (array_key_exists($elevation, $attributes)) {
             $elevationValue = $attributes[$elevation];
-            if ($elevationValue=="high"){
+            if ($elevationValue == "high") {
                 $styleProperties["box-shadow"] = "0 0 0 .2em rgba(3,102,214,0),0 13px 27px -5px rgba(50,50,93,.25),0 8px 16px -8px rgba(0,0,0,.3),0 -6px 16px -6px rgba(0,0,0,.025)";
             } else {
                 $styleProperties["box-shadow"] = "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)";
@@ -595,17 +596,21 @@ class PluginUtility
      * @param bool $withIcon - used to break the recursion with the message in the {@link IconUtility}
      * @return string - an url
      */
-    public static function getUrl($canonical, $text, $withIcon = true)
+    public static function  getUrl($canonical, $text, $withIcon = true)
     {
         /** @noinspection SpellCheckingInspection */
 
         $icon = "";
         if ($withIcon) {
 
-            $icon = "<img src=\"https://combostrap.com/_media/favicon-16x16.png\" />";
+            /**
+             * The best would be
+             */
+            //$icon = "<img src=\"https://combostrap.com/_media/logo.svg\" width='40px'/>";
+            $icon = "<object type=\"image/svg+xml\" data=\"https://combostrap.com/_media/logo.svg\" style=\"max-width: 16px\"></object>";
 
         }
-        return $icon.' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
+        return $icon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
     }
 
     /**
@@ -884,6 +889,44 @@ class PluginUtility
     public static function addAsHtmlComment($string)
     {
         print_r('<!-- ' . self::escape($string) . '-->');
+    }
+
+    public static function getResourceBaseUrl()
+    {
+        return DOKU_URL . 'lib/plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/resources';
+    }
+
+    /**
+     * @param $TAG - the name of the tag that should correspond to the name of the css file in the style directory
+     * @return string - a inline style element to inject in the page or blank if no file exists
+     */
+    public static function getTagStyle($TAG)
+    {
+        $path = DOKU_PLUGIN . self::PLUGIN_BASE_NAME . "/style/" . $TAG . ".css";
+        if (file_exists($path)) {
+            return "<style>" . file_get_contents($path) . "</style>";
+        } else {
+            return "";
+        }
+
+    }
+
+    /**
+     * Utility function to disable preformatted
+     * @param $mode
+     * @return bool
+     */
+    public static function disablePreformatted($mode)
+    {
+        if (
+            $mode == 'preformatted'
+            ||
+            $mode == PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
+        ) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
 

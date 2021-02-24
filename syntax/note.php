@@ -59,6 +59,15 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
     {
         return 201;
     }
+    public function accepts($mode)
+    {
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
+    }
+
 
 
     function connectTo($mode)

@@ -23,12 +23,13 @@ class ImgUtility
         return Doku_Handler_Parse_Media($match);
     }
 
-    public static function render($payload, $class)
+    public static function render($attributes)
     {
-        $src = $payload['src'];
-        $width = $payload['width'];
-        $height = $payload['height'];
-        $title = $payload['title'];
+        $src = $attributes['src'];
+        $width = $attributes['width'];
+        $height = $attributes['height'];
+        $title = $attributes['title'];
+        $class = $attributes['class'];
         //Snippet taken from $renderer->doc .= $renderer->internalmedia($src, $linking = 'nolink');
         return '<img class="'.$class.'" src="' . ml($src, array('w' => $width, 'h' => $height, 'cache' => true)) . '" alt="' . $title . '" width="' . $width . '">' ;
     }

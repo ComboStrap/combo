@@ -16,6 +16,7 @@ namespace ComboStrap;
 use Doku_Handler;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
+use RuntimeException;
 
 
 /**
@@ -469,18 +470,17 @@ class Tag
     /**
      * Descendant can only be run on enter tag
      * @return Tag[]
-     * @throws Exception
      */
     public function getDescendants()
     {
 
         if ($this->state != DOKU_LEXER_ENTER) {
-            throw new Exception("Descendant should be called on enter tag. Get the opening tag first if you are in a exit tag");
+            throw new RuntimeException("Descendant should be called on enter tag. Get the opening tag first if you are in a exit tag");
         }
         if (isset($this->position)) {
             $index = $this->position + 1;
         } else {
-            throw new Exception("It seems that we are at the end of the stack because the position is not set");
+            throw new RuntimeException("It seems that we are at the end of the stack because the position is not set");
         }
         $descendants = array();
         while ($index <= sizeof($this->calls) - 1) {
@@ -515,7 +515,6 @@ class Tag
     /**
      * @param string $tagName
      * @return Tag|null
-     * @throws Exception
      */
     public function getDescendant($tagName)
     {
@@ -588,5 +587,33 @@ class Tag
 
         return $content;
 
+    }
+
+    /**
+     * Return true if the tag is the first sibling
+     *
+     *
+     * @return boolean - true if this is the first sibling
+     */
+    public function isFirstSibling()
+    {
+        $sibling = $this->getSibling();
+        if ($sibling==null){
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function addAttribute($key, $value)
+    {
+        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key]=$value;
+        return $this;
     }
 }

@@ -30,6 +30,13 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
 
     const TAG = "img";
 
+    /**
+     * The attribute that defines if the image is the first image in
+     * the component
+     *
+     */
+    const IS_FIRST_IMAGE_KEY = "isFirstImage";
+
     function getType()
     {
         return 'formatting';
@@ -82,17 +89,13 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
                 $attributes = ImgUtility::parse($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
-
-                $html = "";
                 $parentTag = $tag->getParent()->getName();
-                if ($parentTag == syntax_plugin_combo_card::TAG) {
-                    $html = ImgUtility::render($attributes, "card-img-top");
-                }
+                $isFirstSibling = $tag->isFirstSibling();
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html,
-                    PluginUtility::PARENT_TAG => $parentTag
+                    PluginUtility::PARENT_TAG => $parentTag,
+                    self::IS_FIRST_IMAGE_KEY => $isFirstSibling
                 );
 
 
@@ -122,12 +125,30 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_SPECIAL :
 
-                    if ($data[PluginUtility::PARENT_TAG]===syntax_plugin_combo_card::TAG ){
-                        StringUtility::rtrim($renderer->doc,syntax_plugin_combo_card::CARD_BODY);
-                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+
+                    if ($data[PluginUtility::PARENT_TAG] === syntax_plugin_combo_card::TAG && $isFirstImage) {
+
+                        /**
+                         * First image of a card
+                         */
+                        PluginUtility::addClass2Attributes("card-img-top", $attributes);
+                        $renderer->doc .= ImgUtility::render($attributes);
                         $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
+
                     } else {
-                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                        /**
+                         * Renderer function
+                         */
+                        $src = $attributes['src'];
+                        $title = $attributes['title'];
+                        $align = $attributes['align'];
+                        $width = $attributes['width'];
+                        $height = $attributes['height'];
+                        $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
+                        $linking = $attributes['linking'];
+                        $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
                     }
 
                     break;

@@ -31,7 +31,7 @@ class syntax_plugin_combo_accordionitem extends DokuWiki_Syntax_Plugin
 {
 
 
-    const TAG = 'accordionitem';
+    const TAG = 'accordion-item';
 
     /**
      * @var integer - a counter (unique id for the accordion on the page)

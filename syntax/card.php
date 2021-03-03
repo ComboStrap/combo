@@ -40,6 +40,11 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     const CARD_BODY = '<div class="card-body">' . DOKU_LF;
 
     /**
+     * Key of the attributes that says if the card has an image illustration
+     */
+    const HAS_IMAGE_ILLUSTRATION_KEY = "hasImageIllustration";
+
+    /**
      * @var int a counter to give an id to the card
      */
     private $counter = 0;
@@ -163,55 +168,49 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 $this->counter++;
                 $attributes = PluginUtility::getTagAttributes($match);
                 PluginUtility::addClass2Attributes("card", $attributes);
-                $html = '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+
+                /**
+                 * Image illustration is checked on exit
+                 * but we add the attributes now to avoid null exception
+                 * on render
+                 */
+                $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
+
                 $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
                 $parent = $tag->getParent();
                 if ($parent != null) {
                     switch ($parent->getName()) {
                         case syntax_plugin_combo_accordion::TAG:
-                            if (!in_array("id",$attributes)){
-                                $attributes["id"]=$this->counter;
+                            if (!in_array("id", $attributes)) {
+                                $attributes["id"] = $this->counter;
                             }
                             break;
-                        default:
-                            $html .= self::CARD_BODY;
                     }
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
-                $html = PluginUtility::escape($match);
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::PAYLOAD => $match
                 );
 
 
             case DOKU_LEXER_EXIT :
-                $attributes = PluginUtility::getTagAttributes($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
 
-                $html = '</div>' . DOKU_LF;
-                $html .= "</div>" . DOKU_LF;
-
-                $parent = $tag->getParent();
-                if ($parent != null) {
-                    switch ($parent->getName()) {
-                        case syntax_plugin_combo_accordion::TAG:
-                            $html .= "</div>" . DOKU_LF;
-                            break;
-                    }
+                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $openingTag = $tag->getOpeningTag();
+                $firstDescendant = $openingTag->getDescendants()[0];
+                if ($firstDescendant->getName() == syntax_plugin_combo_img::TAG) {
+                    $openingTag->addAttribute(self::HAS_IMAGE_ILLUSTRATION_KEY, true);
                 }
-
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -237,7 +236,32 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            $renderer->doc .= $data[PluginUtility::PAYLOAD];
+            $attributes = $data[PluginUtility::ATTRIBUTES];
+            $state = $data[PluginUtility::STATE];
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+
+                    $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
+                    unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
+
+                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+
+                    if (!$hasImageIllustration){
+                        $renderer->doc .= self::CARD_BODY;
+                    }
+                    break;
+
+                case DOKU_LEXER_EXIT:
+                    $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
+                    break;
+
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    break;
+
+
+            }
+
             return true;
         }
         return false;

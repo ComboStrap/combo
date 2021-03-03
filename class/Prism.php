@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use Doku_Renderer_xhtml;
+use syntax_plugin_combo_code;
 
 class Prism
 {
@@ -62,7 +63,6 @@ class Prism
      */
     const CONF_PRISM_THEME = "prismTheme";
     const PRISM_THEME_DEFAULT = "tomorrow";
-    const FILE_PATH_KEY = "file-path";
 
 
     /**
@@ -302,9 +302,9 @@ EOD;
         }
         // Download
         $preAttributes['data-download-link']=true;
-        if (array_key_exists(self::FILE_PATH_KEY,$attributes)){
-            $preAttributes['data-src']=$attributes[self::FILE_PATH_KEY];
-            unset($attributes[self::FILE_PATH_KEY]);
+        if (array_key_exists(syntax_plugin_combo_code::FILE_PATH_KEY,$attributes)){
+            $preAttributes['data-src']=$attributes[syntax_plugin_combo_code::FILE_PATH_KEY];
+            unset($attributes[syntax_plugin_combo_code::FILE_PATH_KEY]);
             $preAttributes['data-download-link-label']="Download ".$preAttributes['data-src'];
         } else {
             $preAttributes['data-src']="file.".$language;

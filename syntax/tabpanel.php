@@ -41,7 +41,10 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
     /**
      * @return array
      * Allow which kind of plugin inside
-     * All
+
+     * ************************
+     * This function has no effect because {@link SyntaxPlugin::accepts()} is used
+     * ************************
      */
     public function getAllowedTypes()
     {
@@ -50,6 +53,16 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header"){
+            return false;
+        }
+        /**
+         * If preformatted is disable, we does not accept it
+         */
         if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
             return PluginUtility::disablePreformatted($mode);
         } else {

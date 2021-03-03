@@ -59,14 +59,38 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * No one of array('container', 'baseonly', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
-     * because we manage self the content and we call self the parser
-     *
-     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
+     * ***************
+     * This function has no effect because {@link syntax_plugin_combo_blockquote::accepts()}
+     * is used
+     * ***************
      */
     public function getAllowedTypes()
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+    }
+
+    /**
+     * @param string $mode
+     * @return bool
+     * Allowed type
+     */
+    public function accepts($mode)
+    {
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header"){
+            return false;
+        }
+        /**
+         * If preformatted is disable, we does not accept it
+         */
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
     }
 
 

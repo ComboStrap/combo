@@ -39,6 +39,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      */
     const CARD_BODY = '<div class="card-body">' . DOKU_LF;
 
+    /**
+     * @var int a counter to give an id to the card
+     */
+    private $counter = 0;
 
 
     /**
@@ -56,11 +60,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * One of array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
-     * 'baseonly' will run only in the base mode
-     * because we manage self the content and we call self the parser
-     *
-     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
+     * ***************
+     * This function has no effect because {@link SyntaxPlugin::accepts()}
+     * is used
+     * ***************
      */
     public function getAllowedTypes()
     {
@@ -69,6 +72,16 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header") {
+            return false;
+        }
+        /**
+         * If preformatted is disable, we does not accept it
+         */
         if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
             return PluginUtility::disablePreformatted($mode);
         } else {
@@ -147,10 +160,23 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                $this->counter++;
                 $attributes = PluginUtility::getTagAttributes($match);
                 PluginUtility::addClass2Attributes("card", $attributes);
                 $html = '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
-                $html .= self::CARD_BODY;
+                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+                $parent = $tag->getParent();
+                if ($parent != null) {
+                    switch ($parent->getName()) {
+                        case syntax_plugin_combo_accordion::TAG:
+                            if (!in_array("id",$attributes)){
+                                $attributes["id"]=$this->counter;
+                            }
+                            break;
+                        default:
+                            $html .= self::CARD_BODY;
+                    }
+                }
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
@@ -168,8 +194,21 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
 
             case DOKU_LEXER_EXIT :
+                $attributes = PluginUtility::getTagAttributes($match);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+
                 $html = '</div>' . DOKU_LF;
                 $html .= "</div>" . DOKU_LF;
+
+                $parent = $tag->getParent();
+                if ($parent != null) {
+                    switch ($parent->getName()) {
+                        case syntax_plugin_combo_accordion::TAG:
+                            $html .= "</div>" . DOKU_LF;
+                            break;
+                    }
+                }
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $html

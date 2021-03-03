@@ -7,6 +7,13 @@
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
+if (!defined('DOKU_INC')) {
+    die();
+}
+
+if (!defined('DOKU_PLUGIN')) {
+    define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
+}
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
@@ -17,12 +24,19 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ *
+ * https://getbootstrap.com/docs/4.6/components/collapse/#accordion-example
  */
-class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_accordionitem extends DokuWiki_Syntax_Plugin
 {
 
 
-    const TAG = 'jumbotron';
+    const TAG = 'accordionitem';
+
+    /**
+     * @var integer - a counter (unique id for the accordion on the page)
+     */
+    private $counter = 0;
 
 
     /**
@@ -40,15 +54,14 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * ************************
-     * This function has no effect because {@link SyntaxPlugin::accepts()} is used
-     * ************************
+     * One of array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
+     * 'baseonly' will run only in the base mode
+     * because we manage self the content and we call self the parser
+     *
+     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
     public function getAllowedTypes()
     {
-        /**
-         * No base only otherwise the {@link syntax_plugin_combo_heading} title (heading) base will not be taken into account
-         */
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
@@ -104,6 +117,7 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+
         $pattern = PluginUtility::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
@@ -112,6 +126,7 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
+
 
         $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
 
@@ -138,8 +153,12 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                $this->counter++;
                 $attributes = PluginUtility::getTagAttributes($match);
-                PluginUtility::addClass2Attributes("jumbotron", $attributes);
+                if (!array_key_exists("id",$attributes)){
+                    $attributes["id"]="accordion".$this->counter;
+                }
+                PluginUtility::addClass2Attributes("accordion", $attributes);
                 $html = '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
                 return array(
                     PluginUtility::STATE => $state,
@@ -186,23 +205,13 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
 
         if ($format == 'xhtml') {
 
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
-                case DOKU_LEXER_EXIT :
-                case DOKU_LEXER_ENTER:
-                    /** @var Doku_Renderer_xhtml $renderer */
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD].DOKU_LF;
-                    break;
-
-                case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
-            }
-
+            /** @var Doku_Renderer_xhtml $renderer */
+            $renderer->doc .= $data[PluginUtility::PAYLOAD];
             return true;
-
         }
         return false;
     }
+
 
 
 }

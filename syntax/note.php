@@ -45,22 +45,34 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * No one of array('baseonly','container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
-     * because we manage self the content and we call self the parser
-     *
-     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
+     * ************************
+     * This function has no effect because {@link SyntaxPlugin::accepts()} is used
+     * ************************
      */
     function getAllowedTypes()
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
+
+
     function getSort()
     {
         return 201;
     }
+
     public function accepts($mode)
     {
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header"){
+            return false;
+        }
+        /**
+         * If preformatted is disable, we does not accept it
+         */
         if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
             return PluginUtility::disablePreformatted($mode);
         } else {

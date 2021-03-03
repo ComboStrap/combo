@@ -130,7 +130,13 @@ class PluginUtility
      */
     public static function getContainerTagPattern($tag)
     {
-        return '<' . $tag . '.*?>(?=.*?<\/' . $tag . '>)';
+        // this pattern ensure that the tag
+        // `accordion` will not intercept also the tag `accordionitem`
+        // where:
+        // ?: means non capturing group (to not capture the last >)
+        // (\s.*?): is a capturing group that starts with a space
+        $pattern = "(?:\s.*?>|>)";
+        return '<' . $tag . $pattern.'(?=.*?<\/' . $tag . '>)';
     }
 
     /**

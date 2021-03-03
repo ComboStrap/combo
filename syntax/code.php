@@ -4,9 +4,9 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
 
 // must be run within Dokuwiki
-use ComboStrap\Prism;
-use ComboStrap\StringUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Prism;
+use ComboStrap\Tag;
 
 require_once(__DIR__ . '/../class/StringUtility.php');
 require_once(__DIR__ . '/../class/Prism.php');
@@ -27,6 +27,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
      * The tag of the ui component
      */
     const CODE_TAG = "code";
+    const FILE_PATH_KEY = "file-path";
 
 
     function getType()
@@ -115,16 +116,23 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match,true, Prism::FILE_PATH_KEY);
+                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match, true, self::FILE_PATH_KEY);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
+                /**
+                 * Attribute are send for the
+                 * export of code functionality
+                 */
+                $tag = new Tag(self::CODE_TAG, array(), $state, $handler->calls);
+                $tagAttributes = $tag->getParent()->getAttributes();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
+                    PluginUtility::PAYLOAD => $match,
+                    PluginUtility::ATTRIBUTES => $tagAttributes
                 );
 
             case DOKU_LEXER_EXIT :
@@ -156,9 +164,8 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    Prism::htmlEnter($renderer,$attributes,$this);
+                    Prism::htmlEnter($renderer, $attributes, $this);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -171,6 +178,19 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 
             }
             return true;
+        } else if ($format == 'code') {
+
+            /** @var Doku_Renderer_code $renderer */
+            $state = $data [PluginUtility::STATE];
+            if ($state == DOKU_LEXER_UNMATCHED) {
+
+                $attributes = $data[PluginUtility::ATTRIBUTES];
+                $text = $data[PluginUtility::PAYLOAD];
+                $filename = $attributes[self::FILE_PATH_KEY];
+                $language = strtolower($attributes["type"]);
+                $renderer->code($text,$language,$filename);
+
+            }
         }
 
         // unsupported $mode

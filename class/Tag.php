@@ -214,7 +214,7 @@ class Tag
     public function getParent()
     {
         if (isset($this->position)) {
-            $descendantCounter = $this->position;
+            $descendantCounter = $this->position - 1;
         } else {
             $descendantCounter = sizeof($this->calls) - 1;
         }

@@ -3,20 +3,22 @@ language: php
 # https://www.ovh.nl/shared-hosting/persoonlijke-shared-hosting.xml
 # and https://github.com/splitbrain/dokuwiki-travis
 php:
-  - "7.4"
-  - "7.3"
-  - "7.2"
-  - "7.1"
-  - "7.0"
+#  - "7.4"
+#  - "7.3"
+#  - "7.2"
+#  - "7.1"
+#  - "7.0"
   - "5.6"
 
 env:
   - DOKUWIKI=stable
 
 before_install:
+  - wget https://raw.github.com/splitbrain/dokuwiki-travis/master/travis.sh
   - wget https://raw.github.com/ComboStrap/combo/master/dev/boot.sh
 
 install:
+  - sh travis.sh
   - bash boot.sh
 
 script:

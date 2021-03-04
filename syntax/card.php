@@ -290,7 +290,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
                         case syntax_plugin_combo_accordion::TAG:
-                            $renderer->doc .= "</div>";
+                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF . "</div>" . DOKU_LF;
                             break;
                         default:
                             $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;

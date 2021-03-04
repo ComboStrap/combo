@@ -30,6 +30,11 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
      */
     const TARGET_ID = "targetId";
 
+    /**
+     * An indicator attribute that tells if the accordion is collpased or not
+     */
+    const COLLAPSED = "collapsed";
+
     function getType()
     {
         return 'formatting';
@@ -88,8 +93,15 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                         if ($grandfather->getName() == syntax_plugin_combo_accordion::TAG) {
                             $id = $parentTag->getAttribute("id");
                             $tagAttributes["id"] = $id;
-                            $tagAttributes[self::HEADING_ID] = "heading".ucfirst($id);
-                            $tagAttributes[self::TARGET_ID] = "collapse".ucfirst($id);
+                            $tagAttributes[self::HEADING_ID] = "heading" . ucfirst($id);
+                            $tagAttributes[self::TARGET_ID] = "collapse" . ucfirst($id);
+                            $parentAttribute = $parentTag->getAttributes();
+                            if (!key_exists(self::COLLAPSED, $parentAttribute)) {
+                                // Accordion are collapsed by default
+                                $tagAttributes[self::COLLAPSED] = "true";
+                            } else {
+                                $tagAttributes[self::COLLAPSED] = $parentAttribute[self::COLLAPSED];
+                            }
                             $context = syntax_plugin_combo_accordion::TAG;
                         }
                     }
@@ -149,9 +161,15 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $attribute = $data[PluginUtility::ATTRIBUTES];
                             $headingId = $attribute[self::HEADING_ID];
                             $collapseId = $attribute[self::TARGET_ID];
+                            $collapsed = $attribute[self::COLLAPSED];
+                            if ($collapsed == "false") {
+                                $collapsedClass = "collapsed";
+                            } else {
+                                $collapsedClass = "";
+                            }
                             $renderer->doc .= "<div class=\"card-header\" id=\"$headingId\">" . DOKU_LF;
                             $renderer->doc .= "<h2 class=\"mb-0\">";
-                            $renderer->doc .= "<button class=\"btn btn-link btn-block text-left\" type=\"button\" data-toggle=\"collapse\" data-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
+                            $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data-toggle=\"collapse\" data-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
                             break;
                     }
                     break;
@@ -167,9 +185,15 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $attribute = $data[PluginUtility::ATTRIBUTES];
                             $collapseId = $attribute[self::TARGET_ID];
                             $headingId = $attribute[self::HEADING_ID];
+                            $collapsed = $attribute[self::COLLAPSED];
+                            if ($collapsed == "false") {
+                                $showClass = "show";
+                            } else {
+                                $showClass = "";
+                            }
                             $renderer->doc .= "</button></h2></div>";
-                            $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse show\" aria-labelledby=\"$headingId\" data-parent=\"#$headingId\">";
-                            $renderer->doc .= "<div class=\"card-body\">";
+                            $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse $showClass\" aria-labelledby=\"$headingId\" data-parent=\"#$headingId\">";
+                            $renderer->doc .= "<div class=\"card-body\">" . DOKU_LF;
                             break;
                     }
                     break;

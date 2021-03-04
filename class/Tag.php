@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 
 use Doku_Handler;
+use dokuwiki\Action\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
 use RuntimeException;
@@ -552,6 +553,20 @@ class Tag
     {
         if ($this->position != null) {
             return self::getDataFromCall($this->calls[$this->position]);
+        } else {
+            return array();
+        }
+    }
+
+    /**
+     *
+     * @return array|mixed - the context (generally a tag name)
+     */
+    public function getContext()
+    {
+        if ($this->position != null) {
+            $data =  self::getDataFromCall($this->calls[$this->position]);
+            return $data[PluginUtility::CONTEXT];
         } else {
             return array();
         }

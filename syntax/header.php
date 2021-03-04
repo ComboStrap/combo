@@ -87,7 +87,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
                     PluginUtility::PAYLOAD => $html,
-                    PluginUtility::PARENT_TAG => $parentName
+                    PluginUtility::CONTEXT => $parentName
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -140,7 +140,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
-                    $parent = $data[PluginUtility::PARENT_TAG];
+                    $parent = $data[PluginUtility::CONTEXT];
                     switch ($parent) {
                         case syntax_plugin_combo_blockquote::TAG:
                             StringUtility::rtrim($renderer->doc, syntax_plugin_combo_blockquote::CARD_BODY_BLOCKQUOTE_OPEN_TAG);

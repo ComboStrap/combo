@@ -33,7 +33,10 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 
     const TAG = 'accordion';
 
-
+    /**
+     * @var int a counter to give an id to the accordion card
+     */
+    private $accordionCounter = 0;
 
     /**
      * Syntax Type.
@@ -149,8 +152,16 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                $this->accordionCounter++;
                 $attributes = PluginUtility::getTagAttributes($match);
+
+                // Attributes has at
+                // https://getbootstrap.com/docs/4.6/components/collapse/#accordion-example
                 PluginUtility::addClass2Attributes("accordion", $attributes);
+                if (!in_array("id", $attributes)) {
+                    $attributes["id"] = self::TAG.$this->accordionCounter;
+                }
+
                 $html = '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
                 return array(
                     PluginUtility::STATE => $state,

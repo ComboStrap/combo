@@ -104,7 +104,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::PARENT_TAG => $parent);
+                    PluginUtility::CONTEXT => $parent);
 
             case DOKU_LEXER_UNMATCHED :
                 return array(
@@ -121,7 +121,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PARENT_TAG => $parentName);
+                    PluginUtility::CONTEXT => $parentName);
 
 
         }
@@ -150,7 +150,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $parent = $data[PluginUtility::PARENT_TAG];
+                    $parent = $data[PluginUtility::CONTEXT];
                     if (!empty($parent) && $parent == syntax_plugin_combo_blockquote::TAG) {
                         StringUtility::addEolIfNotPresent($renderer->doc);
                         $renderer->doc .= "<footer class=\"blockquote-footer\"><cite";
@@ -178,7 +178,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT :
 
                     $renderer->doc .= '</cite>';
-                    $parent = $data[PluginUtility::PARENT_TAG];
+                    $parent = $data[PluginUtility::CONTEXT];
                     if (!empty($parent) && in_array($parent, ["card", "blockquote"])) {
                         $renderer->doc .= '</footer>' . DOKU_LF;
                     } else {

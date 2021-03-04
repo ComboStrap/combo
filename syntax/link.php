@@ -114,7 +114,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         }
         return array(
             PluginUtility::ATTRIBUTES => $attributes,
-            PluginUtility::PARENT_TAG => $parentName
+            PluginUtility::CONTEXT => $parentName
         );
 
 
@@ -163,7 +163,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 /**
                  * Extra styling for internal link
                  */
-                $parentTag = $data[PluginUtility::PARENT_TAG];
+                $parentTag = $data[PluginUtility::CONTEXT];
                 switch ($parentTag) {
                     case syntax_plugin_combo_button::TAG:
                     case syntax_plugin_combo_badge::TAG:

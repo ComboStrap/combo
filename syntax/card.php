@@ -45,9 +45,18 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     const HAS_IMAGE_ILLUSTRATION_KEY = "hasImageIllustration";
 
     /**
-     * @var int a counter to give an id to the card
+     * @var int a counter to give an id to the accordion card
      */
-    private $counter = 0;
+    private $accordionCounter = 0;
+
+    /**
+     * @var int a counter for an unknown card type
+     */
+    private $cardCounter = 0;
+    /**
+     * @var int a counter to give an id to the tabs card
+     */
+    private $tabCounter = 0;
 
 
     /**
@@ -165,31 +174,45 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $this->counter++;
                 $attributes = PluginUtility::getTagAttributes($match);
-                PluginUtility::addClass2Attributes("card", $attributes);
-
-                /**
-                 * Image illustration is checked on exit
-                 * but we add the attributes now to avoid null exception
-                 * on render
-                 */
-                $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
 
                 $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
                 $parent = $tag->getParent();
                 if ($parent != null) {
                     switch ($parent->getName()) {
                         case syntax_plugin_combo_accordion::TAG:
-                            if (!in_array("id", $attributes)) {
-                                $attributes["id"] = $this->counter;
-                            }
+                            $this->accordionCounter++;
+                            $id = $this->accordionCounter;
                             break;
+                        case syntax_plugin_combo_tabpanels::TAG:
+                            $this->tabCounter++;
+                            $id = $this->accordionCounter;
+                            break;
+                        default:
+                            // A card alone
+                            $this->cardCounter++;
+                            $id = $this->cardCounter;
+
+                            PluginUtility::addClass2Attributes("card", $attributes);
+
+                            /**
+                             * Image illustration is checked on exit
+                             * but we add the attributes now to avoid null exception
+                             * on render
+                             */
+                            $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
+
                     }
                 }
+
+                if (!in_array("id", $attributes)) {
+                    $attributes["id"] = $parent->getName() . $id;
+                }
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::CONTEXT => $parent->getName()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -197,7 +220,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
+                    PluginUtility::PAYLOAD => $match,
                 );
 
 
@@ -209,8 +232,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 if ($firstDescendant->getName() == syntax_plugin_combo_img::TAG) {
                     $openingTag->addAttribute(self::HAS_IMAGE_ILLUSTRATION_KEY, true);
                 }
+                $context = $openingTag->getContext();
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    PluginUtility::CONTEXT => $context
                 );
 
 
@@ -241,18 +266,35 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER:
 
-                    $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
-                    unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch ($context) {
+                        case syntax_plugin_combo_accordion::TAG:
+                            // A card in a accordion
+                            $renderer->doc .= "<div class=\"card\">";
+                            break;
 
-                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+                        default:
+                            // A card alone
+                            $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
+                            unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
 
-                    if (!$hasImageIllustration){
-                        $renderer->doc .= self::CARD_BODY;
+                            $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+
+                            if (!$hasImageIllustration) {
+                                $renderer->doc .= self::CARD_BODY;
+                            }
                     }
                     break;
 
                 case DOKU_LEXER_EXIT:
-                    $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch ($context) {
+                        case syntax_plugin_combo_accordion::TAG:
+                            $renderer->doc .= "</div>";
+                            break;
+                        default:
+                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
+                    }
                     break;
 
                 case DOKU_LEXER_UNMATCHED:

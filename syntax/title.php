@@ -119,8 +119,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
             PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
             PluginUtility::getModeForComponent(syntax_plugin_combo_note::TAG),
             PluginUtility::getModeForComponent(syntax_plugin_combo_jumbotron::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_tabpanel::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_accordionitem::TAG)
+            PluginUtility::getModeForComponent(syntax_plugin_combo_tabpanel::TAG)
         ];
         if (in_array($mode, $modes)) {
             $this->Lexer->addSpecialPattern(self::HEADING_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
@@ -161,7 +160,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
                     PluginUtility::PAYLOAD => $html,
-                    PluginUtility::PARENT_TAG => $parentTagName
+                    PluginUtility::CONTEXT => $parentTagName
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -205,7 +204,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
                     PluginUtility::PAYLOAD => $html,
-                    PluginUtility::PARENT_TAG => $parentTag
+                    PluginUtility::CONTEXT => $parentTag
                 );
 
         }
@@ -234,7 +233,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_SPECIAL:
                 case DOKU_LEXER_ENTER:
-                    $parentTag = $data[PluginUtility::PARENT_TAG];
+                    $parentTag = $data[PluginUtility::CONTEXT];
                     if ($parentTag == syntax_plugin_combo_blockquote::TAG) {
                         StringUtility::rtrim($renderer->doc, syntax_plugin_combo_blockquote::BLOCKQUOTE_OPEN_TAG);
                     }

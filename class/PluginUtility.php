@@ -33,7 +33,9 @@ class PluginUtility
     const STATE = "state";
     const PAYLOAD = "payload"; // The html or text
     const ATTRIBUTES = "attributes";
-    const PARENT_TAG = 'parent';
+    // The context is generally the parent tag but it may be also the grandfather.
+    // It permits to determine the HTML that is outputted
+    const CONTEXT = 'context';
     const CONTENT = 'content';
     const TAG = "tag";
 

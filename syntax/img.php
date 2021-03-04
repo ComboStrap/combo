@@ -94,7 +94,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PARENT_TAG => $parentTag,
+                    PluginUtility::CONTEXT => $parentTag,
                     self::IS_FIRST_IMAGE_KEY => $isFirstSibling
                 );
 
@@ -128,7 +128,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
                     $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
                     $attributes = $data[PluginUtility::ATTRIBUTES];
 
-                    if ($data[PluginUtility::PARENT_TAG] === syntax_plugin_combo_card::TAG && $isFirstImage) {
+                    if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG && $isFirstImage) {
 
                         /**
                          * First image of a card

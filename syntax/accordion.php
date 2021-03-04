@@ -26,6 +26,9 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  *    syntax_plugin_PluginName_ComponentName
  *
  * https://getbootstrap.com/docs/4.6/components/collapse/#accordion-example
+ *
+ * Ter info:
+ * https://jqueryui.com/accordion/
  */
 class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 {

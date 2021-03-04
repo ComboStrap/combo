@@ -174,45 +174,54 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                // A card alone
+
                 $attributes = PluginUtility::getTagAttributes($match);
 
                 $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
-                $parent = $tag->getParent();
-                if ($parent != null) {
-                    switch ($parent->getName()) {
-                        case syntax_plugin_combo_accordion::TAG:
-                            $this->accordionCounter++;
-                            $id = $this->accordionCounter;
-                            break;
-                        case syntax_plugin_combo_tabpanels::TAG:
-                            $this->tabCounter++;
-                            $id = $this->accordionCounter;
-                            break;
-                        default:
-                            // A card alone
-                            $this->cardCounter++;
-                            $id = $this->cardCounter;
 
-                            PluginUtility::addClass2Attributes("card", $attributes);
-
-                            /**
-                             * Image illustration is checked on exit
-                             * but we add the attributes now to avoid null exception
-                             * on render
-                             */
-                            $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
-
-                    }
+                $parentTag = $tag->getParent();
+                if ($parentTag == null) {
+                    $context = self::TAG;
+                } else {
+                    $context = $parentTag->getName();
                 }
 
+                switch ($context) {
+                    case syntax_plugin_combo_accordion::TAG:
+                        $this->accordionCounter++;
+                        $id = $this->accordionCounter;
+                        break;
+                    case syntax_plugin_combo_tabpanels::TAG:
+                        $this->tabCounter++;
+                        $id = $this->accordionCounter;
+                        break;
+                    case self::TAG:
+                    default:
+
+                        $this->cardCounter++;
+                        $id = $this->cardCounter;
+
+                        /** A card without context */
+                        PluginUtility::addClass2Attributes("card", $attributes);
+                        /**
+                         * Image illustration is checked on exit
+                         * but we add the attributes now to avoid null exception
+                         * on render
+                         */
+                        $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
+
+                }
+
+
                 if (!in_array("id", $attributes)) {
-                    $attributes["id"] = $parent->getName() . $id;
+                    $attributes["id"] = $context . $id;
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $parent->getName()
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED :

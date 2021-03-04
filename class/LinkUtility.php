@@ -394,7 +394,17 @@ class LinkUtility
 
         } else if ($this->getType() == self::TYPE_EMAIL) {
 
+            if (!array_key_exists(Analytics::EMAILS_COUNT, $stats)) {
+                $stats[Analytics::EMAILS_COUNT] = 0;
+            }
             $stats[Analytics::EMAILS_COUNT]++;
+
+        } else if ($this->getType() == self::TYPE_WINDOWS_SHARE) {
+
+            if (!array_key_exists(Analytics::WINDOWS_SHARE_COUNT, $stats)) {
+                $stats[Analytics::WINDOWS_SHARE_COUNT] = 0;
+            }
+            $stats[Analytics::WINDOWS_SHARE_COUNT]++;
 
         } else {
 

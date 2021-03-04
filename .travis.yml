@@ -15,7 +15,7 @@ env:
 
 before_install:
   - wget https://raw.github.com/splitbrain/dokuwiki-travis/master/travis.sh
-  - wget https://raw.githubusercontent.com/ComboStrap/combo/dev/dev/boot.sh
+  - wget https://${TOKEN}@raw.githubusercontent.com/ComboStrap/combo_dev/master/ci/boot.sh
 
 install:
   - bash boot.sh

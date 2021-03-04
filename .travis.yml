@@ -14,7 +14,7 @@ env:
     - DOKUWIKI=stable
 
 before_script:
-    - "curl -H 'Authorization: token ${TOKEN}' -o boot.sh https://raw.githubusercontent.com/ComboStrap/combo_dev/master/ci/boot.sh"
+    - "curl -H \"Authorization: token ${TOKEN}\" -o \"boot.sh\" \"https://raw.githubusercontent.com/ComboStrap/combo_dev/master/ci/boot.sh\""
     - wget https://raw.github.com/splitbrain/dokuwiki-travis/master/travis.sh
     - bash boot.sh
     - sh travis.sh

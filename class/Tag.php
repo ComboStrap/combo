@@ -468,6 +468,22 @@ class Tag
         }
     }
 
+
+    /**
+     *
+     * @return Tag the first descendant that is not whitespace
+     */
+    public function getFirstMeaningFullDescendant()
+    {
+        $descendants = $this->getDescendants();
+        $firstDescendant = $descendants[0];
+        if ($firstDescendant->getState() == DOKU_LEXER_UNMATCHED && trim($firstDescendant->getContent()) == "") {
+            return $descendants[1];
+        } else {
+            return $firstDescendant;
+        }
+    }
+
     /**
      * Descendant can only be run on enter tag
      * @return Tag[]
@@ -500,7 +516,12 @@ class Tag
                  * We don't take the end of line
                  */
                 if ($childCall[0] != "eol") {
+                    /**
+                     * We don't take text
+                     */
+                    //if ($state!=DOKU_LEXER_UNMATCHED) {
                     $descendants[] = self::call2Tag($childCall, $index);
+                    //}
                 }
                 /**
                  * Close
@@ -565,7 +586,7 @@ class Tag
     public function getContext()
     {
         if ($this->position != null) {
-            $data =  self::getDataFromCall($this->calls[$this->position]);
+            $data = self::getDataFromCall($this->calls[$this->position]);
             return $data[PluginUtility::CONTEXT];
         } else {
             return array();
@@ -582,21 +603,29 @@ class Tag
     public function getContent()
     {
         $content = "";
-        $index = $this->position + 1;
-        while ($index <= sizeof($this->calls) - 1) {
+        $state = $this->getState();
+        switch ($state) {
+            case DOKU_LEXER_ENTER:
+                $index = $this->position + 1;
+                while ($index <= sizeof($this->calls) - 1) {
 
-
-            $currentCall = $this->calls[$index];
-            if (
-                self::getTagNameFromCall($currentCall) == $this->getName()
-                &&
-                self::getStateFromCall($currentCall) == DOKU_LEXER_EXIT
-            ) {
+                    $currentCall = $this->calls[$index];
+                    if (
+                        self::getTagNameFromCall($currentCall) == $this->getName()
+                        &&
+                        self::getStateFromCall($currentCall) == DOKU_LEXER_EXIT
+                    ) {
+                        break;
+                    } else {
+                        $content .= self::getContentFromCall($currentCall);
+                        $index++;
+                    }
+                }
                 break;
-            } else {
-                $content .= self::getContentFromCall($currentCall);
-                $index++;
-            }
+            case DOKU_LEXER_UNMATCHED:
+            default:
+                $content = self::getContentFromCall($this->calls[$this->position]);
+                break;
         }
 
 
@@ -610,13 +639,21 @@ class Tag
      *
      * @return boolean - true if this is the first sibling
      */
-    public function isFirstSibling()
+    public function isFirstMeaningFullSibling()
     {
         $sibling = $this->getSibling();
-        if ($sibling==null){
+        if ($sibling == null) {
             return true;
         } else {
-            return false;
+            /** Whitespace string */
+            if ($sibling->getState() == DOKU_LEXER_UNMATCHED && trim($sibling->getContent()) == "") {
+                $sibling = $sibling->getSibling();
+            }
+            if ($sibling == null) {
+                return true;
+            } else {
+                return false;
+            }
         }
 
     }
@@ -628,7 +665,7 @@ class Tag
      */
     public function addAttribute($key, $value)
     {
-        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key]=$value;
+        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key] = $value;
         return $this;
     }
 }

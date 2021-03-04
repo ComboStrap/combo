@@ -237,7 +237,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 $tag = new Tag(self::TAG, array(), $state, $handler->calls);
                 $openingTag = $tag->getOpeningTag();
-                $firstDescendant = $openingTag->getDescendants()[0];
+                $firstDescendant = $openingTag->getFirstMeaningFullDescendant();
                 if ($firstDescendant->getName() == syntax_plugin_combo_img::TAG) {
                     $openingTag->addAttribute(self::HAS_IMAGE_ILLUSTRATION_KEY, true);
                 }
@@ -300,6 +300,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     switch ($context) {
                         case syntax_plugin_combo_accordion::TAG:
                             $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF . "</div>" . DOKU_LF;
+                            break;
+                        case syntax_plugin_combo_cardcolumns::TAG:
+                        case syntax_plugin_combo_cardcolumns::TAG_TEASER:
+                            $renderer->doc .= '</div>' . DOKU_LF;
                             break;
                         default:
                             $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;

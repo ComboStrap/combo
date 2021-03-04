@@ -31,11 +31,25 @@ class ImgUtility
         $title = $attributes['title'];
         $class = $attributes['class'];
         //Snippet taken from $renderer->doc .= $renderer->internalmedia($src, $linking = 'nolink');
-        return '<img class="'.$class.'" src="' . ml($src, array('w' => $width, 'h' => $height, 'cache' => true)) . '" alt="' . $title . '" width="' . $width . '">' ;
+        $linkAttributes = array('cache' => true);
+        if ($width != null) {
+            $linkAttributes['w'] = $width;
+        }
+        if ($height != null) {
+            $linkAttributes['h'] = $height;
+        }
+        $imgHTML = '<img class="' . $class . '" src="' . ml($src, array('w' => $width, 'h' => $height, 'cache' => true)) . '"';
+        if ($title != null) {
+            $imgHTML .= ' alt="' . $title . '"';
+        }
+        if ($width != null) {
+            $imgHTML .= 'width="' . $width . '"';
+        }
+        return  $imgHTML.'>' ;
     }
 
     function isImage($text){
-        return preg_match('/' . self::IMAGE_PATTERN . '/msSi', $text);
+        return preg_match(' / ' . self::IMAGE_PATTERN . ' / msSi', $text);
     }
 
 }

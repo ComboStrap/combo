@@ -23,6 +23,9 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
 {
 
+    const TAG =  "card-columns";
+    const TAG_TEASER =  'teaser-columns';
+
 
     /**
      * Syntax Type.
@@ -178,7 +181,8 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
 
     public static function getTags()
     {
-        return array ('card-columns','teaser-columns');
+
+        return array (self::TAG,self::TAG_TEASER);
     }
 
 

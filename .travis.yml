@@ -18,8 +18,9 @@ before_install:
   - wget https://raw.github.com/ComboStrap/combo/master/dev/boot.sh
 
 install:
-  - sh travis.sh
   - bash boot.sh
+  - sh travis.sh
+
 
 script:
   - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug

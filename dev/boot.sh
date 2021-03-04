@@ -3,8 +3,6 @@
 
 echo "Cloning ComboDev"
 git clone https://"${TOKEN}"@github.com/ComboStrap/combo_dev.git combo_dev
-BASE="lib/plugins/combo"
-echo "Moving into plugin directory: $BASE"
-mv combo_dev/combo_test $BASE/_test
+mv combo_dev/combo_test ./_test
 
 echo "Set up is done"

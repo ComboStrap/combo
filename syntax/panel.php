@@ -24,13 +24,18 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = 'panel';
-    const TAB_PANEL_TAG = 'tabpanel';
+    const OLD_TAB_PANEL_TAG = 'tabpanel';
     const STATE = 'state';
     const SELECTED = 'selected';
 
+    /**
+     * @var int a counter to give an id to the accordion panel
+     */
+    private $accordionCounter = 0;
+
     private static function getTags()
     {
-        return [self::TAG, self::TAB_PANEL_TAG];
+        return [self::TAG, self::OLD_TAB_PANEL_TAG];
     }
 
 
@@ -161,22 +166,29 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                // tagname to check if this is the old tag nameone
-                $context = PluginUtility::getTag($match);
+                // tagname to check if this is the old tag name one
+                $tagName = PluginUtility::getTag($match);
 
                 // Context
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 $tag = new Tag(self::TAG, $tagAttributes, $state, $handler->calls);
                 $parent = $tag->getParent();
+                if ($parent != null) {
+                    $context = $parent->getName();
+                } else {
+                    $context = $tagName;
+                }
+
 
                 /**
                  * Old deprecated syntax
                  */
-                if ($context == self::TAB_PANEL_TAG) {
+                if ($tagName == self::OLD_TAB_PANEL_TAG) {
 
+                    $context = self::OLD_TAB_PANEL_TAG;
                     $id = "";
                     if (!isset($tagAttributes["id"])) {
-                        LogUtility::msg("The id attribute is mandatory for a " . self::TAB_PANEL_TAG . "");
+                        LogUtility::msg("The id attribute is mandatory for a " . self::OLD_TAB_PANEL_TAG . "");
                     } else {
                         $id = $tagAttributes["id"];
                     }
@@ -185,7 +197,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     if ($siblingTag != null) {
                         if ($siblingTag->getName() === syntax_plugin_combo_tabs::TAG) {
                             $descendants = $siblingTag->getDescendants();
-                            $tagAttributes[self::SELECTED]=false;
+                            $tagAttributes[self::SELECTED] = false;
                             foreach ($descendants as $descendant) {
                                 $descendantName = $descendant->getName();
                                 $descendantPanel = $descendant->getAttribute("panel");
@@ -194,35 +206,46 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                                     $descendantName == syntax_plugin_combo_tab::TAG
                                     && $descendantPanel === $id
                                     && $descendantSelected === "true") {
-                                    $tagAttributes[self::SELECTED]=true;
+                                    $tagAttributes[self::SELECTED] = true;
                                     break;
                                 }
                             }
                         } else {
-                            LogUtility::msg("The direct element above a " . self::TAB_PANEL_TAG . " should be a tabs", LogUtility::LVL_MSG_ERROR, "tabs");
+                            LogUtility::msg("The direct element above a " . self::OLD_TAB_PANEL_TAG . " should be a tabs", LogUtility::LVL_MSG_ERROR, "tabs");
                         }
                     }
+                }
+
+                switch ($context) {
+                    case syntax_plugin_combo_accordion::TAG:
+                        $this->accordionCounter++;
+                        $tagAttributes["id"]=$context.$this->accordionCounter;
+                        break;
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::CONTEXT=>$context
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED:
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
+                    PluginUtility::PAYLOAD => trim($match)
                 );
 
 
             case DOKU_LEXER_EXIT :
 
+                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $openingTag = $tag->getOpeningTag();
+
                 return
                     array(
-                        PluginUtility::STATE => $state
+                        PluginUtility::STATE => $state,
+                        PluginUtility::CONTEXT => $openingTag->getContext()
                     );
 
 
@@ -252,15 +275,20 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $context=$data[PluginUtility::CONTEXT];
-                    switch ($context){
-                        case self::TAB_PANEL_TAG:
-                            // Old deprecated syntax
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch ($context) {
+                        case syntax_plugin_combo_accordion::TAG:
+                            // A panel in a accordion
+                            $renderer->doc .= "<div class=\"card\">";
+                            break;
+                        case self::OLD_TAB_PANEL_TAG: // Old deprecated syntax
+                        case syntax_plugin_combo_tabs::TAG: // new syntax
+
                             $attributes = $data[PluginUtility::ATTRIBUTES];
 
                             PluginUtility::addClass2Attributes("tab-pane fade", $attributes);
 
-                            if ($attributes[self::SELECTED]){
+                            if ($attributes[self::SELECTED]) {
                                 PluginUtility::addClass2Attributes("show active", $attributes);
                             }
                             unset($attributes[self::SELECTED]);
@@ -270,12 +298,22 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
                             $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>';
                             break;
+
+                        default:
+                            LogUtility::log2FrontEnd("The context ($context) is unknown in enter rendering", LogUtility::LVL_MSG_ERROR, self::TAG);
+                            break;
                     }
 
                     break;
                 case DOKU_LEXER_EXIT :
-
-                    $renderer->doc .= "</div>";
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch ($context) {
+                        case syntax_plugin_combo_accordion::TAG:
+                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF . "</div>" . DOKU_LF;
+                            break;
+                        default:
+                            $renderer->doc .= "</div>";
+                    }
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);

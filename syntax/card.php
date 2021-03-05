@@ -44,10 +44,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      */
     const HAS_IMAGE_ILLUSTRATION_KEY = "hasImageIllustration";
 
-    /**
-     * @var int a counter to give an id to the accordion card
-     */
-    private $accordionCounter = 0;
 
     /**
      * @var int a counter for an unknown card type
@@ -187,31 +183,18 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $context = $parentTag->getName();
                 }
 
-                switch ($context) {
-                    case syntax_plugin_combo_accordion::TAG:
-                        $this->accordionCounter++;
-                        $id = $this->accordionCounter;
-                        break;
-                    case syntax_plugin_combo_tabpanels::TAG:
-                        $this->tabCounter++;
-                        $id = $this->accordionCounter;
-                        break;
-                    case self::TAG:
-                    default:
 
-                        $this->cardCounter++;
-                        $id = $this->cardCounter;
+                $this->cardCounter++;
+                $id = $this->cardCounter;
 
-                        /** A card without context */
-                        PluginUtility::addClass2Attributes("card", $attributes);
-                        /**
-                         * Image illustration is checked on exit
-                         * but we add the attributes now to avoid null exception
-                         * on render
-                         */
-                        $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
-
-                }
+                /** A card without context */
+                PluginUtility::addClass2Attributes("card", $attributes);
+                /**
+                 * Image illustration is checked on exit
+                 * but we add the attributes now to avoid null exception
+                 * on render
+                 */
+                $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
 
 
                 if (!in_array("id", $attributes)) {
@@ -275,32 +258,20 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER:
 
-                    $context = $data[PluginUtility::CONTEXT];
-                    switch ($context) {
-                        case syntax_plugin_combo_accordion::TAG:
-                            // A card in a accordion
-                            $renderer->doc .= "<div class=\"card\">";
-                            break;
+                    $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
+                    unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
 
-                        default:
-                            // A card alone
-                            $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
-                            unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
+                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
 
-                            $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
-
-                            if (!$hasImageIllustration) {
-                                $renderer->doc .= self::CARD_BODY;
-                            }
+                    if (!$hasImageIllustration) {
+                        $renderer->doc .= self::CARD_BODY;
                     }
+
                     break;
 
                 case DOKU_LEXER_EXIT:
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
-                        case syntax_plugin_combo_accordion::TAG:
-                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF . "</div>" . DOKU_LF;
-                            break;
                         case syntax_plugin_combo_cardcolumns::TAG:
                         case syntax_plugin_combo_cardcolumns::TAG_TEASER:
                             $renderer->doc .= '</div>' . DOKU_LF;

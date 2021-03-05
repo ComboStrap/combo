@@ -270,7 +270,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                 return
                     array(
                         PluginUtility::STATE => $state,
-                        PluginUtility::PAYLOAD => PluginUtility::escape($match)
+                        PluginUtility::PAYLOAD => trim($match)
                     );
 
 
@@ -294,8 +294,8 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                         $descendants = $openingTag->getDescendants();
 
                         /**
+                         * Start the navigation tabs element
                          * We add calls in the stack to create the tabs navigational element
-                         *
                          */
                         $navigationalCallElements[] = CallStack::createCall(self::TAG,
                             DOKU_LEXER_ENTER,
@@ -303,7 +303,6 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                             self::NAVIGATIONAL_ELEMENT_CONTEXT
                         );
                         $labelStacksToDelete = array();
-                        $descendantsAttributes = array();
                         foreach ($descendants as $descendant) {
 
                             /**
@@ -372,7 +371,6 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                             self::NAVIGATIONAL_ELEMENT_CONTEXT
                         );
 
-                        $openingTag->addAttribute(self::KEY_PANEL_ATTRIBUTES, $descendantsAttributes);
 
                         /**
                          * Deleting the labels first
@@ -436,36 +434,13 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                             /**
                              * Old syntax, when the tag had to be added specifically
                              */
-                        case self::TAG:
+                        case syntax_plugin_combo_tab::TAG:
                             $renderer->doc .= self::openNavigationalTabsElement($attributes);
                             break;
                         default:
                             LogUtility::log2FrontEnd("The context $context is unknown in enter", LogUtility::LVL_MSG_ERROR, self::TAG);
 
                     }
-
-
-//                    if ($context == syntax_plugin_combo_panel::TAG) {
-//
-//                        // In the new context (ie not with tab children), the navigational element is no more expressed
-//                        // but derived, we create / derive it below
-//                        $panels = $attributes[self::KEY_PANEL_ATTRIBUTES];
-//                        foreach ($panels as $panel => $panelAttributes) {
-//                            /**
-//                             * There is two calls because we still support the deprecated
-//                             * {@link syntax_plugin_combo_tab} syntax
-//                             */
-//                            $label = $panelAttributes[self::LABEL];
-//                            unset($panelAttributes[self::LABEL]);
-//                            $renderer->doc .= self::openNavigationalTabElement($panelAttributes);
-//                            $renderer->doc .= $label;
-//                            $renderer->doc .= self::closeNavigationalTabElement();
-//                        }
-//
-//                        $renderer->doc .= self::closeNavigationalHeaderComponent();
-//
-//
-//                    }
 
 
                     break;
@@ -481,10 +456,10 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                         /**
                          * Old syntax
                          */
-                        case self::TAG:
-                            /**
-                             * New syntax (Derived)
-                             */
+                        case syntax_plugin_combo_tab::TAG:
+                        /**
+                         * New syntax (Derived)
+                         */
                         case self::NAVIGATIONAL_ELEMENT_CONTEXT:
                             $renderer->doc .= self::closeNavigationalHeaderComponent();
                             break;

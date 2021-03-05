@@ -73,7 +73,7 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
          * header mode is disable to take over
          * and replace it with {@link syntax_plugin_combo_title}
          */
-        if ($mode == "header"){
+        if ($mode == "header") {
             return false;
         }
         /**
@@ -162,14 +162,12 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
                 // https://getbootstrap.com/docs/4.6/components/collapse/#accordion-example
                 PluginUtility::addClass2Attributes("accordion", $attributes);
                 if (!in_array("id", $attributes)) {
-                    $attributes["id"] = self::TAG.$this->accordionCounter;
+                    $attributes["id"] = self::TAG . $this->accordionCounter;
                 }
 
-                $html = '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -183,10 +181,9 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 
 
             case DOKU_LEXER_EXIT :
-                $html = '</div>' . DOKU_LF;
+
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -212,12 +209,25 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            $renderer->doc .= $data[PluginUtility::PAYLOAD];
+            $state = $data[PluginUtility::STATE];
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+                    break;
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $renderer->doc .= '</div>' . DOKU_LF;
+                    break;
+            }
+
+
             return true;
         }
         return false;
     }
-
 
 
 }

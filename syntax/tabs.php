@@ -170,7 +170,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
      */
     public function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('container', 'base', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
     public function accepts($mode)
@@ -353,8 +353,8 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                                 $firstLabelCall = $handler->calls[$descendant->getPosition()];
                                 $firstLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
                                 $navigationalCallElements[] = $firstLabelCall;
-                                for ($i=1;$i<=$labelStacksSize;$i++) {
-                                    $intermediateLabelCall = $handler->calls[$descendant->getPosition()+$i];
+                                for ($i = 1; $i <= $labelStacksSize; $i++) {
+                                    $intermediateLabelCall = $handler->calls[$descendant->getPosition() + $i];
                                     $intermediateLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
                                     $navigationalCallElements[] = $intermediateLabelCall;
                                 }
@@ -438,7 +438,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= self::openNavigationalTabsElement($attributes);
                             break;
                         default:
-                            LogUtility::log2FrontEnd("The context $context is unknown in enter", LogUtility::LVL_MSG_ERROR, self::TAG);
+                            LogUtility::log2FrontEnd("The context ($context) is unknown in enter", LogUtility::LVL_MSG_ERROR, self::TAG);
 
                     }
 
@@ -457,9 +457,9 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                          * Old syntax
                          */
                         case syntax_plugin_combo_tab::TAG:
-                        /**
-                         * New syntax (Derived)
-                         */
+                            /**
+                             * New syntax (Derived)
+                             */
                         case self::NAVIGATIONAL_ELEMENT_CONTEXT:
                             $renderer->doc .= self::closeNavigationalHeaderComponent();
                             break;

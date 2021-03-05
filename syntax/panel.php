@@ -32,6 +32,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
      * @var int a counter to give an id to the accordion panel
      */
     private $accordionCounter = 0;
+    private $tabCounter = 0;
 
     private static function getTags()
     {
@@ -59,7 +60,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
      */
     public function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('container', 'base', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
     public function accepts($mode)
@@ -180,18 +181,33 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                 }
 
 
+                if (!isset($tagAttributes["id"])) {
+                    switch ($context) {
+                        case syntax_plugin_combo_accordion::TAG:
+                            $this->accordionCounter++;
+                            $id = $context . $this->accordionCounter;
+                            $tagAttributes["id"] = $id;
+                            break;
+                        case syntax_plugin_combo_tabs::TAG:
+                            $this->tabCounter++;
+                            $id = $context . $this->tabCounter;
+                            $tagAttributes["id"] = $id;
+                            break;
+                        default:
+                            LogUtility::msg("An id should be given for the context ($context)", LogUtility::LVL_MSG_ERROR, self::TAG);
+                    }
+                } else {
+
+                    $id = $tagAttributes["id"];
+                }
+
                 /**
                  * Old deprecated syntax
                  */
                 if ($tagName == self::OLD_TAB_PANEL_TAG) {
 
                     $context = self::OLD_TAB_PANEL_TAG;
-                    $id = "";
-                    if (!isset($tagAttributes["id"])) {
-                        LogUtility::msg("The id attribute is mandatory for a " . self::OLD_TAB_PANEL_TAG . "");
-                    } else {
-                        $id = $tagAttributes["id"];
-                    }
+
 
                     $siblingTag = $parent->getAscendantSibling();
                     if ($siblingTag != null) {
@@ -216,12 +232,6 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                switch ($context) {
-                    case syntax_plugin_combo_accordion::TAG:
-                        $this->accordionCounter++;
-                        $tagAttributes["id"]=$context.$this->accordionCounter;
-                        break;
-                }
 
                 return array(
                     PluginUtility::STATE => $state,

@@ -105,7 +105,8 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
             PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
             PluginUtility::getModeForComponent(syntax_plugin_combo_note::TAG),
             PluginUtility::getModeForComponent(syntax_plugin_combo_jumbotron::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_tabpanel::TAG)
+            PluginUtility::getModeForComponent(syntax_plugin_combo_panel::TAG),
+            PluginUtility::getModeForComponent(syntax_plugin_combo_panel::TAB_PANEL_TAG),
         ];
         if (in_array($mode, $modes)) {
             $this->Lexer->addSpecialPattern(self::HEADING_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));

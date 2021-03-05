@@ -842,6 +842,10 @@ class PluginUtility
         return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
     }
 
+    /**
+     * @param $match
+     * @return null|string - return the tag name or null if not found
+     */
     public static function getTag($match)
     {
 
@@ -852,7 +856,7 @@ class PluginUtility
         $pos = strpos($match, ">");
         if ($pos == false) {
             LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_ERROR);
-            return array();
+            return null;
         }
         $match = substr($match, 0, $pos);
 

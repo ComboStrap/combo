@@ -108,7 +108,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['child-of-blockquote'] = $tag->isChildOf("blockquote");
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
-                $attributes['first-sibling'] = $tag->getSibling()!==null?$tag->getSibling()->getName():false;
+                $attributes['first-sibling'] = $tag->getAscendantSibling()!==null?$tag->getAscendantSibling()->getName():false;
 
                 $payload = '<tag-enter type="'.$attributes['type'].'" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-enter>';
 
@@ -130,7 +130,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['child-of-blockquote'] = $tag->isChildOf("blockquote");
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
-                $attributes['first-sibling'] = $tag->getSibling()!==null?$tag->getSibling():false;
+                $attributes['first-sibling'] = $tag->getAscendantSibling()!==null?$tag->getAscendantSibling():false;
                 $payload = '<tag-unmatched type="'.$attributes['type'].'" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-unmatched>';
                 return array(
                     PluginUtility::STATE => $state,
@@ -147,7 +147,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['child-of-blockquote'] = $tag->isChildOf("blockquote");
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
-                $attributes['first-sibling'] = $tag->getSibling()->getName();
+                $attributes['first-sibling'] = $tag->getAscendantSibling()->getName();
                 $payload = '<tag-special type="'.$attributes['type'].'" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-special>';
                 return array(
                     PluginUtility::STATE => $state,
@@ -164,7 +164,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['child-of-blockquote'] = $tag->isChildOf("blockquote");
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
-                $attributes['first-sibling'] = $tag->getSibling()!==null?$tag->getSibling()->getName():false;
+                $attributes['first-sibling'] = $tag->getAscendantSibling()!==null?$tag->getAscendantSibling()->getName():false;
                 $openingTag = $tag->getOpeningTag();
                 $attributes['has-descendants'] = $openingTag->hasDescendants();
                 $attributes['descendants-count'] = sizeof($openingTag->getDescendants());

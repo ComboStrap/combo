@@ -20,11 +20,18 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * ie:
  *    syntax_plugin_PluginName_ComponentName
  */
-class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = 'tabpanel';
+    const TAG = 'panel';
+    const TAB_PANEL_TAG = 'tabpanel';
     const STATE = 'state';
+    const SELECTED = 'selected';
+
+    private static function getTags()
+    {
+        return [self::TAG, self::TAB_PANEL_TAG];
+    }
 
 
     /**
@@ -41,7 +48,6 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
     /**
      * @return array
      * Allow which kind of plugin inside
-
      * ************************
      * This function has no effect because {@link SyntaxPlugin::accepts()} is used
      * ************************
@@ -57,7 +63,7 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
          * header mode is disable to take over
          * and replace it with {@link syntax_plugin_combo_title}
          */
-        if ($mode == "header"){
+        if ($mode == "header") {
             return false;
         }
         /**
@@ -104,12 +110,23 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+
         /**
-         * Only inside {@link syntax_plugin_combo_tabpanels}
+         * Only inside tabs and accordion
+         * and tabpanels for history
          */
-        if ($mode == PluginUtility::getModeForComponent(syntax_plugin_combo_tabpanels::TAG)) {
-            $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if (in_array($mode,
+            [
+                PluginUtility::getModeForComponent(syntax_plugin_combo_tabs::TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_accordion::TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_tabpanels::TAG)
+            ])) {
+
+            foreach (self::getTags() as $tag) {
+                $pattern = PluginUtility::getContainerTagPattern($tag);
+                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            }
+
         }
 
     }
@@ -117,7 +134,9 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::getTags() as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
@@ -142,59 +161,60 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                // tagname to check if this is the old tag nameone
+                $context = PluginUtility::getTag($match);
 
+                // Context
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                $htmlAttributes = $tagAttributes;
-                $id = "";
-                if (!isset($htmlAttributes["id"])) {
-                    LogUtility::msg("The id attribute is mandatory for a " . self::TAG . "");
-                } else {
-                    $id = $htmlAttributes["id"];
-                }
-
-                PluginUtility::addClass2Attributes("tab-pane fade", $htmlAttributes);
-                $htmlAttributes["role"] = "tabpanel";
-                $htmlAttributes["aria-labelledby"] = $id . "-tab";
-
-                /**
-                 * Selected ?
-                 */
                 $tag = new Tag(self::TAG, $tagAttributes, $state, $handler->calls);
                 $parent = $tag->getParent();
-                if ($parent !== null) {
-                    $siblingTag = $parent->getSibling();
+
+                /**
+                 * Old deprecated syntax
+                 */
+                if ($context == self::TAB_PANEL_TAG) {
+
+                    $id = "";
+                    if (!isset($tagAttributes["id"])) {
+                        LogUtility::msg("The id attribute is mandatory for a " . self::TAB_PANEL_TAG . "");
+                    } else {
+                        $id = $tagAttributes["id"];
+                    }
+
+                    $siblingTag = $parent->getAscendantSibling();
                     if ($siblingTag != null) {
                         if ($siblingTag->getName() === syntax_plugin_combo_tabs::TAG) {
                             $descendants = $siblingTag->getDescendants();
+                            $tagAttributes[self::SELECTED]=false;
                             foreach ($descendants as $descendant) {
                                 $descendantName = $descendant->getName();
-                                $descendantPanel = $descendant->getAttribute(syntax_plugin_combo_tab::PANEL);
-                                $descendantSelected = $descendant->getAttribute(syntax_plugin_combo_tab::SELECTED);
+                                $descendantPanel = $descendant->getAttribute("panel");
+                                $descendantSelected = $descendant->getAttribute(self::SELECTED);
                                 if (
                                     $descendantName == syntax_plugin_combo_tab::TAG
                                     && $descendantPanel === $id
                                     && $descendantSelected === "true") {
-                                    PluginUtility::addClass2Attributes("show active", $htmlAttributes);
+                                    $tagAttributes[self::SELECTED]=true;
                                     break;
                                 }
                             }
                         } else {
-                            LogUtility::msg("The direct element above a tabpanels should be a tabs", LogUtility::LVL_MSG_ERROR, "tabs");
+                            LogUtility::msg("The direct element above a " . self::TAB_PANEL_TAG . " should be a tabs", LogUtility::LVL_MSG_ERROR, "tabs");
                         }
                     }
                 }
-                $html = '<div ' . PluginUtility::array2HTMLAttributes($htmlAttributes) . '>';
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::CONTEXT=>$context
                 );
 
             case DOKU_LEXER_UNMATCHED:
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => PluginUtility::escape($match)
+                    PluginUtility::PAYLOAD => $match
                 );
 
 
@@ -202,8 +222,7 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
 
                 return
                     array(
-                        PluginUtility::STATE => $state,
-                        PluginUtility::PAYLOAD => "</div>"
+                        PluginUtility::STATE => $state
                     );
 
 
@@ -233,11 +252,33 @@ class syntax_plugin_combo_tabpanel extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
+                    $context=$data[PluginUtility::CONTEXT];
+                    switch ($context){
+                        case self::TAB_PANEL_TAG:
+                            // Old deprecated syntax
+                            $attributes = $data[PluginUtility::ATTRIBUTES];
+
+                            PluginUtility::addClass2Attributes("tab-pane fade", $attributes);
+
+                            if ($attributes[self::SELECTED]){
+                                PluginUtility::addClass2Attributes("show active", $attributes);
+                            }
+                            unset($attributes[self::SELECTED]);
+
+                            $attributes["role"] = "tabpanel";
+                            $attributes["aria-labelledby"] = $attributes["id"] . "-tab";
+
+                            $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>';
+                            break;
+                    }
+
+                    break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+
+                    $renderer->doc .= "</div>";
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
                     break;
             }
             return true;

@@ -108,6 +108,8 @@ class Tag
                 return self::getMatchFromCall($call);
             case "internallink":
                 return '[[' . $call[1][0] . '|' . $call[1][1] . ']]';
+            case "eol":
+                return DOKU_LF;
             default:
                 return "Unknown tag content for caller ($caller)";
         }
@@ -201,7 +203,7 @@ class Tag
      */
     public function hasSiblings()
     {
-        if ($this->getSibling() === null) {
+        if ($this->getAscendantSibling() === null) {
             return false;
         } else {
             return true;
@@ -374,7 +376,7 @@ class Tag
      *
      * @return null|Tag - the sibling tag (in ascendant order) or null
      */
-    public function getSibling()
+    public function getAscendantSibling()
     {
         if (isset($this->position)) {
             $counter = $this->position - 1;
@@ -641,13 +643,13 @@ class Tag
      */
     public function isFirstMeaningFullSibling()
     {
-        $sibling = $this->getSibling();
+        $sibling = $this->getAscendantSibling();
         if ($sibling == null) {
             return true;
         } else {
             /** Whitespace string */
             if ($sibling->getState() == DOKU_LEXER_UNMATCHED && trim($sibling->getContent()) == "") {
-                $sibling = $sibling->getSibling();
+                $sibling = $sibling->getAscendantSibling();
             }
             if ($sibling == null) {
                 return true;
@@ -666,6 +668,16 @@ class Tag
     public function addAttribute($key, $value)
     {
         $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key] = $value;
+        return $this;
+    }
+
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function addContext($value)
+    {
+        $this->calls[$this->position][1][1][PluginUtility::CONTEXT] = $value;
         return $this;
     }
 }

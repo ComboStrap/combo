@@ -18,13 +18,13 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ *
+ * @deprecated used {@link syntax_plugin_combo_panel} insted (since version 1.12)
  */
 class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = 'tab';
-    const SELECTED = 'selected';
-    const PANEL = 'panel';
 
 
     /**
@@ -117,66 +117,24 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                $liHtmlAttributes = $tagAttributes;
-
-                /**
-                 * Check all attributes for the link (not the li)
-                 * and delete them
-                 */
-                $active = "false";
-                $panel = "";
-                if(isset($liHtmlAttributes[self::SELECTED])){
-                    $active = $liHtmlAttributes[self::SELECTED];
-                    unset($liHtmlAttributes[self::SELECTED]);
-                }
-                if (isset($liHtmlAttributes[self::PANEL])){
-                    $panel = $liHtmlAttributes[self::PANEL];
-                    unset($liHtmlAttributes[self::SELECTED]);
-                } else {
-                    LogUtility::msg("A panel attribute is missing on a tab tag",LogUtility::LVL_MSG_ERROR,syntax_plugin_combo_tabs::TAG);
-                }
-
-                /**
-                 * Creating the li element
-                 */
-                PluginUtility::addClass2Attributes("nav-item",$liHtmlAttributes);
-                $html = "<li ".PluginUtility::array2HTMLAttributes($liHtmlAttributes).">".DOKU_LF;
-
-                /**
-                 * Creating the a element
-                 */
-                $aHtmlAttributes = array();
-                PluginUtility::addClass2Attributes("nav-link",$aHtmlAttributes);
-                if ($active==="true"){
-                    PluginUtility::addClass2Attributes("active",$aHtmlAttributes);
-                    $aHtmlAttributes["aria-selected"]="true";
-                }
-                $aHtmlAttributes['id']=$panel."-tab";
-                $aHtmlAttributes['data-toggle']="tab";
-                $aHtmlAttributes['aria-controls']=$panel;
-                $aHtmlAttributes['href']="#$panel";
-
-                $html .= "<a ".PluginUtility::array2HTMLAttributes($aHtmlAttributes).">";
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::PAYLOAD => $html);
+                    PluginUtility::ATTRIBUTES => $tagAttributes
+                );
 
             case DOKU_LEXER_UNMATCHED:
 
-                return
-                    array(
-                        PluginUtility::STATE => $state,
-                        PluginUtility::PAYLOAD => PluginUtility::escape($match)
-                    );
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $match
+                );
 
 
             case DOKU_LEXER_EXIT :
 
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => "</a>".DOKU_LF."</li>"
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -206,11 +164,14 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]) . DOKU_LF;
+                    break;
+                case DOKU_LEXER_EXIT :
+                    $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
                     break;
             }
             return true;

@@ -19,7 +19,7 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * ie:
  *    syntax_plugin_PluginName_ComponentName
  *
- * @deprecated used {@link syntax_plugin_combo_panel} insted (since version 1.12)
+ * @deprecated used {@link syntax_plugin_combo_panel} instead (since version 1.12)
  */
 class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
 {

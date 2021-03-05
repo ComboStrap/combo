@@ -170,7 +170,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['descendants-count'] = sizeof($openingTag->getDescendants());
                 $badgeTag = $openingTag->getDescendant("badge");
                 $attributes['has-badge-descendant'] = $badgeTag !== null;
-                $attributes['badge-content'] = $badgeTag !== null ? $badgeTag->getContent(): "";
+                $attributes['badge-content'] = $badgeTag !== null ? $badgeTag->getContentRecursively(): "";
                 $payload = '<tag-exit type="'.$attributes['type'].'" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-exit>';
                 return array(
                     PluginUtility::STATE => $state,

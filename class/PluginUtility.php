@@ -113,15 +113,15 @@ class PluginUtility
     }
 
     /**
-     * @param $component
+     * @param $tag
      * @return string
      *
      * A mode is just a name for a class
      * Example: $Parser->addMode('listblock',new Doku_Parser_Mode_ListBlock());
      */
-    public static function getModeForComponent($component)
+    public static function getModeForComponent($tag)
     {
-        return "plugin_" . strtolower(PluginUtility::PLUGIN_BASE_NAME) . "_" . $component;
+        return "plugin_" . self::getComponentName($tag);
     }
 
     /**
@@ -939,6 +939,11 @@ class PluginUtility
         } else {
             return true;
         }
+    }
+
+    public static function getComponentName($tag)
+    {
+        return strtolower(PluginUtility::PLUGIN_BASE_NAME) . "_" . $tag;
     }
 
 

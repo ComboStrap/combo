@@ -5,6 +5,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\HeaderUtility;
+use ComboStrap\LogUtility;
 use ComboStrap\TitleUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
@@ -90,19 +91,28 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                 if ($parentTag != null) {
                     $grandfather = $parentTag->getParent();
                     if ($grandfather != null) {
-                        if ($grandfather->getName() == syntax_plugin_combo_accordion::TAG) {
-                            $id = $parentTag->getAttribute("id");
-                            $tagAttributes["id"] = $id;
-                            $tagAttributes[self::HEADING_ID] = "heading" . ucfirst($id);
-                            $tagAttributes[self::TARGET_ID] = "collapse" . ucfirst($id);
-                            $parentAttribute = $parentTag->getAttributes();
-                            if (!key_exists(self::COLLAPSED, $parentAttribute)) {
-                                // Accordion are collapsed by default
-                                $tagAttributes[self::COLLAPSED] = "true";
-                            } else {
-                                $tagAttributes[self::COLLAPSED] = $parentAttribute[self::COLLAPSED];
-                            }
-                            $context = syntax_plugin_combo_accordion::TAG;
+                        $grandFatherName = $grandfather->getName();
+                        switch ($grandFatherName) {
+                            case syntax_plugin_combo_accordion::TAG:
+                                $id = $parentTag->getAttribute("id");
+                                $tagAttributes["id"] = $id;
+                                $tagAttributes[self::HEADING_ID] = "heading" . ucfirst($id);
+                                $tagAttributes[self::TARGET_ID] = "collapse" . ucfirst($id);
+                                $parentAttribute = $parentTag->getAttributes();
+                                if (!key_exists(self::COLLAPSED, $parentAttribute)) {
+                                    // Accordion are collapsed by default
+                                    $tagAttributes[self::COLLAPSED] = "true";
+                                } else {
+                                    $tagAttributes[self::COLLAPSED] = $parentAttribute[self::COLLAPSED];
+                                }
+                                $context = syntax_plugin_combo_accordion::TAG;
+                                break;
+                            case  syntax_plugin_combo_tabs::TAG:
+                                $context = syntax_plugin_combo_tabs::TAG;
+                                $tagAttributes = $parentTag->getAttributes();
+                                break;
+                            default:
+                                LogUtility::log2FrontEnd("The label is included in the $grandFatherName component and this is unexpected", LogUtility::LVL_MSG_WARNING, self::TAG);
                         }
                     }
                 }
@@ -116,7 +126,8 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_UNMATCHED :
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match);
+                    PluginUtility::PAYLOAD => $match
+                );
 
             case DOKU_LEXER_EXIT :
                 $tag = new Tag(self::TAG, array(), $state, $handler->calls);
@@ -171,6 +182,12 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<h2 class=\"mb-0\">";
                             $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data-toggle=\"collapse\" data-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
                             break;
+                        case  syntax_plugin_combo_tabs::TAG:
+                            $attributes = $data[PluginUtility::ATTRIBUTES];
+                            $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
+                            break;
+                        default:
+                            LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
                     }
                     break;
 
@@ -195,6 +212,12 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse $showClass\" aria-labelledby=\"$headingId\" data-parent=\"#$headingId\">";
                             $renderer->doc .= "<div class=\"card-body\">" . DOKU_LF;
                             break;
+                        case  syntax_plugin_combo_tabs::TAG:
+                            $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
+                            break;
+                        default:
+                            LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
+
                     }
                     break;
 

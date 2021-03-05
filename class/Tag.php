@@ -433,6 +433,10 @@ class Tag
         return $this->getParent() !== false;
     }
 
+
+    /**
+     * @return bool|Tag
+     */
     public function getOpeningTag()
     {
         $descendantCounter = sizeof($this->calls) - 1;
@@ -479,7 +483,7 @@ class Tag
     {
         $descendants = $this->getDescendants();
         $firstDescendant = $descendants[0];
-        if ($firstDescendant->getState() == DOKU_LEXER_UNMATCHED && trim($firstDescendant->getContent()) == "") {
+        if ($firstDescendant->getState() == DOKU_LEXER_UNMATCHED && trim($firstDescendant->getContentRecursively()) == "") {
             return $descendants[1];
         } else {
             return $firstDescendant;
@@ -602,7 +606,7 @@ class Tag
      * such as {@link getDescendant}
      * @return string
      */
-    public function getContent()
+    public function getContentRecursively()
     {
         $content = "";
         $state = $this->getState();
@@ -626,7 +630,7 @@ class Tag
                 break;
             case DOKU_LEXER_UNMATCHED:
             default:
-                $content = self::getContentFromCall($this->calls[$this->position]);
+                $content = $this->getContent();
                 break;
         }
 
@@ -648,7 +652,7 @@ class Tag
             return true;
         } else {
             /** Whitespace string */
-            if ($sibling->getState() == DOKU_LEXER_UNMATCHED && trim($sibling->getContent()) == "") {
+            if ($sibling->getState() == DOKU_LEXER_UNMATCHED && trim($sibling->getContentRecursively()) == "") {
                 $sibling = $sibling->getAscendantSibling();
             }
             if ($sibling == null) {
@@ -679,5 +683,15 @@ class Tag
     {
         $this->calls[$this->position][1][1][PluginUtility::CONTEXT] = $value;
         return $this;
+    }
+
+    public function getPosition()
+    {
+        return $this->position;
+    }
+
+    public function getContent()
+    {
+        return self::getContentFromCall($this->calls[$this->position]);
     }
 }

@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -13,12 +14,20 @@ if (!defined('DOKU_INC')) {
 }
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
+require_once(__DIR__ . '/../class/CallStack.php');
 
 /**
  *
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ *
+ * The tabs component is a little bit a nasty one
+ * because it's used in three cases:
+ *   * the new syntax to enclose the panels
+ *   * the new syntax to create the tabs
+ *   * the old syntax to create the tabs
+ * The code is using the context to manage this cases
  */
 class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 {
@@ -31,6 +40,14 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
      */
     const KEY_PANEL_ATTRIBUTES = "panels";
     const LABEL = 'label';
+
+    /**
+     * A tabs with this context will create
+     * the HTML for a navigational element
+     * The calls with this context are derived
+     * and created
+     */
+    const NAVIGATIONAL_ELEMENT_CONTEXT = "tabHeader";
 
 
     public static function openTabPanelsElement()
@@ -69,7 +86,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
         if (isset($attributes[$panelAttrName])) {
             $panel = $attributes[$panelAttrName];
         } else {
-            if (isset($attributes["id"])){
+            if (isset($attributes["id"])) {
                 $panel = $attributes["id"];
                 unset($attributes["id"]);
                 $attributes[$panelAttrName] = $panel;
@@ -270,35 +287,103 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                     $context = $descendant->getName();
                     $openingTag->addContext($context);
                     if ($context == syntax_plugin_combo_panel::TAG) {
-                        // we need to collect the data of the panel to create the navigational component
+
+                        /**
+                         * Copy the descendant before manipulating the stack
+                         */
                         $descendants = $openingTag->getDescendants();
+
+                        /**
+                         * We add calls in the stack to create the tabs navigational element
+                         *
+                         */
+                        $navigationalCallElements[] = CallStack::createCall(self::TAG,
+                            DOKU_LEXER_ENTER,
+                            $openingTag->getAttributes(),
+                            self::NAVIGATIONAL_ELEMENT_CONTEXT
+                        );
+                        $labelStacksToDelete = array();
                         $descendantsAttributes = array();
                         foreach ($descendants as $descendant) {
+
+                            /**
+                             * Define the panel attributes
+                             * (May be null)
+                             */
+                            if (empty($panelAttributes)) {
+                                $panelAttributes = array();
+                            }
+
+                            /**
+                             * If this is a panel tag, we capture the attributes
+                             */
                             if (
                                 $descendant->getName() == syntax_plugin_combo_panel::TAG
                                 &&
                                 $descendant->getState() == DOKU_LEXER_ENTER
                             ) {
-                                $descendantAttributes = $descendant->getAttributes();
+                                $panelAttributes = $descendant->getAttributes();
+                                continue;
                             }
+
+                            /**
+                             * If this is a label tag, we capture the tags
+                             */
                             if (
                                 $descendant->getName() == syntax_plugin_combo_label::TAG
                                 &&
-                                $descendant->getState() == DOKU_LEXER_UNMATCHED
-                            ){
-                                $descendantAttributes[syntax_plugin_combo_label::TAG]=$descendant->getContent();
-                            }
-                            if (
-                                $descendant->getName() == syntax_plugin_combo_panel::TAG
-                                &&
-                                $descendant->getState() == DOKU_LEXER_EXIT
+                                $descendant->getState() == DOKU_LEXER_ENTER
                             ) {
-                                if (!empty($descendantAttributes)) {
-                                    $descendantsAttributes[$descendantAttributes["id"]] = $descendantAttributes;
+
+                                $labelStacks = $descendant->getDescendants();
+
+                                /**
+                                 * Get the labels call to delete
+                                 * (done at the end)
+                                 */
+                                $labelStacksSize = sizeof($labelStacks);
+                                $firstPosition = $descendant->getPosition(); // the enter label is deleted
+                                $lastPosition = $labelStacks[$labelStacksSize - 1]->getPosition() + 1; // the exit label is deleted
+                                $labelStacksToDelete[] = [$firstPosition, $lastPosition];
+
+
+                                /**
+                                 * Build the navigational call stack for this label
+                                 * with another context just to tag them and see them in the stack
+                                 */
+                                $firstLabelCall = $handler->calls[$descendant->getPosition()];
+                                $firstLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
+                                $navigationalCallElements[] = $firstLabelCall;
+                                for ($i=1;$i<=$labelStacksSize;$i++) {
+                                    $intermediateLabelCall = $handler->calls[$descendant->getPosition()+$i];
+                                    $intermediateLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
+                                    $navigationalCallElements[] = $intermediateLabelCall;
                                 }
+                                $lastLabelCall = $handler->calls[$lastPosition];
+                                $lastLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
+                                $navigationalCallElements[] = $lastLabelCall;
+                                continue;
                             }
+
                         }
+                        $navigationalCallElements[] = CallStack::createCall(self::TAG,
+                            DOKU_LEXER_EXIT,
+                            $openingTag->getAttributes(),
+                            self::NAVIGATIONAL_ELEMENT_CONTEXT
+                        );
+
                         $openingTag->addAttribute(self::KEY_PANEL_ATTRIBUTES, $descendantsAttributes);
+
+                        /**
+                         * Deleting the labels first
+                         * because the navigational tabs are added (and would then move the position)
+                         */
+                        foreach ($labelStacksToDelete as $labelStackToDelete) {
+                            $start = $labelStackToDelete[0];
+                            $end = $labelStackToDelete[1];
+                            CallStack::deleteCalls($handler->calls, $start, $end);
+                        }
+                        CallStack::insertCallStackUpWards($handler->calls, $openingTag->getPosition(), $navigationalCallElements);
                     }
                 }
                 return array(
@@ -336,41 +421,75 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $context = $data[PluginUtility::CONTEXT];
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $renderer->doc .= self::openNavigationalTabsElement($attributes);
 
-                    if ($context == syntax_plugin_combo_panel::TAG) {
-
-                        // In the new context (ie not with tab children), the navigational element is no more expressed
-                        // but derived, we create / derive it below
-                        $panels = $attributes[self::KEY_PANEL_ATTRIBUTES];
-                        foreach ($panels as $panel => $panelAttributes) {
+                    switch ($context) {
+                        /**
+                         * When the tag tabs enclosed the panels
+                         */
+                        case syntax_plugin_combo_panel::TAG:
+                            $renderer->doc .= self::openTabPanelsElement();
+                            break;
+                        /**
+                         * When the tag tabs are derived (new syntax)
+                         */
+                        case self::NAVIGATIONAL_ELEMENT_CONTEXT:
                             /**
-                             * There is two calls because we still support the deprecated
-                             * {@link syntax_plugin_combo_tab} syntax
+                             * Old syntax, when the tag had to be added specifically
                              */
-                            $label = $panelAttributes[self::LABEL];
-                            unset($panelAttributes[self::LABEL]);
-                            $renderer->doc .= self::openNavigationalTabElement($panelAttributes);
-                            $renderer->doc .= $label;
-                            $renderer->doc .= self::closeNavigationalTabElement();
-                        }
-
-                        $renderer->doc .= self::closeNavigationalHeaderComponent();
-                        $renderer->doc .= self::openTabPanelsElement();
+                        case self::TAG:
+                            $renderer->doc .= self::openNavigationalTabsElement($attributes);
+                            break;
+                        default:
+                            LogUtility::log2FrontEnd("The context $context is unknown in enter", LogUtility::LVL_MSG_ERROR, self::TAG);
 
                     }
+
+
+//                    if ($context == syntax_plugin_combo_panel::TAG) {
+//
+//                        // In the new context (ie not with tab children), the navigational element is no more expressed
+//                        // but derived, we create / derive it below
+//                        $panels = $attributes[self::KEY_PANEL_ATTRIBUTES];
+//                        foreach ($panels as $panel => $panelAttributes) {
+//                            /**
+//                             * There is two calls because we still support the deprecated
+//                             * {@link syntax_plugin_combo_tab} syntax
+//                             */
+//                            $label = $panelAttributes[self::LABEL];
+//                            unset($panelAttributes[self::LABEL]);
+//                            $renderer->doc .= self::openNavigationalTabElement($panelAttributes);
+//                            $renderer->doc .= $label;
+//                            $renderer->doc .= self::closeNavigationalTabElement();
+//                        }
+//
+//                        $renderer->doc .= self::closeNavigationalHeaderComponent();
+//
+//
+//                    }
 
 
                     break;
                 case DOKU_LEXER_EXIT :
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
-                        case syntax_plugin_combo_tab::TAG:
-                            $renderer->doc .= self::closeNavigationalHeaderComponent();
-                            break;
+                        /**
+                         * New syntax (tabpanel enclosing)
+                         */
                         case syntax_plugin_combo_panel::TAG:
                             $renderer->doc .= self::closeTabPanelsElement();
                             break;
+                        /**
+                         * Old syntax
+                         */
+                        case self::TAG:
+                            /**
+                             * New syntax (Derived)
+                             */
+                        case self::NAVIGATIONAL_ELEMENT_CONTEXT:
+                            $renderer->doc .= self::closeNavigationalHeaderComponent();
+                            break;
+                        default:
+                            LogUtility::log2FrontEnd("The context $context is unknown in exit", LogUtility::LVL_MSG_ERROR, self::TAG);
                     }
                     break;
                 case DOKU_LEXER_UNMATCHED:

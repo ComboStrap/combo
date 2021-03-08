@@ -434,7 +434,7 @@ class Tag
             }
 
         }
-        if ($treeLevel == 0) {
+        if ($treeLevel <= 0) {
             return self::call2Tag($call, $counter);
         }
         return null;

@@ -136,10 +136,22 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     self::LOW_QUALITY_PAGE_ATTR => $lowQualityPage
                 );
             case DOKU_LEXER_UNMATCHED:
+
+                /**
+                 * Delete the name separator if any
+                 */
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $ascendantSibling = $tag->getAscendantSibling();
+                if ($ascendantSibling->getName()==self::TAG){
+                    if (strpos($match, '|') === 0) {
+                        $match = substr($match,1);
+                    }
+                }
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $match
                 );
+
             case DOKU_LEXER_EXIT:
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
@@ -260,37 +272,44 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
             case 'metadata':
 
-                /**
-                 * Keep track of the backlinks ie meta['relation']['references']
-                 * @var Doku_Renderer_metadata $renderer
-                 */
-                if (isset($data[PluginUtility::ATTRIBUTES])) {
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                } else {
-                    $attributes = $data;
-                }
-                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+                $state = $data[PluginUtility::STATE];
+                if ($state == DOKU_LEXER_ENTER) {
+                    /**
+                     * Keep track of the backlinks ie meta['relation']['references']
+                     * @var Doku_Renderer_metadata $renderer
+                     */
+                    if (isset($data[PluginUtility::ATTRIBUTES])) {
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                    } else {
+                        $attributes = $data;
+                    }
+                    $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
 
-                $link = new LinkUtility($ref);
-                $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
-                if ($name != null) {
-                    $link->setName($name);
-                }
-                $link->handleMetadata($renderer);
+                    $link = new LinkUtility($ref);
+                    $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
+                    if ($name != null) {
+                        $link->setName($name);
+                    }
+                    $link->handleMetadata($renderer);
 
-                return true;
+                    return true;
+                }
                 break;
 
             case Analytics::RENDERER_FORMAT:
-                /**
-                 *
-                 * @var renderer_plugin_combo_analytics $renderer
-                 */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
-                $link = new LinkUtility($ref);
-                $link->processLinkStats($renderer->stats);
-                break;
+
+                $state = $data[PluginUtility::STATE];
+                if ($state == DOKU_LEXER_ENTER) {
+                    /**
+                     *
+                     * @var renderer_plugin_combo_analytics $renderer
+                     */
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+                    $link = new LinkUtility($ref);
+                    $link->processLinkStats($renderer->stats);
+                    break;
+                }
 
         }
         // unsupported $mode

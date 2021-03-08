@@ -32,7 +32,16 @@ class LinkUtility
      */
     const SPECIAL_PATTERN = "\[\[.*?\]\](?!\])";
 
-    const ENTRY_PATTERN = "\[\[[^\|]*\|(?=.*\]\])";
+    /**
+     * A link may have a title or not
+     * ie
+     * [[path:page]]
+     * [[path:page|title]]
+     * are valid
+     *
+     * Get the content until | or ]
+     */
+    const ENTRY_PATTERN = "\[\[[^\|\]]*(?=.*\]\])";
     const EXIT_PATTERN = "\]\]";
 
     /**
@@ -134,10 +143,6 @@ class LinkUtility
     public function __construct($ref)
     {
 
-        /**
-         * Default
-         */
-        $this->type = self::TYPE_INTERNAL;
 
         /**
          * Windows share link
@@ -323,7 +328,7 @@ class LinkUtility
                 $interWikiSplit = preg_split("/>/", $this->ref);
                 $metaDataRenderer->interwikilink($this->ref, $this->name, $interWikiSplit[0], $interWikiSplit[1]);
                 break;
-            case SELF::TYPE_WINDOWS_SHARE:
+            case self::TYPE_WINDOWS_SHARE:
                 $metaDataRenderer->windowssharelink($this->ref, $this->name);
                 break;
             default:
@@ -347,11 +352,7 @@ class LinkUtility
             $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
             $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
 
-            if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $this->ref)) {
-                $this->type = self::TYPE_WINDOWS_SHARE;
-            } elseif (preg_match('#^([a-z0-9\-\.+]+?)://#i', $this->ref)) {
-                $this->type = self::TYPE_EXTERNAL;
-            } elseif (preg_match('<' . $emailPattern . '>', $this->ref)) {
+            if (preg_match('<' . $emailPattern . '>', $this->ref)) {
                 $this->type = self::TYPE_EMAIL;
             } elseif (preg_match('!^#.+!', $this->ref)) {
                 $this->type = self::TYPE_LOCAL;
@@ -682,7 +683,6 @@ class LinkUtility
                 break;
 
         }
-
 
 
         /**

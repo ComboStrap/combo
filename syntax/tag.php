@@ -100,7 +100,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $attributes = PluginUtility::getTagAttributes($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $attributes['name'] = $tag->getName();
                 $attributes['type'] = $tag->getType();
                 $attributes['parent'] = $tag->getParent()->getName();;
@@ -122,7 +122,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $attributes['name'] = $tag->getName();
                 $attributes['type'] = $tag->getType();
                 $attributes['parent'] = $tag->getParent()->getName();;
@@ -139,7 +139,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_SPECIAL :
 
-                $tag = new Tag(self::TAG, PluginUtility::getTagAttributes($match), $state, $handler->calls);
+                $tag = new Tag(self::TAG, PluginUtility::getTagAttributes($match), $state, $handler);
                 $attributes['name'] = $tag->getName();
                 $attributes['type'] = $tag->getType();
                 $attributes['parent'] = $tag->getParent()->getName();;
@@ -156,7 +156,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $attributes['name'] = $tag->getName();
                 $attributes['type'] = $tag->getType();
                 $attributes['parent'] = $tag->getParent()->getName();;

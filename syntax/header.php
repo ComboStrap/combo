@@ -68,7 +68,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 $htmlAttributes = $tagAttributes;
-                $tag = new Tag(HeaderUtility::HEADER, $tagAttributes, $state, $handler->calls);
+                $tag = new Tag(HeaderUtility::HEADER, $tagAttributes, $state, $handler);
                 $parent = $tag->getParent();
                 $parentName = "";
                 $html = "";
@@ -97,7 +97,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
                 $html = "</div>";
-                $tag = new Tag(HeaderUtility::HEADER, array(), $state, $handler->calls);
+                $tag = new Tag(HeaderUtility::HEADER, array(), $state, $handler);
                 $parent = $tag->getParent();
                 if ($parent != null) {
                     switch ($parent->getName()) {

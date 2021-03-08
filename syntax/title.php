@@ -137,7 +137,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                 );
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 $attributes = PluginUtility::mergeAttributes($tagAttributes, $defaultAttributes);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parentTagName = self::getParent($tag);
 
 
@@ -156,7 +156,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $parent = $tag->getParent();
                 $parentTagName = "";
                 /**
@@ -179,7 +179,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
 
                 $attributes = self::parseHeading($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parentTag = self::getParent($tag);
 
                 return array(

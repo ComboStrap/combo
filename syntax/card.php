@@ -174,7 +174,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 $attributes = PluginUtility::getTagAttributes($match);
 
-                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
 
                 $parentTag = $tag->getParent();
                 if ($parentTag == null) {
@@ -218,7 +218,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 $firstDescendant = $openingTag->getFirstMeaningFullDescendant();
                 if ($firstDescendant->getName() == syntax_plugin_combo_img::TAG) {

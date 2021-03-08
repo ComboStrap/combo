@@ -85,7 +85,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
                 $tagAttributes = PluginUtility::getTagAttributes($match);
 
-                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler->calls);
+                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler);
                 $parentTag = $tag->getParent();
                 $context = null;
                 if ($parentTag != null) {
@@ -130,7 +130,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_EXIT :
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 $context = $openingTag->getContext();
                 return array(

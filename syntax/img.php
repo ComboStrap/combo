@@ -88,7 +88,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
                 $attributes = ImgUtility::parse($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parentTag = $tag->getParent()->getName();
                 $isFirstSibling = $tag->isFirstMeaningFullSibling();
                 return array(

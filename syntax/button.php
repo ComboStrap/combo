@@ -154,7 +154,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
 
             case DOKU_LEXER_EXIT :
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 $linkDescendant = $openingTag->getDescendant(syntax_plugin_combo_link::TAG);
                 if ($linkDescendant != null) {

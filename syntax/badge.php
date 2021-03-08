@@ -115,7 +115,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                  * Context Rendering attributes
                  */
                 $attributesToRender = $originalAttributes;
-                $tag = new Tag(self::TAG,$originalAttributes,$state,$handler->calls);
+                $tag = new Tag(self::TAG,$originalAttributes,$state,$handler);
 
                 if($tag->isDescendantOf(syntax_plugin_combo_list::TAG)){
                     PluginUtility::addStyleProperty("margin-left","auto",$attributesToRender);

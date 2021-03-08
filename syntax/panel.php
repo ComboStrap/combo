@@ -172,7 +172,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
                 // Context
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler->calls);
+                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler);
                 $parent = $tag->getParent();
                 if ($parent != null) {
                     $context = $parent->getName();
@@ -249,7 +249,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
 
                 return

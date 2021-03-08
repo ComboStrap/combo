@@ -133,7 +133,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $text = $tag->getOpeningTag()->getAttribute(self::TEXT_ATTRIBUTE);
                 $html = "";
                 if (!empty($text)) {

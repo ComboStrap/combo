@@ -176,7 +176,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                 $html = "";
                 if ($type == "typo") {
-                    $tag = new Tag(self::TAG, $tagAttributes, $state, $handler->calls);
+                    $tag = new Tag(self::TAG, $tagAttributes, $state, $handler);
                     if ($tag->hasParent() && $tag->getParent()->getName() == "card") {
                         PluginUtility::addClass2Attributes("mb-0", $tagAttributes);
                     }
@@ -211,7 +211,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
                 // Important to get an exit in the render phase
-                $node = new Tag(self::TAG, array(), $state, $handler->calls);
+                $node = new Tag(self::TAG, array(), $state, $handler);
                 if ($node->getOpeningTag()->getType() == "card") {
 
                     $doc = "</blockquote>" . DOKU_LF;

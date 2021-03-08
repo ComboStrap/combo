@@ -225,7 +225,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                  * Does the javascript contains a console statement
                  */
                 $useConsole = false;
-                $exitTag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $exitTag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $exitTag->getOpeningTag();
                 if ($openingTag->hasDescendants()) {
                     $tags = $openingTag->getDescendants();

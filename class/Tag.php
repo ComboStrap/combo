@@ -54,6 +54,10 @@ class Tag
      * @var int
      */
     private $position;
+    /**
+     * @var Doku_Handler
+     */
+    private $handler;
 
 
     /**
@@ -69,10 +73,10 @@ class Tag
      * @param $name
      * @param $attributes
      * @param $state
-     * @param $calls - A reference to the dokuwiki call stack - ie {@link Doku_Handler->calls}
+     * @param Doku_Handler $handler - A reference to the dokuwiki handler
      * @param null $position - The position in the call stack of null if it's the HEAD tag (The tag that is created from the data of the {@link SyntaxPlugin::render()}
      */
-    public function __construct($name, $attributes, $state, &$calls, $position = null)
+    public function __construct($name, $attributes, $state, &$handler, $position = null)
     {
         $this->name = $name;
         if ($attributes == null) {
@@ -81,7 +85,17 @@ class Tag
             $this->attributes = $attributes;
         }
         $this->state = $state;
-        $this->calls = &$calls;
+        /**
+         * A temporary Call stack is created in the writer
+         * for list, table, blockquote
+         */
+        $writerCalls = &$handler->getCallWriter()->calls;
+        if (!empty($writerCalls)) {
+            $this->calls = &$writerCalls;
+        } else {
+            $this->calls = &$handler->calls;
+        }
+        $this->handler = &$handler;
         $this->position = $position;
 
     }
@@ -171,7 +185,7 @@ class Tag
             }
         }
 
-        return new Tag($name, $attributes, $state, $this->calls, $position);
+        return new Tag($name, $attributes, $state, $this->handler, $position);
     }
 
     /**

@@ -7,6 +7,7 @@ require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
+use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -114,13 +115,13 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         switch ($state) {
             case DOKU_LEXER_ENTER:
                 $attributes = LinkUtility::parse($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parent = $tag->getParent();
                 $parentName = "";
                 if ($parent != null) {
                     $parentName = $parent->getName();
                     if ($parentName==syntax_plugin_combo_button::TAG){
-                        array_merge($attributes, $parent->getAttributes());
+                        $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
                     }
                 }
                 $link = new LinkUtility($attributes[LinkUtility::ATTRIBUTE_REF]);
@@ -140,14 +141,14 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     PluginUtility::PAYLOAD => $match
                 );
             case DOKU_LEXER_EXIT:
-                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
         }
-        return false;
+        return true;
 
 
     }

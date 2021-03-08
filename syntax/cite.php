@@ -96,7 +96,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                $node = new Tag(self::TAG, $tagAttributes, $state, $handler->calls);
+                $node = new Tag(self::TAG, $tagAttributes, $state, $handler);
                 $parent = "";
                 if ($node->hasParent()) {
                     $parent = $node->getParent()->getName();
@@ -114,7 +114,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
                 // Important otherwise we don't get an exit in the render
-                $node = new Tag(self::TAG, array(), $state, $handler->calls);
+                $node = new Tag(self::TAG, array(), $state, $handler);
                 $parentName = "";
                 if ($node->hasParent()) {
                     $parentName = $node->getParent()->getName();

@@ -96,7 +96,11 @@ class Tag
             $this->calls = &$handler->calls;
         }
         $this->handler = &$handler;
-        $this->position = $position;
+        if ($position!=null) {
+            $this->position = $position;
+        } else {
+            $this->position = sizeof($this->calls);
+        }
 
     }
 

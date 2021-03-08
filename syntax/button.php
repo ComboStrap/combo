@@ -150,7 +150,8 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => PluginUtility::escape($match));
+                    PluginUtility::PAYLOAD => $match
+                );
 
 
             case DOKU_LEXER_EXIT :
@@ -204,6 +205,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                         /**
                          * If this is a button and not a link button
                          */
+                        $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
                         break;
                     case DOKU_LEXER_ENTER :
 

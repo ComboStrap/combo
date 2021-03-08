@@ -143,16 +143,39 @@ class LinkUtility
     public function __construct($ref)
     {
 
+        /**
+         * Email validation pattern
+         * E-Mail (pattern below is defined in inc/mail.php)
+         */
+//        $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
+//        $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
+//        if (preg_match('<' . $emailPattern . '>', $ref)) {
+//            $this->type = self::TYPE_EMAIL;
+//            $this->$ref = $ref;
+//            return;
+//        }
+
+        /**
+         * Local
+         */
+        if (preg_match('!^#.+!', $ref)) {
+            $this->type = self::TYPE_LOCAL;
+            $this->ref = substr($ref, 1);
+            return;
+        }
 
         /**
          * Windows share link
          */
         if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
             $this->type = self::TYPE_WINDOWS_SHARE;
-            $this->$ref = $ref;
+            $this->ref = $ref;
             return;
         }
 
+        /**
+         * URI like links
+         */
         /**
          * External
          */
@@ -173,9 +196,16 @@ class LinkUtility
             $this->ref = $refProcessing;
             $this->type = self::TYPE_INTERWIKI;
         } else {
+            /**
+             * Internal then
+             */
+            $this->type = self::TYPE_INTERNAL;
             $this->ref = $ref;
         }
 
+        /**
+         *
+         */
         $position = strpos($refProcessing, "?");
         if ($position !== false) {
 
@@ -263,6 +293,10 @@ class LinkUtility
     /**
      * @param Doku_Renderer_xhtml $renderer
      * @return mixed
+     *
+     * Derived from {@link Doku_Renderer_xhtml::internallink()}
+     * and others
+     *
      */
     public function renderOpenTag($renderer)
     {
@@ -272,36 +306,101 @@ class LinkUtility
          */
         $this->renderer = $renderer;
 
+        global $conf;
+
         /**
-         * To allow {@link \syntax_plugin_combo_pipeline}
+         * Get the url
          */
-        $name = $this->getName();
-
-
-        // Always return the string
-        $returnOnly = true;
-
-        // The HTML created by DokuWiki
-        $html = "";
-        switch ($this->getType()) {
-            case self::TYPE_INTERWIKI:
-            case self::TYPE_WINDOWS_SHARE:
-            case self::TYPE_EXTERNAL:
-            case self::TYPE_INTERNAL:
-                $html = $this->renderOpenLink();
-                break;
-            case self::TYPE_EMAIL:
-                // E-Mail (pattern above is defined in inc/mail.php)
-                $html = $renderer->emaillink($this->ref, $name, $returnOnly);
-                break;
-            case self::TYPE_LOCAL:
-                $html = $renderer->locallink(substr($this->ref, 1), $name, $returnOnly);
-                break;
-            default:
-                LogUtility::msg("The link ({$this->ref}) with the type " . $this->type . " was not rendered because it's not taken into account");
+        $url = $this->getUrl();
+        if ($url != "") {
+            PluginUtility::addAttributeValue("href", $url, $this->attributes);
         }
 
-        return $html;
+        /**
+         * Processing by type
+         */
+        switch ($this->getType()) {
+            case self::TYPE_INTERWIKI:
+
+                /**
+                 * Target
+                 */
+                $interwikiConf = $conf['target']['interwiki'];
+                if ($interwikiConf) {
+
+                    PluginUtility::addAttributeValue('target', $interwikiConf, $this->attributes);
+                    PluginUtility::addAttributeValue('rel', 'noopener', $this->attributes);
+                }
+                PluginUtility::addClass2Attributes("interwiki", $this->attributes);
+                $wikiClass         = "iw_".preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
+                PluginUtility::addClass2Attributes($wikiClass, $this->attributes);
+
+                break;
+            case self::TYPE_INTERNAL:
+
+                /**
+                 * Internal Page
+                 */
+                $linkedPage = $this->getInternalPage();
+                $this->attributes["data-wiki-id"] = $this->getAbsoluteId();
+
+                /**
+                 * If this is a low quality internal page,
+                 * print a shallow link for the anonymous user
+                 */
+                $lowLink = $this->isLowLink();
+                if ($lowLink) {
+
+                    LowQualityPage::addLowQualityPageHtmlSnippet($this->renderer);
+                    PluginUtility::addClass2Attributes(LowQualityPage::LOW_QUALITY_LINK_CLASS, $this->attributes);
+                    $this->attributes["data-toggle"] = "tooltip";
+                    $this->attributes["title"] = "To follow this link ({$this->getAbsoluteId()}), you need to log in (" . LowQualityPage::ACRONYM . ")";
+
+                } else {
+
+                    if (!$linkedPage->existInFs()) {
+                        /**
+                         * Red color
+                         */
+                        PluginUtility::addClass2Attributes(self::CLASS_DOES_NOT_EXIST, $this->attributes);
+                        PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
+                    }
+
+                    $this->attributes["title"] = $linkedPage->getTitle();
+
+                }
+                break;
+            case self::TYPE_EXTERNAL:
+                if ($conf['relnofollow']) {
+                    PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
+                    PluginUtility::addAttributeValue("rel", 'ugc', $this->attributes);
+                }
+                if ($conf['target']['extern']) {
+                    PluginUtility::addAttributeValue("rel", 'noopener', $this->attributes);
+                }
+                break;
+            case self::TYPE_LOCAL:
+                break;
+            case self::TYPE_WINDOWS_SHARE:
+                PluginUtility::addClass2Attributes("windows", $this->attributes);
+                break;
+            default:
+                LogUtility::msg("The type (" . $this->getType() . ") is unknown", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
+
+        }
+
+
+        /**
+         * Return
+         */
+        if ($this->isLowLink() || $url == "") {
+            // We could also have used a <a> with `rel="nofollow"`
+            // The span element is then modified as link by javascript if the user is not anonymous
+            return "<span " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
+        } else {
+            return "<a " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
+        }
+
 
     }
 
@@ -340,35 +439,18 @@ class LinkUtility
      * Return the type of link from an ID
      *
      * @return string a `TYPE_xxx` constant
-     * Code adapted from {@link Doku_Handler}->internallink($match,$state,$pos)
      */
     public
     function getType()
     {
-        if ($this->type == null) {
-            /**
-             * Email validation pattern
-             */
-            $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
-            $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
-
-            if (preg_match('<' . $emailPattern . '>', $this->ref)) {
-                $this->type = self::TYPE_EMAIL;
-            } elseif (preg_match('!^#.+!', $this->ref)) {
-                $this->type = self::TYPE_LOCAL;
-            } else {
-                $this->type = self::TYPE_INTERNAL;
-            }
-        }
         return $this->type;
-
-
     }
 
     /**
      * Inherit the color of their parent and not from Dokuwiki
      * @param $htmlLink
      * @return bool|false|string
+     * @deprecated as we have taken the link creation over from dokuwiki
      */
     public
     static function inheritColorFromParent($htmlLink)
@@ -604,100 +686,6 @@ class LinkUtility
         return $this->title;
     }
 
-    /**
-     * Render an link
-     * Derived from {@link Doku_Renderer_xhtml::internallink()}
-     */
-    private
-    function renderOpenLink()
-    {
-
-        global $conf;
-
-        /**
-         * Get the url
-         */
-        $url = $this->getUrl();
-        if ($url != "") {
-            PluginUtility::addAttributeValue("href", $url, $this->attributes);
-        }
-
-        /**
-         * Processing by type
-         */
-        switch ($this->getType()) {
-            case self::TYPE_INTERWIKI:
-
-                /**
-                 * Target
-                 */
-                $interwikiConf = $conf['target']['interwiki'];
-                if ($interwikiConf) {
-
-                    PluginUtility::addAttributeValue('target', $interwikiConf, $this->attributes);
-                    PluginUtility::addAttributeValue('rel', 'noopener', $this->attributes);
-                }
-                break;
-            case self::TYPE_INTERNAL:
-
-                /**
-                 * Internal Page
-                 */
-                $linkedPage = $this->getInternalPage();
-                $this->attributes["data-wiki-id"] = $this->getAbsoluteId();
-
-                /**
-                 * If this is a low quality internal page,
-                 * print a shallow link for the anonymous user
-                 */
-                $lowLink = $this->isLowLink();
-                if ($lowLink) {
-
-                    LowQualityPage::addLowQualityPageHtmlSnippet($this->renderer);
-                    PluginUtility::addClass2Attributes(LowQualityPage::LOW_QUALITY_LINK_CLASS, $this->attributes);
-                    $this->attributes["data-toggle"] = "tooltip";
-                    $this->attributes["title"] = "To follow this link ({$this->getAbsoluteId()}), you need to log in (" . LowQualityPage::ACRONYM . ")";
-
-                } else {
-
-                    if (!$linkedPage->existInFs()) {
-                        /**
-                         * Red color
-                         */
-                        PluginUtility::addClass2Attributes(self::CLASS_DOES_NOT_EXIST, $this->attributes);
-                        PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
-                    }
-
-                    $this->attributes["title"] = $linkedPage->getTitle();
-
-                }
-                break;
-            case self::TYPE_EXTERNAL:
-                if ($conf['relnofollow']) {
-                    PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
-                    PluginUtility::addAttributeValue("rel", 'ugc', $this->attributes);
-                }
-                if ($conf['target']['extern']) {
-                    PluginUtility::addAttributeValue("rel", 'noopener', $this->attributes);
-                }
-                break;
-
-        }
-
-
-        /**
-         * Return
-         */
-        if ($this->isLowLink() || $url == "") {
-            // We could also have used a <a> with `rel="nofollow"`
-            // The span element is then modified as link by javascript if the user is not anonymous
-            return "<span " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
-        } else {
-            return "<a " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
-        }
-
-
-    }
 
     public
     function getId()
@@ -720,10 +708,11 @@ class LinkUtility
     private
     function getUrl()
     {
+        global $conf;
         $url = "";
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
-                $url = wl($this->id, $this->parameters);
+                $url = wl($this->getAbsoluteId(), $this->parameters);
                 if ($this->anchor) {
                     $url .= '#' . $this->anchor;
                 }
@@ -748,6 +737,16 @@ class LinkUtility
                 } else {
                     $url = $this->ref;
                 }
+                break;
+            case self::TYPE_EMAIL:
+                $address = $this->ref;
+                if ($conf['mailguard'] == 'visible') {
+                    $address = rawurlencode($this->ref);
+                }
+                $url = 'mailto:' . $address;
+                break;
+            case self::TYPE_LOCAL:
+                $url = '#' . $this->renderer->_headerToLink($this->ref);
                 break;
             default:
                 LogUtility::log2FrontEnd("The url type (" . $this->getType() . ") was not expected to get the URL", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);

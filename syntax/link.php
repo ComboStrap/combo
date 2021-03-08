@@ -120,7 +120,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $parentName = "";
                 if ($parent != null) {
                     $parentName = $parent->getName();
-                    if ($parentName==syntax_plugin_combo_button::TAG){
+                    if ($parentName == syntax_plugin_combo_button::TAG) {
                         $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
                     }
                 }
@@ -142,9 +142,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                  */
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $ascendantSibling = $tag->getAscendantSibling();
-                if ($ascendantSibling->getName()==self::TAG){
+                if ($ascendantSibling->getName() == self::TAG) {
                     if (strpos($match, '|') === 0) {
-                        $match = substr($match,1);
+                        $match = substr($match, 1);
                     }
                 }
                 return array(
@@ -155,9 +155,17 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT:
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
+                $openingAttributes = $openingTag->getAttributes();
+                if ($openingTag->getPosition() == $tag->getPosition() - 1) {
+                    // There is no name
+                    $linkName = (new LinkUtility($openingAttributes[LinkUtility::ATTRIBUTE_REF]))->getRef();
+                } else {
+                    $linkName = "";
+                }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
+                    PluginUtility::ATTRIBUTES => $openingAttributes,
+                    PluginUtility::PAYLOAD => $linkName
                 );
         }
         return true;
@@ -249,6 +257,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     case DOKU_LEXER_EXIT:
                         $context = $data[PluginUtility::CONTEXT];
                         $lowQualityPage = $data[self::LOW_QUALITY_PAGE_ATTR];
+
+                        // if there is no name defined, we get the name as ref in the payload
+                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+
+                        // html element
                         switch ($context) {
                             case syntax_plugin_combo_navbarcollapse::COMPONENT:
                                 $renderer->doc .= '</div>';

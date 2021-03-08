@@ -159,13 +159,14 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
+            $attributes = array();
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= syntax_plugin_combo_tabs::openTabPanelsElement();
+                    $renderer->doc .= syntax_plugin_combo_tabs::openTabPanelsElement($attributes);
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement();
+                    $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($attributes);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= $data[PluginUtility::PAYLOAD];

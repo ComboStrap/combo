@@ -49,15 +49,63 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
      */
     const NAVIGATIONAL_ELEMENT_CONTEXT = "tabHeader";
 
+    /**
+     * Type tabs
+     */
+    const TABS_TYPE = "tabs";
+    const PILLS_TYPE = "pills";
+    const ENCLOSED_TABS_TYPE = "enclosed-tabs";
+    const ENCLOSED_PILLS_TYPE = "enclosed-pills";
+    const TABS_SKIN = "tabs";
+    const PILLS_SKIN = "pills";
 
-    public static function openTabPanelsElement()
+    private static function getComponentType(&$attributes)
     {
-        return "<div class=\"tab-content\" id=\"myTabContent\">";
+        $type = self::TABS_TYPE;
+        if (isset($attributes["skin"])) {
+            $type = $attributes["skin"];
+            unset($attributes["skin"]);
+        }
+        if (isset($attributes["type"])) {
+            $type = $attributes["type"];
+            unset($attributes["type"]);
+        }
+        return $type;
     }
 
-    public static function closeTabPanelsElement()
+
+    /**
+     * @param $attributes
+     * @return string - return the HTML open tags of the panels (not the navigation)
+     */
+    public static function openTabPanelsElement(&$attributes)
     {
-        return "</div>" . DOKU_LF;
+        PluginUtility::addClass2Attributes("tab-content", $attributes);
+        $html = "<div " . PluginUtility::array2HTMLAttributes($attributes) . ">" . DOKU_LF;
+        $type = self::getComponentType($attributes);
+        switch ($type) {
+            case self::ENCLOSED_TABS_TYPE:
+            case self::ENCLOSED_PILLS_TYPE:
+                $html = "<div class=\"card-body\">" . DOKU_LF . $html;
+                break;
+        }
+        return $html;
+
+
+    }
+
+    public static function closeTabPanelsElement(&$attributes)
+    {
+        $html = "</div>" . DOKU_LF;
+        $type = self::getComponentType($attributes);
+        switch ($type) {
+            case self::ENCLOSED_TABS_TYPE:
+            case self::ENCLOSED_PILLS_TYPE:
+                $html .= "</div>" . DOKU_LF;
+                $html .= "</div>" . DOKU_LF;
+                break;
+        }
+        return $html;
     }
 
     public static function closeNavigationalTabElement()
@@ -113,15 +161,23 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
         $htmlAttributes['id'] = $panel . "-tab";
         $htmlAttributes['data-toggle'] = "tab";
         $htmlAttributes['aria-controls'] = $panel;
+        $htmlAttributes["role"] = "tab";
         $htmlAttributes['href'] = "#$panel";
 
         $html .= "<a " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">";
         return $html;
     }
 
-    private static function closeNavigationalHeaderComponent()
+    private static function closeNavigationalHeaderComponent($type)
     {
-        return "</ul>";
+        $html = "</ul>" . DOKU_LF;
+        switch ($type) {
+            case self::ENCLOSED_PILLS_TYPE:
+            case self::ENCLOSED_TABS_TYPE:
+                $html .= "</div>" . DOKU_LF;
+        }
+        return $html;
+
     }
 
     /**
@@ -131,22 +187,70 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
     private static function openNavigationalTabsElement(&$attributes)
     {
         $htmlAttributes = $attributes;
+        /**
+         * Unset non-html attributes
+         */
         unset($htmlAttributes[self::KEY_PANEL_ATTRIBUTES]);
+
+        /**
+         * Type (Skin determination)
+         */
+        $type = self::getComponentType($attributes);
+
+        /**
+         * $skin (tabs or pills)
+         */
+        $skin = self::TABS_TYPE;
+        switch ($type) {
+            case self::TABS_TYPE:
+            case self::ENCLOSED_TABS_TYPE:
+                $skin = self::TABS_SKIN;
+                break;
+            case self::PILLS_TYPE:
+            case self::ENCLOSED_PILLS_TYPE:
+                $skin = self::PILLS_SKIN;
+                break;
+            default:
+                LogUtility::log2FrontEnd("The tabs type ($type) has an unknown skin", LogUtility::LVL_MSG_ERROR, self::TAG);
+        }
+
         /**
          * Creates the panel wrapper element
          */
-        PluginUtility::addClass2Attributes("nav", $htmlAttributes);
-        $skinClass = "nav-tabs";
-        if (isset($attributes["skin"])) {
-            $skin = $attributes["skin"];
-            if ($skin == "pills") {
-                $skinClass = "nav-pills";
-            }
-            unset($attributes["skin"]);
+        $html = "";
+        switch ($type) {
+            case self::TABS_TYPE:
+            case self::PILLS_TYPE:
+                if (!key_exists("spacing", $htmlAttributes)) {
+                    $htmlAttributes["spacing"] = "mb-3";
+                }
+                PluginUtility::addClass2Attributes("nav", $htmlAttributes);
+                PluginUtility::addClass2Attributes("nav-$skin", $htmlAttributes);
+                $htmlAttributes['role'] = 'tablist';
+                $html = "<ul " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">";
+                break;
+            case self::ENCLOSED_TABS_TYPE:
+            case self::ENCLOSED_PILLS_TYPE:
+                /**
+                 * The HTML opening for cards
+                 */
+                PluginUtility::addClass2Attributes("card", $htmlAttributes);
+                $html = "<div " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">" . DOKU_LF .
+                    "<div class=\"card-header\">" . DOKU_LF;
+                /**
+                 * The HTML opening for the menu (UL)
+                 */
+                $ulHtmlAttributes = array();
+                PluginUtility::addClass2Attributes("nav", $ulHtmlAttributes);
+                PluginUtility::addClass2Attributes("nav-$skin", $ulHtmlAttributes);
+                PluginUtility::addClass2Attributes("card-header-$skin", $ulHtmlAttributes);
+                $html .= "<ul " . PluginUtility::array2HTMLAttributes($ulHtmlAttributes) . ">" . DOKU_LF;
+                break;
+            default:
+                LogUtility::log2FrontEnd("The tabs type ($type) is unknown", LogUtility::LVL_MSG_ERROR, self::TAG);
         }
-        PluginUtility::addClass2Attributes($skinClass, $htmlAttributes);
-        $htmlAttributes['role'] = 'tablist';
-        return "<ul " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">";
+        return $html;
+
     }
 
 
@@ -259,10 +363,11 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $tagAttributes = PluginUtility::getTagAttributes($match);
+                $attributes = PluginUtility::getTagAttributes($match);
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes);
+                    PluginUtility::ATTRIBUTES => $attributes);
 
             case DOKU_LEXER_UNMATCHED:
 
@@ -381,12 +486,17 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                             $end = $labelStackToDelete[1];
                             CallStack::deleteCalls($handler->calls, $start, $end);
                         }
+                        /**
+                         * Then deleting
+                         */
                         CallStack::insertCallStackUpWards($handler->calls, $openingTag->getPosition(), $navigationalCallElements);
                     }
                 }
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
 
 
@@ -425,7 +535,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                          * When the tag tabs enclosed the panels
                          */
                         case syntax_plugin_combo_panel::TAG:
-                            $renderer->doc .= self::openTabPanelsElement();
+                            $renderer->doc .= self::openTabPanelsElement($attributes);
                             break;
                         /**
                          * When the tag tabs are derived (new syntax)
@@ -446,12 +556,13 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                     break;
                 case DOKU_LEXER_EXIT :
                     $context = $data[PluginUtility::CONTEXT];
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     switch ($context) {
                         /**
                          * New syntax (tabpanel enclosing)
                          */
                         case syntax_plugin_combo_panel::TAG:
-                            $renderer->doc .= self::closeTabPanelsElement();
+                            $renderer->doc .= self::closeTabPanelsElement($attributes);
                             break;
                         /**
                          * Old syntax
@@ -461,7 +572,8 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                              * New syntax (Derived)
                              */
                         case self::NAVIGATIONAL_ELEMENT_CONTEXT:
-                            $renderer->doc .= self::closeNavigationalHeaderComponent();
+                            $type = self::getComponentType($data[PluginUtility::ATTRIBUTES]);
+                            $renderer->doc .= self::closeNavigationalHeaderComponent($type);
                             break;
                         default:
                             LogUtility::log2FrontEnd("The context $context is unknown in exit", LogUtility::LVL_MSG_ERROR, self::TAG);

@@ -46,6 +46,7 @@ class PluginUtility
     const COMBOSTRAP_NAMESPACE_NAME = "combostrap";
 
 
+
     /**
      * The URL base of the documentation
      */
@@ -408,7 +409,7 @@ class PluginUtility
     /**
      * This method will takes attributes
      * and process the plugin styling attribute such as width and height
-     * to put them in a style HTML attrbute
+     * to put them in a style HTML attribute
      * @param $attributes
      */
     public static function processStyle(&$attributes)

@@ -439,7 +439,7 @@ EOF;
                                 $miniMapList .= "<span class=\"nicon_folder_open\" aria-hidden=\"true\"></span>&nbsp;&nbsp;";
                             }
 
-                            $miniMapList .= $link->render($renderer);;
+                            $miniMapList .= $link->renderOpenTag($renderer);;
 
 
                             // Close the item
@@ -474,7 +474,7 @@ EOF;
                         if ($h1!=null){
                             $startLink->setName($h1);
                         }
-                        $panelHeaderContent = $startLink->render($renderer);
+                        $panelHeaderContent = $startLink->renderOpenTag($renderer);
                         // We are not counting the header page
                         $pageNum--;
                     }

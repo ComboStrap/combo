@@ -113,51 +113,6 @@ EOF;
 
     }
 
-    /**
-     * Render a link as a span element
-     * This is used when a public page links to a low quality page
-     * to render a span element
-     * The span element is then modified as link by javascript if the user is not anonymous
-     * @param LinkUtility $link
-     * @return string the html
-     *
-     * TODO: It could also have a `rel="nofollow"`
-     */
-    public static function renderLowQualityLink($link)
-    {
-
-        $lowQualityPageClass = self::LOW_QUALITY_LINK_CLASS;
-        $qualifiedLink = $link->getAbsoluteId();
-
-        $name = $link->getName();
-        if (empty($name)) {
-            $name = $link->getRef();
-            if (useHeading('content')) {
-                $page = $link->getInternalPage();
-                $h1 = $page->getH1();
-                if (!empty($h1)){
-                    $name = $h1;
-                } else {
-                    /**
-                     * In dokuwiki by default, title = h1
-                     * If there is no h1, we take title
-                     * for backward compatibility
-                     */
-                    $title = $page->getTitle();
-                    if (!empty($title)) {
-                        $name = $title;
-                    }
-                }
-            }
-        }
-
-        // https://www.dokuwiki.org/config:useslash
-        global $conf;
-        if ($conf['useslash']){
-            $qualifiedLink = str_replace(":","/",$qualifiedLink);
-        }
-        return "<span class=\"{$lowQualityPageClass}\" data-wiki-id=\"{$qualifiedLink}\" data-toggle=\"tooltip\" title=\"To follow this link ({$qualifiedLink}), you need to log in (" . LowQualityPage::ACRONYM . ")\">{$name}</span>";
-    }
 
 
 }

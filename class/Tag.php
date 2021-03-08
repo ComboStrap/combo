@@ -552,6 +552,7 @@ class Tag
                 (
                     $tag->getState() === DOKU_LEXER_ENTER
                     || $tag->getState() === DOKU_LEXER_MATCHED
+                    || $tag->getState() === DOKU_LEXER_SPECIAL
                 )
             ) {
                 return $tag;

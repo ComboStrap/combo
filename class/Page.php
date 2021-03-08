@@ -766,10 +766,10 @@ class Page
     {
 
         $title = p_get_metadata(cleanID($this->id), Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
-        if (!blank($heading)) {
+        if (!blank($title)) {
             return PluginUtility::escape($title);
         } else {
-            return $title;
+            return $this->id;
         }
 
     }

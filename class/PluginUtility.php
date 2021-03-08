@@ -46,7 +46,6 @@ class PluginUtility
     const COMBOSTRAP_NAMESPACE_NAME = "combostrap";
 
 
-
     /**
      * The URL base of the documentation
      */
@@ -139,7 +138,7 @@ class PluginUtility
         // ?: means non capturing group (to not capture the last >)
         // (\s.*?): is a capturing group that starts with a space
         $pattern = "(?:\s.*?>|>)";
-        return '<' . $tag . $pattern.'(?=.*?<\/' . $tag . '>)';
+        return '<' . $tag . $pattern . '(?=.*?<\/' . $tag . '>)';
     }
 
     /**
@@ -605,7 +604,7 @@ class PluginUtility
      * @param bool $withIcon - used to break the recursion with the message in the {@link IconUtility}
      * @return string - an url
      */
-    public static function  getUrl($canonical, $text, $withIcon = true)
+    public static function getUrl($canonical, $text, $withIcon = true)
     {
         /** @noinspection SpellCheckingInspection */
 
@@ -743,11 +742,7 @@ class PluginUtility
      */
     public static function addClass2Attributes($classValue, array &$attributes)
     {
-        if (array_key_exists("class", $attributes) && $attributes["class"] !== "") {
-            $attributes["class"] .= " {$classValue}";
-        } else {
-            $attributes["class"] = "{$classValue}";
-        }
+        self::addAttributeValue("class", $classValue, $attributes);
     }
 
     /**
@@ -945,6 +940,15 @@ class PluginUtility
     public static function getComponentName($tag)
     {
         return strtolower(PluginUtility::PLUGIN_BASE_NAME) . "_" . $tag;
+    }
+
+    public static function addAttributeValue($attribute, $value, array &$attributes)
+    {
+        if (array_key_exists($attribute, $attributes) && $attributes[$attribute] !== "") {
+            $attributes[$attribute] .= " {$value}";
+        } else {
+            $attributes[$attribute] = "{$value}";
+        }
     }
 
 

@@ -27,4 +27,22 @@ class StyleUtility
         return $rule.DOKU_LF."}".DOKU_LF;
 
     }
+
+    /**
+     * @param array $array of property as key and value
+     * @return string a html inline style property
+     */
+    public static function createInlineValue(array $array)
+    {
+        $inline = "";
+        foreach ($array as $property => $value) {
+            if ($inline!="") {
+                $inline .= ";$property:$value";
+            } else {
+                $inline = "$property:$value";
+            }
+        }
+        return $inline;
+
+    }
 }

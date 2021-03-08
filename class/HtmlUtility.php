@@ -72,6 +72,7 @@ class HtmlUtility
 
     }
 
+
     /**
      * Return a formatted HTML that does take into account the {@link DOKU_LF}
      * @param $text

@@ -7,13 +7,8 @@ require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
-use ComboStrap\HtmlUtility;
 use ComboStrap\LinkUtility;
-use ComboStrap\LogUtility;
-use ComboStrap\NavBarUtility;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\LowQualityPage;
 use ComboStrap\Tag;
 
 if (!defined('DOKU_INC')) die();
@@ -31,6 +26,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 {
     const TAG = 'link';
     const COMPONENT = 'combo_link';
+
+    /**
+     * Low quality page indicator
+     */
+    const LOW_QUALITY_PAGE_ATTR = "low_quality_page";
 
 
     /**
@@ -83,8 +83,14 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $this->Lexer->addSpecialPattern(LinkUtility::LINK_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern(LinkUtility::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        //$this->Lexer->addSpecialPattern(LinkUtility::SPECIAL_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
+    }
+
+    public function postConnect()
+    {
+        $this->Lexer->addExitPattern(LinkUtility::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
     }
 
 
@@ -105,17 +111,43 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         /**
          * Because we use the specialPattern, there is only one state ie DOKU_LEXER_SPECIAL
          */
-        $attributes = LinkUtility::getAttributes($match);
-        $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
-        $parent = $tag->getParent();
-        $parentName = "";
-        if ($parent != null) {
-            $parentName = $parent->getName();
+        switch ($state) {
+            case DOKU_LEXER_ENTER:
+                $attributes = LinkUtility::parse($match);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
+                $parent = $tag->getParent();
+                $parentName = "";
+                if ($parent != null) {
+                    $parentName = $parent->getName();
+                    if ($parentName==syntax_plugin_combo_button::TAG){
+                        array_merge($attributes, $parent->getAttributes());
+                    }
+                }
+                $link = new LinkUtility($attributes[LinkUtility::ATTRIBUTE_REF]);
+                $lowQualityPage = false;
+                if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
+                    $lowQualityPage = $link->getInternalPage()->isLowQualityPage();
+                }
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::CONTEXT => $parentName,
+                    self::LOW_QUALITY_PAGE_ATTR => $lowQualityPage
+                );
+            case DOKU_LEXER_UNMATCHED:
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $match
+                );
+            case DOKU_LEXER_EXIT:
+                $tag = new Tag(self::TAG, array(), $state, $handler->calls);
+                $openingTag = $tag->getOpeningTag();
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
+                );
         }
-        return array(
-            PluginUtility::ATTRIBUTES => $attributes,
-            PluginUtility::CONTEXT => $parentName
-        );
+        return false;
 
 
     }
@@ -137,7 +169,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 /** @var Doku_Renderer_xhtml $renderer */
-
                 /**
                  * Cache problem may occurs while releasing
                  */
@@ -146,73 +177,87 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 } else {
                     $attributes = $data;
                 }
-                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
-                $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
-                $type = $attributes[LinkUtility::ATTRIBUTE_TYPE];
-                $link = new LinkUtility($ref);
-                if ($name != null) {
-                    $link->setName($name);
-                }
-                $link->setType($type);
 
-                /**
-                 * Render the link
-                 */
-                $htmlLink = $link->render($renderer);
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+                        unset($attributes[LinkUtility::ATTRIBUTE_REF]);
+                        $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
+                        unset($attributes[LinkUtility::ATTRIBUTE_NAME]);
+                        $link = new LinkUtility($ref);
+                        if ($name != null) {
+                            $link->setName($name);
+                        }
+                        $link->setAttributes($attributes);
 
-                /**
-                 * Extra styling for internal link
-                 */
-                $parentTag = $data[PluginUtility::CONTEXT];
-                switch ($parentTag) {
-                    case syntax_plugin_combo_button::TAG:
-                    case syntax_plugin_combo_badge::TAG:
-                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
-                            if ($link->getInternalPage()->existInFs()) {
-                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
-                                $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
-                            }
+
+                        /**
+                         * Extra styling for internal link
+                         */
+                        $parentTag = $data[PluginUtility::CONTEXT];
+                        switch ($parentTag) {
+                            case syntax_plugin_combo_button::TAG:
+                                $attributes["role"] = "button";
+                                syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($attributes);
+                                $htmlLink = $link->renderOpenTag($renderer);
+                                break;
+                            case syntax_plugin_combo_badge::TAG:
+                            case syntax_plugin_combo_cite::TAG:
+                            case syntax_plugin_combo_listitem::TAG:
+                            case syntax_plugin_combo_preformatted::TAG:
+                                $htmlLink = $link->renderOpenTag($renderer);
+                                break;
+                            case syntax_plugin_combo_dropdown::TAG:
+                                PluginUtility::addClass2Attributes("dropdown-item", $attributes);
+                                $htmlLink = $link->renderOpenTag($renderer);
+                                break;
+                            case syntax_plugin_combo_navbarcollapse::COMPONENT:
+                                PluginUtility::addClass2Attributes("navbar-link", $attributes);
+                                $htmlLink = '<div class="navbar-nav">' . $link->renderOpenTag($renderer);
+                                break;
+                            case syntax_plugin_combo_navbargroup::COMPONENT:
+                                $htmlLink = '<li class="nav-item">' . $link->renderOpenTag($renderer);
+                                break;
+                            default:
+                                $htmlLink = $link->renderOpenTag($renderer);
+
+                        }
+
+
+                        /**
+                         * Add it to the rendering
+                         */
+                        $renderer->doc .= $htmlLink;
+                        break;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                        break;
+                    case DOKU_LEXER_EXIT:
+                        $context = $data[PluginUtility::CONTEXT];
+                        $lowQualityPage = $data[self::LOW_QUALITY_PAGE_ATTR];
+                        switch ($context) {
+                            case syntax_plugin_combo_navbarcollapse::COMPONENT:
+                                $renderer->doc .= '</div>';
+                                break;
+                            case syntax_plugin_combo_navbargroup::COMPONENT:
+                                $renderer->doc .= '</li>';
+                                break;
+                        }
+                        if ($lowQualityPage) {
+                            $renderer->doc .= "</span>";
                         } else {
-                            $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
+                            $renderer->doc .= "</a>";
                         }
-                        break;
-                    case syntax_plugin_combo_cite::TAG:
-                    case syntax_plugin_combo_listitem::TAG:
-                    case syntax_plugin_combo_preformatted::TAG:
-                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
-                            if ($link->getInternalPage()->existInFs()) {
-                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
-                            }
-                        }
-                        break;
-                    case syntax_plugin_combo_dropdown::TAG:
-                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
-                            if ($link->getInternalPage()->existInFs()) {
-                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
-                            }
-                        }
-                        $htmlLink = HtmlUtility::addAttributeValue($htmlLink, "class", "dropdown-item");
-                        break;
-                    case syntax_plugin_combo_navbarcollapse::COMPONENT:
-                        $htmlLink = '<div class="navbar-nav">' . NavBarUtility::switchDokuwiki2BootstrapClass($htmlLink) . '</div>';
-                        break;
-                    case syntax_plugin_combo_navbargroup::COMPONENT:
-                        $htmlLink = '<li class="nav-item">' . NavBarUtility::switchDokuwiki2BootstrapClass($htmlLink) . '</li>';
-                        break;
+
 
                 }
 
-
-                /**
-                 * Add it to the rendering
-                 */
-                $renderer->doc .= $htmlLink;
 
                 return true;
                 break;
 
-            case
-            'metadata':
+            case 'metadata':
 
                 /**
                  * Keep track of the backlinks ie meta['relation']['references']

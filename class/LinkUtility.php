@@ -30,7 +30,10 @@ class LinkUtility
      * Link pattern
      * Found in {@link \dokuwiki\Parsing\ParserMode\Internallink}
      */
-    const LINK_PATTERN = "\[\[.*?\]\](?!\])";
+    const SPECIAL_PATTERN = "\[\[.*?\]\](?!\])";
+
+    const ENTRY_PATTERN = "\[\[[^\|]*\|(?=.*\]\])";
+    const EXIT_PATTERN = "\]\]";
 
     /**
      * Type of link
@@ -48,7 +51,7 @@ class LinkUtility
     const ATTRIBUTE_REF = 'ref';
     const ATTRIBUTE_NAME = 'name';
     const ATTRIBUTE_IMAGE = 'image';
-    const ATTRIBUTE_TYPE = 'type';
+
 
     /**
      * Style to cancel the dokuwiki styling
@@ -56,7 +59,16 @@ class LinkUtility
      * Is a constant to be able to use it in the test
      * background is transparent, otherwise, you may see a rectangle with a link in button
      */
-    const STYLE_VALUE_WHEN_EXIST = ";background-color:transparent;border-color:inherit;color:inherit;background-image:unset;padding:unset";
+    const STYLE_VALUE_WHEN_EXIST =
+        array(
+            "background-color" => "transparent",
+            "border-color" => "inherit",
+            "color" => "inherit",
+            "background-image" => "unset",
+            "padding" => "unset"
+        );
+    const CLASS_DOES_NOT_EXIST = "text-danger"; // "wikilink2";
+    //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
     /**
      * @var mixed
      */
@@ -78,15 +90,110 @@ class LinkUtility
      * @var string The value of the title attribute of an anchor
      */
     private $title;
+    /**
+     * @var mixed|string
+     */
+    private $id;
+    /**
+     * @var mixed|string
+     */
+    private $parameters;
+    /**
+     * @var false|string
+     */
+    private $anchor;
+
+    private $attributes = array();
+    /**
+     * The name of the wiki for an inter wiki link
+     * @var string
+     */
+    private $wiki;
+
+    /**
+     * @var Doku_Renderer_xhtml
+     */
+    private $renderer;
+
+    /**
+     *
+     * @var false|string
+     */
+    private $schemeUri;
+
+    /**
+     * The uri scheme that can be used inside a page
+     * @var array
+     */
+    private $authorizedSchemes;
 
     /**
      * Link constructor.
-     * @param $id
+     * @param $ref
      */
-    public function __construct($id)
+    public function __construct($ref)
     {
 
-        $this->ref = $id;
+        /**
+         * Default
+         */
+        $this->type = self::TYPE_INTERNAL;
+
+        /**
+         * Windows share link
+         */
+        if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
+            $this->type = self::TYPE_WINDOWS_SHARE;
+            $this->$ref = $ref;
+            return;
+        }
+
+        /**
+         * External
+         */
+        if (preg_match('#^([a-z0-9\-\.+]+?)://#i', $ref)) {
+            $this->type = self::TYPE_EXTERNAL;
+            $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, "://")));
+            $this->$ref = $ref;
+        }
+
+        /**
+         * interwiki ?
+         */
+        $refProcessing = $ref;
+        $interwikiPosition = strpos($ref, ">");
+        if ($interwikiPosition !== false) {
+            $this->wiki = strtolower(substr($refProcessing, 0, $interwikiPosition));
+            $refProcessing = substr($ref, $interwikiPosition + 1);
+            $this->ref = $refProcessing;
+            $this->type = self::TYPE_INTERWIKI;
+        } else {
+            $this->ref = $ref;
+        }
+
+        $position = strpos($refProcessing, "?");
+        if ($position !== false) {
+
+            $this->id = substr($refProcessing, 0, $position);
+            $secondPart = substr($refProcessing, $position + 1);
+            $anchorPosition = strpos($secondPart, "#");
+            if ($anchorPosition !== false) {
+                $this->parameters = substr($secondPart, 0, $anchorPosition);
+                $this->anchor = substr($secondPart, $anchorPosition + 1);
+            } else {
+                $this->parameters = $secondPart;
+            }
+        } else {
+
+            $anchorPosition = strpos($refProcessing, "#");
+            if ($anchorPosition !== false) {
+                $this->id = substr($refProcessing, 0, $anchorPosition);
+                $this->anchor = substr($refProcessing, $anchorPosition + 1);
+            } else {
+                $this->id = $ref;
+            }
+        }
+
 
     }
 
@@ -118,7 +225,7 @@ class LinkUtility
      *
      * Code adapted from  {@link Doku_Handler::internallink()}
      */
-    public static function getAttributes($match)
+    public static function parse($match)
     {
 
         // Strip the opening and closing markup
@@ -128,12 +235,8 @@ class LinkUtility
         $linkArray = explode('|', $linkString, 2);
 
         // Id
-        $id = trim($linkArray[0]);
-        $linkObject = new LinkUtility($id);
-        $attributes[self::ATTRIBUTE_REF] = $id;
+        $attributes[self::ATTRIBUTE_REF] = trim($linkArray[0]);
 
-        // Type
-        $attributes[self::ATTRIBUTE_TYPE] = $linkObject->getType();
 
         // Text or image
         if (!isset($linkArray[1])) {
@@ -156,8 +259,13 @@ class LinkUtility
      * @param Doku_Renderer_xhtml $renderer
      * @return mixed
      */
-    public function render($renderer)
+    public function renderOpenTag($renderer)
     {
+        /**
+         * Keep a reference to the renderer
+         * The {@link LinkUtility::getUrl()} depends on it
+         */
+        $this->renderer = $renderer;
 
         /**
          * To allow {@link \syntax_plugin_combo_pipeline}
@@ -169,19 +277,13 @@ class LinkUtility
         $returnOnly = true;
 
         // The HTML created by DokuWiki
+        $html = "";
         switch ($this->getType()) {
             case self::TYPE_INTERWIKI:
-                // Interwiki
-                $interWiki = explode('>', $this->ref, 2);
-                $wikiName = strtolower($interWiki[0]);
-                $wikiUri = $interWiki[1];
-                $html = $renderer->interwikilink($this->ref, $name, $wikiName, $wikiUri, $returnOnly);
-                break;
             case self::TYPE_WINDOWS_SHARE:
-                $html = $renderer->windowssharelink($this->ref, $name);
-                break;
             case self::TYPE_EXTERNAL:
-                $html = $renderer->externallink($this->ref, $name, $returnOnly);
+            case self::TYPE_INTERNAL:
+                $html = $this->renderOpenLink();
                 break;
             case self::TYPE_EMAIL:
                 // E-Mail (pattern above is defined in inc/mail.php)
@@ -190,47 +292,10 @@ class LinkUtility
             case self::TYPE_LOCAL:
                 $html = $renderer->locallink(substr($this->ref, 1), $name, $returnOnly);
                 break;
-            case self::TYPE_INTERNAL:
-
-                $linkedPage = $this->getInternalPage();
-
-                /**
-                 * If this is a low quality internal page,
-                 * print a shallow link for the anonymous user
-                 */
-                $lowLink = false;
-                global $conf;
-                $lqppEnable = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE];
-                if ($lqppEnable == 1
-                    && $linkedPage->isLowQualityPage()) {
-                    $lowLink = true;
-                }
-
-                if ($lowLink) {
-
-                    LowQualityPage::addLowQualityPageHtmlSnippet($renderer);
-                    $html = LowQualityPage::renderLowQualityLink($this);
-
-                } else {
-                    $urlQuery = null;
-                    $html = $renderer->internallink($this->ref, $name, $urlQuery, $returnOnly);
-                }
-                break;
             default:
                 LogUtility::msg("The link ({$this->ref}) with the type " . $this->type . " was not rendered because it's not taken into account");
         }
 
-        /**
-         * The html may be just a text, for instance with an interwiki that does not exist
-         * or is not configured
-         * if this is the case, add a span to make it xml valid
-         */
-        if (!XmlUtility::isXml($html)) {
-            $html = "<span>$html</span>";
-            if (!XmlUtility::isXml($html)) {
-                LogUtility::msg("The link ($this->ref) could not be transformed as valid XML");
-            }
-        }
         return $html;
 
     }
@@ -282,9 +347,7 @@ class LinkUtility
             $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
             $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
 
-            if (link_isinterwiki($this->ref)) {
-                $this->type = self::TYPE_INTERWIKI;
-            } elseif (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $this->ref)) {
+            if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $this->ref)) {
                 $this->type = self::TYPE_WINDOWS_SHARE;
             } elseif (preg_match('#^([a-z0-9\-\.+]+?)://#i', $this->ref)) {
                 $this->type = self::TYPE_EXTERNAL;
@@ -312,7 +375,8 @@ class LinkUtility
         /**
          * The extra style for the link
          */
-        return HtmlUtility::addAttributeValue($htmlLink, "style", self::STYLE_VALUE_WHEN_EXIST);
+        $inlineStyle = StyleUtility::createInlineValue(self::STYLE_VALUE_WHEN_EXIST);
+        return HtmlUtility::addAttributeValue($htmlLink, "style", $inlineStyle);
 
     }
 
@@ -325,7 +389,7 @@ class LinkUtility
     static function deleteDokuWikiClass($htmlLink)
     {
         // only wikilink1 (wikilink2 shows a red link if the page does not exist)
-        return HtmlUtility::deleteClassValue($htmlLink, "wikilink1");
+        return HtmlUtility::deleteClassValue($htmlLink, self::CLASS_DOES_NOT_EXIST);
     }
 
 
@@ -423,26 +487,16 @@ class LinkUtility
     {
         if ($this->getType() == self::TYPE_INTERNAL) {
             global $ID;
-            /**
-             * The id may have a fragment #
-             */
-            $id = $this->ref;
-            $link = preg_split("/#/", $id);
-            if (sizeof($link) > 1) {
-                $id = $link[0];
+            $absoluteId = $this->id;
+            resolve_pageid(getNS($ID), $absoluteId, $exists);
+
+            // https://www.dokuwiki.org/config:useslash
+            global $conf;
+            if ($conf['useslash']) {
+                $absoluteId = str_replace(":", "/", $absoluteId);
             }
-            /**
-             * or a query string
-             */
-            $link = preg_split("/\?/", $id);
-            if (sizeof($link) > 1) {
-                $id = $link[0];
-            }
-            /**
-             * Make him absolute
-             */
-            resolve_pageid(getNS($ID), $id, $exists);
-            return $id;
+
+            return $absoluteId;
         } else {
             throw new \RuntimeException("You can't ask an absolute id from a link that is not an internal one");
         }
@@ -502,13 +556,40 @@ class LinkUtility
             $name = PipelineUtility::execute($name);
         }
 
+        /**
+         * Still empty
+         */
+        if (empty($name)) {
+            if ($this->getType() == self::TYPE_INTERNAL) {
+                $name = $this->ref;
+                if (useHeading('content')) {
+                    $page = $this->getInternalPage();
+                    $h1 = $page->getH1();
+                    if (!empty($h1)) {
+                        $name = $h1;
+                    } else {
+                        /**
+                         * In dokuwiki by default, title = h1
+                         * If there is no h1, we take title
+                         * for backward compatibility
+                         */
+                        $title = $page->getTitle();
+                        if (!empty($title)) {
+                            $name = $title;
+                        }
+                    }
+                }
+            }
+        }
+
         return $name;
     }
 
     /**
      * @param $title -the value of the title attribute of the anchor
      */
-    public function setTitle($title)
+    public
+    function setTitle($title)
     {
         $this->title = $title;
     }
@@ -516,9 +597,213 @@ class LinkUtility
     /**
      * @return string the title of the link
      */
-    public function getTitle()
+    public
+    function getTitle()
     {
         return $this->title;
+    }
+
+    /**
+     * Render an link
+     * Derived from {@link Doku_Renderer_xhtml::internallink()}
+     */
+    private
+    function renderOpenLink()
+    {
+
+        global $conf;
+
+        /**
+         * Get the url
+         */
+        $url = $this->getUrl();
+        if ($url != "") {
+            PluginUtility::addAttributeValue("href", $url, $this->attributes);
+        }
+
+        /**
+         * Processing by type
+         */
+        switch ($this->getType()) {
+            case self::TYPE_INTERWIKI:
+
+                /**
+                 * Target
+                 */
+                $interwikiConf = $conf['target']['interwiki'];
+                if ($interwikiConf) {
+
+                    PluginUtility::addAttributeValue('target', $interwikiConf, $this->attributes);
+                    PluginUtility::addAttributeValue('rel', 'noopener', $this->attributes);
+                }
+                break;
+            case self::TYPE_INTERNAL:
+
+                /**
+                 * Internal Page
+                 */
+                $linkedPage = $this->getInternalPage();
+                $this->attributes["data-wiki-id"] = $this->getAbsoluteId();
+
+                /**
+                 * If this is a low quality internal page,
+                 * print a shallow link for the anonymous user
+                 */
+                $lowLink = $this->isLowLink();
+                if ($lowLink) {
+
+                    LowQualityPage::addLowQualityPageHtmlSnippet($this->renderer);
+                    PluginUtility::addClass2Attributes(LowQualityPage::LOW_QUALITY_LINK_CLASS, $this->attributes);
+                    $this->attributes["data-toggle"] = "tooltip";
+                    $this->attributes["title"] = "To follow this link ({$this->getAbsoluteId()}), you need to log in (" . LowQualityPage::ACRONYM . ")";
+
+                } else {
+
+                    if (!$linkedPage->existInFs()) {
+                        /**
+                         * Red color
+                         */
+                        PluginUtility::addClass2Attributes(self::CLASS_DOES_NOT_EXIST, $this->attributes);
+                        PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
+                    }
+
+                    $this->attributes["title"] = $linkedPage->getTitle();
+
+                }
+                break;
+            case self::TYPE_EXTERNAL:
+                if ($conf['relnofollow']) {
+                    PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
+                    PluginUtility::addAttributeValue("rel", 'ugc', $this->attributes);
+                }
+                if ($conf['target']['extern']) {
+                    PluginUtility::addAttributeValue("rel", 'noopener', $this->attributes);
+                }
+                break;
+
+        }
+
+
+
+        /**
+         * Return
+         */
+        if ($this->isLowLink() || $url == "") {
+            // We could also have used a <a> with `rel="nofollow"`
+            // The span element is then modified as link by javascript if the user is not anonymous
+            return "<span " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
+        } else {
+            return "<a " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
+        }
+
+
+    }
+
+    public
+    function getId()
+    {
+        return $this->id;
+    }
+
+    public
+    function getQueries()
+    {
+        return $this->parameters;
+    }
+
+    public
+    function getAnchor()
+    {
+        return $this->anchor;
+    }
+
+    private
+    function getUrl()
+    {
+        $url = "";
+        switch ($this->getType()) {
+            case self::TYPE_INTERNAL:
+                $url = wl($this->id, $this->parameters);
+                if ($this->anchor) {
+                    $url .= '#' . $this->anchor;
+                }
+                break;
+            case self::TYPE_INTERWIKI:
+                $url = $this->renderer->_resolveInterWiki($this->wiki, $this->getRef());
+                break;
+            case self::TYPE_WINDOWS_SHARE:
+                $url = str_replace('\\', '/', $this->getRef());
+                $url = 'file:///' . $url;
+                break;
+            case self::TYPE_EXTERNAL:
+                /**
+                 * Authorized scheme only
+                 * to not inject code
+                 */
+                if (is_null($this->authorizedSchemes)) {
+                    $this->authorizedSchemes = getSchemes();
+                }
+                if (!in_array($this->schemeUri, $this->authorizedSchemes)) {
+                    $url = '';
+                } else {
+                    $url = $this->ref;
+                }
+                break;
+            default:
+                LogUtility::log2FrontEnd("The url type (" . $this->getType() . ") was not expected to get the URL", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
+        }
+
+        /**
+         * URL encoded
+         */
+        $url = str_replace('&', '&amp;', $url);
+        $url = str_replace('&amp;amp;', '&amp;', $url);
+
+        return $url;
+    }
+
+    public
+    function getWiki()
+    {
+        return $this->wiki;
+    }
+
+    /**
+     * @return array
+     */
+    public
+    function getAttribute()
+    {
+        return $this->attributes;
+    }
+
+    public
+    function setAttributes(array &$attributes)
+    {
+        $this->attributes = &$attributes;
+    }
+
+    public
+    function getScheme()
+    {
+        return $this->schemeUri;
+    }
+
+    /**
+     * @return bool true if the public page links to a low quality page
+     */
+    private function isLowLink()
+    {
+        $lowLink = false;
+        if ($this->getType() == self::TYPE_INTERNAL) {
+            global $conf;
+            $lqppEnable = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE];
+            if ($lqppEnable == 1
+                && $this->getInternalPage()->isLowQualityPage()) {
+                $lowLink = true;
+            }
+        }
+        return $lowLink;
     }
 
 

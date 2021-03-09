@@ -7,7 +7,6 @@ require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
-use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -29,9 +28,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     const COMPONENT = 'combo_link';
 
     /**
-     * Low quality page indicator
+     * The link Tag
      */
-    const LOW_QUALITY_PAGE_ATTR = "low_quality_page";
+    const LINK_TAG = "linkTag";
 
 
     /**
@@ -125,15 +124,12 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     }
                 }
                 $link = new LinkUtility($attributes[LinkUtility::ATTRIBUTE_REF]);
-                $lowQualityPage = false;
-                if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
-                    $lowQualityPage = $link->getInternalPage()->isLowQualityPage();
-                }
+                $linkTag = $link->getHtmlTag();
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
                     PluginUtility::CONTEXT => $parentName,
-                    self::LOW_QUALITY_PAGE_ATTR => $lowQualityPage
+                    self::LINK_TAG => $linkTag
                 );
             case DOKU_LEXER_UNMATCHED:
 
@@ -156,7 +152,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 $openingAttributes = $openingTag->getAttributes();
-                $lowQualityPage = $openingTag->getData()[self::LOW_QUALITY_PAGE_ATTR];
+                $linkTag = $openingTag->getData()[self::LINK_TAG];
 
                 if ($openingTag->getPosition() == $tag->getPosition() - 1) {
                     // There is no name
@@ -169,7 +165,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingAttributes,
                     PluginUtility::PAYLOAD => $linkName,
-                    self::LOW_QUALITY_PAGE_ATTR => $lowQualityPage
+                    self::LINK_TAG => $linkTag
                 );
         }
         return true;
@@ -242,6 +238,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $htmlLink = '<div class="navbar-nav">' . $link->renderOpenTag($renderer);
                                 break;
                             case syntax_plugin_combo_navbargroup::COMPONENT:
+                                PluginUtility::addClass2Attributes("nav-link", $attributes);
                                 $htmlLink = '<li class="nav-item">' . $link->renderOpenTag($renderer);
                                 break;
                             default:
@@ -259,8 +256,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
                         break;
                     case DOKU_LEXER_EXIT:
+
                         $context = $data[PluginUtility::CONTEXT];
-                        $lowQualityPage = $data[self::LOW_QUALITY_PAGE_ATTR];
 
                         // if there is no name defined, we get the name as ref in the payload
                         $renderer->doc .= $data[PluginUtility::PAYLOAD];
@@ -274,11 +271,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $renderer->doc .= '</li>';
                                 break;
                         }
-                        if ($lowQualityPage) {
-                            $renderer->doc .= "</span>";
-                        } else {
-                            $renderer->doc .= "</a>";
-                        }
+
+                        $linkTag = $data[self::LINK_TAG];
+                        $renderer->doc .= "</$linkTag>";
 
 
                 }

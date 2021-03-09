@@ -78,6 +78,7 @@ class LinkUtility
         );
     const CLASS_DOES_NOT_EXIST = "text-danger"; // "wikilink2";
     //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
+    const CLASS_EXTERNAL = "urlextern";
     /**
      * @var mixed
      */
@@ -147,13 +148,13 @@ class LinkUtility
          * Email validation pattern
          * E-Mail (pattern below is defined in inc/mail.php)
          */
-//        $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
-//        $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
-//        if (preg_match('<' . $emailPattern . '>', $ref)) {
-//            $this->type = self::TYPE_EMAIL;
-//            $this->$ref = $ref;
-//            return;
-//        }
+        $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
+        $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
+        if (preg_match('<' . $emailPattern . '>', $ref)) {
+            $this->type = self::TYPE_EMAIL;
+            $this->$ref = $ref;
+            return;
+        }
 
         /**
          * Local
@@ -200,7 +201,7 @@ class LinkUtility
         /**
          * Internal then
          */
-        if ($this->type == null){
+        if ($this->type == null) {
             $this->type = self::TYPE_INTERNAL;
             $this->ref = $ref;
         }
@@ -335,7 +336,7 @@ class LinkUtility
                     PluginUtility::addAttributeValue('rel', 'noopener', $this->attributes);
                 }
                 PluginUtility::addClass2Attributes("interwiki", $this->attributes);
-                $wikiClass         = "iw_".preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
+                $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
                 PluginUtility::addClass2Attributes($wikiClass, $this->attributes);
 
                 break;
@@ -382,6 +383,7 @@ class LinkUtility
                 if ($conf['target']['extern']) {
                     PluginUtility::addAttributeValue("rel", 'noopener', $this->attributes);
                 }
+                PluginUtility::addClass2Attributes(self::CLASS_EXTERNAL,$this->attributes);
                 break;
             case self::TYPE_LOCAL:
                 break;
@@ -397,13 +399,8 @@ class LinkUtility
         /**
          * Return
          */
-        if ($this->isLowLink() || $url == "") {
-            // We could also have used a <a> with `rel="nofollow"`
-            // The span element is then modified as link by javascript if the user is not anonymous
-            return "<span " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
-        } else {
-            return "<a " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
-        }
+        $tag = $this->getHTMLTag();
+        return "<$tag " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
 
 
     }
@@ -722,7 +719,8 @@ class LinkUtility
                 }
                 break;
             case self::TYPE_INTERWIKI:
-                $url = $this->renderer->_resolveInterWiki($this->wiki, $this->getRef());
+                $wiki = $this->wiki;
+                $url = $this->renderer->_resolveInterWiki($wiki, $this->getRef());
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());
@@ -809,6 +807,35 @@ class LinkUtility
         return $lowLink;
     }
 
+    public function getHTMLTag()
+    {
+        switch ($this->getType()) {
+            case self::TYPE_INTERNAL:
+                // We could also have used a <a> with `rel="nofollow"`
+                // The span element is then modified as link by javascript if the user is not anonymous
+                if ($this->isLowLink()) {
+                    return "span";
+                } else {
+                    return "a";
+                }
+                break;
+            case self::TYPE_INTERWIKI:
+                if (!$this->wikiExists()) {
+                    return "span";
+                } else {
+                    return "a";
+                }
+            default:
+                return "a";
+        }
+
+    }
+
+    private function wikiExists()
+    {
+        $wikis = getInterwiki();
+        return key_exists($this->wiki, $wikis);
+    }
 
 
 }

@@ -207,11 +207,11 @@ class LinkUtility
          */
         $refProcessing = $ref;
         if ($this->type == null) {
-            $interwikiPosition = strpos($ref, ">");
+            $interwikiPosition = strpos($refProcessing, ">");
             if ($interwikiPosition !== false) {
                 $this->wiki = strtolower(substr($refProcessing, 0, $interwikiPosition));
-                $refProcessing = substr($ref, $interwikiPosition + 1);
-                $this->ref = $refProcessing;
+                $refProcessing = substr($refProcessing, $interwikiPosition + 1);
+                $this->ref = $ref;
                 $this->type = self::TYPE_INTERWIKI;
             }
         }
@@ -247,7 +247,7 @@ class LinkUtility
                 $this->id = substr($refProcessing, 0, $anchorPosition);
                 $this->fragment = substr($refProcessing, $anchorPosition + 1);
             } else {
-                $this->id = $ref;
+                $this->id = $refProcessing;
             }
         }
 
@@ -672,7 +672,7 @@ class LinkUtility
                      */
                     $name = TemplateUtility::render($name, $this->getAbsoluteId());
                 }
-                if (!empty($name)) {
+                if (empty($name)) {
                     $name = $this->ref;
                     if (useHeading('content')) {
                         $page = $this->getInternalPage();
@@ -709,6 +709,10 @@ class LinkUtility
 
                 }
                 break;
+            case self::TYPE_INTERWIKI:
+                if (empty($name)) {
+                    $name = $this->getId();
+                }
         }
 
         return $name;
@@ -764,7 +768,7 @@ class LinkUtility
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $url = $this->renderer->_resolveInterWiki($wiki, $this->getRef());
+                $url = $this->renderer->_resolveInterWiki($wiki, $this->getId());
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());

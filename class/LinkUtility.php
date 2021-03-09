@@ -110,7 +110,7 @@ class LinkUtility
     /**
      * @var false|string
      */
-    private $anchor;
+    private $fragment;
 
     private $attributes = array();
     /**
@@ -182,7 +182,7 @@ class LinkUtility
         if (preg_match('#^([a-z0-9\-\.+]+?)://#i', $ref)) {
             $this->type = self::TYPE_EXTERNAL;
             $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, "://")));
-            $this->$ref = $ref;
+            $this->ref = $ref;
         }
 
         /**
@@ -195,13 +195,16 @@ class LinkUtility
             $refProcessing = substr($ref, $interwikiPosition + 1);
             $this->ref = $refProcessing;
             $this->type = self::TYPE_INTERWIKI;
-        } else {
-            /**
-             * Internal then
-             */
+        }
+
+        /**
+         * Internal then
+         */
+        if ($this->type == null){
             $this->type = self::TYPE_INTERNAL;
             $this->ref = $ref;
         }
+
 
         /**
          *
@@ -214,7 +217,7 @@ class LinkUtility
             $anchorPosition = strpos($secondPart, "#");
             if ($anchorPosition !== false) {
                 $this->parameters = substr($secondPart, 0, $anchorPosition);
-                $this->anchor = substr($secondPart, $anchorPosition + 1);
+                $this->fragment = substr($secondPart, $anchorPosition + 1);
             } else {
                 $this->parameters = $secondPart;
             }
@@ -223,7 +226,7 @@ class LinkUtility
             $anchorPosition = strpos($refProcessing, "#");
             if ($anchorPosition !== false) {
                 $this->id = substr($refProcessing, 0, $anchorPosition);
-                $this->anchor = substr($refProcessing, $anchorPosition + 1);
+                $this->fragment = substr($refProcessing, $anchorPosition + 1);
             } else {
                 $this->id = $ref;
             }
@@ -353,6 +356,7 @@ class LinkUtility
 
                     LowQualityPage::addLowQualityPageHtmlSnippet($this->renderer);
                     PluginUtility::addClass2Attributes(LowQualityPage::LOW_QUALITY_LINK_CLASS, $this->attributes);
+                    unset($this->attributes["href"]);
                     $this->attributes["data-toggle"] = "tooltip";
                     $this->attributes["title"] = "To follow this link ({$this->getAbsoluteId()}), you need to log in (" . LowQualityPage::ACRONYM . ")";
 
@@ -700,9 +704,9 @@ class LinkUtility
     }
 
     public
-    function getAnchor()
+    function getFragment()
     {
-        return $this->anchor;
+        return $this->fragment;
     }
 
     private
@@ -713,8 +717,8 @@ class LinkUtility
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
                 $url = wl($this->getAbsoluteId(), $this->parameters);
-                if ($this->anchor) {
-                    $url .= '#' . $this->anchor;
+                if ($this->fragment) {
+                    $url .= '#' . $this->fragment;
                 }
                 break;
             case self::TYPE_INTERWIKI:
@@ -804,6 +808,7 @@ class LinkUtility
         }
         return $lowLink;
     }
+
 
 
 }

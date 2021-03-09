@@ -141,8 +141,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                  * Delete the name separator if any
                  */
                 $tag = new Tag(self::TAG, array(), $state, $handler);
-                $ascendantSibling = $tag->getAscendantSibling();
-                if ($ascendantSibling->getName() == self::TAG) {
+                $parent = $tag->getParent();
+                if ($parent->getName() == self::TAG) {
                     if (strpos($match, '|') === 0) {
                         $match = substr($match, 1);
                     }
@@ -156,16 +156,20 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 $openingAttributes = $openingTag->getAttributes();
+                $lowQualityPage = $openingTag->getData()[self::LOW_QUALITY_PAGE_ATTR];
+
                 if ($openingTag->getPosition() == $tag->getPosition() - 1) {
                     // There is no name
-                    $linkName = (new LinkUtility($openingAttributes[LinkUtility::ATTRIBUTE_REF]))->getRef();
+                    $link = new LinkUtility($openingAttributes[LinkUtility::ATTRIBUTE_REF]);
+                    $linkName = $link->getName();
                 } else {
                     $linkName = "";
                 }
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingAttributes,
-                    PluginUtility::PAYLOAD => $linkName
+                    PluginUtility::PAYLOAD => $linkName,
+                    self::LOW_QUALITY_PAGE_ATTR => $lowQualityPage
                 );
         }
         return true;

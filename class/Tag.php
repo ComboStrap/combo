@@ -438,7 +438,12 @@ class Tag
             }
 
         }
-        if ($treeLevel <= 0) {
+        /**
+         * Because we don't count tag without an state such as eol,
+         * the tree level may be negative which means
+         * that there is no sibling
+         */
+        if ($treeLevel == 0) {
             return self::call2Tag($call, $counter);
         }
         return null;

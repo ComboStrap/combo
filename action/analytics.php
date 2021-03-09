@@ -129,8 +129,9 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          */
         $maxRefresh = 10; // by default, there is 5 pages in a default dokuwiki installation in the wiki namespace
         $maxRefreshLow = 2;
-        if (sizeof($rows) > $maxRefresh) {
-            LogUtility::msg("There is more than {$maxRefresh} page to refresh in the queue (table `ANALYTICS_TO_REFRESH`). Batch background Analytics refresh was reduced to {$maxRefreshLow} pages to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
+        $pagesToRefresh = sizeof($rows);
+        if ($pagesToRefresh > $maxRefresh) {
+            LogUtility::msg("There is {$pagesToRefresh} pages to refresh in the queue (table `ANALYTICS_TO_REFRESH`). This is more than {$maxRefresh} pages. Batch background Analytics refresh was reduced to {$maxRefreshLow} pages to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
             $maxRefresh = $maxRefreshLow;
         }
         $refreshCounter = 0;

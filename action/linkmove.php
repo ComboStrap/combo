@@ -48,11 +48,31 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
     public function rewrite_combo($match, $state, $pos, $plugin, helper_plugin_move_handler $handler)
     {
         /**
-         * We call the original move method
-         * that supports Link rewriting
+         * The original move method
+         * is {@link helper_plugin_move_handler::internallink()}
+         * $handler->internallink($match, $state, $pos);
          */
-        $handler->internallink($match, $state, $pos);
+        $ref = LinkUtility::parse($match)[LinkUtility::ATTRIBUTE_REF];
+        $link = new LinkUtility($ref);
+        if ($link->getType()==LinkUtility::TYPE_INTERNAL) {
 
+            $new_id = $handler->resolveMoves($link->getId(), 'page');
+            $new_id = $handler->relativeLink($link->getId(), $new_id, 'page');
+            if ($link->getId() == $new_id) {
+                $handler->calls .= $match;
+            } else {
+                if (!empty($link->getQueries())) {
+                    $new_id .= '?' . $link->getQueries();
+                }
+
+                if (!empty($link->getFragment())) {
+                    $new_id .= '#' . $link->getFragment();
+                }
+
+                $handler->calls .= '[[' . $new_id ;
+            }
+
+        }
     }
 
 

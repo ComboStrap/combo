@@ -200,6 +200,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 }
 
                 $state = $data[PluginUtility::STATE];
+                $payload = $data[PluginUtility::PAYLOAD];
                 switch ($state) {
                     case DOKU_LEXER_ENTER:
                         $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
@@ -253,14 +254,14 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= $htmlLink;
                         break;
                     case DOKU_LEXER_UNMATCHED:
-                        $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                        $renderer->doc .= PluginUtility::escape($payload);
                         break;
                     case DOKU_LEXER_EXIT:
 
                         $context = $data[PluginUtility::CONTEXT];
 
                         // if there is no name defined, we get the name as ref in the payload
-                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                        $renderer->doc .= $payload;
 
                         // html element
                         switch ($context) {

@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
+use dokuwiki\Extension\PluginTrait;
 
 require_once(__DIR__ . '/../../combo/class/' . 'TemplateUtility.php');
 
@@ -144,58 +145,75 @@ class LinkUtility
     public function __construct($ref)
     {
 
-        /**
-         * Email validation pattern
-         * E-Mail (pattern below is defined in inc/mail.php)
-         */
-        $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
-        $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
-        if (preg_match('<' . $emailPattern . '>', $ref)) {
-            $this->type = self::TYPE_EMAIL;
-            $this->$ref = $ref;
-            return;
-        }
 
         /**
          * Local
          */
-        if (preg_match('!^#.+!', $ref)) {
-            $this->type = self::TYPE_LOCAL;
-            $this->ref = substr($ref, 1);
-            return;
+        if ($this->type == null) {
+            if (preg_match('!^#.+!', $ref)) {
+                $this->type = self::TYPE_LOCAL;
+                $this->ref = substr($ref, 1);
+                return;
+            }
         }
 
         /**
          * Windows share link
          */
-        if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
-            $this->type = self::TYPE_WINDOWS_SHARE;
-            $this->ref = $ref;
-            return;
+        if ($this->type == null) {
+            if (preg_match('/^\\\\\\\\[^\\\\]+?\\\\/u', $ref)) {
+                $this->type = self::TYPE_WINDOWS_SHARE;
+                $this->ref = $ref;
+                return;
+            }
         }
 
         /**
-         * URI like links
+         * URI like links section
          */
+
+        /**
+         * Email validation pattern
+         * E-Mail (pattern below is defined in inc/mail.php)
+         *
+         * Example:
+         * [[support@combostrap.com?subject=hallo]]
+         * [[support@combostrap.com]]
+         */
+        if ($this->type == null) {
+            $emailRfc2822 = "0-9a-zA-Z!#$%&'*+/=?^_`{|}~-";
+            $emailPattern = '[' . $emailRfc2822 . ']+(?:\.[' . $emailRfc2822 . ']+)*@(?i:[0-9a-z][0-9a-z-]*\.)+(?i:[a-z]{2,63})';
+            if (preg_match('<' . $emailPattern . '>', $ref)) {
+                $this->type = self::TYPE_EMAIL;
+                $this->ref = $ref;
+                // we don't return. The query part is parsed afterwards
+            }
+        }
+
+
         /**
          * External
          */
-        if (preg_match('#^([a-z0-9\-\.+]+?)://#i', $ref)) {
-            $this->type = self::TYPE_EXTERNAL;
-            $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, "://")));
-            $this->ref = $ref;
+        if ($this->type == null) {
+            if (preg_match('#^([a-z0-9\-\.+]+?)://#i', $ref)) {
+                $this->type = self::TYPE_EXTERNAL;
+                $this->schemeUri = strtolower(substr($ref, 0, strpos($ref, "://")));
+                $this->ref = $ref;
+            }
         }
 
         /**
          * interwiki ?
          */
         $refProcessing = $ref;
-        $interwikiPosition = strpos($ref, ">");
-        if ($interwikiPosition !== false) {
-            $this->wiki = strtolower(substr($refProcessing, 0, $interwikiPosition));
-            $refProcessing = substr($ref, $interwikiPosition + 1);
-            $this->ref = $refProcessing;
-            $this->type = self::TYPE_INTERWIKI;
+        if ($this->type == null) {
+            $interwikiPosition = strpos($ref, ">");
+            if ($interwikiPosition !== false) {
+                $this->wiki = strtolower(substr($refProcessing, 0, $interwikiPosition));
+                $refProcessing = substr($ref, $interwikiPosition + 1);
+                $this->ref = $refProcessing;
+                $this->type = self::TYPE_INTERWIKI;
+            }
         }
 
         /**
@@ -316,7 +334,7 @@ class LinkUtility
          * Get the url
          */
         $url = $this->getUrl();
-        if ($url != "") {
+        if (!empty($url)) {
             PluginUtility::addAttributeValue("href", $url, $this->attributes);
         }
 
@@ -383,12 +401,15 @@ class LinkUtility
                 if ($conf['target']['extern']) {
                     PluginUtility::addAttributeValue("rel", 'noopener', $this->attributes);
                 }
-                PluginUtility::addClass2Attributes(self::CLASS_EXTERNAL,$this->attributes);
-                break;
-            case self::TYPE_LOCAL:
+                PluginUtility::addClass2Attributes(self::CLASS_EXTERNAL, $this->attributes);
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 PluginUtility::addClass2Attributes("windows", $this->attributes);
+                break;
+            case self::TYPE_LOCAL:
+                break;
+            case self::TYPE_EMAIL:
+                PluginUtility::addClass2Attributes("mail", $this->attributes);
                 break;
             default:
                 LogUtility::msg("The type (" . $this->getType() . ") is unknown", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
@@ -400,7 +421,28 @@ class LinkUtility
          * Return
          */
         $tag = $this->getHTMLTag();
-        return "<$tag " . PluginUtility::array2HTMLAttributes($this->attributes) . ">";
+        $returnedHTML = "<$tag";
+
+        /**
+         * An email URL and title
+         * may be already encoded because of the vanguard configuration
+         *
+         * The url is not treated as an attribute
+         * because the function array2HTMLAttributes encodes the value
+         * to mitigate XSS
+         *
+         */
+        if ($this->getType() == self::TYPE_EMAIL) {
+            $emailAddress = $this->emailObfuscation($this->getRef());
+            $returnedHTML .= " href=\"$url\"";
+            $returnedHTML .= " title=\"$emailAddress\"";
+            unset($this->attributes["href"]);
+            unset($this->attributes["title"]);
+        }
+        if (sizeof($this->attributes) > 0) {
+            $returnedHTML .= " " . PluginUtility::array2HTMLAttributes($this->attributes);
+        }
+        return $returnedHTML . ">";
 
 
     }
@@ -620,50 +662,53 @@ class LinkUtility
         /**
          * Templating
          */
-        if ($this->getType() == self::TYPE_INTERNAL) {
-            if (!empty($name)) {
-                $name = TemplateUtility::render($name, $this->getAbsoluteId());
-            } else {
-                /**
-                 * If the name is null, Dokuwiki print the title
-                 */
-                $name = $this->getInternalPage()->getH1();
-            }
-        }
-
-        /**
-         * Pipeline
-         */
-        if (strpos($this->name, "<pipeline>") !== false) {
-            $name = str_replace("<pipeline>", "", $name);
-            $name = str_replace("</pipeline>", "", $name);
-            $name = PipelineUtility::execute($name);
-        }
-
-        /**
-         * Still empty
-         */
-        if (empty($name)) {
-            if ($this->getType() == self::TYPE_INTERNAL) {
-                $name = $this->ref;
-                if (useHeading('content')) {
-                    $page = $this->getInternalPage();
-                    $h1 = $page->getH1();
-                    if (!empty($h1)) {
-                        $name = $h1;
-                    } else {
-                        /**
-                         * In dokuwiki by default, title = h1
-                         * If there is no h1, we take title
-                         * for backward compatibility
-                         */
-                        $title = $page->getTitle();
-                        if (!empty($title)) {
-                            $name = $title;
+        switch ($this->getType()) {
+            case self::TYPE_INTERNAL:
+                if (!empty($name)) {
+                    /**
+                     * With the new link syntax class, this is no more possible
+                     * because there is an enter and exit state
+                     * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
+                     */
+                    $name = TemplateUtility::render($name, $this->getAbsoluteId());
+                }
+                if (!empty($name)) {
+                    $name = $this->ref;
+                    if (useHeading('content')) {
+                        $page = $this->getInternalPage();
+                        $h1 = $page->getH1();
+                        if (!empty($h1)) {
+                            $name = $h1;
+                        } else {
+                            /**
+                             * In dokuwiki by default, title = h1
+                             * If there is no h1, we take title
+                             * for backward compatibility
+                             */
+                            $title = $page->getTitle();
+                            if (!empty($title)) {
+                                $name = $title;
+                            }
                         }
                     }
                 }
-            }
+                break;
+            case self::TYPE_EMAIL:
+                if (empty($name)) {
+                    global $conf;
+                    $email = $this->getId();
+                    switch ($conf['mailguard']) {
+                        case 'none' :
+                            $name = $email;
+                            break;
+                        case 'visible' :
+                        default :
+                            $obfuscate = array('@' => ' [at] ', '.' => ' [dot] ', '-' => ' [dash] ');
+                            $name = strtr($email, $obfuscate);
+                    }
+
+                }
+                break;
         }
 
         return $name;
@@ -709,7 +754,6 @@ class LinkUtility
     private
     function getUrl()
     {
-        global $conf;
         $url = "";
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
@@ -741,11 +785,16 @@ class LinkUtility
                 }
                 break;
             case self::TYPE_EMAIL:
-                $address = $this->ref;
-                if ($conf['mailguard'] == 'visible') {
-                    $address = rawurlencode($this->ref);
-                }
+                /**
+                 * An email link is `<email>`
+                 * {@link Emaillink::connectTo()}
+                 * or
+                 * {@link PluginTrait::email()
+                 */
+                // common.php#obfsucate implements the $conf['mailguard']
+                $address = $this->emailObfuscation($this->ref);
                 $url = 'mailto:' . $address;
+                // due to vanguard, the email is already encoded
                 break;
             case self::TYPE_LOCAL:
                 $url = '#' . $this->renderer->_headerToLink($this->ref);
@@ -754,11 +803,6 @@ class LinkUtility
                 LogUtility::log2FrontEnd("The url type (" . $this->getType() . ") was not expected to get the URL", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
         }
 
-        /**
-         * URL encoded
-         */
-        $url = str_replace('&', '&amp;', $url);
-        $url = str_replace('&amp;amp;', '&amp;', $url);
 
         return $url;
     }
@@ -835,6 +879,30 @@ class LinkUtility
     {
         $wikis = getInterwiki();
         return key_exists($this->wiki, $wikis);
+    }
+
+    private function emailObfuscation($input)
+    {
+        $address = obfuscate($input);
+        global $conf;
+        if ($conf['mailguard'] == 'visible') {
+            $address = rawurlencode($address);
+        }
+        return $address;
+    }
+
+    /**
+     * @param $input
+     * @return string|string[] Encode
+     */
+    private function urlEncoded($input)
+    {
+        /**
+         * URL encoded
+         */
+        $input = str_replace('&', '&amp;', $input);
+        $input = str_replace('&amp;amp;', '&amp;', $input);
+        return $input;
     }
 
 

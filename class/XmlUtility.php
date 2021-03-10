@@ -70,10 +70,10 @@ class XmlUtility
     {
 
         $actualAttValue = $xml[$attName];
-        if ($actualAttValue==null){
+        if ($actualAttValue == null) {
             $xml->addAttribute($attName, $attValue);
         } else {
-            $xml[$attName]=(string)$actualAttValue." $attValue";
+            $xml[$attName] = (string)$actualAttValue . " $attValue";
         }
     }
 
@@ -84,6 +84,7 @@ class XmlUtility
      */
     public static function asHtml(SimpleXMLElement $linkDom)
     {
+
         $domXml = dom_import_simplexml($linkDom);
         /**
          * ownerDocument returned the DOMElement
@@ -98,24 +99,33 @@ class XmlUtility
      */
     public static function isXml($text)
     {
-        $valid = true;
 
-        /**
-         * Temporary No error reporting
-         * We see warning in the log
-         */
-        $oldLevel = error_reporting(E_ERROR );
-        try {
-            /** @noinspection PhpComposerExtensionStubsInspection */
-            new SimpleXMLElement($text);
-        } catch (\Exception $e) {
-            $valid = false;
+        $canonical = "simplexml";
+        if (extension_loaded($canonical)) {
+
+            $valid = true;
+
+            /**
+             * Temporary No error reporting
+             * We see warning in the log
+             */
+            $oldLevel = error_reporting(E_ERROR);
+            try {
+                /** @noinspection PhpComposerExtensionStubsInspection */
+                new SimpleXMLElement($text);
+            } catch (\Exception $e) {
+                $valid = false;
+            }
+            /**
+             * Error reporting back
+             */
+            error_reporting($oldLevel);
+            return $valid;
+
+        } else {
+            LogUtility::msg("The SimpleXml base php library was not detected on your custom installation. Check the following ".PluginUtility::getUrl($canonical,"page")." on how to solve this problem.",LogUtility::LVL_MSG_ERROR, $canonical);
+            return false;
         }
-        /**
-         * Error reporting back
-         */
-        error_reporting($oldLevel);
-        return $valid;
     }
 
     /**
@@ -127,7 +137,7 @@ class XmlUtility
      */
     public static function format($text)
     {
-        if (empty($text)){
+        if (empty($text)) {
             throw new \Exception("The text should not be empty");
         }
         $doc = new DOMDocument();
@@ -146,7 +156,7 @@ class XmlUtility
      */
     public static function normalize($text)
     {
-        if (empty($text)){
+        if (empty($text)) {
             throw new \RuntimeException("The text should not be empty");
         }
         $doc = new DOMDocument();
@@ -154,7 +164,7 @@ class XmlUtility
         $doc->normalize();
         $doc->formatOutput = true;
         // Type doc can also be reach with $domNode->ownerDocument
-        return $doc->saveXML($doc->documentElement).DOKU_LF;
+        return $doc->saveXML($doc->documentElement) . DOKU_LF;
     }
 
 

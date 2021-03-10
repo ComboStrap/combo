@@ -30,12 +30,13 @@ class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
     {
 
 
+        $imageBase = '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/';
         $unit = array(
             'type' => 'format',
             'title' => 'Insert an unit test',
-            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/unit-doc-block.png',
+            'icon' => $imageBase . 'unit-doc-block.png',
             'open' => '<unit name="default">\n<file lang path>\n</file>\n\t<code lang>',
-            'close' => '\n\t</code>\n\tt<console>\n\t</console></unit>\n',
+            'close' => '\n\t</code>\n\t<console>\n\t</console></unit>\n',
             // 'key'    => $unitShortcutKey
         );
 
@@ -57,7 +58,7 @@ EOF;
         $frontmatter = array(
             'type' => 'insert',
             'title' => 'Insert a frontmatter',
-            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/table-of-contents.svg',
+            'icon' => $imageBase . 'table-of-contents.svg',
             'insert' => $frontmatter,
             'block' => true
         );

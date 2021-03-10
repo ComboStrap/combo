@@ -416,6 +416,15 @@ class LinkUtility
 
         }
 
+        /**
+         * Title settings
+         */
+        if (!key_exists("title", $this->attributes)) {
+            $title = $this->getTitle();
+            if (!empty($title)) {
+                $this->attributes["title"] = $title;
+            }
+        }
 
         /**
          * Return
@@ -433,7 +442,7 @@ class LinkUtility
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->getRef());
+            $emailAddress = $this->emailObfuscation($this->getId());
             $returnedHTML .= " href=\"$url\"";
             $returnedHTML .= " title=\"$emailAddress\"";
             unset($this->attributes["href"]);
@@ -733,6 +742,16 @@ class LinkUtility
     public
     function getTitle()
     {
+        if (empty($this->title)) {
+            switch ($this->type) {
+                case self::TYPE_INTERNAL:
+                    $this->title = $this->getInternalPage()->getTitle();
+                    break;
+                case self::TYPE_EXTERNAL:
+                    // null, stay empty
+                    break;
+            }
+        }
         return $this->title;
     }
 
@@ -797,8 +816,13 @@ class LinkUtility
                  */
                 // common.php#obfsucate implements the $conf['mailguard']
                 $address = $this->emailObfuscation($this->ref);
+                // Encode only if visible, the hex option
+                // should not be encoded (otherwise, double up with the & characters)
+                global $conf;
+                if ($conf['mailguard'] == 'visible') {
+                    $address = rawurlencode($address);
+                }
                 $url = 'mailto:' . $address;
-                // due to vanguard, the email is already encoded
                 break;
             case self::TYPE_LOCAL:
                 $url = '#' . $this->renderer->_headerToLink($this->ref);
@@ -887,12 +911,13 @@ class LinkUtility
 
     private function emailObfuscation($input)
     {
-        $address = obfuscate($input);
-        global $conf;
-        if ($conf['mailguard'] == 'visible') {
-            $address = rawurlencode($address);
-        }
-        return $address;
+        return obfuscate($input);
+    }
+
+    public function renderClosingTag()
+    {
+        $HTMLTag = $this->getHTMLTag();
+        return "</$HTMLTag>";
     }
 
     /**

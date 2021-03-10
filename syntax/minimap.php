@@ -185,26 +185,8 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 
 
                         /**
-                         * Set name and title
+                         * Set special name and title
                          */
-                        // Name if the variable that it's shown. A part of it can be suppressed
-                        // Title will stay full in the link
-                        $h1TargetPage = $link->getInternalPage()->getH1();
-                        $title = $link->getInternalPage()->getTitle();
-
-                        $link->setName(noNSorNS($pageId));
-                        if ($h1TargetPage !=null) {
-                            $link->setName($h1TargetPage);
-                        } else {
-                            if ($title!=null) {
-                                $link->setName($title);
-                            }
-                        }
-                        $link->setTitle(noNSorNS($pageId));
-                        if ($title!=null) {
-                            $link->setTitle($title);
-                        }
-
                         // If debug mode
                         if ($parameters['debug']) {
                             $link->setTitle($link->getTitle().' (' . $pageId . ')');
@@ -264,10 +246,12 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 
                             // Add a glyphicon if it's a directory
                             if ($pageArray['type'] == "d") {
-                                $miniMapList .= "<span class=\"nicon_folder_open\" aria-hidden=\"true\"></span>&nbsp;&nbsp;";
+                                $miniMapList .= "<span class=\"nicon_folder_open\" aria-hidden=\"true\"></span> ";
                             }
 
                             $miniMapList .= $link->renderOpenTag($renderer);
+                            $miniMapList .= $link->getName();
+                            $miniMapList .= $link->renderClosingTag();
 
 
                             // Close the item
@@ -297,12 +281,9 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         }
                     } else {
                         $startLink = new LinkUtility($startId);
-                        $startLink->setName($startId);
-                        $h1 = $startLink->getInternalPage()->getH1();
-                        if ($h1!=null){
-                            $startLink->setName($h1);
-                        }
                         $panelHeaderContent = $startLink->renderOpenTag($renderer);
+                        $panelHeaderContent .= $startLink->getName();
+                        $panelHeaderContent .= $startLink->renderClosingTag();
                         // We are not counting the header page
                         $pageNum--;
                     }

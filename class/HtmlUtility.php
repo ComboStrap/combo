@@ -226,7 +226,10 @@ class HtmlUtility
             $rightChildNodes = $rightNode->childNodes;
             $rightChildNodesCount = $rightChildNodes->length;
             if ($rightChildNodes == null || $rightChildNodesCount == 0) {
-                $error .= "The left node (" . $leftNode->getNodePath() . ") have child nodes while the right has not.\n";
+                $firstNode = $leftNode->childNodes->item(0);
+                $firstNodeName = $firstNode->nodeName;
+                $firstValue = $firstNode->nodeValue;
+                $error .= "The left node (" . $leftNode->getNodePath() . ") have child nodes while the right has not (First Left Node: $firstNodeName, value: $firstValue) \n";
             } else {
                 $leftChildNodeCount = $leftNode->childNodes->length;
                 $leftChildIndex = 0;

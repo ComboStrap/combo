@@ -26,16 +26,26 @@ class TemplateUtility
 
         /**
          * The title/h1 should never be null
-         * At least the id
+         * otherwise a template link such as [[$id|$title]] will return a link without an description
+         * and therefore not visible
+         * We render at least the id
          */
         $page = new Page($pageId);
         $h1Title = $page->getH1();
-        if ($h1Title==null){
-            $h1Title = $pageId;
-        }
         $pageTitle = $page->getTitle();
+        if ($h1Title==null){
+            if (!empty($pageTitle)){
+                $h1Title = $pageTitle;
+            } else {
+                $h1Title = $pageId;
+            }
+        }
         if($pageTitle==null){
-            $pageTitle = $h1Title;
+            if (!empty($h1Title)){
+                $pageTitle = $h1Title;
+            } else {
+                $pageTitle = $pageId;
+            }
         }
         $pageTitle = str_replace('"', "'", $pageTitle);
         $tpl = str_replace("\$title", $pageTitle, $pageTemplate);

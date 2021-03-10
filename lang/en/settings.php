@@ -2,6 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
@@ -101,4 +102,10 @@ $lang[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = Plugin
  * Excluded rules
  */
 $lang[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring")." - If chosen, the quality rules will not be monitored.)";
+$lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring")." - Disable the Quality Dynamic Monitoring feature (the quality message will not appear anymore)";
+/**
+ * Dokuwiki Class Name
+ */
+$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link")." - Use the Dokuwiki class type for links (Bootstrap conflict if enabled)";
+
 ?>

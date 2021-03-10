@@ -2,6 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
@@ -115,4 +116,10 @@ $meta[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = array(
 /**
  * The quality rules excluded from monitoring
  */
+$meta[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = array('onoff');
 $meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);
+
+/**
+ * Dokuwiki Class Name
+ */
+$meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');

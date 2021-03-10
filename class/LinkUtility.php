@@ -77,9 +77,15 @@ class LinkUtility
             "background-image" => "unset",
             "padding" => "unset"
         );
-    const CLASS_DOES_NOT_EXIST = "text-danger"; // "wikilink2";
-    //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
-    const CLASS_EXTERNAL = "urlextern";
+
+
+    /**
+     * Class added to the type of link
+     * Class have styling rule conflict, they are by default not set
+     * but this configuration permits to turn it back
+     */
+    const CONF_USE_DOKUWIKI_CLASS_NAME = "useDokuwikiLinkClassName";
+
     /**
      * @var mixed
      */
@@ -382,11 +388,17 @@ class LinkUtility
                 } else {
 
                     if (!$linkedPage->existInFs()) {
+
                         /**
                          * Red color
                          */
-                        PluginUtility::addClass2Attributes(self::CLASS_DOES_NOT_EXIST, $this->attributes);
+                        PluginUtility::addClass2Attributes(self::getHtmlClassNotExist(), $this->attributes);
                         PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
+
+                    } else {
+
+                        PluginUtility::addClass2Attributes(self::getHtmlClassInternalLink(), $this->attributes);
+
                     }
 
                     $this->attributes["title"] = $linkedPage->getTitle();
@@ -401,7 +413,7 @@ class LinkUtility
                 if ($conf['target']['extern']) {
                     PluginUtility::addAttributeValue("rel", 'noopener', $this->attributes);
                 }
-                PluginUtility::addClass2Attributes(self::CLASS_EXTERNAL, $this->attributes);
+                PluginUtility::addClass2Attributes(self::getHtmlClassExternalLink(), $this->attributes);
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 PluginUtility::addClass2Attributes("windows", $this->attributes);
@@ -932,6 +944,34 @@ class LinkUtility
         $input = str_replace('&', '&amp;', $input);
         $input = str_replace('&amp;amp;', '&amp;', $input);
         return $input;
+    }
+
+    public static function getHtmlClassInternalLink(){
+        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        if ($oldClassName) {
+            return "wikilink1";
+        } else {
+            return "link-internal";
+        }
+    }
+
+    public static function getHtmlClassExternalLink(){
+        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        if ($oldClassName) {
+            return "urlextern";
+        } else {
+            return "link-external";
+        }
+    }
+
+    //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
+    public static function getHtmlClassNotExist(){
+        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        if($oldClassName){
+            return "wikilink2";
+        } else {
+            return "text-danger";
+        }
     }
 
 

@@ -123,3 +123,10 @@ $meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAM
  * Dokuwiki Class Name
  */
 $meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
+
+/**
+ * Twitter
+ */
+$meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = array('string');
+$meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = array('string');
+$meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_IMAGE] = array('string');

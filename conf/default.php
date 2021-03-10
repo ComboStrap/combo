@@ -147,3 +147,9 @@ $conf['disableDynamicQualityMonitoring'] = 0;
  * Class in link {@link \ComboStrap\LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME}
  */
 $conf['useDokuwikiLinkClassName'] = 0;
+
+/**
+ * Twitter
+ * {@link action_plugin_combo_metatwitter::CONF_TWITTER_SITE_IMAGE}
+ */
+$conf['twitterSiteImage'] = ":apple-touch-icon.png";

@@ -31,22 +31,9 @@ class TemplateUtility
          * We render at least the id
          */
         $page = new Page($pageId);
-        $h1Title = $page->getH1();
-        $pageTitle = $page->getTitle();
-        if ($h1Title==null){
-            if (!empty($pageTitle)){
-                $h1Title = $pageTitle;
-            } else {
-                $h1Title = $pageId;
-            }
-        }
-        if($pageTitle==null){
-            if (!empty($h1Title)){
-                $pageTitle = $h1Title;
-            } else {
-                $pageTitle = $pageId;
-            }
-        }
+        $h1Title = $page->getH1NotEmpty();
+        $pageTitle = $page->getTitleNotEmpty();
+
         $pageTitle = str_replace('"', "'", $pageTitle);
         $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
         $h1Title = str_replace('"', "'", $h1Title);

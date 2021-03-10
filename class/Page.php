@@ -50,10 +50,10 @@ class Page
 
     /**
      *
-     * @param $canonical - null or the canonical value
+     * @param string|null $canonical - null or the canonical value
      * @return string - the canonical URL
      */
-    public static function getUrl($canonical)
+    public static function getUrl($canonical = null)
     {
         if ($canonical != null) {
             $canonicalUrl = getBaseURL(true) . strtr($canonical, ':', '/');
@@ -786,6 +786,44 @@ class Page
         } else {
             return filter_var($dynamicQualityIndicator, FILTER_VALIDATE_BOOLEAN);
         }
+    }
+
+    /**
+     * @return string|null the title, or h1 if empty or the id if empty
+     */
+    public function getTitleNotEmpty()
+    {
+        $pageTitle = $this->getTitle();
+        if($pageTitle ==null){
+            if (!empty($this->getH1())){
+                $pageTitle = $this->getH1();
+            } else {
+                $pageTitle = $this->getId();
+            }
+        }
+        return $pageTitle;
+
+    }
+
+    public function getH1NotEmpty()
+    {
+
+        $h1Title = $this->getH1();
+        if ($h1Title==null){
+            if (!empty($this->getTitle())){
+                $h1Title = $this->getTitle();
+            } else {
+                $h1Title = $this->getId();
+            }
+        }
+        return $h1Title;
+
+    }
+
+    public function getDescription()
+    {
+        $descriptionMeta = p_get_metadata($this->getId(),"description");
+        return $descriptionMeta['abstract'];
     }
 
 

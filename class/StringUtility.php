@@ -20,8 +20,10 @@ class StringUtility
      */
     static function truncateString($myString, $length)
     {
+
         if (strlen($myString) > $length) {
-            $myString = substr($myString, 0, $length) . ' ...';
+            $suffix = ' ...';
+            $myString = substr($myString, 0, ($length - 1) - strlen($suffix)) . $suffix;
         }
         return $myString;
     }
@@ -90,7 +92,7 @@ class StringUtility
         $doc = trim($doc);
         $string = trim($string);
         $length = strlen($doc) - strlen($string);
-        if (substr($doc, $length)===$string) {
+        if (substr($doc, $length) === $string) {
             $doc = substr($doc, 0, $length);
         }
 
@@ -108,7 +110,7 @@ class StringUtility
         $doc = trim($doc);
         $string = trim($string);
         $length = strlen($string);
-        if (substr($doc, 0, $length)===$string) {
+        if (substr($doc, 0, $length) === $string) {
             $doc = substr($doc, $length);
         }
 
@@ -126,7 +128,7 @@ class StringUtility
         /**
          * Delete the frontmatter
          */
-        $text = preg_replace("/^---(json)?$.*^---$/Ums","",$text);
+        $text = preg_replace("/^---(json)?$.*^---$/Ums", "", $text);
         /**
          * New line for node
          */

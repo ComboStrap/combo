@@ -41,3 +41,8 @@ button.btn-primary a.urlextern {
     border-radius: 10rem;
 }
 
+/** Bootstrap has a margin bottom that is not welcome in a card **/
+.card > table {
+    margin-bottom: 0;
+}
+

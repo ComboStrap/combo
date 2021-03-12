@@ -474,9 +474,11 @@ class LinkUtility
      */
     public function handleMetadata($metaDataRenderer)
     {
+
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
-                $metaDataRenderer->internallink($this->ref);
+                $absoluteId = $this->getAbsoluteId();
+                $metaDataRenderer->internallink($absoluteId);
                 break;
             case self::TYPE_EXTERNAL:
                 $metaDataRenderer->externallink($this->ref, $this->name);
@@ -633,16 +635,21 @@ class LinkUtility
     function getAbsoluteId()
     {
         if ($this->getType() == self::TYPE_INTERNAL) {
-            global $ID;
-            $absoluteId = $this->id;
-            resolve_pageid(getNS($ID), $absoluteId, $exists);
 
+            $absoluteId = $this->id;
+            if (strpos($absoluteId, ':') === 0) {
+                // Absolute
+                return $absoluteId;
+            } else {
+                // Relative
+                global $ID;
+                resolve_pageid(getNS($ID), $absoluteId, $exists);
+            }
             // https://www.dokuwiki.org/config:useslash
             global $conf;
             if ($conf['useslash']) {
                 $absoluteId = str_replace(":", "/", $absoluteId);
             }
-
             return $absoluteId;
         } else {
             throw new \RuntimeException("You can't ask an absolute id from a link that is not an internal one");

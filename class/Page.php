@@ -3,16 +3,14 @@
 namespace ComboStrap;
 
 
-
 use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use RuntimeException;
 
 
-
 /**
- * Class urlCanonical with all canonical methodology
+ * Page
  */
 require_once(__DIR__ . '/PluginUtility.php');
 
@@ -33,6 +31,11 @@ class Page
 
     private $id;
     private $canonical;
+
+    /**
+     * @var string the absolute or resolved id
+     */
+    private $absoluteId;
 
     /**
      * Page constructor.
@@ -642,7 +645,7 @@ class Page
     public function getBacklinks()
     {
         $backlinks = array();
-        foreach (ft_backlinks($this->id) as $backlinkId) {
+        foreach (ft_backlinks($this->getAbsoluteId()) as $backlinkId) {
             $backlinks[] = new Page($backlinkId);
         }
         return $backlinks;
@@ -780,7 +783,7 @@ class Page
      */
     public function isQualityMonitored()
     {
-        $dynamicQualityIndicator = p_get_metadata(cleanID($this->id), action_plugin_combo_qualitymessage::DISABLE_INDICATOR,METADATA_RENDER_USING_SIMPLE_CACHE);
+        $dynamicQualityIndicator = p_get_metadata(cleanID($this->id), action_plugin_combo_qualitymessage::DISABLE_INDICATOR, METADATA_RENDER_USING_SIMPLE_CACHE);
         if ($dynamicQualityIndicator === null) {
             return true;
         } else {
@@ -794,8 +797,8 @@ class Page
     public function getTitleNotEmpty()
     {
         $pageTitle = $this->getTitle();
-        if($pageTitle ==null){
-            if (!empty($this->getH1())){
+        if ($pageTitle == null) {
+            if (!empty($this->getH1())) {
                 $pageTitle = $this->getH1();
             } else {
                 $pageTitle = $this->getId();
@@ -809,8 +812,8 @@ class Page
     {
 
         $h1Title = $this->getH1();
-        if ($h1Title==null){
-            if (!empty($this->getTitle())){
+        if ($h1Title == null) {
+            if (!empty($this->getTitle())) {
                 $h1Title = $this->getTitle();
             } else {
                 $h1Title = $this->getId();
@@ -822,8 +825,45 @@ class Page
 
     public function getDescription()
     {
-        $descriptionMeta = p_get_metadata($this->getId(),"description");
+        $descriptionMeta = p_get_metadata($this->getId(), "description");
         return $descriptionMeta['abstract'];
+    }
+
+    public function getFilePath()
+    {
+        return wikiFN($this->getId());
+    }
+
+    public function getContent()
+    {
+        return rawWiki($this->id);
+    }
+
+    /**
+     * The index and  most of the function that are not links related
+     * does not have the path to a page with the root element ie ':'
+     *
+     * This function makes sure that the id does not have ':'
+     * as root
+     *
+     * See the $page argument of {@link resolve_pageid}
+     */
+    public function getAbsoluteId()
+    {
+        if ($this->absoluteId ==null){
+            $this->absoluteId = $this->id;
+            resolve_pageid("", $this->absoluteId, $exists);
+        }
+        return $this->absoluteId;
+
+    }
+
+    public function isInIndex()
+    {
+        $Indexer = idx_get_indexer();
+        $pages = $Indexer->getPages();
+        $return = array_search($this->getAbsoluteId(), $pages, true);
+        return $return !== false;
     }
 
 

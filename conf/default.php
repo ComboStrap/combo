@@ -150,6 +150,19 @@ $conf['useDokuwikiLinkClassName'] = 0;
 
 /**
  * Twitter
- * {@link action_plugin_combo_metatwitter::CONF_TWITTER_SITE_IMAGE}
+ * {@link action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE}
  */
-$conf['twitterSiteImage'] = ":apple-touch-icon.png";
+$conf['defaultTwitterImage'] = ":apple-touch-icon.png";
+$conf['twitterSiteHandle'] = "";
+$conf['twitterSiteId'] = "";
+
+/**
+ * Page Image {@link Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
+ */
+$conf['disableFirstImageAsPageImage'] = 0;
+
+/**
+ * Twitter
+ * {@link action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE}
+ */
+$conf['defaultFacebookImage'] = ":logo-facebook.png";

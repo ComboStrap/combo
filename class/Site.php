@@ -59,4 +59,14 @@ class Site
         }
         return $url;
     }
+
+    /**
+     * https://www.dokuwiki.org/config:title
+     * @return mixed
+     */
+    public static function getTitle()
+    {
+        global $conf;
+        return $conf['title'];
+    }
 }

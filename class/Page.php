@@ -19,6 +19,8 @@ class Page
     const CANONICAL_PROPERTY = 'canonical';
     const TITLE_PROPERTY = 'title';
 
+    const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
+
     /**
      * An indicator in the meta
      * that set a boolean to true or false
@@ -36,6 +38,11 @@ class Page
      * @var string the absolute or resolved id
      */
     private $absoluteId;
+
+    /**
+     * @var array|array[]
+     */
+    private $metadata;
 
     /**
      * Page constructor.
@@ -416,7 +423,10 @@ class Page
         /**
          * Read / not get (get can trigger a rendering of the meta again)
          */
-        return p_read_metadata($this->id);
+        if ($this->metadata == null) {
+            $this->metadata = p_read_metadata($this->id);
+        }
+        return $this->metadata;
     }
 
     /**
@@ -835,22 +845,27 @@ class Page
 
     public function getDescription()
     {
-        $descriptionMeta = p_get_metadata($this->getId(), "description");
-        if (!empty($descriptionMeta)) {
-            if (array_key_exists('abstract', $descriptionMeta)) {
-                return $descriptionMeta['abstract'];
+        $metadata = $this->getMetadata();
+        if (isset($metadata['current']["description"])) {
+            $descriptionMeta = $metadata['current']["description"];
+            if (!empty($descriptionMeta)) {
+                if (array_key_exists('abstract', $descriptionMeta)) {
+                    return $descriptionMeta['abstract'];
+                }
             }
         }
         return null;
 
     }
 
-    public function getFilePath()
+    public
+    function getFilePath()
     {
         return wikiFN($this->getId());
     }
 
-    public function getContent()
+    public
+    function getContent()
     {
         return rawWiki($this->id);
     }
@@ -864,7 +879,8 @@ class Page
      * See the $page argument of {@link resolve_pageid}
      *
      */
-    public function getAbsoluteId()
+    public
+    function getAbsoluteId()
     {
         if ($this->absoluteId == null) {
             $this->absoluteId = cleanID($this->id);
@@ -873,7 +889,8 @@ class Page
 
     }
 
-    public function isInIndex()
+    public
+    function isInIndex()
     {
         $Indexer = idx_get_indexer();
         $pages = $Indexer->getPages();
@@ -884,19 +901,67 @@ class Page
     /**
      * @return string an absolute id with `:`
      */
-    public function getAbsoluteLinkId()
+    public
+    function getAbsoluteLinkId()
     {
         return ":" . $this->id;
     }
 
-    public function saveContent($content, $summary)
+    public
+    function saveContent($content, $summary)
     {
         saveWikiText($this->id, $content, $summary);
     }
 
-    public function addToIndex()
+    public
+    function addToIndex()
     {
         idx_addPage($this->id);
+    }
+
+    public
+    function getType()
+    {
+        $metadata = $this->getMetadata();
+        if (isset($metadata["type"])) {
+            return $metadata["type"];
+        } else {
+            return null;
+        }
+    }
+
+    public
+    function getLocale()
+    {
+        $metadata = $this->getMetadata();
+        if (isset($metadata["locale"])) {
+            return $metadata["locale"];
+        } else {
+            return null;
+        }
+    }
+
+    public
+    function getImage()
+    {
+
+        $metadata = $this->getMetadata();
+        if (isset($metadata['persistent']['image'])) {
+            return $metadata['persistent']['image'];
+        } else if (isset($metadata['current']['relation'])) {
+            if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+                if (isset($metadata['current']['relation']['firstimage'])) {
+                    $firstImage = $metadata['current']['relation']['firstimage'];
+                    if (empty($firstImage)){
+                        return null;
+                    } else {
+                        return $firstImage;
+                    }
+                }
+            }
+        }
+        return null;
+
     }
 
 

@@ -4,6 +4,7 @@ use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
+use ComboStrap\Page;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
 use ComboStrap\UrlManagerBestEndPage;
@@ -129,4 +130,14 @@ $meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
  */
 $meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = array('string');
 $meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = array('string');
-$meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_IMAGE] = array('string');
+$meta[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = array('string');
+
+/**
+ * Page Image
+ */
+$meta[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
+
+/**
+ * Facebook
+ */
+$meta[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = array('string');

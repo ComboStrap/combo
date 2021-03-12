@@ -4,6 +4,7 @@ use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
@@ -110,8 +111,19 @@ $lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_
 /**
  * Twitter
  */
-$lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_IMAGE] = PluginUtility::getUrl("twitter", "Twitter") . " - The media id (path) to the logo shown in a twitter card";
+$lang[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = PluginUtility::getUrl("twitter", "Twitter") . " - The media id (path) to the logo shown in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = PluginUtility::getUrl("twitter", "Twitter") . " - Your twitter handle name used in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = PluginUtility::getUrl("twitter", "Twitter") . " - Your twitter handle id used in a twitter card";
+
+/**
+ * Page Image
+ */
+$lang[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getUrl("page:image", "Page Image") . " - Disable the use of the first image as a page image";
+
+/**
+ * Default
+ */
+$lang[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = PluginUtility::getUrl("facebook", "Facebook") . " - The default facebook page image (minimum size 200x200)";
+
 
 ?>

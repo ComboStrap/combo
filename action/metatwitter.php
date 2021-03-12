@@ -31,7 +31,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
     /**
      * The image
      */
-    const CONF_TWITTER_SITE_IMAGE = "twitterSiteImage";
+    const CONF_DEFAULT_TWITTER_IMAGE = "defaultTwitterImage";
 
     /**
      * The creation ie (combostrap)
@@ -104,14 +104,17 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Card image
          */
-        $twitterImage = PluginUtility::getConfValue(self::CONF_TWITTER_SITE_IMAGE);
-        if ($twitterImage != null) {
+        $twitterImage = $page->getImage();
+        if (empty($twitterImage)) {
+            $twitterImage = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
+        }
+        if (!empty($twitterImage)) {
             $mediaFile = mediaFN($twitterImage);
 
             if (file_exists($mediaFile)) {
                 $twitterImageUrl = ml($twitterImage, '', true, '', true);
                 $twitterMeta["twitter:image"] = $twitterImageUrl;
-                $twitterMeta["twitter:image:alt"] = "Logo of the website";
+                //$twitterMeta["twitter:image:alt"] = "";
             };
 
         }

@@ -477,8 +477,10 @@ class LinkUtility
 
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
-                $absoluteId = $this->toAbsoluteId();
-                $metaDataRenderer->internallink($absoluteId);
+                /**
+                 * The relative link should be passed (ie the original)
+                 */
+                $metaDataRenderer->internallink($this->ref);
                 break;
             case self::TYPE_EXTERNAL:
                 $metaDataRenderer->externallink($this->ref, $this->name);

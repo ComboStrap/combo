@@ -44,22 +44,20 @@ class Page
     public function __construct($id)
     {
 
-        if (empty($id)){
+        if (empty($id)) {
             LogUtility::msg("A null page id was given");
         }
 
-        $idLowerCase = strtolower($id);
-        if ($idLowerCase !== $id) {
-            LogUtility::msg("The page id ({$id}) is not equal in lowercase (ie equal to `{$idLowerCase}`)");
-        }
         /**
-         * characters are not all authorize
+         * characters are not all authorized, all lowercase
          * such as `_` at the end
+         *
          */
         $this->id = cleanID($id);
         if ($this->id !== $id) {
             LogUtility::msg("The page id ({$id}) is not conform and should be `{$this->id}`)");
         }
+
     }
 
 
@@ -838,7 +836,13 @@ class Page
     public function getDescription()
     {
         $descriptionMeta = p_get_metadata($this->getId(), "description");
-        return $descriptionMeta['abstract'];
+        if (!empty($descriptionMeta)) {
+            if (array_key_exists('abstract', $descriptionMeta)) {
+                return $descriptionMeta['abstract'];
+            }
+        }
+        return null;
+
     }
 
     public function getFilePath()
@@ -862,9 +866,8 @@ class Page
      */
     public function getAbsoluteId()
     {
-        if ($this->absoluteId ==null){
-            $this->absoluteId = $this->id;
-            resolve_pageid("", $this->absoluteId, $exists);
+        if ($this->absoluteId == null) {
+            $this->absoluteId = cleanID($this->id);
         }
         return $this->absoluteId;
 
@@ -879,11 +882,21 @@ class Page
     }
 
     /**
-     * @return string the id with `:`
+     * @return string an absolute id with `:`
      */
-    public function getLinkId()
+    public function getAbsoluteLinkId()
     {
-        return ":".$this->id;
+        return ":" . $this->id;
+    }
+
+    public function saveContent($content, $summary)
+    {
+        saveWikiText($this->id, $content, $summary);
+    }
+
+    public function addToIndex()
+    {
+        idx_addPage($this->id);
     }
 
 

@@ -370,7 +370,7 @@ class LinkUtility
                  * Internal Page
                  */
                 $linkedPage = $this->getInternalPage();
-                $this->attributes["data-wiki-id"] = $this->getAbsoluteId();
+                $this->attributes["data-wiki-id"] = $this->toAbsoluteId();
 
                 /**
                  * If this is a low quality internal page,
@@ -383,7 +383,7 @@ class LinkUtility
                     PluginUtility::addClass2Attributes(LowQualityPage::LOW_QUALITY_LINK_CLASS, $this->attributes);
                     unset($this->attributes["href"]);
                     $this->attributes["data-toggle"] = "tooltip";
-                    $this->attributes["title"] = "To follow this link ({$this->getAbsoluteId()}), you need to log in (" . LowQualityPage::ACRONYM . ")";
+                    $this->attributes["title"] = "To follow this link ({$this->toAbsoluteId()}), you need to log in (" . LowQualityPage::ACRONYM . ")";
 
                 } else {
 
@@ -477,7 +477,7 @@ class LinkUtility
 
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
-                $absoluteId = $this->getAbsoluteId();
+                $absoluteId = $this->toAbsoluteId();
                 $metaDataRenderer->internallink($absoluteId);
                 break;
             case self::TYPE_EXTERNAL:
@@ -632,15 +632,12 @@ class LinkUtility
      * @return string - the internal absolute page id
      */
     public
-    function getAbsoluteId()
+    function toAbsoluteId()
     {
         if ($this->getType() == self::TYPE_INTERNAL) {
 
             $absoluteId = $this->id;
-            if (strpos($absoluteId, ':') === 0) {
-                // Absolute
-                return $absoluteId;
-            } else {
+            if (strpos($absoluteId, ':') !== 0) {
                 // Relative
                 global $ID;
                 resolve_pageid(getNS($ID), $absoluteId, $exists);
@@ -650,7 +647,8 @@ class LinkUtility
             if ($conf['useslash']) {
                 $absoluteId = str_replace(":", "/", $absoluteId);
             }
-            return $absoluteId;
+
+            return cleanID($absoluteId);
         } else {
             throw new \RuntimeException("You can't ask an absolute id from a link that is not an internal one");
         }
@@ -667,7 +665,7 @@ class LinkUtility
                 /**
                  * Create the linked page object
                  */
-                $qualifiedPageLinkId = $this->getAbsoluteId();
+                $qualifiedPageLinkId = $this->toAbsoluteId();
                 $this->linkedPage = new Page($qualifiedPageLinkId);
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
@@ -698,7 +696,7 @@ class LinkUtility
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::render($name, $this->getAbsoluteId());
+                    $name = TemplateUtility::render($name, $this->toAbsoluteId());
                 }
                 if (empty($name)) {
                     $name = $this->ref;
@@ -799,7 +797,7 @@ class LinkUtility
         $url = "";
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
-                $url = wl($this->getAbsoluteId(), $this->parameters);
+                $url = wl($this->toAbsoluteId(), $this->parameters);
                 if ($this->fragment) {
                     $url .= '#' . $this->fragment;
                 }

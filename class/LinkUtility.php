@@ -939,6 +939,11 @@ class LinkUtility
         return "</$HTMLTag>";
     }
 
+    public function isRelative()
+    {
+        return strpos($this->getId(), ':') !== 0;
+    }
+
     /**
      * @param $input
      * @return string|string[] Encode

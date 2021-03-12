@@ -52,25 +52,32 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          * is {@link helper_plugin_move_handler::internallink()}
          * $handler->internallink($match, $state, $pos);
          */
-        $ref = LinkUtility::parse($match)[LinkUtility::ATTRIBUTE_REF];
-        $link = new LinkUtility($ref);
-        if ($link->getType()==LinkUtility::TYPE_INTERNAL) {
+        if ($state == DOKU_LEXER_ENTER) {
+            $ref = LinkUtility::parse($match)[LinkUtility::ATTRIBUTE_REF];
+            $link = new LinkUtility($ref);
+            if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
 
-            $new_id = $handler->resolveMoves($link->getId(), 'page');
-            $new_id = $handler->relativeLink($link->getId(), $new_id, 'page');
-            if ($link->getId() == $new_id) {
-                $handler->calls .= $match;
-            } else {
-                if (!empty($link->getQueries())) {
-                    $new_id .= '?' . $link->getQueries();
+                $new_id = $handler->resolveMoves($link->getId(), 'page');
+                if ($link->isRelative()) {
+                    $new_id = $handler->relativeLink($link->getId(), $new_id, 'page');
                 }
+                if ($link->getId() == $new_id) {
+                    $handler->calls .= $match;
+                } else {
+                    if (!empty($link->getQueries())) {
+                        $new_id .= '?' . $link->getQueries();
+                    }
 
-                if (!empty($link->getFragment())) {
-                    $new_id .= '#' . $link->getFragment();
+                    if (!empty($link->getFragment())) {
+                        $new_id .= '#' . $link->getFragment();
+                    }
+
+                    $handler->calls .= '[[' . $new_id;
                 }
-
-                $handler->calls .= '[[' . $new_id ;
             }
+        } else {
+
+            $handler->calls .= $match;
 
         }
     }

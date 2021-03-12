@@ -43,10 +43,22 @@ class Page
      */
     public function __construct($id)
     {
-        $this->id = $id;
+
+        if (empty($id)){
+            LogUtility::msg("A null page id was given");
+        }
+
         $idLowerCase = strtolower($id);
         if ($idLowerCase !== $id) {
             LogUtility::msg("The page id ({$id}) is not equal in lowercase (ie equal to `{$idLowerCase}`)");
+        }
+        /**
+         * characters are not all authorize
+         * such as `_` at the end
+         */
+        $this->id = cleanID($id);
+        if ($this->id !== $id) {
+            LogUtility::msg("The page id ({$id}) is not conform and should be `{$this->id}`)");
         }
     }
 
@@ -843,10 +855,10 @@ class Page
      * The index and  most of the function that are not links related
      * does not have the path to a page with the root element ie ':'
      *
-     * This function makes sure that the id does not have ':'
-     * as root
+     * This function makes sure that the id does not have ':' as root character
      *
      * See the $page argument of {@link resolve_pageid}
+     *
      */
     public function getAbsoluteId()
     {
@@ -864,6 +876,14 @@ class Page
         $pages = $Indexer->getPages();
         $return = array_search($this->getAbsoluteId(), $pages, true);
         return $return !== false;
+    }
+
+    /**
+     * @return string the id with `:`
+     */
+    public function getLinkId()
+    {
+        return ":".$this->id;
     }
 
 

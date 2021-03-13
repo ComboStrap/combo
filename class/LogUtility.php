@@ -122,4 +122,13 @@ class LogUtility
             }
         }
     }
+
+    /**
+     * Log a message to the browser console
+     * @param $message
+     */
+    public static function log2BrowserConsole($message)
+    {
+        // TODO
+    }
 }

@@ -18,7 +18,7 @@ class Site
 
     const CONF_SITE_ISO_COUNTRY = "siteIsoCountry";
 
-    public static function getImageUrlAsSvg()
+    public static function getLogoUrlAsSvg()
     {
         $look = array(
             ':wiki:logo.svg',
@@ -38,7 +38,7 @@ class Site
         return $url;
     }
 
-    public static function getImageUrl()
+    public static function getLogoUrlAsPng()
     {
         $look = array(
             ':logo.png',
@@ -122,5 +122,17 @@ class Site
         global $conf;
         $locale = $conf['lang'];
         return ($locale ? $locale : null);
+    }
+
+    public static function getUrl()
+    {
+        return DOKU_URL;
+    }
+
+    public static function getTag()
+    {
+        global $conf;
+        $tag = $conf['tag'];
+        return ($tag ? $tag : null);
     }
 }

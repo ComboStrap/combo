@@ -30,11 +30,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
      */
     const CONF_DEFAULT_FACEBOOK_IMAGE = "defaultFacebookImage";
 
-    /**
-     * The creation ie (combostrap)
-     */
-    const COMBO_STRAP_TWITTER_HANDLE = "@combostrapweb";
-    const COMBO_STRAP_TWITTER_ID = "1283330969332842497";
+
+    const CANONICAL = "facebook";
 
 
     function __construct()
@@ -71,6 +68,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if ($page->isBar()) {
             return;
         }
+
+
 
         /**
          * "og:url" is already created in the {@link action_plugin_combo_metacanonical}
@@ -128,7 +127,12 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     }
 
                     if ($toSmall) {
-                        LogUtility::msg("The facebook image ($facebookImage) is too small ($width x $height). The minimum size constraint is 200px by 200px");
+                        $message = "The facebook image ($facebookImage) is too small ($width x $height). The minimum size constraint is 200px by 200px";
+                        if ($facebookImage!=$page->getFirstImage()) {
+                            LogUtility::msg($message,LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                        } else {
+                            LogUtility::log2BrowserConsole($message);
+                        }
                     }
 
                 }
@@ -174,6 +178,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         foreach ($facebookMeta as $property => $content) {
             $event->data['meta'][] = array("property" => $property, "content" => $content);
         }
+
+
 
     }
 

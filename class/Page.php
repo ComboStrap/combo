@@ -932,6 +932,21 @@ class Page
     }
 
 
+    public function getFirstImage(){
+
+        $relation = $this->getCurrentMetadata('relation');
+        if (isset($relation['firstimage'])) {
+            $firstImage = $relation['firstimage'];
+            if (empty($firstImage)) {
+                return null;
+            } else {
+                return $firstImage;
+            }
+        }
+        return null;
+
+    }
+
     public
     function getImage()
     {
@@ -941,14 +956,7 @@ class Page
             return $metadata['persistent']['image'];
         } else if (isset($metadata['current']['relation'])) {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
-                if (isset($metadata['current']['relation']['firstimage'])) {
-                    $firstImage = $metadata['current']['relation']['firstimage'];
-                    if (empty($firstImage)) {
-                        return null;
-                    } else {
-                        return $firstImage;
-                    }
-                }
+                return $this->getFirstImage();
             }
         }
         return null;
@@ -1085,6 +1093,12 @@ class Page
             }
         }
         return $lang;
+    }
+
+    public function isHomePage()
+    {
+        global $conf;
+        return $this->id == $conf['start'];
     }
 
 

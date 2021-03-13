@@ -50,33 +50,29 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         /**
          * The original move method
          * is {@link helper_plugin_move_handler::internallink()}
-         * $handler->internallink($match, $state, $pos);
+         *
          */
         if ($state == DOKU_LEXER_ENTER) {
             $ref = LinkUtility::parse($match)[LinkUtility::ATTRIBUTE_REF];
             $link = new LinkUtility($ref);
             if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
 
-                $new_id = $handler->resolveMoves($link->getId(), 'page');
-                if ($link->isRelative()) {
-                    $new_id = $handler->relativeLink($link->getId(), $new_id, 'page');
+                $handler->internallink($match, $state, $pos);
+                $suffix = "]]";
+                $suffixStartPosition = strlen($handler->calls) - strlen($suffix);
+                if (strpos($handler->calls, $suffix) === $suffixStartPosition) {
+                    $handler->calls = substr($handler->calls ,0,$suffixStartPosition);
                 }
-                if ($link->getId() == $new_id) {
-                    $handler->calls .= $match;
-                } else {
-                    if (!empty($link->getQueries())) {
-                        $new_id .= '?' . $link->getQueries();
-                    }
 
-                    if (!empty($link->getFragment())) {
-                        $new_id .= '#' . $link->getFragment();
-                    }
+            } else {
 
-                    $handler->calls .= '[[' . $new_id;
-                }
+                // Other type of links
+                $handler->calls .= $match;
+
             }
         } else {
 
+            // Description and ending
             $handler->calls .= $match;
 
         }

@@ -328,7 +328,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_UNMATCHED :
 
                     // Render and escape
-                    $renderer->doc .= $renderer->_xmlEntities($data[1]);
+                    $renderer->doc .= $renderer->_xmlEntities($data[PluginUtility::PAYLOAD]);
                     break;
 
                 case DOKU_LEXER_EXIT :

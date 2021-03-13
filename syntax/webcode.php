@@ -247,7 +247,10 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                                 if ($actualCodeType == 'xml') {
                                     $actualCodeType = 'html';
                                 }
-                                $codes[$actualCodeType] = "";
+                                // The code for a language may be scattered in mutliple block
+                                if (!isset($codes[$actualCodeType])) {
+                                    $codes[$actualCodeType] = "";
+                                }
                                 continue;
                             }
 

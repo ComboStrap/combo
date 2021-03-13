@@ -13,6 +13,8 @@ require_once(__DIR__ . '/../class/Site.php');
  *
  * For the canonical meta, see {@link action_plugin_combo_metacanonical}
  *
+ * Ref:
+ * https://github.com/giterlizzi/dokuwiki-plugin-semantic/blob/master/helper.php
  */
 class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 {
@@ -47,7 +49,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
     public function register(Doku_Event_Handler $controller)
     {
-        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'metaTwitterProcessing', array());
+       // $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'metaTwitterProcessing', array());
     }
 
     /**

@@ -909,7 +909,7 @@ class Page
     }
 
     public
-    function saveContent($content, $summary = "Default")
+    function upsertContent($content, $summary = "Default")
     {
         saveWikiText($this->id, $content, $summary);
     }
@@ -923,32 +923,14 @@ class Page
     public
     function getType()
     {
-        $metadata = $this->getMetadata();
-        if (isset($metadata["type"])) {
-            return $metadata["type"];
+        $type = $this->getPersistentMetadata("type");
+        if (isset($type)) {
+            return $type;
         } else {
             return null;
         }
     }
 
-    /**
-     * @return mixed|string
-     *
-     */
-    public
-    function getLocale()
-    {
-        $locale = $this->getPersistentMetadata("locale");
-        if ($locale != null) {
-
-            return $locale;
-
-        } else {
-
-            return Site::getLocale();
-
-        }
-    }
 
     public
     function getImage()
@@ -1002,6 +984,21 @@ class Page
         return ($key ? $key : null);
     }
 
+    /**
+     * The modified date is the last modficaction date
+     * the first time, this is the creation date
+     * @return false|string|null
+     */
+    public function getModifiedDateString()
+    {
+        $modified = $this->getModifiedTimestamp();
+        if (!empty($modified)) {
+            return date(DATE_W3C, $modified);
+        } else {
+            return null;
+        }
+    }
+
     private function getCurrentMetadata($key)
     {
         $key = $this->getMetadata()['current'][$key];
@@ -1013,19 +1010,81 @@ class Page
      *
      * @return int
      */
-    public function getCreatedDate()
+    public function getCreatedTimestamp()
     {
-        return ((@$this->meta['date']['created']) ? $this->meta['date']['created'] : -1);
+        $created = $this->getPersistentMetadata('date')['created'];
+        return ($created ? $created : null);;
     }
 
     /**
      * Get the modified date of page
      *
+     * The modified date is the last modification date
+     * the first time, this is the creation date
+     *
      * @return int
      */
-    public function getModifiedDate()
+    public function getModifiedTimestamp()
     {
-        return ((@$this->meta['date']['modified']) ? $this->meta['date']['modified'] : -1);
+        $modified = $this->getCurrentMetadata('date')['modified'];
+        return ($modified ? $modified : null);
+    }
+
+    /**
+     * Creation date can not be null
+     * @return false|string
+     */
+    public function getCreatedDateString()
+    {
+
+        $created = $this->getCreatedTimestamp();
+        if (!empty($created)) {
+            return date(DATE_W3C, $created);
+        } else {
+            // Not created
+            return null;
+        }
+
+    }
+
+    /**
+     * Refresh the metadata (used only in test)
+     */
+    public function refreshMetadata()
+    {
+
+        $this->metadata = p_render_metadata($this->getId(), $this->metadata);
+        return $this->metadata;
+
+    }
+
+    public function getCountry()
+    {
+
+        $country = $this->getPersistentMetadata("country");
+        if (!empty($country)) {
+            if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
+                LogUtility::msg("The country value ($country) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
+            }
+            return $country;
+        } else {
+
+            return Site::getCountry();
+
+        }
+
+    }
+
+    public function getLang()
+    {
+        $lang = $this->getPersistentMetadata("lang");
+        if (empty($lang)) {
+            global $conf;
+            if (isset($conf["lang"])) {
+                $lang = $conf["lang"];
+            }
+        }
+        return $lang;
     }
 
 

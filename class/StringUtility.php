@@ -178,7 +178,7 @@ class StringUtility
 
     public static function match($subject, $pattern)
     {
-        return preg_match("/$pattern/", $subject) === 0;
+        return preg_match("/$pattern/", $subject) === 1;
     }
 
 }

@@ -73,11 +73,12 @@ class Site
     }
 
     /**
+     * @param string $sep - the separator - generally ("-") but not always
      * @return string
      *
      * Locale always canonicalizes to upper case.
      */
-    public static function getLocale()
+    public static function getLocale($sep = "-")
     {
 
         $locale = null;
@@ -86,7 +87,7 @@ class Site
         if ($lang != null) {
             $country = self::getCountry();
             if ($country != null) {
-                $locale = strtoupper("{$lang}_{$country}");
+                $locale = strtolower($lang).$sep.strtoupper($country);
             }
         }
 
@@ -101,10 +102,14 @@ class Site
     public static function getCountry()
     {
         $country = PluginUtility::getConfValue(self::CONF_SITE_ISO_COUNTRY);
-        if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
-            LogUtility::msg("The country configuration value ($country) does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
+        if (!empty($country)) {
+            if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
+                LogUtility::msg("The country configuration value ($country) does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
+            }
+        } else {
+            return null;
         }
-        return ($country ? $country : null);
+
     }
 
     /**

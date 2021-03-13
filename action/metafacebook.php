@@ -92,6 +92,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (!empty($ogType)) {
             $facebookMeta["og:type"] = $ogType;
         } else {
+            // The default facebook value
             $facebookMeta["og:type"] = "website";
         }
 
@@ -151,8 +152,19 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
         $facebookMeta["fb:app_id"] = self::FACEBOOK_APP_ID;
 
-        $locale = $page->getLocale();
-        if ($locale != null) {
+        $lang = $page->getLang();
+        if (!empty($lang)) {
+
+            $country = $page->getCountry();
+            if (empty($country)){
+                $country = $lang;
+            }
+            $facebookMeta["og:locale"] = $lang."_".strtoupper($country);
+
+        } else {
+
+            // The Facebook default
+            $facebookMeta["og:locale"] = "en_US";
 
         }
 

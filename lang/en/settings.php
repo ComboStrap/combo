@@ -8,6 +8,7 @@ use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
+use ComboStrap\Site;
 use ComboStrap\UrlManagerBestEndPage;
 
 require_once(__DIR__ . '/../../class/PluginUtility.php');
@@ -125,5 +126,9 @@ $lang[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getUrl("pag
  */
 $lang[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = PluginUtility::getUrl("facebook", "Facebook") . " - The default facebook page image (minimum size 200x200)";
 
+/**
+ * Country
+ */
+$lang[Site::CONF_SITE_ISO_COUNTRY] = PluginUtility::getUrl("country", "Country") . " - The default ISO country code for a page";
 
 ?>

@@ -22,7 +22,9 @@ class NavBarUtility
      */
     public static function text($text)
     {
-        return '<span class="navbar-text active">'.$text.'</span>';
+        if (!empty(trim($text))) {
+            return '<span class="navbar-text active">' . $text . '</span>';
+        }
     }
 
 

@@ -162,7 +162,13 @@ $conf['twitterSiteId'] = "";
 $conf['disableFirstImageAsPageImage'] = 0;
 
 /**
- * Twitter
+ * Facebook
  * {@link action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE}
  */
 $conf['defaultFacebookImage'] = ":logo-facebook.png";
+
+/**
+ * Country
+ * {@link Site::CONF_SITE_ISO_COUNTRY}
+ */
+$conf['siteIsoCountry'] = "";

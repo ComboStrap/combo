@@ -7,6 +7,7 @@ use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use RuntimeException;
+use Locale;
 
 
 /**
@@ -908,7 +909,7 @@ class Page
     }
 
     public
-    function saveContent($content, $summary)
+    function saveContent($content, $summary = "Default")
     {
         saveWikiText($this->id, $content, $summary);
     }
@@ -930,14 +931,22 @@ class Page
         }
     }
 
+    /**
+     * @return mixed|string
+     *
+     */
     public
     function getLocale()
     {
-        $metadata = $this->getMetadata();
-        if (isset($metadata["locale"])) {
-            return $metadata["locale"];
+        $locale = $this->getPersistentMetadata("locale");
+        if ($locale != null) {
+
+            return $locale;
+
         } else {
-            return null;
+
+            return Site::getLocale();
+
         }
     }
 
@@ -952,7 +961,7 @@ class Page
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
                 if (isset($metadata['current']['relation']['firstimage'])) {
                     $firstImage = $metadata['current']['relation']['firstimage'];
-                    if (empty($firstImage)){
+                    if (empty($firstImage)) {
                         return null;
                     } else {
                         return $firstImage;
@@ -962,6 +971,61 @@ class Page
         }
         return null;
 
+    }
+
+    /**
+     * Get author name
+     *
+     * @return string
+     */
+    public function getAuthor()
+    {
+        $author = $this->getPersistentMetadata('creator');
+        return ($author ? $author : null);
+    }
+
+    /**
+     * Get author ID
+     *
+     * @return string
+     */
+    public function getAuthorID()
+    {
+        $user = $this->getPersistentMetadata('user');
+        return ($user ? $user : null);
+    }
+
+
+    private function getPersistentMetadata($key)
+    {
+        $key = $this->getMetadata()['persistent'][$key];
+        return ($key ? $key : null);
+    }
+
+    private function getCurrentMetadata($key)
+    {
+        $key = $this->getMetadata()['current'][$key];
+        return ($key ? $key : null);
+    }
+
+    /**
+     * Get the create date of page
+     *
+     * @return int
+     */
+    public function getCreatedDate()
+    {
+        return ((@$this->meta['date']['created']) ? $this->meta['date']['created'] : -1);
+    }
+
+    /**
+     * Get the modified date of page
+     *
+     * @return int
+     */
+    public function getModifiedDate()
+    {
+        return ((@$this->meta['date']['modified']) ? $this->meta['date']['modified'] : -1);
     }
 
 

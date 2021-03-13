@@ -7,6 +7,7 @@ use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
+use ComboStrap\Site;
 use ComboStrap\UrlManagerBestEndPage;
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -141,3 +142,8 @@ $meta[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
  * Facebook
  */
 $meta[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = array('string');
+
+/**
+ * Site country
+ */
+$meta[Site::CONF_SITE_ISO_COUNTRY]=array("string");

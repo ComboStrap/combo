@@ -16,6 +16,8 @@ namespace ComboStrap;
 class Site
 {
 
+    const CONF_SITE_ISO_COUNTRY = "siteIsoCountry";
+
     public static function getImageUrlAsSvg()
     {
         $look = array(
@@ -68,5 +70,52 @@ class Site
     {
         global $conf;
         return $conf['title'];
+    }
+
+    /**
+     * @return string
+     *
+     * Locale always canonicalizes to upper case.
+     */
+    public static function getLocale()
+    {
+
+        $locale = null;
+
+        $lang = self::getLang();
+        if ($lang != null) {
+            $country = self::getCountry();
+            if ($country != null) {
+                $locale = strtoupper("{$lang}_{$country}");
+            }
+        }
+
+        return $locale;
+    }
+
+    /**
+     *
+     * ISO 3166 alpha-2 country code
+     *
+     */
+    public static function getCountry()
+    {
+        $country = PluginUtility::getConfValue(self::CONF_SITE_ISO_COUNTRY);
+        if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
+            LogUtility::msg("The country configuration value ($country) does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
+        }
+        return ($country ? $country : null);
+    }
+
+    /**
+     * @return mixed|null
+     * Wrapper around  https://www.dokuwiki.org/config:lang
+     */
+    private static function getLang()
+    {
+
+        global $conf;
+        $locale = $conf['lang'];
+        return ($locale ? $locale : null);
     }
 }

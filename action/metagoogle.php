@@ -14,6 +14,8 @@ require_once(__DIR__ . '/../class/Site.php');
 /**
  *
  *
+ * To test locally use ngrok
+ * https://developers.google.com/search/docs/guides/debug#testing-firewalled-pages
  *
  *
  * Ref:
@@ -62,7 +64,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             return;
         }
 
-        $type = $page->getType();
+        $type = strtolower($page->getType());
         if (empty($type)) {
             $type = "website";
         }
@@ -116,7 +118,6 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     "url" => Site::getUrl(),
                     "logo" => Site::getLogoUrlAsPng()
                 );
-                $organization = $page->getMetadata("organization");
 
                 break;
 
@@ -126,6 +127,21 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 break;
         }
 
+        /**
+         * Do we have extra ld-json properties
+         */
+        $extraLdJson = $page->getMetadata($type);
+        if (empty($extraLdJson)){
+            $extraLdJson = $page->getMetadata($ldJsonSite["@type"]);
+        }
+        if (!empty($extraLdJson)){
+            $ldJsonSite = array_merge($ldJsonSite, $extraLdJson);
+        }
+
+
+        /**
+         * Publish
+         */
         if (!empty($ldJsonSite)) {
             $event->data["script"][] = array(
                 "type" => "application/ld+json",

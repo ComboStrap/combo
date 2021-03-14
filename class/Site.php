@@ -87,7 +87,7 @@ class Site
         if ($lang != null) {
             $country = self::getCountry();
             if ($country != null) {
-                $locale = strtolower($lang).$sep.strtoupper($country);
+                $locale = strtolower($lang) . $sep . strtoupper($country);
             }
         }
 
@@ -126,7 +126,15 @@ class Site
 
     public static function getUrl()
     {
+
+        /**
+         * In a dev environment,
+         * don't set the
+         * https://www.dokuwiki.org/config:baseurl
+         * to be able to test the metadata / social integration
+         */
         return DOKU_URL;
+
     }
 
     public static function getTag()

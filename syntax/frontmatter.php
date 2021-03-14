@@ -126,16 +126,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 );
             }
 
-            // Trim it
-            $jsonKey = array_map('trim', array_keys($json));
-            // We will get a php warning here because the values may be an array
-            // and trim accept only string
-            $oldLevel = error_reporting(E_ERROR);
-            $jsonValues = array_map('trim', $json);
-            error_reporting($oldLevel);
-            $json = array_combine($jsonKey, $jsonValues);
-
-
             $notModifiableMeta = [
                 "date",
                 "user",
@@ -146,14 +136,16 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             $result = array();
             foreach ($json as $key => $value) {
 
+                $lowerCaseKey = trim(strtolower($key));
+
                 // Not modifiable metadata
-                if (in_array($key, $notModifiableMeta)) {
-                    LogUtility::msg("Front Matter: The metadata ($key) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
+                if (in_array($lowerCaseKey, $notModifiableMeta)) {
+                    LogUtility::msg("Front Matter: The metadata ($lowerCaseKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
                     continue;
                 }
 
                 // Description is special
-                if ($key == "description") {
+                if ($lowerCaseKey == "description") {
                     $result["description"] = $value;
                     p_set_metadata($ID, array("description" => array("abstract" => $value)));
                     continue;
@@ -164,7 +156,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                  * to advertise that it's in the front-matter
                  * for the quality rules
                  */
-                if ($key == Page::TITLE_PROPERTY) {
+                if ($lowerCaseKey == Page::TITLE_PROPERTY) {
                     $result[Page::TITLE_PROPERTY] = $value;
                 }
 
@@ -172,18 +164,18 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                  * Pass the low quality indicator
                  * to advertise that it's in the front-matter
                  */
-                if ($key == Page::LOW_QUALITY_PAGE_INDICATOR) {
+                if ($lowerCaseKey == Page::LOW_QUALITY_PAGE_INDICATOR) {
                     $result[Page::LOW_QUALITY_PAGE_INDICATOR] = $value;
                 }
 
                 // Canonical should be lowercase
-                if ($key == Page::CANONICAL_PROPERTY) {
+                if ($lowerCaseKey == Page::CANONICAL_PROPERTY) {
                     $result[Page::CANONICAL_PROPERTY] = $value;
                     $value = strtolower($value);
                 }
 
                 // Set the value persistently
-                p_set_metadata($ID, array($key => $value));
+                p_set_metadata($ID, array($lowerCaseKey => $value));
 
             }
 
@@ -209,11 +201,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data)
     {
-        // TODO: https://developers.google.com/search/docs/data-types/breadcrumb#breadcrumb-list
-        // News article: https://developers.google.com/search/docs/data-types/article
-        // News article: https://developers.google.com/search/docs/data-types/paywalled-content
-        // What is ?: https://developers.google.com/search/docs/data-types/qapage
-        // How to ?: https://developers.google.com/search/docs/data-types/how-to
 
         switch ($format) {
             case 'xhtml':

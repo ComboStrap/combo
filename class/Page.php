@@ -43,7 +43,7 @@ class Page
     /**
      * @var array|array[]
      */
-    private $metadata;
+    private $metadatas;
 
     /**
      * Page constructor.
@@ -419,15 +419,17 @@ class Page
      * Return the metadata stored in the file system
      * @return array|array[]
      */
-    public function getMetadata()
+    public function getMetadatas()
     {
+
         /**
          * Read / not get (get can trigger a rendering of the meta again)
          */
-        if ($this->metadata == null) {
-            $this->metadata = p_read_metadata($this->id);
+        if ($this->metadatas == null) {
+            $this->metadatas = p_read_metadata($this->id);
         }
-        return $this->metadata;
+        return $this->metadatas;
+
     }
 
     /**
@@ -436,7 +438,7 @@ class Page
      */
     public function getInternalLinksFromMeta()
     {
-        $metadata = $this->getMetadata();
+        $metadata = $this->getMetadatas();
         if (key_exists('current', $metadata)) {
             $current = $metadata['current'];
             if (key_exists('relation', $current)) {
@@ -846,7 +848,7 @@ class Page
 
     public function getDescription()
     {
-        $metadata = $this->getMetadata();
+        $metadata = $this->getMetadatas();
         if (isset($metadata['current']["description"])) {
             $descriptionMeta = $metadata['current']["description"];
             if (!empty($descriptionMeta)) {
@@ -932,7 +934,8 @@ class Page
     }
 
 
-    public function getFirstImage(){
+    public function getFirstImage()
+    {
 
         $relation = $this->getCurrentMetadata('relation');
         if (isset($relation['firstimage'])) {
@@ -951,7 +954,7 @@ class Page
     function getImage()
     {
 
-        $metadata = $this->getMetadata();
+        $metadata = $this->getMetadatas();
         if (isset($metadata['persistent']['image'])) {
             return $metadata['persistent']['image'];
         } else if (isset($metadata['current']['relation'])) {
@@ -988,7 +991,7 @@ class Page
 
     private function getPersistentMetadata($key)
     {
-        $key = $this->getMetadata()['persistent'][$key];
+        $key = $this->getMetadatas()['persistent'][$key];
         return ($key ? $key : null);
     }
 
@@ -1009,7 +1012,7 @@ class Page
 
     private function getCurrentMetadata($key)
     {
-        $key = $this->getMetadata()['current'][$key];
+        $key = $this->getMetadatas()['current'][$key];
         return ($key ? $key : null);
     }
 
@@ -1061,8 +1064,8 @@ class Page
     public function refreshMetadata()
     {
 
-        $this->metadata = p_render_metadata($this->getId(), $this->metadata);
-        return $this->metadata;
+        $this->metadatas = p_render_metadata($this->getId(), $this->metadatas);
+        return $this->metadatas;
 
     }
 
@@ -1099,6 +1102,11 @@ class Page
     {
         global $conf;
         return $this->id == $conf['start'];
+    }
+
+    public function getMetadata($key)
+    {
+        return $this->getPersistentMetadata($key);
     }
 
 

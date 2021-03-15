@@ -13,9 +13,6 @@
 namespace ComboStrap;
 
 
-use Doku_Renderer_xhtml;
-use syntax_plugin_combo_tooltip;
-
 require_once(__DIR__ . '/../class/Auth.php');
 
 /**
@@ -26,93 +23,13 @@ require_once(__DIR__ . '/../class/Auth.php');
 class LowQualityPage
 {
 
-    const ACRONYM = "LQPP"; // low quality page protection
+    const LOW_QUALITY_PROTECTION_ACRONYM = "LQPP"; // low quality page protection
     const CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE = "lowQualityPageProtectionEnable";
+
+    /**
+     * @deprecated used {@link PageProtection::CONF_MODE} instead
+     */
     const CONF_LOW_QUALITY_PAGE_PROTECTION_MODE = "lowQualityPageProtectionMode";
-    const ACL = "acl";
-    const HIDDEN = "hidden";
-
-    /**
-     * The class of the span
-     * element created in place of the link
-     * See {@link LowQualityPage::renderLowQualityLink()}
-     */
-    const LOW_QUALITY_LINK_CLASS = "lqpp";
-
-    /**
-     * A javascript indicator
-     * to know if the user is logged in or not
-     * (ie public or not)
-     */
-    const JS_INDICATOR = "lqpp_public";
-
-
-    /**
-     * If low page rank and not logged in,
-     * no authorization
-     * @param $id
-     * @param $user
-     * @return bool
-     */
-    public static function isPageToExclude($id, $user = '')
-    {
-        if (!Auth::isLoggedIn($user)) {
-            $page = new Page($id);
-            if ($page->isLowQualityPage()) {
-                /**
-                 * Low quality page should not
-                 * be public and readable for the search engine
-                 */
-                return true;
-            } else {
-                /**
-                 * Do not cache high quality page
-                 */
-                return false;
-            }
-        } else {
-            /**
-             * Logged in, no exclusion
-             */
-            return false;
-        }
-
-    }
-
-    /**
-     * Add the HTML snippet
-     * @param Doku_Renderer_xhtml $renderer
-     */
-    static function addLowQualityPageHtmlSnippet(Doku_Renderer_xhtml $renderer)
-    {
-        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded($renderer);
-        $lowQualityPageClass = self::LOW_QUALITY_LINK_CLASS;
-        $jsIndicator = self::JS_INDICATOR;
-        $jsClass = self::LOW_QUALITY_LINK_CLASS;
-        if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, "lqpp")) {
-            $renderer->doc .= <<<EOF
-<style>
-.{$lowQualityPageClass} {
-    color:#a829dc
-}
-</style>
-<script type="text/javascript">
-window.addEventListener('DOMContentLoaded', function () {
-
-    jQuery("span.{$jsClass}").each(function() {
-        if (JSINFO["{$jsIndicator}"]==false){
-            let actualClass = jQuery(this).attr("class");
-            jQuery(this).replaceWith( "<a class=\""+actualClass+"\" href=\""+DOKU_BASE+jQuery(this).attr("data-wiki-id")+"\">"+jQuery(this).text()+"</a>" )
-        }
-    })
-
-})
-</script>
-EOF;
-        }
-
-    }
-
 
 
 }

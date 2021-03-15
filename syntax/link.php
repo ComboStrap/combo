@@ -84,7 +84,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     {
 
         $this->Lexer->addEntryPattern(LinkUtility::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-        //$this->Lexer->addSpecialPattern(LinkUtility::SPECIAL_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
     }
 
@@ -199,6 +198,10 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $attributes = $data;
                 }
 
+                if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::TAG)){
+                    $renderer->doc .= PluginUtility::getTagStyle(self::TAG);
+                }
+
                 $state = $data[PluginUtility::STATE];
                 $payload = $data[PluginUtility::PAYLOAD];
                 switch ($state) {
@@ -215,7 +218,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
 
                         /**
-                         * Extra styling for internal link
+                         * Extra styling
                          */
                         $parentTag = $data[PluginUtility::CONTEXT];
                         switch ($parentTag) {
@@ -243,6 +246,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $htmlLink = '<li class="nav-item">' . $link->renderOpenTag($renderer);
                                 break;
                             default:
+
                                 $htmlLink = $link->renderOpenTag($renderer);
 
                         }

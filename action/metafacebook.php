@@ -77,6 +77,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
          */
         $facebookMeta = array(
             "og:title" => StringUtility::truncateString($page->getTitleNotEmpty(), 70),
+            "og:description" => $page->getDescription(),
         );
 
         $title = Site::getTitle();

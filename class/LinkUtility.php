@@ -18,6 +18,7 @@ use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 
 require_once(__DIR__ . '/../../combo/class/' . 'TemplateUtility.php');
+require_once(__DIR__ . '/../../combo/class/' . 'Publication.php');
 
 /**
  * Class LinkUtility
@@ -153,17 +154,6 @@ class LinkUtility
 
 
         /**
-         * Local
-         */
-        if ($this->type == null) {
-            if (preg_match('!^#.+!', $ref)) {
-                $this->type = self::TYPE_LOCAL;
-                $this->ref = substr($ref, 1);
-                return;
-            }
-        }
-
-        /**
          * Windows share link
          */
         if ($this->type == null) {
@@ -175,8 +165,18 @@ class LinkUtility
         }
 
         /**
-         * URI like links section
+         * URI like links section with query and fragment
          */
+
+        /**
+         * Local
+         */
+        if ($this->type == null) {
+            if (preg_match('!^#.+!', $ref)) {
+                $this->type = self::TYPE_LOCAL;
+                $this->ref = $ref;
+            }
+        }
 
         /**
          * Email validation pattern
@@ -376,14 +376,21 @@ class LinkUtility
                  * If this is a low quality internal page,
                  * print a shallow link for the anonymous user
                  */
-                $lowLink = $this->isLowLink();
+                $lowLink = $this->isProtectedLink();
                 if ($lowLink) {
 
-                    LowQualityPage::addLowQualityPageHtmlSnippet($this->renderer);
-                    PluginUtility::addClass2Attributes(LowQualityPage::LOW_QUALITY_LINK_CLASS, $this->attributes);
+                    PageProtection::addPageProtectionSnippet($this->renderer);
+                    PluginUtility::addClass2Attributes(PageProtection::PROTECTED_LINK_CLASS, $this->attributes);
+                    $protectionSourceAcronym = "";
+                    if ($this->getInternalPage()->isLowQualityPage()) {
+                        $protectionSourceAcronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
+                    } else if ($this->getInternalPage()->isLatePublication()) {
+                        $protectionSourceAcronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
+                    }
+                    PluginUtility::addAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym, $this->attributes);
                     unset($this->attributes["href"]);
                     $this->attributes["data-toggle"] = "tooltip";
-                    $this->attributes["title"] = "To follow this link ({$this->toAbsoluteId()}), you need to log in (" . LowQualityPage::ACRONYM . ")";
+                    $this->attributes["title"] = "To follow this link ({$this->toAbsoluteId()}), you need to log in (" . $protectionSourceAcronym . ")";
 
                 } else {
 
@@ -741,6 +748,12 @@ class LinkUtility
                 if (empty($name)) {
                     $name = $this->getId();
                 }
+                break;
+            case self::TYPE_LOCAL:
+                if (empty($name)) {
+                    $name = $this->getFragment();
+                }
+                break;
         }
 
         return $name;
@@ -882,20 +895,30 @@ class LinkUtility
     }
 
     /**
-     * @return bool true if the public page links to a low quality page
+     * @return bool true if the page should be protected
      */
-    private function isLowLink()
+    private function isProtectedLink()
     {
-        $lowLink = false;
+        $protectedLink = false;
         if ($this->getType() == self::TYPE_INTERNAL) {
             global $conf;
+
+            // Low Quality Page protection
             $lqppEnable = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE];
             if ($lqppEnable == 1
                 && $this->getInternalPage()->isLowQualityPage()) {
-                $lowLink = true;
+                $protectedLink = true;
+            }
+
+            if ($protectedLink === false) {
+                $latePublicationProtectionEnabled = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][Publication::CONF_FUTURE_PUBLICATION_PROTECTION_ENABLE];
+                if ($latePublicationProtectionEnabled == 1
+                    && $this->getInternalPage()->isLatePublication()) {
+                    $protectedLink = true;
+                }
             }
         }
-        return $lowLink;
+        return $protectedLink;
     }
 
     public function getHTMLTag()
@@ -904,7 +927,7 @@ class LinkUtility
             case self::TYPE_INTERNAL:
                 // We could also have used a <a> with `rel="nofollow"`
                 // The span element is then modified as link by javascript if the user is not anonymous
-                if ($this->isLowLink()) {
+                if ($this->isProtectedLink()) {
                     return "span";
                 } else {
                     return "a";
@@ -958,7 +981,8 @@ class LinkUtility
         return $input;
     }
 
-    public static function getHtmlClassInternalLink(){
+    public static function getHtmlClassInternalLink()
+    {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "wikilink1";
@@ -967,7 +991,8 @@ class LinkUtility
         }
     }
 
-    public static function getHtmlClassExternalLink(){
+    public static function getHtmlClassExternalLink()
+    {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
             return "urlextern";
@@ -977,9 +1002,10 @@ class LinkUtility
     }
 
     //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
-    public static function getHtmlClassNotExist(){
+    public static function getHtmlClassNotExist()
+    {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
-        if($oldClassName){
+        if ($oldClassName) {
             return "wikilink2";
         } else {
             return "text-danger";

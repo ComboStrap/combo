@@ -29,6 +29,8 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 {
 
 
+    const WEBSITE_TYPE = "website";
+
     function __construct()
     {
         // enable direct access to language strings
@@ -66,12 +68,20 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
         $type = strtolower($page->getType());
         if (empty($type)) {
-            $type = "website";
+            $type = self::WEBSITE_TYPE;
         }
+
+        if (empty($type)) {
+            if ($page->isHomePage()) {
+                $type = self::WEBSITE_TYPE;
+            }
+        }
+
+
 
         $ldJsonSite = array();
         switch ($type) {
-            case "website":
+            case self::WEBSITE_TYPE:
 
                 /**
                  * https://schema.org/WebSite
@@ -82,13 +92,18 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     '@context' => 'http://schema.org',
                     '@type' => 'WebSite',
                     'url' => Site::getUrl(),
-                    'name' => Site::getTitle(),
-                    'potentialAction' => array(
+                    'name' => Site::getTitle()
+                );
+
+                if ($page->isHomePage()) {
+
+                    $ldJsonSite['potentialAction'] = array(
                         '@type' => 'SearchAction',
                         'target' => Site::getUrl() . DOKU_SCRIPT . '?do=search&amp;id={search_term_string}',
                         'query-input' => 'required name=search_term_string',
-                    )
-                );
+                    );
+                }
+
                 $tag = Site::getTag();
                 if (!empty($tag)) {
                     $ldJsonSite['description'] = $tag;
@@ -98,15 +113,10 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     $ldJsonSite['image'] = $siteImageUrl;
                 }
 
-                $event->data["script"][] = array(
-                    "type" => "application/ld+json",
-                    "_data" => json_encode($ldJsonSite, JSON_PRETTY_PRINT),
-                );
-
-
                 break;
 
-            case "organization":
+            case
+            "organization":
 
                 /**
                  * Organization + Logo
@@ -121,6 +131,17 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
                 break;
 
+            case "article":
+
+                // https://developers.google.com/search/docs/data-types/article
+
+                // Image (at least 696 pixels wide)
+                // https://developers.google.com/search/docs/advanced/guidelines/google-images#supported-image-formats
+
+                // Date
+                // https://en.wikipedia.org/wiki/ISO_8601
+
+                break;
             default:
                 LogUtility::msg("The type ($type) is unknown for the page (" . $page->getId() . ")", LogUtility::LVL_MSG_ERROR, "semantic:type");
 
@@ -131,10 +152,10 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
          * Do we have extra ld-json properties
          */
         $extraLdJson = $page->getMetadata($type);
-        if (empty($extraLdJson)){
+        if (empty($extraLdJson)) {
             $extraLdJson = $page->getMetadata($ldJsonSite["@type"]);
         }
-        if (!empty($extraLdJson)){
+        if (!empty($extraLdJson)) {
             $ldJsonSite = array_merge($ldJsonSite, $extraLdJson);
         }
 

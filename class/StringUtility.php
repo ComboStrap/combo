@@ -181,4 +181,10 @@ class StringUtility
         return preg_match("/$pattern/", $subject) === 1;
     }
 
+    public static function endWiths($string, $suffix)
+    {
+        $suffixStartPosition = strlen($string) - strlen($suffix );
+        return strrpos($string, $suffix ) === $suffixStartPosition;
+    }
+
 }

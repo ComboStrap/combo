@@ -97,6 +97,16 @@ class Page
         return new Page(PluginUtility::getPageId());
     }
 
+    public static function isDirectoryId($id)
+    {
+        /**
+         * {@link search_universal} triggers ACL check
+         * with id of the form :path:*
+         * for directory
+         */
+        return StringUtility::endWiths($id,":*");
+    }
+
 
     /**
      * Does the page is known in the pages table
@@ -1107,6 +1117,71 @@ class Page
     public function getMetadata($key)
     {
         return $this->getPersistentMetadata($key);
+    }
+
+    public function getPublishedTimestamp()
+    {
+        $persistentMetadata = $this->getPersistentMetadata(Publication::META_KEY_PUBLISHED);
+        if (!empty($persistentMetadata)) {
+            $timestamp = strtotime($persistentMetadata);
+            if ($timestamp === false) {
+                LogUtility::msg("The published date ($persistentMetadata) of the page ($this->id) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, "published");
+            } else {
+                return date("U", $timestamp);
+            }
+        } else {
+            return null;
+        }
+
+    }
+
+    public function getPublishedElseCreationTimeStamp()
+    {
+        $publishedDate = $this->getPublishedTimestamp();
+        if (empty($publishedDate)) {
+            return $this->getCreatedTimestamp();
+        }
+    }
+
+    /**
+     * If low page rank or late publication and not logged in,
+     * no authorization
+     * @param $user
+     * @return bool if the page should be protected
+     */
+    public function isProtected($user = '')
+    {
+        $protected = false;
+        if (!Auth::isLoggedIn($user)) {
+
+            /**
+             * Low quality page and late publication should not
+             * be public and readable for the search engine
+             */
+
+            if ($this->isLowQualityPage()) {
+                $lowQualityPageEnabled = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
+                if ($lowQualityPageEnabled == 1) {
+                    $protected = true;
+                }
+            }
+
+            if ($this->isLatePublication()) {
+
+                $latePublicationEnabled = PluginUtility::getConfValue(Publication::CONF_FUTURE_PUBLICATION_PROTECTION_ENABLE);
+                if ($latePublicationEnabled == 1) {
+                    $protected = true;
+                }
+
+            }
+        }
+        return $protected;
+
+    }
+
+    public function isLatePublication()
+    {
+        return $this->getPublishedElseCreationTimeStamp() > time();
     }
 
 

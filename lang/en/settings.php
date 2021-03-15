@@ -5,6 +5,7 @@ use ComboStrap\IconUtility;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
+use ComboStrap\PageProtection;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
@@ -92,7 +93,7 @@ $lang[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE] = PluginUtilit
  */
 $lang[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = PluginUtility::getUrl("low_quality_page", "Mandatory Quality rules") . ' - The mandatory quality rules are the rules that should pass to consider the quality of a page as not `low`';
 $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = PluginUtility::getUrl("lqpp", "Low quality page protection") . " - If enabled, a low quality page will no more be discoverable by search engine or anonymous user.";
-$lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = PluginUtility::getUrl("lqpp", "Low quality page protection mode") . " - Choose the protection mode. Hidden (but still accessible) vs Acl (User should log in)";
+$lang[PageProtection::CONF_PAGE_PROTECTION_MODE] = PluginUtility::getUrl("page:protection", "Page protection mode") . " - Choose the protection mode for low quality page and late publication. Hidden (but still accessible) vs Acl (User should log in)";
 
 /**
  * Autofrontmatter

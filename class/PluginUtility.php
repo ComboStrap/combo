@@ -3,10 +3,10 @@
 
 namespace ComboStrap;
 
+global $COMBO_SNIPPETS;
+$COMBO_SNIPPETS = array();
 
-use helper_plugin_sqlite;
 use syntax_plugin_combo_preformatted;
-use TestConstant;
 use TestRequest;
 
 require_once(__DIR__ . '/LogUtility.php');
@@ -682,12 +682,12 @@ class PluginUtility
      * Check if a HTML tag was already added for a request
      * The request id is just the timestamp
      * An indicator array should be provided
-     * @param $info - the render->info array
      * @param $snippetName - the name of the snippet (or $this->getPluginComponent())
      * @return bool
      */
-    public static function htmlSnippetAlreadyAdded(&$info, $snippetName)
+    public static function htmlSnippetAlreadyAdded($snippetName)
     {
+
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
             // since php 5.4
             $requestTime = $_SERVER['REQUEST_TIME_FLOAT'];
@@ -702,10 +702,13 @@ class PluginUtility
             global $ID;
             $uniqueId = $keyPrefix . hash('crc32b', $_SERVER['REMOTE_ADDR'] . $_SERVER['REMOTE_PORT'] . $requestTime . $ID);
         }
-        if (array_key_exists($uniqueId, $info)) {
+
+
+        global $COMBO_SNIPPETS;
+        if (array_key_exists($uniqueId, $COMBO_SNIPPETS)) {
             return true;
         } else {
-            $info[$uniqueId] = $requestTime;
+            $COMBO_SNIPPETS[$uniqueId] = $requestTime;
             return false;
         }
     }

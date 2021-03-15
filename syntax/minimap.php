@@ -128,7 +128,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_SPECIAL :
 
-                    if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info,self::MINIMAP_TAG_NAME)){
+                    if (!PluginUtility::htmlSnippetAlreadyAdded(self::MINIMAP_TAG_NAME)){
                         $renderer->doc .= PluginUtility::getTagStyle(self::MINIMAP_TAG_NAME);
                     };
 

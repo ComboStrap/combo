@@ -198,7 +198,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $attributes = $data;
                 }
 
-                if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::TAG)){
+                if (!PluginUtility::htmlSnippetAlreadyAdded(self::TAG)){
                     $renderer->doc .= PluginUtility::getTagStyle(self::TAG);
                 }
 

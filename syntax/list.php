@@ -152,7 +152,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::TAG)) {
+                    if (!PluginUtility::htmlSnippetAlreadyAdded( self::TAG)) {
                         $styles = $this->getStyles();
                         $renderer->doc .= '<style>' . StyleUtility::getRule($styles, "." . self::COMBO_LIST_CLASS) . '</style>'.DOKU_LF;
                     }

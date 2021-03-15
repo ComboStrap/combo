@@ -339,7 +339,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     }
 
 
-                    if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::TAG)){
+                    if (!PluginUtility::htmlSnippetAlreadyAdded( self::TAG)){
                         $renderer->doc .= PluginUtility::getTagStyle(self::TAG);
                     }
                     // Dokuwiki Code ?

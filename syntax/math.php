@@ -142,7 +142,7 @@ EOD;
             case 'odt':
                 /** @var Doku_Renderer_xhtml $renderer */
                 $renderer->doc .= $renderer->_xmlEntities($content) . DOKU_LF;
-                if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, $this->getPluginComponent())) {
+                if (!PluginUtility::htmlSnippetAlreadyAdded( $this->getPluginComponent())) {
                     $renderer->doc .= '<div id="' . self::MATH_JAX_DIV_ID . '">' . DOKU_LF;
                     $renderer->doc .= self::HTML_SCRIPT_MATHJAX;
                     $renderer->doc .= '</div>';

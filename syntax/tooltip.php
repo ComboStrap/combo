@@ -21,7 +21,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
     public static function addToolTipSnippetIfNeeded(Doku_Renderer_xhtml $renderer)
     {
-        if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::TAG)) {
+        if (!PluginUtility::htmlSnippetAlreadyAdded( self::TAG)) {
             $renderer->doc .= "<script id=\"" . self::SCRIPT_ID . "\">" . DOKU_LF
                 . "window.addEventListener('load', function () { jQuery('[data-toggle=\"tooltip\"]').tooltip() })" . DOKU_LF
                 . "</script>" . DOKU_LF;

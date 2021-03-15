@@ -9,6 +9,7 @@ use ComboStrap\PageProtection;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
+use ComboStrap\Publication;
 use ComboStrap\Site;
 use ComboStrap\UrlManagerBestEndPage;
 
@@ -131,5 +132,10 @@ $lang[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = PluginUti
  * Country
  */
 $lang[Site::CONF_SITE_ISO_COUNTRY] = PluginUtility::getUrl("country", "Country") . " - The default ISO country code for a page";
+
+/**
+ * Late publication
+ */
+$lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::getUrl("published", "Late Publication") . " - Page with a published date in the future will be protected from search engine and the public";
 
 ?>

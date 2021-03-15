@@ -911,7 +911,7 @@ class LinkUtility
             }
 
             if ($protectedLink === false) {
-                $latePublicationProtectionEnabled = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][Publication::CONF_FUTURE_PUBLICATION_PROTECTION_ENABLE];
+                $latePublicationProtectionEnabled = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE];
                 if ($latePublicationProtectionEnabled == 1
                     && $this->getInternalPage()->isLatePublication()) {
                     $protectedLink = true;

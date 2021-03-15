@@ -8,6 +8,7 @@ use ComboStrap\Page;
 use ComboStrap\PageProtection;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
+use ComboStrap\Publication;
 use ComboStrap\Site;
 use ComboStrap\UrlManagerBestEndPage;
 
@@ -147,4 +148,10 @@ $meta[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = array('st
 /**
  * Site country
  */
-$meta[Site::CONF_SITE_ISO_COUNTRY]=array("string");
+$meta[Site::CONF_SITE_ISO_COUNTRY] = array("string");
+
+/**
+ * Late publication protection
+ */
+$meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
+

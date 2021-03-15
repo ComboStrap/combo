@@ -36,8 +36,8 @@ class Publication
      * Late publication protection
      */
     const LATE_PUBLICATION_PROTECTION_ACRONYM = "lpp";
-    const CONF_FUTURE_PUBLICATION_PROTECTION = "futurePublicationProtectionMode";
-    const CONF_FUTURE_PUBLICATION_PROTECTION_ENABLE = "futurePublicationProtectionEnabled";
+    const CONF_LATE_PUBLICATION_PROTECTION = "latePublicationProtectionMode";
+    const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
 
 
     /**

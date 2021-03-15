@@ -1135,12 +1135,16 @@ class Page
 
     }
 
+    /**
+     * @return false|int|string|null
+     */
     public function getPublishedElseCreationTimeStamp()
     {
         $publishedDate = $this->getPublishedTimestamp();
         if (empty($publishedDate)) {
-            return $this->getCreatedTimestamp();
+            $publishedDate = $this->getCreatedTimestamp();
         }
+        return $publishedDate;
     }
 
     /**
@@ -1168,7 +1172,7 @@ class Page
 
             if ($this->isLatePublication()) {
 
-                $latePublicationEnabled = PluginUtility::getConfValue(Publication::CONF_FUTURE_PUBLICATION_PROTECTION_ENABLE);
+                $latePublicationEnabled = PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
                 if ($latePublicationEnabled == 1) {
                     $protected = true;
                 }

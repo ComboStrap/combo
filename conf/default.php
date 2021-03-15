@@ -179,3 +179,9 @@ $conf['defaultFacebookImage'] = ":logo-facebook.png";
  * {@link Site::CONF_SITE_ISO_COUNTRY}
  */
 $conf['siteIsoCountry'] = "";
+
+/**
+ *
+ * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE}
+ */
+$conf['latePublicationProtectionEnable'] = 1;

@@ -114,6 +114,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 list($attributes) = $data;
                 /** @var Doku_Renderer_xhtml $renderer */
 
+                $page = Page::createFromEnvironment();
 
                 /**
                  * Disqus configuration
@@ -133,10 +134,10 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
 
                     $disqusIdentifier = $attributes[self::ATTRIBUTE_IDENTIFIER];
                     if (empty($disqusIdentifier)) {
-                        $disqusIdentifier = PluginUtility::getPageId();
+                        $disqusIdentifier = $page->getId();
                     }
 
-                    $canonical = MetadataUtility::getMeta(Page::CANONICAL_PROPERTY);
+                    $canonical = $page->getCanonical();
                     if (!empty($canonical)) {
                         $disqusIdentifier = $canonical;
                     }
@@ -146,25 +147,21 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
 
                 $url = $attributes[self::ATTRIBUTE_URL];
                 if (empty($url)) {
-                    if (!empty($canonical)) {
-                        $url = Page::getUrl($canonical);
-                    }
+                    $url = $page->getCanonicalUrlOrDefault();
                 }
+                $disqusConfig .= "this.page.url = $url;";
 
-                if (!empty($url)) {
-                    $disqusConfig .= "this.page.url = $url;";
-                }
 
                 $title = $attributes[self::ATTRIBUTE_TITLE];
                 if (empty($title)) {
                     $title = action_plugin_combo_metatitle::getTitle();
-                    if (!empty($title)){
+                    if (!empty($title)) {
                         $disqusConfig .= "this.page.title = $title;";
                     }
                 }
 
                 $category = $attributes[self::ATTRIBUTE_CATEGORY];
-                if (empty($category)){
+                if (empty($category)) {
                     $disqusConfig .= "this.page.category_id = $category;";
                 }
 

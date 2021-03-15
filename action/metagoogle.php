@@ -66,7 +66,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             return;
         }
 
-        $type = strtolower($page->getType());
+        $type = $page->getType();
         if (empty($type)) {
             $type = self::WEBSITE_TYPE;
         }
@@ -78,9 +78,8 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
         }
 
 
-
         $ldJsonSite = array();
-        switch ($type) {
+        switch (strtolower($type)) {
             case self::WEBSITE_TYPE:
 
                 /**
@@ -134,6 +133,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             case "article":
 
                 // https://developers.google.com/search/docs/data-types/article
+                // https://schema.org/Article
 
                 // Image (at least 696 pixels wide)
                 // https://developers.google.com/search/docs/advanced/guidelines/google-images#supported-image-formats
@@ -141,20 +141,39 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 // Date
                 // https://en.wikipedia.org/wiki/ISO_8601
 
+                $ldJsonSite = array(
+                    "@context" => "https://schema.org",
+                    "@type" => "Article",
+                    'url' => $page->getCanonicalUrlOrDefault(),
+                    "headline" => $page->getTitleNotEmpty(),
+                    "datePublished" => date('c', $page->getPublishedElseCreationTimeStamp()),
+                    "dateModified" => date('c', $page->getModifiedTimestamp()),
+                    "publisher" => array(
+                        "@type" => "Organization",
+                        "name" => Site::getTitle(),
+                        "logo" => array(
+                            "@type" => "ImageObject",
+                            "url" => Site::getLogoUrlAsPng()
+                        )
+                    )
+                );
+
                 break;
             default:
-                LogUtility::msg("The type ($type) is unknown for the page (" . $page->getId() . ")", LogUtility::LVL_MSG_ERROR, "semantic:type");
 
+                // May be added manually by the user itself
+                $ldJsonSite = array(
+                    '@context' => 'http://schema.org',
+                    '@type' => $type,
+                    'url' => $page->getCanonicalUrlOrDefault()
+                );
                 break;
         }
 
         /**
          * Do we have extra ld-json properties
          */
-        $extraLdJson = $page->getMetadata($type);
-        if (empty($extraLdJson)) {
-            $extraLdJson = $page->getMetadata($ldJsonSite["@type"]);
-        }
+        $extraLdJson = $page->getMetadata("json-ld");
         if (!empty($extraLdJson)) {
             $ldJsonSite = array_merge($ldJsonSite, $extraLdJson);
         }

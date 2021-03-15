@@ -71,25 +71,18 @@ class Page
 
     /**
      *
-     * @param string|null $canonical - null or the canonical value
-     * @return string - the canonical URL
+     *
+     * Dokuwiki Methodology taken from {@link tpl_metaheaders()}
+     * @return string - the Dokuwiki URL
      */
-    public static function getUrl($canonical = null)
+    public function getUrl()
     {
-        if ($canonical != null) {
-            $canonicalUrl = getBaseURL(true) . strtr($canonical, ':', '/');
+        if ($this->isHomePage()) {
+            $url = DOKU_URL;
         } else {
-            /**
-             * Dokuwiki Methodology taken from {@link tpl_metaheaders()}
-             */
-            global $ID;
-            global $conf;
-            $canonicalUrl = wl($ID, '', true, '&');
-            if ($ID == $conf['start']) {
-                $canonicalUrl = DOKU_URL;
-            }
+            $url = wl($this->id, '', true, '&');
         }
-        return $canonicalUrl;
+        return $url;
     }
 
     public static function createFromEnvironment()
@@ -104,7 +97,7 @@ class Page
          * with id of the form :path:*
          * for directory
          */
-        return StringUtility::endWiths($id,":*");
+        return StringUtility::endWiths($id, ":*");
     }
 
 
@@ -385,21 +378,37 @@ class Page
      */
     public function getCanonical()
     {
-        if (!empty($this->canonical)) {
-            return $this->canonical;
-        } else {
-            $names = $this->getNames();
-            $namesLength = sizeof($names);
-            if ($namesLength == 1) {
+        if (empty($this->canonical)) {
 
-                return $this->id;
+            $this->canonical = $this->getPersistentMetadata(Page::CANONICAL_PROPERTY);
 
-            } else {
-
-                return join(":", array_slice($names, $namesLength - 2));
-
+            /**
+             * The last part of the id as canonical
+             */
+            // How many last parts are taken into account in the canonical processing (2 by default)
+            $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
+            if (empty($this->canonical) && $canonicalLastNamesCount > 0) {
+                /**
+                 * Takes the last names part
+                 */
+                $names = $this->getNames();
+                $namesLength = sizeof($names);
+                if ($namesLength > $canonicalLastNamesCount) {
+                    $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
+                }
+                /**
+                 * If this is a start page, delete the name
+                 * ie javascript:start will become javascript
+                 */
+                if ($this->isStartPage()) {
+                    $names = array_slice($names, 0, $namesLength - 1);
+                }
+                $this->canonical = implode(":", $names);
+                p_set_metadata($this->id, array(Page::CANONICAL_PROPERTY => $this->canonical));
             }
+
         }
+        return $this->canonical;
     }
 
     /**
@@ -1186,6 +1195,23 @@ class Page
     public function isLatePublication()
     {
         return $this->getPublishedElseCreationTimeStamp() > time();
+    }
+
+    public function getCanonicalUrl()
+    {
+        if (!empty($this->getCanonical())) {
+            return getBaseURL(true) . strtr($this->getCanonical(), ':', '/');
+        }
+        return null;
+    }
+
+    public function getCanonicalUrlOrDefault()
+    {
+        $url = $this->getCanonicalUrl();
+        if (empty($url)) {
+            $url = $this->getUrl();
+        }
+        return $url;
     }
 
 

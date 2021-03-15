@@ -15,4 +15,4 @@
 
 More ... [ComboStrap](https://combostrap.com)
 
-This repository stores the [Combo Dokuwiki plugin](https://combostrap.com/combo)
+This repository stores the [Combo Dokuwiki plugin](https://combostrap.com/combostrap#combo)

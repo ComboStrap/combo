@@ -124,7 +124,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                 } else {
 
                     $toSmall = false;
-                    if ($facebookImage->analyzable()) {
+                    if ($facebookImage->isAnalyzable()) {
 
                         // There is a minimum size constraint of 200px by 200px
                         if ($facebookImage->getWidth() < 200) {

@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\Image;
+use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Page;

@@ -195,7 +195,7 @@ class Image
      *
      * @return bool true if we could extract the dimensions
      */
-    public function analyzable()
+    public function isAnalyzable()
     {
         $this->analyzeIfNeeded();
         return $this->analyzable;

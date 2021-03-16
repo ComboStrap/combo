@@ -129,7 +129,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 case self::BLOGPOSTING_SCHEMA_ORG_LOWERCASE:
 
                     $schemaType = "Article";
-                    switch(strtolower($type)){
+                    switch (strtolower($type)) {
                         case Page::NEWS_TYPE:
                         case self::NEWSARTICLE_SCHEMA_ORG_LOWERCASE:
                             $schemaType = "NewsArticle";
@@ -165,26 +165,30 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                         )
                     );
 
-                    $imagesId = $page->getImageSet();
-                    $imagesUrl = array();
-                    foreach ($imagesId as $imageId) {
-                        $image = new Image($imageId);
-                        if ($image->exists()) {
-                            $imagesUrl[] = $image->getUrl();
+                    $imagesSet = $page->getImageSet();
+                    $schemaImages = array();
+                    foreach ($imagesSet as $imageId) {
+                        $imageObject = new Image($imageId);
+                        if ($imageObject->exists()) {
+                            $imageObject = array(
+                                "@type" => "ImageObject",
+                                "url" => $imageObject->getUrl()
+                            );
+                            if ($imageObject->isAnalyzable()) {
+                                if (!empty($imageObject->getWidth())) {
+                                    $imageObject["width"] = $imageObject->getWidth();
+                                }
+                                if (!empty($imageObject->getHeight())) {
+                                    $imageObject["height"] = $imageObject->getHeight();
+                                }
+                            }
+                            $schemaImages[] = $imageObject;
                         } else {
                             LogUtility::msg("The image ($imageId) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         }
                     }
-                    $imagesCount = sizeof($imagesUrl);
-                    switch ($imagesCount) {
-                        case 0:
-                            // No image
-                            break;
-                        case 1:
-                            $ldJsonSite["image"] = $imagesUrl[0];
-                            break;
-                        default:
-                            $ldJsonSite["image"] = $imagesUrl;
+                    if (!empty($schemaImages)) {
+                        $ldJsonSite["image"] = $schemaImages;
                     }
                     break;
 

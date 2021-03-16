@@ -185,3 +185,9 @@ $conf['siteIsoCountry'] = "";
  * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE}
  */
 $conf['latePublicationProtectionEnable'] = 1;
+
+/**
+ * Default page type
+ * {@link Page::CONF_DEFAULT_PAGE_TYPE}
+ */
+$conf["defaultPageType"] = "article";

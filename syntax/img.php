@@ -6,12 +6,12 @@
 // must be run within Dokuwiki
 use ComboStrap\HeaderUtility;
 use ComboStrap\TitleUtility;
-use ComboStrap\ImgUtility;
+use ComboStrap\Image;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 
-require_once(__DIR__ . '/../class/ImgUtility.php');
+require_once(__DIR__ . '/../class/Image.php');
 
 if (!defined('DOKU_INC')) die();
 
@@ -74,7 +74,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
             PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
         ];
         if (in_array($mode, $modes)) {
-            $this->Lexer->addSpecialPattern(ImgUtility::IMAGE_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(Image::IMAGE_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
 
@@ -87,7 +87,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
 
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
-                $attributes = ImgUtility::parse($match);
+                $attributes = Image::parse($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parentTag = $tag->getParent()->getName();
                 $isFirstSibling = $tag->isFirstMeaningFullSibling();
@@ -134,7 +134,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
                          * First image of a card
                          */
                         PluginUtility::addClass2Attributes("card-img-top", $attributes);
-                        $renderer->doc .= ImgUtility::render($attributes);
+                        $renderer->doc .= Image::render($attributes);
                         $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
 
                     } else {

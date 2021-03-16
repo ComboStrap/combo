@@ -155,3 +155,7 @@ $meta[Site::CONF_SITE_ISO_COUNTRY] = array("string");
  */
 $meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
 
+/**
+ * Default Page Type
+ */
+$meta[Page::CONF_DEFAULT_PAGE_TYPE] = array("string");

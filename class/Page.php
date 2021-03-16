@@ -32,6 +32,17 @@ class Page
      */
     const LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
 
+    /**
+     * The default page type
+     */
+    const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
+    const WEBSITE_TYPE = "website";
+    const ARTICLE_TYPE = "article";
+    const ORGANIZATION_TYPE = "organization";
+    const NEWS_TYPE = "news";
+    const BLOG_TYPE = "blog";
+
+
     private $id;
     private $canonical;
 
@@ -948,7 +959,16 @@ class Page
         if (isset($type)) {
             return $type;
         } else {
-            return null;
+            if ($this->isHomePage()) {
+                return self::WEBSITE_TYPE;
+            } else {
+                $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE);
+                if (!empty($defaultPageTypeConf)) {
+                    return $defaultPageTypeConf;
+                } else {
+                    return null;
+                }
+            }
         }
     }
 
@@ -962,26 +982,63 @@ class Page
             if (empty($firstImage)) {
                 return null;
             } else {
-                return $firstImage;
+                return new Image($firstImage);
             }
         }
         return null;
 
     }
 
+    /**
+     * An array of images that represents the same image
+     * but in different dimension and ratio
+     * (may be empty)
+     * @return Image[]
+     */
+    public
+    function getImageSet()
+    {
+
+        /**
+         * Google accepts several images dimension and ratios
+         * for the same image
+         * We may get an array then
+         */
+        $imageMeta = $this->getMetadata('image');
+        $images = array();
+        if (!empty($imageMeta)) {
+            if (is_array($imageMeta)) {
+                foreach ($imageMeta as $imageIdFromMeta) {
+                    $images[] = new Image($imageIdFromMeta);
+                }
+            } else {
+                $images = array(new Image($imageMeta));
+            }
+        } else {
+            if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+                if (!empty($this->getFirstImage())){
+                    $images = array($this->getFirstImage());
+                }
+            }
+        }
+        return $images;
+
+    }
+
+
+    /**
+     * @return Image|null
+     */
     public
     function getImage()
     {
 
-        $metadata = $this->getMetadatas();
-        if (isset($metadata['persistent']['image'])) {
-            return $metadata['persistent']['image'];
-        } else if (isset($metadata['current']['relation'])) {
-            if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
-                return $this->getFirstImage();
-            }
+        $images = $this->getImageSet();
+        if (sizeof($images) >= 1) {
+            return $images[0];
+        } else {
+            return null;
         }
-        return null;
 
     }
 
@@ -1212,6 +1269,24 @@ class Page
             $url = $this->getUrl();
         }
         return $url;
+    }
+
+    /**
+     *
+     * @return string|null - the locale facebook way
+     */
+    public function getLocale()
+    {
+        $lang = $this->getLang();
+        if (!empty($lang)) {
+
+            $country = $this->getCountry();
+            if (empty($country)) {
+                $country = $lang;
+            }
+            return $lang . "_" . strtoupper($country);
+        }
+        return null;
     }
 
 

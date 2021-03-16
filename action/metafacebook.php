@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -10,6 +11,7 @@ use ComboStrap\StringUtility;
 if (!defined('DOKU_INC')) die();
 
 require_once(__DIR__ . '/../class/Site.php');
+require_once(__DIR__ . '/../class/Image.php');
 
 /**
  *
@@ -70,7 +72,6 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
 
-
         /**
          * "og:url" is already created in the {@link action_plugin_combo_metacanonical}
          * "og:description" is already created in the {@link action_plugin_combo_metadescription}
@@ -97,63 +98,74 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Image
+         * @var Image[]
          */
-        $facebookImage = $page->getImage();
-        if ($facebookImage == null) {
-            $facebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
+        $facebookImages = $page->getImageSet();
+        if (empty($facebookImages)) {
+            $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
+            if (!empty($defaultFacebookImage)) {
+                $image = new Image($defaultFacebookImage);
+                if ($image->exists()) {
+                    $facebookImages[] = $image;
+                } else {
+                    if ($defaultFacebookImage != "logo-facebook.png") {
+                        LogUtility::msg("The default facebook image ($defaultFacebookImage) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    }
+                }
+
+
+            }
         }
-        if ($facebookImage != null) {
-            $mediaFile = mediaFN($facebookImage);
+        if (!empty($facebookImages)) {
+            foreach ($facebookImages as $facebookImage) {
 
-            if (file_exists($mediaFile)) {
-                // based on php getimagesize
-                $dimensions = media_image_preview_size($facebookImage, '', false);
+                if (!$facebookImage->exists()) {
+                    LogUtility::msg("The image ($facebookImage) does not exist and was not added", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                } else {
 
-                // There is a minimum size constraint of 200px by 200px
-                $toSmall = false;
-                if (!empty($dimensions)) {
-                    list($width, $height) = $dimensions;
+                    $toSmall = false;
+                    if ($facebookImage->analyzable()) {
 
-
-                    if ($width < 200) {
-                        $toSmall = true;
-                    } else {
-                        $facebookMeta["og:image:width"] = $width;
-                        if ($height < 200) {
+                        // There is a minimum size constraint of 200px by 200px
+                        if ($facebookImage->getWidth() < 200) {
                             $toSmall = true;
                         } else {
-                            $facebookMeta["og:image:height"] = $height;
+                            $facebookMeta["og:image:width"] = $facebookImage->getWidth();
+                            if ($facebookImage->getHeight() < 200) {
+                                $toSmall = true;
+                            } else {
+                                $facebookMeta["og:image:height"] = $facebookImage->getHeight();
+                            }
                         }
                     }
 
                     if ($toSmall) {
-                        $message = "The facebook image ($facebookImage) is too small ($width x $height). The minimum size constraint is 200px by 200px";
-                        if ($facebookImage!=$page->getFirstImage()) {
-                            LogUtility::msg($message,LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                        $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getWidth() . " x " . $facebookImage->getHeight() . "). The minimum size constraint is 200px by 200px";
+                        if ($facebookImage->getId() != $page->getFirstImage()->getId()) {
+                            LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         } else {
                             LogUtility::log2BrowserConsole($message);
                         }
                     }
 
-                }
 
-                /**
-                 * We may don't known the dimensions
-                 */
-                if (!$toSmall) {
-                    $mime = mimetype($facebookImage);
-                    if (!empty($mime)) {
-                        $facebookMeta["og:image:type"] = $mime[1];
+                    /**
+                     * We may don't known the dimensions
+                     */
+                    if (!$toSmall) {
+                        $mime = $facebookImage->getMime();
+                        if (!empty($mime)) {
+                            $facebookMeta["og:image:type"] = $mime[1];
+                        }
+                        $facebookMeta["og:image"] = $facebookImage->getUrl();
+                        // One image only
+                        break;
                     }
-
-                    $facebookImageUrl = ml($facebookImage, '', true, '', true);
-                    $facebookMeta["og:image"] = $facebookImageUrl;
                 }
 
             }
-
         }
+
 
         $facebookMeta["fb:app_id"] = self::FACEBOOK_APP_ID;
 
@@ -161,10 +173,10 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (!empty($lang)) {
 
             $country = $page->getCountry();
-            if (empty($country)){
+            if (empty($country)) {
                 $country = $lang;
             }
-            $facebookMeta["og:locale"] = $lang."_".strtoupper($country);
+            $facebookMeta["og:locale"] = $lang . "_" . strtoupper($country);
 
         } else {
 
@@ -179,7 +191,6 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         foreach ($facebookMeta as $property => $content) {
             $event->data['meta'][] = array("property" => $property, "content" => $content);
         }
-
 
 
     }

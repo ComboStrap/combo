@@ -138,4 +138,9 @@ $lang[Site::CONF_SITE_ISO_COUNTRY] = PluginUtility::getUrl("country", "Country")
  */
 $lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::getUrl("published", "Late Publication") . " - Page with a published date in the future will be protected from search engine and the public";
 
+/**
+ * Default page type
+ */
+$lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default page type for all pages (expected the home page)")
+
 ?>

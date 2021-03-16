@@ -41,6 +41,7 @@ class Page
     const ORGANIZATION_TYPE = "organization";
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
+    const DESCRIPTION_PROPERTY = "description";
 
 
     private $id;
@@ -55,6 +56,14 @@ class Page
      * @var array|array[]
      */
     private $metadatas;
+    /**
+     * @var string|null - the description (the origin is in the $descriptionOrigin)
+     */
+    private $description;
+    /**
+     * @var string - the dokuwiki
+     */
+    private $descriptionOrigin;
 
     /**
      * Page constructor.
@@ -878,18 +887,26 @@ class Page
 
     public function getDescription()
     {
-        $metadata = $this->getMetadatas();
-        if (isset($metadata['current']["description"])) {
-            $descriptionMeta = $metadata['current']["description"];
-            if (!empty($descriptionMeta)) {
-                if (array_key_exists('abstract', $descriptionMeta)) {
-                    return $descriptionMeta['abstract'];
-                }
-            }
+
+        $this->processDescriptionIfNeeded();
+        if ($this->descriptionOrigin == \syntax_plugin_combo_frontmatter::CANONICAL) {
+            return $this->description;
+        } else {
+            return null;
         }
-        return null;
+
 
     }
+
+
+    /**
+     * @return string - the description or the dokuwiki generated description
+     */
+    public function getDescriptionOrElseDokuWiki()
+    {
+        return $this->description;
+    }
+
 
     public
     function getFilePath()
@@ -1016,7 +1033,7 @@ class Page
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
-                if (!empty($this->getFirstImage())){
+                if (!empty($this->getFirstImage())) {
                     $images = array($this->getFirstImage());
                 }
             }
@@ -1067,8 +1084,8 @@ class Page
 
     private function getPersistentMetadata($key)
     {
-        $key = $this->getMetadatas()['persistent'][$key];
-        return ($key ? $key : null);
+        $metadata = $this->getMetadatas()['persistent'][$key];
+        return ($metadata ? $metadata : null);
     }
 
     /**
@@ -1287,6 +1304,45 @@ class Page
             return $lang . "_" . strtoupper($country);
         }
         return null;
+    }
+
+    private function processDescriptionIfNeeded()
+    {
+
+        if ($this->descriptionOrigin == null) {
+            $descriptionArray = $this->getMetadata(Page::DESCRIPTION_PROPERTY);
+            if (!empty($descriptionArray)) {
+                if (array_key_exists('abstract', $descriptionArray)) {
+
+                    $description = $descriptionArray['abstract'];
+
+                    $this->descriptionOrigin = "dokuwiki";
+                    if (array_key_exists('origin', $descriptionArray)) {
+                        $this->descriptionOrigin = $descriptionArray['origin'];
+                    }
+
+                    if ($this->descriptionOrigin == "dokuwiki") {
+
+                        // suppress the carriage return
+                        $description = str_replace("\n", " ", $descriptionArray['abstract']);
+                        // suppress the h1
+                        $description = str_replace($this->getH1(), "", $description);
+                        // Suppress the star, the tab, About
+                        $description = preg_replace('/(\*|\t|About)/im', "", $description);
+                        // Suppress all double space and trim
+                        $description = trim(preg_replace('/  /m', " ", $description));
+                        $this->description = $description;
+
+                    } else {
+
+                        $this->description = $description;
+
+                    }
+                }
+
+            }
+        }
+
     }
 
 

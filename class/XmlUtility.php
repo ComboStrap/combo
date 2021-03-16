@@ -167,5 +167,13 @@ class XmlUtility
         return $doc->saveXML($doc->documentElement) . DOKU_LF;
     }
 
+    public static function extractTextWithoutCdata($text)
+    {
+        $text = str_replace("/*<![CDATA[*/","",$text);
+        $text = str_replace("/*!]]>*/","",$text);
+        $text = str_replace("\/","/",$text);
+        return $text;
+    }
+
 
 }

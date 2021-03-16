@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\LogUtility;
-
+use ComboStrap\Page;
 
 
 /**
@@ -23,47 +23,28 @@ class action_plugin_combo_metadescription extends DokuWiki_Action_Plugin
 
     /**
      * Add a meta-data description
+     * @param $event
+     * @param $param
      */
     function description_modification(&$event, $param)
     {
 
-        // if (empty($event->data) || empty($event->data['meta'])) return;
-
         global $ID;
+        if (empty($ID)) {
+            return;  // Admin call for instance
+        }
 
         /**
          * Description
          * https://www.dokuwiki.org/devel:metadata
          */
-        if (defined('DOKU_UNITTEST')) {
-            if ($ID == null || $ID == "") {
-                return;  // Admin call for instance in test
-            }
-            $dokuWikiDescription = p_get_metadata($ID, self::DESCRIPTION_META_KEY);
-        } else {
-            $render = METADATA_RENDER_USING_CACHE;
-            $dokuWikiDescription = p_get_metadata($ID, self::DESCRIPTION_META_KEY, $render);
-        }
+        $page = new Page($ID);
 
-        if (empty($dokuWikiDescription) || $dokuWikiDescription == "") {
-            $this->sendDestInfo($ID);
-            return;
-        }
-
-        // Get the abstract and suppress the carriage return
-        $description = str_replace("\n", " ", $dokuWikiDescription['abstract']);
+        $description = $page->getDescriptionOrElseDokuWiki();
         if (empty($description)) {
             $this->sendDestInfo($ID);
             return;
         }
-
-        // Suppress the title
-        $title = p_get_metadata($ID, 'title');
-        $description = str_replace($title, "", $description);
-        // Suppress the star, the tab, About
-        $description = preg_replace('/(\*|\t|About)/im', "", $description);
-        // Suppress all double space and trim
-        $description = trim(preg_replace('/  /m', " ", $description));
 
         // Add it to the meta
         $event->data['meta'][] = array("name" => self::DESCRIPTION_META_KEY, "content" => $description);

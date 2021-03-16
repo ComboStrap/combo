@@ -137,6 +137,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
                 // Image (at least 696 pixels wide)
                 // https://developers.google.com/search/docs/advanced/guidelines/google-images#supported-image-formats
+                // BMP, GIF, JPEG, PNG, WebP, and SVG.
 
                 // Date
                 // https://en.wikipedia.org/wiki/ISO_8601

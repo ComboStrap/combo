@@ -133,6 +133,7 @@ class Site
          * https://www.dokuwiki.org/config:baseurl
          * to be able to test the metadata / social integration
          */
+
         return DOKU_URL;
 
     }

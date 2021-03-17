@@ -6,6 +6,7 @@
  * @author  Nicolas GERARD
  */
 
+use ComboStrap\SnippetManager;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 
@@ -128,9 +129,9 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_SPECIAL :
 
-                    if (!PluginUtility::htmlSnippetAlreadyAdded(self::MINIMAP_TAG_NAME)){
-                        $renderer->doc .= PluginUtility::getTagStyle(self::MINIMAP_TAG_NAME);
-                    };
+
+                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::MINIMAP_TAG_NAME);
+
 
                     global $ID;
                     global $INFO;

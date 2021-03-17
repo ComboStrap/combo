@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\SnippetManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
@@ -19,13 +20,11 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
     const SCRIPT_ID = "combo_tooltip";
 
 
-    public static function addToolTipSnippetIfNeeded(Doku_Renderer_xhtml $renderer)
+    public static function addToolTipSnippetIfNeeded()
     {
-        if (!PluginUtility::htmlSnippetAlreadyAdded( self::TAG)) {
-            $renderer->doc .= "<script id=\"" . self::SCRIPT_ID . "\">" . DOKU_LF
-                . "window.addEventListener('load', function () { jQuery('[data-toggle=\"tooltip\"]').tooltip() })" . DOKU_LF
-                . "</script>" . DOKU_LF;
-        }
+        $script = "window.addEventListener('load', function () { jQuery('[data-toggle=\"tooltip\"]').tooltip() })";
+        PluginUtility::getSnippetManager()->addJavascriptSnippetIfNeeded(self::SCRIPT_ID, $script);
+
     }
 
 

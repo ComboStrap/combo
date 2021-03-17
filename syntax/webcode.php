@@ -18,6 +18,7 @@
  */
 
 // must be run within Dokuwiki
+use ComboStrap\SnippetManager;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -338,10 +339,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         return false;
                     }
 
+                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
 
-                    if (!PluginUtility::htmlSnippetAlreadyAdded( self::TAG)){
-                        $renderer->doc .= PluginUtility::getTagStyle(self::TAG);
-                    }
                     // Dokuwiki Code ?
                     if (array_key_exists('dw', $codes)) {
 

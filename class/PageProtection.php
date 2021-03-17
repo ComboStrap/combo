@@ -39,7 +39,6 @@ class PageProtection
     const CONF_VALUE_HIDDEN = "hidden";
 
 
-
     /**
      * A javascript indicator
      * to know if the user is logged in or not
@@ -69,14 +68,15 @@ class PageProtection
         $protectedLinkClass = self::PROTECTED_LINK_CLASS;
         $jsIsPublicNavigationIndicator = self::JS_IS_PUBLIC_NAVIGATION_INDICATOR;
         $jsClass = self::PROTECTED_LINK_CLASS;
-        if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::NAME)) {
-            $renderer->doc .= <<<EOF
-<style>
+        $style = <<<EOF
 .{$protectedLinkClass} {
     color:#a829dc
 }
-</style>
-<script type="text/javascript">
+EOF;
+        PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::NAME, $style);
+
+
+        $js = <<<EOF
 window.addEventListener('DOMContentLoaded', function () {
 
     if (JSINFO["{$jsIsPublicNavigationIndicator}"]===false){
@@ -87,9 +87,9 @@ window.addEventListener('DOMContentLoaded', function () {
     }
 
 })
-</script>
 EOF;
-        }
+        PluginUtility::getSnippetManager()->addJavascriptSnippetIfNeeded(self::NAME, $js);
+
 
     }
 }

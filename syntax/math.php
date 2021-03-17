@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\SnippetManager;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 
@@ -13,25 +14,8 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
 {
 
-    const MATH_EXPRESSION = 'math_expression';
     const MATH_JAX_DIV_ID = "mathjax_id";
-    const HTML_SCRIPT_MATHJAX = <<<EOD
-<script type="text/x-mathjax-config">
-                MathJax.Hub.Config({
-                    showProcessingMessages: true,
-                    extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
-                    jax: ["input/TeX", "output/HTML-CSS"],
-                    tex2jax: {
-                        inlineMath: [ ["<math>","</math>"]],
-                        displayMath: [ ["<MATH>","</MATH>"] ],
-                        processEscapes: true,
-                        scale:120
-                    },
-                    "HTML-CSS": { fonts: ["TeX"] }
-                });
-</script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js" async></script>
-EOD;
+
 
     /**
      * syntax_plugin_combo_math constructor.
@@ -142,11 +126,27 @@ EOD;
             case 'odt':
                 /** @var Doku_Renderer_xhtml $renderer */
                 $renderer->doc .= $renderer->_xmlEntities($content) . DOKU_LF;
-                if (!PluginUtility::htmlSnippetAlreadyAdded( $this->getPluginComponent())) {
-                    $renderer->doc .= '<div id="' . self::MATH_JAX_DIV_ID . '">' . DOKU_LF;
-                    $renderer->doc .= self::HTML_SCRIPT_MATHJAX;
-                    $renderer->doc .= '</div>';
-                }
+
+                $id = self::MATH_JAX_DIV_ID;
+                $headHtmlElement = <<<EOD
+<script type="text/x-mathjax-config" id=\"$id\">
+    MathJax.Hub.Config({
+        showProcessingMessages: true,
+        extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
+        jax: ["input/TeX", "output/HTML-CSS"],
+        tex2jax: {
+            inlineMath: [ ["<math>","</math>"]],
+            displayMath: [ ["<MATH>","</MATH>"] ],
+            processEscapes: true,
+            scale:120
+        },
+        "HTML-CSS": { fonts: ["TeX"] }
+    });
+</script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js" async></script>
+EOD;
+                PluginUtility::getSnippetManager()->addHeadTagsOnce($id, $headHtmlElement);
+
                 break;
 
             case 'latexport':

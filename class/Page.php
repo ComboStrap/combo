@@ -42,6 +42,7 @@ class Page
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
     const DESCRIPTION_PROPERTY = "description";
+    const TYPE_PROPERTY = "type";
 
 
     private $id;

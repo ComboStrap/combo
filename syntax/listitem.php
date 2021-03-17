@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\SnippetManager;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\StyleUtility;
@@ -97,9 +98,9 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
         $authorizedModes = array(
             PluginUtility::getModeForComponent(syntax_plugin_combo_list::TAG),
             PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
-            );
+        );
 
-        if (in_array($mode,$authorizedModes)) {
+        if (in_array($mode, $authorizedModes)) {
             foreach (self::TAGS as $tag) {
                 $pattern = PluginUtility::getContainerTagPattern($tag);
                 $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
@@ -139,7 +140,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $attributes = PluginUtility::getTagAttributes($match);
-                PluginUtility::addClass2Attributes(self::COMBO_LIST_ITEM_CLASS,$attributes);
+                PluginUtility::addClass2Attributes(self::COMBO_LIST_ITEM_CLASS, $attributes);
                 $html = '<li';
                 if (sizeof($attributes)) {
                     $html .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
@@ -190,10 +191,11 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    if (!PluginUtility::htmlSnippetAlreadyAdded(self::TAG)) {
-                        $styles = self::getStyles();
-                        $renderer->doc .= '<style>' . StyleUtility::getRule($styles, "." . self::COMBO_LIST_ITEM_CLASS) . '</style>'.DOKU_LF;
-                    }
+
+                    $styles = self::getStyles();
+                    $cssRule = StyleUtility::getRule($styles, "." . self::COMBO_LIST_ITEM_CLASS);
+                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG, $cssRule);
+
                     $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
                     break;
                 case DOKU_LEXER_EXIT :

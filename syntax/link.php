@@ -7,6 +7,7 @@ require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
+use ComboStrap\SnippetManager;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -198,9 +199,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $attributes = $data;
                 }
 
-                if (!PluginUtility::htmlSnippetAlreadyAdded(self::TAG)){
-                    $renderer->doc .= PluginUtility::getTagStyle(self::TAG);
-                }
+                PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+
 
                 $state = $data[PluginUtility::STATE];
                 $payload = $data[PluginUtility::PAYLOAD];

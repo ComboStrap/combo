@@ -3,8 +3,7 @@
 
 namespace ComboStrap;
 
-global $COMBO_SNIPPETS;
-$COMBO_SNIPPETS = array();
+
 
 use syntax_plugin_combo_preformatted;
 use TestRequest;
@@ -682,10 +681,9 @@ class PluginUtility
      * Check if a HTML tag was already added for a request
      * The request id is just the timestamp
      * An indicator array should be provided
-     * @param $snippetName - the name of the snippet (or $this->getPluginComponent())
-     * @return bool
+     * @return string
      */
-    public static function htmlSnippetAlreadyAdded($snippetName)
+    public static function getRequestId()
     {
 
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
@@ -696,21 +694,10 @@ class PluginUtility
             $requestTime = $_SERVER['REQUEST_TIME'];
         }
         $keyPrefix = 'combo_';
-        if (!empty($snippetName)) {
-            $uniqueId = $keyPrefix . $snippetName;
-        } else {
-            global $ID;
-            $uniqueId = $keyPrefix . hash('crc32b', $_SERVER['REMOTE_ADDR'] . $_SERVER['REMOTE_PORT'] . $requestTime . $ID);
-        }
 
+        global $ID;
+        return $keyPrefix . hash('crc32b', $_SERVER['REMOTE_ADDR'] . $_SERVER['REMOTE_PORT'] . $requestTime . $ID);
 
-        global $COMBO_SNIPPETS;
-        if (array_key_exists($uniqueId, $COMBO_SNIPPETS)) {
-            return true;
-        } else {
-            $COMBO_SNIPPETS[$uniqueId] = $requestTime;
-            return false;
-        }
     }
 
     /**
@@ -913,13 +900,23 @@ class PluginUtility
      */
     public static function getTagStyle($TAG)
     {
-        $path = DOKU_PLUGIN . self::PLUGIN_BASE_NAME . "/style/" . $TAG . ".css";
-        if (file_exists($path)) {
-            return "<style>" . file_get_contents($path) . "</style>";
+        $script = self::getCssRules($TAG);
+        if (!empty($script)) {
+            return "<style>" . $script . "</style>";
         } else {
             return "";
         }
 
+    }
+
+    public static function getCssRules($TAG)
+    {
+        $path = DOKU_PLUGIN . self::PLUGIN_BASE_NAME . "/style/" . $TAG . ".css";
+        if (file_exists($path)) {
+            return file_get_contents($path);
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -952,6 +949,11 @@ class PluginUtility
         } else {
             $attributes[$attribute] = "{$value}";
         }
+    }
+
+    public static function getSnippetManager()
+    {
+        return  SnippetManager::get();
     }
 
 

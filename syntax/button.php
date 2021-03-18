@@ -163,7 +163,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 } else {
                     $context = self::TAG;
                 }
-                $openingTag->addContext($context);
+                $openingTag->setContext($context);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::CONTEXT => $context

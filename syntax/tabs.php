@@ -390,7 +390,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                      * Add the context to the opening and ending tag
                      */
                     $context = $descendant->getName();
-                    $openingTag->addContext($context);
+                    $openingTag->setContext($context);
                     if ($context == syntax_plugin_combo_panel::TAG) {
 
                         /**

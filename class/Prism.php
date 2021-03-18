@@ -255,7 +255,7 @@ EOD;
             $language = "apacheconf";
         }
 
-        StringUtility::addEolIfNotPresent($renderer->doc);
+        StringUtility::addEolCharacterIfNotPresent($renderer->doc);
         PluginUtility::addClass2Attributes('language-' . $language, $attributes);
         if (array_key_exists("line-numbers", $attributes)) {
             unset($attributes["line-numbers"]);

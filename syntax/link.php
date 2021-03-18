@@ -34,6 +34,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     const LINK_TAG = "linkTag";
 
 
+
     /**
      * Syntax Type.
      *
@@ -70,6 +71,33 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     {
         return array('substition', 'formatting', 'disabled');
     }
+
+    public function accepts($mode)
+    {
+        /**
+         * To avoid that the description if it contains a link
+         * will be taken by the links mode
+         *
+         * For instance, [[https://hallo|https://hallo]] will send https://hallo
+         * to the external link mode
+         */
+        $linkModes = [
+            "externallink",
+            "locallink",
+            "internallink",
+            "interwikilink",
+            "emaillink",
+            //"emphasis_open", // italic use // and therefore take over a link as description which is not handy when copying a tweet
+            //"emphasis_close",
+            //"acrnonym"
+            ];
+        if (in_array($mode, $linkModes)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 
     /**
      * @see Doku_Parser_Mode::getSort()

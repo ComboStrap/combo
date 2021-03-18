@@ -754,6 +754,8 @@ class LinkUtility
                     $name = $this->getFragment();
                 }
                 break;
+            default:
+                return $this->getRef();
         }
 
         return $name;

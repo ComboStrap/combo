@@ -221,7 +221,7 @@ class Tag
      */
     public function hasSiblings()
     {
-        if ($this->getAscendantSibling() === null) {
+        if ($this->getPreviousSibling() === null) {
             return false;
         } else {
             return true;
@@ -394,7 +394,7 @@ class Tag
      *
      * @return null|Tag - the sibling tag (in ascendant order) or null
      */
-    public function getAscendantSibling()
+    public function getPreviousSibling()
     {
         if (isset($this->position)) {
             $counter = $this->position - 1;
@@ -671,13 +671,13 @@ class Tag
      */
     public function isFirstMeaningFullSibling()
     {
-        $sibling = $this->getAscendantSibling();
+        $sibling = $this->getPreviousSibling();
         if ($sibling == null) {
             return true;
         } else {
             /** Whitespace string */
             if ($sibling->getState() == DOKU_LEXER_UNMATCHED && trim($sibling->getContentRecursively()) == "") {
-                $sibling = $sibling->getAscendantSibling();
+                $sibling = $sibling->getPreviousSibling();
             }
             if ($sibling == null) {
                 return true;
@@ -703,9 +703,19 @@ class Tag
      * @param $value
      * @return $this
      */
-    public function addContext($value)
+    public function setContext($value)
     {
         $this->calls[$this->position][1][1][PluginUtility::CONTEXT] = $value;
+        return $this;
+    }
+
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function setType($value)
+    {
+        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES]["type"] = $value;
         return $this;
     }
 

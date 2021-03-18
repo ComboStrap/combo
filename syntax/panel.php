@@ -209,7 +209,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     $context = self::OLD_TAB_PANEL_TAG;
 
 
-                    $siblingTag = $parent->getAscendantSibling();
+                    $siblingTag = $parent->getPreviousSibling();
                     if ($siblingTag != null) {
                         if ($siblingTag->getName() === syntax_plugin_combo_tabs::TAG) {
                             $descendants = $siblingTag->getDescendants();

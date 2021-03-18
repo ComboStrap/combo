@@ -84,7 +84,7 @@ EOF;
             'type' => 'format',
             'title' => 'webcode',
             'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/webcode.png',
-            'open' => '<webcode name="Default" frameborder=0\n',
+            'open' => '<webcode name="Default" frameborder="0">\n',
             'close' => '\n</webcode>\n'
             //'key' => $webCodeShortcutKey
         );

@@ -64,7 +64,7 @@ class PageProtection
      */
     public static function addPageProtectionSnippet(Doku_Renderer_xhtml $renderer)
     {
-        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded($renderer);
+        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
         $protectedLinkClass = self::PROTECTED_LINK_CLASS;
         $jsIsPublicNavigationIndicator = self::JS_IS_PUBLIC_NAVIGATION_INDICATOR;
         $jsClass = self::PROTECTED_LINK_CLASS;

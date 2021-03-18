@@ -14,7 +14,7 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
 {
 
-    const MATH_JAX_DIV_ID = "mathjax_id";
+    const TAG = "math";
 
 
     /**
@@ -127,25 +127,34 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
                 $renderer->doc .= $renderer->_xmlEntities($content) . DOKU_LF;
 
-                $id = self::MATH_JAX_DIV_ID;
                 $headHtmlElement = <<<EOD
-<script type="text/x-mathjax-config" id=\"$id\">
-    MathJax.Hub.Config({
-        showProcessingMessages: true,
-        extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
-        jax: ["input/TeX", "output/HTML-CSS"],
-        tex2jax: {
-            inlineMath: [ ["<math>","</math>"]],
-            displayMath: [ ["<MATH>","</MATH>"] ],
-            processEscapes: true,
-            scale:120
-        },
-        "HTML-CSS": { fonts: ["TeX"] }
-    });
-</script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js" async></script>
+MathJax.Hub.Config({
+    showProcessingMessages: true,
+    extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+        inlineMath: [ ["<math>","</math>"]],
+        displayMath: [ ["<MATH>","</MATH>"] ],
+        processEscapes: true,
+        scale:120
+    },
+    "HTML-CSS": { fonts: ["TeX"] }
+});
 EOD;
-                PluginUtility::getSnippetManager()->addHeadTagsOnce($id, $headHtmlElement);
+
+                PluginUtility::getSnippetManager()->addHeadTagsOnce(self::TAG,
+                    array("script" => [
+                        array(
+                            "type" => "text/x-mathjax-config",
+                            "_data" => $headHtmlElement
+                        ),
+                        array(
+                            "type" => "text/javascript",
+                            "src" => "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js",
+                            "async" => true
+                        )
+                    ])
+                );
 
                 break;
 

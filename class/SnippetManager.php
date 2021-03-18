@@ -42,6 +42,12 @@ class SnippetManager
     var $heads = array();
 
 
+    public static function getClassFromTag($tag)
+    {
+        return "combo-".$tag;
+    }
+
+
     /**
      * @param $id
      * @param string|null $css - the css

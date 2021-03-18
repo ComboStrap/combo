@@ -17,14 +17,15 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
     const TAG = "tooltip";
     const TEXT_ATTRIBUTE = "text";
     const POSITION_ATTRIBUTE = "position";
-    const SCRIPT_ID = "combo_tooltip";
 
 
+    /**
+     * tooltip is used also in page protection
+     */
     public static function addToolTipSnippetIfNeeded()
     {
         $script = "window.addEventListener('load', function () { jQuery('[data-toggle=\"tooltip\"]').tooltip() })";
-        PluginUtility::getSnippetManager()->addJavascriptSnippetIfNeeded(self::SCRIPT_ID, $script);
-
+        PluginUtility::getSnippetManager()->addJavascriptSnippetIfNeeded(self::TAG, $script);
     }
 
 
@@ -110,18 +111,10 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $attributes = PluginUtility::getTagAttributes($match);
-                $html = "";
-                if (isset($attributes[self::TEXT_ATTRIBUTE])) {
-                    $position = "top";
-                    if (isset($attributes[self::POSITION_ATTRIBUTE])) {
-                        $position = $attributes[self::POSITION_ATTRIBUTE];
-                    }
-                    $html = "<span class=\"d-inline-block\" tabindex=\"0\" data-toggle=\"tooltip\" data-placement=\"${position}\" title=\"" . $attributes[self::TEXT_ATTRIBUTE] . "\">" . DOKU_LF;
-                }
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -133,14 +126,10 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 $tag = new Tag(self::TAG, array(), $state, $handler);
-                $text = $tag->getOpeningTag()->getAttribute(self::TEXT_ATTRIBUTE);
-                $html = "";
-                if (!empty($text)) {
-                    $html = "</span>";
-                }
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::ATTRIBUTES => $tag->getOpeningTag()->getAttributes()
                 );
 
 
@@ -168,17 +157,33 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_UNMATCHED:
-                case DOKU_LEXER_ENTER :
                     $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    break;
+                case DOKU_LEXER_ENTER :
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+
+                    if (isset($attributes[self::TEXT_ATTRIBUTE])) {
+                        $position = "top";
+                        if (isset($attributes[self::POSITION_ATTRIBUTE])) {
+                            $position = $attributes[self::POSITION_ATTRIBUTE];
+                        }
+                        $renderer->doc .= "<span class=\"d-inline-block\" tabindex=\"0\" data-toggle=\"tooltip\" data-placement=\"${position}\" title=\"" . $attributes[self::TEXT_ATTRIBUTE] . "\">" . DOKU_LF;
+                    };
+
                     break;
 
                 case DOKU_LEXER_EXIT:
-                    $html = $data[PluginUtility::PAYLOAD];
-                    if (!empty($html)) {
+                    if (isset($data[PluginUtility::ATTRIBUTES][self::TEXT_ATTRIBUTE])) {
 
-                        self::addToolTipSnippetIfNeeded($renderer);
+                        $text = $data[PluginUtility::ATTRIBUTES][self::TEXT_ATTRIBUTE];
+                        if (!empty($text)) {
+                            $renderer->doc .= "</span>";
+                            self::addToolTipSnippetIfNeeded();
+                        }
+
                     }
-                    $renderer->doc .= $html;
+                    break;
+
 
             }
             return true;

@@ -106,6 +106,7 @@ class Site
             if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
                 LogUtility::msg("The country configuration value ($country) does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
             }
+            return $country;
         } else {
             return null;
         }

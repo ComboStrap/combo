@@ -71,7 +71,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
          */
 
 
-        $canonicalUrl = $page->getCanonicalUrl();
+        $canonicalUrl = $page->getCanonicalUrlOrDefault();
 
         /**
          * Replace the meta entry

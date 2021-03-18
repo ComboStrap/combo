@@ -277,7 +277,7 @@ class Page
                     $sqlite->res_close($res);
 
                 } else {
-                    LogUtility::msg("The page ($$this->id) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
+                    LogUtility::msg("The page ($this->id) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
                 }
                 $this->persistPageAlias($canonical, $idInDb);
             }
@@ -905,6 +905,7 @@ class Page
      */
     public function getDescriptionOrElseDokuWiki()
     {
+        $this->processDescriptionIfNeeded();
         return $this->description;
     }
 
@@ -1085,7 +1086,7 @@ class Page
 
     private function getPersistentMetadata($key)
     {
-        if (isset($this->getMetadatas()['persistent'][$key])){
+        if (isset($this->getMetadatas()['persistent'][$key])) {
             return $this->getMetadatas()['persistent'][$key];
         } else {
             return null;
@@ -1161,7 +1162,27 @@ class Page
     public function refreshMetadata()
     {
 
+        if ($this->metadatas == null) {
+            /**
+             * Read the metadata from the file
+             */
+            $this->metadatas = $this->getMetadatas();
+        }
+        /**
+         * Read/render the metadata from the file
+         * with parsing
+         */
         $this->metadatas = p_render_metadata($this->getId(), $this->metadatas);
+
+        /**
+         * ReInitialize
+         */
+        $this->descriptionOrigin = null;
+        $this->description = null;
+
+        /**
+         * Return
+         */
         return $this->metadatas;
 
     }
@@ -1318,7 +1339,7 @@ class Page
             if (!empty($descriptionArray)) {
                 if (array_key_exists('abstract', $descriptionArray)) {
 
-                    $description = $descriptionArray['abstract'];
+                    $temporaryDescription = $descriptionArray['abstract'];
 
                     $this->descriptionOrigin = "dokuwiki";
                     if (array_key_exists('origin', $descriptionArray)) {
@@ -1328,18 +1349,18 @@ class Page
                     if ($this->descriptionOrigin == "dokuwiki") {
 
                         // suppress the carriage return
-                        $description = str_replace("\n", " ", $descriptionArray['abstract']);
+                        $temporaryDescription = str_replace("\n", " ", $descriptionArray['abstract']);
                         // suppress the h1
-                        $description = str_replace($this->getH1(), "", $description);
+                        $temporaryDescription = str_replace($this->getH1(), "", $temporaryDescription);
                         // Suppress the star, the tab, About
-                        $description = preg_replace('/(\*|\t|About)/im', "", $description);
+                        $temporaryDescription = preg_replace('/(\*|\t|About)/im', "", $temporaryDescription);
                         // Suppress all double space and trim
-                        $description = trim(preg_replace('/  /m', " ", $description));
-                        $this->description = $description;
+                        $temporaryDescription = trim(preg_replace('/  /m', " ", $temporaryDescription));
+                        $this->description = $temporaryDescription;
 
                     } else {
 
-                        $this->description = $description;
+                        $this->description = $temporaryDescription;
 
                     }
                 }

@@ -13,7 +13,6 @@ class Prism
     /**
      * The class used to mark the added prism code
      */
-    const SCRIPT_ID = 'combo_prism';
     const BASE_PRISM_CDN = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/";
     /**
      * The default prompt for bash
@@ -74,7 +73,7 @@ class Prism
     public static function addSnippet($theme)
     {
         $BASE_PRISM_CDN = self::BASE_PRISM_CDN;
-        $SCRIPT_ID = self::SCRIPT_ID;
+        $SCRIPT_ID = "prism";
         if ($theme == self::PRISM_THEME) {
             $themeStyleSheet = "prism.min.css";
         } else {

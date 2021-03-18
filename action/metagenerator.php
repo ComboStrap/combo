@@ -18,7 +18,7 @@ class action_plugin_combo_metagenerator extends DokuWiki_Action_Plugin
     function handleGenerator(&$event, $param)
     {
         $info = $this->getInfo();
-        $event->data['meta'][] = array("name" => "generator", "content" => "ComboStrap ".$info['date']);
+        $event->data['meta'][] = array("name" => "generator", "content" => "ComboStrap ".$info['version']);
 
     }
 

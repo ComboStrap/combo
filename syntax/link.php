@@ -165,6 +165,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingAttributes,
                     PluginUtility::PAYLOAD => $linkName,
+                    PluginUtility::CONTEXT => $openingTag->getContext(),
                     self::LINK_TAG => $linkTag
                 );
         }
@@ -262,12 +263,12 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         break;
                     case DOKU_LEXER_EXIT:
 
-                        $context = $data[PluginUtility::CONTEXT];
-
-                        // if there is no name defined, we get the name as ref in the payload
+                        // if there is no link name defined, we get the name as ref in the payload
+                        // otherwise null string
                         $renderer->doc .= $payload;
 
                         // html element
+                        $context = $data[PluginUtility::CONTEXT];
                         switch ($context) {
                             case syntax_plugin_combo_navbarcollapse::COMPONENT:
                                 $renderer->doc .= '</div>';

@@ -14,8 +14,8 @@ namespace ComboStrap;
 
 /**
  * @package ComboStrap
- * A component to manage the HTML that
- * from components that should come in the head HTML node
+ * A component to manage the extra HTML that
+ * comes from components and that should come in the head HTML node
  */
 class SnippetManager
 {
@@ -42,6 +42,12 @@ class SnippetManager
     var $heads = array();
 
 
+    /**
+     * @param $id
+     * @param string|null $css - the css
+     *   if null, the file $id.css is searched in the `style` directory
+     *
+     */
     public function addCssSnippetOnlyOnce($id, $css = null)
     {
 
@@ -56,6 +62,10 @@ class SnippetManager
 
     }
 
+    /**
+     * @param $id
+     * @param $script - javascript code
+     */
     public function addJavascriptSnippetIfNeeded($id, $script)
     {
         $js = &$this->getHeadsForPage(self::JS_TYPE);
@@ -68,7 +78,7 @@ class SnippetManager
 
     /**
      * @param $id
-     * @param array $componentTags - an array of tags where the key is the node and the value the attributes
+     * @param array $componentTags - an array of tags without content where the key is the node and the value the attributes
      */
     public function addHeadTagsOnce($id, $componentTags)
     {
@@ -102,6 +112,7 @@ class SnippetManager
 
     /**
      * @return SnippetManager - the global reference
+     * that is set for every run at the end of this fille
      */
     public static function get()
     {
@@ -111,7 +122,6 @@ class SnippetManager
 
     public function getCss()
     {
-
         return $this->getSnippets(self::CSS_TYPE);
     }
 
@@ -155,6 +165,21 @@ class SnippetManager
         return $distinctSnippets;
     }
 
+    /**
+     * Empty the snippets
+     * This is used to render the snippet only once
+     * The snippets renders first in the head
+     * and otherwise at the end of the document.
+     */
+    public function close()
+    {
+        $this->heads = array();
+    }
+
+    public function getData()
+    {
+        return $this->heads;
+    }
 
 
 }

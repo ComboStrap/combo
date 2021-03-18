@@ -14,6 +14,7 @@ require_once(__DIR__ . '/IconUtility.php');
 require_once(__DIR__ . '/StringUtility.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/RenderUtility.php');
+require_once(__DIR__ . '/SnippetManager.php');
 
 
 /**
@@ -951,6 +952,11 @@ class PluginUtility
         }
     }
 
+    /**
+     * Plugin Utility is available to all plugin,
+     * this is a convenient way to the the snippet manager
+     * @return SnippetManager
+     */
     public static function getSnippetManager()
     {
         return  SnippetManager::get();

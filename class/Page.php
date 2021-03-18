@@ -1085,8 +1085,11 @@ class Page
 
     private function getPersistentMetadata($key)
     {
-        $metadata = $this->getMetadatas()['persistent'][$key];
-        return ($metadata ? $metadata : null);
+        if (isset($this->getMetadatas()['persistent'][$key])){
+            return $this->getMetadatas()['persistent'][$key];
+        } else {
+            return null;
+        }
     }
 
     /**

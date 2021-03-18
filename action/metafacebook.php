@@ -94,7 +94,13 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             $facebookMeta["og:type"] = $ogType;
         } else {
             // The default facebook value
-            $facebookMeta["og:type"] = "website";
+            $facebookMeta["og:type"] = Page::WEBSITE_TYPE;
+        }
+
+        if ($ogType == Page::ARTICLE_TYPE) {
+            // https://ogp.me/#type_article
+            $facebookMeta["article:published_time"] = date("c", $page->getPublishedElseCreationTimeStamp());
+            $facebookMeta["article:modified_time"] = date("c", $page->getModifiedTimestamp());
         }
 
         /**

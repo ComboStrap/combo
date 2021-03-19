@@ -42,13 +42,13 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
     function metaCanonicalProcessing($event)
     {
 
-
-        if ($_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"){
+        global $ID;
+        if (empty($ID)){
+            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
             // $ID is null
             return;
         }
 
-        global $ID;
         $page = new Page($ID);
 
         /**

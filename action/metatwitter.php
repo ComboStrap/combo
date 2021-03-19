@@ -72,13 +72,13 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
     function metaTwitterProcessing($event)
     {
 
-
-        if ($_SERVER['SCRIPT_NAME'] == "/lib/exe/mediamanager.php") {
-            // $ID is null
+        global $ID;
+        if (empty($ID)) {
+            // $ID is null for media
             return;
         }
 
-        global $ID;
+
         $page = new Page($ID);
 
         /**

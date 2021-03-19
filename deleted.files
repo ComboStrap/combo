@@ -18,3 +18,4 @@ class/TestUtility.php
 class/Text.php
 class/TitleUtility.php
 class/UrlCanonical.php
+action/lowqualitypage.php

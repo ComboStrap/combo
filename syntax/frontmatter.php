@@ -42,6 +42,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const PARSING_STATE_EMPTY = "empty";
     const PARSING_STATE_ERROR = "error";
     const PARSING_STATE_SUCCESSFUL = "successful";
+    const STATUS = "status";
+    const CANONICAL = "frontmatter";
 
     /**
      * Syntax Type.
@@ -110,7 +112,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             // Empty front matter
             if (trim($match) == "") {
                 $this->closeParsing();
-                return array("state" => self::PARSING_STATE_EMPTY);
+                return array(self::STATUS => self::PARSING_STATE_EMPTY);
             }
 
             // Otherwise you get an object ie $arrayFormat-> syntax
@@ -119,18 +121,11 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
             // Decodage problem
             if ($json == null) {
-                return array("state" => self::PARSING_STATE_ERROR);
+                return array(
+                    self::STATUS => self::PARSING_STATE_ERROR,
+                    PluginUtility::PAYLOAD => $match
+                );
             }
-
-            // Trim it
-            $jsonKey = array_map('trim', array_keys($json));
-            // We will get a php warning here because the values may be an array
-            // and trim accept only string
-            $oldLevel = error_reporting(E_ERROR);
-            $jsonValues = array_map('trim', $json);
-            error_reporting($oldLevel);
-            $json = array_combine($jsonKey, $jsonValues);
-
 
             $notModifiableMeta = [
                 "date",
@@ -142,50 +137,66 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             $result = array();
             foreach ($json as $key => $value) {
 
+                $lowerCaseKey = trim(strtolower($key));
+
                 // Not modifiable metadata
-                if (in_array($key, $notModifiableMeta)) {
-                    LogUtility::msg("Front Matter: The metadata ($key) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
+                if (in_array($lowerCaseKey, $notModifiableMeta)) {
+                    LogUtility::msg("Front Matter: The metadata ($lowerCaseKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
                     continue;
                 }
 
-                // Description is special
-                if ($key == "description") {
-                    $result["description"] = $value;
-                    p_set_metadata($ID, array("description" => array("abstract" => $value)));
-                    continue;
-                }
+                switch ($lowerCaseKey) {
 
-                /**
-                 * Pass the title to the metadata
-                 * to advertise that it's in the front-matter
-                 * for the quality rules
-                 */
-                if ($key == Page::TITLE_PROPERTY) {
-                    $result[Page::TITLE_PROPERTY] = $value;
-                }
+                    case Page::DESCRIPTION_PROPERTY:
+                        $result["description"] = $value;
+                        /**
+                         * Overwrite also the actual description
+                         */
+                        p_set_metadata($ID, array(Page::DESCRIPTION_PROPERTY => array(
+                            "abstract" => $value,
+                            "origin" => syntax_plugin_combo_frontmatter::CANONICAL
+                        )));
+                        /**
+                         * Continue because
+                         * the description value was already stored
+                         * We don't want to override it
+                         * And continue 2 because continue == break in a switch
+                         */
+                        continue 2;
+                        break;
 
-                /**
-                 * Pass the low quality indicator
-                 * to advertise that it's in the front-matter
-                 */
-                if ($key == Page::LOW_QUALITY_PAGE_INDICATOR) {
-                    $result[Page::LOW_QUALITY_PAGE_INDICATOR] = $value;
-                }
+                    /**
+                     * Pass the title to the metadata
+                     * to advertise that it's in the front-matter
+                     * for the quality rules
+                     */
+                    case Page::TITLE_PROPERTY:
+                        $result[Page::TITLE_PROPERTY] = $value;
+                        break;
 
-                // Canonical should be lowercase
-                if ($key == Page::CANONICAL_PROPERTY) {
-                    $result[Page::CANONICAL_PROPERTY] = $value;
-                    $value = strtolower($value);
-                }
+                    /**
+                     * Pass the low quality indicator
+                     * to advertise that it's in the front-matter
+                     */
+                    case Page::LOW_QUALITY_PAGE_INDICATOR:
+                        $result[Page::LOW_QUALITY_PAGE_INDICATOR] = $value;
+                        break;
 
+                    // Canonical should be lowercase
+                    case Page::CANONICAL_PROPERTY:
+                        $result[Page::CANONICAL_PROPERTY] = $value;
+                        $value = strtolower($value);
+                        break;
+
+                }
                 // Set the value persistently
-                p_set_metadata($ID, array($key => $value));
+                p_set_metadata($ID, array($lowerCaseKey => $value));
 
             }
 
             $this->closeParsing($json);
 
-            $result["state"]= self::PARSING_STATE_SUCCESSFUL;
+            $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
 
             return $result;
         }
@@ -205,19 +216,15 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data)
     {
-        // TODO: https://developers.google.com/search/docs/data-types/breadcrumb#breadcrumb-list
-        // News article: https://developers.google.com/search/docs/data-types/article
-        // News article: https://developers.google.com/search/docs/data-types/paywalled-content
-        // What is ?: https://developers.google.com/search/docs/data-types/qapage
-        // How to ?: https://developers.google.com/search/docs/data-types/how-to
 
         switch ($format) {
             case 'xhtml':
                 global $ID;
                 /** @var Doku_Renderer_xhtml $renderer */
-                $state = $data["state"];
+                $state = $data[self::STATUS];
                 if ($state == self::PARSING_STATE_ERROR) {
-                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid", LogUtility::LVL_MSG_ERROR);
+                    $json = $data[PluginUtility::PAYLOAD];
+                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. See the errors it by clicking on <a href=\"https://jsonformatter.curiousconcept.com/?data=" . urlencode($json) . "\">this link</a>.", LogUtility::LVL_MSG_ERROR);
                 }
                 break;
             case Analytics::RENDERER_FORMAT:
@@ -246,7 +253,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      * Delete the controlled meta that are no more present if they exists
      * @return bool
      */
-    public function closeParsing(array $json = array())
+    public
+    function closeParsing(array $json = array())
     {
         global $ID;
 

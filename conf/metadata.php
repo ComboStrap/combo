@@ -2,9 +2,14 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
+use ComboStrap\Page;
+use ComboStrap\PageProtection;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
+use ComboStrap\Publication;
+use ComboStrap\Site;
 use ComboStrap\UrlManagerBestEndPage;
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -92,9 +97,9 @@ $meta[syntax_plugin_combo_file::CONF_FILE_ENABLE] = array('onoff');
  */
 require_once(__DIR__ . '/../class/LowQualityPage.php');
 $meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = array('onoff');
-$meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = array('multichoice', '_choices' => array(
-    LowQualityPage::ACL,
-    LowQualityPage::HIDDEN
+$meta[PageProtection::CONF_PAGE_PROTECTION_MODE] = array('multichoice', '_choices' => array(
+    PageProtection::CONF_VALUE_ACL,
+    PageProtection::CONF_VALUE_HIDDEN
 ));
 
 /**
@@ -115,4 +120,48 @@ $meta[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = array(
 /**
  * The quality rules excluded from monitoring
  */
+$meta[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = array('onoff');
 $meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);
+
+/**
+ * Dokuwiki Class Name
+ */
+$meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
+
+/**
+ * Twitter
+ */
+$meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = array('string');
+$meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = array('string');
+$meta[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = array('string');
+$meta[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = array('multichoice', '_choices' => array(
+    action_plugin_combo_metatwitter::CONF_ON,
+    action_plugin_combo_metatwitter::CONF_OFF
+));
+$meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = array('string');
+$meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = array('string');
+
+/**
+ * Page Image
+ */
+$meta[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
+
+/**
+ * Facebook
+ */
+$meta[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = array('string');
+
+/**
+ * Site country
+ */
+$meta[Site::CONF_SITE_ISO_COUNTRY] = array("string");
+
+/**
+ * Late publication protection
+ */
+$meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
+
+/**
+ * Default Page Type
+ */
+$meta[Page::CONF_DEFAULT_PAGE_TYPE] = array("string");

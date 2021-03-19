@@ -3,16 +3,15 @@
 namespace ComboStrap;
 
 
-
 use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use RuntimeException;
-
+use Locale;
 
 
 /**
- * Class urlCanonical with all canonical methodology
+ * Page
  */
 require_once(__DIR__ . '/PluginUtility.php');
 
@@ -20,6 +19,8 @@ class Page
 {
     const CANONICAL_PROPERTY = 'canonical';
     const TITLE_PROPERTY = 'title';
+
+    const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
 
     /**
      * An indicator in the meta
@@ -31,8 +32,39 @@ class Page
      */
     const LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
 
+    /**
+     * The default page type
+     */
+    const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
+    const WEBSITE_TYPE = "website";
+    const ARTICLE_TYPE = "article";
+    const ORGANIZATION_TYPE = "organization";
+    const NEWS_TYPE = "news";
+    const BLOG_TYPE = "blog";
+    const DESCRIPTION_PROPERTY = "description";
+    const TYPE_PROPERTY = "type";
+
+
     private $id;
     private $canonical;
+
+    /**
+     * @var string the absolute or resolved id
+     */
+    private $absoluteId;
+
+    /**
+     * @var array|array[]
+     */
+    private $metadatas;
+    /**
+     * @var string|null - the description (the origin is in the $descriptionOrigin)
+     */
+    private $description;
+    /**
+     * @var string - the dokuwiki
+     */
+    private $descriptionOrigin;
 
     /**
      * Page constructor.
@@ -40,40 +72,53 @@ class Page
      */
     public function __construct($id)
     {
-        $this->id = $id;
-        $idLowerCase = strtolower($id);
-        if ($idLowerCase !== $id) {
-            LogUtility::msg("The page id ({$id}) is not equal in lowercase (ie equal to `{$idLowerCase}`)");
+
+        if (empty($id)) {
+            LogUtility::msg("A null page id was given");
         }
+
+        /**
+         * characters are not all authorized, all lowercase
+         * such as `_` at the end
+         *
+         */
+        $this->id = cleanID($id);
+        if ($this->id !== $id) {
+            LogUtility::msg("The page id ({$id}) is not conform and should be `{$this->id}`)");
+        }
+
     }
 
 
     /**
      *
-     * @param $canonical - null or the canonical value
-     * @return string - the canonical URL
+     *
+     * Dokuwiki Methodology taken from {@link tpl_metaheaders()}
+     * @return string - the Dokuwiki URL
      */
-    public static function getUrl($canonical)
+    public function getUrl()
     {
-        if ($canonical != null) {
-            $canonicalUrl = getBaseURL(true) . strtr($canonical, ':', '/');
+        if ($this->isHomePage()) {
+            $url = DOKU_URL;
         } else {
-            /**
-             * Dokuwiki Methodology taken from {@link tpl_metaheaders()}
-             */
-            global $ID;
-            global $conf;
-            $canonicalUrl = wl($ID, '', true, '&');
-            if ($ID == $conf['start']) {
-                $canonicalUrl = DOKU_URL;
-            }
+            $url = wl($this->id, '', true, '&');
         }
-        return $canonicalUrl;
+        return $url;
     }
 
     public static function createFromEnvironment()
     {
         return new Page(PluginUtility::getPageId());
+    }
+
+    public static function isDirectoryId($id)
+    {
+        /**
+         * {@link search_universal} triggers ACL check
+         * with id of the form :path:*
+         * for directory
+         */
+        return StringUtility::endWiths($id, ":*");
     }
 
 
@@ -232,7 +277,7 @@ class Page
                     $sqlite->res_close($res);
 
                 } else {
-                    LogUtility::msg("The page ($$this->id) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
+                    LogUtility::msg("The page ($this->id) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
                 }
                 $this->persistPageAlias($canonical, $idInDb);
             }
@@ -354,21 +399,37 @@ class Page
      */
     public function getCanonical()
     {
-        if (!empty($this->canonical)) {
-            return $this->canonical;
-        } else {
-            $names = $this->getNames();
-            $namesLength = sizeof($names);
-            if ($namesLength == 1) {
+        if (empty($this->canonical)) {
 
-                return $this->id;
+            $this->canonical = $this->getPersistentMetadata(Page::CANONICAL_PROPERTY);
 
-            } else {
-
-                return join(":", array_slice($names, $namesLength - 2));
-
+            /**
+             * The last part of the id as canonical
+             */
+            // How many last parts are taken into account in the canonical processing (2 by default)
+            $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
+            if (empty($this->canonical) && $canonicalLastNamesCount > 0) {
+                /**
+                 * Takes the last names part
+                 */
+                $names = $this->getNames();
+                $namesLength = sizeof($names);
+                if ($namesLength > $canonicalLastNamesCount) {
+                    $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
+                }
+                /**
+                 * If this is a start page, delete the name
+                 * ie javascript:start will become javascript
+                 */
+                if ($this->isStartPage()) {
+                    $names = array_slice($names, 0, $namesLength - 1);
+                }
+                $this->canonical = implode(":", $names);
+                p_set_metadata($this->id, array(Page::CANONICAL_PROPERTY => $this->canonical));
             }
+
         }
+        return $this->canonical;
     }
 
     /**
@@ -398,12 +459,17 @@ class Page
      * Return the metadata stored in the file system
      * @return array|array[]
      */
-    public function getMetadata()
+    public function getMetadatas()
     {
+
         /**
          * Read / not get (get can trigger a rendering of the meta again)
          */
-        return p_read_metadata($this->id);
+        if ($this->metadatas == null) {
+            $this->metadatas = p_read_metadata($this->id);
+        }
+        return $this->metadatas;
+
     }
 
     /**
@@ -412,7 +478,7 @@ class Page
      */
     public function getInternalLinksFromMeta()
     {
-        $metadata = $this->getMetadata();
+        $metadata = $this->getMetadatas();
         if (key_exists('current', $metadata)) {
             $current = $metadata['current'];
             if (key_exists('relation', $current)) {
@@ -642,7 +708,7 @@ class Page
     public function getBacklinks()
     {
         $backlinks = array();
-        foreach (ft_backlinks($this->id) as $backlinkId) {
+        foreach (ft_backlinks($this->getAbsoluteId()) as $backlinkId) {
             $backlinks[] = new Page($backlinkId);
         }
         return $backlinks;
@@ -766,10 +832,10 @@ class Page
     {
 
         $title = p_get_metadata(cleanID($this->id), Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
-        if (!blank($heading)) {
+        if (!blank($title)) {
             return PluginUtility::escape($title);
         } else {
-            return $title;
+            return $this->id;
         }
 
     }
@@ -780,12 +846,528 @@ class Page
      */
     public function isQualityMonitored()
     {
-        $dynamicQualityIndicator = p_get_metadata(cleanID($this->id), action_plugin_combo_qualitymessage::DISABLE_INDICATOR,METADATA_RENDER_USING_SIMPLE_CACHE);
+        $dynamicQualityIndicator = p_get_metadata(cleanID($this->id), action_plugin_combo_qualitymessage::DISABLE_INDICATOR, METADATA_RENDER_USING_SIMPLE_CACHE);
         if ($dynamicQualityIndicator === null) {
             return true;
         } else {
             return filter_var($dynamicQualityIndicator, FILTER_VALIDATE_BOOLEAN);
         }
+    }
+
+    /**
+     * @return string|null the title, or h1 if empty or the id if empty
+     */
+    public function getTitleNotEmpty()
+    {
+        $pageTitle = $this->getTitle();
+        if ($pageTitle == null) {
+            if (!empty($this->getH1())) {
+                $pageTitle = $this->getH1();
+            } else {
+                $pageTitle = $this->getId();
+            }
+        }
+        return $pageTitle;
+
+    }
+
+    public function getH1NotEmpty()
+    {
+
+        $h1Title = $this->getH1();
+        if ($h1Title == null) {
+            if (!empty($this->getTitle())) {
+                $h1Title = $this->getTitle();
+            } else {
+                $h1Title = $this->getId();
+            }
+        }
+        return $h1Title;
+
+    }
+
+    public function getDescription()
+    {
+
+        $this->processDescriptionIfNeeded();
+        if ($this->descriptionOrigin == \syntax_plugin_combo_frontmatter::CANONICAL) {
+            return $this->description;
+        } else {
+            return null;
+        }
+
+
+    }
+
+
+    /**
+     * @return string - the description or the dokuwiki generated description
+     */
+    public function getDescriptionOrElseDokuWiki()
+    {
+        $this->processDescriptionIfNeeded();
+        return $this->description;
+    }
+
+
+    public
+    function getFilePath()
+    {
+        return wikiFN($this->getId());
+    }
+
+    public
+    function getContent()
+    {
+        return rawWiki($this->id);
+    }
+
+    /**
+     * The index and  most of the function that are not links related
+     * does not have the path to a page with the root element ie ':'
+     *
+     * This function makes sure that the id does not have ':' as root character
+     *
+     * See the $page argument of {@link resolve_pageid}
+     *
+     */
+    public
+    function getAbsoluteId()
+    {
+        if ($this->absoluteId == null) {
+            $this->absoluteId = cleanID($this->id);
+        }
+        return $this->absoluteId;
+
+    }
+
+    public
+    function isInIndex()
+    {
+        $Indexer = idx_get_indexer();
+        $pages = $Indexer->getPages();
+        $return = array_search($this->getAbsoluteId(), $pages, true);
+        return $return !== false;
+    }
+
+    /**
+     * @return string an absolute id with `:`
+     */
+    public
+    function getAbsoluteLinkId()
+    {
+        return ":" . $this->id;
+    }
+
+    public
+    function upsertContent($content, $summary = "Default")
+    {
+        saveWikiText($this->id, $content, $summary);
+    }
+
+    public
+    function addToIndex()
+    {
+        idx_addPage($this->id);
+    }
+
+    public
+    function getType()
+    {
+        $type = $this->getPersistentMetadata("type");
+        if (isset($type)) {
+            return $type;
+        } else {
+            if ($this->isHomePage()) {
+                return self::WEBSITE_TYPE;
+            } else {
+                $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE);
+                if (!empty($defaultPageTypeConf)) {
+                    return $defaultPageTypeConf;
+                } else {
+                    return null;
+                }
+            }
+        }
+    }
+
+
+    public function getFirstImage()
+    {
+
+        $relation = $this->getCurrentMetadata('relation');
+        if (isset($relation['firstimage'])) {
+            $firstImage = $relation['firstimage'];
+            if (empty($firstImage)) {
+                return null;
+            } else {
+                return new Image($firstImage);
+            }
+        }
+        return null;
+
+    }
+
+    /**
+     * An array of images that represents the same image
+     * but in different dimension and ratio
+     * (may be empty)
+     * @return Image[]
+     */
+    public
+    function getImageSet()
+    {
+
+        /**
+         * Google accepts several images dimension and ratios
+         * for the same image
+         * We may get an array then
+         */
+        $imageMeta = $this->getMetadata('image');
+        $images = array();
+        if (!empty($imageMeta)) {
+            if (is_array($imageMeta)) {
+                foreach ($imageMeta as $imageIdFromMeta) {
+                    $images[] = new Image($imageIdFromMeta);
+                }
+            } else {
+                $images = array(new Image($imageMeta));
+            }
+        } else {
+            if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+                if (!empty($this->getFirstImage())) {
+                    $images = array($this->getFirstImage());
+                }
+            }
+        }
+        return $images;
+
+    }
+
+
+    /**
+     * @return Image|null
+     */
+    public
+    function getImage()
+    {
+
+        $images = $this->getImageSet();
+        if (sizeof($images) >= 1) {
+            return $images[0];
+        } else {
+            return null;
+        }
+
+    }
+
+    /**
+     * Get author name
+     *
+     * @return string
+     */
+    public function getAuthor()
+    {
+        $author = $this->getPersistentMetadata('creator');
+        return ($author ? $author : null);
+    }
+
+    /**
+     * Get author ID
+     *
+     * @return string
+     */
+    public function getAuthorID()
+    {
+        $user = $this->getPersistentMetadata('user');
+        return ($user ? $user : null);
+    }
+
+
+    private function getPersistentMetadata($key)
+    {
+        if (isset($this->getMetadatas()['persistent'][$key])) {
+            return $this->getMetadatas()['persistent'][$key];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * The modified date is the last modficaction date
+     * the first time, this is the creation date
+     * @return false|string|null
+     */
+    public function getModifiedDateString()
+    {
+        $modified = $this->getModifiedTimestamp();
+        if (!empty($modified)) {
+            return date(DATE_W3C, $modified);
+        } else {
+            return null;
+        }
+    }
+
+    private function getCurrentMetadata($key)
+    {
+        $key = $this->getMetadatas()['current'][$key];
+        return ($key ? $key : null);
+    }
+
+    /**
+     * Get the create date of page
+     *
+     * @return int
+     */
+    public function getCreatedTimestamp()
+    {
+        $created = $this->getPersistentMetadata('date')['created'];
+        return ($created ? $created : null);;
+    }
+
+    /**
+     * Get the modified date of page
+     *
+     * The modified date is the last modification date
+     * the first time, this is the creation date
+     *
+     * @return int
+     */
+    public function getModifiedTimestamp()
+    {
+        $modified = $this->getCurrentMetadata('date')['modified'];
+        return ($modified ? $modified : null);
+    }
+
+    /**
+     * Creation date can not be null
+     * @return false|string
+     */
+    public function getCreatedDateString()
+    {
+
+        $created = $this->getCreatedTimestamp();
+        if (!empty($created)) {
+            return date(DATE_W3C, $created);
+        } else {
+            // Not created
+            return null;
+        }
+
+    }
+
+    /**
+     * Refresh the metadata (used only in test)
+     */
+    public function refreshMetadata()
+    {
+
+        if ($this->metadatas == null) {
+            /**
+             * Read the metadata from the file
+             */
+            $this->metadatas = $this->getMetadatas();
+        }
+        /**
+         * Read/render the metadata from the file
+         * with parsing
+         */
+        $this->metadatas = p_render_metadata($this->getId(), $this->metadatas);
+
+        /**
+         * ReInitialize
+         */
+        $this->descriptionOrigin = null;
+        $this->description = null;
+
+        /**
+         * Return
+         */
+        return $this->metadatas;
+
+    }
+
+    public function getCountry()
+    {
+
+        $country = $this->getPersistentMetadata("country");
+        if (!empty($country)) {
+            if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
+                LogUtility::msg("The country value ($country) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
+            }
+            return $country;
+        } else {
+
+            return Site::getCountry();
+
+        }
+
+    }
+
+    public function getLang()
+    {
+        $lang = $this->getPersistentMetadata("lang");
+        if (empty($lang)) {
+            global $conf;
+            if (isset($conf["lang"])) {
+                $lang = $conf["lang"];
+            }
+        }
+        return $lang;
+    }
+
+    public function isHomePage()
+    {
+        global $conf;
+        return $this->id == $conf['start'];
+    }
+
+    public function getMetadata($key)
+    {
+        return $this->getPersistentMetadata($key);
+    }
+
+    public function getPublishedTimestamp()
+    {
+        $persistentMetadata = $this->getPersistentMetadata(Publication::META_KEY_PUBLISHED);
+        if (!empty($persistentMetadata)) {
+            $timestamp = strtotime($persistentMetadata);
+            if ($timestamp === false) {
+                LogUtility::msg("The published date ($persistentMetadata) of the page ($this->id) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, "published");
+            } else {
+                return date("U", $timestamp);
+            }
+        } else {
+            return null;
+        }
+
+    }
+
+    /**
+     * @return false|int|string|null
+     */
+    public function getPublishedElseCreationTimeStamp()
+    {
+        $publishedDate = $this->getPublishedTimestamp();
+        if (empty($publishedDate)) {
+            $publishedDate = $this->getCreatedTimestamp();
+        }
+        return $publishedDate;
+    }
+
+    /**
+     * If low page rank or late publication and not logged in,
+     * no authorization
+     * @param $user
+     * @return bool if the page should be protected
+     */
+    public function isProtected($user = '')
+    {
+        $protected = false;
+        if (!Auth::isLoggedIn($user)) {
+
+            /**
+             * Low quality page and late publication should not
+             * be public and readable for the search engine
+             */
+
+            if ($this->isLowQualityPage()) {
+                $lowQualityPageEnabled = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
+                if ($lowQualityPageEnabled == 1) {
+                    $protected = true;
+                }
+            }
+
+            if ($this->isLatePublication()) {
+
+                $latePublicationEnabled = PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
+                if ($latePublicationEnabled == 1) {
+                    $protected = true;
+                }
+
+            }
+        }
+        return $protected;
+
+    }
+
+    public function isLatePublication()
+    {
+        return $this->getPublishedElseCreationTimeStamp() > time();
+    }
+
+    public function getCanonicalUrl()
+    {
+        if (!empty($this->getCanonical())) {
+            return getBaseURL(true) . strtr($this->getCanonical(), ':', '/');
+        }
+        return null;
+    }
+
+    public function getCanonicalUrlOrDefault()
+    {
+        $url = $this->getCanonicalUrl();
+        if (empty($url)) {
+            $url = $this->getUrl();
+        }
+        return $url;
+    }
+
+    /**
+     *
+     * @return string|null - the locale facebook way
+     */
+    public function getLocale()
+    {
+        $lang = $this->getLang();
+        if (!empty($lang)) {
+
+            $country = $this->getCountry();
+            if (empty($country)) {
+                $country = $lang;
+            }
+            return $lang . "_" . strtoupper($country);
+        }
+        return null;
+    }
+
+    private function processDescriptionIfNeeded()
+    {
+
+        if ($this->descriptionOrigin == null) {
+            $descriptionArray = $this->getMetadata(Page::DESCRIPTION_PROPERTY);
+            if (!empty($descriptionArray)) {
+                if (array_key_exists('abstract', $descriptionArray)) {
+
+                    $temporaryDescription = $descriptionArray['abstract'];
+
+                    $this->descriptionOrigin = "dokuwiki";
+                    if (array_key_exists('origin', $descriptionArray)) {
+                        $this->descriptionOrigin = $descriptionArray['origin'];
+                    }
+
+                    if ($this->descriptionOrigin == "dokuwiki") {
+
+                        // suppress the carriage return
+                        $temporaryDescription = str_replace("\n", " ", $descriptionArray['abstract']);
+                        // suppress the h1
+                        $temporaryDescription = str_replace($this->getH1(), "", $temporaryDescription);
+                        // Suppress the star, the tab, About
+                        $temporaryDescription = preg_replace('/(\*|\t|About)/im', "", $temporaryDescription);
+                        // Suppress all double space and trim
+                        $temporaryDescription = trim(preg_replace('/  /m', " ", $temporaryDescription));
+                        $this->description = $temporaryDescription;
+
+                    } else {
+
+                        $this->description = $temporaryDescription;
+
+                    }
+                }
+
+            }
+        }
+
     }
 
 

@@ -53,6 +53,23 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
+    public function accepts($mode)
+    {
+        $accept = true;
+
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            $accept = PluginUtility::disablePreformatted($mode);
+        }
+
+        // Create P element
+        if ($mode == "eol") {
+            $accept = false;
+        }
+
+        return $accept;
+
+    }
+
     /**
      * How Dokuwiki will add P element
      *
@@ -98,6 +115,7 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
         $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
 
     }
+
 
     /**
      *
@@ -179,12 +197,12 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
                         $breakpoint = $attributes["breakpoint"];
                         unset($attributes["breakpoint"]);
                     }
-                    $attributes["class"] .= ' navbar-expand-'.$breakpoint;
+                    $attributes["class"] .= ' navbar-expand-' . $breakpoint;
 
                     // Grab the position
                     if (array_key_exists("position", $attributes)) {
                         $position = $attributes["position"];
-                        if ($position==="top") {
+                        if ($position === "top") {
                             $attributes["class"] .= ' fixed-top';
                         }
                         unset($attributes["position"]);
@@ -196,7 +214,7 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
                         $theme = $attributes["theme"];
                         unset($attributes["theme"]);
                     }
-                    $attributes["class"] .= ' navbar-'.$theme;
+                    $attributes["class"] .= ' navbar-' . $theme;
 
                     // Align
                     $align = "center";

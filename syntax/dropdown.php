@@ -122,17 +122,25 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 $linkAttributes = PluginUtility::getTagAttributes($match);
-                return array($state, $linkAttributes);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $linkAttributes
+                );
 
             case DOKU_LEXER_UNMATCHED :
 
                 // Normally we don't get any here
-                return array($state, $match);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $match
+                );
 
 
             case DOKU_LEXER_EXIT :
 
-                return array($state, '');
+                array(
+                    PluginUtility::STATE => $state
+                );
 
 
         }
@@ -154,8 +162,18 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
 
-        list($state, $payload) = $data;
+
         if ($format == 'xhtml') {
+
+            /**
+             * Cache fighting
+             */
+            if (isset($data[PluginUtility::STATE])) {
+                $state = $data[PluginUtility::STATE];
+            } else {
+                $state = $data[0];
+            }
+
 
             /** @var Doku_Renderer_xhtml $renderer */
 
@@ -164,17 +182,31 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $this->dropdownCounter++;
                     $dropDownId = "dropDown" . $this->dropdownCounter;
-                    $name = 'Name';
-                    if (array_key_exists("name", $payload)) {
-                        $name = $payload["name"];
+                    if (isset($data[PluginUtility::ATTRIBUTES])) {
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                    } else {
+                        $attributes = $data[1];
                     }
-                    $renderer->doc .= '<li class="nav-item dropdown">' . DOKU_LF
+                    $name = "Name attribute not set";
+                    if (array_key_exists("name", $attributes)) {
+                        $name = $attributes["name"];
+                        unset($attributes["name"]);
+                    }
+                    PluginUtility::addClass2Attributes("nav-item", $attributes);
+                    PluginUtility::addClass2Attributes("dropdown", $attributes);
+                    $htmlAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $renderer->doc .= "<li $htmlAttributes>" . DOKU_LF
                         . '<a id="' . $dropDownId . '" href="#" class="nav-link dropdown-toggle active" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="Title">' . $name . '</a>' . DOKU_LF
                         . '<div class="dropdown-menu" aria-labelledby="' . $dropDownId . '">' . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
 
+                    if (isset($data[PluginUtility::PAYLOAD])) {
+                        $payload = $data[PluginUtility::PAYLOAD];
+                    } else {
+                        $payload = $data[1];
+                    }
                     $renderer->doc .= PluginUtility::escape($payload);
                     break;
 

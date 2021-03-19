@@ -40,6 +40,7 @@ class Analytics
     const QUALITY = 'quality';
     const STATISTICS = "statistics";
     const EMAILS_COUNT = "emails_count";
+    const WINDOWS_SHARE_COUNT = "windows_share_count";
 
     /**
      * An array of info for errors mostly

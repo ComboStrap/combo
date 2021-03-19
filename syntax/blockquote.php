@@ -30,8 +30,17 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "blockquote";
+
+    /**
+     * When the blockquote is a tweet
+     */
+    const TWEET = "tweet";
+    const TWEET_SUPPORTED_LANG = array("en", "ar", "bn", "cs", "da", "de", "el", "es", "fa", "fi", "fil", "fr", "he", "hi", "hu", "id", "it", "ja", "ko", "msa", "nl", "no", "pl", "pt", "ro", "ru", "sv", "th", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw");
+    const CONF_TWEET_WIDGETS_THEME = "twitter:widgets:theme";
+    const CONF_TWEET_WIDGETS_BORDER = "twitter:widgets:border-color";
+
     const BLOCKQUOTE_OPEN_TAG = "<blockquote class=\"blockquote mb-0\">" . DOKU_LF;
-    const CARD_BODY_BLOCKQUOTE_OPEN_TAG = syntax_plugin_combo_card::CARD_BODY.self::BLOCKQUOTE_OPEN_TAG;
+    const CARD_BODY_BLOCKQUOTE_OPEN_TAG = syntax_plugin_combo_card::CARD_BODY . self::BLOCKQUOTE_OPEN_TAG;
 
 
     /**
@@ -59,14 +68,49 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * No one of array('container', 'baseonly', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
-     * because we manage self the content and we call self the parser
-     *
-     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
+     * ***************
+     * This function has no effect because {@link syntax_plugin_combo_blockquote::accepts()}
+     * is used
+     * ***************
      */
     public function getAllowedTypes()
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+    }
+
+    /**
+     * @param string $mode
+     * @return bool
+     * Allowed type
+     */
+    public function accepts($mode)
+    {
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header") {
+            return false;
+        }
+
+        /**
+         * Empty line will create an empty that will
+         * go and takes also the cite element (???)
+         * Not fighting this
+         */
+        if ($mode == "eol") {
+            return false;
+        }
+
+
+        /**
+         * If preformatted is disable, we does not accept it
+         */
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
     }
 
 
@@ -139,69 +183,32 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = array("type" => "card");
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 $tagAttributes = PluginUtility::mergeAttributes($tagAttributes, $defaultAttributes);
-
-
-                $type = $tagAttributes["type"];
-                if ($type == "typo") {
-                    $class = "blockquote";
-                } else {
-                    $class = "card";
-                }
-                PluginUtility::addClass2Attributes($class, $tagAttributes);
-
-
-                $html = "";
-                if ($type == "typo") {
-                    $tag = new Tag(self::TAG, $tagAttributes, $state, $handler->calls);
-                    if ($tag->hasParent() && $tag->getParent()->getName() == "card") {
-                        PluginUtility::addClass2Attributes("mb-0", $tagAttributes);
-                    }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($tagAttributes);
-                    $html .= "<blockquote {$inlineAttributes}>" . DOKU_LF;
-                } else {
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($tagAttributes);
-                    $html = "<div {$inlineAttributes}>" . DOKU_LF;
-                    /**
-                     * Add the card body directly,
-                     * the {@link syntax_plugin_combo_header} will delete it if present
-                     * We use this methodology because a blockquote may have as direct
-                     * child another combo/dokuwiki syntax that is not aware
-                     * of where it lives and will then not open the body of the card
-                     */
-                    $html .= self::CARD_BODY_BLOCKQUOTE_OPEN_TAG;
+                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler);
+                $context = null;
+                if ($tag->hasParent()) {
+                    $context = $tag->getParent()->getName();
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::PAYLOAD => $html);
+                    PluginUtility::CONTEXT => $context
+                );
 
 
             case DOKU_LEXER_UNMATCHED :
-                $doc = PluginUtility::escape($match);
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $doc);
-
+                    PluginUtility::PAYLOAD => $match
+                );
 
             case DOKU_LEXER_EXIT :
                 // Important to get an exit in the render phase
-                $node = new Tag(self::TAG, array(), $state, $handler->calls);
-                if ($node->getOpeningTag()->getType() == "card") {
-
-                    $doc = "</blockquote>" . DOKU_LF;
-                    $doc .= "</div>" . DOKU_LF;
-                    $doc .= "</div>" . DOKU_LF;
-
-                } else {
-
-                    $doc = "</blockquote>" . DOKU_LF;
-
-                }
+                $node = new Tag(self::TAG, array(), $state, $handler);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $doc
+                    PluginUtility::CONTEXT => $node->getOpeningTag()->getType()
                 );
 
         }
@@ -228,17 +235,101 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
 
-                case DOKU_LEXER_ENTER :
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                case DOKU_LEXER_ENTER:
+
+                    /**
+                     * Add the CSS
+                     */
+                    $snippetManager = PluginUtility::getSnippetManager();
+                    $snippetManager->addCssSnippetOnlyOnce(self::TAG);
+
+                    /**
+                     * Create the HTML
+                     */
+                    $blockquoteAttributes = $data[PluginUtility::ATTRIBUTES];
+                    $type = $blockquoteAttributes["type"];
+                    switch ($type) {
+                        case "typo":
+
+                            $class = "blockquote";
+                            PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
+                            $context = $data[PluginUtility::CONTEXT];
+                            if ($context == syntax_plugin_combo_card::TAG) {
+                                PluginUtility::addClass2Attributes("mb-0", $blockquoteAttributes);
+                            }
+                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
+                            $renderer->doc .= "<blockquote {$inlineBlockQuoteAttributes}>" . DOKU_LF;
+                            break;
+                        case self::TWEET:
+
+                            PluginUtility::getSnippetManager()->addHeadTagsOnce(self::TWEET,
+                                array("script" =>
+                                    array(
+                                        array(
+                                            "id" => "twitter-wjs",
+                                            "type" => "text/javascript",
+                                            "aysnc" => true,
+                                            "src" => "https://platform.twitter.com/widgets.js",
+                                            "defer" => true
+                                        ))));
+
+
+                            $class = "twitter-tweet";
+                            PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
+
+                            $tweetAttributesNames = ["cards", "dnt", "conversation", "align", "width", "theme", "lang"];
+                            foreach ($tweetAttributesNames as $tweetAttributesName) {
+                                if (isset($blockquoteAttributes[$tweetAttributesName])) {
+                                    $blockquoteAttributes["data-" . $tweetAttributesName] = $blockquoteAttributes[$tweetAttributesName];
+                                    unset($blockquoteAttributes[$tweetAttributesName]);
+                                }
+                            }
+
+                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
+                            $renderer->doc .= "<blockquote $inlineBlockQuoteAttributes>" . DOKU_LF;
+                            $renderer->doc .= "<p>" . DOKU_LF;
+                            break;
+                        default:
+                            $class = "card";
+                            PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
+                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
+                            $renderer->doc .= "<div {$inlineBlockQuoteAttributes}>" . DOKU_LF;
+                            /**
+                             * Add the card body directly,
+                             * the {@link syntax_plugin_combo_header} will delete it if present
+                             * We use this methodology because a blockquote may have as direct
+                             * child another combo/dokuwiki syntax that is not aware
+                             * of where it lives and will then not open the body of the card
+                             */
+                            $renderer->doc .= self::CARD_BODY_BLOCKQUOTE_OPEN_TAG;
+                            break;
+                    }
                     break;
+
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    break;
+
                 case DOKU_LEXER_EXIT:
                     // Because we can have several unmatched on a line we don't know if
                     // there is a eol
-                    StringUtility::addEolIfNotPresent($renderer->doc);
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
-                    break;
+                    StringUtility::addEolCharacterIfNotPresent($renderer->doc);
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch ($context) {
+                        case "card":
 
+                            $renderer->doc .= "</blockquote>" . DOKU_LF;
+                            $renderer->doc .= "</div>" . DOKU_LF;
+                            $renderer->doc .= "</div>" . DOKU_LF;
+                            break;
+                        case self::TWEET:
+                        default:
+
+                            $renderer->doc .= "</blockquote>" . DOKU_LF;
+                            break;
+
+                    }
+                    break;
 
 
             }

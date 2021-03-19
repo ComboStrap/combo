@@ -51,24 +51,25 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
      */
     public function getAllowedTypes()
     {
-        return array('container', 'formatting',  'substition', 'protected', 'disabled', 'paragraphs');
+        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    /**
-     * We don't accept link as substition
-     * @param string $mode
-     * @return bool
-     */
-//    public function accepts($mode)
-//    {
-//        $position = strpos($mode, 'link');
-//        if ($position === false){
-//            return parent::accepts($mode);
-//        } else {
-//            return false;
-//        }
-//
-//    }
+    public function accepts($mode)
+    {
+        $accept = true;
+
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            $accept = PluginUtility::disablePreformatted($mode);
+        }
+
+        // P element are not welcome in a navbar
+        if ($mode == "eol") {
+            $accept = false;
+        }
+
+        return $accept;
+
+    }
 
 
     /**
@@ -197,7 +198,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
                         } else {
                             $attributes["class"] = "{$classValue}";
                         }
-                        $renderer->doc .= '<div id="' . $idElementToCollapse . '" '.PluginUtility::array2HTMLAttributes($attributes).'>';
+                        $renderer->doc .= '<div id="' . $idElementToCollapse . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '>';
 
                         // All element below will collapse
                         break;

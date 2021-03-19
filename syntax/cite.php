@@ -4,6 +4,7 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
 // must be run within Dokuwiki
+use ComboStrap\LinkUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 use ComboStrap\PluginUtility;
@@ -96,7 +97,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                $node = new Tag(self::TAG, $tagAttributes, $state, $handler->calls);
+                $node = new Tag(self::TAG, $tagAttributes, $state, $handler);
                 $parent = "";
                 if ($node->hasParent()) {
                     $parent = $node->getParent()->getName();
@@ -104,7 +105,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::PARENT_TAG => $parent);
+                    PluginUtility::CONTEXT => $parent);
 
             case DOKU_LEXER_UNMATCHED :
                 return array(
@@ -114,14 +115,27 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
                 // Important otherwise we don't get an exit in the render
-                $node = new Tag(self::TAG, array(), $state, $handler->calls);
-                $parentName = "";
+                $node = new Tag(self::TAG, array(), $state, $handler);
+                $context = "";
                 if ($node->hasParent()) {
-                    $parentName = $node->getParent()->getName();
+                    $parent = $node->getParent();
+                    $context = $parent->getName();
+                    if ($context == syntax_plugin_combo_blockquote::TAG) {
+                        $link = $node->getOpeningTag()->getDescendant(syntax_plugin_combo_link::TAG);
+                        if (!empty($link)) {
+                            $ref = $link->getAttribute(LinkUtility::ATTRIBUTE_REF);
+                            if (StringUtility::match($ref, "https:\/\/twitter.com\/[^\/]*\/status\/.*")) {
+                                $context = syntax_plugin_combo_blockquote::TWEET;
+                                $parent->setType($context);
+                                $parent->setContext($context);
+                                $node->getOpeningTag()->setContext($context);
+                            }
+                        }
+                    }
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PARENT_TAG => $parentName);
+                    PluginUtility::CONTEXT => $context);
 
 
         }
@@ -150,24 +164,29 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $parent = $data[PluginUtility::PARENT_TAG];
-                    if (!empty($parent) && $parent == syntax_plugin_combo_blockquote::TAG) {
-                        StringUtility::addEolIfNotPresent($renderer->doc);
-                        $renderer->doc .= "<footer class=\"blockquote-footer\"><cite";
-                        if (sizeof($attributes) > 0) {
-                            $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
-                            $renderer->doc .= " $inlineAttributes>";
-                        } else {
-                            $renderer->doc .= '>';
-                        }
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch ($context) {
 
-                    } else {
-                        $renderer->doc .= "<cite";
-                        if (sizeof($attributes) > 0) {
-                            $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
-                            $renderer->doc .= " $inlineAttributes";
-                        }
-                        $renderer->doc .= ">";
+                        case syntax_plugin_combo_blockquote::TAG:
+                            StringUtility::addEolCharacterIfNotPresent($renderer->doc);
+                            $renderer->doc .= "<footer class=\"blockquote-footer\"><cite";
+                            if (sizeof($attributes) > 0) {
+                                $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                                $renderer->doc .= " $inlineAttributes>";
+                            } else {
+                                $renderer->doc .= '>';
+                            }
+                            break;
+                        case syntax_plugin_combo_blockquote::TWEET:
+                            $renderer->doc .= '</p>';
+                            break;
+                        default:
+                            $renderer->doc .= "<cite";
+                            if (sizeof($attributes) > 0) {
+                                $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                                $renderer->doc .= " $inlineAttributes";
+                            }
+                            $renderer->doc .= ">";
                     }
                     break;
 
@@ -177,12 +196,19 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
-                    $renderer->doc .= '</cite>';
-                    $parent = $data[PluginUtility::PARENT_TAG];
-                    if (!empty($parent) && in_array($parent, ["card", "blockquote"])) {
-                        $renderer->doc .= '</footer>' . DOKU_LF;
-                    } else {
-                        $renderer->doc .= DOKU_LF;
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch($context){
+                        case syntax_plugin_combo_card::TAG:
+                        case syntax_plugin_combo_blockquote::TAG:
+                            $renderer->doc .= '</cite>';
+                            $renderer->doc .= '</footer>' . DOKU_LF;
+                            break;
+                        case syntax_plugin_combo_blockquote::TWEET:
+                            // There is no element
+                            break;
+                        default:
+                            $renderer->doc .= '</cite>'.DOKU_LF;
+
                     }
                     break;
 

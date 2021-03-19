@@ -33,6 +33,10 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
      * up in the messages
      */
     const CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING = "excludedQualityRulesFromDynamicMonitoring";
+    /**
+     * Disable the message totally
+     */
+    const CONF_DISABLE_QUALITY_MONITORING = "disableDynamicQualityMonitoring";
 
     /**
      * Key in the frontmatter that disable the message
@@ -51,13 +55,15 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        $controller->register_hook(
-            'TPL_ACT_RENDER',
-            'BEFORE',
-            $this,
-            '_displayQualityMessage',
-            array()
-        );
+        if(!$this->getConf(self::CONF_DISABLE_QUALITY_MONITORING)) {
+            $controller->register_hook(
+                'TPL_ACT_RENDER',
+                'BEFORE',
+                $this,
+                '_displayQualityMessage',
+                array()
+            );
+        }
 
 
     }

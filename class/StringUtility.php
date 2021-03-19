@@ -20,8 +20,10 @@ class StringUtility
      */
     static function truncateString($myString, $length)
     {
+
         if (strlen($myString) > $length) {
-            $myString = substr($myString, 0, $length) . ' ...';
+            $suffix = ' ...';
+            $myString = substr($myString, 0, ($length - 1) - strlen($suffix)) . $suffix;
         }
         return $myString;
     }
@@ -68,7 +70,7 @@ class StringUtility
      * Add an EOL if not present at the end of the string
      * @param $doc
      */
-    public static function addEolIfNotPresent(&$doc)
+    public static function addEolCharacterIfNotPresent(&$doc)
     {
         if ($doc[strlen($doc) - 1] != DOKU_LF) {
             $doc .= DOKU_LF;
@@ -90,7 +92,7 @@ class StringUtility
         $doc = trim($doc);
         $string = trim($string);
         $length = strlen($doc) - strlen($string);
-        if (substr($doc, $length)===$string) {
+        if (substr($doc, $length) === $string) {
             $doc = substr($doc, 0, $length);
         }
 
@@ -108,7 +110,7 @@ class StringUtility
         $doc = trim($doc);
         $string = trim($string);
         $length = strlen($string);
-        if (substr($doc, 0, $length)===$string) {
+        if (substr($doc, 0, $length) === $string) {
             $doc = substr($doc, $length);
         }
 
@@ -126,7 +128,7 @@ class StringUtility
         /**
          * Delete the frontmatter
          */
-        $text = preg_replace("/^---(json)?$.*^---$/Ums","",$text);
+        $text = preg_replace("/^---(json)?$.*^---$/Ums", "", $text);
         /**
          * New line for node
          */
@@ -172,6 +174,17 @@ class StringUtility
          */
         $preg_match = preg_match("/^[\w\-'\]\[,]*$/u", $text);
         return $preg_match == 1;
+    }
+
+    public static function match($subject, $pattern)
+    {
+        return preg_match("/$pattern/", $subject) === 1;
+    }
+
+    public static function endWiths($string, $suffix)
+    {
+        $suffixStartPosition = strlen($string) - strlen($suffix );
+        return strrpos($string, $suffix ) === $suffixStartPosition;
     }
 
 }

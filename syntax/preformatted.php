@@ -14,8 +14,9 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
 {
 
     const TAG='preformatted';
+
     /**
-     * Enable or disable this component
+     * Enable or disable preformatted
      */
     const CONF_PREFORMATTED_ENABLE = 'preformattedEnable';
 

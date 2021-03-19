@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -140,81 +141,33 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 $inLinesAttributes = PluginUtility::getTagAttributes($match);
                 $attributes = PluginUtility::mergeAttributes($inLinesAttributes, $defaultAttributes);
 
-                # A button
-                PluginUtility::addClass2Attributes("btn", $attributes);
-
-                $type = $attributes["type"];
-                $skin = $attributes["skin"];
-                $class = "btn";
-                switch ($skin) {
-                    case "contained":
-                    {
-                        $class .= "-" . $type;
-                        $attributes["elevation"]=true;
-                        break;
-                    }
-                    case "filled":
-                    {
-                        $class .= "-" . $type;
-                        break;
-                    }
-                    case "outline":
-                    {
-                        $class .= "-outline-" . $type;
-                        break;
-                    }
-                    case "text":
-                    {
-                        $class .= "-link";
-                        $attributes["color"]=$type;
-                        break;
-                    }
-                }
-                unset($attributes["skin"]);
-                PluginUtility::addClass2Attributes($class, $attributes);
-
-                if (array_key_exists("align", $attributes)) {
-                    $align = $attributes["align"];
-                    if ($align == "center") {
-                        PluginUtility::addStyleProperty("display", "block", $attributes);
-                    }
-                }
-
-                $sizeAttribute = "size";
-                if (array_key_exists($sizeAttribute, $attributes)) {
-                    $size = $attributes[$sizeAttribute];
-                    unset($attributes[$sizeAttribute]);
-                    switch ($size) {
-                        case "lg":
-                        case "large":
-                            PluginUtility::addClass2Attributes("btn-lg", $attributes);
-                            break;
-                        case "sm":
-                        case "small":
-                            PluginUtility::addClass2Attributes("btn-sm", $attributes);
-                            break;
-                    }
-                }
-
-
-                $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
-                $html = '<button type="button" ' . $inlineAttributes . '>';
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => PluginUtility::escape($match));
+                    PluginUtility::PAYLOAD => $match
+                );
 
 
             case DOKU_LEXER_EXIT :
-
-                return array(PluginUtility::STATE => $state, '');
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $openingTag = $tag->getOpeningTag();
+                $linkDescendant = $openingTag->getDescendant(syntax_plugin_combo_link::TAG);
+                if ($linkDescendant != null) {
+                    $context = syntax_plugin_combo_link::TAG;
+                } else {
+                    $context = self::TAG;
+                }
+                $openingTag->setContext($context);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::CONTEXT => $context
+                );
 
 
         }
@@ -243,17 +196,42 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
 
-                $state = $data["state"];
+                /**
+                 * CSS
+                 */
+                PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+
+                /**
+                 * HTML
+                 */
+                $state = $data[PluginUtility::STATE];
+                $attributes = $data[PluginUtility::ATTRIBUTES];
+                $context = $data[PluginUtility::CONTEXT];
                 switch ($state) {
 
                     case DOKU_LEXER_UNMATCHED:
+                        /**
+                         * If this is a button and not a link button
+                         */
+                        $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                        break;
                     case DOKU_LEXER_ENTER :
-                        $renderer->doc .= $data["payload"];
+
+                        if ($context == self::TAG) {
+                            self::processButtonAttributesToHtmlAttributes($attributes);
+                            $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                            $renderer->doc .= '<button type="button" ' . $inlineAttributes . '>';
+                        }
                         break;
 
 
                     case DOKU_LEXER_EXIT :
-                        $renderer->doc .= '</button>';
+                        /**
+                         * If this is a button and not a link button
+                         */
+                        if ($context == self::TAG) {
+                            $renderer->doc .= '</button>';
+                        }
                         break;
                 }
                 return true;
@@ -264,7 +242,6 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
     }
 
 
-
     public static function getTags()
     {
         $elements[] = self::TAG;
@@ -272,6 +249,73 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
         return $elements;
     }
 
+    /**
+     * @param $attributes
+     */
+    public static function processButtonAttributesToHtmlAttributes(&$attributes)
+    {
+        # A button
+        PluginUtility::addClass2Attributes("btn", $attributes);
+
+        $type = $attributes["type"];
+        if (blank($type)) {
+            $type = "primary";
+        }
+        $skin = $attributes["skin"];
+        if (blank($skin)) {
+            $skin = "filled";
+        }
+        $class = "btn";
+        switch ($skin) {
+            case "contained":
+            {
+                $class .= "-" . $type;
+                $attributes["elevation"] = true;
+                break;
+            }
+            case "filled":
+            {
+                $class .= "-" . $type;
+                break;
+            }
+            case "outline":
+            {
+                $class .= "-outline-" . $type;
+                break;
+            }
+            case "text":
+            {
+                $class .= "-link";
+                $attributes["color"] = $type;
+                break;
+            }
+        }
+        unset($attributes["skin"]);
+        PluginUtility::addClass2Attributes($class, $attributes);
+
+        if (array_key_exists("align", $attributes)) {
+            $align = $attributes["align"];
+            if ($align == "center") {
+                PluginUtility::addStyleProperty("display", "block", $attributes);
+            }
+        }
+
+        $sizeAttribute = "size";
+        if (array_key_exists($sizeAttribute, $attributes)) {
+            $size = $attributes[$sizeAttribute];
+            unset($attributes[$sizeAttribute]);
+            switch ($size) {
+                case "lg":
+                case "large":
+                    PluginUtility::addClass2Attributes("btn-lg", $attributes);
+                    break;
+                case "sm":
+                case "small":
+                    PluginUtility::addClass2Attributes("btn-sm", $attributes);
+                    break;
+            }
+        }
+    }
 
 
 }

@@ -4,8 +4,8 @@
 namespace ComboStrap;
 
 
-use helper_plugin_sqlite;
-use TestConstant;
+
+use syntax_plugin_combo_preformatted;
 use TestRequest;
 
 require_once(__DIR__ . '/LogUtility.php');
@@ -14,6 +14,7 @@ require_once(__DIR__ . '/IconUtility.php');
 require_once(__DIR__ . '/StringUtility.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/RenderUtility.php');
+require_once(__DIR__ . '/SnippetManager.php');
 
 
 /**
@@ -32,7 +33,9 @@ class PluginUtility
     const STATE = "state";
     const PAYLOAD = "payload"; // The html or text
     const ATTRIBUTES = "attributes";
-    const PARENT_TAG = 'parent';
+    // The context is generally the parent tag but it may be also the grandfather.
+    // It permits to determine the HTML that is outputted
+    const CONTEXT = 'context';
     const CONTENT = 'content';
     const TAG = "tag";
 
@@ -110,15 +113,15 @@ class PluginUtility
     }
 
     /**
-     * @param $component
+     * @param $tag
      * @return string
      *
      * A mode is just a name for a class
      * Example: $Parser->addMode('listblock',new Doku_Parser_Mode_ListBlock());
      */
-    public static function getModeForComponent($component)
+    public static function getModeForComponent($tag)
     {
-        return "plugin_" . strtolower(PluginUtility::PLUGIN_BASE_NAME) . "_" . $component;
+        return "plugin_" . self::getComponentName($tag);
     }
 
     /**
@@ -129,7 +132,13 @@ class PluginUtility
      */
     public static function getContainerTagPattern($tag)
     {
-        return '<' . $tag . '.*?>(?=.*?<\/' . $tag . '>)';
+        // this pattern ensure that the tag
+        // `accordion` will not intercept also the tag `accordionitem`
+        // where:
+        // ?: means non capturing group (to not capture the last >)
+        // (\s.*?): is a capturing group that starts with a space
+        $pattern = "(?:\s.*?>|>)";
+        return '<' . $tag . $pattern . '(?=.*?<\/' . $tag . '>)';
     }
 
     /**
@@ -236,7 +245,7 @@ class PluginUtility
         }
 
         // Suppress the / for a leaf tag
-        if ($match[strlen($match)-1] == "/") {
+        if ($match[strlen($match) - 1] == "/") {
             $match = substr($match, 0, strlen($match) - 1);
         }
 
@@ -399,7 +408,7 @@ class PluginUtility
     /**
      * This method will takes attributes
      * and process the plugin styling attribute such as width and height
-     * to put them in a style HTML attrbute
+     * to put them in a style HTML attribute
      * @param $attributes
      */
     public static function processStyle(&$attributes)
@@ -507,7 +516,14 @@ class PluginUtility
 
         $elevation = "elevation";
         if (array_key_exists($elevation, $attributes)) {
-            $styleProperties["box-shadow"] = "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)";
+            $elevationValue = $attributes[$elevation];
+            if ($elevationValue == "high") {
+                $styleProperties["box-shadow"] = "0 0 0 .2em rgba(3,102,214,0),0 13px 27px -5px rgba(50,50,93,.25),0 8px 16px -8px rgba(0,0,0,.3),0 -6px 16px -6px rgba(0,0,0,.025)";
+            } else {
+                $styleProperties["box-shadow"] = "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)";
+            }
+            $styleProperties["transition"] = ".2s";
+            $styleProperties["transition-property"] = "color,box-shadow";
             unset($attributes[$elevation]);
         }
 
@@ -595,10 +611,14 @@ class PluginUtility
         $icon = "";
         if ($withIcon) {
 
-            $icon = "<img src=\"https://combostrap.com/_media/favicon-16x16.png\" />";
+            /**
+             * The best would be
+             */
+            //$icon = "<img src=\"https://combostrap.com/_media/logo.svg\" width='40px'/>";
+            $icon = "<object type=\"image/svg+xml\" data=\"https://combostrap.com/_media/logo.svg\" style=\"max-width: 16px\"></object>";
 
         }
-        return $icon.' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
+        return $icon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
     }
 
     /**
@@ -662,12 +682,11 @@ class PluginUtility
      * Check if a HTML tag was already added for a request
      * The request id is just the timestamp
      * An indicator array should be provided
-     * @param $info - the render->info array
-     * @param $snippetName - the name of the snippet (or $this->getPluginComponent())
-     * @return bool
+     * @return string
      */
-    public static function htmlSnippetAlreadyAdded(&$info, $snippetName)
+    public static function getRequestId()
     {
+
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
             // since php 5.4
             $requestTime = $_SERVER['REQUEST_TIME_FLOAT'];
@@ -676,18 +695,10 @@ class PluginUtility
             $requestTime = $_SERVER['REQUEST_TIME'];
         }
         $keyPrefix = 'combo_';
-        if (!empty($snippetName)) {
-            $uniqueId = $keyPrefix . $snippetName;
-        } else {
-            global $ID;
-            $uniqueId = $keyPrefix . hash('crc32b', $_SERVER['REMOTE_ADDR'] . $_SERVER['REMOTE_PORT'] . $requestTime . $ID);
-        }
-        if (array_key_exists($uniqueId, $info)) {
-            return true;
-        } else {
-            $info[$uniqueId] = $requestTime;
-            return false;
-        }
+
+        global $ID;
+        return $keyPrefix . hash('crc32b', $_SERVER['REMOTE_ADDR'] . $_SERVER['REMOTE_PORT'] . $requestTime . $ID);
+
     }
 
     /**
@@ -722,11 +733,7 @@ class PluginUtility
      */
     public static function addClass2Attributes($classValue, array &$attributes)
     {
-        if (array_key_exists("class", $attributes) && $attributes["class"] !== "") {
-            $attributes["class"] .= " {$classValue}";
-        } else {
-            $attributes["class"] = "{$classValue}";
-        }
+        self::addAttributeValue("class", $classValue, $attributes);
     }
 
     /**
@@ -822,6 +829,10 @@ class PluginUtility
         return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
     }
 
+    /**
+     * @param $match
+     * @return null|string - return the tag name or null if not found
+     */
     public static function getTag($match)
     {
 
@@ -832,7 +843,7 @@ class PluginUtility
         $pos = strpos($match, ">");
         if ($pos == false) {
             LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_ERROR);
-            return array();
+            return null;
         }
         $match = substr($match, 0, $pos);
 
@@ -870,6 +881,79 @@ class PluginUtility
             $attributes['data-target'] = $targetId;
         }
     }
+
+    /**
+     * @param string $string add a command into HTML
+     */
+    public static function addAsHtmlComment($string)
+    {
+        print_r('<!-- ' . self::escape($string) . '-->');
+    }
+
+    public static function getResourceBaseUrl()
+    {
+        return DOKU_URL . 'lib/plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/resources';
+    }
+
+    /**
+     * @param $TAG - the name of the tag that should correspond to the name of the css file in the style directory
+     * @return string - a inline style element to inject in the page or blank if no file exists
+     */
+    public static function getTagStyle($TAG)
+    {
+        $script = self::getCssRules($TAG);
+        if (!empty($script)) {
+            return "<style>" . $script . "</style>";
+        } else {
+            return "";
+        }
+
+    }
+
+
+    /**
+     * Utility function to disable preformatted
+     * @param $mode
+     * @return bool
+     */
+    public static function disablePreformatted($mode)
+    {
+        if (
+            $mode == 'preformatted'
+            ||
+            $mode == PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
+        ) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public static function getComponentName($tag)
+    {
+        return strtolower(PluginUtility::PLUGIN_BASE_NAME) . "_" . $tag;
+    }
+
+    public static function addAttributeValue($attribute, $value, array &$attributes)
+    {
+        if (array_key_exists($attribute, $attributes) && $attributes[$attribute] !== "") {
+            $attributes[$attribute] .= " {$value}";
+        } else {
+            $attributes[$attribute] = "{$value}";
+        }
+    }
+
+    /**
+     * Plugin Utility is available to all plugin,
+     * this is a convenient way to the the snippet manager
+     * @return SnippetManager
+     */
+    public static function getSnippetManager()
+    {
+        return  SnippetManager::get();
+    }
+
+
 
 
 }

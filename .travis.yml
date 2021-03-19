@@ -3,25 +3,25 @@ language: php
 # https://www.ovh.nl/shared-hosting/persoonlijke-shared-hosting.xml
 # and https://github.com/splitbrain/dokuwiki-travis
 php:
-  - "7.4"
-  - "7.3"
-  - "7.2"
-  - "7.1"
-  - "7.0"
-  - "5.6"
+#    - "7.4" - Array and string offset access syntax with curly braces is deprecated vendor/marcusschwarz/lesserphp/lessc.inc.php:761
+    - "7.3"
+    - "7.2"
+    - "7.1"
+    - "7.0"
+    - "5.6"
 
 env:
-  - DOKUWIKI=stable
+    - DOKUWIKI=stable
 
-before_install:
-  - wget https://raw.github.com/ComboStrap/combo/master/dev/boot.sh
-
-install:
-  - bash boot.sh
+before_script:
+    - "curl -H \"Authorization: token ${TOKEN}\" -o \"boot.sh\" \"https://raw.githubusercontent.com/ComboStrap/combo_dev/master/ci/boot.sh\""
+    - wget https://raw.githubusercontent.com/splitbrain/dokuwiki-travis/master/travis.sh
+    - bash boot.sh
+    - sh travis.sh
 
 script:
-  - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug
+    - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug
 
 notifications:
-  email:
-    - support@combostrap.com
+    email:
+        - support@combostrap.com

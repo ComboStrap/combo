@@ -14,8 +14,10 @@ namespace ComboStrap;
 
 
 use Doku_Handler;
+use dokuwiki\Action\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
+use RuntimeException;
 
 
 /**
@@ -52,6 +54,10 @@ class Tag
      * @var int
      */
     private $position;
+    /**
+     * @var Doku_Handler
+     */
+    private $handler;
 
 
     /**
@@ -67,10 +73,10 @@ class Tag
      * @param $name
      * @param $attributes
      * @param $state
-     * @param $calls - A reference to the dokuwiki call stack - ie {@link Doku_Handler->calls}
+     * @param Doku_Handler $handler - A reference to the dokuwiki handler
      * @param null $position - The position in the call stack of null if it's the HEAD tag (The tag that is created from the data of the {@link SyntaxPlugin::render()}
      */
-    public function __construct($name, $attributes, $state, &$calls, $position = null)
+    public function __construct($name, $attributes, $state, &$handler, $position = null)
     {
         $this->name = $name;
         if ($attributes == null) {
@@ -79,8 +85,23 @@ class Tag
             $this->attributes = $attributes;
         }
         $this->state = $state;
-        $this->calls = &$calls;
-        $this->position = $position;
+        /**
+         * A temporary Call stack is created in the writer
+         * for list, table, blockquote
+         */
+        $writerCalls = &$handler->getCallWriter()->calls;
+        if (!empty($writerCalls)) {
+            $this->calls = &$writerCalls;
+        } else {
+            $this->calls = &$handler->calls;
+        }
+        $this->handler = &$handler;
+        if ($position != null) {
+            $this->position = $position;
+        } else {
+            // The tag is not yet in the stack
+            $this->position = sizeof($this->calls);
+        }
 
     }
 
@@ -106,6 +127,8 @@ class Tag
                 return self::getMatchFromCall($call);
             case "internallink":
                 return '[[' . $call[1][0] . '|' . $call[1][1] . ']]';
+            case "eol":
+                return DOKU_LF;
             default:
                 return "Unknown tag content for caller ($caller)";
         }
@@ -117,6 +140,12 @@ class Tag
     }
 
     /**
+     * The lexer state
+     *   DOKU_LEXER_ENTER = 1
+     *   DOKU_LEXER_MATCHED = 2
+     *   DOKU_LEXER_UNMATCHED = 3
+     *   DOKU_LEXER_EXIT = 4
+     *   DOKU_LEXER_SPECIAL = 5
      * @return mixed
      */
     public function getState()
@@ -161,7 +190,7 @@ class Tag
             }
         }
 
-        return new Tag($name, $attributes, $state, $this->calls, $position);
+        return new Tag($name, $attributes, $state, $this->handler, $position);
     }
 
     /**
@@ -193,7 +222,7 @@ class Tag
      */
     public function hasSiblings()
     {
-        if ($this->getSibling() === null) {
+        if ($this->getPreviousSibling() === null) {
             return false;
         } else {
             return true;
@@ -208,7 +237,7 @@ class Tag
     public function getParent()
     {
         if (isset($this->position)) {
-            $descendantCounter = $this->position;
+            $descendantCounter = $this->position - 1;
         } else {
             $descendantCounter = sizeof($this->calls) - 1;
         }
@@ -366,7 +395,7 @@ class Tag
      *
      * @return null|Tag - the sibling tag (in ascendant order) or null
      */
-    public function getSibling()
+    public function getPreviousSibling()
     {
         if (isset($this->position)) {
             $counter = $this->position - 1;
@@ -393,6 +422,14 @@ class Tag
                      */
                     $treeLevel = $treeLevel + 1;
                     break;
+                case DOKU_LEXER_UNMATCHED:
+                    if (empty(trim(self::getContentFromCall($call)))){
+                        // An empty unmatched in not considered a sibling
+                        // state = null will continue the loop
+                        // we can't use a continue statement in a switch
+                        $state = null;
+                    }
+                    break;
             }
 
             /*
@@ -400,7 +437,7 @@ class Tag
              * If we get above or on the same level
              */
             if ($treeLevel <= 0
-                && $state != null // eol state
+                && $state != null // eol state or empty tag
             ) {
                 break;
             } else {
@@ -410,6 +447,11 @@ class Tag
             }
 
         }
+        /**
+         * Because we don't count tag without an state such as eol,
+         * the tree level may be negative which means
+         * that there is no sibling
+         */
         if ($treeLevel == 0) {
             return self::call2Tag($call, $counter);
         }
@@ -423,6 +465,10 @@ class Tag
         return $this->getParent() !== false;
     }
 
+
+    /**
+     * @return bool|Tag
+     */
     public function getOpeningTag()
     {
         $descendantCounter = sizeof($this->calls) - 1;
@@ -460,21 +506,36 @@ class Tag
         }
     }
 
+
+    /**
+     *
+     * @return Tag the first descendant that is not whitespace
+     */
+    public function getFirstMeaningFullDescendant()
+    {
+        $descendants = $this->getDescendants();
+        $firstDescendant = $descendants[0];
+        if ($firstDescendant->getState() == DOKU_LEXER_UNMATCHED && trim($firstDescendant->getContentRecursively()) == "") {
+            return $descendants[1];
+        } else {
+            return $firstDescendant;
+        }
+    }
+
     /**
      * Descendant can only be run on enter tag
      * @return Tag[]
-     * @throws Exception
      */
     public function getDescendants()
     {
 
         if ($this->state != DOKU_LEXER_ENTER) {
-            throw new Exception("Descendant should be called on enter tag. Get the opening tag first if you are in a exit tag");
+            throw new RuntimeException("Descendant should be called on enter tag. Get the opening tag first if you are in a exit tag");
         }
         if (isset($this->position)) {
             $index = $this->position + 1;
         } else {
-            throw new Exception("It seems that we are at the end of the stack because the position is not set");
+            throw new RuntimeException("It seems that we are at the end of the stack because the position is not set");
         }
         $descendants = array();
         while ($index <= sizeof($this->calls) - 1) {
@@ -493,7 +554,12 @@ class Tag
                  * We don't take the end of line
                  */
                 if ($childCall[0] != "eol") {
+                    /**
+                     * We don't take text
+                     */
+                    //if ($state!=DOKU_LEXER_UNMATCHED) {
                     $descendants[] = self::call2Tag($childCall, $index);
+                    //}
                 }
                 /**
                  * Close
@@ -509,7 +575,6 @@ class Tag
     /**
      * @param string $tagName
      * @return Tag|null
-     * @throws Exception
      */
     public function getDescendant($tagName)
     {
@@ -519,6 +584,7 @@ class Tag
                 (
                     $tag->getState() === DOKU_LEXER_ENTER
                     || $tag->getState() === DOKU_LEXER_MATCHED
+                    || $tag->getState() === DOKU_LEXER_SPECIAL
                 )
             ) {
                 return $tag;
@@ -552,6 +618,20 @@ class Tag
         }
     }
 
+    /**
+     *
+     * @return array|mixed - the context (generally a tag name)
+     */
+    public function getContext()
+    {
+        if ($this->position != null) {
+            $data = self::getDataFromCall($this->calls[$this->position]);
+            return $data[PluginUtility::CONTEXT];
+        } else {
+            return array();
+        }
+    }
+
 
     /**
      * Return the content of a tag (the string between this tag)
@@ -559,28 +639,102 @@ class Tag
      * such as {@link getDescendant}
      * @return string
      */
-    public function getContent()
+    public function getContentRecursively()
     {
         $content = "";
-        $index = $this->position + 1;
-        while ($index <= sizeof($this->calls) - 1) {
+        $state = $this->getState();
+        switch ($state) {
+            case DOKU_LEXER_ENTER:
+                $index = $this->position + 1;
+                while ($index <= sizeof($this->calls) - 1) {
 
-
-            $currentCall = $this->calls[$index];
-            if (
-                self::getTagNameFromCall($currentCall) == $this->getName()
-                &&
-                self::getStateFromCall($currentCall) == DOKU_LEXER_EXIT
-            ) {
+                    $currentCall = $this->calls[$index];
+                    if (
+                        self::getTagNameFromCall($currentCall) == $this->getName()
+                        &&
+                        self::getStateFromCall($currentCall) == DOKU_LEXER_EXIT
+                    ) {
+                        break;
+                    } else {
+                        $content .= self::getContentFromCall($currentCall);
+                        $index++;
+                    }
+                }
                 break;
-            } else {
-                $content .= self::getContentFromCall($currentCall);
-                $index++;
-            }
+            case DOKU_LEXER_UNMATCHED:
+            default:
+                $content = $this->getContent();
+                break;
         }
 
 
         return $content;
 
+    }
+
+    /**
+     * Return true if the tag is the first sibling
+     *
+     *
+     * @return boolean - true if this is the first sibling
+     */
+    public function isFirstMeaningFullSibling()
+    {
+        $sibling = $this->getPreviousSibling();
+        if ($sibling == null) {
+            return true;
+        } else {
+            /** Whitespace string */
+            if ($sibling->getState() == DOKU_LEXER_UNMATCHED && trim($sibling->getContentRecursively()) == "") {
+                $sibling = $sibling->getPreviousSibling();
+            }
+            if ($sibling == null) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+    }
+
+    /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function addAttribute($key, $value)
+    {
+        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key] = $value;
+        return $this;
+    }
+
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function setContext($value)
+    {
+        $this->calls[$this->position][1][1][PluginUtility::CONTEXT] = $value;
+        return $this;
+    }
+
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function setType($value)
+    {
+        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES]["type"] = $value;
+        return $this;
+    }
+
+    public function getPosition()
+    {
+        return $this->position;
+    }
+
+    public function getContent()
+    {
+        return self::getContentFromCall($this->calls[$this->position]);
     }
 }

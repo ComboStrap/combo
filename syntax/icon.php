@@ -121,7 +121,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 // Get the parameters
                 $originalAttributes = PluginUtility::getTagAttributes($match);
                 $attributesToRender = $originalAttributes;
-                $tag = new Tag(self::TAG,$originalAttributes,$state,$handler->calls);
+                $tag = new Tag(self::TAG,$originalAttributes,$state,$handler);
                 if($tag->isDescendantOf(syntax_plugin_combo_list::TAG)){
                     PluginUtility::addClass2Attributes("mr-2",$attributesToRender);
                 }

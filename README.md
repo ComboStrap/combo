@@ -11,6 +11,7 @@
   * [Quality Control](https://combostrap.com/quality)
   * [Analytics](https://combostrap.com/analytics)
   * [Seo](https://combostrap.com/seo)
+  * [Social (Google, Twitter, Facebook)](https://combostrap.com/social)
   * [Ads](https://combostrap.com/ads)
 
 More ... [ComboStrap](https://combostrap.com)

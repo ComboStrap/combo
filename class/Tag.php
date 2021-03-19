@@ -96,9 +96,10 @@ class Tag
             $this->calls = &$handler->calls;
         }
         $this->handler = &$handler;
-        if ($position!=null) {
+        if ($position != null) {
             $this->position = $position;
         } else {
+            // The tag is not yet in the stack
             $this->position = sizeof($this->calls);
         }
 
@@ -421,6 +422,14 @@ class Tag
                      */
                     $treeLevel = $treeLevel + 1;
                     break;
+                case DOKU_LEXER_UNMATCHED:
+                    if (empty(trim(self::getContentFromCall($call)))){
+                        // An empty unmatched in not considered a sibling
+                        // state = null will continue the loop
+                        // we can't use a continue statement in a switch
+                        $state = null;
+                    }
+                    break;
             }
 
             /*
@@ -428,7 +437,7 @@ class Tag
              * If we get above or on the same level
              */
             if ($treeLevel <= 0
-                && $state != null // eol state
+                && $state != null // eol state or empty tag
             ) {
                 break;
             } else {

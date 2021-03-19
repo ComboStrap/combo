@@ -160,6 +160,7 @@ class XmlUtility
             throw new \RuntimeException("The text should not be empty");
         }
         $doc = new DOMDocument();
+        $text = XmlUtility::preprocessText($text);
         $doc->loadXML($text);
         $doc->normalize();
         $doc->formatOutput = true;
@@ -172,6 +173,13 @@ class XmlUtility
         $text = str_replace("/*<![CDATA[*/","",$text);
         $text = str_replace("/*!]]>*/","",$text);
         $text = str_replace("\/","/",$text);
+        return $text;
+    }
+
+    public static function preprocessText($text)
+    {
+        $text = preg_replace("/\r\n\s*\r\n/","\r\n",$text);
+        $text = preg_replace("/\n\s*\n/","\n",$text);
         return $text;
     }
 

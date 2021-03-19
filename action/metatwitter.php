@@ -112,7 +112,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
             // Identify the Twitter profile of the page that populates the via property
             // https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
-            $name = substr($siteTwitterHandle,"@","");
+            $name = str_replace($siteTwitterHandle,"@","");
             $event->data['link'][] = array("rel" => "me", "href" => "https://twitter.com/$name");
         }
         if (!empty($siteTwitterId)) {

@@ -36,19 +36,28 @@ class action_plugin_combo_cachebursting extends DokuWiki_Action_Plugin
 
         $namespace = $event->data[1];
         global $conf;
+
+        $sidebars = [
+            $conf['sidebar']
+        ];
+
         /**
          * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
          */
-        $sidebars = [
-            $conf['sidebar'],
-            $conf['tpl']['strap']['sidekickbar']
-        ];
+        $sideKickBarName = $conf['tpl']['strap']['sidekickbar'];
+        if(!empty($sideKickBarName)){
+            $sidebars[]=$sideKickBarName;
+        }
 
         /**
          * Delete the cache for the sidebar if they exists
          */
         foreach ($sidebars as $sidebar) {
-            $id = new Page("$namespace:$sidebar");
+            if (!empty($namespace)){
+                $id = new Page("$namespace:$sidebar");
+            } else {
+                $id = new Page($sidebar);
+            }
             $id->deleteCache();
         }
 

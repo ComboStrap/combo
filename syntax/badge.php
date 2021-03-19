@@ -115,7 +115,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                  * Context Rendering attributes
                  */
                 $attributesToRender = $originalAttributes;
-                $tag = new Tag(self::TAG,$originalAttributes,$state,$handler->calls);
+                $tag = new Tag(self::TAG,$originalAttributes,$state,$handler);
 
                 if($tag->isDescendantOf(syntax_plugin_combo_list::TAG)){
                     PluginUtility::addStyleProperty("margin-left","auto",$attributesToRender);
@@ -192,6 +192,8 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_EXIT :
                 case DOKU_LEXER_ENTER :
+
+                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
 
                     $renderer->doc .= $data[PluginUtility::PAYLOAD].DOKU_LF;
                     break;

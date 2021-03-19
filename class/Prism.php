@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use Doku_Renderer_xhtml;
+use syntax_plugin_combo_code;
 
 class Prism
 {
@@ -12,7 +13,6 @@ class Prism
     /**
      * The class used to mark the added prism code
      */
-    const SCRIPT_CLASS = 'combo_prism';
     const BASE_PRISM_CDN = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/";
     /**
      * The default prompt for bash
@@ -62,40 +62,47 @@ class Prism
      */
     const CONF_PRISM_THEME = "prismTheme";
     const PRISM_THEME_DEFAULT = "tomorrow";
-    const FILE_PATH_KEY = "file-path";
 
 
     /**
      *
      * @param $theme
-     * @return string
      *
      * Ter info: The theme of the default wiki is in the print.css file (search for code blocks)
      */
-    public static function getSnippet($theme)
+    public static function addSnippet($theme)
     {
         $BASE_PRISM_CDN = self::BASE_PRISM_CDN;
+        $SCRIPT_ID = "prism";
         if ($theme == self::PRISM_THEME) {
             $themeStyleSheet = "prism.min.css";
         } else {
             $themeStyleSheet = "prism-$theme.min.css";
         }
         $themeIntegrity = self::THEMES_INTEGRITY[$theme];
-        $script = <<<EOD
-<script defer="true" src="$BASE_PRISM_CDN/components/prism-core.min.js"></script>
-<script defer="true" src="$BASE_PRISM_CDN/plugins/autoloader/prism-autoloader.min.js"></script>
-<script defer="true" src="$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js"></script>
-<!--https://prismjs.com/plugins/normalize-whitespace/-->
-<script defer="true" src="$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js"></script>
-<!--https://prismjs.com/plugins/show-language/-->
-<script defer="true" src="$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js"></script>
-<!--https://prismjs.com/plugins/command-line/-->
-<script defer="true" src="$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js"></script>
-<!--https://prismjs.com/plugins/line-numbers/-->
-<script defer="true" src="$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js"></script>
-<!--https://prismjs.com/plugins/download-button/-->
-<script defer="true" src="$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js" integrity="sha512-rGJwSZEEYPBQjqYxrdg6Ug/6i763XQogKx+N/GF1rCGvfmhIlIUFxCjc4FmEdCu5dvovqxHsoe3IPMKP+KlgNQ==" crossorigin="anonymous"></script>
-<script defer="true" type="application/javascript">
+
+        $tags = array();
+        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/components/prism-core.min.js");
+        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/autoloader/prism-autoloader.min.js");
+        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js");
+        // https://prismjs.com/plugins/normalize-whitespace/
+        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js");
+        // https://prismjs.com/plugins/show-language/
+        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js");
+        // https://prismjs.com/plugins/command-line/
+        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js");
+        //https://prismjs.com/plugins/line-numbers/
+        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js");
+        // https://prismjs.com/plugins/download-button/-->
+        $tags['script'][] = array(
+            "src" => "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
+            "integrity" => "sha512-rGJwSZEEYPBQjqYxrdg6Ug/6i763XQogKx+N/GF1rCGvfmhIlIUFxCjc4FmEdCu5dvovqxHsoe3IPMKP+KlgNQ==",
+            "crossorigin" => "anonymous"
+        );
+
+        PluginUtility::getSnippetManager()->addHeadTagsOnce($SCRIPT_ID, $tags);
+
+        $javascriptCode = <<<EOD
 document.addEventListener('DOMContentLoaded', (event) => {
 
     if (typeof self === 'undefined' || !self.Prism || !self.document) {
@@ -206,13 +213,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 
 });
-
-</script>
 EOD;
-
-        return '<div class="' . Prism::SCRIPT_CLASS . '">' . DOKU_LF
-            . $script . DOKU_LF
-            . '</div>' . DOKU_LF;
+        PluginUtility::getSnippetManager()->addJavascriptSnippetIfNeeded($SCRIPT_ID, $javascriptCode);
 
     }
 
@@ -229,9 +231,8 @@ EOD;
         /**
          * Add prism
          */
-        if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, Prism::SNIPPET_NAME)) {
-            $renderer->doc .= Prism::getSnippet($theme);
-        }
+        Prism::addSnippet($theme);
+
 
         /**
          * Add HTML
@@ -244,17 +245,17 @@ EOD;
          * Language name mapping between the dokuwiki default
          * and prism
          */
-        if ($language == "rsplus"){
+        if ($language == "rsplus") {
             $language = "r";
         }
-        if ($language == "dos"){
+        if ($language == "dos") {
             $language = "batch";
         }
-        if ($language == "apache"){
+        if ($language == "apache") {
             $language = "apacheconf";
         }
 
-        StringUtility::addEolIfNotPresent($renderer->doc);
+        StringUtility::addEolCharacterIfNotPresent($renderer->doc);
         PluginUtility::addClass2Attributes('language-' . $language, $attributes);
         if (array_key_exists("line-numbers", $attributes)) {
             unset($attributes["line-numbers"]);
@@ -269,45 +270,45 @@ EOD;
         PluginUtility::addClass2Attributes($addedClass, $preAttributes);
         // Command line
         if (array_key_exists("prompt", $attributes)) {
-            PluginUtility::addClass2Attributes("command-line",$preAttributes);
-            $preAttributes["data-prompt"]=$attributes["prompt"];
+            PluginUtility::addClass2Attributes("command-line", $preAttributes);
+            $preAttributes["data-prompt"] = $attributes["prompt"];
             unset($attributes["prompt"]);
         } else {
             switch ($language) {
                 case "bash":
-                    PluginUtility::addClass2Attributes("command-line",$preAttributes);
-                    $preAttributes["data-prompt"]=$plugin->getConf(self::CONF_BASH_PROMPT);
+                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
+                    $preAttributes["data-prompt"] = $plugin->getConf(self::CONF_BASH_PROMPT);
                     break;
                 case "batch":
-                    PluginUtility::addClass2Attributes("command-line",$preAttributes);
+                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
                     $powerShell = trim($plugin->getConf(self::CONF_BATCH_PROMPT));
-                    if (!empty($powerShell)){
-                        if (!strpos($powerShell, -1)==">"){
+                    if (!empty($powerShell)) {
+                        if (!strpos($powerShell, -1) == ">") {
                             $powerShell .= ">";
                         }
                     }
-                    $preAttributes["data-prompt"]=$powerShell;
+                    $preAttributes["data-prompt"] = $powerShell;
                     break;
                 case "powershell":
-                    PluginUtility::addClass2Attributes("command-line",$preAttributes);
+                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
                     $powerShell = trim($plugin->getConf(self::CONF_POWERSHELL_PROMPT));
-                    if (!empty($powerShell)){
-                        if (!strpos($powerShell, -1)==">"){
+                    if (!empty($powerShell)) {
+                        if (!strpos($powerShell, -1) == ">") {
                             $powerShell .= ">";
                         }
                     }
-                    $preAttributes["data-prompt"]=$powerShell;
+                    $preAttributes["data-prompt"] = $powerShell;
                     break;
             }
         }
         // Download
-        $preAttributes['data-download-link']=true;
-        if (array_key_exists(self::FILE_PATH_KEY,$attributes)){
-            $preAttributes['data-src']=$attributes[self::FILE_PATH_KEY];
-            unset($attributes[self::FILE_PATH_KEY]);
-            $preAttributes['data-download-link-label']="Download ".$preAttributes['data-src'];
+        $preAttributes['data-download-link'] = true;
+        if (array_key_exists(syntax_plugin_combo_code::FILE_PATH_KEY, $attributes)) {
+            $preAttributes['data-src'] = $attributes[syntax_plugin_combo_code::FILE_PATH_KEY];
+            unset($attributes[syntax_plugin_combo_code::FILE_PATH_KEY]);
+            $preAttributes['data-download-link-label'] = "Download " . $preAttributes['data-src'];
         } else {
-            $preAttributes['data-src']="file.".$language;
+            $preAttributes['data-src'] = "file." . $language;
         }
         $htmlCode = '<pre ' . PluginUtility::array2HTMLAttributes($preAttributes) . '>' . DOKU_LF;
 
@@ -325,8 +326,6 @@ EOD;
     {
         $renderer->doc .= '</code>' . DOKU_LF . '</pre>' . DOKU_LF;
     }
-
-
 
 
 }

@@ -24,10 +24,18 @@ class TemplateUtility
          * @see {@link \syntax_plugin_combo_pipeline}
          */
 
-        $pageTitle = self::getPageTitle($pageId);
+        /**
+         * The title/h1 should never be null
+         * otherwise a template link such as [[$id|$title]] will return a link without an description
+         * and therefore not visible
+         * We render at least the id
+         */
+        $page = new Page($pageId);
+        $h1Title = $page->getH1NotEmpty();
+        $pageTitle = $page->getTitleNotEmpty();
+
         $pageTitle = str_replace('"', "'", $pageTitle);
         $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
-        $h1Title = self::getPageH1($pageId);
         $h1Title = str_replace('"', "'", $h1Title);
         $tpl = str_replace("\$h1", $h1Title, $tpl);
         return str_replace("\$id", $pageId, $tpl);

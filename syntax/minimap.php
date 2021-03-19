@@ -6,6 +6,7 @@
  * @author  Nicolas GERARD
  */
 
+use ComboStrap\SnippetManager;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 
@@ -19,179 +20,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
     const INCLUDE_DIRECTORY_PARAMETERS = 'includedirectory';
     const SHOW_HEADER = 'showheader';
     const NAMESPACE_KEY_ATT = 'namespace';
-    const POWERED_BY = 'poweredby';
 
-    const STYLE_SNIPPET = <<<EOF
-<style>
-.nicon_folder_open {
-    background-image: url('data:image/svg+xml;charset=utf8,<svg xmlns="http://www.w3.org/2000/svg" width="250" height="195"><g fill="rgb(204,204,204)" transform="translate(-7.897 -268.6)"><rect rx="0" y="286.829" x="12.897" height="175" width="200" opacity=".517"/><path d="M13.23 458.808l39.687-132.291h198.437l-39.687 132.291z" fill-rule="evenodd"/><rect rx="0" y="273.6" x="39.688" height="13" width="90"/></g></svg>');
-    display: inline-block;
-    width: 1.5em;
-    height: 1em;
-    vertical-align: middle;
-    content: "";
-    background-size: 100% 100%;
-}
-#minimap__plugin {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.42857;
-}
-
-#minimap__plugin .panel-default {
-    border-color: #ddd;
-    box-sizing: border-box;
-}
-
-#minimap__plugin .panel {
-    box-sizing: border-box;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    -moz-border-bottom-colors: none;
-    -moz-border-left-colors: none;
-    -moz-border-right-colors: none;
-    -moz-border-top-colors: none;
-    background-color: #fff;
-    border-image-outset: 0 0 0 0;
-    border-image-repeat: stretch stretch;
-    border-image-slice: 100% 100% 100% 100%;
-    border-image-source: none;
-    border-image-width: 1 1 1 1;
-    border-radius: 4px;
-    border: 1px solid;
-    margin-bottom: 20px;
-    display: block;
-    color: #ddd;
-}
-
-#minimap__plugin .panel-default > .panel-heading {
-    background: #f5f5f5 linear-gradient(to bottom, #f5f5f5 0px, #e8e8e8 100%) repeat-x;
-    border-color: #ddd;
-    color: #333;
-}
-
-#minimap__plugin .panel-heading {
-    border-bottom: 1px solid;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-    padding: 10px 15px;
-    box-sizing: border-box;
-    display: block;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.42857;
-}
-
-#minimap__plugin .panel > .list-group, #minimap__plugin .panel > .panel-collapse > .list-group {
-    margin-bottom: 0;
-}
-
-#minimap__plugin .list-group {
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.075);
-    padding-left: 0;
-    box-sizing: border-box;
-    color: #333;
-}
-
-#minimap__plugin .panel-heading + .list-group .list-group-item:first-child {
-    border-top-width: 0;
-}
-
-#minimap__plugin .panel > .list-group .list-group-item,
-#minimap__plugin .panel > .panel-collapse > .list-group .list-group-item {
-    border-bottom-width: 1px;
-    border-left-width: 0;
-    border-right-width: 0;
-    border-radius: 0;
-}
-
-#minimap__plugin .list-group-item {
-    -moz-border-bottom-colors: none;
-    -moz-border-left-colors: none;
-    -moz-border-right-colors: none;
-    -moz-border-top-colors: none;
-    background-color: #fff;
-    border-image-outset: 0 0 0 0;
-    border-image-repeat: stretch stretch;
-    border-image-slice: 100% 100% 100% 100%;
-    border-image-source: none;
-    border-image-width: 1 1 1 1;
-    /*border: solid #ddd;*/
-    display: block;
-    padding: 10px 15px;
-    position: relative;
-    box-sizing: border-box;
-    margin: 0 0 -1px;
-}
-
-#minimap__plugin .label-primary {
-    background-color: #337ab7;
-}
-
-#minimap__plugin .label {
-    border-radius: 0.25em;
-    color: #fff;
-    display: inline;
-    font-size: 75%;
-    font-weight: 700;
-    line-height: 1;
-    padding: 0.2em 0.6em 0.3em;
-    text-align: center;
-    vertical-align: baseline;
-    white-space: nowrap;
-    box-sizing: border-box;
-}
-
-/* Active link css */
-#minimap__plugin .list-group-item.active,
-#minimap__plugin .list-group-item.active:focus,
-#minimap__plugin .list-group-item.active:hover {
-    background: #f5f5f5 linear-gradient(to bottom, #f5f5f5 0px, #e8e8e8 100%) repeat-x;
-    border-color: #ddd;
-    color: #333;
-    text-shadow: none;
-}
-
-#minimap__plugin .list-group-item.active {
-    background-color: #e8e8e8 ! important;
-    z-index: 2;
-}
-
-
-#minimap__plugin .panel-body {
-    clear: both;
-    content: " ";
-    box-sizing: border-box;
-    display: table;
-    padding: 15px;
-    unicode-bidi: -moz-isolate;
-    color: #333;
-}
-
-#minimap__plugin .glyphicon {
-    /*already same color than the header*/
-    color: #d8d2d2;
-}
-
-#minimap__plugin .panel-footing {
-    display: flex;
-    padding: 0.10rem;
-    background: #f5f5f5 linear-gradient(to bottom,#f5f5f5 0px,#e8e8e8 100%) repeat-x;
-}
-
-#minimap__plugin .minimap_badge {
-
-    border-radius: 0.25em;
-    background-color: #d8d2d2;
-    font-size: 0.6rem;
-    padding: 0.25rem;
-    margin-left: auto !important;
-    margin-right: 0.3rem;
-    color: #1d4a71;
-    margin: 0.1rem;
-}
-</style>
-EOF;
 
 
     function connectTo($aMode)
@@ -300,9 +129,9 @@ EOF;
 
                 case DOKU_LEXER_SPECIAL :
 
-                    if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info,self::MINIMAP_TAG_NAME)){
-                        $renderer->doc .= self::STYLE_SNIPPET;
-                    };
+
+                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::MINIMAP_TAG_NAME);
+
 
                     global $ID;
                     global $INFO;
@@ -357,26 +186,8 @@ EOF;
 
 
                         /**
-                         * Set name and title
+                         * Set special name and title
                          */
-                        // Name if the variable that it's shown. A part of it can be suppressed
-                        // Title will stay full in the link
-                        $h1TargetPage = $link->getInternalPage()->getH1();
-                        $title = $link->getInternalPage()->getTitle();
-
-                        $link->setName(noNSorNS($pageId));
-                        if ($h1TargetPage !=null) {
-                            $link->setName($h1TargetPage);
-                        } else {
-                            if ($title!=null) {
-                                $link->setName($title);
-                            }
-                        }
-                        $link->setTitle(noNSorNS($pageId));
-                        if ($title!=null) {
-                            $link->setTitle($title);
-                        }
-
                         // If debug mode
                         if ($parameters['debug']) {
                             $link->setTitle($link->getTitle().' (' . $pageId . ')');
@@ -436,10 +247,12 @@ EOF;
 
                             // Add a glyphicon if it's a directory
                             if ($pageArray['type'] == "d") {
-                                $miniMapList .= "<span class=\"nicon_folder_open\" aria-hidden=\"true\"></span>&nbsp;&nbsp;";
+                                $miniMapList .= "<span class=\"nicon_folder_open\" aria-hidden=\"true\"></span> ";
                             }
 
-                            $miniMapList .= $link->render($renderer);;
+                            $miniMapList .= $link->renderOpenTag($renderer);
+                            $miniMapList .= $link->getName();
+                            $miniMapList .= $link->renderClosingTag();
 
 
                             // Close the item
@@ -469,12 +282,9 @@ EOF;
                         }
                     } else {
                         $startLink = new LinkUtility($startId);
-                        $startLink->setName($startId);
-                        $h1 = $startLink->getInternalPage()->getH1();
-                        if ($h1!=null){
-                            $startLink->setName($h1);
-                        }
-                        $panelHeaderContent = $startLink->render($renderer);
+                        $panelHeaderContent = $startLink->renderOpenTag($renderer);
+                        $panelHeaderContent .= $startLink->getName();
+                        $panelHeaderContent .= $startLink->renderClosingTag();
                         // We are not counting the header page
                         $pageNum--;
                     }

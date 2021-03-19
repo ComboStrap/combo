@@ -1,11 +1,12 @@
 <?php
 
 
-use ComboStrap\FsWikiUtility;
+use ComboStrap\SnippetManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\StyleUtility;
 
 require_once(__DIR__ . '/../class/StyleUtility.php');
+require_once(__DIR__ . '/../class/SnippetManager.php');
 
 
 /**
@@ -152,11 +153,15 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    if (!PluginUtility::htmlSnippetAlreadyAdded($renderer->info, self::TAG)) {
-                        $styles = $this->getStyles();
-                        $renderer->doc .= '<style>' . StyleUtility::getRule($styles, "." . self::COMBO_LIST_CLASS) . '</style>'.DOKU_LF;
-                    }
+
+                    $styles = $this->getStyles();
+                    $styleRule = StyleUtility::getRule($styles, "." . self::COMBO_LIST_CLASS);
+                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(
+                        self::TAG,
+                        $styleRule
+                    );
                     $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+
                     break;
                 case DOKU_LEXER_EXIT :
                     $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;

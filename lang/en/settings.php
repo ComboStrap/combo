@@ -2,10 +2,15 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
+use ComboStrap\Page;
+use ComboStrap\PageProtection;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
+use ComboStrap\Publication;
+use ComboStrap\Site;
 use ComboStrap\UrlManagerBestEndPage;
 
 require_once(__DIR__ . '/../../class/PluginUtility.php');
@@ -79,7 +84,6 @@ $lang[syntax_plugin_combo_code::CONF_CODE_ENABLE] = PluginUtility::getUrl("code"
 $lang[syntax_plugin_combo_file::CONF_FILE_ENABLE] = PluginUtility::getUrl("file", "File Component") . ' - Enable or disable the file component';
 
 
-
 /**
  * Preformatted mode
  */
@@ -89,16 +93,57 @@ $lang[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE] = PluginUtilit
  * Mandatory rules
  */
 $lang[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = PluginUtility::getUrl("low_quality_page", "Mandatory Quality rules") . ' - The mandatory quality rules are the rules that should pass to consider the quality of a page as not `low`';
-$lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = PluginUtility::getUrl("lqpp", "Low quality page protection")." - If enabled, a low quality page will no more be discoverable by search engine or anonymous user.";
-$lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = PluginUtility::getUrl("lqpp", "Low quality page protection mode")." - Choose the protection mode. Hidden (but still accessible) vs Acl (User should log in)";
+$lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = PluginUtility::getUrl("lqpp", "Low quality page protection") . " - If enabled, a low quality page will no more be discoverable by search engine or anonymous user.";
+$lang[PageProtection::CONF_PAGE_PROTECTION_MODE] = PluginUtility::getUrl("page:protection", "Page protection mode") . " - Choose the protection mode for low quality page and late publication. Hidden (but still accessible) vs Acl (User should log in)";
 
 /**
  * Autofrontmatter
  */
-$lang[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = PluginUtility::getUrl("frontmatter", "Frontmatter")." - If enabled, a new page will be created with a frontmatter)";
+$lang[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = PluginUtility::getUrl("frontmatter", "Frontmatter") . " - If enabled, a new page will be created with a frontmatter)";
 
 /**
  * Excluded rules
  */
-$lang[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring")." - If chosen, the quality rules will not be monitored.)";
+$lang[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - If chosen, the quality rules will not be monitored.)";
+$lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - Disable the Quality Dynamic Monitoring feature (the quality message will not appear anymore)";
+/**
+ * Dokuwiki Class Name
+ */
+$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the Dokuwiki class type for links (Bootstrap conflict if enabled)";
+
+/**
+ * Twitter
+ */
+$lang[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = PluginUtility::getUrl("twitter", "Twitter") . " - The media id (path) to the logo shown in a twitter card";
+$lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = PluginUtility::getUrl("twitter", "Twitter") . " - Your twitter handle name used in a twitter card";
+$lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = PluginUtility::getUrl("twitter", "Twitter") . " - Your twitter handle id used in a twitter card";
+$lang[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = PluginUtility::getUrl("tweet", "Tweet") . " - Set the `do not track` attribute";
+$lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = PluginUtility::getUrl("tweet", "Tweet") . " - Set the theme for embedded twitter widget";
+$lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = PluginUtility::getUrl("tweet", "Tweet") . " - Set the border-color for embedded twitter widget";
+
+/**
+ * Page Image
+ */
+$lang[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getUrl("page:image", "Page Image") . " - Disable the use of the first image as a page image";
+
+/**
+ * Default
+ */
+$lang[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = PluginUtility::getUrl("facebook", "Facebook") . " - The default facebook page image (minimum size 200x200)";
+
+/**
+ * Country
+ */
+$lang[Site::CONF_SITE_ISO_COUNTRY] = PluginUtility::getUrl("country", "Country") . " - The default ISO country code for a page";
+
+/**
+ * Late publication
+ */
+$lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::getUrl("published", "Late Publication") . " - Page with a published date in the future will be protected from search engine and the public";
+
+/**
+ * Default page type
+ */
+$lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default page type for all pages (expected the home page)")
+
 ?>

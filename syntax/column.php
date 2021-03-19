@@ -29,7 +29,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
     static function getTags()
     {
-        return [ "column", "col"];
+        return ["column", "col"];
     }
 
     /**
@@ -51,6 +51,15 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
     public function getAllowedTypes()
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+    }
+
+    public function accepts($mode)
+    {
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -86,9 +95,12 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
      */
     function connectTo($mode)
     {
-        foreach (self::getTags() as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        // Only inside a row
+        if ($mode == PluginUtility::getModeForComponent(syntax_plugin_combo_row::TAG)) {
+            foreach (self::getTags() as $tag) {
+                $pattern = PluginUtility::getContainerTagPattern($tag);
+                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            }
         }
 
 
@@ -172,7 +184,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_UNMATCHED :
 
-                    $renderer->doc .= PluginUtility::escape($payload);;
+                    $renderer->doc .= PluginUtility::escape($payload) . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_EXIT :

@@ -40,11 +40,9 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * One of array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
-     * 'baseonly' will run only in the base mode
-     * because we manage self the content and we call self the parser
-     *
-     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
+     * ************************
+     * This function has no effect because {@link SyntaxPlugin::accepts()} is used
+     * ************************
      */
     public function getAllowedTypes()
     {
@@ -52,6 +50,25 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
          * No base only otherwise the {@link syntax_plugin_combo_heading} title (heading) base will not be taken into account
          */
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+    }
+
+    public function accepts($mode)
+    {
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header"){
+            return false;
+        }
+        /**
+         * If preformatted is disable, we does not accept it
+         */
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
     }
 
     /**

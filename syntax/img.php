@@ -6,12 +6,12 @@
 // must be run within Dokuwiki
 use ComboStrap\HeaderUtility;
 use ComboStrap\TitleUtility;
-use ComboStrap\ImgUtility;
+use ComboStrap\Image;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 
-require_once(__DIR__ . '/../class/ImgUtility.php');
+require_once(__DIR__ . '/../class/Image.php');
 
 if (!defined('DOKU_INC')) die();
 
@@ -29,6 +29,13 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
 
 
     const TAG = "img";
+
+    /**
+     * The attribute that defines if the image is the first image in
+     * the component
+     *
+     */
+    const IS_FIRST_IMAGE_KEY = "isFirstImage";
 
     function getType()
     {
@@ -67,7 +74,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
             PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
         ];
         if (in_array($mode, $modes)) {
-            $this->Lexer->addSpecialPattern(ImgUtility::IMAGE_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(Image::IMAGE_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
 
@@ -80,19 +87,15 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
 
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
-                $attributes = ImgUtility::parse($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
-
-                $html = "";
+                $attributes = Image::parse($match);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parentTag = $tag->getParent()->getName();
-                if ($parentTag == syntax_plugin_combo_card::TAG) {
-                    $html = ImgUtility::render($attributes, "card-img-top");
-                }
+                $isFirstSibling = $tag->isFirstMeaningFullSibling();
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html,
-                    PluginUtility::PARENT_TAG => $parentTag
+                    PluginUtility::CONTEXT => $parentTag,
+                    self::IS_FIRST_IMAGE_KEY => $isFirstSibling
                 );
 
 
@@ -122,12 +125,30 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_SPECIAL :
 
-                    if ($data[PluginUtility::PARENT_TAG]===syntax_plugin_combo_card::TAG ){
-                        StringUtility::rtrim($renderer->doc,syntax_plugin_combo_card::CARD_BODY);
-                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $context = $data[PluginUtility::CONTEXT];
+                    if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {
+
+                        /**
+                         * First image of a card
+                         */
+                        PluginUtility::addClass2Attributes("card-img-top", $attributes);
+                        $renderer->doc .= Image::render($attributes);
                         $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
+
                     } else {
-                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                        /**
+                         * Renderer function
+                         */
+                        $src = $attributes['src'];
+                        $title = $attributes['title'];
+                        $align = $attributes['align'];
+                        $width = $attributes['width'];
+                        $height = $attributes['height'];
+                        $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
+                        $linking = $attributes['linking'];
+                        $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
                     }
 
                     break;

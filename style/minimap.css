@@ -7,7 +7,6 @@
 *
 */
 
-
 .nicon_folder_open {
     background-image: url('data:image/svg+xml;charset=utf8,<svg xmlns="http://www.w3.org/2000/svg" width="250" height="195"><g fill="rgb(204,204,204)" transform="translate(-7.897 -268.6)"><rect rx="0" y="286.829" x="12.897" height="175" width="200" opacity=".517"/><path d="M13.23 458.808l39.687-132.291h198.437l-39.687 132.291z" fill-rule="evenodd"/><rect rx="0" y="273.6" x="39.688" height="13" width="90"/></g></svg>');
     display: inline-block;
@@ -17,7 +16,6 @@
     content: "";
     background-size: 100% 100%;
 }
-
 #minimap__plugin {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
@@ -37,11 +35,8 @@
     -moz-border-right-colors: none;
     -moz-border-top-colors: none;
     background-color: #fff;
-    border-image-outset: 0 0 0 0;
     border-image-repeat: stretch stretch;
-    border-image-slice: 100% 100% 100% 100%;
     border-image-source: none;
-    border-image-width: 1 1 1 1;
     border-radius: 4px;
     border: 1px solid;
     margin-bottom: 20px;
@@ -97,9 +92,7 @@
     -moz-border-right-colors: none;
     -moz-border-top-colors: none;
     background-color: #fff;
-    border-image-outset: 0 0 0 0;
     border-image-repeat: stretch stretch;
-    border-image-slice: 100% 100% 100% 100%;
     border-image-source: none;
     border-image-width: 1 1 1 1;
     /*border: solid #ddd;*/
@@ -171,9 +164,6 @@
     background-color: #d8d2d2;
     font-size: 0.6rem;
     padding: 0.25rem;
-    margin-left: auto !important;
-    margin-right: 0.3rem;
     color: #1d4a71;
     margin: 0.1rem;
 }
-

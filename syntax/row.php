@@ -50,6 +50,17 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
+
+    public function accepts($mode)
+    {
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
+    }
+
+
     /**
      * How Dokuwiki will add P element
      *
@@ -78,8 +89,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     /**
      * Create a pattern that will called this plugin
      *
-     * @see Doku_Parser_Mode::connectTo()
      * @param string $mode
+     * @see Doku_Parser_Mode::connectTo()
      */
     function connectTo($mode)
     {
@@ -101,13 +112,13 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * The handle function goal is to parse the matched syntax through the pattern function
      * and to return the result for use in the renderer
      * This result is always cached until the page is modified.
-     * @see DokuWiki_Syntax_Plugin::handle()
-     *
      * @param string $match
      * @param int $state
      * @param int $pos
      * @param Doku_Handler $handler
      * @return array|bool
+     * @see DokuWiki_Syntax_Plugin::handle()
+     *
      */
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
@@ -118,14 +129,22 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 $attributes = PluginUtility::getTagAttributes($match);
 
-                return array($state, $attributes);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
             case DOKU_LEXER_UNMATCHED:
-                return array($state, $match);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $match
+                );
 
             case DOKU_LEXER_EXIT :
 
-                return array($state, '');
+                return array(
+                    PluginUtility::STATE => $state
+                );
 
 
         }
@@ -150,13 +169,13 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state,$payload) = $data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = $payload;
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " ".self::TAG;
+                        $attributes["class"] .= " " . self::TAG;
                     } else {
                         $attributes["class"] = self::TAG;
                     }
@@ -166,7 +185,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_UNMATCHED :
 
-                    $renderer->doc .= PluginUtility::escape($payload);;
+                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::ATTRIBUTES]);
                     break;
 
                 case DOKU_LEXER_EXIT :
@@ -178,9 +197,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
         }
         return false;
     }
-
-
-
 
 
 }

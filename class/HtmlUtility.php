@@ -15,8 +15,6 @@ namespace ComboStrap;
 
 use DOMDocument;
 use DOMNode;
-use DOMNodeList;
-use http\Exception\RuntimeException;
 use SimpleXMLElement;
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -71,6 +69,7 @@ class HtmlUtility
         return XmlUtility::asHtml($domElement);
 
     }
+
 
     /**
      * Return a formatted HTML that does take into account the {@link DOKU_LF}
@@ -156,11 +155,12 @@ class HtmlUtility
     }
 
     /**
-     *
+     * @noinspection PhpComposerExtensionStubsInspection
+     * @param DOMNode $leftNode
+     * @param DOMNode $rightNode
      * Tip: To get the text of a node:
      * $leftNode->ownerDocument->saveHTML($leftNode)
      */
-    /** @noinspection PhpComposerExtensionStubsInspection */
     private static function diffNode(DOMNode $leftNode, DOMNode $rightNode, &$error)
     {
 
@@ -175,25 +175,39 @@ class HtmlUtility
             if ($rightNodeAttributes == null) {
                 $error .= "The node (" . $rightNode->getNodePath() . ") have no attributes while the left node has.\n";
             } else {
-                $rightAttributesLength = $rightNodeAttributes->length;
-                if ($leftAttributesLength != $rightAttributesLength) {
-                    $error .= "The node (" . $rightNode->getNodePath() . ") have different number of attributes (" . $leftAttributesLength . "," . $rightAttributesLength . ")\n";
+
+                /**
+                 * Collect the attributes by name
+                 */
+                $leftAttributes = array();
+                for ($i = 0; $i < $leftAttributesLength; $i++) {
+                    $leftAtt = $leftNode->attributes->item($i);
+                    $leftAttributes[$leftAtt->nodeName]=$leftAtt;
                 }
-                if ($leftAttributesLength != 0) {
-                    for ($i = 0; $i < $leftAttributesLength; $i++) {
-                        $leftAtt = $leftNode->attributes->item($i);
-                        $rightAtt = $rightNodeAttributes->item($i);
-                        $leftAttName = $leftAtt->nodeName;
-                        $rightAttName = $rightAtt->nodeName;
-                        if ($leftAttName != $rightAttName) {
-                            $error .= "The attribute (" . $leftAttName . ") of the node (" . $rightNode->getNodePath() . ") have different name than the right (" . $rightAttName . ")\n";
-                        }
+                ksort($leftAttributes);
+                $rightAttributes = array();
+                for ($i = 0; $i < $rightNodeAttributes->length; $i++) {
+                    $rightAtt = $rightNodeAttributes->item($i);
+                    $rightAttributes[$rightAtt->nodeName]=$rightAtt;
+                }
+
+                foreach($leftAttributes as $leftAttName => $leftAtt){
+                    $rightAtt = $rightAttributes[$leftAttName];
+                    if ($rightAtt==null){
+                        $error .= "The attribute (" . $leftAtt->getNodePath() . ") does not exist on the right side\n";
+                    } else {
+                        unset($rightAttributes[$leftAttName]);
                         $leftAttValue = $leftAtt->nodeValue;
                         $rightAttValue = $rightAtt->nodeValue;
                         if ($leftAttValue != $rightAttValue) {
-                            $error .= "The attribute (" . $leftAttName . ") of the node (" . $rightNode->getNodePath() . ") have a different value (" . $leftAttValue . ") than the right (" . $rightAttValue . ")\n";
+                            $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
                         }
                     }
+                }
+
+                ksort($rightAttributes);
+                foreach($rightAttributes as $rightAttName => $rightAtt){
+                    $error .= "The attribute (" . $rightAttName . ") of the node (" . $rightAtt->getNodePath() . ") does not exist on the left side\n";
                 }
             }
         }
@@ -201,7 +215,7 @@ class HtmlUtility
             $leftNodeValue = trim($leftNode->nodeValue);
             $rightNodeValue = trim($rightNode->nodeValue);
             if ($leftNodeValue != $rightNodeValue) {
-                $error .= "The node (" . $rightNode->getNodePath() . ") have different value (" . $leftNodeValue . "," . $rightNodeValue . ")\n";
+                $error .= "The node (" . $rightNode->getNodePath() . ") have different values (" . $leftNodeValue . "," . $rightNodeValue . ")\n";
             }
         }
         /**
@@ -212,13 +226,16 @@ class HtmlUtility
             $rightChildNodes = $rightNode->childNodes;
             $rightChildNodesCount = $rightChildNodes->length;
             if ($rightChildNodes == null || $rightChildNodesCount == 0) {
-                $error .= "The left node (" . $leftNode->getNodePath() . ") have child nodes while the right has not.\n";
+                $firstNode = $leftNode->childNodes->item(0);
+                $firstNodeName = $firstNode->nodeName;
+                $firstValue = $firstNode->nodeValue;
+                $error .= "The left node (" . $leftNode->getNodePath() . ") have child nodes while the right has not (First Left Node: $firstNodeName, value: $firstValue) \n";
             } else {
                 $leftChildNodeCount = $leftNode->childNodes->length;
                 $leftChildIndex = 0;
                 $rightChildIndex = 0;
                 while ($leftChildIndex < $leftChildNodeCount && $rightChildIndex < $rightChildNodesCount) {
-                    $leftChildIndex++;
+
                     $leftChildNode = $leftNode->childNodes->item($leftChildIndex);
                     if ($leftChildNode->nodeName == "#text") {
                         $leftChildNodeValue = trim($leftChildNode->nodeValue);
@@ -228,7 +245,6 @@ class HtmlUtility
                         }
                     }
 
-                    $rightChildIndex++;
                     $rightChildNode = $rightChildNodes->item($rightChildIndex);
                     if ($rightChildNode->nodeName == "#text") {
                         $leftChildNodeValue = trim($rightChildNode->nodeValue);
@@ -249,6 +265,12 @@ class HtmlUtility
                             $error .= "The left node (" . $leftChildNode->getNodePath() . ") does not exist in the right document.\n";
                         }
                     }
+
+                    /**
+                     * 0 based index
+                     */
+                    $leftChildIndex++;
+                    $rightChildIndex++;
                 }
             }
         }

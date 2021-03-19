@@ -118,7 +118,14 @@ $conf['powershellPrompt'] = 'PS C:\\';
  * See {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE}
  */
 $conf['lowQualityPageProtectionEnable'] = 0;
-$conf['lowQualityPageProtectionMode'] = "acl";
+
+/**
+ * Page Protection Mode {@link \ComboStrap\PageProtection::CONF_PAGE_PROTECTION_MODE}
+ * Empty to be able to see if the value was set
+ * to override the old conf value {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE}
+ *
+ */
+$conf['pageProtectionMode'] = "";
 
 /**
  * Preformatted mode disable
@@ -137,6 +144,53 @@ $conf['mandatoryQualityRules'] = 'words_min,internal_backlinks_min,internal_link
 $conf['autoFrontMatterEnable'] = 1;
 
 /**
- * {@link action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING
+ * {@link action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING}
+ * {@link action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING}
  */
 $conf['excludedQualityRulesFromDynamicMonitoring'] = 'words_by_section_avg_min,words_by_section_avg_max';
+$conf['disableDynamicQualityMonitoring'] = 0;
+
+/**
+ * Class in link {@link \ComboStrap\LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME}
+ */
+$conf['useDokuwikiLinkClassName'] = 0;
+
+/**
+ * Twitter
+ * {@link action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE}
+ */
+$conf['defaultTwitterImage'] = ":apple-touch-icon.png";
+$conf['twitterSiteHandle'] = "";
+$conf['twitterSiteId'] = "";
+$conf['twitter:dnt'] = "on";
+$conf['twitter:widgets:theme'] = "light";
+$conf['twitter:widgets:border-color'] = "#55acee";
+
+/**
+ * Page Image {@link Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
+ */
+$conf['disableFirstImageAsPageImage'] = 0;
+
+/**
+ * Facebook
+ * {@link action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE}
+ */
+$conf['defaultFacebookImage'] = ":logo-facebook.png";
+
+/**
+ * Country
+ * {@link Site::CONF_SITE_ISO_COUNTRY}
+ */
+$conf['siteIsoCountry'] = "";
+
+/**
+ *
+ * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE}
+ */
+$conf['latePublicationProtectionEnable'] = 1;
+
+/**
+ * Default page type
+ * {@link Page::CONF_DEFAULT_PAGE_TYPE}
+ */
+$conf["defaultPageType"] = "article";

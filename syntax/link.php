@@ -7,13 +7,9 @@ require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
-use ComboStrap\HtmlUtility;
+use ComboStrap\SnippetManager;
 use ComboStrap\LinkUtility;
-use ComboStrap\LogUtility;
-use ComboStrap\NavBarUtility;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\LowQualityPage;
 use ComboStrap\Tag;
 
 if (!defined('DOKU_INC')) die();
@@ -31,6 +27,12 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 {
     const TAG = 'link';
     const COMPONENT = 'combo_link';
+
+    /**
+     * The link Tag
+     */
+    const LINK_TAG = "linkTag";
+
 
 
     /**
@@ -70,6 +72,33 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         return array('substition', 'formatting', 'disabled');
     }
 
+    public function accepts($mode)
+    {
+        /**
+         * To avoid that the description if it contains a link
+         * will be taken by the links mode
+         *
+         * For instance, [[https://hallo|https://hallo]] will send https://hallo
+         * to the external link mode
+         */
+        $linkModes = [
+            "externallink",
+            "locallink",
+            "internallink",
+            "interwikilink",
+            "emaillink",
+            //"emphasis_open", // italic use // and therefore take over a link as description which is not handy when copying a tweet
+            //"emphasis_close",
+            //"acrnonym"
+            ];
+        if (in_array($mode, $linkModes)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+
     /**
      * @see Doku_Parser_Mode::getSort()
      * The mode with the lowest sort number will win out
@@ -83,8 +112,13 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $this->Lexer->addSpecialPattern(LinkUtility::LINK_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern(LinkUtility::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
+    }
+
+    public function postConnect()
+    {
+        $this->Lexer->addExitPattern(LinkUtility::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
     }
 
 
@@ -105,17 +139,65 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         /**
          * Because we use the specialPattern, there is only one state ie DOKU_LEXER_SPECIAL
          */
-        $attributes = LinkUtility::getAttributes($match);
-        $tag = new Tag(self::TAG, $attributes, $state, $handler->calls);
-        $parent = $tag->getParent();
-        $parentName = "";
-        if ($parent != null) {
-            $parentName = $parent->getName();
+        switch ($state) {
+            case DOKU_LEXER_ENTER:
+                $attributes = LinkUtility::parse($match);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
+                $parent = $tag->getParent();
+                $parentName = "";
+                if ($parent != null) {
+                    $parentName = $parent->getName();
+                    if ($parentName == syntax_plugin_combo_button::TAG) {
+                        $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
+                    }
+                }
+                $link = new LinkUtility($attributes[LinkUtility::ATTRIBUTE_REF]);
+                $linkTag = $link->getHtmlTag();
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::CONTEXT => $parentName,
+                    self::LINK_TAG => $linkTag
+                );
+            case DOKU_LEXER_UNMATCHED:
+
+                /**
+                 * Delete the name separator if any
+                 */
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $parent = $tag->getParent();
+                if ($parent->getName() == self::TAG) {
+                    if (strpos($match, '|') === 0) {
+                        $match = substr($match, 1);
+                    }
+                }
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $match
+                );
+
+            case DOKU_LEXER_EXIT:
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $openingTag = $tag->getOpeningTag();
+                $openingAttributes = $openingTag->getAttributes();
+                $linkTag = $openingTag->getData()[self::LINK_TAG];
+
+                if ($openingTag->getPosition() == $tag->getPosition() - 1) {
+                    // There is no name
+                    $link = new LinkUtility($openingAttributes[LinkUtility::ATTRIBUTE_REF]);
+                    $linkName = $link->getName();
+                } else {
+                    $linkName = "";
+                }
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $openingAttributes,
+                    PluginUtility::PAYLOAD => $linkName,
+                    PluginUtility::CONTEXT => $openingTag->getContext(),
+                    self::LINK_TAG => $linkTag
+                );
         }
-        return array(
-            PluginUtility::ATTRIBUTES => $attributes,
-            PluginUtility::PARENT_TAG => $parentName
-        );
+        return true;
 
 
     }
@@ -137,7 +219,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 /** @var Doku_Renderer_xhtml $renderer */
-
                 /**
                  * Cache problem may occurs while releasing
                  */
@@ -146,105 +227,135 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 } else {
                     $attributes = $data;
                 }
-                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
-                $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
-                $type = $attributes[LinkUtility::ATTRIBUTE_TYPE];
-                $link = new LinkUtility($ref);
-                if ($name != null) {
-                    $link->setName($name);
+
+                PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+
+
+                $state = $data[PluginUtility::STATE];
+                $payload = $data[PluginUtility::PAYLOAD];
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+                        unset($attributes[LinkUtility::ATTRIBUTE_REF]);
+                        $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
+                        unset($attributes[LinkUtility::ATTRIBUTE_NAME]);
+                        $link = new LinkUtility($ref);
+                        if ($name != null) {
+                            $link->setName($name);
+                        }
+                        $link->setAttributes($attributes);
+
+
+                        /**
+                         * Extra styling
+                         */
+                        $parentTag = $data[PluginUtility::CONTEXT];
+                        switch ($parentTag) {
+                            case syntax_plugin_combo_button::TAG:
+                                $attributes["role"] = "button";
+                                syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($attributes);
+                                $htmlLink = $link->renderOpenTag($renderer);
+                                break;
+                            case syntax_plugin_combo_badge::TAG:
+                            case syntax_plugin_combo_cite::TAG:
+                            case syntax_plugin_combo_listitem::TAG:
+                            case syntax_plugin_combo_preformatted::TAG:
+                                $htmlLink = $link->renderOpenTag($renderer);
+                                break;
+                            case syntax_plugin_combo_dropdown::TAG:
+                                PluginUtility::addClass2Attributes("dropdown-item", $attributes);
+                                $htmlLink = $link->renderOpenTag($renderer);
+                                break;
+                            case syntax_plugin_combo_navbarcollapse::COMPONENT:
+                                PluginUtility::addClass2Attributes("navbar-link", $attributes);
+                                $htmlLink = '<div class="navbar-nav">' . $link->renderOpenTag($renderer);
+                                break;
+                            case syntax_plugin_combo_navbargroup::COMPONENT:
+                                PluginUtility::addClass2Attributes("nav-link", $attributes);
+                                $htmlLink = '<li class="nav-item">' . $link->renderOpenTag($renderer);
+                                break;
+                            default:
+
+                                $htmlLink = $link->renderOpenTag($renderer);
+
+                        }
+
+
+                        /**
+                         * Add it to the rendering
+                         */
+                        $renderer->doc .= $htmlLink;
+                        break;
+                    case DOKU_LEXER_UNMATCHED:
+                        $renderer->doc .= PluginUtility::escape($payload);
+                        break;
+                    case DOKU_LEXER_EXIT:
+
+                        // if there is no link name defined, we get the name as ref in the payload
+                        // otherwise null string
+                        $renderer->doc .= $payload;
+
+                        // html element
+                        $context = $data[PluginUtility::CONTEXT];
+                        switch ($context) {
+                            case syntax_plugin_combo_navbarcollapse::COMPONENT:
+                                $renderer->doc .= '</div>';
+                                break;
+                            case syntax_plugin_combo_navbargroup::COMPONENT:
+                                $renderer->doc .= '</li>';
+                                break;
+                        }
+
+                        $linkTag = $data[self::LINK_TAG];
+                        $renderer->doc .= "</$linkTag>";
+
+
                 }
-                $link->setType($type);
 
-                /**
-                 * Render the link
-                 */
-                $htmlLink = $link->render($renderer);
-
-                /**
-                 * Extra styling for internal link
-                 */
-                $parentTag = $data[PluginUtility::PARENT_TAG];
-                switch ($parentTag) {
-                    case syntax_plugin_combo_button::TAG:
-                    case syntax_plugin_combo_badge::TAG:
-                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
-                            if ($link->getInternalPage()->existInFs()) {
-                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
-                                $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
-                            }
-                        } else {
-                            $htmlLink = LinkUtility::inheritColorFromParent($htmlLink);
-                        }
-                        break;
-                    case syntax_plugin_combo_cite::TAG:
-                    case syntax_plugin_combo_listitem::TAG:
-                    case syntax_plugin_combo_preformatted::TAG:
-                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
-                            if ($link->getInternalPage()->existInFs()) {
-                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
-                            }
-                        }
-                        break;
-                    case syntax_plugin_combo_dropdown::TAG:
-                        if ($link->getType() == LinkUtility::TYPE_INTERNAL) {
-                            if ($link->getInternalPage()->existInFs()) {
-                                $htmlLink = LinkUtility::deleteDokuWikiClass($htmlLink);
-                            }
-                        }
-                        $htmlLink = HtmlUtility::addAttributeValue($htmlLink, "class", "dropdown-item");
-                        break;
-                    case syntax_plugin_combo_navbarcollapse::COMPONENT:
-                        $htmlLink = '<div class="navbar-nav">' . NavBarUtility::switchDokuwiki2BootstrapClass($htmlLink) . '</div>';
-                        break;
-                    case syntax_plugin_combo_navbargroup::COMPONENT:
-                        $htmlLink = '<li class="nav-item">' . NavBarUtility::switchDokuwiki2BootstrapClass($htmlLink) . '</li>';
-                        break;
-
-                }
-
-
-                /**
-                 * Add it to the rendering
-                 */
-                $renderer->doc .= $htmlLink;
 
                 return true;
                 break;
 
-            case
-            'metadata':
+            case 'metadata':
 
-                /**
-                 * Keep track of the backlinks ie meta['relation']['references']
-                 * @var Doku_Renderer_metadata $renderer
-                 */
-                if (isset($data[PluginUtility::ATTRIBUTES])) {
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                } else {
-                    $attributes = $data;
+                $state = $data[PluginUtility::STATE];
+                if ($state == DOKU_LEXER_ENTER) {
+                    /**
+                     * Keep track of the backlinks ie meta['relation']['references']
+                     * @var Doku_Renderer_metadata $renderer
+                     */
+                    if (isset($data[PluginUtility::ATTRIBUTES])) {
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                    } else {
+                        $attributes = $data;
+                    }
+                    $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+
+                    $link = new LinkUtility($ref);
+                    $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
+                    if ($name != null) {
+                        $link->setName($name);
+                    }
+                    $link->handleMetadata($renderer);
+
+                    return true;
                 }
-                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
-
-                $link = new LinkUtility($ref);
-                $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
-                if ($name != null) {
-                    $link->setName($name);
-                }
-                $link->handleMetadata($renderer);
-
-                return true;
                 break;
 
             case Analytics::RENDERER_FORMAT:
-                /**
-                 *
-                 * @var renderer_plugin_combo_analytics $renderer
-                 */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
-                $link = new LinkUtility($ref);
-                $link->processLinkStats($renderer->stats);
-                break;
+
+                $state = $data[PluginUtility::STATE];
+                if ($state == DOKU_LEXER_ENTER) {
+                    /**
+                     *
+                     * @var renderer_plugin_combo_analytics $renderer
+                     */
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+                    $link = new LinkUtility($ref);
+                    $link->processLinkStats($renderer->stats);
+                    break;
+                }
 
         }
         // unsupported $mode

@@ -17,6 +17,7 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ * @deprecated for {@link syntax_plugin_combo_tabs} in version 1.12
  */
 class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
 {
@@ -115,8 +116,8 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::PAYLOAD => "<div class=\"tab-content\" id=\"myTabContent\">");
+                    PluginUtility::ATTRIBUTES => $tagAttributes
+                );
 
             case DOKU_LEXER_UNMATCHED:
 
@@ -131,8 +132,7 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => "</div>"
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -159,11 +159,14 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
+            $attributes = array();
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
+                    $renderer->doc .= syntax_plugin_combo_tabs::openTabPanelsElement($attributes);
+                    break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+                    $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($attributes);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= $data[PluginUtility::PAYLOAD];

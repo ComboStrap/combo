@@ -39,6 +39,20 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      */
     const CARD_BODY = '<div class="card-body">' . DOKU_LF;
 
+    /**
+     * Key of the attributes that says if the card has an image illustration
+     */
+    const HAS_IMAGE_ILLUSTRATION_KEY = "hasImageIllustration";
+
+
+    /**
+     * @var int a counter for an unknown card type
+     */
+    private $cardCounter = 0;
+    /**
+     * @var int a counter to give an id to the tabs card
+     */
+    private $tabCounter = 0;
 
 
     /**
@@ -56,15 +70,33 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * One of array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
-     * 'baseonly' will run only in the base mode
-     * because we manage self the content and we call self the parser
-     *
-     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
+     * ***************
+     * This function has no effect because {@link SyntaxPlugin::accepts()}
+     * is used
+     * ***************
      */
     public function getAllowedTypes()
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+    }
+
+    public function accepts($mode)
+    {
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header") {
+            return false;
+        }
+        /**
+         * If preformatted is disable, we does not accept it
+         */
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -138,32 +170,64 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                // A card alone
+
                 $attributes = PluginUtility::getTagAttributes($match);
+
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
+
+                $parentTag = $tag->getParent();
+                if ($parentTag == null) {
+                    $context = self::TAG;
+                } else {
+                    $context = $parentTag->getName();
+                }
+
+
+                $this->cardCounter++;
+                $id = $this->cardCounter;
+
+                /** A card without context */
                 PluginUtility::addClass2Attributes("card", $attributes);
-                $html = '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
-                $html .= self::CARD_BODY;
+                /**
+                 * Image illustration is checked on exit
+                 * but we add the attributes now to avoid null exception
+                 * on render
+                 */
+                $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
+
+
+                if (!in_array("id", $attributes)) {
+                    $attributes["id"] = $context . $id;
+                }
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
-                $html = PluginUtility::escape($match);
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::PAYLOAD => $match,
                 );
 
 
             case DOKU_LEXER_EXIT :
-                $html = '</div>' . DOKU_LF;
-                $html .= "</div>" . DOKU_LF;
+
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $openingTag = $tag->getOpeningTag();
+                $firstDescendant = $openingTag->getFirstMeaningFullDescendant();
+                if ($firstDescendant->getName() == syntax_plugin_combo_img::TAG) {
+                    $openingTag->addAttribute(self::HAS_IMAGE_ILLUSTRATION_KEY, true);
+                }
+                $context = $openingTag->getContext();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::CONTEXT => $context
                 );
 
 
@@ -189,7 +253,41 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            $renderer->doc .= $data[PluginUtility::PAYLOAD];
+            $attributes = $data[PluginUtility::ATTRIBUTES];
+            $state = $data[PluginUtility::STATE];
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+
+                    $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
+                    unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
+
+                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+
+                    if (!$hasImageIllustration) {
+                        $renderer->doc .= self::CARD_BODY;
+                    }
+
+                    break;
+
+                case DOKU_LEXER_EXIT:
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch ($context) {
+                        case syntax_plugin_combo_cardcolumns::TAG:
+                        case syntax_plugin_combo_cardcolumns::TAG_TEASER:
+                            $renderer->doc .= '</div>' . DOKU_LF;
+                            break;
+                        default:
+                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
+                    }
+                    break;
+
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    break;
+
+
+            }
+
             return true;
         }
         return false;

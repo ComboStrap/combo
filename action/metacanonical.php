@@ -42,13 +42,13 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
     function metaCanonicalProcessing($event)
     {
 
-
-        if ($_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"){
+        global $ID;
+        if (empty($ID)){
+            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
             // $ID is null
             return;
         }
 
-        global $ID;
         $page = new Page($ID);
 
         /**
@@ -70,34 +70,8 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
          * {@link wl()} use the constant DOKU_URL that is set before any test via getBaseURL(true)
          */
 
-        $canonical = MetadataUtility::getMeta(Page::CANONICAL_PROPERTY);
 
-        /**
-         * The last part of the id as canonical
-         */
-        // How many last parts are taken into account in the canonical processing (2 by default)
-        $canonicalLastNamesCount = $this->getConf(self::CANONICAL_LAST_NAMES_COUNT_CONF, 0);
-        if ($canonical == null && $canonicalLastNamesCount > 0) {
-            /**
-             * Takes the last names part
-             */
-            $names = $page->getNames();
-            $namesLength = sizeof($names);
-            if ($namesLength > $canonicalLastNamesCount) {
-                $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
-            }
-            /**
-             * If this is a start page, delete the name
-             * ie javascript:start will become javascript
-             */
-            if ($page->isStartPage()) {
-                $names = array_slice($names, 0, $namesLength - 1);
-            }
-            $canonical = implode(":", $names);
-            p_set_metadata($ID, array(Page::CANONICAL_PROPERTY => $canonical));
-        }
-
-        $canonicalUrl = Page::getUrl($canonical);
+        $canonicalUrl = $page->getCanonicalUrlOrDefault();
 
         /**
          * Replace the meta entry

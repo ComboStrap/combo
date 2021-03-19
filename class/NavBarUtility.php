@@ -22,19 +22,10 @@ class NavBarUtility
      */
     public static function text($text)
     {
-        return '<span class="navbar-text active">'.$text.'</span>';
+        if (!empty(trim($text))) {
+            return '<span class="navbar-text active">' . $text . '</span>';
+        }
     }
 
-    /**
-     * Delete the dokuwiki class and add the bootstrap one
-     * @param $html
-     * @return bool|false|string
-     */
-    public static function switchDokuwiki2BootstrapClass($html)
-    {
-        $html = HtmlUtility::addAttributeValue($html,"class","nav-link");
-        $html = HtmlUtility::addAttributeValue($html,"class","active"); // The color is darker
-        $html = LinkUtility::deleteDokuWikiClass($html);
-        return $html;
-    }
+
 }

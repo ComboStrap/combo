@@ -9,6 +9,7 @@ class Note
 
 
     const SIGNATURE_CLASS = "signature";
+    const TAG = "note";
     private $content = "";
     private $type = self::TYPE_CLASSIC;
 
@@ -66,8 +67,14 @@ class Note
         $this->signatureName = $signatureName;
     }
 
+    /**
+     * Used when sending message and in the main content
+     * @return string
+     */
     public function getHtml()
     {
+
+        PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
         $message = "";
         if ($this->getContent() <> "") {
 

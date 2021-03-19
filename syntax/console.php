@@ -107,7 +107,7 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match,true, Prism::FILE_PATH_KEY);
+                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match,true, syntax_plugin_combo_code::FILE_PATH_KEY);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes

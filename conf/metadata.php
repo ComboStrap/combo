@@ -134,6 +134,12 @@ $meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
 $meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = array('string');
 $meta[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = array('string');
 $meta[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = array('string');
+$meta[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = array('multichoice', '_choices' => array(
+    action_plugin_combo_metatwitter::CONF_ON,
+    action_plugin_combo_metatwitter::CONF_OFF
+));
+$meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = array('string');
+$meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = array('string');
 
 /**
  * Page Image

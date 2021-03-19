@@ -162,6 +162,9 @@ $conf['useDokuwikiLinkClassName'] = 0;
 $conf['defaultTwitterImage'] = ":apple-touch-icon.png";
 $conf['twitterSiteHandle'] = "";
 $conf['twitterSiteId'] = "";
+$conf['twitter:dnt'] = "on";
+$conf['twitter:widgets:theme'] = "light";
+$conf['twitter:widgets:border-color'] = "#55acee";
 
 /**
  * Page Image {@link Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}

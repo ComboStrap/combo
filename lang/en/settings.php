@@ -117,6 +117,9 @@ $lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_
 $lang[action_plugin_combo_metatwitter::CONF_DEFAULT_TWITTER_IMAGE] = PluginUtility::getUrl("twitter", "Twitter") . " - The media id (path) to the logo shown in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_HANDLE] = PluginUtility::getUrl("twitter", "Twitter") . " - Your twitter handle name used in a twitter card";
 $lang[action_plugin_combo_metatwitter::CONF_TWITTER_SITE_ID] = PluginUtility::getUrl("twitter", "Twitter") . " - Your twitter handle id used in a twitter card";
+$lang[action_plugin_combo_metatwitter::CONF_DONT_NOT_TRACK] = PluginUtility::getUrl("tweet", "Tweet") . " - Set the `do not track` attribute";
+$lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME] = PluginUtility::getUrl("tweet", "Tweet") . " - Set the theme for embedded twitter widget";
+$lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = PluginUtility::getUrl("tweet", "Tweet") . " - Set the border-color for embedded twitter widget";
 
 /**
  * Page Image

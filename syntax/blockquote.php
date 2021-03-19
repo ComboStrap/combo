@@ -36,7 +36,8 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
      */
     const TWEET = "tweet";
     const TWEET_SUPPORTED_LANG = array("en", "ar", "bn", "cs", "da", "de", "el", "es", "fa", "fi", "fil", "fr", "he", "hi", "hu", "id", "it", "ja", "ko", "msa", "nl", "no", "pl", "pt", "ro", "ru", "sv", "th", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw");
-
+    const CONF_TWEET_WIDGETS_THEME = "twitter:widgets:theme";
+    const CONF_TWEET_WIDGETS_BORDER = "twitter:widgets:border-color";
 
     const BLOCKQUOTE_OPEN_TAG = "<blockquote class=\"blockquote mb-0\">" . DOKU_LF;
     const CARD_BODY_BLOCKQUOTE_OPEN_TAG = syntax_plugin_combo_card::CARD_BODY . self::BLOCKQUOTE_OPEN_TAG;
@@ -182,11 +183,16 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = array("type" => "card");
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 $tagAttributes = PluginUtility::mergeAttributes($tagAttributes, $defaultAttributes);
-
+                $tag = new Tag(self::TAG, $tagAttributes, $state, $handler);
+                $context = null;
+                if ($tag->hasParent()) {
+                    $context = $tag->getParent()->getName();
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes,
+                    PluginUtility::CONTEXT => $context
                 );
 
 
@@ -244,10 +250,11 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     $type = $blockquoteAttributes["type"];
                     switch ($type) {
                         case "typo":
+
                             $class = "blockquote";
                             PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
-                            $tag = new Tag(self::TAG, $blockquoteAttributes, $state, $handler);
-                            if ($tag->hasParent() && $tag->getParent()->getName() == "card") {
+                            $context = $data[PluginUtility::CONTEXT];
+                            if ($context == syntax_plugin_combo_card::TAG) {
                                 PluginUtility::addClass2Attributes("mb-0", $blockquoteAttributes);
                             }
                             $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
@@ -259,8 +266,8 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                                 array("script" =>
                                     array(
                                         array(
-                                            "id"=>"twitter-wjs",
-                                            "type"=>"text/javascript",
+                                            "id" => "twitter-wjs",
+                                            "type" => "text/javascript",
                                             "aysnc" => true,
                                             "src" => "https://platform.twitter.com/widgets.js",
                                             "defer" => true
@@ -270,10 +277,10 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             $class = "twitter-tweet";
                             PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
 
-                            $tweetAttributesNames = ["id","cards","dnt","conversation","align","width"];
+                            $tweetAttributesNames = ["cards", "dnt", "conversation", "align", "width", "theme", "lang"];
                             foreach ($tweetAttributesNames as $tweetAttributesName) {
                                 if (isset($blockquoteAttributes[$tweetAttributesName])) {
-                                    $blockquoteAttributes["data-".$tweetAttributesName]=$blockquoteAttributes[$tweetAttributesName];
+                                    $blockquoteAttributes["data-" . $tweetAttributesName] = $blockquoteAttributes[$tweetAttributesName];
                                     unset($blockquoteAttributes[$tweetAttributesName]);
                                 }
                             }

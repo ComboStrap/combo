@@ -37,11 +37,20 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
     const CONF_DEFAULT_TWITTER_IMAGE = "defaultTwitterImage";
 
     /**
+     * Don't track
+     */
+    const CONF_TWITTER_DONT_NOT_TRACK = "twitter:dnt";
+    const CONF_DONT_NOT_TRACK = "twitter:dnt";
+    const CONF_ON = "on";
+    const CONF_OFF = "off";
+
+    /**
      * The creation ie (combostrap)
      */
     const COMBO_STRAP_TWITTER_HANDLE = "@combostrapweb";
     const COMBO_STRAP_TWITTER_ID = "1283330969332842497";
     const CANONICAL = "twitter";
+
 
 
     function __construct()
@@ -100,6 +109,11 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         $siteTwitterId = PluginUtility::getConfValue(self::CONF_TWITTER_SITE_ID);
         if (!empty($siteTwitterHandle)) {
             $twitterMeta["twitter:site"] = $siteTwitterHandle;
+
+            // Identify the Twitter profile of the page that populates the via property
+            // https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
+            $name = substr($siteTwitterHandle,"@","");
+            $event->data['link'][] = array("rel" => "me", "href" => "https://twitter.com/$name");
         }
         if (!empty($siteTwitterId)) {
             $twitterMeta["twitter:site:id"] = $siteTwitterId;
@@ -137,11 +151,28 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         }
 
         /**
+         * https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
+         */
+        // don;t track
+        $twitterMeta["twitter:dnt"]=PluginUtility::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK);
+        // turn off csp warning
+        $twitterMeta["twitter:widgets:csp"]="on";
+
+        /**
+         * Embedded Tweet Theme
+         */
+
+        $twitterMeta["twitter:widgets:theme"]=PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME);
+        $twitterMeta["twitter:widgets:border-color"]=PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER);
+
+        /**
          * Add the properties
          */
         foreach ($twitterMeta as $key => $content) {
             $event->data['meta'][] = array("name" => $key, "content" => $content);
         }
+
+
 
     }
 

@@ -428,7 +428,7 @@ class LinkUtility
             case self::TYPE_LOCAL:
                 break;
             case self::TYPE_EMAIL:
-                PluginUtility::addClass2Attributes("mail", $this->attributes);
+                PluginUtility::addClass2Attributes(self::getHtmlClassEmailLink(), $this->attributes);
                 break;
             default:
                 LogUtility::msg("The type (" . $this->getType() . ") is unknown", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
@@ -990,6 +990,16 @@ class LinkUtility
             return "wikilink1";
         } else {
             return "link-internal";
+        }
+    }
+
+    public static function getHtmlClassEmailLink()
+    {
+        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        if ($oldClassName) {
+            return "mail";
+        } else {
+            return "link-mail";
         }
     }
 

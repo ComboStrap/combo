@@ -5,3 +5,11 @@ a.link-external:not(.btn) {
     background-position: 0 center;
     padding: 0 0 0 18px;
 }
+
+a.link-mail:not(.btn) {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAABOUlEQVR4AaXJMWoUUQDG8f/33ltldyZB3E2xaCAxIQREFKwD2lhb6QmsxMIL6BlU8AhCjmBADdqlWLyACKZKF7LZmUzmzXwiSMTKwl/7478Jng9OXa5fviRzwTS5/j40OcHo2fSofH10tUcXHVg9q54cj3kleOnRj/uHh3e+FVgCbK2drX/dn5xuogAD8uqnyfXZRi3J+tXN2uxj2WwkEgFw0vnW3srmwbU2K2uat2fvi/ObSbII0Kl3VL+9O975PPXEOwe7sb8dZXfqSGB6YWm89Wb+dF+jt+3K3ZoeYUDwwgOjK14wV7tHNXhYUvgEqzUhQeegZVcsSOYBRFeCIXN3ggBoiYYTJBOJIHmhhiWEEHzwl3ycIhjxm5y1nO8FYoJbj268A0D8ISAWj0HQyEOE+Zuwasy//ATU93+97E8p8AAAAABJRU5ErkJggg==);
+    background-repeat: no-repeat;
+    background-position: 0 center;
+    padding: 0 0 0 18px;
+}
+

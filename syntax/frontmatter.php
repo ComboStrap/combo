@@ -160,8 +160,9 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                          * Continue because
                          * the description value was already stored
                          * We don't want to override it
+                         * And continue 2 because continue == break in a switch
                          */
-                        continue;
+                        continue 2;
                         break;
 
                     /**

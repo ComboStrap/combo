@@ -34,7 +34,8 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
     /**
      * When the blockquote is a tweet
      */
-    const TWEET_CONTEXT = "tweet";
+    const TWEET = "tweet";
+    const TWEET_SUPPORTED_LANG = array("en", "ar", "bn", "cs", "da", "de", "el", "es", "fa", "fi", "fil", "fr", "he", "hi", "hu", "id", "it", "ja", "ko", "msa", "nl", "no", "pl", "pt", "ro", "ru", "sv", "th", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw");
 
 
     const BLOCKQUOTE_OPEN_TAG = "<blockquote class=\"blockquote mb-0\">" . DOKU_LF;
@@ -229,6 +230,16 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
+
+                    /**
+                     * Add the CSS
+                     */
+                    $snippetManager = PluginUtility::getSnippetManager();
+                    $snippetManager->addCssSnippetOnlyOnce(self::TAG);
+
+                    /**
+                     * Create the HTML
+                     */
                     $blockquoteAttributes = $data[PluginUtility::ATTRIBUTES];
                     $type = $blockquoteAttributes["type"];
                     switch ($type) {
@@ -242,30 +253,34 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
                             $renderer->doc .= "<blockquote {$inlineBlockQuoteAttributes}>" . DOKU_LF;
                             break;
-                        case self::TWEET_CONTEXT:
+                        case self::TWEET:
 
-                            PluginUtility::getSnippetManager()->addHeadTagsOnce(self::TWEET_CONTEXT,
+                            PluginUtility::getSnippetManager()->addHeadTagsOnce(self::TWEET,
                                 array("script" =>
                                     array(
                                         array(
+                                            "id"=>"twitter-wjs",
+                                            "type"=>"text/javascript",
                                             "aysnc" => true,
                                             "src" => "https://platform.twitter.com/widgets.js",
-                                            "charset" => "utf-8"
+                                            "defer" => true
                                         ))));
+
+
                             $class = "twitter-tweet";
                             PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
-                            $pAttributesNames = ["lang", "dir"];
-                            $pAttributes = array();
-                            foreach ($pAttributesNames as $pAttributesName) {
-                                if (isset($blockquoteAttributes[$pAttributesName])) {
-                                    $pAttributes[$pAttributesName] = $blockquoteAttributes[$pAttributesName];
-                                    unset($blockquoteAttributes[$pAttributesName]);
+
+                            $tweetAttributesNames = ["id","cards","dnt","conversation","align","width"];
+                            foreach ($tweetAttributesNames as $tweetAttributesName) {
+                                if (isset($blockquoteAttributes[$tweetAttributesName])) {
+                                    $blockquoteAttributes["data-".$tweetAttributesName]=$blockquoteAttributes[$tweetAttributesName];
+                                    unset($blockquoteAttributes[$tweetAttributesName]);
                                 }
                             }
+
                             $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
                             $renderer->doc .= "<blockquote $inlineBlockQuoteAttributes>" . DOKU_LF;
-                            $inlinePAttributes = PluginUtility::array2HTMLAttributes($pAttributes);
-                            $renderer->doc .= "<p $inlinePAttributes>" . DOKU_LF;
+                            $renderer->doc .= "<p>" . DOKU_LF;
                             break;
                         default:
                             $class = "card";
@@ -300,7 +315,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "</div>" . DOKU_LF;
                             $renderer->doc .= "</div>" . DOKU_LF;
                             break;
-                        case self::TWEET_CONTEXT:
+                        case self::TWEET:
                         default:
 
                             $renderer->doc .= "</blockquote>" . DOKU_LF;

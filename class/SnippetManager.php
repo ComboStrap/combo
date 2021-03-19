@@ -44,7 +44,7 @@ class SnippetManager
 
     public static function getClassFromTag($tag)
     {
-        return "combo-".$tag;
+        return "combo-" . $tag;
     }
 
 
@@ -60,7 +60,7 @@ class SnippetManager
         $cssForPage = &$this->getHeadsForPage(self::CSS_TYPE);
         if (!isset($cssForPage[$id])) {
             if ($css == null) {
-                $cssForPage[$id] = PluginUtility::getCssRules($id);
+                $cssForPage[$id] = $this->getCssRulesFromFile($id);
             } else {
                 $cssForPage[$id] = $css;
             }
@@ -70,14 +70,17 @@ class SnippetManager
 
     /**
      * @param $id
-     * @param $script - javascript code
+     * @param $script - javascript code if null, it will search in the js directory
      */
-    public function addJavascriptSnippetIfNeeded($id, $script)
+    public function addJavascriptSnippetIfNeeded($id, $script = null)
     {
         $js = &$this->getHeadsForPage(self::JS_TYPE);
         if (!isset($js[$id])) {
-
-            $js[$id] = $script;
+            if ($script == null) {
+                $js[$id] = $this->getJavascriptContentFromFile($id);
+            } else {
+                $js[$id] = $script;
+            }
 
         }
     }
@@ -93,7 +96,6 @@ class SnippetManager
             $headTags[$id] = $componentTags;
         }
     }
-
 
 
     /**
@@ -185,6 +187,40 @@ class SnippetManager
     public function getData()
     {
         return $this->heads;
+    }
+
+    /**
+     * @param $tagName - the tag name
+     * @return false|string - the specific javascript content for the tag
+     */
+    private function getJavascriptContentFromFile($tagName)
+    {
+
+        $path = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/js/" . strtolower($tagName) . ".js";
+        if (file_exists($path)) {
+            return file_get_contents($path);
+        } else {
+            LogUtility::msg("The javascript file ($path) was not found", LogUtility::LVL_MSG_WARNING, $tagName);
+            return "";
+        }
+
+    }
+
+    /**
+     * @param $tagName
+     * @return false|string - the css content of the css file
+     */
+    private function getCssRulesFromFile($tagName)
+    {
+
+        $path = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/style/" . strtolower($tagName) . ".css";
+        if (file_exists($path)) {
+            return file_get_contents($path);
+        } else {
+            LogUtility::msg("The css file ($path) was not found", LogUtility::LVL_MSG_WARNING, $tagName);
+            return "";
+        }
+
     }
 
 

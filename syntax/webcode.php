@@ -313,12 +313,15 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
         // There is other mode such as metadata where you can output data for the headers (Not 100% sure)
         if ($mode == 'xhtml') {
 
+
             /** @var Doku_Renderer_xhtml $renderer */
 
             $state = $data[PluginUtility::STATE];
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
+
+                    PluginUtility::getSnippetManager()->addJavascriptSnippetIfNeeded(self::TAG);
 
                     // The extracted data are the attribute of the webcode tag
                     // We put in a class variable so that we can use in the last step (DOKU_LEXER_EXIT)
@@ -444,7 +447,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // Credits bar
                         $bar = '<div class="webcode-bar">';
-                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by Webcode") . '</div>';
+                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by Webcode",false) . '</div>';
                         $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $this->attributes) . '</div>';
                         $bar .= '</div>';
                         $renderer->doc .= '<div class="webcode">' . $iFrameHtml . $bar . '</div>';

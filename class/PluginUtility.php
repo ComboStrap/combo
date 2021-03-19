@@ -910,15 +910,6 @@ class PluginUtility
 
     }
 
-    public static function getCssRules($TAG)
-    {
-        $path = DOKU_PLUGIN . self::PLUGIN_BASE_NAME . "/style/" . $TAG . ".css";
-        if (file_exists($path)) {
-            return file_get_contents($path);
-        } else {
-            return "";
-        }
-    }
 
     /**
      * Utility function to disable preformatted
@@ -961,6 +952,8 @@ class PluginUtility
     {
         return  SnippetManager::get();
     }
+
+
 
 
 }

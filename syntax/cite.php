@@ -125,7 +125,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                         if (!empty($link)) {
                             $ref = $link->getAttribute(LinkUtility::ATTRIBUTE_REF);
                             if (StringUtility::match($ref, "https:\/\/twitter.com\/[^\/]*\/status\/.*")) {
-                                $context = syntax_plugin_combo_blockquote::TWEET_CONTEXT;
+                                $context = syntax_plugin_combo_blockquote::TWEET;
                                 $parent->setType($context);
                                 $parent->setContext($context);
                                 $node->getOpeningTag()->setContext($context);
@@ -177,7 +177,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                                 $renderer->doc .= '>';
                             }
                             break;
-                        case syntax_plugin_combo_blockquote::TWEET_CONTEXT:
+                        case syntax_plugin_combo_blockquote::TWEET:
                             $renderer->doc .= '</p>';
                             break;
                         default:
@@ -203,7 +203,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= '</cite>';
                             $renderer->doc .= '</footer>' . DOKU_LF;
                             break;
-                        case syntax_plugin_combo_blockquote::TWEET_CONTEXT:
+                        case syntax_plugin_combo_blockquote::TWEET:
                             // There is no element
                             break;
                         default:

@@ -10,6 +10,11 @@
     margin-bottom: .75rem;
 }
 
+/** Bootstrap has a margin bottom that is not welcome in a card **/
+.card > table {
+    margin-bottom: 0;
+}
+
 /** No because ui/li is also used for menu such as tabs if there is a list in the card,
  * there should be a more specific selection
  */

@@ -127,6 +127,14 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
                 $renderer->doc .= $renderer->_xmlEntities($content) . DOKU_LF;
 
+                /**
+                 * CSS
+                 */
+                PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+
+                /**
+                 * Javascript config
+                 */
                 $headHtmlElement = <<<EOD
 MathJax.Hub.Config({
     showProcessingMessages: true,

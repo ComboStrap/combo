@@ -1,0 +1,10 @@
+
+/*Message*/
+.combo-message > .signature {
+    font-size: 95%;
+    clear: both;
+    bottom: 5px;
+    right: 15px;
+    position: absolute;
+    font-style: italic;
+}

@@ -196,6 +196,14 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
 
+                /**
+                 * CSS
+                 */
+                PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+
+                /**
+                 * HTML
+                 */
                 $state = $data[PluginUtility::STATE];
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $context = $data[PluginUtility::CONTEXT];

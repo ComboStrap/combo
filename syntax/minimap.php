@@ -130,7 +130,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_SPECIAL :
 
 
-                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::MINIMAP_TAG_NAME);
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::MINIMAP_TAG_NAME);
 
 
                     global $ID;

@@ -193,7 +193,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT :
                 case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
 
                     $renderer->doc .= $data[PluginUtility::PAYLOAD].DOKU_LF;
                     break;

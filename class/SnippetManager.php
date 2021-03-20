@@ -16,6 +16,12 @@ namespace ComboStrap;
  * @package ComboStrap
  * A component to manage the extra HTML that
  * comes from components and that should come in the head HTML node
+ *
+ * The snippet manager handles two scope of snippet
+ * All function with the suffix
+ *   * `ForBar` are snippets for a bar (ie page, sidebar, ...) - cached
+ *   * `ForRequests` are snippets added for the HTTP request - not cached. Example of request component: message, anchor
+ *
  */
 class SnippetManager
 {
@@ -47,6 +53,11 @@ class SnippetManager
      */
     private $headsByRequest = array();
 
+    /**
+     * @var array the processed bar
+     */
+    private $barsProcessed = array();
+
 
     public static function getClassFromTag($tag)
     {
@@ -60,10 +71,10 @@ class SnippetManager
      *   if null, the file $id.css is searched in the `style` directory
      *
      */
-    public function addCssSnippetOnlyOnce($id, $css = null)
+    public function upsertCssSnippetForBar($id, $css = null)
     {
 
-        $cssForPage = &$this->getHeadsForPage(self::CSS_TYPE);
+        $cssForPage = &$this->getHeadsByBarByElementType(self::CSS_TYPE);
         if (!isset($cssForPage[$id])) {
             if ($css == null) {
                 $cssForPage[$id] = $this->getCssRulesFromFile($id);
@@ -78,9 +89,9 @@ class SnippetManager
      * @param $id
      * @param $script - javascript code if null, it will search in the js directory
      */
-    public function addJavascriptSnippetIfNeeded($id, $script = null)
+    public function upsertJavascriptForBar($id, $script = null)
     {
-        $js = &$this->getHeadsForPage(self::JS_TYPE);
+        $js = &$this->getHeadsByBarByElementType(self::JS_TYPE);
         if (!isset($js[$id])) {
             if ($script == null) {
                 $js[$id] = $this->getJavascriptContentFromFile($id);
@@ -95,9 +106,9 @@ class SnippetManager
      * @param $id
      * @param array $componentTags - an array of tags without content where the key is the node and the value the attributes
      */
-    public function addHeadTagsOnce($id, $componentTags)
+    public function upsertHeadTagsForBar($id, $componentTags)
     {
-        $headTags = &$this->getHeadsForPage(self::TAG_TYPE);
+        $headTags = &$this->getHeadsByBarByElementType(self::TAG_TYPE);
         if (!isset($headTags[$id])) {
             $headTags[$id] = $componentTags;
         }
@@ -108,13 +119,13 @@ class SnippetManager
      * @param $type
      * @return mixed a reference to the heads array
      */
-    private function &getHeadsForPage($type)
+    private function &getHeadsByBarByElementType($type)
     {
         /**
          * To be able to get
          * all component used by page (sidebar included)
          */
-        $ID = PluginUtility::getPageId();
+        global $ID; // the bar id
         if (!isset($this->headsByBar[$ID])) {
             $this->headsByBar[$ID] = array();
         }
@@ -149,18 +160,6 @@ class SnippetManager
         return $this->getSnippets(self::TAG_TYPE);
     }
 
-    /**
-     *
-     * Add the style from the previous run
-     * because one of the bar may have not run because it was cached
-     *
-     * @param array $previousRun
-     */
-    public function mergeWithPreviousRun(array $previousRun)
-    {
-        $this->headsByBar = array_merge($previousRun, $this->headsByBar);
-
-    }
 
     /**
      * @param $localType
@@ -179,8 +178,8 @@ class SnippetManager
         foreach ($this->headsByRequest as $page => $components) {
             foreach ($components as $type => $snippets) {
                 if ($type == $localType) {
-                    foreach($snippets as $comboTag => $tags) {
-                        foreach($tags as $htmlTagName => $htmlTags) {
+                    foreach ($snippets as $comboTag => $tags) {
+                        foreach ($tags as $htmlTagName => $htmlTags) {
                             foreach ($htmlTags as $htmlTag) {
                                 $distinctSnippets[$comboTag][$htmlTagName][] = $htmlTag;
                             }
@@ -246,14 +245,93 @@ class SnippetManager
     /**
      * @param $comboTag
      * @param $htmlTag
-     * @param array $array - add a tag each time that this function is called
-     * Used to add meta by request (for instance, during the rendering of a sidebar
-     * and after during the rendering of a page)
+     * @param array $htmlAttributes - upsert a tag each time that this function is called
      */
-    public function addHeadTagEachTime($comboTag, $htmlTag, array $array)
+    public function upsertHeadTagForRequest($comboTag, $htmlTag, array $htmlAttributes)
     {
         $id = PluginUtility::getPageId();
-        $this->headsByRequest[$id][self::TAG_TYPE][$comboTag][$htmlTag][] = $array;
+        $this->headsByRequest[$id][self::TAG_TYPE][$comboTag][$htmlTag] = [$htmlAttributes];
+    }
+
+    /**
+     * Keep track of the parsed bar (ie page in page)
+     * @param $pageId
+     * @param $cached
+     */
+    public function addBar($pageId, $cached)
+    {
+        $this->barsProcessed[$pageId] = $cached;
+    }
+
+    public function getBarsOfPage()
+    {
+        return $this->barsProcessed;
+    }
+
+    /**
+     * A function to be able to add snippets from the snippets cache
+     * when a bar was served from the cache
+     * @param $bar
+     * @param $snippets
+     */
+    public function addSnippetsFromCacheForBar($bar, $snippets)
+    {
+        if (!isset($this->headsByBar[$bar])) {
+            $this->headsByBar[$bar] = $snippets;
+        } else {
+            LogUtility::msg("Snippets for the bar ($bar) have been already added. Are you sure that the bar was not rendered ?", LogUtility::LVL_MSG_ERROR);
+        }
+    }
+
+    public function getSnippetsForBar($bar)
+    {
+        if (isset($this->headsByBar[$bar])) {
+            return $this->headsByBar[$bar];
+        } else {
+            return null;
+        }
+
+    }
+
+    /**
+     * Add a javascript snippet at a request level
+     * (Meaning that it should never be cached)
+     * @param $comboComponent
+     * @param $script
+     */
+    public function upsertJavascriptSnippetForRequest($comboComponent, $script = null)
+    {
+
+        $id = PluginUtility::getPageId();
+        if ($script == null) {
+            $script = $this->getJavascriptContentFromFile($comboComponent);
+        }
+
+        $this->headsByRequest[$id][self::JS_TYPE][$comboComponent]["script"] = [
+            array(
+                "class" => SnippetManager::getClassFromTag($comboComponent),
+                "type" => "text/javascript",
+                "_data" => $script
+            )
+        ];
+
+
+    }
+
+    public function upsertCssSnippetForRequest($comboComponent, $script = null)
+    {
+        $id = PluginUtility::getPageId();
+        if ($script == null) {
+            $script = $this->getCssRulesFromFile($comboComponent);
+        }
+
+        $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent]["style"] = [
+            array(
+                "class" => SnippetManager::getClassFromTag($comboComponent),
+                "_data" => $script
+            )
+        ];
+
     }
 
 

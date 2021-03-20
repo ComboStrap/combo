@@ -168,4 +168,10 @@ class Site
         global $conf;
         $conf['cachetime'] = 60*60;
     }
+
+    public static function debugIsOn()
+    {
+        global $conf;
+        return $conf['allowdebug'];
+    }
 }

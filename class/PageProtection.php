@@ -73,7 +73,7 @@ class PageProtection
     color:#a829dc
 }
 EOF;
-        PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::NAME, $style);
+        PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::NAME, $style);
 
 
         $js = <<<EOF
@@ -88,7 +88,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
 })
 EOF;
-        PluginUtility::getSnippetManager()->addJavascriptSnippetIfNeeded(self::NAME, $js);
+        PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::NAME, $js);
 
 
     }

@@ -156,7 +156,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
 
                     $styles = $this->getStyles();
                     $styleRule = StyleUtility::getRule($styles, "." . self::COMBO_LIST_CLASS);
-                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(
                         self::TAG,
                         $styleRule
                     );

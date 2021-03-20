@@ -199,7 +199,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 /**
                  * CSS
                  */
-                PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
 
                 /**
                  * HTML

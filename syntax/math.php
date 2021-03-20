@@ -130,7 +130,7 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
                 /**
                  * CSS
                  */
-                PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
 
                 /**
                  * Javascript config
@@ -150,7 +150,7 @@ MathJax.Hub.Config({
 });
 EOD;
 
-                PluginUtility::getSnippetManager()->addHeadTagsOnce(self::TAG,
+                PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::TAG,
                     array("script" => [
                         array(
                             "type" => "text/x-mathjax-config",

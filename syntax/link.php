@@ -228,7 +228,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $attributes = $data;
                 }
 
-                PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
 
 
                 $state = $data[PluginUtility::STATE];

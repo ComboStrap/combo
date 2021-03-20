@@ -194,7 +194,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
 
                     $styles = self::getStyles();
                     $cssRule = StyleUtility::getRule($styles, "." . self::COMBO_LIST_ITEM_CLASS);
-                    PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG, $cssRule);
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG, $cssRule);
 
                     $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
                     break;

@@ -241,7 +241,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      * Add the CSS
                      */
                     $snippetManager = PluginUtility::getSnippetManager();
-                    $snippetManager->addCssSnippetOnlyOnce(self::TAG);
+                    $snippetManager->upsertCssSnippetForBar(self::TAG);
 
                     /**
                      * Create the HTML
@@ -262,7 +262,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             break;
                         case self::TWEET:
 
-                            PluginUtility::getSnippetManager()->addHeadTagsOnce(self::TWEET,
+                            PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::TWEET,
                                 array("script" =>
                                     array(
                                         array(

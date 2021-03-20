@@ -4,12 +4,12 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\Plugin;
 
-class Note
+class Message
 {
 
 
     const SIGNATURE_CLASS = "signature";
-    const TAG = "note";
+    const TAG = "message";
     private $content = "";
     private $type = self::TYPE_CLASSIC;
 
@@ -74,11 +74,11 @@ class Note
     public function getHtml()
     {
 
-        PluginUtility::getSnippetManager()->addCssSnippetOnlyOnce(self::TAG);
+        PluginUtility::getSnippetManager()->upsertCssSnippetForRequest(self::TAG);
         $message = "";
         if ($this->getContent() <> "") {
 
-            if ($this->getType() == Note::TYPE_CLASSIC) {
+            if ($this->getType() == Message::TYPE_CLASSIC) {
                 $message .='<div class="alert alert-success combo-message ' . $this->class . '" role="alert">';
             } else {
                 $message .='<div class="alert alert-warning combo-message ' . $this->class . '" role="alert">';

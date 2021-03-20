@@ -2,7 +2,9 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\SnippetManager;
+use dokuwiki\Cache\CacheRenderer;
 
 if (!defined('DOKU_INC')) die();
 
@@ -15,6 +17,7 @@ if (!defined('DOKU_INC')) die();
 class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 {
 
+    const COMBO_CACHE_PREFIX = "combo:cache:";
 
     /**
      * @var bool - to trace if the header output was called
@@ -30,8 +33,13 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
     public function register(Doku_Event_Handler $controller)
     {
+
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'componentSnippetHead', array());
         $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'componentSnippetContent', array());
+
+
+        $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'barParsed', array());
+
     }
 
     /**
@@ -61,29 +69,46 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $snippetManager = PluginUtility::getSnippetManager();
 
         /**
-         * Because the cache is at the bar level,
-         * a rendering for a page may run without the others
-         * Therefore we saved the data in between
-         * (The storage is done at the page level)
-         * Adapted from {@link p_cached_output()}
+         * For each processed bar in the page
+         *   * retrieve the snippets from the cache or store the process one
+         *   * add the cache information in meta
          */
-        $cache = new \dokuwiki\Cache\Cache($ID, "snippet");
-        // note: $cache->useCache()) permits to add dependencies and get a cache results
-        // in case we want to add dependencies on the bar
-        $data = $cache->retrieveCache();
-        global $conf;
-        if ($conf['allowdebug']) {
-            LogUtility::log2file("Snippet cache file {$cache->cache} used", LogUtility::LVL_MSG_DEBUG);
-        }
-        if (!empty($data)) {
-            $storedArray = unserialize($data);
-        } else {
-            $storedArray = array();
-        }
-        $snippetManager->mergeWithPreviousRun($storedArray);
+        $bars = $snippetManager->getBarsOfPage();
+        foreach ($bars as $bar => $servedFromCache) {
 
-        $cache->storeCache(serialize($snippetManager->getData()));
+            // Add cache meta for info
+            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $bar, "content" => var_export($servedFromCache, true));
 
+            // Get or store the data
+            $cache = new \dokuwiki\Cache\Cache($bar, "snippet");
+
+            // if the bar was served from the cache
+            if ($servedFromCache) {
+                // Retrieve snippets from previous run
+
+                $data = $cache->retrieveCache();
+
+                if (!empty($data)) {
+                    $snippets = unserialize($data);
+                    $snippetManager->addSnippetsFromCacheForBar($bar, $snippets);
+
+                    if (Site::debugIsOn()) {
+                        LogUtility::log2file("Snippet cache file {$cache->cache} used", LogUtility::LVL_MSG_DEBUG);
+                        $event->data['script'][] = array(
+                            "type" => "application/json",
+                            "_data" => json_encode($snippets),
+                            "class" => "combo-snippet-cache-" . str_replace(":", "-", $bar));
+                    }
+
+                }
+            } else {
+                $snippets = $snippetManager->getSnippetsForBar($bar);
+                if(!empty($snippets)) {
+                    $cache->storeCache(serialize($snippets));
+                }
+            }
+
+        }
 
         /**
          * tags
@@ -198,39 +223,25 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
     }
 
-    /**
-     * Adapted from {@link p_cached_output()}
-     */
-    function getCachedSnippet()
-    {
 
-        global $ID;
-        $file = wikiFN($ID);
-        $format = "combo_head";
-        global $conf;
+    /**
+     *
+     * @param $event
+     */
+    function barParsed($event)
+    {
+        $data = $event->data;
+        if ($data->mode == "xhtml") {
+
+            /* @var CacheRenderer $data */
+            $page = $data->page;
+            $cached = $event->result;
+            PluginUtility::getSnippetManager()->addBar($page, $cached);
+
+        }
 
 
     }
-
-//    function storeSnippetArray()
-//    {
-//        global $conf;
-//
-//        $cache = new CacheRenderer($ID, $file, $format);
-//        if (!empty($headHtml)) {
-//            if ($cache->storeCache($headHtml)) {              // storeCache() attempts to save cachefile
-//                if ($conf['allowdebug']) {
-//
-//                    LogUtility::log2file("No cache file used, but created {$cache->cache} ");
-//                }
-//            } else {
-//                $cache->removeCache();                     //try to delete cachefile
-//                if ($conf['allowdebug']) {
-//                    LogUtility::log2file("no cachefile used, caching forbidden");
-//                }
-//            }
-//        }
-//    }
 
 
 }

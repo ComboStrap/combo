@@ -100,7 +100,7 @@ class Prism
             "crossorigin" => "anonymous"
         );
 
-        PluginUtility::getSnippetManager()->addHeadTagsOnce($SCRIPT_ID, $tags);
+        PluginUtility::getSnippetManager()->upsertHeadTagsForBar($SCRIPT_ID, $tags);
 
         $javascriptCode = <<<EOD
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 });
 EOD;
-        PluginUtility::getSnippetManager()->addJavascriptSnippetIfNeeded($SCRIPT_ID, $javascriptCode);
+        PluginUtility::getSnippetManager()->upsertJavascriptForBar($SCRIPT_ID, $javascriptCode);
 
     }
 

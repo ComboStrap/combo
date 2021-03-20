@@ -35,16 +35,22 @@ class SnippetManager
      * No need
      */
     const TAG_TYPE = "tag";
+    const COMBO_CLASS_PREFIX = "combo-";
 
     /**
      * @var array the content array of all heads
      */
-    var $heads = array();
+    private $headsByBar = array();
+
+    /**
+     * @var array heads that are unique on a request scope
+     */
+    private $headsByRequest = array();
 
 
     public static function getClassFromTag($tag)
     {
-        return "combo-" . $tag;
+        return self::COMBO_CLASS_PREFIX . $tag;
     }
 
 
@@ -108,14 +114,14 @@ class SnippetManager
          * To be able to get
          * all component used by page (sidebar included)
          */
-        global $ID;
-        if (!isset($this->heads[$ID])) {
-            $this->heads[$ID] = array();
+        $ID = PluginUtility::getPageId();
+        if (!isset($this->headsByBar[$ID])) {
+            $this->headsByBar[$ID] = array();
         }
-        if (!isset($this->heads[$ID][$type])) {
-            $this->heads[$ID][$type] = array();
+        if (!isset($this->headsByBar[$ID][$type])) {
+            $this->headsByBar[$ID][$type] = array();
         }
-        return $this->heads[$ID][$type];
+        return $this->headsByBar[$ID][$type];
     }
 
     /**
@@ -152,7 +158,7 @@ class SnippetManager
      */
     public function mergeWithPreviousRun(array $previousRun)
     {
-        $this->heads = array_merge($previousRun, $this->heads);
+        $this->headsByBar = array_merge($previousRun, $this->headsByBar);
 
     }
 
@@ -163,10 +169,23 @@ class SnippetManager
     private function getSnippets($localType)
     {
         $distinctSnippets = array();
-        foreach ($this->heads as $page => $components) {
+        foreach ($this->headsByBar as $page => $components) {
             foreach ($components as $type => $snippets) {
                 if ($type == $localType) {
                     $distinctSnippets = array_merge($distinctSnippets, $snippets);
+                }
+            }
+        }
+        foreach ($this->headsByRequest as $page => $components) {
+            foreach ($components as $type => $snippets) {
+                if ($type == $localType) {
+                    foreach($snippets as $comboTag => $tags) {
+                        foreach($tags as $htmlTagName => $htmlTags) {
+                            foreach ($htmlTags as $htmlTag) {
+                                $distinctSnippets[$comboTag][$htmlTagName][] = $htmlTag;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -181,12 +200,13 @@ class SnippetManager
      */
     public function close()
     {
-        $this->heads = array();
+        $this->headsByBar = array();
+        $this->headsByRequest = array();
     }
 
     public function getData()
     {
-        return $this->heads;
+        return $this->headsByBar;
     }
 
     /**
@@ -221,6 +241,19 @@ class SnippetManager
             return "";
         }
 
+    }
+
+    /**
+     * @param $comboTag
+     * @param $htmlTag
+     * @param array $array - add a tag each time that this function is called
+     * Used to add meta by request (for instance, during the rendering of a sidebar
+     * and after during the rendering of a page)
+     */
+    public function addHeadTagEachTime($comboTag, $htmlTag, array $array)
+    {
+        $id = PluginUtility::getPageId();
+        $this->headsByRequest[$id][self::TAG_TYPE][$comboTag][$htmlTag][] = $array;
     }
 
 

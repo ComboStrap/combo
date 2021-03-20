@@ -145,4 +145,27 @@ class Site
         $tag = $conf['tag'];
         return ($tag ? $tag : null);
     }
+
+    /**
+     * @return string - the name of the sidebar page
+     */
+    public static function getSidebarName()
+    {
+        global $conf;
+        return $conf["sidebar"];
+    }
+
+    public static function setTemplate($template)
+    {
+        global $conf;
+        $conf['template'] = $template;
+    }
+
+    public static function setCacheOn()
+    {
+        // ensure the value is not -1, which disables caching
+        // https://www.dokuwiki.org/config:cachetime
+        global $conf;
+        $conf['cachetime'] = 60*60;
+    }
 }

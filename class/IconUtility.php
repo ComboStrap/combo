@@ -54,8 +54,7 @@ class IconUtility
              * because the URL has an icon
              */
             $msg = "The icon file ($mediaFile) could not be loaded as a XML SVG. The error returned is $e";
-            LogUtility::log2FrontEnd($msg,LogUtility::LVL_MSG_ERROR,self::NAME, false);
-            LogUtility::log2file($msg);
+            LogUtility::msg($msg,LogUtility::LVL_MSG_ERROR,self::NAME);
             if (defined('DOKU_UNITTEST')) {
                 throw new \RuntimeException($msg);
             } else {

@@ -345,16 +345,22 @@ class Tag
                 break;
             default:
                 $component = $call[1][0];
-                $componentNames = explode("_", $component);
-                /**
-                 * To take care of
-                 * PHP Warning:  sizeof(): Parameter must be an array or an object that implements Countable
-                 * in lib/plugins/combo/class/Tag.php on line 314
-                 */
-                if (is_array($componentNames)) {
-                    $tagName = $componentNames[sizeof($componentNames) - 1];
+                if (!is_array($component)) {
+                    $componentNames = explode("_", $component);
+                    /**
+                     * To take care of
+                     * PHP Warning:  sizeof(): Parameter must be an array or an object that implements Countable
+                     * in lib/plugins/combo/class/Tag.php on line 314
+                     */
+                    if (is_array($componentNames)) {
+                        $tagName = $componentNames[sizeof($componentNames) - 1];
+                    } else {
+                        $tagName = $component;
+                    }
                 } else {
-                    $tagName = $component;
+                    // To resolve: explode() expects parameter 2 to be string, array given
+                    LogUtility::msg("The call (".print_r($call,true).") has an array and not a string as component (".print_r($component,true)."). Page: ".PluginUtility::getPageId(),LogUtility::LVL_MSG_ERROR);
+                    $tagName = "";
                 }
         }
         return $tagName;

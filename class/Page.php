@@ -65,6 +65,11 @@ class Page
      * @var string - the dokuwiki
      */
     private $descriptionOrigin;
+    /**
+     * @var CacheRenderer
+     */
+    private $xhtmlCache;
+    private $instructionCache;
 
     /**
      * Page constructor.
@@ -910,8 +915,7 @@ class Page
     }
 
 
-    public
-    function getFilePath()
+    public function getFilePath()
     {
         return wikiFN($this->getId());
     }
@@ -1367,6 +1371,32 @@ class Page
 
             }
         }
+
+    }
+
+    public function hasXhtmlCache()
+    {
+        if ($this->xhtmlCache == null) {
+            $file = $this->getFilePath();
+            $this->xhtmlCache = new CacheRenderer($this->id, $file, 'xhtml');
+        }
+        /**
+         * $cache->cache is the file
+         */
+        return file_exists($this->xhtmlCache->cache);
+    }
+
+    public function hasInstructionCache()
+    {
+
+        if ($this->instructionCache == null) {
+            $file = $this->getFilePath();
+            $this->instructionCache = new CacheInstructions($this->getId(), $file);
+        }
+        /**
+         * $cache->cache is the file
+         */
+        return file_exists($this->instructionCache->cache);
 
     }
 

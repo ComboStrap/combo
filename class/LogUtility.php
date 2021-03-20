@@ -15,15 +15,45 @@ namespace ComboStrap;
 
 class LogUtility
 {
-    const LVL_MSG_INFO = 0;
-    const LVL_MSG_WARNING = 2;
-    const LVL_MSG_SUCCESS = 1;
+
     /**
      * Constant for the function {@link msg()}
      * -1 = error, 0 = info, 1 = success, 2 = notify
+     * (Not even in order of importance)
      */
-    const LVL_MSG_ERROR = -1;
-    const LVL_MSG_DEBUG = 3;
+    const LVL_MSG_ERROR = 4; //-1;
+    const LVL_MSG_WARNING = 3; //2;
+    const LVL_MSG_SUCCESS = 2; //1;
+    const LVL_MSG_INFO = 1; //0;
+    const LVL_MSG_DEBUG = 0; //3;
+
+
+
+    /**
+     * Id level to name
+     */
+    const LVL_NAME = array(
+        0 => "debug",
+        1 => "info",
+        3 => "warning",
+        2 => "success",
+        4 => "error"
+    );
+
+    /**
+     * Id level to name
+     * {@link msg()} constant
+     */
+    const LVL_TO_MSG_LEVEL = array(
+        0 => 3,
+        1 => 0,
+        2 => 1,
+        3 => 2,
+        4 => -1
+    );
+
+
+    const LOGLEVEL_URI_QUERY_PROPERTY = "loglevel";
 
     /**
      * Send a message to a manager and log it
@@ -35,30 +65,29 @@ class LogUtility
     public static function msg($message, $level = self::LVL_MSG_ERROR, $canonical = null)
     {
 
-        self::log2FrontEnd($message, $level, $canonical);
         /**
-         * Print to a log file
-         * Note: {@link dbg()} dbg print to the web page
+         * Log to frontend
          */
-        $prefix = PluginUtility::$PLUGIN_NAME;
-        if ($canonical != null) {
-            $prefix .= ' - ' . $canonical;
-        }
-        $msg = $prefix . ' - ' . $message;
-        self::log2file($msg);
+        self::log2FrontEnd($message, $level, $canonical);
 
-
-        $loglevel = self::LVL_MSG_INFO;
+        /**
+         * Log level passed for a page (only for file used)
+         * to not allow an attacker to see all errors in frontend
+         */
         global $INPUT;
-        $loglevelProp = $INPUT->str("loglevel", null);
-        if ($loglevelProp != null) {
-            $loglevel = $loglevelProp;
+        $loglevelProp = $INPUT->str(self::LOGLEVEL_URI_QUERY_PROPERTY, null);
+        if (!empty($loglevelProp)) {
+            $level = $loglevelProp;
         }
+        self::log2file($message, $level, $canonical);
+
+        /**
+         * If test, we throw an error
+         */
         if (defined('DOKU_UNITTEST')
-            && ($level == self::LVL_MSG_WARNING || $level == self::LVL_MSG_ERROR)
-            && ($loglevel != self::LVL_MSG_ERROR)
+            && ($level >= self::LVL_MSG_WARNING)
         ) {
-            throw new \RuntimeException($msg);
+            throw new \RuntimeException(PluginUtility::$PLUGIN_NAME . " - " . $message);
         }
     }
 
@@ -66,25 +95,33 @@ class LogUtility
      * Print log to a  file
      *
      * Adapted from {@link dbglog}
+     * Note: {@link dbg()} dbg print to the web page
      *
      * @param string $msg
+     * @param int $logLevel
+     * @param null $canonical
      */
-    static function log2file($msg)
+    static function log2file($msg, $logLevel = self::LVL_MSG_INFO, $canonical = null)
     {
 
-        /* @var Input $INPUT */
-        global $INPUT;
-        global $conf;
+        if (defined('DOKU_UNITTEST') || $logLevel >= self::LVL_MSG_WARNING) {
 
-        if (is_object($msg) || is_array($msg)) {
-            $msg = print_r($msg, true);
-        }
+            $prefix = PluginUtility::$PLUGIN_NAME;
+            if (!empty($canonical)) {
+                $prefix .= ' - ' . $canonical;
+            }
+            $msg = $prefix . ' - ' . $msg;
 
-        $file = $conf['cachedir'] . '/debug.log';
-        $fh = fopen($file, 'a');
-        if ($fh) {
-            fwrite($fh, date('H:i:s ') . $INPUT->server->str('REMOTE_ADDR') . ': ' . $msg . "\n");
-            fclose($fh);
+            global $INPUT;
+            global $conf;
+
+            $file = $conf['cachedir'] . '/debug.log';
+            $fh = fopen($file, 'a');
+            if ($fh) {
+                $sep = " - ";
+                fwrite($fh, date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . "\n");
+                fclose($fh);
+            }
         }
 
     }
@@ -117,8 +154,9 @@ class LogUtility
             }
 
             $htmlMsg = $prefix . " - " . $message;
-            if ($level != self::LVL_MSG_DEBUG) {
-                msg($htmlMsg, $level, '', '', MSG_USERS_ONLY);
+            if ($level > self::LVL_MSG_DEBUG) {
+                $dokuWikiLevel = self::LVL_TO_MSG_LEVEL[$level];
+                msg($htmlMsg, $dokuWikiLevel, '', '', MSG_USERS_ONLY);
             }
         }
     }

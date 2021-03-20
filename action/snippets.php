@@ -1,12 +1,8 @@
 <?php
 
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Page;
 use ComboStrap\SnippetManager;
-use ComboStrap\TplUtility;
-use dokuwiki\Cache\CacheRenderer;
 
 if (!defined('DOKU_INC')) die();
 
@@ -71,20 +67,21 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * (The storage is done at the page level)
          * Adapted from {@link p_cached_output()}
          */
-        $storedArray = array();
-        $file = wikiFN($ID);
-        $cache = new CacheRenderer($ID, $file, "snippet");
-        if ($cache->useCache()) { // useCache means isCacheUsable
-            $data = $cache->retrieveCache();
-            global $conf;
-            if ($conf['allowdebug']) {
-                LogUtility::log2file("Snippet cache file {$cache->cache} used");
-            }
-            if (!empty($data)) {
-                $storedArray = unserialize($data);
-            }
-            $snippetManager->mergeWithPreviousRun($storedArray);
+        $cache = new \dokuwiki\Cache\Cache($ID, "snippet");
+        // note: $cache->useCache()) permits to add dependencies and get a cache results
+        // in case we want to add dependencies on the bar
+        $data = $cache->retrieveCache();
+        global $conf;
+        if ($conf['allowdebug']) {
+            LogUtility::log2file("Snippet cache file {$cache->cache} used", LogUtility::LVL_MSG_DEBUG);
         }
+        if (!empty($data)) {
+            $storedArray = unserialize($data);
+        } else {
+            $storedArray = array();
+        }
+        $snippetManager->mergeWithPreviousRun($storedArray);
+
         $cache->storeCache(serialize($snippetManager->getData()));
 
 

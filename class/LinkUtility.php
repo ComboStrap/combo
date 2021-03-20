@@ -379,7 +379,7 @@ class LinkUtility
                 $lowLink = $this->isProtectedLink();
                 if ($lowLink) {
 
-                    PageProtection::addPageProtectionSnippet($this->renderer);
+                    PageProtection::addPageProtectionSnippet();
                     PluginUtility::addClass2Attributes(PageProtection::PROTECTED_LINK_CLASS, $this->attributes);
                     $protectionSourceAcronym = "";
                     if ($this->getInternalPage()->isLowQualityPage()) {

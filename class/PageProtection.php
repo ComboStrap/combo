@@ -25,7 +25,7 @@ use syntax_plugin_combo_tooltip;
 class PageProtection
 {
 
-    const NAME = "protection_mode";
+    const NAME = "page-protection";
 
     /**
      * Conf that gets one of the two values
@@ -51,7 +51,7 @@ class PageProtection
      * element created in place of the link
      * See {@link LinkUtility::renderOpenTag()}
      */
-    const PROTECTED_LINK_CLASS = "combo_page_protection";
+    const PROTECTED_LINK_CLASS = "combo-page-protection";
 
     /**
      * An html attribute to get the source of the protection
@@ -62,7 +62,7 @@ class PageProtection
      * Add the HTML snippet
      * @param Doku_Renderer_xhtml $renderer
      */
-    public static function addPageProtectionSnippet(Doku_Renderer_xhtml $renderer)
+    public static function addPageProtectionSnippet()
     {
         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
         $protectedLinkClass = self::PROTECTED_LINK_CLASS;

@@ -184,12 +184,14 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
 
                         // The button is the hamburger menu that will be shown
                         $idElementToCollapse = 'navbarcollapse';
-                        $renderer->doc .= '<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#' . $idElementToCollapse . '" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation"';
+                        $renderer->doc .= '<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#' . $idElementToCollapse . '" aria-controls="' . $idElementToCollapse . '" aria-expanded="false" aria-label="Toggle navigation"';
                         if (array_key_exists("order", $attributes)) {
-                            $renderer->doc .= ' style="order:' . $attributes["order"];
+                            $renderer->doc .= ' style="order:' . $attributes["order"] . '"';
                             unset($attributes["order"]);
                         }
-                        $renderer->doc .= '"><span class="navbar-toggler-icon"></span></button>' . DOKU_LF;
+                        $renderer->doc .= '>' . DOKU_LF;
+                        $renderer->doc .= '<span class="navbar-toggler-icon"></span>' . DOKU_LF;
+                        $renderer->doc .= '</button>' . DOKU_LF;
 
 
                         $classValue = "collapse navbar-collapse";

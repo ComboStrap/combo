@@ -44,7 +44,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin {
                     'ajax' => true,
                     'autocomplete' => true
                 );
-                $match = utf8_substr($match, strlen($this->getPluginComponent()) + 1, -1);
+                $match = substr($match, strlen($this->getPluginComponent()) + 1, -1);
                 $parameters = array_merge($init, PluginUtility::parse2HTMLAttributes($match));
                 return array($state, $parameters);
 
@@ -86,12 +86,14 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin {
                     }
                     $renderer->doc .= '">' . DOKU_LF;
                     $renderer->doc .= '<input type="hidden" name="do" value="search" />';
-                    $renderer->doc .=  '<label class="sr-only" for="search">Search Term</label>';
-                    $renderer->doc .=  '<input type="text" tabindex="1"';
-                    if ($ACT == 'search') $renderer->doc .= 'value="' . htmlspecialchars($QUERY) . '" ';
+                    $renderer->doc .= '<input type="hidden" name="id" value="dokuwiki" />';
+                    $inputSearchId = 'qsearch__in';
+                    $renderer->doc .=  "<label class=\"sr-only\" for=\"$inputSearchId\">Search Term</label>";
+                    $renderer->doc .=  '<input name="q" type="text" tabindex="1"';
+                    if ($ACT == 'search') $renderer->doc .= ' value="' . htmlspecialchars($QUERY) . '" ';
                     $renderer->doc .= 'placeholder="' . $lang['btn_search'] . '..." ';
                     if (!$parameters['autocomplete']) $renderer->doc .= 'autocomplete="off" ';
-                    $renderer->doc .= 'id="qsearch__in" accesskey="f" name="id" class="edit form-control" title="[F]"/>';
+                    $renderer->doc .= 'id="' . $inputSearchId . '" accesskey="f" class="edit form-control" title="[F]"/>';
                     if ($parameters['ajax']) $renderer->doc .= '<div id="qsearch__out" class="ajax_qsearch JSpopup"></div>';
                     $renderer->doc .= '</form>';
                     break;

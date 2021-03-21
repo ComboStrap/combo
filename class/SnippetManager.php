@@ -179,9 +179,13 @@ class SnippetManager
             foreach ($components as $type => $snippets) {
                 if ($type == $localType) {
                     foreach ($snippets as $comboTag => $tags) {
-                        foreach ($tags as $htmlTagName => $htmlTags) {
-                            foreach ($htmlTags as $htmlTag) {
-                                $distinctSnippets[$comboTag][$htmlTagName][] = $htmlTag;
+                        if ($localType == self::CSS_TYPE) {
+                            $distinctSnippets[$comboTag] = $tags;
+                        } else {
+                            foreach ($tags as $htmlTagName => $htmlTags) {
+                                foreach ($htmlTags as $htmlTag) {
+                                    $distinctSnippets[$comboTag][$htmlTagName][] = $htmlTag;
+                                }
                             }
                         }
                     }
@@ -279,7 +283,9 @@ class SnippetManager
         if (!isset($this->headsByBar[$bar])) {
             $this->headsByBar[$bar] = $snippets;
         } else {
-            LogUtility::msg("Snippets for the bar ($bar) have been already added. Are you sure that the bar was not rendered ?", LogUtility::LVL_MSG_ERROR);
+            // Bad data
+            $data = var_export($this->headsByBar[$bar], true);
+            LogUtility::msg("Internal error: Snippets for the bar ($bar) have been added while the bar was cached. The snippets added are ($data). This snippet should be added at the request level", LogUtility::LVL_MSG_ERROR);
         }
     }
 
@@ -325,12 +331,14 @@ class SnippetManager
             $script = $this->getCssRulesFromFile($comboComponent);
         }
 
-        $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent]["style"] = [
-            array(
-                "class" => SnippetManager::getClassFromTag($comboComponent),
-                "_data" => $script
-            )
-        ];
+        $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent] = $script;
+
+//        $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent]["style"] = [
+//            array(
+//                "class" => SnippetManager::getClassFromTag($comboComponent),
+//                "_data" => $script
+//            )
+//        ];
 
     }
 

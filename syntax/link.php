@@ -295,7 +295,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         // otherwise null string
                         $renderer->doc .= $payload;
 
-                        // html element
+                        // Close the link
+                        $linkTag = $data[self::LINK_TAG];
+                        $renderer->doc .= "</$linkTag>";
+
+                        // Close the html wrapper element
                         $context = $data[PluginUtility::CONTEXT];
                         switch ($context) {
                             case syntax_plugin_combo_navbarcollapse::COMPONENT:
@@ -306,8 +310,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 break;
                         }
 
-                        $linkTag = $data[self::LINK_TAG];
-                        $renderer->doc .= "</$linkTag>";
+
 
 
                 }

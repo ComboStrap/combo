@@ -4,8 +4,6 @@
  *
  */
 
-use ComboStrap\HtmlUtility;
-use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 
 
@@ -138,7 +136,7 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                array(
+                return array(
                     PluginUtility::STATE => $state
                 );
 

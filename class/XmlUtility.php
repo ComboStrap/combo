@@ -163,6 +163,7 @@ class XmlUtility
         $text = XmlUtility::preprocessText($text);
         $doc->loadXML($text);
         $doc->normalize();
+        $doc->preserveWhiteSpace = false;
         $doc->formatOutput = true;
         // Type doc can also be reach with $domNode->ownerDocument
         return $doc->saveXML($doc->documentElement) . DOKU_LF;

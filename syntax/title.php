@@ -229,7 +229,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= self::renderOpeningTag($parentTag, $attributes, $renderer);
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT:
                     $attributes = $data[PluginUtility::ATTRIBUTES];

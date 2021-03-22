@@ -211,7 +211,7 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT:
                     $renderer->doc .= '</div>' . DOKU_LF;

@@ -138,7 +138,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
                     // What about:
                     //   * the title of the website ? $conf['title']
                     //   * the logo ? $logo = tpl_getMediaFile(array(':wiki:logo.png', ':logo.png', 'images/logo.png'), false, $logoSize);
-                    $renderer->doc .= $renderer->_xmlEntities($parameters);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :

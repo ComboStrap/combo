@@ -94,7 +94,10 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = array();
                 $inlineAttributes = PluginUtility::getTagAttributes($match);
                 $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
-                return array($state, $attributes);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
             case DOKU_LEXER_UNMATCHED :
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
@@ -102,7 +105,9 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 // Important otherwise we don't get an exit in the render
-                return array($state, '');
+                return array(
+                    PluginUtility::STATE => $state
+                );
 
 
         }
@@ -125,10 +130,10 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state, $payload) = $data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = $payload;
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     $renderer->doc .= '<div';
                     if (sizeof($attributes) > 0) {
                         $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
@@ -137,7 +142,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= $renderer->_xmlEntities($payload);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :

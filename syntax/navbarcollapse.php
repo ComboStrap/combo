@@ -206,7 +206,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
                         break;
 
                     case DOKU_LEXER_UNMATCHED:
-                        $renderer->doc .= NavBarUtility::text(PluginUtility::escape($payload));
+                        $renderer->doc .= NavBarUtility::text(PluginUtility::renderUnmatched($data));
                         break;
 
 

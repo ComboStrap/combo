@@ -9,6 +9,8 @@ require_once(__DIR__ . '/../class/Tag.php');
 /**
  * Just a node to test the {@link Tag} context
  * This is not public
+ *
+ * TODO: Move this in the test class
  */
 class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
 {
@@ -108,9 +110,9 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['child-of-blockquote'] = $tag->isChildOf("blockquote");
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
-                $attributes['first-sibling'] = $tag->getPreviousSibling()!==null?$tag->getPreviousSibling()->getName():false;
+                $attributes['first-sibling'] = $tag->getPreviousSibling() !== null ? $tag->getPreviousSibling()->getName() : false;
 
-                $payload = '<tag-enter type="'.$attributes['type'].'" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-enter>';
+                $payload = '<tag-enter type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-enter>';
 
                 /**
                  * Attributes needs to be given
@@ -118,20 +120,21 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                  */
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $payload
+                    PluginUtility::PAYLOAD => $payload,
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $attributes['name'] = $tag->getName();
-                $attributes['type'] = $tag->getType();
+                $attributes['type'] = $tag->getParent()->getType();
                 $attributes['parent'] = $tag->getParent()->getName();;
-                $attributes['parent-type'] = $tag->getParent()->getType();;
+                $attributes['parent-type'] = $tag->getParent()->getType();
                 $attributes['child-of-blockquote'] = $tag->isChildOf("blockquote");
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
-                $attributes['first-sibling'] = $tag->getPreviousSibling()!==null?$tag->getPreviousSibling():false;
-                $payload = '<tag-unmatched type="'.$attributes['type'].'" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-unmatched>';
+                $attributes['first-sibling'] = $tag->getPreviousSibling() !== null ? $tag->getPreviousSibling() : false;
+                $payload = '<tag-unmatched type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-unmatched>';
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $payload
@@ -148,7 +151,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
                 $attributes['first-sibling'] = $tag->getPreviousSibling()->getName();
-                $payload = '<tag-special type="'.$attributes['type'].'" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-special>';
+                $payload = '<tag-special type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-special>';
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $payload
@@ -164,14 +167,14 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['child-of-blockquote'] = $tag->isChildOf("blockquote");
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
-                $attributes['first-sibling'] = $tag->getPreviousSibling()!==null?$tag->getPreviousSibling()->getName():false;
+                $attributes['first-sibling'] = $tag->getPreviousSibling() !== null ? $tag->getPreviousSibling()->getName() : false;
                 $openingTag = $tag->getOpeningTag();
                 $attributes['has-descendants'] = $openingTag->hasDescendants();
                 $attributes['descendants-count'] = sizeof($openingTag->getDescendants());
                 $badgeTag = $openingTag->getDescendant("badge");
                 $attributes['has-badge-descendant'] = $badgeTag !== null;
-                $attributes['badge-content'] = $badgeTag !== null ? $badgeTag->getContentRecursively(): "";
-                $payload = '<tag-exit type="'.$attributes['type'].'" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-exit>';
+                $attributes['badge-content'] = $badgeTag !== null ? $badgeTag->getContentRecursively() : "";
+                $payload = '<tag-exit type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-exit>';
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $payload

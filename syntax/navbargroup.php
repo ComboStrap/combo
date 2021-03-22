@@ -190,7 +190,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= "<ul {$inlineAttributes}>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= NavBarUtility::text(PluginUtility::escape($payload));
+                    $renderer->doc .= NavBarUtility::text(PluginUtility::renderUnmatched($data));
                     break;
 
                 case DOKU_LEXER_EXIT :

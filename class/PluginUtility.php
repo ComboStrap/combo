@@ -54,7 +54,10 @@ class PluginUtility
      */
     const PRESERVE_LEFT_WHITE_SPACE_COMPONENTS = array(
         "link",
-        // Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
+        /**
+         * Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
+         * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class
+         */
         "strong",
         "emphasis",
         "underline",

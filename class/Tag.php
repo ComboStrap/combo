@@ -13,8 +13,9 @@
 namespace ComboStrap;
 
 
+require_once(__DIR__ . '/Call.php');
+
 use Doku_Handler;
-use dokuwiki\Action\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
 use RuntimeException;
@@ -25,6 +26,8 @@ use RuntimeException;
  * @package ComboStrap
  * This is class that have tree like function on tag level
  * to match what's called a {@link Doku_Handler::$calls call}
+ *
+ * It's just a wrapper that adds tree functionality above the {@link CallStack}
  */
 class Tag
 {
@@ -58,6 +61,13 @@ class Tag
      * @var Doku_Handler
      */
     private $handler;
+    /**
+     *
+     * @var Call
+     * The tag call may be null if this is the actual tag
+     * in the handler process (ie not yet created in the stack)
+     */
+    private $tagCall;
 
 
     /**
@@ -79,11 +89,8 @@ class Tag
     public function __construct($name, $attributes, $state, &$handler, $position = null)
     {
         $this->name = $name;
-        if ($attributes == null) {
-            $this->attributes = array();
-        } else {
-            $this->attributes = $attributes;
-        }
+
+
         $this->state = $state;
         /**
          * A temporary Call stack is created in the writer
@@ -98,46 +105,27 @@ class Tag
         $this->handler = &$handler;
         if ($position != null) {
             $this->position = $position;
+            /**
+             * A shortcut access variable to the call of the tag
+             */
+            if (isset($this->calls[$this->position])) {
+                $this->tagCall = new Call($this->calls[$this->position]);
+                $this->attributes = $this->tagCall->getAttributes();
+            }
+
         } else {
             // The tag is not yet in the stack
             $this->position = sizeof($this->calls);
+            if ($attributes == null) {
+                $this->attributes = array();
+            } else {
+                $this->attributes = $attributes;
+            }
         }
 
+
     }
 
-
-    /**
-     * @param $call
-     * @return mixed the data returned from the {@link DokuWiki_Syntax_Plugin::handle} (ie attributes, payload, ...)
-     */
-    private static function getDataFromCall($call)
-    {
-        return $call[1][1];
-    }
-
-    /**
-     * @param $call
-     * @return mixed the matched content from the {@link DokuWiki_Syntax_Plugin::handle}
-     */
-    private static function getContentFromCall($call)
-    {
-        $caller = $call[0];
-        switch ($caller) {
-            case "plugin":
-                return self::getMatchFromCall($call);
-            case "internallink":
-                return '[[' . $call[1][0] . '|' . $call[1][1] . ']]';
-            case "eol":
-                return DOKU_LF;
-            default:
-                return "Unknown tag content for caller ($caller)";
-        }
-    }
-
-    private static function getMatchFromCall($call)
-    {
-        return $call[1][3];
-    }
 
     /**
      * The lexer state
@@ -155,20 +143,22 @@ class Tag
 
     /**
      * From a call to a node
-     * @param $call
+     * @param array $callArray
      * @param $position - the position in the call stack (ie in the array)
      * @return Tag
      */
-    private function call2Tag(&$call, $position)
+    private function call2Tag(&$callArray, $position)
     {
+        $call = new Call($callArray);
+
         $attributes = null;
-        $data = self::getDataFromCall($call);
+        $data = $call->getDataFromCall();
         if (isset($data[PluginUtility::ATTRIBUTES])) {
             $attributes = $data[PluginUtility::ATTRIBUTES];
         }
 
-        $name = self::getTagNameFromCall($call);
-        $state = self::getStateFromCall($call);
+        $name = $call->getTagNameFromCall();
+        $state = $call->getStateFromCall();
 
         /**
          * Getting attributes
@@ -178,10 +168,10 @@ class Tag
          * we parse the match again
          */
         if ($attributes == null
-            && self::getStateFromCall($call) == DOKU_LEXER_ENTER
+            && $call->getStateFromCall() == DOKU_LEXER_ENTER
             && $name != 'preformatted' // preformatted does not have any attributes
         ) {
-            $match = self::getMatchFromCall($call);
+            $match = $call->getMatchFromCall();
             /**
              * If this is not a combo element, we got no match
              */
@@ -191,22 +181,6 @@ class Tag
         }
 
         return new Tag($name, $attributes, $state, $this->handler, $position);
-    }
-
-    /**
-     * The parser state
-     * @param $call
-     * @return mixed
-     * May be null (example eol, internallink, ...)
-     */
-    private static function getStateFromCall($call)
-    {
-        $returnedArray = $call[1];
-        if (!array_key_exists(2, $returnedArray)) {
-            return null;
-        } else {
-            return $returnedArray[2];
-        }
     }
 
     public function isChildOf($tag)
@@ -232,68 +206,73 @@ class Tag
 
     /**
      * Return the parent node or false if root
+     *
+     * The node should not be in an exit node
+     * (If this is the case, use the function {@link Tag::getOpeningTag()} first
+     *
      * @return bool|Tag
      */
     public function getParent()
     {
-        if (isset($this->position)) {
-            $descendantCounter = $this->position - 1;
-        } else {
-            $descendantCounter = sizeof($this->calls) - 1;
-        }
-        $treeLevel = 0;
-
         /**
          * Case when we start from the exit state element
-         * We put -1 in the level when we encounter the opening tag
-         * to not get it
+         * We go first to the opening tag
+         * because the algorithm is level based.
          */
         if ($this->state == DOKU_LEXER_EXIT) {
-            $treeLevel = +1;
-        }
 
-        while ($descendantCounter > 0) {
+            return $this->getOpeningTag()->getParent();
 
-            $parentCall = $this->calls[$descendantCounter];
-            $parentCallState = self::getStateFromCall($parentCall);
-
-
-            /**
-             * The breaking statement
-             */
-            if (
-                $parentCallState == null // Special tag such as EOL, internal link
-                || $parentCallState == DOKU_LEXER_UNMATCHED
-                || $parentCallState != DOKU_LEXER_ENTER
-                || $treeLevel != 0) {
-                $descendantCounter = $descendantCounter - 1;
-                unset($parentCall);
-            } else {
-                break;
-            }
-
-            /**
-             * After the breaking condition, otherwise a sibling would become a parent
-             * on its enter state
-             */
-            switch ($parentCallState) {
-                case DOKU_LEXER_ENTER:
-                    $treeLevel = $treeLevel - 1;
-                    break;
-                case DOKU_LEXER_EXIT:
-                    /**
-                     * When the tag has a sibling with an exit tag
-                     */
-                    $treeLevel = $treeLevel + 1;
-                    break;
-            }
-
-
-        }
-        if (isset($parentCall)) {
-            return $this->call2Tag($parentCall, $descendantCounter);
         } else {
-            return false;
+
+            /**
+             * Start to the actual call minus one
+             */
+            $callStackPosition = $this->position - 1;
+            $treeLevel = 0;
+
+            /**
+             * We are in a parent when the tree level is negative
+             */
+            while ($callStackPosition > 0) {
+
+                $previousCallArray = $this->calls[$callStackPosition];
+                $previousCall = new Call($previousCallArray);
+                $parentCallState = $previousCall->getStateFromCall();
+
+                /**
+                 * Add
+                 * would become a parent on its enter state
+                 */
+                switch ($parentCallState) {
+                    case DOKU_LEXER_ENTER:
+                        $treeLevel = $treeLevel - 1;
+                        break;
+                    case DOKU_LEXER_EXIT:
+                        /**
+                         * When the tag has a sibling with an exit tag
+                         */
+                        $treeLevel = $treeLevel + 1;
+                        break;
+                }
+
+                /**
+                 * The breaking statement
+                 */
+                if ($treeLevel >= 0) {
+                    $callStackPosition = $callStackPosition - 1;
+                    unset($previousCallArray);
+                } else {
+                    break;
+                }
+
+
+            }
+            if (isset($previousCallArray)) {
+                return $this->call2Tag($previousCallArray, $callStackPosition);
+            } else {
+                return false;
+            }
         }
     }
 
@@ -329,52 +308,16 @@ class Tag
         return $this->name;
     }
 
-    /**
-     * Return the tag name from a call array
-     * (much more what's called the component name)
-     * @param $call
-     * @return mixed|string
-     */
-    static function getTagNameFromCall($call)
-    {
-        $state = self::getStateFromCall($call);
-        $tagName = null;
-        switch ($state) {
-            case DOKU_LEXER_MATCHED:
-                $tagName = PluginUtility::getTag(self::getContentFromCall($call));
-                break;
-            default:
-                $component = $call[1][0];
-                if (!is_array($component)) {
-                    $componentNames = explode("_", $component);
-                    /**
-                     * To take care of
-                     * PHP Warning:  sizeof(): Parameter must be an array or an object that implements Countable
-                     * in lib/plugins/combo/class/Tag.php on line 314
-                     */
-                    if (is_array($componentNames)) {
-                        $tagName = $componentNames[sizeof($componentNames) - 1];
-                    } else {
-                        $tagName = $component;
-                    }
-                } else {
-                    // To resolve: explode() expects parameter 2 to be string, array given
-                    LogUtility::msg("The call (".print_r($call,true).") has an array and not a string as component (".print_r($component,true)."). Page: ".PluginUtility::getPageId(),LogUtility::LVL_MSG_ERROR);
-                    $tagName = "";
-                }
-        }
-        return $tagName;
-
-    }
-
 
     /**
      * @return string - the type attribute of the opening tag
      */
     public function getType()
     {
+
         if ($this->getState() == DOKU_LEXER_UNMATCHED) {
-            return $this->getOpeningTag()->getType();
+            LogUtility::msg("The unmatched tag (" . $this->name . ") does not have any attributes. Get its parent if you want the type",LogUtility::LVL_MSG_ERROR);
+            return null;
         } else {
             return $this->getAttribute("type");
         }
@@ -388,7 +331,8 @@ class Tag
     {
 
         for ($i = sizeof($this->calls) - 1; $i >= 0; $i--) {
-            if (self::getTagNameFromCall($this->calls[$i]) == "$tag") {
+            $call = new Call($this->calls[$i]);
+            if ($call->getTagNameFromCall() == "$tag") {
                 return true;
             }
 
@@ -411,8 +355,9 @@ class Tag
         $treeLevel = 0;
         while ($counter > 0) {
 
-            $call = $this->calls[$counter];
-            $state = self::getStateFromCall($call);
+            $callArray = $this->calls[$counter];
+            $call = new Call($callArray);
+            $state = $call->getStateFromCall();
 
             /**
              * Before the breaking condition
@@ -429,7 +374,7 @@ class Tag
                     $treeLevel = $treeLevel + 1;
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    if (empty(trim(self::getContentFromCall($call)))){
+                    if (empty(trim($call->getContentFromCall()))) {
                         // An empty unmatched in not considered a sibling
                         // state = null will continue the loop
                         // we can't use a continue statement in a switch
@@ -443,12 +388,12 @@ class Tag
              * If we get above or on the same level
              */
             if ($treeLevel <= 0
-                && $state != null // eol state or empty tag
+                && $state != null // eol state, strong close or empty tag
             ) {
                 break;
             } else {
                 $counter = $counter - 1;
-                unset($call);
+                unset($callArray);
                 continue;
             }
 
@@ -459,7 +404,7 @@ class Tag
          * that there is no sibling
          */
         if ($treeLevel == 0) {
-            return self::call2Tag($call, $counter);
+            return self::call2Tag($callArray, $counter);
         }
         return null;
 
@@ -480,19 +425,20 @@ class Tag
         $descendantCounter = sizeof($this->calls) - 1;
         while ($descendantCounter > 0) {
 
-            $parentCall = $this->calls[$descendantCounter];
-            $parentTagName = self::getTagNameFromCall($parentCall);
-            $state = self::getStateFromCall($parentCall);
+            $previousCallArray = $this->calls[$descendantCounter];
+            $previousCall = new Call($previousCallArray);
+            $parentTagName = $previousCall->getTagNameFromCall();
+            $state = $previousCall->getStateFromCall();
             if ($state === DOKU_LEXER_ENTER && $parentTagName === $this->getName()) {
                 break;
             } else {
                 $descendantCounter = $descendantCounter - 1;
-                unset($parentCall);
+                unset($previousCallArray);
             }
 
         }
-        if (isset($parentCall)) {
-            return $this->call2Tag($parentCall, $descendantCounter);
+        if (isset($previousCallArray)) {
+            return $this->call2Tag($previousCallArray, $descendantCounter);
         } else {
             return false;
         }
@@ -546,9 +492,10 @@ class Tag
         $descendants = array();
         while ($index <= sizeof($this->calls) - 1) {
 
-            $childCall = $this->calls[$index];
-            $childTagName = self::getTagNameFromCall($childCall);
-            $state = self::getStateFromCall($childCall);
+            $childCallArray = $this->calls[$index];
+            $childCall = new Call($childCallArray);
+            $childTagName = $childCall->getTagNameFromCall();
+            $state = $childCall->getStateFromCall();
 
             /**
              * We break when got to the exit tag
@@ -559,19 +506,19 @@ class Tag
                 /**
                  * We don't take the end of line
                  */
-                if ($childCall[0] != "eol") {
+                if ($childCallArray[0] != "eol") {
                     /**
                      * We don't take text
                      */
                     //if ($state!=DOKU_LEXER_UNMATCHED) {
-                    $descendants[] = self::call2Tag($childCall, $index);
+                    $descendants[] = self::call2Tag($childCallArray, $index);
                     //}
                 }
                 /**
                  * Close
                  */
                 $index = $index + 1;
-                unset($childCall);
+                unset($childCallArray);
             }
 
         }
@@ -604,8 +551,9 @@ class Tag
      */
     public function getMatchedContent()
     {
-        if ($this->position != null) {
-            return self::getMatchFromCall($this->calls[$this->position]);
+        if ($this->tagCall != null) {
+
+            return $this->tagCall->getMatchFromCall();
         } else {
             return null;
         }
@@ -617,8 +565,8 @@ class Tag
      */
     public function getData()
     {
-        if ($this->position != null) {
-            return self::getDataFromCall($this->calls[$this->position]);
+        if ($this->tagCall != null) {
+            return $this->tagCall->getDataFromCall();
         } else {
             return array();
         }
@@ -630,8 +578,8 @@ class Tag
      */
     public function getContext()
     {
-        if ($this->position != null) {
-            $data = self::getDataFromCall($this->calls[$this->position]);
+        if ($this->tagCall != null) {
+            $data = $this->tagCall->getDataFromCall();
             return $data[PluginUtility::CONTEXT];
         } else {
             return array();
@@ -654,15 +602,16 @@ class Tag
                 $index = $this->position + 1;
                 while ($index <= sizeof($this->calls) - 1) {
 
-                    $currentCall = $this->calls[$index];
+                    $currentCallArray = $this->calls[$index];
+                    $currentCall = new Call($currentCallArray);
                     if (
-                        self::getTagNameFromCall($currentCall) == $this->getName()
+                        $currentCall->getTagNameFromCall() == $this->getName()
                         &&
-                        self::getStateFromCall($currentCall) == DOKU_LEXER_EXIT
+                        $currentCall->getStateFromCall() == DOKU_LEXER_EXIT
                     ) {
                         break;
                     } else {
-                        $content .= self::getContentFromCall($currentCall);
+                        $content .= $currentCall->getContentFromCall();
                         $index++;
                     }
                 }
@@ -741,6 +690,19 @@ class Tag
 
     public function getContent()
     {
-        return self::getContentFromCall($this->calls[$this->position]);
+        if ($this->tagCall != null) {
+            return $this->tagCall->getContentFromCall();
+        } else {
+            return null;
+        }
+    }
+
+    public function getDocumentStartTag()
+    {
+        if (sizeof($this->calls) > 0) {
+            return $this->call2Tag($this->calls[0], 0);
+        } else {
+            throw new RuntimeException("The stack is empty, there is no root tag");
+        }
     }
 }

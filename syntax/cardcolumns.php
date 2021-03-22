@@ -171,6 +171,10 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= '<div class="card-columns">' . DOKU_LF;
                     break;
 
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
+
                 case DOKU_LEXER_EXIT :
 
                     $renderer->doc .= '</div>'.DOKU_LF;

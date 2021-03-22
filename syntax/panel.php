@@ -208,7 +208,6 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
                     $context = self::OLD_TAB_PANEL_TAG;
 
-
                     $siblingTag = $parent->getPreviousSibling();
                     if ($siblingTag != null) {
                         if ($siblingTag->getName() === syntax_plugin_combo_tabs::TAG) {
@@ -227,7 +226,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                                 }
                             }
                         } else {
-                            LogUtility::msg("The direct element above a " . self::OLD_TAB_PANEL_TAG . " should be a tabs", LogUtility::LVL_MSG_ERROR, "tabs");
+                            LogUtility::msg("The direct element above a " . self::OLD_TAB_PANEL_TAG . " should be a `tabs` and not a `".$siblingTag->getName()."`", LogUtility::LVL_MSG_ERROR, "tabs");
                         }
                     }
                 }
@@ -241,7 +240,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED:
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
@@ -253,9 +252,11 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                  * Label Mandatory check
                  * (Only the presence of at minimum 1 and not the presence in each panel)
                  */
-                $labelTag = $openingTag->getDescendant(syntax_plugin_combo_label::TAG);
-                if (empty($labelTag)){
-                    LogUtility::msg("No label was found in the panel (number ".$this->tabCounter."). They are mandatory to create tabs or accordion",LogUtility::LVL_MSG_ERROR,self::TAG);
+                if ($match != "</" . self::OLD_TAB_PANEL_TAG . ">") {
+                    $labelTag = $openingTag->getDescendant(syntax_plugin_combo_label::TAG);
+                    if (empty($labelTag)) {
+                        LogUtility::msg("No label was found in the panel (number " . $this->tabCounter . "). They are mandatory to create tabs or accordion", LogUtility::LVL_MSG_ERROR, self::TAG);
+                    }
                 }
 
                 return

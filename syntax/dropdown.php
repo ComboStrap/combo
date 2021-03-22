@@ -196,12 +196,7 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_UNMATCHED :
 
-                    if (isset($data[PluginUtility::PAYLOAD])) {
-                        $payload = $data[PluginUtility::PAYLOAD];
-                    } else {
-                        $payload = $data[1];
-                    }
-                    $renderer->doc .= PluginUtility::escape($payload);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
 

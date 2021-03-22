@@ -190,7 +190,8 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
             }
 
             return true;

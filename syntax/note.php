@@ -55,7 +55,6 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
     }
 
 
-
     function getSort()
     {
         return 201;
@@ -67,7 +66,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
          * header mode is disable to take over
          * and replace it with {@link syntax_plugin_combo_title}
          */
-        if ($mode == "header"){
+        if ($mode == "header") {
             return false;
         }
         /**
@@ -79,7 +78,6 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
             return true;
         }
     }
-
 
 
     function connectTo($mode)
@@ -106,15 +104,20 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                 $defaultAttributes = array("type" => "info");
                 $inlineAttributes = PluginUtility::getTagAttributes($match);
                 $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
-                return array($state, $attributes);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
                 // Important otherwise we don't get an exit in the render
-                return array($state, '');
+                return array(
+                    PluginUtility::STATE => $state
+                );
 
 
         }
@@ -137,10 +140,10 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state, $payload) = $data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = $payload;
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     $classValue = "alert";
                     $type = $attributes["type"];
                     // Switch for the color
@@ -179,7 +182,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= $renderer->_xmlEntities($payload);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :

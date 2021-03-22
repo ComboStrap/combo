@@ -210,7 +210,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                         /**
                          * If this is a button and not a link button
                          */
-                        $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
                         break;
                     case DOKU_LEXER_ENTER :
 

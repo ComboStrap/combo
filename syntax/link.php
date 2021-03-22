@@ -283,7 +283,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= $htmlLink;
                         break;
                     case DOKU_LEXER_UNMATCHED:
-                        $renderer->doc .= PluginUtility::escape($payload);
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
                         break;
                     case DOKU_LEXER_EXIT:
 

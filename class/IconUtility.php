@@ -25,6 +25,8 @@ require_once(__DIR__ . '/../class/ConfUtility.php');
  * TODO: Add Bootstrap ? https://icons.getbootstrap.com/
  * TODO: Add material ? https://material.io/resources/icons
  *
+ * Injection via javascript ?
+ * https://www.npmjs.com/package/svg-injector
  */
 class IconUtility
 {

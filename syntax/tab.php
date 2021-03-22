@@ -6,6 +6,7 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -125,10 +126,9 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED:
 
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match, $state,$handler);
+
+
 
 
             case DOKU_LEXER_EXIT :
@@ -168,7 +168,12 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]) . DOKU_LF;
+
+                    $renderer->doc .= PluginUtility::renderUnmatched(
+                            $data[PluginUtility::PAYLOAD],
+                            $data[PluginUtility::CONTEXT]
+                        ) . DOKU_LF;
+
                     break;
                 case DOKU_LEXER_EXIT :
                     $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();

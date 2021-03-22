@@ -112,7 +112,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        return array($match);
+        return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
     }
 
@@ -129,7 +129,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
         if ($format=="xhtml") {
-            $renderer->doc .= $data[0];
+            $renderer->doc .= PluginUtility::renderUnmatched($data);
         }
         return false;
     }

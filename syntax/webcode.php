@@ -210,11 +210,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                // Cache the values
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+
 
             case DOKU_LEXER_EXIT:
 

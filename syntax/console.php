@@ -21,7 +21,7 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
     /**
      * The tag of the ui component
      */
-    const CONSOLE_TAG = "console";
+    const TAG = "console";
 
 
     function getType()
@@ -74,7 +74,7 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::CONSOLE_TAG);
+        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
 
@@ -84,7 +84,7 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
     function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::CONSOLE_TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
 
     }
 
@@ -114,10 +114,7 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_EXIT :
                 return array(PluginUtility::STATE => $state);

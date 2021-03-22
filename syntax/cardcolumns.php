@@ -134,6 +134,9 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                 $parameters = PluginUtility::parse2HTMLAttributes($match);
                 return array($state, $parameters);
 
+            case DOKU_LEXER_UNMATCHED:
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+
             case DOKU_LEXER_EXIT :
 
                 return array($state, '');

@@ -1,7 +1,6 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
+
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
@@ -10,6 +9,8 @@ if(!defined('DOKU_INC')) die();
 
 
 class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
+
+    const TAG = "brand";
 
     /**
      * Syntax Type.
@@ -79,7 +80,7 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
                 return array($state, $parameters);
 
             case DOKU_LEXER_UNMATCHED :
-                return array ($state, $match);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_EXIT :
 

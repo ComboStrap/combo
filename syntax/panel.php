@@ -241,16 +241,22 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED:
 
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => trim($match)
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
 
             case DOKU_LEXER_EXIT :
 
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
+
+                /**
+                 * Label Mandatory check
+                 * (Only the presence of at minimum 1 and not the presence in each panel)
+                 */
+                $labelTag = $openingTag->getDescendant(syntax_plugin_combo_label::TAG);
+                if (empty($labelTag)){
+                    LogUtility::msg("No label was found in the panel (number ".$this->tabCounter."). They are mandatory to create tabs or accordion",LogUtility::LVL_MSG_ERROR,self::TAG);
+                }
 
                 return
                     array(
@@ -326,7 +332,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     }
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
             }
             return true;

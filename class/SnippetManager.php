@@ -43,6 +43,7 @@ class SnippetManager
     const TAG_TYPE = "tag";
     const COMBO_CLASS_PREFIX = "combo-";
 
+
     /**
      * @var array the content array of all heads
      */
@@ -219,7 +220,7 @@ class SnippetManager
     private function getJavascriptContentFromFile($tagName)
     {
 
-        $path = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/js/" . strtolower($tagName) . ".js";
+        $path = Resources::getSnippetResourceDirectory() . "/js/" . strtolower($tagName) . ".js";
         if (file_exists($path)) {
             return file_get_contents($path);
         } else {
@@ -236,7 +237,7 @@ class SnippetManager
     private function getCssRulesFromFile($tagName)
     {
 
-        $path = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/style/" . strtolower($tagName) . ".css";
+        $path = Resources::getSnippetResourceDirectory() . "/style/" . strtolower($tagName) . ".css";
         if (file_exists($path)) {
             return file_get_contents($path);
         } else {

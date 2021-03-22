@@ -27,9 +27,11 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 {
 
+    const TAG = "column";
+
     static function getTags()
     {
-        return ["column", "col"];
+        return [self::TAG, "col"];
     }
 
     /**
@@ -139,7 +141,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
                 return array($state, $attributes);
 
             case DOKU_LEXER_UNMATCHED:
-                return array($state, $match);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 

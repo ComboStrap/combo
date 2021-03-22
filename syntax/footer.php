@@ -124,7 +124,7 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
                 return array($state, $tagAttributes);
 
             case DOKU_LEXER_UNMATCHED:
-                return array($state, $match);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_EXIT :
 

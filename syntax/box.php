@@ -97,7 +97,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 return array($state, $attributes);
 
             case DOKU_LEXER_UNMATCHED :
-                return array($state, $match);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -130,7 +130,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $attributes = $payload;
                     $renderer->doc .= '<div';
-                    if (sizeof($attributes)>0) {
+                    if (sizeof($attributes) > 0) {
                         $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
                     }
                     $renderer->doc .= '>';

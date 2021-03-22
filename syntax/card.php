@@ -49,10 +49,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * @var int a counter for an unknown card type
      */
     private $cardCounter = 0;
-    /**
-     * @var int a counter to give an id to the tabs card
-     */
-    private $tabCounter = 0;
+
 
 
     /**
@@ -209,11 +206,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match,
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
 
             case DOKU_LEXER_EXIT :

@@ -152,14 +152,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
                     PluginUtility::PAYLOAD => $html);
 
             case DOKU_LEXER_UNMATCHED :
-                if (!empty(trim($match))) {
-                    $payload = "<span>" . PluginUtility::escape($match) . '</span>';
-                } else {
-                    $payload = "";
-                }
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $payload);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -202,7 +195,10 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $render = PluginUtility::renderUnmatched($data);
+                    if (!empty($render)) {
+                        $renderer->doc .= "<span>" . $render . '</span>';
+                    }
                     break;
             }
             return true;

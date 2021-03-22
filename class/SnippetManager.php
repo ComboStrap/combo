@@ -206,6 +206,7 @@ class SnippetManager
     {
         $this->headsByBar = array();
         $this->headsByRequest = array();
+        $this->barsProcessed = array();
     }
 
     public function getData()

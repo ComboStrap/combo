@@ -46,7 +46,10 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin {
                 );
                 $match = substr($match, strlen($this->getPluginComponent()) + 1, -1);
                 $parameters = array_merge($init, PluginUtility::parse2HTMLAttributes($match));
-                return array($state, $parameters);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES=> $parameters
+                );
 
         }
         return array();
@@ -69,7 +72,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin {
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state,$parameters)=$data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_SPECIAL :
 
@@ -81,6 +84,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin {
                     if (!actionOK('search')) return false;
 
                     $renderer->doc .= '<form action="' . wl() . '" accept-charset="utf-8" id="dw__search" method="get" role="search" class="search form-inline ';
+                    $parameters = $data[PluginUtility::ATTRIBUTES];
                     if (array_key_exists("class", $parameters)) {
                         $renderer->doc .= ' '.$parameters["class"];
                     }

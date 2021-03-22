@@ -1,14 +1,14 @@
 <?php
 
 
-
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
 
-if(!defined('DOKU_INC')) die();
+if (!defined('DOKU_INC')) die();
 
 
-class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
+{
 
     const TAG = "brand";
 
@@ -18,7 +18,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
-    function getType() {
+    function getType()
+    {
         return 'formatting';
     }
 
@@ -31,7 +32,8 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
-    function getPType() {
+    function getPType()
+    {
         return 'normal';
     }
 
@@ -42,11 +44,13 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
      * array('container', 'baseonly', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
      *
      */
-    function getAllowedTypes() {
+    function getAllowedTypes()
+    {
         return array('container', 'baseonly', 'formatting', 'substition', 'protected', 'disabled');
     }
 
-    function getSort() {
+    function getSort()
+    {
         return 201;
     }
 
@@ -54,38 +58,45 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
     /**
      * Create a pattern that will called this plugin
      *
-     * @see Doku_Parser_Mode::connectTo()
      * @param string $mode
+     * @see Doku_Parser_Mode::connectTo()
      */
-    function connectTo($mode) {
+    function connectTo($mode)
+    {
 
         $pattern = PluginUtility::getContainerTagPattern(self::getTag());
         $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
     }
 
-    function postConnect() {
+    function postConnect()
+    {
 
         $this->Lexer->addExitPattern('</' . self::getTag() . '>', 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
     }
 
-    function handle($match, $state, $pos, Doku_Handler $handler) {
+    function handle($match, $state, $pos, Doku_Handler $handler)
+    {
 
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $match = substr($match, strlen($this->getPluginComponent()) + 1, -1);
-                $parameters = PluginUtility::parse2HTMLAttributes($match);
-                return array($state, $parameters);
+                $parameters = PluginUtility::getTagAttributes($match);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $parameters
+                );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
                 // Important otherwise we don't get an exit in the render
-                return array($state, '');
+                return array(
+                    PluginUtility::STATE => $state
+                );
 
 
         }
@@ -103,16 +114,18 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data){
+    function render($format, Doku_Renderer $renderer, $data)
+    {
 
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state, $parameters) = $data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= '<a href="'.wl().'" accesskey="h"';
+                    $renderer->doc .= '<a href="' . wl() . '" accesskey="h"';
 
+                    $parameters = $data[PluginUtility::ATTRIBUTES];
                     $title = ' title="';
                     if (array_key_exists("title", $parameters)) {
                         $title .= $parameters["title"];
@@ -120,16 +133,16 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin {
                         global $conf;
                         $title .= $conf['title'];
                     }
-                    $title .='"';
+                    $title .= '"';
                     $renderer->doc .= $title;
 
                     $renderer->doc .= ' class="navbar-brand';
                     if (array_key_exists("class", $parameters)) {
-                        $renderer->doc .= ' '.hsc($parameters["class"]);
+                        $renderer->doc .= ' ' . hsc($parameters["class"]);
                     }
                     $renderer->doc .= '"';
                     if (array_key_exists("style", $parameters)) {
-                        $renderer->doc .= ' style="'.hsc($parameters["style"]).'"';
+                        $renderer->doc .= ' style="' . hsc($parameters["style"]) . '"';
                     }
                     $renderer->doc .= '>';
                     break;

@@ -131,7 +131,10 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
                 // Suppress the component name
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                return array($state, $tagAttributes);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES=> $tagAttributes
+                );
 
             case DOKU_LEXER_UNMATCHED:
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
@@ -139,7 +142,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                return array($state, '');
+                return array(PluginUtility::STATE => $state);
 
 
         }
@@ -161,7 +164,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
 
-        list($state, $payload) = $data;
+        $state = $data[PluginUtility::STATE];
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
@@ -171,22 +174,22 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     // https://getbootstrap.com/docs/4.0/components/navbar/#toggler splits the navbar-nav to another element
                     // navbar-nav implementation
-
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     $classValue = "navbar-nav";
-                    if (array_key_exists("class", $payload)) {
-                        $payload["class"] .= " {$classValue}";
+                    if (array_key_exists("class", $attributes)) {
+                        $attributes["class"] .= " {$classValue}";
                     } else {
-                        $payload["class"] = $classValue;
+                        $attributes["class"] = $classValue;
                     }
 
-                    if (array_key_exists("expand", $payload)) {
-                        if ($payload["expand"]=="true") {
-                            $payload["class"] .= " mr-auto";
+                    if (array_key_exists("expand", $attributes)) {
+                        if ($attributes["expand"]=="true") {
+                            $attributes["class"] .= " mr-auto";
                         }
-                        unset($payload["expand"]);
+                        unset($attributes["expand"]);
                     }
 
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($payload);
+                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
                     $renderer->doc .= "<ul {$inlineAttributes}>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :

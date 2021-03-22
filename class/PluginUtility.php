@@ -53,7 +53,14 @@ class PluginUtility
      * lists manually because this is a hassle to retrieve this information from {@link \DokuWiki_Syntax_Plugin::getType()}
      */
     const PRESERVE_LEFT_WHITE_SPACE_COMPONENTS = array(
-        "link",
+        /**
+         * The inline of combo
+         */
+        \syntax_plugin_combo_link::TAG,
+        \syntax_plugin_combo_icon::TAG,
+        \syntax_plugin_combo_inote::TAG,
+        \syntax_plugin_combo_button::TAG,
+        \syntax_plugin_combo_tooltip::TAG,
         /**
          * Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
          * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class

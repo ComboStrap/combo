@@ -100,7 +100,10 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                     }
                 }
                 // Cache the values
-                return array($state, $parameters);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES=> $parameters
+                );
 
         }
 
@@ -119,8 +122,8 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_xhtml $renderer */
 
-            // Unfold the $data array in two separates variables
-            list($state, $parameters) = $data;
+
+            $state=$data[PluginUtility::STATE];
 
             // As there is only one call to connect to in order to a add a pattern,
             // there is only one state entering the function
@@ -142,12 +145,13 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         $callingId = $INFO['id'];
                     }
 
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     $nameSpacePath = getNS($callingId); // The complete path to the directory
-                    if (array_key_exists(self::NAMESPACE_KEY_ATT, $parameters)) {
-                        $nameSpacePath = $parameters[self::NAMESPACE_KEY_ATT];
+                    if (array_key_exists(self::NAMESPACE_KEY_ATT, $attributes)) {
+                        $nameSpacePath = $attributes[self::NAMESPACE_KEY_ATT];
                     }
                     $currentNameSpace = curNS($callingId); // The name of the container directory
-                    $includeDirectory = $parameters[self::INCLUDE_DIRECTORY_PARAMETERS];
+                    $includeDirectory = $attributes[self::INCLUDE_DIRECTORY_PARAMETERS];
                     $pagesOfNamespace = $this->getNamespaceChildren($nameSpacePath, $sort = 'natural', $listdirs = $includeDirectory);
 
                     // Set the two possible home page for the namespace ie:
@@ -189,7 +193,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                          * Set special name and title
                          */
                         // If debug mode
-                        if ($parameters['debug']) {
+                        if ($attributes['debug']) {
                             $link->setTitle($link->getTitle().' (' . $pageId . ')');
                         }
 
@@ -197,8 +201,8 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         $link->setTitle($link->getTitle() .' (' . $pageNum . ')');
 
                         // Suppress the parts in the name with the regexp defines in the 'suppress' params
-                        if ($parameters['suppress']) {
-                            $substrPattern = '/' . $parameters['suppress'] . '/i';
+                        if ($attributes['suppress']) {
+                            $substrPattern = '/' . $attributes['suppress'] . '/i';
                             $replacement = '';
                             $name = preg_replace($substrPattern, $replacement, $link->getName());
                             $link->setName($name);
@@ -277,7 +281,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
 
                     $panelHeaderContent = "";
                     if ($startId == "") {
-                        if ($parameters[self::SHOW_HEADER] == true) {
+                        if ($attributes[self::SHOW_HEADER] == true) {
                             $panelHeaderContent = 'No Home Page found';
                         }
                     } else {
@@ -293,11 +297,11 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                         $miniMapHeader .= '<div class="panel-heading">' . $panelHeaderContent . '  <span class="label label-primary">' . $pageNum . ' pages</span></div>';
                     }
 
-                    if ($parameters['debug']) {
+                    if ($attributes['debug']) {
                         $miniMapHeader .= '<div class="panel-body">' .
                             '<B>Debug Information:</B><BR>' .
                             'CallingId: (' . $callingId . ')<BR>' .
-                            'Suppress Option: (' . $parameters['suppress'] . ')<BR>' .
+                            'Suppress Option: (' . $attributes['suppress'] . ')<BR>' .
                             '</div>';
                     }
 

@@ -29,8 +29,7 @@ class AnalyticsMenuItem extends AbstractItem {
     /** @var string do action for this plugin */
     protected $type = 'export_'.Analytics::RENDERER_NAME_MODE;
 
-    /** @var string icon file */
-    protected $svg = __DIR__ . '/../images/file-chart.svg';
+
 
     /**
      *
@@ -50,6 +49,12 @@ class AnalyticsMenuItem extends AbstractItem {
     public function getTitle()
     {
         return "Show the ComboStrap analytics";
+    }
+
+    public function getSvg()
+    {
+        /** @var string icon file */
+        return Resources::getImagesDirectory() . '/file-chart.svg';
     }
 
 

@@ -6,36 +6,42 @@
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
 
-if(!defined('DOKU_INC')) die();
+if (!defined('DOKU_INC')) die();
 
 
-class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
+{
 
-    function getType() {
+    function getType()
+    {
         return 'substition';
     }
 
-    function getPType() {
+    function getPType()
+    {
         return 'normal';
     }
 
-    function getAllowedTypes() {
+    function getAllowedTypes()
+    {
         return array();
     }
 
-    function getSort() {
+    function getSort()
+    {
         return 201;
     }
 
 
+    function connectTo($mode)
+    {
 
-    function connectTo($mode) {
-
-        $this->Lexer->addSpecialPattern('<' . self::getTag() . '[^>]*>',$mode,'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
+        $this->Lexer->addSpecialPattern('<' . self::getTag() . '[^>]*>', $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
     }
 
-    function handle($match, $state, $pos, Doku_Handler $handler) {
+    function handle($match, $state, $pos, Doku_Handler $handler)
+    {
 
         switch ($state) {
 
@@ -48,7 +54,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin {
                 $parameters = array_merge($init, PluginUtility::parse2HTMLAttributes($match));
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES=> $parameters
+                    PluginUtility::ATTRIBUTES => $parameters
                 );
 
         }
@@ -86,14 +92,15 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin {
                     $renderer->doc .= '<form action="' . wl() . '" accept-charset="utf-8" id="dw__search" method="get" role="search" class="search form-inline ';
                     $parameters = $data[PluginUtility::ATTRIBUTES];
                     if (array_key_exists("class", $parameters)) {
-                        $renderer->doc .= ' '.$parameters["class"];
+                        $renderer->doc .= ' ' . $parameters["class"];
                     }
                     $renderer->doc .= '">' . DOKU_LF;
                     $renderer->doc .= '<input type="hidden" name="do" value="search" />';
-                    $renderer->doc .= '<input type="hidden" name="id" value="dokuwiki" />';
+                    $id = PluginUtility::getPageId();
+                    $renderer->doc .= "<input type=\"hidden\" name=\"id\" value=\"$id\" />";
                     $inputSearchId = 'qsearch__in';
-                    $renderer->doc .=  "<label class=\"sr-only\" for=\"$inputSearchId\">Search Term</label>";
-                    $renderer->doc .=  '<input name="q" type="text" tabindex="1"';
+                    $renderer->doc .= "<label class=\"sr-only\" for=\"$inputSearchId\">Search Term</label>";
+                    $renderer->doc .= '<input name="q" type="text" tabindex="1"';
                     if ($ACT == 'search') $renderer->doc .= ' value="' . htmlspecialchars($QUERY) . '" ';
                     $renderer->doc .= 'placeholder="' . $lang['btn_search'] . '..." ';
                     if (!$parameters['autocomplete']) $renderer->doc .= 'autocomplete="off" ';

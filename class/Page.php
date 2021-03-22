@@ -89,7 +89,7 @@ class Page
          */
         $this->id = cleanID($id);
         if ($this->id !== $id) {
-            LogUtility::msg("The page id ({$id}) is not conform and should be `{$this->id}`)");
+            LogUtility::msg("Internal error, the page id ({$id}) is not conform and should be `{$this->id}`)", LogUtility::LVL_MSG_ERROR);
         }
 
     }

@@ -31,7 +31,7 @@ class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
     {
 
 
-        $imageBase = Resources::getImagesDirectory();
+        $imageBase = '../../plugins/' . Resources::getRelativeImagesDirectory();
 
         $unit = array(
             'type' => 'format',
@@ -47,7 +47,7 @@ class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
          * There is no knowledge of which page is modified
          */
 
-        $frontmatter = <<<EOF
+        $frontmatterInsert = <<<EOF
 ---json
 {
     "canonical":"unique:name",
@@ -61,7 +61,7 @@ EOF;
             'type' => 'insert',
             'title' => 'Insert a frontmatter',
             'icon' => $imageBase . '/table-of-contents.svg',
-            'insert' => $frontmatter,
+            'insert' => $frontmatterInsert,
             'block' => true
         );
 
@@ -75,14 +75,7 @@ EOF;
 
         );
 
-        $event->data[] = array(
-            'type' => 'picker',
-            'title' => "Choose comboStrap component",
-            'icon' => $imageBase . '/logo.svg',
-            'list' => array($frontmatter, $blockquote, $unit)
-        );
-
-        $event->data[] = array(
+        $webcode = array(
             'type' => 'format',
             'title' => 'webcode',
             'icon' => $imageBase . '/webcode.png',
@@ -90,6 +83,14 @@ EOF;
             'close' => '\n</webcode>\n'
             //'key' => $webCodeShortcutKey
         );
+
+        $event->data[] = array(
+            'type' => 'picker',
+            'title' => "Choose comboStrap component",
+            'icon' => $imageBase . '/logo.svg',
+            'list' => array($frontmatter, $blockquote, $unit, $webcode)
+        );
+
 
         return true;
 

@@ -124,6 +124,8 @@ class PluginUtility
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
         self::$URL_BASE = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
 
+        PluginUtility::initSnippetManager();
+
     }
 
     /**
@@ -992,6 +994,11 @@ class PluginUtility
         return SnippetManager::get();
     }
 
+    public static function initSnippetManager()
+    {
+        SnippetManager::init();
+    }
+
     /**
      * Function used in a render
      * @param $data - the data from {@link PluginUtility::handleAndReturnUnmatchedData()}
@@ -1030,6 +1037,8 @@ class PluginUtility
             PluginUtility::CONTEXT => $context
         );
     }
+
+
 
 
 }

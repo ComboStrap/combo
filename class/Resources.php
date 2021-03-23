@@ -21,21 +21,36 @@ class Resources
      */
     const RESOURCES_DIRECTORY_NAME = "resources";
     const SNIPPET_DIRECTORY_NAME = "snippet";
+    const IMAGES_DIRECTORY_NAME = 'images';
 
 
     public static function getImagesDirectory()
     {
-        return self::getResourcesDirectory() . '/images';
+        return self::getAbsoluteResourcesDirectory() . '/' . self::IMAGES_DIRECTORY_NAME;
     }
 
     public static function getSnippetResourceDirectory()
     {
-        return self::getResourcesDirectory() . "/snippet";
+        return self::getAbsoluteResourcesDirectory() . "/snippet";
     }
 
-    private static function getResourcesDirectory()
+    private static function getAbsoluteResourcesDirectory()
     {
-        return DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/" . self::RESOURCES_DIRECTORY_NAME;
+        return DOKU_PLUGIN . self::getRelativeResourceDirectory();
+    }
+
+    /**
+     * Relative to Plugin
+     * @return string
+     */
+    public static function getRelativeImagesDirectory()
+    {
+        return self::getRelativeResourceDirectory() . '/' . self::IMAGES_DIRECTORY_NAME;
+    }
+
+    private static function getRelativeResourceDirectory()
+    {
+        return PluginUtility::PLUGIN_BASE_NAME . "/" . self::RESOURCES_DIRECTORY_NAME;
     }
 
 }

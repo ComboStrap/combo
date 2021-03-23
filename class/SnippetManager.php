@@ -59,6 +59,12 @@ class SnippetManager
      */
     private $barsProcessed = array();
 
+    public static function init()
+    {
+        global $componentScript;
+        $componentScript = new SnippetManager();
+    }
+
 
     public static function getClassFromTag($tag)
     {
@@ -143,6 +149,9 @@ class SnippetManager
     public static function get()
     {
         global $componentScript;
+        if(empty($componentScript)){
+            SnippetManager::init();
+        }
         return $componentScript;
     }
 
@@ -335,19 +344,9 @@ class SnippetManager
 
         $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent] = $script;
 
-//        $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent]["style"] = [
-//            array(
-//                "class" => SnippetManager::getClassFromTag($comboComponent),
-//                "_data" => $script
-//            )
-//        ];
-
     }
 
 
 }
-
-global $componentScript;
-$componentScript = new SnippetManager();
 
 

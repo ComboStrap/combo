@@ -51,6 +51,12 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
         $this->headerOutputWasCalled = false;
 
+        /**
+         * Fighting the fact that in 7.2,
+         * there is still a cache
+         */
+        PluginUtility::initSnippetManager();
+
     }
 
     /**

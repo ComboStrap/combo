@@ -7,7 +7,6 @@ require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
-use ComboStrap\SnippetManager;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -32,7 +31,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      * The link Tag
      */
     const LINK_TAG = "linkTag";
-
 
 
     /**
@@ -90,7 +88,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
             //"emphasis_open", // italic use // and therefore take over a link as description which is not handy when copying a tweet
             //"emphasis_close",
             //"acrnonym"
-            ];
+        ];
         if (in_array($mode, $linkModes)) {
             return false;
         } else {
@@ -161,20 +159,18 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 );
             case DOKU_LEXER_UNMATCHED:
 
+                $data = PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
                 /**
-                 * Delete the name separator if any
+                 * Delete the separator `|` between the ref and the description if any
                  */
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $parent = $tag->getParent();
                 if ($parent->getName() == self::TAG) {
                     if (strpos($match, '|') === 0) {
-                        $match = substr($match, 1);
+                        $data[PluginUtility::PAYLOAD] = substr($match, 1);
                     }
                 }
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
-                );
+                return $data;
 
             case DOKU_LEXER_EXIT:
                 $tag = new Tag(self::TAG, array(), $state, $handler);
@@ -287,7 +283,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= $htmlLink;
                         break;
                     case DOKU_LEXER_UNMATCHED:
-                        $renderer->doc .= PluginUtility::escape($payload);
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
                         break;
                     case DOKU_LEXER_EXIT:
 
@@ -309,8 +305,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $renderer->doc .= '</li>';
                                 break;
                         }
-
-
 
 
                 }

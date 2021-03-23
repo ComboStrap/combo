@@ -8,6 +8,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\Resources;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -30,11 +31,12 @@ class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
     {
 
 
-        $imageBase = '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/';
+        $imageBase = '../../plugins/' . Resources::getRelativeImagesDirectory();
+
         $unit = array(
             'type' => 'format',
             'title' => 'Insert an unit test',
-            'icon' => $imageBase . 'unit-doc-block.png',
+            'icon' => $imageBase . '/unit-doc-block.png',
             'open' => '<unit name="default">\n<file lang path>\n</file>\n\t<code lang>',
             'close' => '\n\t</code>\n\t<console>\n\t</console></unit>\n',
             // 'key'    => $unitShortcutKey
@@ -45,7 +47,7 @@ class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
          * There is no knowledge of which page is modified
          */
 
-        $frontmatter = <<<EOF
+        $frontmatterInsert = <<<EOF
 ---json
 {
     "canonical":"unique:name",
@@ -58,8 +60,8 @@ EOF;
         $frontmatter = array(
             'type' => 'insert',
             'title' => 'Insert a frontmatter',
-            'icon' => $imageBase . 'table-of-contents.svg',
-            'insert' => $frontmatter,
+            'icon' => $imageBase . '/table-of-contents.svg',
+            'insert' => $frontmatterInsert,
             'block' => true
         );
 
@@ -67,27 +69,28 @@ EOF;
         $blockquote = array(
             'type' => 'format',
             'title' => 'blockquote',
-            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/blockquote-icon.png',
+            'icon' => $imageBase . '/blockquote-icon.png',
             'open' => '<blockquote>',
             'close' => '</blockquote>',
 
         );
 
-        $event->data[] = array(
-            'type' => 'picker',
-            'title' => "Choose comboStrap component",
-            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/logo.svg',
-            'list' => array($frontmatter, $blockquote, $unit)
-        );
-
-        $event->data[] = array(
+        $webcode = array(
             'type' => 'format',
             'title' => 'webcode',
-            'icon' => '../../plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/images/webcode.png',
+            'icon' => $imageBase . '/webcode.png',
             'open' => '<webcode name="Default" frameborder="0">\n',
             'close' => '\n</webcode>\n'
             //'key' => $webCodeShortcutKey
         );
+
+        $event->data[] = array(
+            'type' => 'picker',
+            'title' => "Choose comboStrap component",
+            'icon' => $imageBase . '/logo.svg',
+            'list' => array($frontmatter, $blockquote, $unit, $webcode)
+        );
+
 
         return true;
 

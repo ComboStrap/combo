@@ -109,7 +109,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
                 return array($state, $attributes);
 
             case DOKU_LEXER_UNMATCHED :
-                return array($state, $match);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -146,7 +146,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :

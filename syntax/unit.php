@@ -24,6 +24,7 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
 {
 
 
+    const TAG = "unit";
 
 
     private static function getTag()
@@ -56,9 +57,18 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
      * this node (All !)
      * Otherwise the node that are in the matched content are not processed
      */
-    function getAllowedTypes() {
+    function getAllowedTypes()
+    {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+    }
 
+    public function accepts($mode)
+    {
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -67,13 +77,16 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
      * See
      * https://www.dokuwiki.org/devel:syntax_plugins#ptype
      */
-    function getPType(){ return 'block';}
+    function getPType()
+    {
+        return 'block';
+    }
 
     // This where the addEntryPattern must bed defined
     public function connectTo($mode)
     {
         // This define the DOKU_LEXER_ENTER state
-        $pattern = PluginUtility::getContainerTagPattern(self::getElementName());
+        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
     }
@@ -81,7 +94,7 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
         // We define the DOKU_LEXER_EXIT state
-        $this->Lexer->addExitPattern('</' . self::getElementName() . '>', 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
     }
 
@@ -94,6 +107,11 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
      * This is an instruction block and is cached apart from the rendering output
      * There is two caches levels
      * This cache may be suppressed with the url parameters ?purge=true
+     * @param $match
+     * @param $state
+     * @param $pos
+     * @param Doku_Handler $handler
+     * @return array
      */
     public function handle($match, $state, $pos, Doku_Handler $handler)
     {
@@ -101,32 +119,21 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                // Suppress the tag name
-                $match = utf8_substr($match, strlen(self::getTag()) + 1, -1);
-                $parameters = PluginUtility::parse2HTMLAttributes($match);
-                return array($state, $parameters);
+                $parameters = PluginUtility::getTagAttributes($match);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $parameters);
 
                 break;
 
             case DOKU_LEXER_UNMATCHED :
 
-
-
-                //
-                // The nested authorized plugin are given in the function
-                // getAllowedTypes
-                //
-                // cdata  means normal text ??? See xhtml.php function cdata
-                // What it does exactly, I don't know
-                // but as we want to process the content
-                // we need to add a call to the lexer to go further
-                // Comes from the wrap plugin
-                $handler->_addCall('cdata', array($match), $pos, null);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
                 break;
 
             case DOKU_LEXER_EXIT:
 
-                return array($state, '');
+                return array(PluginUtility::STATE => $state);
                 break;
 
         }
@@ -158,20 +165,23 @@ class syntax_plugin_combo_unit extends DokuWiki_Syntax_Plugin
              * @var Doku_Renderer_xhtml $renderer
              */
 
-            list($state, $parameters) = $data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
 
-                    $renderer->doc .= '<div class="webcomponent_'.self::getTag() .'"';
+                    $renderer->doc .= '<div class="webcomponent_' . self::getTag() . '"';
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     // Normally none
-                    if ($parameters['display']){
-                        $renderer->doc .= ' style="display:'.$parameters['display'].'" ';
+                    if ($attributes['display']) {
+                        $renderer->doc .= ' style="display:' . $attributes['display'] . '" ';
                     }
                     $renderer->doc .= '>';
                     break;
 
-
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
                 case DOKU_LEXER_EXIT :
 
                     $renderer->doc .= '</div>';

@@ -136,9 +136,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_UNMATCHED :
 
                 // We should not ever come here but a user does not not known that
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => PluginUtility::escape($match));
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_MATCHED :
 
@@ -239,7 +237,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                     // The attributes are used in the exit
                     break;
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :

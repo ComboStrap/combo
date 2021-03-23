@@ -87,31 +87,28 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $attributes = PluginUtility::getTagAttributes($match);
-                if (isset($attributes["type"])){
+                if (isset($attributes["type"])) {
                     $type = $attributes["type"];
-                    if ($type == "lead"){
-                        PluginUtility::addClass2Attributes("lead",$attributes);
+                    if ($type == "lead") {
+                        PluginUtility::addClass2Attributes("lead", $attributes);
                     }
                 }
-                $html = "<p ".PluginUtility::array2HTMLAttributes($attributes).">";
+                $html = "<p " . PluginUtility::array2HTMLAttributes($attributes) . ">";
                 return array(
-                    PluginUtility::STATE=> $state,
+                    PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
                     PluginUtility::PAYLOAD => $html
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return array(
-                    PluginUtility::STATE=> $state,
-                    PluginUtility::PAYLOAD=>PluginUtility::escape($match)
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
                 // Important otherwise we don't get an exit in the render
                 return array(
-                    PluginUtility::STATE=> $state,
-                    PluginUtility::PAYLOAD=>"</p>");
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => "</p>");
 
 
         }
@@ -137,12 +134,14 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    break;
+                case DOKU_LEXER_UNMATCHED :
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD].DOKU_LF;
+                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
                     break;
             }
             return true;

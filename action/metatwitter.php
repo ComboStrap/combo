@@ -39,8 +39,8 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
     /**
      * Don't track
      */
-    const CONF_TWITTER_DONT_NOT_TRACK = "twitter:dnt";
-    const CONF_DONT_NOT_TRACK = "twitter:dnt";
+    const CONF_TWITTER_DONT_NOT_TRACK = self::META_DNT;
+    const CONF_DONT_NOT_TRACK = self::META_DNT;
     const CONF_ON = "on";
     const CONF_OFF = "off";
 
@@ -51,6 +51,20 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
     const COMBO_STRAP_TWITTER_ID = "1283330969332842497";
     const CANONICAL = "twitter";
 
+    const META_CARD = "twitter:card";
+    const DEFAULT_IMAGE = ":apple-touch-icon.png";
+    const META_DESCRIPTION = "twitter:description";
+    const META_IMAGE = "twitter:image";
+    const META_TITLE = "twitter:title";
+    const META_CREATOR = "twitter:creator";
+    const META_CREATOR_ID = "twitter:creator:id";
+    const META_SITE = "twitter:site";
+    const META_SITE_ID = "twitter:site:id";
+    const META_IMAGE_ALT = "twitter:image:alt";
+    const META_DNT = "twitter:dnt";
+    const META_WIDGET_CSP = "twitter:widgets:csp";
+    const META_WIDGETS_THEME = "twitter:widgets:theme";
+    const META_WIDGETS_BORDER_COLOR = "twitter:widgets:border-color";
 
 
     function __construct()
@@ -93,12 +107,13 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         // https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/markup
         // https://cards-dev.twitter.com/validator
 
+        $description = $page->getDescriptionOrElseDokuWiki();
         $twitterMeta = array(
-            "twitter:card" => "summary",
-            "twitter:title" => StringUtility::truncateString($page->getTitleNotEmpty(), 70),
-            "twitter:description" => StringUtility::truncateString($page->getDescription(), 200),
-            "twitter:creator" => self::COMBO_STRAP_TWITTER_HANDLE,
-            "twitter:creator:id" => self::COMBO_STRAP_TWITTER_ID
+            self::META_CARD => "summary",
+            self::META_TITLE => StringUtility::truncateString($page->getTitleNotEmpty(), 70),
+            self::META_DESCRIPTION => StringUtility::truncateString($description, 200),
+            self::META_CREATOR => self::COMBO_STRAP_TWITTER_HANDLE,
+            self::META_CREATOR_ID => self::COMBO_STRAP_TWITTER_ID
         );
 
 
@@ -108,7 +123,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         $siteTwitterHandle = PluginUtility::getConfValue(self::CONF_TWITTER_SITE_HANDLE);
         $siteTwitterId = PluginUtility::getConfValue(self::CONF_TWITTER_SITE_ID);
         if (!empty($siteTwitterHandle)) {
-            $twitterMeta["twitter:site"] = $siteTwitterHandle;
+            $twitterMeta[self::META_SITE] = $siteTwitterHandle;
 
             // Identify the Twitter profile of the page that populates the via property
             // https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
@@ -116,7 +131,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
             $event->data['link'][] = array("rel" => "me", "href" => "https://twitter.com/$name");
         }
         if (!empty($siteTwitterId)) {
-            $twitterMeta["twitter:site:id"] = $siteTwitterId;
+            $twitterMeta[self::META_SITE_ID] = $siteTwitterId;
         }
 
         /**
@@ -140,9 +155,9 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (!empty($twitterImages)) {
             foreach ($twitterImages as $twitterImage) {
                 if ($twitterImage->exists()) {
-                    $twitterMeta["twitter:image"] = $twitterImage->getUrl();
+                    $twitterMeta[self::META_IMAGE] = $twitterImage->getUrl();
                     if (!empty($twitterImage->getAlt())) {
-                        $twitterMeta["twitter:image:alt"] = $twitterImage->getAlt();
+                        $twitterMeta[self::META_IMAGE_ALT] = $twitterImage->getAlt();
                     }
                     // One image only
                     break;
@@ -153,17 +168,17 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * https://developer.twitter.com/en/docs/twitter-for-websites/webpage-properties
          */
-        // don;t track
-        $twitterMeta["twitter:dnt"]=PluginUtility::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK);
+        // don't track
+        $twitterMeta[self::META_DNT]=PluginUtility::getConfValue(self::CONF_TWITTER_DONT_NOT_TRACK);
         // turn off csp warning
-        $twitterMeta["twitter:widgets:csp"]="on";
+        $twitterMeta[self::META_WIDGET_CSP]="on";
 
         /**
          * Embedded Tweet Theme
          */
 
-        $twitterMeta["twitter:widgets:theme"]=PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME);
-        $twitterMeta["twitter:widgets:border-color"]=PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER);
+        $twitterMeta[self::META_WIDGETS_THEME]=PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_THEME);
+        $twitterMeta[self::META_WIDGETS_BORDER_COLOR]=PluginUtility::getConfValue(syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER);
 
         /**
          * Add the properties

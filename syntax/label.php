@@ -4,12 +4,10 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
 // must be run within Dokuwiki
-use ComboStrap\HeaderUtility;
 use ComboStrap\LogUtility;
-use ComboStrap\TitleUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\StringUtility;
 use ComboStrap\Tag;
+use ComboStrap\TitleUtility;
 
 require_once(__DIR__ . '/../class/HeaderUtility.php');
 
@@ -124,10 +122,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_EXIT :
                 $tag = new Tag(self::TAG, array(), $state, $handler);
@@ -192,7 +187,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT:

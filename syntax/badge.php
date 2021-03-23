@@ -154,10 +154,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                     PluginUtility::PAYLOAD => $html);
 
             case DOKU_LEXER_UNMATCHED :
-                return array(
-                    PluginUtility::STATE=> $state,
-                    PluginUtility::PAYLOAD=> PluginUtility::escape($match)
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -199,7 +196,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
             }

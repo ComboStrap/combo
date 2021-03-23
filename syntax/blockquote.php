@@ -198,10 +198,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
                 // Important to get an exit in the render phase
@@ -307,7 +304,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT:

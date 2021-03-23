@@ -89,7 +89,7 @@ class Page
          */
         $this->id = cleanID($id);
         if ($this->id !== $id) {
-            LogUtility::msg("The page id ({$id}) is not conform and should be `{$this->id}`)");
+            LogUtility::msg("Internal error, the page id ({$id}) is not conform and should be `{$this->id}`)", LogUtility::LVL_MSG_ERROR);
         }
 
     }
@@ -1228,7 +1228,11 @@ class Page
 
     public function getMetadata($key)
     {
-        return $this->getPersistentMetadata($key);
+        $persistentMetadata = $this->getPersistentMetadata($key);
+        if(empty($persistentMetadata)){
+            $persistentMetadata = $this->getCurrentMetadata($key);
+        }
+        return $persistentMetadata;
     }
 
     public function getPublishedTimestamp()

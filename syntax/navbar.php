@@ -138,15 +138,20 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                return array($state, $tagAttributes);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES=> $tagAttributes
+                );
 
             case DOKU_LEXER_UNMATCHED:
 
-                return PluginUtility::escape($match);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_EXIT :
 
-                return array($state, '');
+                return array(
+                    PluginUtility::STATE => $state
+                );
 
 
         }
@@ -171,12 +176,12 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state, $payload) = $data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
 
-                    $attributes = $payload;
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     $class = 'navbar';
                     if (array_key_exists("class", $attributes)) {
                         $attributes["class"] .= ' ' . $class;
@@ -243,7 +248,7 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::escape($payload);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :

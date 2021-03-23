@@ -4,7 +4,6 @@
 namespace ComboStrap;
 
 
-
 use syntax_plugin_combo_preformatted;
 use TestRequest;
 
@@ -15,6 +14,7 @@ require_once(__DIR__ . '/StringUtility.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/SnippetManager.php');
+require_once(__DIR__ . '/Resources.php');
 
 
 /**
@@ -44,6 +44,36 @@ class PluginUtility
      * where the icon and other artifactory are stored
      */
     const COMBOSTRAP_NAMESPACE_NAME = "combostrap";
+
+    /**
+     * List of inline components
+     * Used to manage white space before an unmatched string.
+     * The syntax tree of Dokuwiki (ie {@link \Doku_Handler::$calls})
+     * has only data and no class, for now, we create this
+     * lists manually because this is a hassle to retrieve this information from {@link \DokuWiki_Syntax_Plugin::getType()}
+     */
+    const PRESERVE_LEFT_WHITE_SPACE_COMPONENTS = array(
+        /**
+         * The inline of combo
+         */
+        \syntax_plugin_combo_link::TAG,
+        \syntax_plugin_combo_icon::TAG,
+        \syntax_plugin_combo_inote::TAG,
+        \syntax_plugin_combo_button::TAG,
+        \syntax_plugin_combo_tooltip::TAG,
+        /**
+         * Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
+         * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class
+         */
+        "strong",
+        "emphasis",
+        "underline",
+        "monospace",
+        "subscript",
+        "superscript",
+        "deleted",
+        "footnote"
+    );
 
 
     /**
@@ -93,6 +123,8 @@ class PluginUtility
         global $lang;
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
         self::$URL_BASE = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
+
+        PluginUtility::initSnippetManager();
 
     }
 
@@ -454,7 +486,16 @@ class PluginUtility
                             }
                             ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $primaryColor);
                             ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, "transparent");
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, $primaryColor);
+                            $borderColor = $color[ColorUtility::BACKGROUND_COLOR];
+                            if(isset($styleProperties[ColorUtility::BORDER_COLOR])){
+                                // Color in the `border` attribute
+                                // takes precedence in the `border-color` if located afterwards
+                                // We don't take the risk
+                                $borderColor = $styleProperties[ColorUtility::BORDER_COLOR];
+                                unset($styleProperties[ColorUtility::BORDER_COLOR]);
+                            }
+                            ArrayUtility::addIfNotSet($styleProperties, "border", "1px solid " . $borderColor);
+
                             break;
                         case "text":
                             $primaryColor = $color[ColorUtility::COLOR];
@@ -950,7 +991,51 @@ class PluginUtility
      */
     public static function getSnippetManager()
     {
-        return  SnippetManager::get();
+        return SnippetManager::get();
+    }
+
+    public static function initSnippetManager()
+    {
+        SnippetManager::init();
+    }
+
+    /**
+     * Function used in a render
+     * @param $data - the data from {@link PluginUtility::handleAndReturnUnmatchedData()}
+     * @return string
+     */
+    public static function renderUnmatched($data)
+    {
+
+        $payload = $data[self::PAYLOAD];
+        $context = $data[self::CONTEXT];
+        if (!in_array($context, self::PRESERVE_LEFT_WHITE_SPACE_COMPONENTS)) {
+            $payload = ltrim($payload);
+        }
+        return PluginUtility::escape($payload);
+    }
+
+    /**
+     * Function used in a handle function of a syntax plugin for
+     * unmatched context
+     * @param $tagName
+     * @param $match
+     * @param \Doku_Handler $handler
+     * @return array
+     */
+    public static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
+    {
+        $tag = new Tag($tagName, array(), DOKU_LEXER_UNMATCHED, $handler);
+        $sibling = $tag->getPreviousSibling();
+        $context = null;
+        if (!empty($sibling)) {
+            $context = $sibling->getName();
+        }
+        return array(
+            PluginUtility::STATE => DOKU_LEXER_UNMATCHED,
+            PluginUtility::PAYLOAD => $match,
+            PluginUtility::CONTEXT => $context
+        );
     }
 
 

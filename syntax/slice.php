@@ -7,14 +7,14 @@ use ComboStrap\PluginUtility;
 if (!defined('DOKU_INC')) die();
 
 /**
- * Class syntax_plugin_combo_note
- * Implementation of a note
- * called an alert in <a href="https://getbootstrap.com/docs/4.0/components/alerts/">bootstrap</a>
+ * Class syntax_plugin_combo_box
+ * Implementation of a div
+ *
  */
-class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_slice extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "note";
+    const TAG = "slice";
 
     /**
      * Syntax Type.
@@ -45,23 +45,19 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * ************************
-     * This function has no effect because {@link SyntaxPlugin::accepts()} is used
-     * ************************
+     * No one of array('baseonly','container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
+     * because we manage self the content and we call self the parser
+     *
+     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
     function getAllowedTypes()
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-
-    function getSort()
-    {
-        return 201;
-    }
-
     public function accepts($mode)
     {
+
         /**
          * header mode is disable to take over
          * and replace it with {@link syntax_plugin_combo_title}
@@ -69,14 +65,17 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
         if ($mode == "header") {
             return false;
         }
-        /**
-         * If preformatted is disable, we does not accept it
-         */
+
         if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
             return PluginUtility::disablePreformatted($mode);
         } else {
             return true;
         }
+    }
+
+    function getSort()
+    {
+        return 200;
     }
 
 
@@ -101,7 +100,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultAttributes = array("type" => "info");
+                $defaultAttributes = array();
                 $inlineAttributes = PluginUtility::getTagAttributes($match);
                 $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
                 return array(
@@ -144,41 +143,41 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $classValue = "alert";
-                    $type = $attributes["type"];
-                    // Switch for the color
-                    switch ($type) {
-                        case "important":
-                            $type = "warning";
+
+                    $sizeAttribute = "size";
+                    $size = "md";
+                    if (array_key_exists($sizeAttribute, $attributes)) {
+                        $size = $attributes[$sizeAttribute];
+                        unset($attributes[$sizeAttribute]);
+                    }
+                    switch ($size) {
+                        case "lg":
+                        case "large":
+                            PluginUtility::addClass2Attributes("slice-lg", $attributes);
                             break;
-                        case "warning":
-                            $type = "danger";
+                        case "sm":
+                        case "small":
+                            PluginUtility::addClass2Attributes("slice-sm", $attributes);
+                            break;
+                        case "xl":
+                        case "extra-large":
+                            PluginUtility::addClass2Attributes("slice-xl", $attributes);
+                            break;
+                        default:
+                            PluginUtility::addClass2Attributes("slice", $attributes);
                             break;
                     }
 
-                    if ($type != "tip") {
-                        $classValue .= " alert-" . $type;
-                    } else {
-                        // There is no alert-tip color
-                        // base color was background color and we have modified the luminance
-                        if (!array_key_exists("color", $attributes)) {
-                            $attributes["color"] = "#6c6400"; // lum - 51
-                        }
-                        if (!array_key_exists("border-color", $attributes)) {
-                            $attributes["border-color"] = "#FFF78c"; // lum - 186
-                        }
-                        if (!array_key_exists("background-color", $attributes)) {
-                            $attributes["background-color"] = "#fff79f"; // lum - 195
-                        }
-                    }
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar("slice");
 
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " {$classValue}";
-                    } else {
-                        $attributes["class"] = "{$classValue}";
-                    }
+                    PluginUtility::addClass2Attributes("slice-test", $attributes);
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar("slice-test");
 
-                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . ' role="note">';
+                    $renderer->doc .= '<section';
+                    if (sizeof($attributes) > 0) {
+                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                    }
+                    $renderer->doc .= '>';
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -186,7 +185,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= '</div>';
+                    $renderer->doc .= '</section>';
                     break;
             }
             return true;

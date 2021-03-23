@@ -108,10 +108,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                     PluginUtility::CONTEXT => $parent);
 
             case DOKU_LEXER_UNMATCHED :
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
                 // Important otherwise we don't get an exit in the render
@@ -191,13 +188,13 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :
 
                     $context = $data[PluginUtility::CONTEXT];
-                    switch($context){
+                    switch ($context) {
                         case syntax_plugin_combo_card::TAG:
                         case syntax_plugin_combo_blockquote::TAG:
                             $renderer->doc .= '</cite>';
@@ -207,7 +204,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                             // There is no element
                             break;
                         default:
-                            $renderer->doc .= '</cite>'.DOKU_LF;
+                            $renderer->doc .= '</cite>' . DOKU_LF;
 
                     }
                     break;

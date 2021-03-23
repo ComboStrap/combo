@@ -43,6 +43,7 @@ class SnippetManager
     const TAG_TYPE = "tag";
     const COMBO_CLASS_PREFIX = "combo-";
 
+
     /**
      * @var array the content array of all heads
      */
@@ -57,6 +58,12 @@ class SnippetManager
      * @var array the processed bar
      */
     private $barsProcessed = array();
+
+    public static function init()
+    {
+        global $componentScript;
+        $componentScript = new SnippetManager();
+    }
 
 
     public static function getClassFromTag($tag)
@@ -142,6 +149,9 @@ class SnippetManager
     public static function get()
     {
         global $componentScript;
+        if(empty($componentScript)){
+            SnippetManager::init();
+        }
         return $componentScript;
     }
 
@@ -205,6 +215,7 @@ class SnippetManager
     {
         $this->headsByBar = array();
         $this->headsByRequest = array();
+        $this->barsProcessed = array();
     }
 
     public function getData()
@@ -219,7 +230,7 @@ class SnippetManager
     private function getJavascriptContentFromFile($tagName)
     {
 
-        $path = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/js/" . strtolower($tagName) . ".js";
+        $path = Resources::getSnippetResourceDirectory() . "/js/" . strtolower($tagName) . ".js";
         if (file_exists($path)) {
             return file_get_contents($path);
         } else {
@@ -236,7 +247,7 @@ class SnippetManager
     private function getCssRulesFromFile($tagName)
     {
 
-        $path = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/style/" . strtolower($tagName) . ".css";
+        $path = Resources::getSnippetResourceDirectory() . "/style/" . strtolower($tagName) . ".css";
         if (file_exists($path)) {
             return file_get_contents($path);
         } else {
@@ -333,19 +344,9 @@ class SnippetManager
 
         $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent] = $script;
 
-//        $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent]["style"] = [
-//            array(
-//                "class" => SnippetManager::getClassFromTag($comboComponent),
-//                "_data" => $script
-//            )
-//        ];
-
     }
 
 
 }
-
-global $componentScript;
-$componentScript = new SnippetManager();
 
 

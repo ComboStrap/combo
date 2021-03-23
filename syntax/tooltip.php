@@ -118,10 +118,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => PluginUtility::escape($match)
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -157,7 +154,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];

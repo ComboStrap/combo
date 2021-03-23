@@ -84,14 +84,22 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     {
 
         $id = $event->data['id'];
+        /**
+         * ACL ID have the root form
+         */
+        $cleanId = cleanID($id);
         if (Page::isDirectoryId($id)){
+
             return;
+
         } else {
+
             $user = $event->data['user'];
-            $page = new Page($id);
+            $page = new Page($cleanId);
             if ($page->isProtected($user)) {
                 $event->result = AUTH_NONE;
             }
+
         }
 
     }

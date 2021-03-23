@@ -123,17 +123,17 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
+
+                $data = PluginUtility::handleAndReturnUnmatchedData(self::CODE_TAG, $match, $handler);
                 /**
                  * Attribute are send for the
                  * export of code functionality
                  */
                 $tag = new Tag(self::CODE_TAG, array(), $state, $handler);
                 $tagAttributes = $tag->getParent()->getAttributes();
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match,
-                    PluginUtility::ATTRIBUTES => $tagAttributes
-                );
+                $data[PluginUtility::ATTRIBUTES] = $tagAttributes;
+                return $data;
+
 
             case DOKU_LEXER_EXIT :
                 return array(PluginUtility::STATE => $state);
@@ -169,7 +169,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]) . DOKU_LF;
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :
@@ -188,7 +188,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                 $text = $data[PluginUtility::PAYLOAD];
                 $filename = $attributes[self::FILE_PATH_KEY];
                 $language = strtolower($attributes["type"]);
-                $renderer->code($text,$language,$filename);
+                $renderer->code($text, $language, $filename);
 
             }
         }

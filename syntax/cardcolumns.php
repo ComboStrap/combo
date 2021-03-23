@@ -23,8 +23,8 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG =  "card-columns";
-    const TAG_TEASER =  'teaser-columns';
+    const TAG = "card-columns";
+    const TAG_TEASER = 'teaser-columns';
 
 
     /**
@@ -85,8 +85,8 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
     /**
      * Create a pattern that will called this plugin
      *
-     * @see Doku_Parser_Mode::connectTo()
      * @param string $mode
+     * @see Doku_Parser_Mode::connectTo()
      */
     function connectTo($mode)
     {
@@ -110,13 +110,13 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
      * The handle function goal is to parse the matched syntax through the pattern function
      * and to return the result for use in the renderer
      * This result is always cached until the page is modified.
-     * @see DokuWiki_Syntax_Plugin::handle()
-     *
      * @param string $match
      * @param int $state
      * @param int $pos
      * @param Doku_Handler $handler
      * @return array|bool
+     * @see DokuWiki_Syntax_Plugin::handle()
+     *
      */
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
@@ -129,14 +129,20 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                 $match = substr($match, 1, -1);
                 // Suppress the tag name
                 foreach (self::getTags() as $tag) {
-                    $match = str_replace( $tag, "",$match);
+                    $match = str_replace($tag, "", $match);
                 }
                 $parameters = PluginUtility::parse2HTMLAttributes($match);
-                return array($state, $parameters);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $parameters
+                );
+
+            case DOKU_LEXER_UNMATCHED:
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
-                return array($state, '');
+                return array(PluginUtility::STATE => $state);
 
 
         }
@@ -161,16 +167,20 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state, $parameters) = $data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
                     $renderer->doc .= '<div class="card-columns">' . DOKU_LF;
                     break;
 
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
+
                 case DOKU_LEXER_EXIT :
 
-                    $renderer->doc .= '</div>'.DOKU_LF;
+                    $renderer->doc .= '</div>' . DOKU_LF;
                     break;
             }
             return true;
@@ -182,7 +192,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
     public static function getTags()
     {
 
-        return array (self::TAG,self::TAG_TEASER);
+        return array(self::TAG, self::TAG_TEASER);
     }
 
 

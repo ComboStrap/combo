@@ -107,6 +107,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
             PluginUtility::getModeForComponent(syntax_plugin_combo_jumbotron::TAG),
             PluginUtility::getModeForComponent(syntax_plugin_combo_panel::TAG),
             PluginUtility::getModeForComponent(syntax_plugin_combo_panel::OLD_TAB_PANEL_TAG),
+            PluginUtility::getModeForComponent(syntax_plugin_combo_slice::TAG),
         ];
         if (in_array($mode, $modes)) {
             $this->Lexer->addSpecialPattern(self::HEADING_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
@@ -229,7 +230,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= self::renderOpeningTag($parentTag, $attributes, $renderer);
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::escape($data[PluginUtility::PAYLOAD]);
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT:
                     $attributes = $data[PluginUtility::ATTRIBUTES];

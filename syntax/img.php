@@ -4,12 +4,10 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
 // must be run within Dokuwiki
-use ComboStrap\HeaderUtility;
-use ComboStrap\TitleUtility;
 use ComboStrap\Image;
 use ComboStrap\PluginUtility;
-use ComboStrap\StringUtility;
 use ComboStrap\Tag;
+use ComboStrap\TitleUtility;
 
 require_once(__DIR__ . '/../class/Image.php');
 
@@ -23,7 +21,7 @@ if (!defined('DOKU_INC')) die();
 class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
 {
 
-    // The > in the pattern below is to be able to handle pluggin
+    // The > in the pattern below is to be able to handle plugin
     // that uses a pattern such as {{changes>.}} from the change plugin
     // https://github.com/cosmocode/changes/blob/master/syntax.php
 

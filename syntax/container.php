@@ -55,7 +55,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
      */
     public function getAllowedTypes()
     {
-        return array('baseonly','container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
     /**
@@ -136,14 +136,17 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
                 // Suppress the component name
 
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                return array($state, $tagAttributes);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $tagAttributes
+                );
 
             case DOKU_LEXER_UNMATCHED:
-                return array($state, $match);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
-                return array($state, '');
+                return array(PluginUtility::STATE => $state);
 
 
         }
@@ -168,11 +171,11 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            list($state, $payload) = $data;
+            $state = $data[PluginUtility::STATE];
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = $payload;
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     if (array_key_exists("class", $attributes)) {
                         $attributes["class"] .= " " . self::TAG;
                     } else {
@@ -184,7 +187,7 @@ class syntax_plugin_combo_container extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_UNMATCHED :
 
-                    $renderer->doc .= PluginUtility::escape($payload);;
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :

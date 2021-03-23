@@ -8,7 +8,8 @@
 class action_plugin_combo_metagenerator extends DokuWiki_Action_Plugin
 {
 
-    const TITLE_META_KEY = "title";
+
+    const META_KEY = "generator";
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -18,7 +19,7 @@ class action_plugin_combo_metagenerator extends DokuWiki_Action_Plugin
     function handleGenerator(&$event, $param)
     {
         $info = $this->getInfo();
-        $event->data['meta'][] = array("name" => "generator", "content" => "ComboStrap v".$info['version']." (".$info['date'].")");
+        $event->data['meta'][] = array("name" => self::META_KEY, "content" => "ComboStrap v".$info['version']." (".$info['date'].")");
 
     }
 

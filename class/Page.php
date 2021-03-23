@@ -1228,7 +1228,11 @@ class Page
 
     public function getMetadata($key)
     {
-        return $this->getPersistentMetadata($key);
+        $persistentMetadata = $this->getPersistentMetadata($key);
+        if(empty($persistentMetadata)){
+            $persistentMetadata = $this->getCurrentMetadata($key);
+        }
+        return $persistentMetadata;
     }
 
     public function getPublishedTimestamp()

@@ -484,7 +484,16 @@ class PluginUtility
                             }
                             ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $primaryColor);
                             ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, "transparent");
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, $primaryColor);
+                            $borderColor = $color[ColorUtility::BACKGROUND_COLOR];
+                            if(isset($styleProperties[ColorUtility::BORDER_COLOR])){
+                                // Color in the `border` attribute
+                                // takes precedence in the `border-color` if located afterwards
+                                // We don't take the risk
+                                $borderColor = $styleProperties[ColorUtility::BORDER_COLOR];
+                                unset($styleProperties[ColorUtility::BORDER_COLOR]);
+                            }
+                            ArrayUtility::addIfNotSet($styleProperties, "border", "1px solid " . $borderColor);
+
                             break;
                         case "text":
                             $primaryColor = $color[ColorUtility::COLOR];

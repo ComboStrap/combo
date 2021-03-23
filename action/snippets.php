@@ -35,10 +35,21 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     {
 
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'componentSnippetHead', array());
+        $controller->register_hook('DOKUWIKI_DONE', 'BEFORE', $this, 'close', array());
         $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'componentSnippetContent', array());
 
 
         $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'barParsed', array());
+
+    }
+
+    /**
+     * Reset variable
+     * Otherwise in test, when we call it two times, it just fail
+     */
+    function close(){
+
+        $this->headerOutputWasCalled = false;
 
     }
 

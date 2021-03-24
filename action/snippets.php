@@ -166,46 +166,26 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
             $snippetManager = PluginUtility::getSnippetManager();
 
-            /**
-             * tags
-             */
-            foreach ($snippetManager->getTags() as $component => $tags) {
-                foreach ($tags as $tagType => $tagRows) {
-                    foreach ($tagRows as $tagRow) {
-                        $class = SnippetManager::getClassFromSnippetId($component);
-                        $event->data .= "<$tagType class=\"$class\"";
-                        foreach ($tagRow as $attributeName => $attributeValue) {
-                            if ($attributeName != "_data") {
-                                $event->data .= " $attributeName=\"$attributeValue\"";
-                            } else {
-                                $content = $attributeValue;
-                            }
+            foreach ($snippetManager->getSnippets() as $tagType => $tags) {
+
+                foreach ($tags as $tag) {
+                    $event->data .= DOKU_LF . "<$tagType";
+                    $attributes = "";
+                    $content = null;
+                    foreach ($tag as $attributeName => $attributeValue) {
+                        if ($attributeName != "_data") {
+                            $attributes .= " $attributeName=\"$attributeValue\"";
+                        } else {
+                            $content = $attributeValue;
                         }
-                        $event->data .= ">";
-                        if (!empty($content)) {
-                            $event->data .= $content;
-                        }
-                        $event->data .= "</$tagType>";
                     }
+                    $event->data .= "$attributes>";
+                    if (!empty($content)) {
+                        $event->data .= $content;
+                    }
+                    $event->data .= "</$tagType>" . DOKU_LF;
                 }
-            }
 
-            /**
-             * Css
-             */
-            foreach ($snippetManager->getCss() as $component => $snippet) {
-
-                $class = SnippetManager::getClassFromSnippetId($component);
-                $event->data .= "<style class=\"$class\">$snippet</style>" . DOKU_LF;
-
-            }
-
-            /**
-             * Javascript
-             */
-            foreach ($snippetManager->getJavascript() as $component => $snippet) {
-                $class = SnippetManager::getClassFromSnippetId($component);
-                $event->data .= "<script class=\"$class\" type=\"text/javascript\">$snippet</script>" . DOKU_LF;
             }
 
             $snippetManager->close();

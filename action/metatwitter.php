@@ -94,7 +94,9 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
 
         $page = new Page($ID);
-
+        if(!$page->existInFs()){
+            return;
+        }
         /**
          * No social for bars
          */

@@ -66,7 +66,9 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             return;
         }
         $page = new Page($ID);
-
+        if(!$page->existInFs()){
+            return;
+        }
         /**
          * No metadata for bars
          */

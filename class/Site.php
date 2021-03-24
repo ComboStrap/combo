@@ -174,4 +174,38 @@ class Site
         global $conf;
         return $conf['allowdebug'];
     }
+
+    public static function useStrapTemplate()
+    {
+        global $conf;
+        $conf['template'] = 'strap';
+    }
+
+    public static function useDefaultTemplate()
+    {
+        global $conf;
+        $conf['template'] = 'dokuwiki';
+    }
+
+    public static function setCacheDefault()
+    {
+        // The value is -1, which disables caching
+        // https://www.dokuwiki.org/config:cachetime
+        global $conf;
+        $conf['cachetime'] = -1;
+    }
+
+    public static function useHeadingAsTitle()
+    {
+        // https://www.dokuwiki.org/config:useheading
+        global $conf;
+        $conf['useheading'] = 1;
+    }
+
+    public static function useHeadingDefault()
+    {
+        // https://www.dokuwiki.org/config:useheading
+        global $conf;
+        $conf['useheading'] = 0;
+    }
 }

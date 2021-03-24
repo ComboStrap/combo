@@ -41,6 +41,7 @@ class SnippetManager
      * No need
      */
     const TAG_TYPE = "tag";
+
     const COMBO_CLASS_PREFIX = "combo-";
 
 
@@ -66,81 +67,53 @@ class SnippetManager
     }
 
 
-    public static function getClassFromTag($tag)
+    public static function getClassFromSnippetId($tag)
     {
         return self::COMBO_CLASS_PREFIX . $tag;
     }
 
 
     /**
-     * @param $id
+     * @param $snippetId
      * @param string|null $css - the css
-     *   if null, the file $id.css is searched in the `style` directory
-     *
+     *   if null, the file $snippetId.css is searched in the `style` directory
      */
-    public function upsertCssSnippetForBar($id, $css = null)
+    public function upsertCssSnippetForBar($snippetId, $css = null)
     {
-
-        $cssForPage = &$this->getHeadsByBarByElementType(self::CSS_TYPE);
-        if (!isset($cssForPage[$id])) {
-            if ($css == null) {
-                $cssForPage[$id] = $this->getCssRulesFromFile($id);
-            } else {
-                $cssForPage[$id] = $css;
-            }
+        global $ID;
+        $bar = $ID;
+        if ($css == null) {
+            $css = $this->getCssRulesFromFile($snippetId);
         }
+        $this->headsByBar[$bar][self::CSS_TYPE][$snippetId] = $css;
 
     }
 
     /**
-     * @param $id
+     * @param $snippetId
      * @param $script - javascript code if null, it will search in the js directory
      */
-    public function upsertJavascriptForBar($id, $script = null)
+    public function upsertJavascriptForBar($snippetId, $script = null)
     {
-        $js = &$this->getHeadsByBarByElementType(self::JS_TYPE);
-        if (!isset($js[$id])) {
-            if ($script == null) {
-                $js[$id] = $this->getJavascriptContentFromFile($id);
-            } else {
-                $js[$id] = $script;
-            }
-
+        global $ID;
+        $bar = $ID;
+        if ($script == null) {
+            $script = $this->getJavascriptContentFromFile($snippetId);
         }
+        $this->headsByBar[$bar][self::JS_TYPE][$snippetId] = $script;
     }
 
     /**
-     * @param $id
-     * @param array $componentTags - an array of tags without content where the key is the node and the value the attributes
+     * @param $snippetId
+     * @param array $componentTags - an array of tags without content where the key is the node type and the value a array of attributes array
      */
-    public function upsertHeadTagsForBar($id, $componentTags)
+    public function upsertHeadTagsForBar($snippetId, $componentTags)
     {
-        $headTags = &$this->getHeadsByBarByElementType(self::TAG_TYPE);
-        if (!isset($headTags[$id])) {
-            $headTags[$id] = $componentTags;
-        }
+        global $ID;
+        $bar = $ID;
+        $this->headsByBar[$bar][self::TAG_TYPE][$snippetId] = $componentTags;
     }
 
-
-    /**
-     * @param $type
-     * @return mixed a reference to the heads array
-     */
-    private function &getHeadsByBarByElementType($type)
-    {
-        /**
-         * To be able to get
-         * all component used by page (sidebar included)
-         */
-        global $ID; // the bar id
-        if (!isset($this->headsByBar[$ID])) {
-            $this->headsByBar[$ID] = array();
-        }
-        if (!isset($this->headsByBar[$ID][$type])) {
-            $this->headsByBar[$ID][$type] = array();
-        }
-        return $this->headsByBar[$ID][$type];
-    }
 
     /**
      * @return SnippetManager - the global reference
@@ -149,60 +122,97 @@ class SnippetManager
     public static function get()
     {
         global $componentScript;
-        if(empty($componentScript)){
+        if (empty($componentScript)) {
             SnippetManager::init();
         }
         return $componentScript;
     }
 
-    public function getCss()
-    {
-        return $this->getSnippets(self::CSS_TYPE);
-    }
-
-    public function getJavascript()
-    {
-        return $this->getSnippets(self::JS_TYPE);
-    }
-
-    public function getTags()
-    {
-        return $this->getSnippets(self::TAG_TYPE);
-    }
-
 
     /**
-     * @param $localType
-     * @return array
+     * @return array of node type and an array of array of html attributes
      */
-    private function getSnippets($localType)
+    public function getSnippets()
     {
+        /**
+         * Delete the bar, page
+         */
         $distinctSnippets = array();
-        foreach ($this->headsByBar as $page => $components) {
-            foreach ($components as $type => $snippets) {
-                if ($type == $localType) {
-                    $distinctSnippets = array_merge($distinctSnippets, $snippets);
+        $allSnippets = [$this->headsByBar, $this->headsByRequest];
+        foreach ($allSnippets as $snippets) {
+            foreach ($snippets as $barOrPageId => $snippetTypes) {
+                foreach ($snippetTypes as $snippetType => $snippetId) {
+                    if (is_array($snippetId)) {
+                        if (isset($distinctSnippets[$snippetType])) {
+                            $actualSnippetId = $distinctSnippets[$snippetType];
+                            $mergeSnippetId = array_merge($actualSnippetId, $snippetId);
+                        } else {
+                            $mergeSnippetId = $snippetId;
+                        }
+                    } else {
+                        // css and javascript script
+                        $mergeSnippetId = $snippetId;
+                    }
+                    $distinctSnippets[$snippetType] = $mergeSnippetId;
                 }
             }
         }
-        foreach ($this->headsByRequest as $page => $components) {
-            foreach ($components as $type => $snippets) {
-                if ($type == $localType) {
-                    foreach ($snippets as $comboTag => $tags) {
-                        if ($localType == self::CSS_TYPE) {
-                            $distinctSnippets[$comboTag] = $tags;
-                        } else {
-                            foreach ($tags as $htmlTagName => $htmlTags) {
-                                foreach ($htmlTags as $htmlTag) {
-                                    $distinctSnippets[$comboTag][$htmlTagName][] = $htmlTag;
+
+        /**
+         * Transform in dokuwuiki format
+         * We collect the separately head that have content
+         * from the head that refers to external resources
+         * because the content will depends on the resources
+         * and should then come in the last position
+         */
+        $dokuWikiHeadsFormatContent = array();
+        $dokuWikiHeadsSrc = array();
+        foreach ($distinctSnippets as $snippetType => $snippetBySnippetId) {
+            switch ($snippetType) {
+                case self::JS_TYPE:
+                    foreach ($snippetBySnippetId as $snippetId => $snippet) {
+                        $dokuWikiHeadsFormatContent["script"][] = array(
+                            "class" => self::getClassFromSnippetId($snippetId),
+                            "_data" => $snippet
+                        );
+                    }
+                    break;
+                case self::CSS_TYPE:
+                    foreach ($snippetBySnippetId as $snippetId => $snippet) {
+                        $dokuWikiHeadsFormatContent["style"][] = array(
+                            "class" => self::getClassFromSnippetId($snippetId),
+                            "_data" => $snippet
+                        );
+                    }
+                    break;
+                case self::TAG_TYPE:
+                    foreach ($snippetBySnippetId as $snippetId => $snippetTags) {
+                        foreach($snippetTags as $snippetType => $heads) {
+                            $classFromSnippetId = self::getClassFromSnippetId($snippetId);
+                            foreach ($heads as $head) {
+                                if(isset($head["class"])){
+                                    $head["class"] = $head["class"]." ". $classFromSnippetId;
+                                } else {
+                                    $head["class"] = $classFromSnippetId;
                                 }
+                                $dokuWikiHeadsSrc[$snippetType][] = $head;
                             }
                         }
                     }
-                }
+                    break;
             }
         }
-        return $distinctSnippets;
+
+        /**
+         * Merge the content head node at the last position of the head ref node
+         */
+        foreach ($dokuWikiHeadsFormatContent as $headsNodeType => $headsData){
+            foreach ($headsData as $heads){
+                $dokuWikiHeadsSrc[$headsNodeType][]=$heads;
+            }
+
+        }
+        return $dokuWikiHeadsSrc;
     }
 
     /**
@@ -324,14 +334,7 @@ class SnippetManager
             $script = $this->getJavascriptContentFromFile($comboComponent);
         }
 
-        $this->headsByRequest[$id][self::JS_TYPE][$comboComponent]["script"] = [
-            array(
-                "class" => SnippetManager::getClassFromTag($comboComponent),
-                "type" => "text/javascript",
-                "_data" => $script
-            )
-        ];
-
+        $this->headsByRequest[$id][self::JS_TYPE][$comboComponent] = $script;
 
     }
 

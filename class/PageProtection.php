@@ -60,7 +60,6 @@ class PageProtection
 
     /**
      * Add the HTML snippet
-     * @param Doku_Renderer_xhtml $renderer
      */
     public static function addPageProtectionSnippet()
     {

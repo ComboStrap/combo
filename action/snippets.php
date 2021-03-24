@@ -47,7 +47,8 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
      * Reset variable
      * Otherwise in test, when we call it two times, it just fail
      */
-    function close(){
+    function close()
+    {
 
         $this->headerOutputWasCalled = false;
 
@@ -120,7 +121,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                 }
             } else {
                 $snippets = $snippetManager->getSnippetsForBar($bar);
-                if(!empty($snippets)) {
+                if (!empty($snippets)) {
                     $cache->storeCache(serialize($snippets));
                 }
             }
@@ -128,36 +129,14 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         }
 
         /**
-         * tags
+         * Snippets
          */
-        foreach ($snippetManager->getTags() as $component => $tags) {
-            foreach ($tags as $tagType => $tagRows) {
-                foreach ($tagRows as $tagRow) {
-                    $tagRow["class"] = SnippetManager::getClassFromTag($component);;
-                    $event->data[$tagType][] = $tagRow;
-                }
+        foreach ($snippetManager->getSnippets() as $tagType => $tags) {
+
+            foreach ($tags as $tag) {
+                $event->data[$tagType][] = $tag;
             }
-        }
 
-        /**
-         * Css
-         */
-        foreach ($snippetManager->getCss() as $component => $snippet) {
-            $event->data['style'][] = array(
-                "class" => SnippetManager::getClassFromTag($component),
-                "_data" => $snippet
-            );
-        }
-
-        /**
-         * Javascript
-         */
-        foreach ($snippetManager->getJavascript() as $component => $snippet) {
-            $event->data['script'][] = array(
-                "class" => SnippetManager::getClassFromTag($component),
-                "type" => "text/javascript",
-                "_data" => $snippet
-            );
         }
 
 
@@ -193,7 +172,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             foreach ($snippetManager->getTags() as $component => $tags) {
                 foreach ($tags as $tagType => $tagRows) {
                     foreach ($tagRows as $tagRow) {
-                        $class = SnippetManager::getClassFromTag($component);
+                        $class = SnippetManager::getClassFromSnippetId($component);
                         $event->data .= "<$tagType class=\"$class\"";
                         foreach ($tagRow as $attributeName => $attributeValue) {
                             if ($attributeName != "_data") {
@@ -216,7 +195,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
              */
             foreach ($snippetManager->getCss() as $component => $snippet) {
 
-                $class = SnippetManager::getClassFromTag($component);
+                $class = SnippetManager::getClassFromSnippetId($component);
                 $event->data .= "<style class=\"$class\">$snippet</style>" . DOKU_LF;
 
             }
@@ -225,7 +204,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
              * Javascript
              */
             foreach ($snippetManager->getJavascript() as $component => $snippet) {
-                $class = SnippetManager::getClassFromTag($component);
+                $class = SnippetManager::getClassFromSnippetId($component);
                 $event->data .= "<script class=\"$class\" type=\"text/javascript\">$snippet</script>" . DOKU_LF;
             }
 

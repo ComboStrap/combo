@@ -82,4 +82,16 @@ class Auth
 
     }
 
+    public static function isAdmin(){
+        global $INFO;
+        return $INFO['isadmin'];
+    }
+
+    public static function isManager(){
+        global $INFO;
+        return $INFO['ismanager'];
+    }
+
+
+
 }

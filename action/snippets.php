@@ -72,7 +72,15 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
         global $ID;
         if (empty($ID)) {
-            return;
+            global $_SERVER;
+            $requestUri = $_SERVER['REQUEST_URI'];
+            if (!strpos($requestUri, "/lib/exe/ajax.php") !== false) {
+                global $_REQUEST;
+                $call = $_REQUEST['call'];
+                if($call != action_plugin_combo_webcode::CALL_ID) {
+                    return;
+                }
+            }
         }
 
         /**

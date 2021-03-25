@@ -3,6 +3,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\TplConstant;
+use ComboStrap\TplUtility;
 
 /**
  * Class action_plugin_combo_hidden
@@ -33,9 +34,9 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
             if (file_exists($constantFile)) {
                 /** @noinspection PhpIncludeInspection */
                 require_once($constantFile);
-                $footer = tpl_getConf(TplConstant::CONF_FOOTER);
-                $sidekick = tpl_getConf(TplConstant::CONF_SIDEKICK);
-                $header = tpl_getConf(TplConstant::CONF_HEADER);
+                $footer = tpl_getConf(TplUtility::CONF_FOOTER);
+                $sidekick = tpl_getConf(TplUtility::CONF_SIDEKICK);
+                $header = tpl_getConf(TplUtility::CONF_HEADER);
                 $pattern .= "|" . $footer . "|" . $sidekick . "|" . $header;
             }
         }

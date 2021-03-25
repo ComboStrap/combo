@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\Page;
+use ComboStrap\TplUtility;
 
 if (!defined('DOKU_INC')) die();
 

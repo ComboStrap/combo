@@ -176,13 +176,13 @@ class Site
         return $conf['allowdebug'];
     }
 
-    public static function useStrapTemplate()
+    public static function setTemplateToStrap()
     {
         global $conf;
         $conf['template'] = 'strap';
     }
 
-    public static function useDefaultTemplate()
+    public static function setTemplateToDefault()
     {
         global $conf;
         $conf['template'] = 'dokuwiki';
@@ -214,8 +214,8 @@ class Site
     {
         $template = Site::getTemplate();
         if ($template == self::STRAP_TEMPLATE_NAME) {
-            global $conf;
-            return $conf[0];
+            require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
+            return tpl_getConf(TplUtility::CONF_HEIGHT_FIXED_TOP_NAVBAR);
         } else {
             return 0;
         }
@@ -227,4 +227,12 @@ class Site
         return $conf['template'];
 
     }
+
+    public static function isStrapTemplate()
+    {
+        global $conf;
+        return $conf['template'] == self::STRAP_TEMPLATE_NAME;
+    }
+
+
 }

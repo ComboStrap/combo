@@ -17,6 +17,7 @@ class Site
 {
 
     const CONF_SITE_ISO_COUNTRY = "siteIsoCountry";
+    const STRAP_TEMPLATE_NAME = "strap";
 
     public static function getLogoUrlAsSvg()
     {
@@ -166,7 +167,7 @@ class Site
         // ensure the value is not -1, which disables caching
         // https://www.dokuwiki.org/config:cachetime
         global $conf;
-        $conf['cachetime'] = 60*60;
+        $conf['cachetime'] = 60 * 60;
     }
 
     public static function debugIsOn()
@@ -207,5 +208,23 @@ class Site
         // https://www.dokuwiki.org/config:useheading
         global $conf;
         $conf['useheading'] = 0;
+    }
+
+    public static function getTopSpacing()
+    {
+        $template = Site::getTemplate();
+        if ($template == self::STRAP_TEMPLATE_NAME) {
+            global $conf;
+            return $conf[0];
+        } else {
+            return 0;
+        }
+    }
+
+    private static function getTemplate()
+    {
+        global $conf;
+        return $conf['template'];
+
     }
 }

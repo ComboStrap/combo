@@ -42,20 +42,41 @@ class Call
      * (much more what's called the component name)
      * @return mixed|string
      */
-    public function getTagNameFromCall()
+    public function getTagName()
     {
-        $state = $this->getStateFromCall();
-        $tagName = null;
-        switch ($state) {
-            case DOKU_LEXER_MATCHED:
-                $tagName = PluginUtility::getTag($this->getContentFromCall());
-                break;
-            default:
-                $pluginDokuData = $this->call[1];
-                if (!empty($pluginDokuData)) {
-                    /**
-                     * This is a plugin node
-                     */
+        $mode = $this->call[0];
+        if ($mode != "plugin") {
+
+            /**
+             * This is a standard dokuwiki node
+             */
+            $dokuWikiNodeName = $this->call[0];
+
+            /**
+             * The dokwuiki node name has also the open and close notion
+             * We delete this is not in the doc and therefore not logical
+             */
+            $tagName = str_replace("_close", "", $dokuWikiNodeName);
+            $tagName = str_replace("_open", "", $tagName);
+
+        } else {
+
+            /**
+             * This is a plugin node
+             *
+             * This code is a little bit weird
+             * but yeah, it was created while discovering the structure
+             * of a call and not enough time to dig into
+             */
+            $state = $this->getState();
+            $tagName = null;
+            switch ($state) {
+                case DOKU_LEXER_MATCHED:
+                    $tagName = PluginUtility::getTag($this->getContent());
+                    break;
+                default:
+
+                    $pluginDokuData = $this->call[1];
                     $component = $pluginDokuData[0];
                     if (!is_array($component)) {
                         $componentNames = explode("_", $component);
@@ -74,18 +95,8 @@ class Call
                         LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . PluginUtility::getPageId(), LogUtility::LVL_MSG_ERROR);
                         $tagName = "";
                     }
-                } else {
-                    /**
-                     * This is a standard dokuwiki node
-                     */
-                    $dokuWikiNodeName = $this->call[0];
-                    /**
-                     * The dokwuiki node name has also the open and close notion
-                     * We delete this is not in the doc and therefore not logical
-                     */
-                    $tagName = str_replace("_close", "", $dokuWikiNodeName);
-                    $tagName = str_replace("_open", "", $tagName);
-                }
+
+            }
         }
         return $tagName;
 
@@ -97,7 +108,7 @@ class Call
      * @return mixed
      * May be null (example eol, internallink, ...)
      */
-    public function getStateFromCall()
+    public function getState()
     {
         $mode = $this->call[0];
         if ($mode != "plugin") {
@@ -134,7 +145,7 @@ class Call
     /**
      * @return mixed the data returned from the {@link DokuWiki_Syntax_Plugin::handle} (ie attributes, payload, ...)
      */
-    public function getDataFromCall()
+    public function getData()
     {
         return $this->call[1][1];
     }
@@ -142,12 +153,12 @@ class Call
     /**
      * @return mixed the matched content from the {@link DokuWiki_Syntax_Plugin::handle}
      */
-    public function getContentFromCall()
+    public function getContent()
     {
         $caller = $this->call[0];
         switch ($caller) {
             case "plugin":
-                return $this->getMatchFromCall();
+                return $this->getMatch();
             case "internallink":
                 return '[[' . $this->call[1][0] . '|' . $this->call[1][1] . ']]';
             case "eol":
@@ -160,14 +171,14 @@ class Call
     /**
      * @return mixed the text matched
      */
-    public function getMatchFromCall()
+    public function getMatch()
     {
         return $this->call[1][3];
     }
 
     public function getAttributes()
     {
-        $data = $this->getDataFromCall();
+        $data = $this->getData();
         if (isset($data[PluginUtility::ATTRIBUTES])) {
             return $data[PluginUtility::ATTRIBUTES];
         } else {

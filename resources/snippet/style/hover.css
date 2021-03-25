@@ -4,8 +4,7 @@
     transition: all .2s ease;
 }
 
-/*called grow*/
-.combo-hover-zoom:hover {
+.combo-hover-grow:hover {
     -webkit-transform: scale(1.05);
     transform: scale(1.05);
     transition: all .2s ease;

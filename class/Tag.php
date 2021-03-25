@@ -152,13 +152,13 @@ class Tag
         $call = new Call($callArray);
 
         $attributes = null;
-        $data = $call->getDataFromCall();
+        $data = $call->getData();
         if (isset($data[PluginUtility::ATTRIBUTES])) {
             $attributes = $data[PluginUtility::ATTRIBUTES];
         }
 
-        $name = $call->getTagNameFromCall();
-        $state = $call->getStateFromCall();
+        $name = $call->getTagName();
+        $state = $call->getState();
 
         /**
          * Getting attributes
@@ -168,10 +168,10 @@ class Tag
          * we parse the match again
          */
         if ($attributes == null
-            && $call->getStateFromCall() == DOKU_LEXER_ENTER
+            && $call->getState() == DOKU_LEXER_ENTER
             && $name != 'preformatted' // preformatted does not have any attributes
         ) {
-            $match = $call->getMatchFromCall();
+            $match = $call->getMatch();
             /**
              * If this is not a combo element, we got no match
              */
@@ -238,7 +238,7 @@ class Tag
 
                 $previousCallArray = $this->calls[$callStackPosition];
                 $previousCall = new Call($previousCallArray);
-                $parentCallState = $previousCall->getStateFromCall();
+                $parentCallState = $previousCall->getState();
 
                 /**
                  * Add
@@ -316,7 +316,7 @@ class Tag
     {
 
         if ($this->getState() == DOKU_LEXER_UNMATCHED) {
-            LogUtility::msg("The unmatched tag (" . $this->name . ") does not have any attributes. Get its parent if you want the type",LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The unmatched tag (" . $this->name . ") does not have any attributes. Get its parent if you want the type", LogUtility::LVL_MSG_ERROR);
             return null;
         } else {
             return $this->getAttribute("type");
@@ -332,7 +332,7 @@ class Tag
 
         for ($i = sizeof($this->calls) - 1; $i >= 0; $i--) {
             $call = new Call($this->calls[$i]);
-            if ($call->getTagNameFromCall() == "$tag") {
+            if ($call->getTagName() == "$tag") {
                 return true;
             }
 
@@ -347,17 +347,25 @@ class Tag
      */
     public function getPreviousSibling()
     {
-        if (isset($this->position)) {
-            $counter = $this->position - 1;
-        } else {
-            $counter = sizeof($this->calls) - 1;
-        }
+
+        $counter = $this->position - 1;
         $treeLevel = 0;
         while ($counter > 0) {
 
             $callArray = $this->calls[$counter];
             $call = new Call($callArray);
-            $state = $call->getStateFromCall();
+            $state = $call->getState();
+
+            /**
+             * Edge case
+             */
+            if($state==null){
+                if($call->getTagName()=="acronym"){
+                    // Acronym does not have an enter/exit state
+                    //  this is a sibling
+                    break;
+                }
+            }
 
             /**
              * Before the breaking condition
@@ -374,8 +382,8 @@ class Tag
                     $treeLevel = $treeLevel + 1;
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    if (empty(trim($call->getContentFromCall()))) {
-                        // An empty unmatched in not considered a sibling
+                    if (empty(trim($call->getContent()))) {
+                        // An empty unmatched is not considered a sibling
                         // state = null will continue the loop
                         // we can't use a continue statement in a switch
                         $state = null;
@@ -427,8 +435,8 @@ class Tag
 
             $previousCallArray = $this->calls[$descendantCounter];
             $previousCall = new Call($previousCallArray);
-            $parentTagName = $previousCall->getTagNameFromCall();
-            $state = $previousCall->getStateFromCall();
+            $parentTagName = $previousCall->getTagName();
+            $state = $previousCall->getState();
             if ($state === DOKU_LEXER_ENTER && $parentTagName === $this->getName()) {
                 break;
             } else {
@@ -494,8 +502,8 @@ class Tag
 
             $childCallArray = $this->calls[$index];
             $childCall = new Call($childCallArray);
-            $childTagName = $childCall->getTagNameFromCall();
-            $state = $childCall->getStateFromCall();
+            $childTagName = $childCall->getTagName();
+            $state = $childCall->getState();
 
             /**
              * We break when got to the exit tag
@@ -553,7 +561,7 @@ class Tag
     {
         if ($this->tagCall != null) {
 
-            return $this->tagCall->getMatchFromCall();
+            return $this->tagCall->getMatch();
         } else {
             return null;
         }
@@ -566,7 +574,7 @@ class Tag
     public function getData()
     {
         if ($this->tagCall != null) {
-            return $this->tagCall->getDataFromCall();
+            return $this->tagCall->getData();
         } else {
             return array();
         }
@@ -579,7 +587,7 @@ class Tag
     public function getContext()
     {
         if ($this->tagCall != null) {
-            $data = $this->tagCall->getDataFromCall();
+            $data = $this->tagCall->getData();
             return $data[PluginUtility::CONTEXT];
         } else {
             return array();
@@ -605,13 +613,13 @@ class Tag
                     $currentCallArray = $this->calls[$index];
                     $currentCall = new Call($currentCallArray);
                     if (
-                        $currentCall->getTagNameFromCall() == $this->getName()
+                        $currentCall->getTagName() == $this->getName()
                         &&
-                        $currentCall->getStateFromCall() == DOKU_LEXER_EXIT
+                        $currentCall->getState() == DOKU_LEXER_EXIT
                     ) {
                         break;
                     } else {
-                        $content .= $currentCall->getContentFromCall();
+                        $content .= $currentCall->getContent();
                         $index++;
                     }
                 }
@@ -674,6 +682,17 @@ class Tag
     }
 
     /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function setAttribute($key, $value)
+    {
+        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key] = $value;
+        return $this;
+    }
+
+    /**
      * @param $value
      * @return $this
      */
@@ -691,7 +710,7 @@ class Tag
     public function getContent()
     {
         if ($this->tagCall != null) {
-            return $this->tagCall->getContentFromCall();
+            return $this->tagCall->getContent();
         } else {
             return null;
         }

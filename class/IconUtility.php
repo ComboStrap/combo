@@ -107,6 +107,9 @@ class IconUtility
         }
         XmlUtility::setAttribute($heightName, $heightValue, $mediaSvgXml);
 
+        // hover
+        Hover::processHover($attributes);
+
 
         // Add fill="currentColor" to all path descendant element
         if ($namespace!="") {

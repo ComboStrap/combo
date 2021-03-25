@@ -1,6 +1,7 @@
 // http://pavlyukpetr.github.io/motion-css//documentation.html
 // https://api.jquery.com/scroll/
 // https://developer.mozilla.org/en-US/docs/Web/API/Document/scroll_event
+// https://cssanimation.rocks/scroll-animations/
 jQuery(window).scroll(function () {
     jQuery('[data-combo-animate]').each(function () {
 

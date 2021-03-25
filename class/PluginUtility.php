@@ -15,6 +15,8 @@ require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Resources.php');
+require_once(__DIR__ . '/Hover.php');
+require_once(__DIR__ . '/Sticky.php');
 
 
 /**
@@ -72,7 +74,11 @@ class PluginUtility
         "subscript",
         "superscript",
         "deleted",
-        "footnote"
+        "footnote",
+        /**
+         * Others
+         */
+        "acronym"
     );
 
 
@@ -202,7 +208,15 @@ class PluginUtility
         // Process the attributes that have an effect on the class
         self::processClass($attributes);
 
-        self::processHover($attributes);
+        /**
+         * Hover animation
+         */
+        Hover::processHover($attributes);
+        /**
+         * Stickiness
+         */
+        Sticky::processStickiness($attributes);
+
         self::processCollapse($attributes);
         // Then transform
         $tagAttributeString = "";
@@ -1037,33 +1051,6 @@ class PluginUtility
             PluginUtility::PAYLOAD => $match,
             PluginUtility::CONTEXT => $context
         );
-    }
-
-    /**
-     * Process hover animation
-     * @param $attributes
-     */
-    private static function processHover(&$attributes)
-    {
-        if (isset($attributes["hover"])) {
-            $hover = $attributes["hover"];
-            unset($attributes["hover"]);
-//            PluginUtility::getSnippetManager()->upsertHeadTagsForBar("hover",
-//                array("link" =>
-//                    [
-//                        array(
-//                            "rel" => "stylesheet",
-//                            "href" => "https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css",
-//                            "integrity" => "sha512-csw0Ma4oXCAgd/d4nTcpoEoz4nYvvnk21a8VA2h2dzhPAvjbUIK6V3si7/g/HehwdunqqW18RwCJKpD7rL67Xg==",
-//                            "crossorigin" => "anonymous"
-//                        )
-//                    ]
-//                ));
-//            PluginUtility::addClass2Attributes("hvr-$hover", $attributes);
-            PluginUtility::getSnippetManager()->upsertCssSnippetForBar("hover");
-            PluginUtility::addClass2Attributes("combo-hover-$hover", $attributes);
-        }
-
     }
 
 

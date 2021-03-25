@@ -31,3 +31,23 @@ jQuery(window).scroll(function () {
 });
 
 
+// https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+const callback = function(entries) {
+    entries.forEach(entry => {
+        entry.target.classList.toggle("is-visible");
+    });
+};
+
+let options = {
+    root: document.querySelector('#scrollArea'),
+    rootMargin: '0px',
+    threshold: 1.0
+}
+const observer = new IntersectionObserver(callback, options);
+
+const targets = document.querySelectorAll(".show-on-scroll");
+targets.forEach(function(target) {
+    observer.observe(target);
+});
+
+

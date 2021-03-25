@@ -18,6 +18,7 @@
  */
 
 // must be run within Dokuwiki
+use ComboStrap\Site;
 use ComboStrap\SnippetManager;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -280,6 +281,28 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         }
                     }
                 }
+//                if(isset($codes["dw"])){
+//                    // http://php.net/manual/en/function.stream-context-create.php
+//                    $dw = $codes["dw"];
+//
+//                    $url = Site::getAjaxUrl();
+//                    $data = array(
+//                        action_plugin_combo_webcode::DW_PARAM => $dw,
+//                        action_plugin_combo_webcode::CALL_PARAM => action_plugin_combo_webcode::CALL_ID
+//                    );
+//
+//                    // use key 'http' even if you send the request to https://...
+//                    $options = array(
+//                        'http' => array(
+//                            'method'  => 'POST',
+//                            'content' => http_build_query($data)
+//                        )
+//                    );
+//                    $context  = stream_context_create($options);
+//                    $result = file_get_contents($url, false, $context);
+//                    if ($result === FALSE) { /* Handle error */ }
+//
+//                }
                 return array(
                     PluginUtility::STATE => $state,
                     self::CODES_ATTRIBUTE => $codes,

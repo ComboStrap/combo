@@ -15,7 +15,7 @@ require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Resources.php');
-require_once(__DIR__ . '/Hover.php');
+require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/Sticky.php');
 
 
@@ -209,9 +209,11 @@ class PluginUtility
         self::processClass($attributes);
 
         /**
-         * Hover animation
+         * Process animation (onHover, onView)
          */
-        Hover::processHover($attributes);
+        Animation::processHover($attributes);
+        Animation::processOnView($attributes);
+
         /**
          * Stickiness
          */

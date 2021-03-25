@@ -13,6 +13,8 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 {
 
     const CALL_ID = "webcode";
+    const DW_PARAM = "dw";
+    const CALL_PARAM = "call";
 
     function register(Doku_Event_Handler $controller)
     {
@@ -32,7 +34,6 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
      */
     function _ajax_call(&$event)
     {
-        $info = confToHash(__DIR__ . '/plugin.info.txt');
 
         if ($event->data !== self::CALL_ID) {
             return;
@@ -43,7 +44,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
 
         global $INPUT;
-        $dw = $INPUT->str('dw');
+        $dw = $INPUT->str(self::DW_PARAM);
         $title = $INPUT->str('title') ?: "ComboStrap WebCode - Dokuwiki Renderer";
 
 

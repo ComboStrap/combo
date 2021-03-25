@@ -1,39 +1,39 @@
 
-.slice {
+.slide {
     position: relative;
     padding-top: 4rem;
     padding-bottom: 4rem;
 }
 
-.slice-xl {
+.slide-xl {
     padding-top: 8rem;
     padding-bottom: 8rem;
 }
 
-.slice-lg {
+.slide-lg {
     padding-top: 6rem;
     padding-bottom: 6rem;
 }
 
-.slice-sm {
+.slide-sm {
     padding-top: 2rem;
     padding-bottom: 2rem;
 }
 
 
-.bg-slice-light {
+.bg-slide-light {
     background-color: #e0e6ed;
 }
 
-.bg-slice-dark {
+.bg-slide-dark {
     background-color: #1a232d;
 }
 
-.bg-slice-primary {
+.bg-slide-primary {
     background-color: #fff;
 }
 
-.bg-slice-secondary {
+.bg-slide-secondary {
     background-color: #fafbfe;
 }
 

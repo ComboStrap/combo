@@ -11,10 +11,10 @@ if (!defined('DOKU_INC')) die();
  * Implementation of a div
  *
  */
-class syntax_plugin_combo_slice extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "slice";
+    const TAG = "slide";
 
     /**
      * Syntax Type.
@@ -153,25 +153,28 @@ class syntax_plugin_combo_slice extends DokuWiki_Syntax_Plugin
                     switch ($size) {
                         case "lg":
                         case "large":
-                            PluginUtility::addClass2Attributes("slice-lg", $attributes);
+                            PluginUtility::addClass2Attributes(self::TAG."-lg", $attributes);
                             break;
                         case "sm":
                         case "small":
-                            PluginUtility::addClass2Attributes("slice-sm", $attributes);
+                            PluginUtility::addClass2Attributes(self::TAG."-sm", $attributes);
                             break;
                         case "xl":
                         case "extra-large":
-                            PluginUtility::addClass2Attributes("slice-xl", $attributes);
+                            PluginUtility::addClass2Attributes(self::TAG."-xl", $attributes);
                             break;
                         default:
-                            PluginUtility::addClass2Attributes("slice", $attributes);
+                            PluginUtility::addClass2Attributes(self::TAG, $attributes);
                             break;
                     }
 
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar("slice");
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
 
-                    PluginUtility::addClass2Attributes("slice-test", $attributes);
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar("slice-test");
+                    /**
+                     * By default, this is rounded
+                     * BUt for a slide, this is by default not wanted
+                     */
+                    PluginUtility::addStyleProperty("border-radius",0,$attributes);
 
                     $renderer->doc .= '<section';
                     if (sizeof($attributes) > 0) {

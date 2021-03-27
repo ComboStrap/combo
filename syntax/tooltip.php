@@ -1,6 +1,8 @@
 <?php
 
 
+use ComboStrap\Bootstrap;
+use ComboStrap\Site;
 use ComboStrap\SnippetManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -24,7 +26,8 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      */
     public static function addToolTipSnippetIfNeeded()
     {
-        $script = "window.addEventListener('load', function () { jQuery('[data-toggle=\"tooltip\"]').tooltip() })";
+        $namespace = Bootstrap::getDataNamespace();
+        $script = "window.addEventListener('load', function () { jQuery('[data{$namespace}-toggle=\"tooltip\"]').tooltip() })";
         PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::TAG, $script);
     }
 
@@ -164,7 +167,9 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                         if (isset($attributes[self::POSITION_ATTRIBUTE])) {
                             $position = $attributes[self::POSITION_ATTRIBUTE];
                         }
-                        $renderer->doc .= "<span class=\"d-inline-block\" tabindex=\"0\" data-toggle=\"tooltip\" data-placement=\"${position}\" title=\"" . $attributes[self::TEXT_ATTRIBUTE] . "\">" . DOKU_LF;
+
+                        $dataAttributeNamespace = Bootstrap::getDataNamespace();
+                        $renderer->doc .= "<span class=\"d-inline-block\" tabindex=\"0\" data{$dataAttributeNamespace}-toggle=\"tooltip\" data{$dataAttributeNamespace}-placement=\"${position}\" title=\"" . $attributes[self::TEXT_ATTRIBUTE] . "\">" . DOKU_LF;
                     };
 
                     break;

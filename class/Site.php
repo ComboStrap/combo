@@ -19,8 +19,6 @@ class Site
     const CONF_SITE_ISO_COUNTRY = "siteIsoCountry";
     const STRAP_TEMPLATE_NAME = "strap";
 
-    const BootStrapFiveMajorVersion = "5";
-
     public static function getLogoUrlAsSvg()
     {
         $look = array(
@@ -239,14 +237,6 @@ class Site
     public static function getAjaxUrl()
     {
         return self::getUrl() . "/lib/exe/ajax.php";
-    }
-
-    public static function getBootStrapMajorVersion()
-    {
-
-        $bootstrapVersion = tpl_getConf(TplUtility::CONF_BOOTSTRAP_VERSION, "4.5.0");
-        return $bootstrapVersion[0];
-
     }
 
 

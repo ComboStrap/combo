@@ -390,7 +390,8 @@ class LinkUtility
                     }
                     PluginUtility::addAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym, $this->attributes);
                     unset($this->attributes["href"]);
-                    $this->attributes["data-toggle"] = "tooltip";
+                    $dataNamespace = Bootstrap::getDataNamespace();
+                    $this->attributes["data{$dataNamespace}-toggle"] = "tooltip";
                     $this->attributes["title"] = "To follow this link ({$this->toAbsoluteId()}), you need to log in (" . $protectionSourceAcronym . ")";
 
                 } else {

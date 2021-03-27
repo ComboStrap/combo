@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\HtmlUtility;
 use ComboStrap\LinkUtility;
 use ComboStrap\NavBarUtility;
@@ -187,7 +188,8 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
 
                         // The button is the hamburger menu that will be shown
                         $idElementToCollapse = 'navbarcollapse';
-                        $renderer->doc .= '<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#' . $idElementToCollapse . '" aria-controls="' . $idElementToCollapse . '" aria-expanded="false" aria-label="Toggle navigation"';
+                        $dataNamespace = Bootstrap::getDataNamespace();
+                        $renderer->doc .= "<button class=\"navbar-toggler\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$idElementToCollapse\" aria-controls=\"$idElementToCollapse \" aria-expanded=\"false\" aria-label=\"Toggle navigation\"";
                         if (array_key_exists("order", $attributes)) {
                             $renderer->doc .= ' style="order:' . $attributes["order"] . '"';
                             unset($attributes["order"]);

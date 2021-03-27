@@ -2,6 +2,7 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
@@ -109,16 +110,16 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
                 $defaultConfValue = PluginUtility::parse2HTMLAttributes($this->getConf(self::CONF_DEFAULT_ATTRIBUTES_KEY));
                 $originalAttributes = PluginUtility::getTagAttributes($match);
-                $originalAttributes = PluginUtility::mergeAttributes($originalAttributes,$defaultConfValue);
+                $originalAttributes = PluginUtility::mergeAttributes($originalAttributes, $defaultConfValue);
 
                 /**
                  * Context Rendering attributes
                  */
                 $attributesToRender = $originalAttributes;
-                $tag = new Tag(self::TAG,$originalAttributes,$state,$handler);
+                $tag = new Tag(self::TAG, $originalAttributes, $state, $handler);
 
-                if($tag->isDescendantOf(syntax_plugin_combo_list::TAG)){
-                    PluginUtility::addStyleProperty("margin-left","auto",$attributesToRender);
+                if ($tag->isDescendantOf(syntax_plugin_combo_list::TAG)) {
+                    PluginUtility::addStyleProperty("margin-left", "auto", $attributesToRender);
                 }
 
 
@@ -138,11 +139,16 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                PluginUtility::addClass2Attributes($classValue,$attributesToRender);
+                PluginUtility::addClass2Attributes($classValue, $attributesToRender);
 
                 $rounded = $attributesToRender[self::ATTRIBUTE_ROUNDED];
-                if (!empty($rounded)){
-                    $attributesToRender["class"] .= " badge-pill";
+                if (!empty($rounded)) {
+                    $badgePillClass = "badge-pill";
+                    if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFiveMajorVersion) {
+                        // https://getbootstrap.com/docs/5.0/migration/#badges-1
+                        $badgePillClass = "rounded-pill";
+                    }
+                    $attributesToRender["class"] .= " $badgePillClass";
                     unset($attributesToRender[self::ATTRIBUTE_ROUNDED]);
                 }
 
@@ -154,14 +160,14 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                     PluginUtility::PAYLOAD => $html);
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
                 // Important otherwise we don't get an exit in the render
                 return array(
-                    PluginUtility::STATE=> $state,
-                    PluginUtility::PAYLOAD=> '</span>'
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => '</span>'
                 );
 
 
@@ -192,7 +198,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
                     PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
 
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD].DOKU_LF;
+                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 
-use Doku_Renderer_xhtml;
 use syntax_plugin_combo_tooltip;
 
 /**

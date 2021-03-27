@@ -4,7 +4,9 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) die();
 
@@ -99,7 +101,15 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     $id = PluginUtility::getPageId();
                     $renderer->doc .= "<input type=\"hidden\" name=\"id\" value=\"$id\" />";
                     $inputSearchId = 'qsearch__in';
-                    $renderer->doc .= "<label class=\"sr-only\" for=\"$inputSearchId\">Search Term</label>";
+
+                    // https://getbootstrap.com/docs/5.0/getting-started/accessibility/#visually-hidden-content
+                    //
+                    $visuallyHidden = "sr-only";
+                    $bootStrapVersion = Bootstrap::getBootStrapMajorVersion();
+                    if ($bootStrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
+                        $visuallyHidden = "visually-hidden";
+                    }
+                    $renderer->doc .= "<label class=\"$visuallyHidden\" for=\"$inputSearchId\">Search Term</label>";
                     $renderer->doc .= '<input name="q" type="text" tabindex="1"';
                     if ($ACT == 'search') $renderer->doc .= ' value="' . htmlspecialchars($QUERY) . '" ';
                     $renderer->doc .= 'placeholder="' . $lang['btn_search'] . '..." ';

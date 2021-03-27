@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -159,7 +160,8 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
             $htmlAttributes["aria-selected"] = "true";
         }
         $htmlAttributes['id'] = $panel . "-tab";
-        $htmlAttributes['data-toggle'] = "tab";
+        $namespace = Bootstrap::getDataNamespace();
+        $htmlAttributes["data{$namespace}-toggle"] = "tab";
         $htmlAttributes['aria-controls'] = $panel;
         $htmlAttributes["role"] = "tab";
         $htmlAttributes['href'] = "#$panel";

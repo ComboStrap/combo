@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\Tag;
@@ -257,9 +258,9 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * directly, we need to add a column
                      * and we close it here
                      */
-                    $bootstrapVersion = Site::getBootStrapMajorVersion();
+                    $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                     $context = $data[PluginUtility::CONTEXT];
-                    if ($bootstrapVersion == Site::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_cardcolumns::TAG) {
+                    if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_cardcolumns::TAG) {
                         $renderer->doc .= '<div class="col-sm-6 col-lg-4 mb-4">';
                     }
 
@@ -288,8 +289,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                              * directly, we need to add a column
                              * and we close it here
                              */
-                            $bootstrapVersion = Site::getBootStrapMajorVersion();
-                            if ($bootstrapVersion == Site::BootStrapFiveMajorVersion) {
+                            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+                            if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
                                 $renderer->doc .= '</div>';
                             }
                             $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;

@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
@@ -181,7 +182,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $bootstrapVersion = Site::getBootStrapMajorVersion();
+                    $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                     switch ($bootstrapVersion) {
                         case 5:
                             // https://getbootstrap.com/docs/5.0/examples/masonry/

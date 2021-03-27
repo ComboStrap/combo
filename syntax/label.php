@@ -4,6 +4,7 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
 // must be run within Dokuwiki
+use ComboStrap\Bootstrap;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -175,7 +176,8 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             }
                             $renderer->doc .= "<div class=\"card-header\" id=\"$headingId\">" . DOKU_LF;
                             $renderer->doc .= "<h2 class=\"mb-0\">";
-                            $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data-toggle=\"collapse\" data-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
+                            $dataNamespace = Bootstrap::getDataNamespace();
+                            $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
                             break;
                         case  syntax_plugin_combo_tabs::TAG:
                             $attributes = $data[PluginUtility::ATTRIBUTES];
@@ -204,7 +206,8 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                                 $showClass = "";
                             }
                             $renderer->doc .= "</button></h2></div>";
-                            $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse $showClass\" aria-labelledby=\"$headingId\" data-parent=\"#$headingId\">";
+                            $dataNamespace = Bootstrap::getDataNamespace();
+                            $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse $showClass\" aria-labelledby=\"$headingId\" data-{$dataNamespace}parent=\"#$headingId\">";
                             $renderer->doc .= "<div class=\"card-body\">" . DOKU_LF;
                             break;
                         case  syntax_plugin_combo_tabs::TAG:

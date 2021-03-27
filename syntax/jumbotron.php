@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
@@ -139,7 +140,13 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 $attributes = PluginUtility::getTagAttributes($match);
-                PluginUtility::addClass2Attributes("jumbotron", $attributes);
+
+                $jumbotronClass = "jumbotron";
+                if(Bootstrap::getBootStrapMajorVersion()== Bootstrap::BootStrapFiveMajorVersion){
+                    $jumbotronClass= "bg-light rounded px-4 py-2 m-2";
+                }
+
+                PluginUtility::addClass2Attributes($jumbotronClass, $attributes);
                 $html = '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
                 return array(
                     PluginUtility::STATE => $state,

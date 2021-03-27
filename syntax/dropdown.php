@@ -4,7 +4,9 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -188,9 +190,14 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                     }
                     PluginUtility::addClass2Attributes("nav-item", $attributes);
                     PluginUtility::addClass2Attributes("dropdown", $attributes);
+
+                    /**
+                     * New namespace for data attribute
+                     */
+                    $dataToggleAttributeName = Bootstrap::getDataNamespace();
                     $htmlAttributes = PluginUtility::array2HTMLAttributes($attributes);
                     $renderer->doc .= "<li $htmlAttributes>" . DOKU_LF
-                        . '<a id="' . $dropDownId . '" href="#" class="nav-link dropdown-toggle active" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="Title">' . $name . '</a>' . DOKU_LF
+                        . "<a id=\"$dropDownId\" href=\"#\" class=\"nav-link dropdown-toggle active\" data{$dataToggleAttributeName}-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" title=\"$name\">$name </a>" . DOKU_LF
                         . '<div class="dropdown-menu" aria-labelledby="' . $dropDownId . '">' . DOKU_LF;
                     break;
 

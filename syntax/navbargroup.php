@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\NavBarUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -185,8 +186,8 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
                     if (array_key_exists("expand", $attributes)) {
                         if ($attributes["expand"]=="true") {
-                            $bootstrapVersion = Site::getBootStrapMajorVersion();
-                            if($bootstrapVersion==Site::BootStrapFiveMajorVersion){
+                            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+                            if($bootstrapVersion== Bootstrap::BootStrapFiveMajorVersion){
                                 $attributes["class"] .= " me-auto";
                             } else {
                                 $attributes["class"] .= " mr-auto";

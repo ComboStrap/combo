@@ -17,6 +17,7 @@ require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Resources.php');
 require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/Sticky.php');
+require_once(__DIR__ . '/Bootstrap.php');
 
 
 /**
@@ -583,9 +584,9 @@ class PluginUtility
             $colorValue = $color;
         } else {
             // Custom Css variable
-            $bootstrapVersion = Site::getBootStrapMajorVersion();
+            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
             switch ($bootstrapVersion) {
-                case Site::BootStrapFiveMajorVersion:
+                case Bootstrap::BootStrapFiveMajorVersion:
                     $colorValue = "bs-" . $color;
                     break;
                 default:
@@ -813,9 +814,9 @@ class PluginUtility
             unset($attributes[$spacing]);
 
             $spacingNames = preg_split("/\s/", $spacingValue);
-            $bootstrapVersion = Site::getBootStrapMajorVersion();
+            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
             foreach ($spacingNames as $spacingClass) {
-                if ($bootstrapVersion == Site::BootStrapFiveMajorVersion) {
+                if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
 
                     // The sides r and l has been renamed to e and s
                     // https://getbootstrap.com/docs/5.0/migration/#utilities-2

@@ -24,7 +24,8 @@ require_once(__DIR__ . '/../class/IconUtility.php');
  * !!!!!!!!!!! The component name must be the name of the php file !!!
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
- *
+ * https://icons.getbootstrap.com/
+ * https://remixicon.com/
  */
 class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 {

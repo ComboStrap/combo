@@ -64,9 +64,9 @@ class Call
             /**
              * This is a plugin node
              *
-             * This code is a little bit weird
-             * but yeah, it was created while discovering the structure
-             * of a call and not enough time to dig into
+             * The name of the tag is the last part
+             * of the class
+             * To make it unique
              */
             $state = $this->getState();
             $tagName = null;
@@ -79,6 +79,9 @@ class Call
                     $pluginDokuData = $this->call[1];
                     $component = $pluginDokuData[0];
                     if (!is_array($component)) {
+                        /**
+                         * Tag name from class
+                         */
                         $componentNames = explode("_", $component);
                         /**
                          * To take care of

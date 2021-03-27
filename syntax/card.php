@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\Tag;
 
 if (!defined('DOKU_INC')) {
@@ -49,7 +50,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * @var int a counter for an unknown card type
      */
     private $cardCounter = 0;
-
 
 
     /**
@@ -206,7 +206,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
@@ -251,11 +251,28 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER:
 
-                    $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
-                    unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
 
+                    /**
+                     * Bootstrap five does not include masonry
+                     * directly, we need to add a column
+                     * and we close it here
+                     */
+                    $bootstrapVersion = Site::getBootStrapMajorVersion();
+                    $context = $data[PluginUtility::CONTEXT];
+                    if ($bootstrapVersion == Site::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_cardcolumns::TAG) {
+                        $renderer->doc .= '<div class="col-sm-6 col-lg-4 mb-4">';
+                    }
+
+                    /**
+                     * Card
+                     */
                     $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
 
+                    /**
+                     * Illustrations
+                     */
+                    $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
+                    unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
                     if (!$hasImageIllustration) {
                         $renderer->doc .= self::CARD_BODY;
                     }
@@ -266,8 +283,16 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
                         case syntax_plugin_combo_cardcolumns::TAG:
-                        case syntax_plugin_combo_cardcolumns::TAG_TEASER:
-                            $renderer->doc .= '</div>' . DOKU_LF;
+                            /**
+                             * Bootstrap five does not include masonry
+                             * directly, we need to add a column
+                             * and we close it here
+                             */
+                            $bootstrapVersion = Site::getBootStrapMajorVersion();
+                            if ($bootstrapVersion == Site::BootStrapFiveMajorVersion) {
+                                $renderer->doc .= '</div>';
+                            }
+                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
                             break;
                         default:
                             $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;

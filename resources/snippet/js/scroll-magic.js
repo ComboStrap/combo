@@ -15,8 +15,8 @@ window.addEventListener("load", function(event) {
         let $dataAnimatedClass = revealElement.getAttribute("data-animated-class")
         new ScrollMagic.Scene({
             triggerElement: revealElement, // y value not modified, so we can use element as trigger as well
-            triggerHook: 0.9, // show, when scrolled 10% into view (or "onEnter")
-            offset: 50,	// start a little later
+            triggerHook: 0.8, //0.9, // show, when scrolled 10% into view (or "onEnter")
+            offset: 0,	// start a little later
             duration: "80%", // hide 10% before exiting view (80% + 10% from bottom)
             // reverse: false // only do once, stay in state once triggered,
         })

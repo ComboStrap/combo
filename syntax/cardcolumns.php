@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -23,8 +24,17 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "card-columns";
-    const TAG_TEASER = 'teaser-columns';
+    /**
+     * The Tag constant should be the exact same last name of the class
+     * This is how we recognize a tag in the {@link \ComboStrap\CallStack}
+     */
+    const TAG = "cardcolumns";
+
+    /**
+     * The syntax tags
+     */
+    const SYNTAX_TAG_COLUMNS = "card-columns";
+    const SYNTAX_TAG_TEASER = 'teaser-columns';
 
 
     /**
@@ -90,7 +100,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
      */
     function connectTo($mode)
     {
-        foreach (self::getTags() as $tag) {
+        foreach (self::getSyntaxTags() as $tag) {
             $pattern = '<' . $tag . '.*?>(?=.*?</' . $tag . '>)';
             $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
         }
@@ -99,7 +109,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
-        foreach (self::getTags() as $tag) {
+        foreach (self::getSyntaxTags() as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
         }
 
@@ -128,7 +138,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                 // Suppress the <>
                 $match = substr($match, 1, -1);
                 // Suppress the tag name
-                foreach (self::getTags() as $tag) {
+                foreach (self::getSyntaxTags() as $tag) {
                     $match = str_replace($tag, "", $match);
                 }
                 $parameters = PluginUtility::parse2HTMLAttributes($match);
@@ -171,7 +181,27 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= '<div class="card-columns">' . DOKU_LF;
+                    $bootstrapVersion = Site::getBootStrapMajorVersion();
+                    switch ($bootstrapVersion) {
+                        case 5:
+                            // https://getbootstrap.com/docs/5.0/examples/masonry/
+                            PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::TAG,
+                                array(
+                                    "script" => [
+                                        array(
+                                            "src" => "https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js",
+                                            "integrity" => "sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D",
+                                            "crossorigin" => "anonymous",
+                                            "async" => true
+                                        )
+                                    ]
+                                )
+                            );
+                            $renderer->doc .= '<div class="row" data-masonry="{&quot;percentPosition&quot;: true }" >';
+                            break;
+                        default:
+                            $renderer->doc .= '<div class="card-columns">' . DOKU_LF;
+                    }
                     break;
 
                 case DOKU_LEXER_UNMATCHED:
@@ -189,10 +219,10 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
     }
 
 
-    public static function getTags()
+    public static function getSyntaxTags()
     {
 
-        return array(self::TAG, self::TAG_TEASER);
+        return array(self::SYNTAX_TAG_COLUMNS, self::SYNTAX_TAG_TEASER);
     }
 
 

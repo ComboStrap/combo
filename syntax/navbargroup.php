@@ -6,6 +6,7 @@
 
 use ComboStrap\NavBarUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -184,7 +185,12 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
                     if (array_key_exists("expand", $attributes)) {
                         if ($attributes["expand"]=="true") {
-                            $attributes["class"] .= " mr-auto";
+                            $bootstrapVersion = Site::getBootStrapMajorVersion();
+                            if($bootstrapVersion==Site::BootStrapFiveMajorVersion){
+                                $attributes["class"] .= " me-auto";
+                            } else {
+                                $attributes["class"] .= " mr-auto";
+                            }
                         }
                         unset($attributes["expand"]);
                     }

@@ -305,7 +305,11 @@ class Tag
      */
     public function getName()
     {
-        return $this->name;
+        if($this->tagCall!=null){
+            return $this->tagCall->getTagName();
+        } else {
+            return $this->name;
+        }
     }
 
 

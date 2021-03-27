@@ -52,6 +52,7 @@ class LinkUtility
     const TYPE_INTERWIKI = 'interwiki';
     const TYPE_WINDOWS_SHARE = 'windowsShare';
     const TYPE_EXTERNAL = 'external';
+
     const TYPE_EMAIL = 'email';
     const TYPE_LOCAL = 'local';
     const TYPE_INTERNAL = 'internal';

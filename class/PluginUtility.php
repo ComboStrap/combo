@@ -276,27 +276,7 @@ class PluginUtility
     public static function getQualifiedTagAttributes($match, $hasThirdValue, $keyThirdArgument)
     {
 
-        // Until the first >
-        $pos = strpos($match, ">");
-        if ($pos == false) {
-            LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_WARNING);
-            return array();
-        }
-        $match = substr($match, 0, $pos);
-
-
-        // Trim to start clean
-        $match = trim($match);
-
-        // Suppress the <
-        if ($match[0] == "<") {
-            $match = substr($match, 1);
-        }
-
-        // Suppress the / for a leaf tag
-        if ($match[strlen($match) - 1] == "/") {
-            $match = substr($match, 0, strlen($match) - 1);
-        }
+        $match = PluginUtility::getPreprocessEnterTag($match);
 
         // Suppress the tag name (ie until the first blank)
         $spacePosition = strpos($match, " ");
@@ -602,7 +582,18 @@ class PluginUtility
         if ($color[0] == "#") {
             $colorValue = $color;
         } else {
-            $colorValue = "var(--" . $color . ")";
+            // Custom Css variable
+            $bootstrapVersion = Site::getBootStrapMajorVersion();
+            switch ($bootstrapVersion) {
+                case Site::BootStrapFiveMajorVersion:
+                    $colorValue = "bs-" . $color;
+                    break;
+                default:
+                    $colorValue = $color;
+                    break;
+            }
+            $colorValue = "var(--" . $colorValue . ")";
+
         }
         return $colorValue;
     }
@@ -817,9 +808,42 @@ class PluginUtility
         // Spacing is just a class
         $spacing = "spacing";
         if (array_key_exists($spacing, $attributes)) {
+
             $spacingValue = $attributes[$spacing];
             unset($attributes[$spacing]);
-            self::addClass2Attributes($spacingValue, $attributes);
+
+            $spacingNames = preg_split("/\s/", $spacingValue);
+            $bootstrapVersion = Site::getBootStrapMajorVersion();
+            foreach ($spacingNames as $spacingClass) {
+                if ($bootstrapVersion == Site::BootStrapFiveMajorVersion) {
+
+                    // The sides r and l has been renamed to e and s
+                    // https://getbootstrap.com/docs/5.0/migration/#utilities-2
+                    //
+
+                    // https://getbootstrap.com/docs/5.0/utilities/spacing/
+                    // By default, we consider tha there is no size and breakpoint
+                    $sizeAndBreakPoint = "";
+                    $propertyAndSide = $spacingClass;
+
+                    $minusCharacter = "-";
+                    $minusLocation = strpos($spacingClass, $minusCharacter);
+                    if ($minusLocation !== false) {
+                        // There is no size or break point
+                        $sizeAndBreakPoint = substr($spacingClass, $minusLocation + 1);
+                        $propertyAndSide = substr($spacingClass, 0, $minusLocation);
+                    }
+                    $propertyAndSide = str_replace("r", "e", $propertyAndSide);
+                    $propertyAndSide = str_replace("l", "s", $propertyAndSide);
+                    if (empty($sizeAndBreakPoint)) {
+                        $spacingClass = $propertyAndSide;
+                    } else {
+                        $spacingClass = $propertyAndSide . $minusCharacter . $sizeAndBreakPoint;
+                    }
+
+                }
+                self::addClass2Attributes($spacingClass, $attributes);
+            }
         }
 
     }
@@ -1062,6 +1086,64 @@ class PluginUtility
             $conf[$namespace][PluginUtility::PLUGIN_BASE_NAME][$key] = $value;
         } else {
             $conf[$key] = $value;
+        }
+
+    }
+
+    /**
+     * Utility methodPreprocess a start tag to be able to extract the name
+     * and the attributes easily
+     *
+     * It will delete:
+     *   * the characters <> and the /> if present
+     *   * and trim
+     *
+     * It will remain the tagname and its attributes
+     * @param $match
+     * @return false|string|null
+     */
+    private static function getPreprocessEnterTag($match)
+    {
+        // Until the first >
+        $pos = strpos($match, ">");
+        if ($pos == false) {
+            LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_WARNING);
+            return null;
+        }
+        $match = substr($match, 0, $pos);
+
+
+        // Trim to start clean
+        $match = trim($match);
+
+        // Suppress the <
+        if ($match[0] == "<") {
+            $match = substr($match, 1);
+        }
+
+        // Suppress the / for a leaf tag
+        if ($match[strlen($match) - 1] == "/") {
+            $match = substr($match, 0, strlen($match) - 1);
+        }
+        return $match;
+    }
+
+    /**
+     * Retrieve the tag name used in the text document
+     * @param $match
+     * @return false|string|null
+     */
+    public static function getSyntaxTagNameFromMatch($match)
+    {
+        $preprocessMatch = PluginUtility::getPreprocessEnterTag($match);
+
+        // Tag name (ie until the first blank)
+        $spacePosition = strpos($match, " ");
+        if (!$spacePosition) {
+            // No space, meaning this is only the tag name
+            return $preprocessMatch;
+        } else {
+            return trim(substr(0, $spacePosition));
         }
 
     }

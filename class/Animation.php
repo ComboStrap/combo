@@ -80,8 +80,8 @@ class Animation
             PluginUtility::addAttributeValue("data-animated-class", $animationClass, $attributes);
             //PluginUtility::addClass2Attributes($animationClass,$attributes);
 
-            $delay = "animate__delay-2s";
-            PluginUtility::addClass2Attributes($delay, $attributes);
+            //$delay = "animate__delay-2s";
+            //PluginUtility::addClass2Attributes($delay, $attributes);
 
             $snippetManager = PluginUtility::getSnippetManager();
 

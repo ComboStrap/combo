@@ -19,6 +19,8 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ *
+ * See also: doc : http://themenectar.com/docs/salient/theme-options/header-navigation
  */
 class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
 {

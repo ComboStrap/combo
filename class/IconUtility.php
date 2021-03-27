@@ -109,6 +109,8 @@ class IconUtility
 
         // hover
         Animation::processHover($attributes);
+        // Position
+        Position::processPosition($attributes);
 
 
         // Add fill="currentColor" to all path descendant element

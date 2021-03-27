@@ -1032,10 +1032,10 @@ class Page
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = new Image($imageIdFromMeta);
+                    $images[] = new Image(cleanID($imageIdFromMeta));
                 }
             } else {
-                $images = array(new Image($imageMeta));
+                $images = array(new Image(cleanID($imageMeta)));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {

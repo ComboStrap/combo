@@ -16,7 +16,7 @@ require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Resources.php');
 require_once(__DIR__ . '/Animation.php');
-require_once(__DIR__ . '/Sticky.php');
+require_once(__DIR__ . '/Position.php');
 require_once(__DIR__ . '/Bootstrap.php');
 
 
@@ -215,10 +215,12 @@ class PluginUtility
         Animation::processHover($attributes);
         Animation::processOnView($attributes);
 
+
         /**
-         * Stickiness
+         * Position and Stickiness
          */
-        Sticky::processStickiness($attributes);
+        Position::processStickiness($attributes);
+        Position::processPosition($attributes);
 
         self::processCollapse($attributes);
         // Then transform
@@ -541,9 +543,14 @@ class PluginUtility
         $heightName = "height";
         if (array_key_exists($heightName, $attributes)) {
             $styleProperties[$heightName] = trim($attributes[$heightName]);
-            if (!array_key_exists("overflow", $attributes)) {
-                $styleProperties["overflow"] = "auto";
-            }
+            /**
+             * Overflow auto means that positioning element on the edge with the
+             * will clip them with the {@link Position::processPosition()} position attribute
+             *
+             * if (!array_key_exists("overflow", $attributes)) {
+             *        $styleProperties["overflow"] = "auto";
+             * }
+             */
             unset($attributes[$heightName]);
         }
 

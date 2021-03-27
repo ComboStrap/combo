@@ -22,6 +22,11 @@ before_script:
 script:
     - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug
 
+branches:
+    only:
+        - master
+        - stable
+
 notifications:
     email:
         - support@combostrap.com

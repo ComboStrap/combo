@@ -19,6 +19,8 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
 {
 
 
+    const TAG = "header";
+
     function getType()
     {
         return 'formatting';

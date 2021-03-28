@@ -145,10 +145,31 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $parentName = "";
                 if ($parent != null) {
                     $parentName = $parent->getName();
-                    if ($parentName == syntax_plugin_combo_button::TAG) {
-                        $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
+                    switch ($parentName) {
+                        case syntax_plugin_combo_button::TAG:
+                            $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
+                            $firstContainingBlock = $parent->getParent();
+                            break;
+                        case syntax_plugin_combo_column::TAG:
+                            // A col is in a row
+                            $firstContainingBlock = $parent->getParent();
+                            break;
+                        case "section":
+                            // When editing, there is a section
+                            $firstContainingBlock = $parent->getParent();
+                            break;
+                        default:
+                            $firstContainingBlock = $parent;
+                    }
+                    if ($firstContainingBlock!=null) {
+                        if ($firstContainingBlock->getAttribute("clickable")) {
+                            PluginUtility::addClass2Attributes("stretched-link", $attributes);
+                            $firstContainingBlock->addClass("position-relative");
+                            $firstContainingBlock->unsetAttribute("clickable");
+                        }
                     }
                 }
+
                 $link = new LinkUtility($attributes[LinkUtility::ATTRIBUTE_REF]);
                 $linkTag = $link->getHtmlTag();
                 return array(
@@ -247,6 +268,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                          */
                         $parentTag = $data[PluginUtility::CONTEXT];
                         switch ($parentTag) {
+                            /**
+                             * Button link
+                             */
                             case syntax_plugin_combo_button::TAG:
                                 $attributes["role"] = "button";
                                 syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($attributes);

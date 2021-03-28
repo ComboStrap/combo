@@ -305,7 +305,7 @@ class Tag
      */
     public function getName()
     {
-        if($this->tagCall!=null){
+        if ($this->tagCall != null) {
             return $this->tagCall->getTagName();
         } else {
             return $this->name;
@@ -363,8 +363,8 @@ class Tag
             /**
              * Edge case
              */
-            if($state==null){
-                if($call->getTagName()=="acronym"){
+            if ($state == null) {
+                if ($call->getTagName() == "acronym") {
                     // Acronym does not have an enter/exit state
                     //  this is a sibling
                     break;
@@ -694,6 +694,33 @@ class Tag
     {
         $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key] = $value;
         return $this;
+    }
+
+    /**
+     * @param $key
+     * @return $this
+     */
+    public function unsetAttribute($key)
+    {
+        unset($this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key]);
+        return $this;
+    }
+
+    /**
+     * Add a class to an element
+     * @param $value
+     * @return $this
+     */
+    public function addClass($value)
+    {
+        $classValue = $this->getAttribute("class");
+        if (empty($classValue)) {
+            $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES]["class"] = $value;
+        } else {
+            $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES]["class"] = $classValue . " " . $value;
+        }
+        return $this;
+
     }
 
     /**

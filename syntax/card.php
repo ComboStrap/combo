@@ -87,6 +87,11 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
         if ($mode == "header") {
             return false;
         }
+
+        if ($mode == "eol") {
+            return false;
+        }
+
         /**
          * If preformatted is disable, we does not accept it
          */
@@ -301,6 +306,24 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED:
+
+                    /**
+                     * If this it the first content, add the p paragraph
+                     */
+                    $previousSibling = $data[PluginUtility::CONTEXT];
+                    $payload = trim($data[PluginUtility::PAYLOAD]);
+                    if (!empty($payload)) {
+                        if ($previousSibling == null ||
+                            $previousSibling == "img" ||
+                            $previousSibling == syntax_plugin_combo_title::TAG ||
+                            $previousSibling == syntax_plugin_combo_header::TAG
+                        ) {
+                            $renderer->doc .= "<p class=\"card-text\">";
+                        }
+                    }
+                    /**
+                     * Render
+                     */
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 

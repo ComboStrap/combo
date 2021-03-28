@@ -82,6 +82,8 @@ class PluginUtility
         "acronym"
     );
 
+    const PARENT = "parent";
+
 
     /**
      * The URL base of the documentation
@@ -1072,7 +1074,7 @@ class PluginUtility
      * @param \Doku_Handler $handler
      * @return array
      */
-    public static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
+    public static function  handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
     {
         $tag = new Tag($tagName, array(), DOKU_LEXER_UNMATCHED, $handler);
         $sibling = $tag->getPreviousSibling();

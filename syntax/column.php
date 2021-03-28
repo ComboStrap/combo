@@ -57,6 +57,22 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
+
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header") {
+            return false;
+        }
+
+        /**
+         * p element are making the layout horrible
+         */
+        if ($mode == "eol"){
+            return false;
+        }
+
         if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
             return PluginUtility::disablePreformatted($mode);
         } else {

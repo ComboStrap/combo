@@ -26,6 +26,11 @@ class Animation
     const ON_VIEW_ID = "onview";
     const ANIMATE_CLASS = "animate__animated";
 
+    /**
+     * Supported Animation name of hover
+     * float and grow are not in
+     */
+    const HOVER_ANIMATIONS = ["shrink", "pulse", "pulse-grow", "pulse-shrink", "push", "pop", "bounce-in", "bounce-out", "rotate", "grow-rotate", "sink", "bob", "hang", "skew", "skew-forward", "skew-backward", "wobble-horizontal", "wobble-vertical", "wobble-to-bottom-right", "wobble-to-top-right", "wobble-top", "wobble-bottom", "wobble-skew", "buzz", "buzz-out", "forward", "backward", "fade", "back-pulse", "sweep-to-right", "sweep-to-left", "sweep-to-bottom", "sweep-to-top", "bounce-to-right", "bounce-to-left", "bounce-to-bottom", "bounce-to-top", "radial-out", "radial-in", "rectangle-in", "rectangle-out", "shutter-in-horizontal", "shutter-out-horizontal", "shutter-in-vertical", "shutter-out-vertical", "icon-back", "hollow", "trim", "ripple-out", "ripple-in", "outline-out", "outline-in", "round-corners", "underline-from-left", "underline-from-center", "underline-from-right", "reveal", "underline-reveal", "overline-reveal", "overline-from-left", "overline-from-center", "overline-from-right", "shadow", "grow-shadow", "float-shadow", "glow", "shadow-radial", "box-shadow-outset", "box-shadow-inset", "bubble-top", "bubble-right", "bubble-bottom", "bubble-left", "bubble-float-top", "bubble-float-right", "bubble-float-bottom", "bubble-float-left", "curl-top-left", "curl-top-right", "curl-bottom-right", "curl-bottom-left"];
 
     /**
      * Process hover animation
@@ -36,18 +41,12 @@ class Animation
         if (isset($attributes[self::ON_HOVER_ATTRIBUTE])) {
             $hover = strtolower($attributes[self::ON_HOVER_ATTRIBUTE]);
             unset($attributes[self::ON_HOVER_ATTRIBUTE]);
-            switch ($hover) {
-                case "grow":
-                case "float":
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::ON_HOVER_SNIPPET_ID);
-                    PluginUtility::addClass2Attributes("combo-hover-$hover", $attributes);
-                    break;
-                case "float-shadow":
-                    PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::ON_HOVER_SNIPPET_ID);
-                    PluginUtility::addClass2Attributes("combo-hover-float", $attributes);
-                    PluginUtility::addAttributeValue("data-hover-class","shadow", $attributes);
-                    break;
-                default:
+            $hoverAnimations = preg_split("/\s/", $hover);
+
+            $comboDataHoverClasses = "";
+            foreach ($hoverAnimations as $hover) {
+
+                if (in_array($hover, self::HOVER_ANIMATIONS)) {
                     PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::ON_HOVER_SNIPPET_ID,
                         array("link" =>
                             [
@@ -60,7 +59,28 @@ class Animation
                             ]
                         ));
                     PluginUtility::addClass2Attributes("hvr-$hover", $attributes);
-                    break;
+
+                } else {
+
+                    if (in_array($hover, ["float", "grow"])) {
+                        $hover = "combo-" . $hover;
+                    }
+                    $comboDataHoverClasses .= " " . $hover;
+
+                }
+
+            }
+            if (!empty($comboDataHoverClasses)) {
+                // Grow, float and easing are in the css
+                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::ON_HOVER_SNIPPET_ID);
+
+                // Smooth Transition in and out of hover
+                PluginUtility::addClass2Attributes("combo-hover-easing", $attributes);
+
+                PluginUtility::addAttributeValue("data-hover-class", trim($comboDataHoverClasses), $attributes);
+
+                // The javascript that manage the hover effect by adding the class in the data-hover class
+                PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::ON_HOVER_SNIPPET_ID);
             }
 
         }

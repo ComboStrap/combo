@@ -28,6 +28,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     const COMPONENT = 'combo_link';
 
     /**
+     * Disable the link
+     */
+    const CONF_DISABLE_LINK = "disableLink";
+
+    /**
      * The link Tag
      */
     const LINK_TAG = "linkTag";
@@ -110,13 +115,17 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $this->Lexer->addEntryPattern(LinkUtility::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
+            $this->Lexer->addEntryPattern(LinkUtility::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
     public function postConnect()
     {
-        $this->Lexer->addExitPattern(LinkUtility::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
+            $this->Lexer->addExitPattern(LinkUtility::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
     }
 
 
@@ -161,7 +170,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                         default:
                             $firstContainingBlock = $parent;
                     }
-                    if ($firstContainingBlock!=null) {
+                    if ($firstContainingBlock != null) {
                         if ($firstContainingBlock->getAttribute("clickable")) {
                             PluginUtility::addClass2Attributes("stretched-link", $attributes);
                             $firstContainingBlock->addClass("position-relative");

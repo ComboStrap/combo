@@ -20,7 +20,7 @@ namespace ComboStrap;
 class Animation
 {
     const ON_HOVER_ATTRIBUTE = "onhover";
-    const HOVER = "hover";
+    const ON_HOVER_SNIPPET_ID = "onhover";
 
     const ON_VIEW_ATTRIBUTE = "onview";
     const ON_VIEW_ID = "onview";
@@ -39,14 +39,16 @@ class Animation
             switch ($hover) {
                 case "grow":
                 case "float":
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::HOVER);
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::ON_HOVER_SNIPPET_ID);
                     PluginUtility::addClass2Attributes("combo-hover-$hover", $attributes);
                     break;
                 case "float-shadow":
-                    PluginUtility::addClass2Attributes("combo-hover-$hover", $attributes);
+                    PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::ON_HOVER_SNIPPET_ID);
+                    PluginUtility::addClass2Attributes("combo-hover-float", $attributes);
+                    PluginUtility::addAttributeValue("data-hover-class","shadow", $attributes);
                     break;
                 default:
-                    PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::HOVER,
+                    PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::ON_HOVER_SNIPPET_ID,
                         array("link" =>
                             [
                                 array(

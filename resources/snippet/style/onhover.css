@@ -1,11 +1,17 @@
 
+.combo-hover-float {
+    transition: all .2s ease;
+}
+
 .combo-hover-float:hover {
     transform: translateY(-3px) !important;
+}
+
+.combo-hover-grow {
     transition: all .2s ease;
 }
 
 .combo-hover-grow:hover {
     -webkit-transform: scale(1.05);
     transform: scale(1.05);
-    transition: all .2s ease;
 }

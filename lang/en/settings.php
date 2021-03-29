@@ -109,7 +109,8 @@ $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = Plu
 /**
  * Dokuwiki Class Name
  */
-$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the Dokuwiki class type for links (Bootstrap conflict if enabled)";
+$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
+$lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
 
 /**
  * Twitter

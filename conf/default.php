@@ -160,6 +160,10 @@ $conf['disableDynamicQualityMonitoring'] = 0;
  * Class in link {@link \ComboStrap\LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME}
  */
 $conf['useDokuwikiLinkClassName'] = 0;
+/**
+ * Class in link {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
+ */
+$conf['disableLink'] = 0;
 
 /**
  * Twitter

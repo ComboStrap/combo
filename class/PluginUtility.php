@@ -18,6 +18,7 @@ require_once(__DIR__ . '/Resources.php');
 require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/Position.php');
 require_once(__DIR__ . '/Bootstrap.php');
+require_once(__DIR__ . '/Shadow.php');
 
 
 /**
@@ -557,18 +558,7 @@ class PluginUtility
             unset($attributes[$textAlign]);
         }
 
-        $elevation = "elevation";
-        if (array_key_exists($elevation, $attributes)) {
-            $elevationValue = $attributes[$elevation];
-            if ($elevationValue == "high") {
-                $styleProperties["box-shadow"] = "0 0 0 .2em rgba(3,102,214,0),0 13px 27px -5px rgba(50,50,93,.25),0 8px 16px -8px rgba(0,0,0,.3),0 -6px 16px -6px rgba(0,0,0,.025)";
-            } else {
-                $styleProperties["box-shadow"] = "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)";
-            }
-            $styleProperties["transition"] = ".2s";
-            $styleProperties["transition-property"] = "color,box-shadow";
-            unset($attributes[$elevation]);
-        }
+        Shadow::process($attributes,$styleProperties);
 
 
         if (sizeof($styleProperties) != 0) {

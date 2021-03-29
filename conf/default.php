@@ -204,3 +204,9 @@ $conf['latePublicationProtectionEnable'] = 1;
  * {@link Page::CONF_DEFAULT_PAGE_TYPE}
  */
 $conf["defaultPageType"] = "article";
+
+/**
+ * Default shadow elevation
+ * {@link \ComboStrap\Shadow::CONF_DEFAULT_VALUE}
+ */
+$conf["defaultShadowLevel"] = "medium";

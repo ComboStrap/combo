@@ -9,6 +9,7 @@ use ComboStrap\PageProtection;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
+use ComboStrap\Shadow;
 use ComboStrap\Site;
 use ComboStrap\UrlManagerBestEndPage;
 
@@ -166,3 +167,8 @@ $meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
  * Default Page Type
  */
 $meta[Page::CONF_DEFAULT_PAGE_TYPE] = array("string");
+
+/**
+ * Default Shadow level
+ */
+$meta[Shadow::CONF_DEFAULT_VALUE] = array("string");

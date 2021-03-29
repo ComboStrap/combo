@@ -10,6 +10,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
+use ComboStrap\Shadow;
 use ComboStrap\Site;
 use ComboStrap\UrlManagerBestEndPage;
 
@@ -145,6 +146,11 @@ $lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::get
 /**
  * Default page type
  */
-$lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default page type for all pages (expected the home page)")
+$lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default page type for all pages (expected the home page)");
+
+/**
+ * Default Shadow level
+ */
+$lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "The default level applied to a shadow attributes");
 
 ?>

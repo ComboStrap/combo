@@ -7,14 +7,23 @@ use ComboStrap\PluginUtility;
 if (!defined('DOKU_INC')) die();
 
 /**
- * Class syntax_plugin_combo_box
- * Implementation of a div
+ * Implementation of a background
  *
+ *
+ * Cool calm example of moving square background
+ * https://codepen.io/Lewitje/pen/BNNJjo
+ * Particles.js
+ * https://codepen.io/akey96/pen/oNgeQYX
+ * Gradient positioning above a photo
+ * https://codepen.io/uzoawili/pen/GypGOy
+ * Fire flies
+ * https://codepen.io/mikegolus/pen/Jegvym
  */
-class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "box";
+    const TAG = "background";
+    const TAG_SYNTAX = "bg";
 
     /**
      * Syntax Type.
@@ -51,7 +60,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
     public function accepts($mode)

@@ -214,7 +214,7 @@ class PluginUtility
         /**
          * Process animation (onHover, onView)
          */
-        Animation::processHover($attributes);
+        Animation::processOnHover($attributes);
         Animation::processOnView($attributes);
 
 
@@ -429,17 +429,6 @@ class PluginUtility
 
 
     /**
-     * Set the environment to be able to
-     * run a {@link TestRequest} as admin
-     * @param TestRequest $request
-     */
-    public static function runAsAdmin($request)
-    {
-        Auth::becomeSuperUser($request);
-
-    }
-
-    /**
      * This method will takes attributes
      * and process the plugin styling attribute such as width and height
      * to put them in a style HTML attribute
@@ -538,7 +527,13 @@ class PluginUtility
 
         $widthName = "width";
         if (array_key_exists($widthName, $attributes)) {
-            $styleProperties['max-width'] = trim($attributes[$widthName]);
+
+            $widthValue = trim($attributes[$widthName]);
+            if($widthValue=="fit"){
+                $widthValue = "fit-content";
+            }
+            $styleProperties['max-width'] = $widthValue;
+
             unset($attributes[$widthName]);
         }
 

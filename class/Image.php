@@ -39,6 +39,7 @@ class Image
      * @var bool
      */
     private $analyzable = false;
+    private $description = null;
 
     /**
      * Image constructor.
@@ -52,7 +53,7 @@ class Image
          * It should then not be {@link cleanID()}
          */
         $this->id = cleanID($id);
-        if ($id != $this->id){
+        if ($id != $this->id) {
             LogUtility::msg("The image id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
     }
@@ -156,11 +157,11 @@ class Image
                     $this->analyzable = true;
                 }
                 $this->width = (int)$imageSize[0];
-                if (empty($this->width)){
+                if (empty($this->width)) {
                     $this->analyzable = false;
                 }
                 $this->height = (int)$imageSize[1];
-                if (empty($this->height)){
+                if (empty($this->height)) {
                     $this->analyzable = false;
                 }
                 $this->imageType = (int)$imageSize[2];
@@ -205,6 +206,25 @@ class Image
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string the wiki syntax
+     */
+    public function getMarkupSyntax()
+    {
+        $descriptionPart = $this->description != null ? "|$this->description" : "";
+        return '{{' . $this->id . $descriptionPart . '}}';
+    }
+
+    public function setDescription($description)
+    {
+        $this->description = $description;
+    }
+
+    public function getDescription()
+    {
+        return $this->description;
     }
 
 

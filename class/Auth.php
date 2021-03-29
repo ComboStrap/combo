@@ -39,20 +39,23 @@ class Auth
 
     /**
      * @param TestRequest $request
-     * @param null $user
+     * @param string $user
      */
-    public static function becomeSuperUser(&$request,$user = null)
+    public static function becomeSuperUser(&$request = null, $user = 'admin')
     {
         global $conf;
         $conf['useacl'] = 1;
-        if ($user!=null) {
-            $user = 'admin';
-            $conf['superuser'] = $user;
+        $conf['superuser'] = $user;
+        $conf['remoteuser'] = $user;
+
+        if($request!=null) {
+            $request->setServer('REMOTE_USER', $user);
+        } else {
+            global $INPUT;
+            $INPUT->server->set('REMOTE_USER',$user);
         }
 
         // $_SERVER[] = $user;
-        $request->setServer('REMOTE_USER', $conf['superuser']);
-
         // global $USERINFO;
         // $USERINFO['grps'] = array('admin', 'user');
 
@@ -65,7 +68,7 @@ class Auth
      * @param $request
      * @param string $user - the user to login
      */
-    public static function logIn(&$request, $user='defaultUser')
+    public static function logIn(&$request, $user = 'defaultUser')
     {
 
         $request->setServer('REMOTE_USER', $user);
@@ -82,16 +85,17 @@ class Auth
 
     }
 
-    public static function isAdmin(){
+    public static function isAdmin()
+    {
         global $INFO;
         return $INFO['isadmin'];
     }
 
-    public static function isManager(){
+    public static function isManager()
+    {
         global $INFO;
         return $INFO['ismanager'];
     }
-
 
 
 }

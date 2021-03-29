@@ -31,7 +31,7 @@ class Animation
      * Process hover animation
      * @param $attributes
      */
-    public static function processHover(&$attributes)
+    public static function processOnHover(&$attributes)
     {
         if (isset($attributes[self::ON_HOVER_ATTRIBUTE])) {
             $hover = strtolower($attributes[self::ON_HOVER_ATTRIBUTE]);
@@ -40,6 +40,9 @@ class Animation
                 case "grow":
                 case "float":
                     PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::HOVER);
+                    PluginUtility::addClass2Attributes("combo-hover-$hover", $attributes);
+                    break;
+                case "float-shadow":
                     PluginUtility::addClass2Attributes("combo-hover-$hover", $attributes);
                     break;
                 default:

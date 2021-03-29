@@ -29,11 +29,18 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
     const TAG = "img";
 
     /**
+     * Used in the move plugin
+     * The two last word of the class
+     */
+    const COMPONENT = 'combo_img';
+
+    /**
      * The attribute that defines if the image is the first image in
      * the component
      *
      */
     const IS_FIRST_IMAGE_KEY = "isFirstImage";
+
 
     function getType()
     {
@@ -115,43 +122,54 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
 
-        if ($format == 'xhtml') {
+        $attributes = $data[PluginUtility::ATTRIBUTES];
+        switch ($format) {
 
-            /** @var Doku_Renderer_xhtml $renderer */
-            $state = $data[PluginUtility::STATE];
-            switch ($state) {
+            case 'xhtml':
 
-                case DOKU_LEXER_SPECIAL :
+                /** @var Doku_Renderer_xhtml $renderer */
+                $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
+                $context = $data[PluginUtility::CONTEXT];
+                if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {
 
-                    $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $context = $data[PluginUtility::CONTEXT];
-                    if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {
+                    /**
+                     * First image of a card
+                     */
+                    PluginUtility::addClass2Attributes("card-img-top", $attributes);
+                    $renderer->doc .= Image::render($attributes);
+                    $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
 
-                        /**
-                         * First image of a card
-                         */
-                        PluginUtility::addClass2Attributes("card-img-top", $attributes);
-                        $renderer->doc .= Image::render($attributes);
-                        $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
+                } else {
+                    /**
+                     * Renderer function
+                     */
+                    $src = $attributes['src'];
+                    $title = $attributes['title'];
+                    $align = $attributes['align'];
+                    $width = $attributes['width'];
+                    $height = $attributes['height'];
+                    $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
+                    $linking = $attributes['linking'];
+                    $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
+                }
 
-                    } else {
-                        /**
-                         * Renderer function
-                         */
-                        $src = $attributes['src'];
-                        $title = $attributes['title'];
-                        $align = $attributes['align'];
-                        $width = $attributes['width'];
-                        $height = $attributes['height'];
-                        $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
-                        $linking = $attributes['linking'];
-                        $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
-                    }
+                break;
 
-                    break;
+            case "metadata":
+                /**
+                 * Keep track of the metadata
+                 * @var Doku_Renderer_metadata $renderer
+                 */
+                $src = $attributes['src'];
+                $title = $attributes['title'];
+                $align = $attributes['align'];
+                $width = $attributes['width'];
+                $height = $attributes['height'];
+                $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
+                $linking = $attributes['linking'];
+                $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
+                break;
 
-            }
         }
         // unsupported $mode
         return false;

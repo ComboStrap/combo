@@ -1,6 +1,12 @@
 
 .slide {
     position: relative;
+    overflow: hidden;
+    margin: 0;
+    width: 100%;
+}
+
+.slide-md {
     padding-top: 4rem;
     padding-bottom: 4rem;
 }

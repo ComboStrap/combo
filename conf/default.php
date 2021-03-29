@@ -73,6 +73,12 @@ $conf['MinimalNamesCountForAutomaticCanonical'] = 0;
 $conf['icons_namespace'] = ":combostrap:icons";
 
 /**
+ * Default library
+ * See {@link IconUtility::CONF_DEFAULT_ICON_LIBRARYE}
+ */
+$conf['defaultIconLibrary'] = "material-design";
+
+/**
  * Css Optimization
  * See {@link action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET}
  * See {@link action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET}

@@ -28,6 +28,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "row";
+    const SNIPPET_ID = "grid";
 
     /**
      * Syntax Type.
@@ -176,6 +177,9 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     } else {
                         $attributes["class"] = self::TAG;
                     }
+
+                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::SNIPPET_ID);
+                    $renderer->doc .= "<div class='container'>" . DOKU_LF;
                     $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
                     $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;
                     break;
@@ -187,6 +191,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
+                    $renderer->doc .= '</div>' . DOKU_LF;
                     $renderer->doc .= '</div>' . DOKU_LF;
                     break;
             }

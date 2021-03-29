@@ -22,6 +22,17 @@ class Shadow
 
     const CONF_DEFAULT_VALUE = "defaultShadowLevel";
 
+    /**
+     * Historically, this is the shadow of material design for the button
+     */
+    const MEDIUM_ELEVATION_CLASS = "shadow-md-combo";
+    const SNIPPET_ID = "shadow";
+
+    const CONF_SMALL_LEVEL_VALUE = "small";
+    const CONF_MEDIUM_LEVEL_VALUE = "medium";
+    const CONF_LARGE_LEVEL_VALUE = "large";
+    const CONF_EXTRA_LARGE_LEVEL_VALUE = "extra-large";
+
     public static function process(&$attributes, &$styleProperties)
     {
         $elevationValue = "";
@@ -36,51 +47,65 @@ class Shadow
 
         if (!empty($elevationValue)) {
 
-            switch ($elevationValue) {
-                case "sm":
-                    PluginUtility::addClass2Attributes("shadow-sm", $attributes);
-                    break;
-                case "md":
-                    PluginUtility::addClass2Attributes("shadow", $attributes);
-                    break;
-                case "lg":
-                case "high": // old value
-                    PluginUtility::addClass2Attributes("shadow-lg", $attributes);
-                    break;
-                case "true":
-                case true:
-                case "1":
-                    $defaultValue = PluginUtility::getConfValue(self::CONF_DEFAULT_VALUE);
-                    switch ($defaultValue){
-                        case "medium":
-                            PluginUtility::addClass2Attributes("shadow", $attributes);
-                            // Old deprecated: $styleProperties["box-shadow"] = "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)";
-                            break;
-                        case "small":
-                            PluginUtility::addClass2Attributes("shadow-sm", $attributes);
-                            break;
-                        case "large":
-                            PluginUtility::addClass2Attributes("shadow-lg", $attributes);
-                            // Old deprecated: $styleProperties["box-shadow"] = "0 0 0 .2em rgba(3,102,214,0),0 13px 27px -5px rgba(50,50,93,.25),0 8px 16px -8px rgba(0,0,0,.3),0 -6px 16px -6px rgba(0,0,0,.025)";
-                            break;
-                        default:
-                            LogUtility::msg("Internal error: The default value ($defaultValue) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            break;
-                    }
-                    break;
-                default:
-                    LogUtility::msg("The value ($elevationValue) of the shadow/elevation property is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-
+            $shadowClass = self::getClass($elevationValue);
+            if (!empty($shadowClass)) {
+                PluginUtility::addClass2Attributes($shadowClass, $attributes);
             }
-
-            /**
-             * Easing
-             */
-            $styleProperties["transition"] = ".2s";
-            $styleProperties["transition-property"] = "color,box-shadow";
 
         }
 
+    }
+
+
+    public
+    static function getDefaultClass()
+    {
+        $defaultValue = PluginUtility::getConfValue(self::CONF_DEFAULT_VALUE);
+        return self::getClass($defaultValue);
+    }
+
+    public
+    static function getClass($value)
+    {
+        // To string because if the value was true, the first string case
+        // would be chosen :(
+        if ($value === true) {
+            $value = "true";
+        }
+        switch ($value) {
+            case self::CONF_SMALL_LEVEL_VALUE:
+            case "sm":
+                return "shadow-sm";
+                break;
+            case self::CONF_MEDIUM_LEVEL_VALUE:
+            case "md";
+                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::SNIPPET_ID);
+                return self::MEDIUM_ELEVATION_CLASS;
+            case self::CONF_LARGE_LEVEL_VALUE:
+            case "lg":
+                return "shadow";
+                break;
+            case self::CONF_EXTRA_LARGE_LEVEL_VALUE:
+            case "xl":
+            case "high":
+                return "shadow-lg";
+                // Old deprecated: $styleProperties["box-shadow"] = "0 0 0 .2em rgba(3,102,214,0),0 13px 27px -5px rgba(50,50,93,.25),0 8px 16px -8px rgba(0,0,0,.3),0 -6px 16px -6px rgba(0,0,0,.025)";
+                break;
+            case "true":
+            case "1":
+                return self::getDefaultClass();
+                break;
+            default:
+                LogUtility::msg("The shadow / elevation value ($value) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                return null;
+                break;
+        }
+    }
+
+    public
+    static function addMediumElevation(&$attributes)
+    {
+        PluginUtility::addClass2Attributes(self::MEDIUM_ELEVATION_CLASS, $attributes);
     }
 
 }

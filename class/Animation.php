@@ -62,15 +62,42 @@ class Animation
 
                 } else {
 
+                    /**
+                     *
+                     */
                     if (in_array($hover, ["float", "grow"])) {
                         $hover = "combo-" . $hover;
                     }
+
+                    /**
+                     * Shadow translation between animation name
+                     * and class
+                     */
+                    switch ($hover){
+                        case "shadow":
+                            $hover = Shadow::getDefaultClass();
+                            break;
+                        case "shadow-md":
+                            $hover = Shadow::MEDIUM_ELEVATION_CLASS;
+                            break;
+                        case "shadow-lg":
+                            $hover = "shadow";
+                            break;
+                        case "shadow-xl":
+                            $hover = "shadow-lg";
+                            break;
+                    }
+
+                    /**
+                     * Add it to the list of class
+                     */
                     $comboDataHoverClasses .= " " . $hover;
 
                 }
 
             }
             if (!empty($comboDataHoverClasses)) {
+
                 // Grow, float and easing are in the css
                 PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::ON_HOVER_SNIPPET_ID);
 
@@ -81,6 +108,7 @@ class Animation
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
                 PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::ON_HOVER_SNIPPET_ID);
+
             }
 
         }

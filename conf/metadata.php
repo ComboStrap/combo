@@ -171,4 +171,7 @@ $meta[Page::CONF_DEFAULT_PAGE_TYPE] = array("string");
 /**
  * Default Shadow level
  */
-$meta[Shadow::CONF_DEFAULT_VALUE] = array("string");
+$meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
+    Shadow::CONF_SMALL_LEVEL_VALUE,
+    Shadow::CONF_MEDIUM_LEVEL_VALUE
+));

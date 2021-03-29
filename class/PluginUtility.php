@@ -463,7 +463,7 @@ class PluginUtility
                             ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $color[ColorUtility::COLOR]);
                             ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
                             ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
-                            $attributes["elevation"] = true;
+                            Shadow::addMediumElevation($attributes);
                             break;
                         case "filled":
                         case "solid":

@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) {
@@ -136,7 +137,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED:
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -178,8 +179,20 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         $attributes["class"] = self::TAG;
                     }
 
-                    // row-cols-auto
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::SNIPPET_ID);
+                    $type = "";
+                    if (isset($attributes['type'])) {
+                        $type = $attributes['type'];
+                        unset($attributes['type']);
+                    }
+
+                    if ($type=="auto"){
+                        PluginUtility::addClass2Attributes("row-cols-auto",$attributes);
+                    }
+                    if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
+                        && $type == "auto") {
+                        // row-cols-auto is not in 4.0
+                        PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::SNIPPET_ID);
+                    }
 
                     $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
                     $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;

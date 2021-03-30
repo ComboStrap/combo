@@ -4,7 +4,6 @@ use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
-use ComboStrap\Sqlite;
 
 if (!defined('DOKU_INC')) die();
 
@@ -14,6 +13,7 @@ require_once(DOKU_PLUGIN . 'admin.php');
 require_once(DOKU_INC . 'inc/parser/xhtml.php');
 require_once(__DIR__ . '/../class/PageRules.php');
 require_once(__DIR__ . '/../class/PluginUtility.php');
+require_once(__DIR__ . '/../class/Resources.php');
 
 /**
  * The admin pages
@@ -101,7 +101,7 @@ class admin_plugin_combo_pagerules extends DokuWiki_Admin_Plugin
 
     public function getMenuIcon()
     {
-        return DOKU_PLUGIN . $this->getPluginName() . '/images/page-next.svg';
+        return Resources::getImagesDirectory() .'/page-next.svg';
     }
 
 

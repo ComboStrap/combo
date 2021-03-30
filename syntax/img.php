@@ -79,7 +79,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
             PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
         ];
         if (in_array($mode, $modes)) {
-            $this->Lexer->addSpecialPattern(Image::IMAGE_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(Image::INTERNAL_MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
 
@@ -136,7 +136,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
                      * First image of a card
                      */
                     PluginUtility::addClass2Attributes("card-img-top", $attributes);
-                    $renderer->doc .= Image::render($attributes);
+                    $renderer->doc .= Image::createFromRenderAttributes($attributes)->renderImgHtmlTag();
                     $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
 
                 } else {

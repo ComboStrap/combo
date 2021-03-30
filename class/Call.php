@@ -148,7 +148,7 @@ class Call
     /**
      * @return mixed the data returned from the {@link DokuWiki_Syntax_Plugin::handle} (ie attributes, payload, ...)
      */
-    public function getData()
+    public function getPluginData()
     {
         return $this->call[1][1];
     }
@@ -181,11 +181,18 @@ class Call
 
     public function getAttributes()
     {
-        $data = $this->getData();
-        if (isset($data[PluginUtility::ATTRIBUTES])) {
-            return $data[PluginUtility::ATTRIBUTES];
-        } else {
-            return null;
+
+        $tagName = $this->getTagName();
+        switch ($tagName) {
+            case Image::INTERNAL_MEDIA:
+                return $this->call[1];
+            default:
+                $data = $this->getPluginData();
+                if (isset($data[PluginUtility::ATTRIBUTES])) {
+                    return $data[PluginUtility::ATTRIBUTES];
+                } else {
+                    return null;
+                }
         }
     }
 }

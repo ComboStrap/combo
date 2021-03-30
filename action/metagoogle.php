@@ -190,14 +190,14 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     if ($image->exists()) {
                         $imageObjectSchema = array(
                             "@type" => "ImageObject",
-                            "url" => $image->getUrl()
+                            "url" => $image->getAbsoluteUrl()
                         );
                         if ($image->isAnalyzable()) {
-                            if (!empty($image->getWidth())) {
-                                $imageObjectSchema["width"] = $image->getWidth();
+                            if (!empty($image->getImageWidth())) {
+                                $imageObjectSchema["width"] = $image->getImageWidth();
                             }
-                            if (!empty($image->getHeight())) {
-                                $imageObjectSchema["height"] = $image->getHeight();
+                            if (!empty($image->getImageHeight())) {
+                                $imageObjectSchema["height"] = $image->getImageHeight();
                             }
                         }
                         $schemaImages[] = $imageObjectSchema;

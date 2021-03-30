@@ -2,7 +2,9 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Image;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag;
 
 if (!defined('DOKU_INC')) die();
 
@@ -23,7 +25,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "background";
-    const TAG_SYNTAX = "bg";
+    const TAG_SHORT = "bg";
 
     /**
      * Syntax Type.
@@ -81,15 +83,19 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach ($this->getTags() as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
     }
 
 
     function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach ($this->getTags() as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
@@ -112,7 +118,17 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                // Important otherwise we don't get an exit in the render
+                $tag = new Tag(self::TAG,array(),$state,$handler);
+                $openingTag = $tag->getOpeningTag();
+                $callImage = $openingTag->getDescendant(syntax_plugin_combo_img::TAG);
+                if ($callImage==null){
+                    $callImage = $openingTag->getDescendant(Image::INTERNAL_MEDIA);
+                }
+                if ($callImage!=null) {
+                    $callImage->deleteCall();
+                    $image =  Image::createFromCallAttributes($callImage->getAttributes());
+                    $openingTag->setAttribute("img",$image->toAttributes());
+                }
                 return array(
                     PluginUtility::STATE => $state
                 );
@@ -142,6 +158,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
+                    if ()
                     $renderer->doc .= '<div';
                     if (sizeof($attributes) > 0) {
                         $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
@@ -162,6 +179,11 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
         // unsupported $mode
         return false;
+    }
+
+    private function getTags()
+    {
+        return [self::TAG, self::TAG_SHORT];
     }
 
 

@@ -136,20 +136,20 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     if ($facebookImage->isAnalyzable()) {
 
                         // There is a minimum size constraint of 200px by 200px
-                        if ($facebookImage->getWidth() < 200) {
+                        if ($facebookImage->getImageWidth() < 200) {
                             $toSmall = true;
                         } else {
-                            $facebookMeta["og:image:width"] = $facebookImage->getWidth();
-                            if ($facebookImage->getHeight() < 200) {
+                            $facebookMeta["og:image:width"] = $facebookImage->getImageWidth();
+                            if ($facebookImage->getImageHeight() < 200) {
                                 $toSmall = true;
                             } else {
-                                $facebookMeta["og:image:height"] = $facebookImage->getHeight();
+                                $facebookMeta["og:image:height"] = $facebookImage->getImageHeight();
                             }
                         }
                     }
 
                     if ($toSmall) {
-                        $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getWidth() . " x " . $facebookImage->getHeight() . "). The minimum size constraint is 200px by 200px";
+                        $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getImageWidth() . " x " . $facebookImage->getImageHeight() . "). The minimum size constraint is 200px by 200px";
                         if ($facebookImage->getId() != $page->getFirstImage()->getId()) {
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         } else {
@@ -166,7 +166,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                         if (!empty($mime)) {
                             $facebookMeta["og:image:type"] = $mime[1];
                         }
-                        $facebookMeta["og:image"] = $facebookImage->getUrl();
+                        $facebookMeta["og:image"] = $facebookImage->getAbsoluteUrl();
                         // One image only
                         break;
                     }

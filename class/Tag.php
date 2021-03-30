@@ -16,6 +16,7 @@ namespace ComboStrap;
 require_once(__DIR__ . '/Call.php');
 
 use Doku_Handler;
+use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
 use RuntimeException;
@@ -31,6 +32,9 @@ use RuntimeException;
  */
 class Tag
 {
+
+    const CANONICAL = "support";
+
     /**
      * The {@link Doku_Handler::$calls}
      * @var
@@ -151,12 +155,7 @@ class Tag
     {
         $call = new Call($callArray);
 
-        $attributes = null;
-        $data = $call->getData();
-        if (isset($data[PluginUtility::ATTRIBUTES])) {
-            $attributes = $data[PluginUtility::ATTRIBUTES];
-        }
-
+        $attributes = $call->getAttributes();
         $name = $call->getTagName();
         $state = $call->getState();
 
@@ -297,7 +296,9 @@ class Tag
      */
     public function getAttributes()
     {
+
         return $this->attributes;
+
     }
 
     /**
@@ -538,24 +539,50 @@ class Tag
     }
 
     /**
-     * @param string $tagName
+     * @param string $requiredTagName
      * @return Tag|null
      */
-    public function getDescendant($tagName)
+    public function getDescendant($requiredTagName)
     {
         $tags = $this->getDescendants();
         foreach ($tags as $tag) {
-            if ($tag->getName() === $tagName &&
-                (
-                    $tag->getState() === DOKU_LEXER_ENTER
-                    || $tag->getState() === DOKU_LEXER_MATCHED
-                    || $tag->getState() === DOKU_LEXER_SPECIAL
-                )
-            ) {
-                return $tag;
+            $currentTagName = $tag->getName();
+            if ($currentTagName === $requiredTagName) {
+                $currentTagState = $tag->getState();
+                /**
+                 * No unmatched tag
+                 */
+                if (
+                    $currentTagState === DOKU_LEXER_ENTER
+                    || $currentTagState === DOKU_LEXER_MATCHED
+                    || $currentTagState === DOKU_LEXER_SPECIAL
+                ) {
+                    return $tag;
+                } else {
+                    /**
+                     * Dokuwiki special match does not have any
+                     * state
+                     */
+                    if ($currentTagName == "internalmedia") {
+                        return $tag;
+                    }
+                }
             }
         }
         return null;
+    }
+
+    public function deleteCall()
+    {
+        /**
+         * The current call in an handle method cannot be deleted
+         * because it does not exist yet
+         */
+        if (!$this->isCurrent()) {
+            unset($this->calls[$this->position]);
+        } else {
+            LogUtility::msg("Internal error: The current call cannot be deleted", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+        }
     }
 
     /**
@@ -578,7 +605,7 @@ class Tag
     public function getData()
     {
         if ($this->tagCall != null) {
-            return $this->tagCall->getData();
+            return $this->tagCall->getPluginData();
         } else {
             return array();
         }
@@ -591,7 +618,7 @@ class Tag
     public function getContext()
     {
         if ($this->tagCall != null) {
-            $data = $this->tagCall->getData();
+            $data = $this->tagCall->getPluginData();
             return $data[PluginUtility::CONTEXT];
         } else {
             return array();
@@ -754,5 +781,17 @@ class Tag
         } else {
             throw new RuntimeException("The stack is empty, there is no root tag");
         }
+    }
+
+    /**
+     * The current call is the call being created
+     * in a {@link SyntaxPlugin::handle()}
+     * It does not exist yet in the call stack
+     * and cannot be deleted
+     * @return bool
+     */
+    private function isCurrent()
+    {
+        return $this->position == sizeof($this->calls);
     }
 }

@@ -38,6 +38,11 @@ class InternalMedia
     private $alt;
 
     private $class;
+
+    /**
+     * Caching of external image
+     * https://www.dokuwiki.org/images#caching
+     */
     private $cache;
 
     /**
@@ -83,7 +88,7 @@ class InternalMedia
          */
         $this->id = cleanID($id);
         if ($id != $this->id) {
-            LogUtility::msg("The media id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("Internal error: The media id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, "support");
         }
     }
 
@@ -94,7 +99,7 @@ class InternalMedia
      * @param $match
      * @return array
      */
-    public static function parse($match)
+    public static function getParseAttributes($match)
     {
         return Doku_Handler_Parse_Media($match);
     }
@@ -126,12 +131,12 @@ class InternalMedia
     }
 
     /**
-     * @param $attributes - the attributes created by the function {@link InternalMedia::parse()}
+     * @param $attributes - the attributes created by the function {@link InternalMedia::getParseAttributes()}
      * @return Image
      */
     public static function createFromRenderAttributes($attributes)
     {
-        $src = $attributes['src'];
+        $src = cleanID($attributes['src']);
         $media = self::instantiateMedia($src);
 
         $width = $attributes['width'];
@@ -150,7 +155,7 @@ class InternalMedia
 
     public static function createFromRenderMatch($match)
     {
-        return self::createFromRenderAttributes(self::parse($match));
+        return self::createFromRenderAttributes(self::getParseAttributes($match));
     }
 
     public function getMime()

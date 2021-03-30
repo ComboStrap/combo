@@ -42,6 +42,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     const IS_FIRST_IMAGE_KEY = "isFirstImage";
 
 
+
+
     function getType()
     {
         return 'formatting';
@@ -74,11 +76,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        // Only inside a card
-        $modes = [
-            PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
-        ];
-        if (in_array($mode, $modes)) {
+        $enable = $this->getConf(Image::CONF_LAZY_LOAD_IMAGE_ENABLE);
+        if (!$enable){
+
+            // Inside a card, we need to take over
+            $modes = [
+                PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
+            ];
+            $enable = in_array($mode, $modes);
+        }
+
+        if ($enable) {
             $this->Lexer->addSpecialPattern(InternalMedia::INTERNAL_MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
@@ -92,13 +100,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
-                $media = InternalMedia::createFromRenderMatch($match);
-                $tag = new Tag(self::TAG, $media->getAttributes(), $state, $handler);
+                $attributes = InternalMedia::getParseAttributes($match);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parentTag = $tag->getParent()->getName();
                 $isFirstSibling = $tag->isFirstMeaningFullSibling();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $media->getAttributes(),
+                    PluginUtility::ATTRIBUTES => $attributes,
                     PluginUtility::CONTEXT => $parentTag,
                     self::IS_FIRST_IMAGE_KEY => $isFirstSibling
                 );
@@ -143,19 +151,25 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                         $renderer->doc .= $media->renderMediaTag();
                         $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
 
+                    } else {
+                        $renderer->doc .= $media->renderMediaTag();
                     }
+
                 } else {
+
                     /**
-                     * Renderer function
+                     * This is not a media image (a video)
+                     * Dokuwiki takes over
                      */
                     $src = $attributes['src'];
                     $title = $attributes['title'];
                     $align = $attributes['align'];
                     $width = $attributes['width'];
                     $height = $attributes['height'];
-                    $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
+                    $cache = $attributes['cache'];
                     $linking = $attributes['linking'];
                     $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
+
                 }
 
                 break;

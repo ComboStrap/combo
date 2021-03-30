@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 require_once(__DIR__ . '/InternalMedia.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  * Image
@@ -48,6 +49,7 @@ class Image extends InternalMedia
      * @var mixed - the mime from the {@link Image::analyzeImageIfNeeded()}
      */
     private $mime;
+    private $lazyLoad = null;
 
 
     /**
@@ -86,7 +88,7 @@ class Image extends InternalMedia
                 $att['cache'] = $this->getCache();
             }
             $direct = true;
-            return ml($this->getId(), $att, $direct, '', $absolute);
+            return ml($this->getId(), $att, $direct, '&', $absolute);
 
         } else {
 
@@ -114,12 +116,13 @@ class Image extends InternalMedia
 
         if ($this->exists()) {
 
-            $imgHTML = '<img ';
+            $imgHTML = '<img';
 
+            $lazyLoad = $this->getLazyLoad();
             /**
              * Snippet
              */
-            if (PluginUtility::getConfValue(self::CONF_LAZY_LOAD_IMAGE_ENABLE)) {
+            if ($lazyLoad) {
                 $snippetManager = PluginUtility::getSnippetManager();
                 /**
                  * The library
@@ -148,7 +151,7 @@ class Image extends InternalMedia
             /**
              * Class
              */
-            if (PluginUtility::getConfValue(self::CONF_LAZY_LOAD_IMAGE_ENABLE)) {
+            if ($lazyLoad) {
                 $this->addClass("lazyload");
             }
             if (!empty($this->getClass())) {
@@ -159,7 +162,7 @@ class Image extends InternalMedia
              * Src
              */
             $srcValue = $this->getUrl();
-            if (PluginUtility::getConfValue(self::CONF_LAZY_LOAD_IMAGE_ENABLE)) {
+            if ($lazyLoad) {
 
                 // Modern transparent srcset pattern
                 // normal src attribute with a transparent or low quality image as srcset value
@@ -167,31 +170,38 @@ class Image extends InternalMedia
                 $imgHTML .= " src=\"$srcValue\"";
                 $imgHTML .= " srcset=\"data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\"";
 
-                // Responsive image src set building
-                $srcSet = "";
+                /**
+                 * max-width as asked
+                 */
                 $widthValue = $this->getImgTagWidthValue();
+                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
+
+                /**
+                 * Responsive image src set building
+                 */
+                $srcSet = "";
                 $smWidth = 300;
-                if ($widthValue > $smWidth){
+                if ($widthValue > $smWidth) {
                     $src300Url = $this->getUrl(true, $smWidth);
-                    $srcSet = "$src300Url $smWidth";
+                    $srcSet = "$src300Url {$smWidth}w";
                 }
                 $mediumWith = 600;
-                if ($widthValue > $mediumWith){
+                if ($widthValue > $mediumWith) {
                     $srcMediumUrl = $this->getUrl(true, $mediumWith);
-                    if (!empty($srcSet)){
+                    if (!empty($srcSet)) {
                         $srcSet .= ", ";
                     }
-                    $srcSet .= "$srcMediumUrl $mediumWith";
+                    $srcSet .= "$srcMediumUrl {$mediumWith}w";
                 }
                 $largeWidth = 900;
-                if ($widthValue > $largeWidth){
+                if ($widthValue > $largeWidth) {
                     $srcLargeUrl = $this->getUrl(true, $largeWidth);
-                    if (!empty($srcSet)){
+                    if (!empty($srcSet)) {
                         $srcSet .= ", ";
                     }
-                    $srcSet .= "$srcLargeUrl $largeWidth";
+                    $srcSet .= "$srcLargeUrl {$largeWidth}w";
                 }
-                if(!empty($srcSet)) {
+                if (!empty($srcSet)) {
                     $imgHTML .= " data-sizes=\"auto\" data-srcset=\"$srcSet\"";
                 }
 
@@ -199,10 +209,10 @@ class Image extends InternalMedia
             } else {
                 $imgHTML .= " src=\"$srcValue\"";
                 if (!empty($this->getImgTagWidthValue())) {
-                    $imgHTML .= ' width = "' . $this->getImgTagWidthValue() . '"';
+                    $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
                 }
                 if (!empty($this->getImgTagHeightValue())) {
-                    $imgHTML .= ' height = "' . $this->getImgTagHeightValue() . '"';
+                    $imgHTML .= ' height="' . $this->getImgTagHeightValue() . '"';
                 }
             }
 
@@ -215,7 +225,7 @@ class Image extends InternalMedia
             }
 
 
-            $imgHTML .= ' > ';
+            $imgHTML .= '>';
 
         } else {
 
@@ -314,7 +324,14 @@ class Image extends InternalMedia
 
             }
         }
-        return $linkWidth;
+        /**
+         * Rounding to integer
+         * The fetch.php file takes int as value for width and height
+         * making a rounding if we pass a double (such as 37.5)
+         * This is important because the security token is based on width and height
+         * and therefore the fetch will failed
+         */
+        return intval($linkWidth);
     }
 
     /**
@@ -343,9 +360,29 @@ class Image extends InternalMedia
             $linkHeight = $linkHeight * ($localWidth / $this->getMediaWidth());
         }
 
-        // Return
-        return $linkHeight;
+        /**
+         * Rounding to integer
+         * The fetch.php file takes int as value for width and height
+         * making a rounding if we pass a double (such as 37.5)
+         * This is important because the security token is based on width and height
+         * and therefore the fetch will failed
+         */
+        return intval($linkHeight);
 
+    }
+
+    public function setLazyLoad($false)
+    {
+        $this->lazyLoad = $false;
+    }
+
+    public function getLazyLoad()
+    {
+        if ($this->lazyLoad !== null) {
+            return $this->lazyLoad;
+        } else {
+            return PluginUtility::getConfValue(self::CONF_LAZY_LOAD_IMAGE_ENABLE);
+        }
     }
 
 

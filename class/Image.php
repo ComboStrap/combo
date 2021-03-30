@@ -12,24 +12,19 @@
 
 namespace ComboStrap;
 
+require_once(__DIR__ . '/InternalMedia.php');
 
-class Image
+/**
+ * Image
+ * This is the class that handles the
+ * image type of the dokuwiki {@link InternalMedia}
+ */
+class Image extends InternalMedia
 {
 
-
-    /**
-     * Image, video or just file
-     */
-    const INTERNAL_MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
     const CANONICAL = "image";
 
-    /**
-     * The dokuwiki mode name
-     * for an internal media
-     */
-    const INTERNAL_MEDIA = "internalmedia";
 
-    private $id;
     private $imageWidth;
     /**
      * @var int
@@ -41,134 +36,29 @@ class Image
      */
     private $imageType;
     private $wasAnalyzed = false;
-    /**
-     * @var mixed
-     */
-    private $mime;
+
     /**
      * @var bool
      */
     private $analyzable = false;
-    private $description = null;
 
     /**
-     * @var string the alt attribute value (known as the title for dokuwiki)
+     * @var mixed - the mime from the {@link Image::analyzeImageIfNeeded()}
      */
-    private $alt;
+    private $mime;
 
-    private $class;
-    private $cache;
-
-    /**
-     * @var int The requested height on the link
-     */
-    private $linkHeight;
-    /**
-     * @var int The requested with on the link
-     */
-    private $linkWidth;
-
-    /**
-     * Link value:
-     *   * 'nolink'
-     *   * 'direct': directly to the image
-     *   * 'linkonly': show only a url
-     *   * 'details': go to the details media viewer
-     *
-     * @var
-     */
-    private $linking;
-
-    /**
-     * Render attribute
-     *   * 'center'
-     *   * 'right'
-     *   * 'left'
-     */
-    private $align;
-
-
-    /**
-     * Image constructor.
-     * @param $id
-     */
-    public function __construct($id)
-    {
-        /**
-         * The id of image should starts with the root `:`
-         * otherwise the image does not exist
-         * It should then not be {@link cleanID()}
-         */
-        $this->id = cleanID($id);
-        if ($id != $this->id) {
-            LogUtility::msg("The image id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-        }
-    }
-
-    /**
-     * Create an image from internal call media attributes
-     * @param array $callAttributes
-     * @return Image
-     */
-    public static function createFromCallAttributes(array $callAttributes)
-    {
-        $id = $callAttributes[0]; // path
-        $title = $callAttributes[1];
-        $align = $callAttributes[2]; // not sure what to do with that
-        $width = $callAttributes[3];
-        $height = $callAttributes[4];
-        $cache = $callAttributes[5];// not sure what to do with that
-        $linking = $callAttributes[6];// not sure what to do with that
-        $image = new Image($id);
-        $image->setTitle($title);
-        $image->setImageWidth($width);
-        $image->setImageHeight($height);
-        $image->setCache($cache);
-        $image->setLinking($linking);
-        $image->setAlign($align);
-        return $image;
-
-    }
-
-    /**
-     * @param $attributes - the attributes created by the function {@link Image::parse()}
-     * @return Image
-     */
-    public static function createFromRenderAttributes($attributes)
-    {
-        $src = $attributes['src'];
-        $image = new Image($src);
-
-        $width = $attributes['width'];
-        $image->setImageWidth($width);
-        $height = $attributes['height'];
-        $image->setImageHeight($height);
-        $title = $attributes['title'];
-        $image->setTitle($title);
-        $class = $attributes['class'];
-        $image->setClass($class);
-        $linking = $attributes['linking'];
-        $image->setLinking($linking);
-        return $image;
-
-    }
-
-    public function getAlt()
-    {
-        return $this->alt;
-    }
 
     public function getUrl($absolute = true)
     {
 
-        if ($this->exists()) {
+        if (InternalMedia::exists($this)) {
 
             $att = array();
-            if (!empty($this->getLinkWidth())) {
-                $att['w'] = $this->getLinkWidth();
+            if (!empty($this->getImgTagWidthValue())) {
+                $att['w'] = $this->getImgTagWidthValue();
             }
-            if (!empty($this->getLinkHeight())) {
-                $att['h'] = $this->getLinkHeight();
+            if (!empty($this->getImgTagHeightValue())) {
+                $att['h'] = $this->getImgTagHeightValue();
             }
             if ($this->getCache()) {
                 $att['cache'] = $this->getCache();
@@ -190,24 +80,6 @@ class Image
 
     }
 
-    public function exists()
-    {
-
-        return file_exists($this->getFsPath());
-
-    }
-
-
-    /**
-     * Parse the img dokuwiki syntax
-     * The output can be used to create an image object with the {@link Image::createFromRenderAttributes()} function
-     * @param $match
-     * @return array
-     */
-    public static function parse($match)
-    {
-        return Doku_Handler_Parse_Media($match);
-    }
 
     /**
      * Render a link
@@ -215,7 +87,7 @@ class Image
      * A media can be a video also (Use
      * @return string
      */
-    public function renderImgHtmlTag()
+    public function renderMediaTag()
     {
 
         if ($this->exists()) {
@@ -241,41 +113,36 @@ class Image
             if (!empty($this->getTitle())) {
                 $imgHTML .= ' alt = "' . $this->getTitle() . '"';
             }
-            if (!empty($this->getLinkWidth())) {
-                $imgHTML .= ' width = "' . $this->getLinkWidth() . '"';
+            if (!empty($this->getImgTagWidthValue())) {
+                $imgHTML .= ' width = "' . $this->getImgTagWidthValue() . '"';
             }
-            if (!empty($this->getLinkHeight())) {
-                $imgHTML .= ' height = "' . $this->getLinkHeight() . '"';
+            if (!empty($this->getImgTagHeightValue())) {
+                $imgHTML .= ' height = "' . $this->getImgTagHeightValue() . '"';
             }
 
             $imgHTML .= ' > ';
 
         } else {
 
-            $id = $this->getId();
-            $imgHTML = "<span class=\"text-danger\">The image ($id) does not exist</span>";
+            $imgHTML = "<span class=\"text-danger\">The image ($this) does not exist</span>";
 
         }
         return $imgHTML;
     }
 
-    function isImage($text)
-    {
-        return preg_match(' / ' . self::INTERNAL_MEDIA_PATTERN . ' / msSi', $text);
-    }
-
-    private function getFsPath()
-    {
-        return mediaFN($this->id);
-    }
-
-    public function getImageWidth()
+    /**
+     * @return int - the width of the image from the file
+     */
+    public function getMediaWidth()
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWidth;
     }
 
-    public function getImageHeight()
+    /**
+     * @return int - the height of the image from the file
+     */
+    public function getMediaHeight()
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWeight;
@@ -286,16 +153,16 @@ class Image
 
         if (!$this->wasAnalyzed) {
 
-            if ($this->exists()) {
+            if (InternalMedia::exists($this)) {
                 /**
                  * Based on {@link media_image_preview_size()}
                  * $dimensions = media_image_preview_size($this->id, '', false);
                  */
                 $imageInfo = array();
-                $imageSize = getimagesize(mediaFN($this->id), $imageInfo);
+                $imageSize = getimagesize(InternalMedia::getPath($this), $imageInfo);
                 if ($imageSize === false) {
                     $this->analyzable = false;
-                    LogUtility::msg("The image ($this->id) could not be analyzed", LogUtility::LVL_MSG_ERROR, "image");
+                    LogUtility::msg("The image ($this) could not be analyzed", LogUtility::LVL_MSG_ERROR, "image");
                 } else {
                     $this->analyzable = true;
                 }
@@ -315,25 +182,6 @@ class Image
 
     }
 
-    public function getMime()
-    {
-
-//        $this->analyzeIfNeeded();
-//        $mime = $this->mime;
-//        if ($mime == null) {
-//            if (!empty($this->imagetype)) {
-//                $mime = image_type_to_mime_type($this->imageType);
-//            }
-//        }
-        return mimetype($this->id);
-
-
-    }
-
-    public function __toString()
-    {
-        return $this->id;
-    }
 
     /**
      *
@@ -346,130 +194,31 @@ class Image
 
     }
 
-    public function getId()
-    {
-        return $this->id;
-    }
+
+
 
     /**
-     * @return string the wiki syntax
+     * @return int - the width value attribute in a img
      */
-    public function getMarkupSyntax()
-    {
-        $descriptionPart = $this->description != null ? "|$this->description" : "";
-        return '{{' . $this->id . $descriptionPart . '}}';
-    }
-
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    }
-
-    public function getDescription()
-    {
-        return $this->description;
-    }
-
-    /**
-     * @param $title - the alt of the link
-     */
-    private function setTitle($title)
-    {
-        $this->alt = $title;
-    }
-
-    private function setAlt($title)
-    {
-        $this->alt = $title;
-    }
-
-    private function setImageWidth($width)
-    {
-        $this->imageWidth = $width;
-    }
-
-    private function setImageHeight($height)
-    {
-        $this->imageWeight = $height;
-    }
-
-    /**
-     * Return the same array than with the {@link Image::parse()} method
-     * that is used in the renderer
-     */
-    public function toAttributes()
-    {
-//        'type'=>$call,
-//        'src'=>$src,
-//        'title'=>$link[1],
-//        'align'=>$align,
-//        'width'=>$w,
-//        'height'=>$h,
-//        'cache'=>$cache,
-//        'linking'=>$linking,
-    }
-
-    private function setClass($class)
-    {
-        $this->class = $class;
-    }
-
-    private function getClass()
-    {
-        return $this->class;
-    }
-
-    private function getCache()
-    {
-        return $this->cache;
-    }
-
-    private function getTitle()
-    {
-        return $this->getAlt();
-    }
-
-    private function setCache($cache)
-    {
-        $this->cache = $cache;
-    }
-
-    private function getRequestedHeight()
-    {
-        return $this->linkHeight;
-    }
-
-    private function getRequestedWidth()
-    {
-        return $this->linkWidth;
-    }
-
-    private function getLinkWidth()
+    private function getImgTagWidthValue()
     {
         $linkWidth = $this->getRequestedWidth();
         if (empty($linkWidth)) {
-            $linkWidth = $this->getImageWidth();
+            $linkWidth = $this->getMediaWidth();
         }
         return $linkWidth;
     }
 
-    private function getLinkHeight()
+    /**
+     * @return int the height value attribute in a img
+     */
+    private function getImgTagHeightValue()
     {
         $linkHeight = $this->getRequestedHeight();
         if (empty($linkHeight)) {
-            $linkHeight = $this->getImageHeight();
+            $linkHeight = $this->getMediaHeight();
         }
         return $linkHeight;
-    }
-
-    private function setLinking($linking)
-    {
-        $this->linking = $linking;
-    }
-
-    private function setAlign($align)
-    {
-        $this->align = $align;
     }
 
 

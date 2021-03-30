@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\Image;
+use ComboStrap\InternalMedia;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -146,7 +147,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
             $defaultImageIdConf = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE));
             if (!empty($defaultImageIdConf)) {
                 $twitterImage = new Image($defaultImageIdConf);
-                if ($twitterImage->exists()) {
+                if (InternalMedia::exists($twitterImage)) {
                     $twitterImages[] = $twitterImage;
                 } else {
                     if ($defaultImageIdConf != "apple-touch-icon.png") {
@@ -158,7 +159,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         }
         if (!empty($twitterImages)) {
             foreach ($twitterImages as $twitterImage) {
-                if ($twitterImage->exists()) {
+                if (InternalMedia::exists($twitterImage)) {
                     $twitterMeta[self::META_IMAGE] = $twitterImage->getAbsoluteUrl();
                     if (!empty($twitterImage->getAlt())) {
                         $twitterMeta[self::META_IMAGE_ALT] = $twitterImage->getAlt();

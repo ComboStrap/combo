@@ -36,7 +36,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     /**
      * The card body html
      * It's created as a constant because
-     * the below card property such as {@link syntax_plugin_combo_img}
+     * the below card property such as {@link syntax_plugin_combo_media}
      * may remove it if they are used
      */
     const CARD_BODY = '<div class="card-body">' . DOKU_LF;
@@ -220,7 +220,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 $firstDescendant = $openingTag->getFirstMeaningFullDescendant();
-                if ($firstDescendant->getName() == syntax_plugin_combo_img::TAG) {
+                if ($firstDescendant->getName() == syntax_plugin_combo_media::TAG) {
                     $openingTag->addAttribute(self::HAS_IMAGE_ILLUSTRATION_KEY, true);
                 }
                 $context = $openingTag->getContext();

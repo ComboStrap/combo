@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Image;
+use ComboStrap\InternalMedia;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
@@ -120,14 +121,14 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
                 $tag = new Tag(self::TAG,array(),$state,$handler);
                 $openingTag = $tag->getOpeningTag();
-                $callImage = $openingTag->getDescendant(syntax_plugin_combo_img::TAG);
+                $callImage = $openingTag->getDescendant(syntax_plugin_combo_media::TAG);
                 if ($callImage==null){
-                    $callImage = $openingTag->getDescendant(Image::INTERNAL_MEDIA);
+                    $callImage = $openingTag->getDescendant(InternalMedia::INTERNAL_MEDIA);
                 }
                 if ($callImage!=null) {
                     $callImage->deleteCall();
-                    $image =  Image::createFromCallAttributes($callImage->getAttributes());
-                    $openingTag->setAttribute("img",$image->toAttributes());
+                    $image = InternalMedia::createFromCallAttributes($callImage->getAttributes());
+                    $openingTag->setAttribute("img",$image->getAttributes());
                 }
                 return array(
                     PluginUtility::STATE => $state
@@ -158,7 +159,6 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if ()
                     $renderer->doc .= '<div';
                     if (sizeof($attributes) > 0) {
                         $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributes($attributes);

@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\Image;
+use ComboStrap\InternalMedia;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -187,17 +188,17 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 $schemaImages = array();
                 foreach ($imagesSet as $imageId) {
                     $image = new Image($imageId);
-                    if ($image->exists()) {
+                    if (InternalMedia::exists($image)) {
                         $imageObjectSchema = array(
                             "@type" => "ImageObject",
                             "url" => $image->getAbsoluteUrl()
                         );
                         if ($image->isAnalyzable()) {
-                            if (!empty($image->getImageWidth())) {
-                                $imageObjectSchema["width"] = $image->getImageWidth();
+                            if (!empty($image->getMediaWidth())) {
+                                $imageObjectSchema["width"] = $image->getMediaWidth();
                             }
-                            if (!empty($image->getImageHeight())) {
-                                $imageObjectSchema["height"] = $image->getImageHeight();
+                            if (!empty($image->getMediaHeight())) {
+                                $imageObjectSchema["height"] = $image->getMediaHeight();
                             }
                         }
                         $schemaImages[] = $imageObjectSchema;

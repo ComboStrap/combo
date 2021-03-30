@@ -5,6 +5,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Image;
+use ComboStrap\InternalMedia;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TitleUtility;
@@ -15,10 +16,9 @@ if (!defined('DOKU_INC')) die();
 
 
 /**
- * Card image
- * Title
+ * Internal media
  */
-class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 {
 
     // The > in the pattern below is to be able to handle plugin
@@ -26,7 +26,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
     // https://github.com/cosmocode/changes/blob/master/syntax.php
 
 
-    const TAG = "img";
+    const TAG = "media";
 
     /**
      * Used in the move plugin
@@ -79,7 +79,7 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
             PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
         ];
         if (in_array($mode, $modes)) {
-            $this->Lexer->addSpecialPattern(Image::INTERNAL_MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(InternalMedia::INTERNAL_MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
 
@@ -92,13 +92,13 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
 
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
-                $attributes = Image::parse($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler);
+                $media = InternalMedia::createFromRenderMatch($match);
+                $tag = new Tag(self::TAG, $media->getAttributes(), $state, $handler);
                 $parentTag = $tag->getParent()->getName();
                 $isFirstSibling = $tag->isFirstMeaningFullSibling();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::ATTRIBUTES => $media->getAttributes(),
                     PluginUtility::CONTEXT => $parentTag,
                     self::IS_FIRST_IMAGE_KEY => $isFirstSibling
                 );
@@ -130,15 +130,20 @@ class syntax_plugin_combo_img extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
                 $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
                 $context = $data[PluginUtility::CONTEXT];
-                if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {
+                $attributes = $data[PluginUtility::ATTRIBUTES];
+                $media = InternalMedia::createFromRenderAttributes($attributes);
+                if ($media->isImage()) {
 
-                    /**
-                     * First image of a card
-                     */
-                    PluginUtility::addClass2Attributes("card-img-top", $attributes);
-                    $renderer->doc .= Image::createFromRenderAttributes($attributes)->renderImgHtmlTag();
-                    $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
+                    if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {
 
+                        /**
+                         * First image of a card
+                         */
+                        $media->setClass("card-img-top");
+                        $renderer->doc .= $media->renderMediaTag();
+                        $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
+
+                    }
                 } else {
                     /**
                      * Renderer function

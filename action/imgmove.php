@@ -30,10 +30,10 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
     function handle_move(Doku_Event $event, $params)
     {
         /**
-         * The handlers is the name of the component (ie refers to the {@link syntax_plugin_combo_img} handler)
+         * The handlers is the name of the component (ie refers to the {@link syntax_plugin_combo_media} handler)
          * and 'move_combo_img' to the below method
          */
-        $event->data['handlers'][syntax_plugin_combo_img::COMPONENT] = array($this, 'move_combo_img');
+        $event->data['handlers'][syntax_plugin_combo_media::COMPONENT] = array($this, 'move_combo_img');
     }
 
     /**

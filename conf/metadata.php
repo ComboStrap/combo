@@ -2,6 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\Image;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
@@ -173,5 +174,14 @@ $meta[Page::CONF_DEFAULT_PAGE_TYPE] = array("string");
  */
 $meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
     Shadow::CONF_SMALL_LEVEL_VALUE,
-    Shadow::CONF_MEDIUM_LEVEL_VALUE
+    Shadow::CONF_MEDIUM_LEVEL_VALUE,
+    Shadow::CONF_LARGE_LEVEL_VALUE,
+    Shadow::CONF_EXTRA_LARGE_LEVEL_VALUE
 ));
+
+/**
+ * Lazy load image
+ */
+$meta[Image::CONF_LAZY_LOAD_IMAGE_ENABLE] = array('onoff');
+
+

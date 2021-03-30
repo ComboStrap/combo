@@ -23,6 +23,8 @@ class Image extends InternalMedia
 {
 
     const CANONICAL = "image";
+    const CONF_LAZY_LOAD_IMAGE_ENABLE = "lazyLoadImageEnable";
+    const LAZY_LOAD_SNIPPET_ID = "lazy-load";
 
 
     private $imageWidth;
@@ -48,18 +50,38 @@ class Image extends InternalMedia
     private $mime;
 
 
-    public function getUrl($absolute = true)
+    /**
+     * @param bool $absolute - use for semantic data
+     * @param null $localWidth - the asked width - use for responsive image
+     * @return string|null
+     */
+    public function getUrl($absolute = true, $localWidth = null)
     {
 
-        if (InternalMedia::exists($this)) {
+        if ($this->exists()) {
 
+            /**
+             * Link attribute
+             */
             $att = array();
-            if (!empty($this->getImgTagWidthValue())) {
-                $att['w'] = $this->getImgTagWidthValue();
+
+            // Width is driving the computation
+            $urlWidth = $localWidth;
+            if ($urlWidth == null) {
+                $urlWidth = $this->getImgTagWidthValue();
             }
-            if (!empty($this->getImgTagHeightValue())) {
-                $att['h'] = $this->getImgTagHeightValue();
+            if (!empty($urlWidth)) {
+
+                $att['w'] = $urlWidth;
+
+                // Height
+                $height = $this->getImgTagHeightValue($urlWidth);
+                if (!empty($height)) {
+                    $att['h'] = $height;
+                }
+
             }
+
             if ($this->getCache()) {
                 $att['cache'] = $this->getCache();
             }
@@ -95,8 +117,40 @@ class Image extends InternalMedia
             $imgHTML = '<img ';
 
             /**
+             * Snippet
+             */
+            if (PluginUtility::getConfValue(self::CONF_LAZY_LOAD_IMAGE_ENABLE)) {
+                $snippetManager = PluginUtility::getSnippetManager();
+                /**
+                 * The library
+                 * https://github.com/aFarkas/lazysizes
+                 */
+                $snippetManager->upsertHeadTagsForBar(self::LAZY_LOAD_SNIPPET_ID,
+                    array(
+                        'script' => [
+                            array(
+                                "src" => "https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js",
+                                "integrity" => "sha256-bmG+LzdKASJRACVXiUC69++Nu8rz7MX1U1z8gb0c/Tk=",
+                                "crossorigin" => "anonymous"
+                            )
+                        ]
+                    )
+                );
+                /**
+                 * The Spinner effect
+                 * lazysizes adds the class lazy loading while the images are loading
+                 * and the class lazyloaded as soon as the image is loaded.
+                 */
+                $snippetManager->upsertCssSnippetForBar(self::LAZY_LOAD_SNIPPET_ID);
+
+            }
+
+            /**
              * Class
              */
+            if (PluginUtility::getConfValue(self::CONF_LAZY_LOAD_IMAGE_ENABLE)) {
+                $this->addClass("lazyload");
+            }
             if (!empty($this->getClass())) {
                 $imgHTML .= ' class="' . $this->getClass() . '"';
             }
@@ -105,7 +159,53 @@ class Image extends InternalMedia
              * Src
              */
             $srcValue = $this->getUrl();
-            $imgHTML .= " src=\"$srcValue\"";
+            if (PluginUtility::getConfValue(self::CONF_LAZY_LOAD_IMAGE_ENABLE)) {
+
+                // Modern transparent srcset pattern
+                // normal src attribute with a transparent or low quality image as srcset value
+                // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
+                $imgHTML .= " src=\"$srcValue\"";
+                $imgHTML .= " srcset=\"data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\"";
+
+                // Responsive image src set building
+                $srcSet = "";
+                $widthValue = $this->getImgTagWidthValue();
+                $smWidth = 300;
+                if ($widthValue > $smWidth){
+                    $src300Url = $this->getUrl(true, $smWidth);
+                    $srcSet = "$src300Url $smWidth";
+                }
+                $mediumWith = 600;
+                if ($widthValue > $mediumWith){
+                    $srcMediumUrl = $this->getUrl(true, $mediumWith);
+                    if (!empty($srcSet)){
+                        $srcSet .= ", ";
+                    }
+                    $srcSet .= "$srcMediumUrl $mediumWith";
+                }
+                $largeWidth = 900;
+                if ($widthValue > $largeWidth){
+                    $srcLargeUrl = $this->getUrl(true, $largeWidth);
+                    if (!empty($srcSet)){
+                        $srcSet .= ", ";
+                    }
+                    $srcSet .= "$srcLargeUrl $largeWidth";
+                }
+                if(!empty($srcSet)) {
+                    $imgHTML .= " data-sizes=\"auto\" data-srcset=\"$srcSet\"";
+                }
+
+
+            } else {
+                $imgHTML .= " src=\"$srcValue\"";
+                if (!empty($this->getImgTagWidthValue())) {
+                    $imgHTML .= ' width = "' . $this->getImgTagWidthValue() . '"';
+                }
+                if (!empty($this->getImgTagHeightValue())) {
+                    $imgHTML .= ' height = "' . $this->getImgTagHeightValue() . '"';
+                }
+            }
+
 
             /**
              * Title
@@ -113,12 +213,7 @@ class Image extends InternalMedia
             if (!empty($this->getTitle())) {
                 $imgHTML .= ' alt = "' . $this->getTitle() . '"';
             }
-            if (!empty($this->getImgTagWidthValue())) {
-                $imgHTML .= ' width = "' . $this->getImgTagWidthValue() . '"';
-            }
-            if (!empty($this->getImgTagHeightValue())) {
-                $imgHTML .= ' height = "' . $this->getImgTagHeightValue() . '"';
-            }
+
 
             $imgHTML .= ' > ';
 
@@ -195,8 +290,6 @@ class Image extends InternalMedia
     }
 
 
-
-
     /**
      * @return int - the width value attribute in a img
      */
@@ -204,21 +297,55 @@ class Image extends InternalMedia
     {
         $linkWidth = $this->getRequestedWidth();
         if (empty($linkWidth)) {
-            $linkWidth = $this->getMediaWidth();
+            if (empty($this->getRequestedHeight())) {
+
+                $linkWidth = $this->getMediaWidth();
+
+            } else {
+
+                // Height is not empty
+                // We derive the width from it
+                if ($this->getMediaHeight() != 0
+                    && !empty($this->getMediaHeight())
+                    && !empty($this->getMediaWidth())
+                ) {
+                    $linkWidth = $this->getMediaWidth() * ($this->getRequestedHeight() / $this->getMediaHeight());
+                }
+
+            }
         }
         return $linkWidth;
     }
 
     /**
+     * @param null $localWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
      * @return int the height value attribute in a img
      */
-    private function getImgTagHeightValue()
+    private function getImgTagHeightValue($localWidth = null)
     {
+
+        /**
+         * Height default
+         */
         $linkHeight = $this->getRequestedHeight();
         if (empty($linkHeight)) {
             $linkHeight = $this->getMediaHeight();
         }
+
+        /**
+         * Scale the height by size parameter
+         */
+        if (!empty($linkHeight) &&
+            !empty($localWidth) &&
+            !empty($this->getMediaWidth()) &&
+            $this->getMediaWidth() != 0
+        ) {
+            $linkHeight = $linkHeight * ($localWidth / $this->getMediaWidth());
+        }
+
+        // Return
         return $linkHeight;
+
     }
 
 

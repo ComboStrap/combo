@@ -2,6 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\Image;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
@@ -152,5 +153,10 @@ $lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default
  * Default Shadow level
  */
 $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "The default level applied to a shadow attributes");
+
+/**
+ * Lazy load image
+ */
+$lang[Image::CONF_LAZY_LOAD_IMAGE_ENABLE] = PluginUtility::getUrl(Image::CANONICAL, "Load the image only when they become visible");
 
 ?>

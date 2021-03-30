@@ -139,7 +139,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                         /**
                          * First image of a card
                          */
-                        $media->setClass("card-img-top");
+                        $media->addClass("card-img-top");
                         $renderer->doc .= $media->renderMediaTag();
                         $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
 

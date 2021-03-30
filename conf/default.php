@@ -210,3 +210,9 @@ $conf["defaultPageType"] = "article";
  * {@link \ComboStrap\Shadow::CONF_DEFAULT_VALUE}
  */
 $conf["defaultShadowLevel"] = "medium";
+
+/**
+ * Lazy loading {@link \ComboStrap\Image::CONF_LAZY_LOAD_IMAGE_ENABLE}
+ */
+$conf["lazyLoadImageEnable"] = 1;
+

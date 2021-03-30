@@ -141,7 +141,7 @@ class InternalMedia
         $title = $attributes['title'];
         $media->setTitle($title);
         $class = $attributes['class'];
-        $media->setClass($class);
+        $media->addClass($class);
         $linking = $attributes['linking'];
         $media->setLinking($linking);
         return $media;
@@ -241,7 +241,11 @@ class InternalMedia
 
     public function getRequestedWidth()
     {
-        return $this->linkWidth;
+        if ($this->linkWidth==0){
+            return null; // empty
+        } else {
+            return $this->linkWidth;
+        }
     }
 
     public function setRequestedWidth($width)
@@ -259,9 +263,13 @@ class InternalMedia
         $this->align = $align;
     }
 
-    public function setClass($class)
+    public function addClass($class)
     {
-        $this->class = $class;
+        if(empty($this->class)) {
+            $this->class = $class;
+        } else {
+            $this->class .= " $class";
+        }
     }
 
     protected function getClass()

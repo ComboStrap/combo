@@ -188,7 +188,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 $schemaImages = array();
                 foreach ($imagesSet as $imageId) {
                     $image = new Image($imageId);
-                    if (InternalMedia::exists($image)) {
+                    if ($image->exists()) {
                         $imageObjectSchema = array(
                             "@type" => "ImageObject",
                             "url" => $image->getAbsoluteUrl()

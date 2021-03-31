@@ -1,5 +1,9 @@
 # Combo
 
+> Volatile WebSite Generator based on Easy Markup File, Bootstrap Styled, and the power of the DokuWiki Platform
+
+![ComboStrap - Easy Markup WebSite Generator](./resources/images/banner-combostrap.png "combostrap website bootstrap dokuwiki")
+
 ## About
 
 [ComboStrap](https://combostrap.com) provides:

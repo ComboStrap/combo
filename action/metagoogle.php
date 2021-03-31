@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\Image;
+use ComboStrap\RasterImage;
 use ComboStrap\InternalMedia;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
@@ -187,7 +187,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 $imagesSet = $page->getImageSet();
                 $schemaImages = array();
                 foreach ($imagesSet as $imageId) {
-                    $image = new Image($imageId);
+                    $image = new RasterImage($imageId);
                     if ($image->exists()) {
                         $imageObjectSchema = array(
                             "@type" => "ImageObject",

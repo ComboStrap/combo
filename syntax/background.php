@@ -2,7 +2,7 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\Image;
+use ComboStrap\RasterImage;
 use ComboStrap\InternalMedia;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -21,6 +21,10 @@ if (!defined('DOKU_INC')) die();
  * https://codepen.io/uzoawili/pen/GypGOy
  * Fire flies
  * https://codepen.io/mikegolus/pen/Jegvym
+ *
+ * z-index:100 could also be on the front
+ * https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/Stacking_without_z-index
+ * https://getbootstrap.com/docs/5.0/layout/z-index/
  */
 class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 {

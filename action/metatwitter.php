@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\Image;
+use ComboStrap\RasterImage;
 use ComboStrap\InternalMedia;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
@@ -146,7 +146,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (empty($twitterImages)) {
             $defaultImageIdConf = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE));
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = new Image($defaultImageIdConf);
+                $twitterImage = new RasterImage($defaultImageIdConf);
                 if ($twitterImage->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {

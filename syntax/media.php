@@ -4,13 +4,13 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
 // must be run within Dokuwiki
-use ComboStrap\Image;
+use ComboStrap\RasterImage;
 use ComboStrap\InternalMedia;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TitleUtility;
 
-require_once(__DIR__ . '/../class/Image.php');
+require_once(__DIR__ . '/../class/RasterImage.php');
 
 if (!defined('DOKU_INC')) die();
 
@@ -40,8 +40,6 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      *
      */
     const IS_FIRST_IMAGE_KEY = "isFirstImage";
-
-
 
 
     function getType()
@@ -76,8 +74,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        $enable = $this->getConf(Image::CONF_LAZY_LOAD_IMAGE_ENABLE);
-        if (!$enable){
+        $enable = $this->getConf(RasterImage::CONF_LAZY_LOAD_IMAGE_ENABLE);
+        if (!$enable) {
 
             // Inside a card, we need to take over
             $modes = [
@@ -102,7 +100,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
                 $attributes = InternalMedia::getParseAttributes($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
-                $parentTag = $tag->getParent()->getName();
+                $parent = $tag->getParent();
+                $parentTag = "";
+                if (!empty($parent)) {
+                    $parentTag = $parent->getName();
+                }
                 $isFirstSibling = $tag->isFirstMeaningFullSibling();
                 return array(
                     PluginUtility::STATE => $state,

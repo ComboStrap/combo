@@ -65,7 +65,6 @@ class IconUtility
 
         try {
             /** @noinspection PhpComposerExtensionStubsInspection */
-            /** @noinspection PhpUndefinedVariableInspection */
             $mediaSvgXml = simplexml_load_file($mediaFile);
         } catch (\Exception $e) {
             /**

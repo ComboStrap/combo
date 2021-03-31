@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\Image;
+use ComboStrap\RasterImage;
 use ComboStrap\InternalMedia;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
@@ -12,7 +12,7 @@ use ComboStrap\StringUtility;
 if (!defined('DOKU_INC')) die();
 
 require_once(__DIR__ . '/../class/Site.php');
-require_once(__DIR__ . '/../class/Image.php');
+require_once(__DIR__ . '/../class/RasterImage.php');
 
 /**
  *
@@ -108,13 +108,13 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
         /**
-         * @var Image[]
+         * @var RasterImage[]
          */
         $facebookImages = $page->getImageSet();
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = new Image($defaultFacebookImage);
+                $image = new RasterImage($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {

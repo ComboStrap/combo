@@ -1005,7 +1005,7 @@ class Page
             if (empty($firstImage)) {
                 return null;
             } else {
-                return new Image($firstImage);
+                return new RasterImage($firstImage);
             }
         }
         return null;
@@ -1016,7 +1016,7 @@ class Page
      * An array of images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
-     * @return Image[]
+     * @return RasterImage[]
      */
     public
     function getImageSet()
@@ -1032,10 +1032,10 @@ class Page
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = new Image(cleanID($imageIdFromMeta));
+                    $images[] = new RasterImage(cleanID($imageIdFromMeta));
                 }
             } else {
-                $images = array(new Image(cleanID($imageMeta)));
+                $images = array(new RasterImage(cleanID($imageMeta)));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
@@ -1050,7 +1050,7 @@ class Page
 
 
     /**
-     * @return Image|null
+     * @return RasterImage|null
      */
     public
     function getImage()

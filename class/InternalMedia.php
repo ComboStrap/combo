@@ -31,6 +31,7 @@ class InternalMedia
 
     private $id;
 
+    private $lazyLoad = null;
 
     /**
      * @var string the alt attribute value (known as the title for dokuwiki)
@@ -132,7 +133,7 @@ class InternalMedia
 
     /**
      * @param $attributes - the attributes created by the function {@link InternalMedia::getParseAttributes()}
-     * @return Image
+     * @return RasterImage
      */
     public static function createFromRenderAttributes($attributes)
     {
@@ -158,6 +159,16 @@ class InternalMedia
         return self::createFromRenderAttributes(self::getParseAttributes($match));
     }
 
+    public function setLazyLoad($false)
+    {
+        $this->lazyLoad = $false;
+    }
+
+    public function getLazyLoad()
+    {
+        return $this->lazyLoad;
+    }
+
     public function getMime()
     {
 
@@ -179,13 +190,17 @@ class InternalMedia
 
     /**
      * @param $id
-     * @return Image|InternalMedia
+     * @return RasterImage|InternalMedia
      */
     private static function instantiateMedia($id)
     {
         $mime = mimetype($id)[1];
         if (substr($mime, 0, 5) == 'image') {
-            $internalMedia = new Image($id);
+            if (substr($mime,6)=="svg+xml"){
+                $internalMedia = new SvgImage($id);
+            } else {
+                $internalMedia = new RasterImage($id);
+            }
         } else {
             $internalMedia = new InternalMedia($id);
         }

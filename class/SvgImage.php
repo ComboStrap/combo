@@ -20,12 +20,11 @@ require_once(__DIR__ . '/PluginUtility.php');
  * This is the class that handles the
  * image type of the dokuwiki {@link InternalMedia}
  */
-class Image extends InternalMedia
+class SvgImage extends InternalMedia
 {
 
-    const CANONICAL = "image";
-    const CONF_LAZY_LOAD_IMAGE_ENABLE = "lazyLoadImageEnable";
-    const LAZY_LOAD_SNIPPET_ID = "lazy-load";
+    const CANONICAL = "svg";
+
 
 
     private $imageWidth;
@@ -40,50 +39,21 @@ class Image extends InternalMedia
     private $imageType;
     private $wasAnalyzed = false;
 
-    /**
-     * @var bool
-     */
-    private $analyzable = false;
-
-    /**
-     * @var mixed - the mime from the {@link Image::analyzeImageIfNeeded()}
-     */
-    private $mime;
-    private $lazyLoad = null;
-
 
     /**
      * @param bool $absolute - use for semantic data
-     * @param null $localWidth - the asked width - use for responsive image
      * @return string|null
      */
-    public function getUrl($absolute = true, $localWidth = null)
+    public function getUrl($absolute = true)
     {
 
         if ($this->exists()) {
 
             /**
              * Link attribute
+             * No width and height
              */
             $att = array();
-
-            // Width is driving the computation
-            $urlWidth = $localWidth;
-            if ($urlWidth == null) {
-                $urlWidth = $this->getImgTagWidthValue();
-            }
-            if (!empty($urlWidth)) {
-
-                $att['w'] = $urlWidth;
-
-                // Height
-                $height = $this->getImgTagHeightValue($urlWidth);
-                if (!empty($height)) {
-                    $att['h'] = $height;
-                }
-
-            }
-
             if ($this->getCache()) {
                 $att['cache'] = $this->getCache();
             }
@@ -123,29 +93,7 @@ class Image extends InternalMedia
              * Snippet
              */
             if ($lazyLoad) {
-                $snippetManager = PluginUtility::getSnippetManager();
-                /**
-                 * The library
-                 * https://github.com/aFarkas/lazysizes
-                 */
-                $snippetManager->upsertHeadTagsForBar(self::LAZY_LOAD_SNIPPET_ID,
-                    array(
-                        'script' => [
-                            array(
-                                "src" => "https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js",
-                                "integrity" => "sha256-bmG+LzdKASJRACVXiUC69++Nu8rz7MX1U1z8gb0c/Tk=",
-                                "crossorigin" => "anonymous"
-                            )
-                        ]
-                    )
-                );
-                /**
-                 * The Spinner effect
-                 * lazysizes adds the class lazy loading while the images are loading
-                 * and the class lazyloaded as soon as the image is loaded.
-                 */
-                $snippetManager->upsertCssSnippetForBar(self::LAZY_LOAD_SNIPPET_ID);
-
+                LazyLoad::addSnippet();
             }
 
             /**
@@ -174,36 +122,14 @@ class Image extends InternalMedia
                  * max-width as asked
                  */
                 $widthValue = $this->getImgTagWidthValue();
-                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
+                if(!empty($widthValue)) {
+                    $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
+                }
 
                 /**
-                 * Responsive image src set building
+                 * Responsive image src set
+                 * is not needed for svg
                  */
-                $srcSet = "";
-                $smWidth = 300;
-                if ($widthValue > $smWidth) {
-                    $src300Url = $this->getUrl(true, $smWidth);
-                    $srcSet = "$src300Url {$smWidth}w";
-                }
-                $mediumWith = 600;
-                if ($widthValue > $mediumWith) {
-                    $srcMediumUrl = $this->getUrl(true, $mediumWith);
-                    if (!empty($srcSet)) {
-                        $srcSet .= ", ";
-                    }
-                    $srcSet .= "$srcMediumUrl {$mediumWith}w";
-                }
-                $largeWidth = 900;
-                if ($widthValue > $largeWidth) {
-                    $srcLargeUrl = $this->getUrl(true, $largeWidth);
-                    if (!empty($srcSet)) {
-                        $srcSet .= ", ";
-                    }
-                    $srcSet .= "$srcLargeUrl {$largeWidth}w";
-                }
-                if (!empty($srcSet)) {
-                    $imgHTML .= " data-sizes=\"auto\" data-srcset=\"$srcSet\"";
-                }
 
 
             } else {
@@ -229,7 +155,7 @@ class Image extends InternalMedia
 
         } else {
 
-            $imgHTML = "<span class=\"text-danger\">The image ($this) does not exist</span>";
+            $imgHTML = "<span class=\"text-danger\">The svg ($this) does not exist</span>";
 
         }
         return $imgHTML;
@@ -240,7 +166,6 @@ class Image extends InternalMedia
      */
     public function getMediaWidth()
     {
-        $this->analyzeImageIfNeeded();
         return $this->imageWidth;
     }
 
@@ -249,54 +174,7 @@ class Image extends InternalMedia
      */
     public function getMediaHeight()
     {
-        $this->analyzeImageIfNeeded();
         return $this->imageWeight;
-    }
-
-    private function analyzeImageIfNeeded()
-    {
-
-        if (!$this->wasAnalyzed) {
-
-            if (InternalMedia::exists($this)) {
-                /**
-                 * Based on {@link media_image_preview_size()}
-                 * $dimensions = media_image_preview_size($this->id, '', false);
-                 */
-                $imageInfo = array();
-                $imageSize = getimagesize(InternalMedia::getPath($this), $imageInfo);
-                if ($imageSize === false) {
-                    $this->analyzable = false;
-                    LogUtility::msg("The image ($this) could not be analyzed", LogUtility::LVL_MSG_ERROR, "image");
-                } else {
-                    $this->analyzable = true;
-                }
-                $this->imageWidth = (int)$imageSize[0];
-                if (empty($this->imageWidth)) {
-                    $this->analyzable = false;
-                }
-                $this->imageWeight = (int)$imageSize[1];
-                if (empty($this->imageWeight)) {
-                    $this->analyzable = false;
-                }
-                $this->imageType = (int)$imageSize[2];
-                $this->mime = $imageSize[3];
-            }
-            $this->wasAnalyzed = true;
-        }
-
-    }
-
-
-    /**
-     *
-     * @return bool true if we could extract the dimensions
-     */
-    public function isAnalyzable()
-    {
-        $this->analyzeImageIfNeeded();
-        return $this->analyzable;
-
     }
 
 
@@ -369,20 +247,6 @@ class Image extends InternalMedia
          */
         return intval($linkHeight);
 
-    }
-
-    public function setLazyLoad($false)
-    {
-        $this->lazyLoad = $false;
-    }
-
-    public function getLazyLoad()
-    {
-        if ($this->lazyLoad !== null) {
-            return $this->lazyLoad;
-        } else {
-            return PluginUtility::getConfValue(self::CONF_LAZY_LOAD_IMAGE_ENABLE);
-        }
     }
 
 

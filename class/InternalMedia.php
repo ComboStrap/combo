@@ -12,7 +12,7 @@
 
 namespace ComboStrap;
 
-use http\Exception\RuntimeException;
+require_once(__DIR__ . '/SvgImage.php');
 
 /**
  * Class InternalMedia

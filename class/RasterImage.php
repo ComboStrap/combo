@@ -25,7 +25,7 @@ class RasterImage extends InternalMedia
 {
 
     const CANONICAL = "image";
-    const CONF_LAZY_LOAD_IMAGE_ENABLE = "lazyLoadImageEnable";
+    const CONF_LAZY_LOAD_ENABLE = "lazyLoadRasterImageEnable";
 
 
     private $imageWidth;
@@ -357,7 +357,7 @@ class RasterImage extends InternalMedia
         if ($lazyLoad !== null) {
             return $lazyLoad;
         } else {
-            return PluginUtility::getConfValue(RasterImage::CONF_LAZY_LOAD_IMAGE_ENABLE);
+            return PluginUtility::getConfValue(RasterImage::CONF_LAZY_LOAD_ENABLE);
         }
     }
 

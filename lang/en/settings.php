@@ -157,6 +157,6 @@ $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "Th
 /**
  * Lazy load image
  */
-$lang[RasterImage::CONF_LAZY_LOAD_IMAGE_ENABLE] = PluginUtility::getUrl(RasterImage::CANONICAL, "Load the image only when they become visible");
+$lang[RasterImage::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(RasterImage::CANONICAL, "Load the image only when they become visible");
 
 ?>

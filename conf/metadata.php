@@ -182,6 +182,6 @@ $meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
 /**
  * Lazy load image
  */
-$meta[RasterImage::CONF_LAZY_LOAD_IMAGE_ENABLE] = array('onoff');
+$meta[RasterImage::CONF_LAZY_LOAD_ENABLE] = array('onoff');
 
 

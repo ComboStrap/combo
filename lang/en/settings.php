@@ -13,6 +13,7 @@ use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
+use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
 require_once(__DIR__ . '/../../class/PluginUtility.php');
@@ -157,6 +158,7 @@ $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "Th
 /**
  * Lazy load image
  */
-$lang[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the image only when they become visible");
+$lang[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the raster image only when they become visible");
+$lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Load the svg only when they become visible");
 
 ?>

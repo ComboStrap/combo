@@ -108,7 +108,7 @@ class RasterImageLink extends InternalMediaLink
      * Render a link
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also (Use
-     * @param $attributes
+     * @param TagAttributes $attributes
      * @return string
      */
     public function renderMediaTag($attributes)
@@ -132,10 +132,10 @@ class RasterImageLink extends InternalMediaLink
              * Class
              */
             if ($lazyLoad) {
-                $this->getComponentAttributes()->addClassName(LazyLoad::getClass());
+                $attributes->addClassName(LazyLoad::getClass());
             }
-            if (!empty($this->getComponentAttributes()->getClass())) {
-                $imgHTML .= ' class="' . $this->getComponentAttributes()->getClass() . '"';
+            if (!empty($attributes->getClass())) {
+                $imgHTML .= ' class="' . $attributes->getClass() . '"';
             }
 
             /**

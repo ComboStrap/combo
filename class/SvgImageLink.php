@@ -31,6 +31,11 @@ class SvgImageLink extends InternalMediaLink
      */
     const DEFAULT_MAX_INLINE_SIZE = 2048; // 2kb
 
+    /**
+     * Lazy Load
+     */
+    const CONF_LAZY_LOAD_ENABLE = "lazyLoadSvgEnable";
+
 
     private $svgWidth;
     /**
@@ -58,7 +63,7 @@ class SvgImageLink extends InternalMediaLink
          * Class
          */
         if ($lazyLoad) {
-            $tagAttributes->addClassName("lazyload");
+            $tagAttributes->addClassName(LazyLoad::getClass());
         }
         if ($tagAttributes->hasAttribute("class")) {
             $imgHTML .= ' class="' . $tagAttributes->getClass() . '"';
@@ -70,11 +75,7 @@ class SvgImageLink extends InternalMediaLink
         $srcValue = $this->getUrl();
         if ($lazyLoad) {
 
-            // Modern transparent srcset pattern
-            // normal src attribute with a transparent or low quality image as srcset value
-            // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
-            $imgHTML .= " src=\"$srcValue\"";
-            $imgHTML .= " srcset=\"data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\"";
+            $imgHTML .= " data-src=\"$srcValue\"";
 
             /**
              * max-width as asked
@@ -293,5 +294,14 @@ class SvgImageLink extends InternalMediaLink
         return SvgFile::createFromId($this->getId());
     }
 
+    public function getLazyLoad()
+    {
+        $lazyLoad = parent::getLazyLoad();
+        if ($lazyLoad !== null) {
+            return $lazyLoad;
+        } else {
+            return PluginUtility::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
+        }
+    }
 
 }

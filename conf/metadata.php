@@ -12,6 +12,7 @@ use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
+use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -183,5 +184,10 @@ $meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
  * Lazy load image
  */
 $meta[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
+
+/**
+ * Lazy load image
+ */
+$meta[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
 
 

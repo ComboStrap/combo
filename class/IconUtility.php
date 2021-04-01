@@ -193,7 +193,7 @@ class IconUtility
             $tagAttributes->addAttributeValue("height", "24px");
             $tagAttributes->addAttributeValue("fill", "currentColor");
 
-            return $svgFile->getXmlText($tagAttributes);
+            return $svgFile->getOptimizedSvg($tagAttributes);
 
         } else {
 

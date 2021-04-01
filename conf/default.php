@@ -216,3 +216,8 @@ $conf["defaultShadowLevel"] = "medium";
  */
 $conf["lazyLoadRasterImageEnable"] = 1;
 
+/**
+ * Lazy loading {@link \ComboStrap\SvgImageLink::CONF_LAZY_LOAD_ENABLE}
+ */
+$conf["lazyLoadSvgEnable"] = 1;
+

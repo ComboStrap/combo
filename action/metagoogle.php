@@ -1,7 +1,7 @@
 <?php
 
-use ComboStrap\RasterImage;
-use ComboStrap\InternalMedia;
+use ComboStrap\RasterImageLink;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -187,8 +187,8 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 $imagesSet = $page->getImageSet();
                 $schemaImages = array();
                 foreach ($imagesSet as $imageId) {
-                    $image = new RasterImage($imageId);
-                    if ($image->exists()) {
+                    $image = new RasterImageLink($imageId);
+                    if ($image->getFile()->exists()) {
                         $imageObjectSchema = array(
                             "@type" => "ImageObject",
                             "url" => $image->getAbsoluteUrl()

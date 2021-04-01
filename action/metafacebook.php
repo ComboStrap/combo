@@ -1,7 +1,7 @@
 <?php
 
-use ComboStrap\RasterImage;
-use ComboStrap\InternalMedia;
+use ComboStrap\RasterImageLink;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -12,7 +12,7 @@ use ComboStrap\StringUtility;
 if (!defined('DOKU_INC')) die();
 
 require_once(__DIR__ . '/../class/Site.php');
-require_once(__DIR__ . '/../class/RasterImage.php');
+require_once(__DIR__ . '/../class/RasterImageLink.php');
 
 /**
  *
@@ -108,14 +108,14 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
         /**
-         * @var RasterImage[]
+         * @var RasterImageLink[]
          */
         $facebookImages = $page->getImageSet();
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = new RasterImage($defaultFacebookImage);
-                if ($image->exists()) {
+                $image = new RasterImageLink($defaultFacebookImage);
+                if ($image->getFile()->exists()) {
                     $facebookImages[] = $image;
                 } else {
                     if ($defaultFacebookImage != "logo-facebook.png") {
@@ -129,7 +129,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (!empty($facebookImages)) {
             foreach ($facebookImages as $facebookImage) {
 
-                if (!$facebookImage->exists()) {
+                if (!$facebookImage->getFile()->exists()) {
                     LogUtility::msg("The image ($facebookImage) does not exist and was not added", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 } else {
 

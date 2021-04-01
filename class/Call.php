@@ -184,7 +184,7 @@ class Call
 
         $tagName = $this->getTagName();
         switch ($tagName) {
-            case InternalMedia::INTERNAL_MEDIA:
+            case InternalMediaLink::INTERNAL_MEDIA:
                 return $this->call[1];
             default:
                 $data = $this->getPluginData();

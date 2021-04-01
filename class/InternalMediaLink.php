@@ -12,14 +12,14 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/SvgImage.php');
+require_once(__DIR__ . '/SvgImageLink.php');
 
 /**
  * Class InternalMedia
  * Represent a media link
  * @package ComboStrap
  */
-class InternalMedia
+class InternalMediaLink
 {
 
     /**
@@ -44,7 +44,7 @@ class InternalMedia
      * Caching of external image
      * https://www.dokuwiki.org/images#caching
      */
-    private $cache;
+    private $cache = true;
 
     /**
      * @var int The requested height on the link
@@ -109,7 +109,7 @@ class InternalMedia
     /**
      * Create an image from internal call media attributes
      * @param array $callAttributes
-     * @return InternalMedia
+     * @return InternalMediaLink
      */
     public static function createFromCallAttributes(array $callAttributes)
     {
@@ -121,7 +121,7 @@ class InternalMedia
         $cache = $callAttributes[5];// not sure what to do with that
         $linking = $callAttributes[6];// not sure what to do with that
 
-        $internalMedia = self::instantiateMedia($id);
+        $internalMedia = self::instantiateMediaLink($id);
         $internalMedia->setTitle($title);
         $internalMedia->setRequestedWidth($width);
         $internalMedia->setRequestedHeight($height);
@@ -133,13 +133,13 @@ class InternalMedia
     }
 
     /**
-     * @param $attributes - the attributes created by the function {@link InternalMedia::getParseAttributes()}
-     * @return RasterImage
+     * @param $attributes - the attributes created by the function {@link InternalMediaLink::getParseAttributes()}
+     * @return RasterImageLink
      */
     public static function createFromRenderAttributes($attributes)
     {
         $src = cleanID($attributes['src']);
-        $media = self::instantiateMedia($src);
+        $media = self::instantiateMediaLink($src);
 
         $width = $attributes['width'];
         $media->setRequestedWidth($width);
@@ -151,6 +151,8 @@ class InternalMedia
         $media->addClass($class);
         $linking = $attributes['linking'];
         $media->setLinking($linking);
+        $nocache = $attributes['cache'];
+        $media->setCache($nocache);
         return $media;
 
     }
@@ -177,33 +179,23 @@ class InternalMedia
 
     }
 
-    public function exists()
-    {
-
-        return file_exists($this->getPath());
-
-    }
-
-    public function getPath()
-    {
-        return mediaFN($this->getId());
-    }
 
     /**
      * @param $id
-     * @return RasterImage|InternalMedia
+     * @return RasterImageLink|InternalMediaLink
      */
-    private static function instantiateMedia($id)
+    private static function instantiateMediaLink($id)
     {
         $mime = mimetype($id)[1];
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime,6)=="svg+xml"){
-                $internalMedia = new SvgImage($id);
+                $internalMedia = new SvgImageLink($id);
             } else {
-                $internalMedia = new RasterImage($id);
+                $internalMedia = new RasterImageLink($id);
             }
         } else {
-            $internalMedia = new InternalMedia($id);
+            LogUtility::msg("Internal error: The media ($id) is not yet implemented", LogUtility::LVL_MSG_ERROR, "support");
+            $internalMedia = new InternalMediaLink($id);
         }
         return $internalMedia;
     }
@@ -242,12 +234,14 @@ class InternalMedia
 
     public static function isInternalMediaSyntax($text)
     {
-        return preg_match(' / ' . InternalMedia::INTERNAL_MEDIA_PATTERN . ' / msSi', $text);
+        return preg_match(' / ' . InternalMediaLink::INTERNAL_MEDIA_PATTERN . ' / msSi', $text);
     }
 
     public function setCache($cache)
     {
-        $this->cache = $cache;
+        if($cache=="nocache") {
+            $this->cache = false;
+        }
     }
 
     public function getRequestedHeight()
@@ -298,7 +292,7 @@ class InternalMedia
         return $this->class;
     }
 
-    protected function getCache()
+    public function getCache()
     {
         return $this->cache;
     }
@@ -351,9 +345,13 @@ class InternalMedia
         return $this->linking;
     }
 
-    public function renderMediaTag()
+    public function renderMediaTag($attributes)
     {
-        LogUtility::msg("Internal error: The media ($this) is not yet implemented", LogUtility::LVL_MSG_ERROR, "support");
+        // hover
+        Animation::processOnHover($attributes);
+        // Position
+        Position::processPosition($attributes);
+
 
     }
 
@@ -368,6 +366,10 @@ class InternalMedia
 
     }
 
+    public function getFile()
+    {
+        return new File(mediaFN($this->getId()));
+    }
 
 
 }

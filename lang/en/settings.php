@@ -2,7 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
-use ComboStrap\RasterImage;
+use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
@@ -157,6 +157,6 @@ $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "Th
 /**
  * Lazy load image
  */
-$lang[RasterImage::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(RasterImage::CANONICAL, "Load the image only when they become visible");
+$lang[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the image only when they become visible");
 
 ?>

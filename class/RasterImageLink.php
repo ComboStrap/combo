@@ -12,16 +12,16 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/InternalMedia.php');
+require_once(__DIR__ . '/InternalMediaLink.php');
 require_once(__DIR__ . '/LazyLoad.php');
 require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  * Image
  * This is the class that handles the
- * image type of the dokuwiki {@link InternalMedia}
+ * raster image type of the dokuwiki {@link InternalMediaLink}
  */
-class RasterImage extends InternalMedia
+class RasterImageLink extends InternalMediaLink
 {
 
     const CANONICAL = "image";
@@ -46,7 +46,7 @@ class RasterImage extends InternalMedia
     private $analyzable = false;
 
     /**
-     * @var mixed - the mime from the {@link RasterImage::analyzeImageIfNeeded()}
+     * @var mixed - the mime from the {@link RasterImageLink::analyzeImageIfNeeded()}
      */
     private $mime;
 
@@ -59,7 +59,7 @@ class RasterImage extends InternalMedia
     public function getUrl($absolute = true, $localWidth = null)
     {
 
-        if ($this->exists()) {
+        if ($this->getFile()->exists()) {
 
             /**
              * Link attribute
@@ -108,12 +108,15 @@ class RasterImage extends InternalMedia
      * Render a link
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also (Use
+     * @param $attributes
      * @return string
      */
-    public function renderMediaTag()
+    public function renderMediaTag($attributes)
     {
 
-        if ($this->exists()) {
+        parent::renderMediaTag($attributes);
+
+        if ($this->getFile()->exists()) {
 
             $imgHTML = '<img';
 
@@ -237,14 +240,14 @@ class RasterImage extends InternalMedia
 
         if (!$this->wasAnalyzed) {
 
-            if ($this->exists()) {
+            if ($this->getFile()->exists()) {
 
                 /**
                  * Based on {@link media_image_preview_size()}
                  * $dimensions = media_image_preview_size($this->id, '', false);
                  */
                 $imageInfo = array();
-                $imageSize = getimagesize($this->getPath(), $imageInfo);
+                $imageSize = getimagesize($this->getFile()->getPath(), $imageInfo);
                 if ($imageSize === false) {
                     $this->analyzable = false;
                     LogUtility::msg("The image ($this) could not be analyzed", LogUtility::LVL_MSG_ERROR, "image");
@@ -357,7 +360,7 @@ class RasterImage extends InternalMedia
         if ($lazyLoad !== null) {
             return $lazyLoad;
         } else {
-            return PluginUtility::getConfValue(RasterImage::CONF_LAZY_LOAD_ENABLE);
+            return PluginUtility::getConfValue(RasterImageLink::CONF_LAZY_LOAD_ENABLE);
         }
     }
 

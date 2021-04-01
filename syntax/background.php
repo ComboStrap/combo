@@ -2,8 +2,8 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\RasterImage;
-use ComboStrap\InternalMedia;
+use ComboStrap\RasterImageLink;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
@@ -127,11 +127,11 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 $openingTag = $tag->getOpeningTag();
                 $callImage = $openingTag->getDescendant(syntax_plugin_combo_media::TAG);
                 if ($callImage==null){
-                    $callImage = $openingTag->getDescendant(InternalMedia::INTERNAL_MEDIA);
+                    $callImage = $openingTag->getDescendant(InternalMediaLink::INTERNAL_MEDIA);
                 }
                 if ($callImage!=null) {
                     $callImage->deleteCall();
-                    $image = InternalMedia::createFromCallAttributes($callImage->getAttributes());
+                    $image = InternalMediaLink::createFromCallAttributes($callImage->getAttributes());
                     $openingTag->setAttribute("img",$image->getAttributes());
                 }
                 return array(

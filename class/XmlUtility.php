@@ -20,6 +20,8 @@ class XmlUtility
     const CLOSED = "closed";
     const NORMAL = "normal";
 
+    const SIMPLE_XML_EXTENSION = "simplexml";
+
 
     /**
      * @param $attName
@@ -100,8 +102,8 @@ class XmlUtility
     public static function isXml($text)
     {
 
-        $canonical = "simplexml";
-        if (extension_loaded($canonical)) {
+
+        if (extension_loaded(self::SIMPLE_XML_EXTENSION)) {
 
             $valid = true;
 

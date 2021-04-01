@@ -212,7 +212,7 @@ $conf["defaultPageType"] = "article";
 $conf["defaultShadowLevel"] = "medium";
 
 /**
- * Lazy loading {@link \ComboStrap\RasterImage::CONF_LAZY_LOAD_ENABLE}
+ * Lazy loading {@link \ComboStrap\RasterImageLink::CONF_LAZY_LOAD_ENABLE}
  */
 $conf["lazyLoadRasterImageEnable"] = 1;
 

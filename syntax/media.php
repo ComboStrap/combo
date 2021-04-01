@@ -4,13 +4,13 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
 // must be run within Dokuwiki
-use ComboStrap\RasterImage;
-use ComboStrap\InternalMedia;
+use ComboStrap\RasterImageLink;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TitleUtility;
 
-require_once(__DIR__ . '/../class/RasterImage.php');
+require_once(__DIR__ . '/../class/RasterImageLink.php');
 
 if (!defined('DOKU_INC')) die();
 
@@ -74,7 +74,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        $enable = $this->getConf(RasterImage::CONF_LAZY_LOAD_ENABLE);
+        $enable = $this->getConf(RasterImageLink::CONF_LAZY_LOAD_ENABLE);
         if (!$enable) {
 
             // Inside a card, we need to take over
@@ -85,7 +85,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         }
 
         if ($enable) {
-            $this->Lexer->addSpecialPattern(InternalMedia::INTERNAL_MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(InternalMediaLink::INTERNAL_MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
 
@@ -98,7 +98,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
-                $attributes = InternalMedia::getParseAttributes($match);
+                $attributes = InternalMediaLink::getParseAttributes($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parent = $tag->getParent();
                 $parentTag = "";
@@ -141,7 +141,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
                 $context = $data[PluginUtility::CONTEXT];
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $media = InternalMedia::createFromRenderAttributes($attributes);
+                $media = InternalMediaLink::createFromRenderAttributes($attributes);
                 if ($media->isImage()) {
 
                     if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {

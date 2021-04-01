@@ -1,7 +1,7 @@
 <?php
 
-use ComboStrap\RasterImage;
-use ComboStrap\InternalMedia;
+use ComboStrap\RasterImageLink;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -146,8 +146,8 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (empty($twitterImages)) {
             $defaultImageIdConf = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE));
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = new RasterImage($defaultImageIdConf);
-                if ($twitterImage->exists()) {
+                $twitterImage = new RasterImageLink($defaultImageIdConf);
+                if ($twitterImage->getFile()->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {
                     if ($defaultImageIdConf != "apple-touch-icon.png") {
@@ -159,7 +159,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         }
         if (!empty($twitterImages)) {
             foreach ($twitterImages as $twitterImage) {
-                if ($twitterImage->exists()) {
+                if ($twitterImage->getFile()->exists()) {
                     $twitterMeta[self::META_IMAGE] = $twitterImage->getAbsoluteUrl();
                     if (!empty($twitterImage->getAlt())) {
                         $twitterMeta[self::META_IMAGE_ALT] = $twitterImage->getAlt();

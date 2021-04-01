@@ -2,7 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
-use ComboStrap\RasterImage;
+use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
@@ -182,6 +182,6 @@ $meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
 /**
  * Lazy load image
  */
-$meta[RasterImage::CONF_LAZY_LOAD_ENABLE] = array('onoff');
+$meta[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
 
 

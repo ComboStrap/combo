@@ -54,105 +54,7 @@ class IconUtility
     const BOOTSTRAP = "bootstrap";
     const MATERIAL_DESIGN = "material-design";
 
-    /**
-     * A short cut function used also to retrieve an icon internally (ie to style our own message)
-     * @param $mediaFile
-     * @param $attributes
-     * @return bool|mixed
-     */
-    static public function renderFileIcon($mediaFile, $attributes = array())
-    {
 
-        try {
-            /** @noinspection PhpComposerExtensionStubsInspection */
-            $mediaSvgXml = simplexml_load_file($mediaFile);
-        } catch (\Exception $e) {
-            /**
-             * Don't use {@link \ComboStrap\LogUtility::msg()}
-             * or you will get a recursion
-             * because the URL has an icon
-             */
-            $msg = "The icon file ($mediaFile) could not be loaded as a XML SVG. The error returned is $e";
-            LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::NAME);
-            if (defined('DOKU_UNITTEST')) {
-                throw new \RuntimeException($msg);
-            } else {
-                return false;
-            }
-        }
-
-        // A namespace must be registered to be able to query it with xpath
-        $docNamespaces = $mediaSvgXml->getDocNamespaces();
-        $namespace = "";
-        foreach ($docNamespaces as $nsKey => $nsValue) {
-            if (strlen($nsKey) == 0) {
-                if (strpos($nsValue, "svg")) {
-                    $nsKey = self::SVG_NAMESPACE;
-                    $namespace = self::SVG_NAMESPACE;
-                }
-            }
-            if (strlen($nsKey) != 0) {
-                $mediaSvgXml->registerXPathNamespace($nsKey, $nsValue);
-            }
-        }
-        if ($namespace == "") {
-            $msg = "The svg namespace was not found (http://www.w3.org/2000/svg). This can lead to problem with the setting of attributes such as the color due to bad xpath selection.";
-            LogUtility::log2FrontEnd($msg, LogUtility::LVL_MSG_WARNING, self::NAME);
-            LogUtility::log2file($msg);
-        }
-
-        // Set the name attribute for test selection
-        XmlUtility::setAttribute('data-name', $attributes["name"], $mediaSvgXml);
-        unset($attributes["name"]);
-
-
-        // Width
-        $widthName = "width";
-        $widthValue = "24px";
-        if (array_key_exists($widthName, $attributes)) {
-            $widthValue = $attributes[$widthName];
-            unset($attributes[$widthName]);
-        }
-        XmlUtility::setAttribute($widthName, $widthValue, $mediaSvgXml);
-
-        // Height
-        $heightName = "height";
-        $heightValue = "24px";
-        if (array_key_exists($heightName, $attributes)) {
-            $heightValue = $attributes[$heightName];
-            unset($attributes[$heightName]);
-        }
-        XmlUtility::setAttribute($heightName, $heightValue, $mediaSvgXml);
-
-        // hover
-        Animation::processOnHover($attributes);
-        // Position
-        Position::processPosition($attributes);
-
-
-        // Add fill="currentColor" to all path descendant element
-        if ($namespace != "") {
-            $pathsXml = $mediaSvgXml->xpath("//$namespace:path");
-            foreach ($pathsXml as $pathXml):
-                XmlUtility::setAttribute("fill", "currentColor", $pathXml);
-            endforeach;
-        }
-
-        // for line item such as feather (https://github.com/feathericons/feather#2-use)
-        // fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-
-        // FYI: For whatever reason if you add a border the line icon are neater
-        // PluginUtility::addStyleProperty("border","1px solid transparent",$attributes);
-
-        // Process the style
-        PluginUtility::processStyle($attributes);
-
-        foreach ($attributes as $name => $value) {
-            $mediaSvgXml->addAttribute($name, $value);
-        }
-        return XmlUtility::asHtml($mediaSvgXml);
-
-    }
 
     /**
      * The function used to render an icon
@@ -276,7 +178,7 @@ class IconUtility
 
         if (file_exists($mediaFile)) {
 
-            return self::renderFileIcon($mediaFile, $attributes);
+            return (new SvgFile($mediaFile))->getSvg($attributes);
 
         } else {
             return "";

@@ -12,32 +12,102 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/InternalMedia.php');
+require_once(__DIR__ . '/InternalMediaLink.php');
 require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  * Image
  * This is the class that handles the
- * image type of the dokuwiki {@link InternalMedia}
+ * svg link type
  */
-class SvgImage extends InternalMedia
+class SvgImageLink extends InternalMediaLink
 {
 
     const CANONICAL = "svg";
 
+    /**
+     * The maximum size to be embedded
+     * Above this size limit they are fetched
+     */
+    const DEFAULT_MAX_INLINE_SIZE = 2048; // 2kb
 
 
-    private $imageWidth;
+    private $svgWidth;
     /**
      * @var int
      */
-    private $imageWeight;
-    /**
-     * See {@link image_type_to_mime_type}
-     * @var int
-     */
-    private $imageType;
-    private $wasAnalyzed = false;
+    private $svgWeight;
+
+    private  function createImgHTMLTag()
+    {
+        $imgHTML = '<img';
+
+        $lazyLoad = $this->getLazyLoad();
+        /**
+         * Snippet
+         */
+        if ($lazyLoad) {
+            LazyLoad::addSnippet();
+        }
+
+        /**
+         * Class
+         */
+        if ($lazyLoad) {
+            $this->addClass("lazyload");
+        }
+        if (!empty($this->getClass())) {
+            $imgHTML .= ' class="' . $this->getClass() . '"';
+        }
+
+        /**
+         * Src
+         */
+        $srcValue = $this->getUrl();
+        if ($lazyLoad) {
+
+            // Modern transparent srcset pattern
+            // normal src attribute with a transparent or low quality image as srcset value
+            // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
+            $imgHTML .= " src=\"$srcValue\"";
+            $imgHTML .= " srcset=\"data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\"";
+
+            /**
+             * max-width as asked
+             */
+            $widthValue = $this->getImgTagWidthValue();
+            if (!empty($widthValue)) {
+                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
+            }
+
+            /**
+             * Responsive image src set
+             * is not needed for svg
+             */
+
+
+        } else {
+            $imgHTML .= " src=\"$srcValue\"";
+            if (!empty($this->getImgTagWidthValue())) {
+                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
+            }
+            if (!empty($this->getImgTagHeightValue())) {
+                $imgHTML .= ' height="' . $this->getImgTagHeightValue() . '"';
+            }
+        }
+
+
+        /**
+         * Title
+         */
+        if (!empty($this->getTitle())) {
+            $imgHTML .= ' alt = "' . $this->getTitle() . '"';
+        }
+
+
+        $imgHTML .= '>';
+        return $imgHTML;
+    }
 
 
     /**
@@ -47,11 +117,14 @@ class SvgImage extends InternalMedia
     public function getUrl($absolute = true)
     {
 
-        if ($this->exists()) {
+        if ($this->getFile()->exists()) {
 
             /**
              * Link attribute
              * No width and height
+             * There are embedded in the inline
+             * or set in the img element
+             * No need to resize, the browser do it
              */
             $att = array();
             if ($this->getCache()) {
@@ -75,9 +148,7 @@ class SvgImage extends InternalMedia
     }
 
 
-    public function optimize(){
-        return inlineSVG($this->getPath());
-    }
+
 
     /**
      * Render a link
@@ -87,76 +158,17 @@ class SvgImage extends InternalMedia
      */
     public function renderMediaTag()
     {
+        if ($this->getFile()->exists()) {
 
-        if ($this->exists()) {
+            if ($this->getFile()->getSize() > $this->getMaxInlineSize()) {
 
-            $imgHTML = '<img';
-
-            $lazyLoad = $this->getLazyLoad();
-            /**
-             * Snippet
-             */
-            if ($lazyLoad) {
-                LazyLoad::addSnippet();
-            }
-
-            /**
-             * Class
-             */
-            if ($lazyLoad) {
-                $this->addClass("lazyload");
-            }
-            if (!empty($this->getClass())) {
-                $imgHTML .= ' class="' . $this->getClass() . '"';
-            }
-
-            /**
-             * Src
-             */
-            $srcValue = $this->getUrl();
-            if ($lazyLoad) {
-
-                // Modern transparent srcset pattern
-                // normal src attribute with a transparent or low quality image as srcset value
-                // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
-                $imgHTML .= " src=\"$srcValue\"";
-                $imgHTML .= " srcset=\"data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\"";
-
-                /**
-                 * max-width as asked
-                 */
-                $widthValue = $this->getImgTagWidthValue();
-                if(!empty($widthValue)) {
-                    $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
-                }
-
-                /**
-                 * Responsive image src set
-                 * is not needed for svg
-                 */
-
+               $imgHTML = $this->createImgHTMLTag();
 
             } else {
-                $imgHTML .= " src=\"$srcValue\"";
-                if (!empty($this->getImgTagWidthValue())) {
-                    $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
-                }
-                if (!empty($this->getImgTagHeightValue())) {
-                    $imgHTML .= ' height="' . $this->getImgTagHeightValue() . '"';
-                }
+
+                $imgHTML = $this->createInlineHTMLTag();
+
             }
-
-
-            /**
-             * Title
-             */
-            if (!empty($this->getTitle())) {
-                $imgHTML .= ' alt = "' . $this->getTitle() . '"';
-            }
-
-
-            $imgHTML .= '>';
-
         } else {
 
             $imgHTML = "<span class=\"text-danger\">The svg ($this) does not exist</span>";
@@ -170,7 +182,7 @@ class SvgImage extends InternalMedia
      */
     public function getMediaWidth()
     {
-        return $this->imageWidth;
+        return $this->svgWidth;
     }
 
     /**
@@ -178,7 +190,7 @@ class SvgImage extends InternalMedia
      */
     public function getMediaHeight()
     {
-        return $this->imageWeight;
+        return $this->svgWeight;
     }
 
 
@@ -250,6 +262,20 @@ class SvgImage extends InternalMedia
          * and therefore the fetch will failed
          */
         return intval($linkHeight);
+
+    }
+
+    private function getMaxInlineSize()
+    {
+        return self::DEFAULT_MAX_INLINE_SIZE;
+    }
+
+    private function createInlineHTMLTag()
+    {
+        /**
+         * inlineSVG from common.php
+         */
+        return inlineSVG($this->getFile()->getPath());
 
     }
 

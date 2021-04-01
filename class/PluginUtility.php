@@ -19,6 +19,8 @@ require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/Position.php');
 require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/Shadow.php');
+require_once(__DIR__ . '/TagAttributes.php');
+require_once(__DIR__ . '/File.php');
 
 
 /**
@@ -275,7 +277,7 @@ class PluginUtility
      * Because they are users input, they are all escaped
      * @param $match
      * @param $hasThirdValue - if true, the third parameter is treated as value, not a property and returned in the `third` key
-     * use for the code/file/console where the accept a name as third value
+     * use for the code/file/console where they accept a name as third value
      * @param $keyThirdArgument - if a third argument is found, return it with this key
      * @return array
      */

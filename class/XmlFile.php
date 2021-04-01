@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+require_once(__DIR__ . '/File.php');
 
 class XmlFile extends File
 {
@@ -44,25 +45,7 @@ class XmlFile extends File
                     throw new \RuntimeException($msg);
                 }
             }
-            // A namespace must be registered to be able to query it with xpath
-            $docNamespaces = $this->xmlDom->getDocNamespaces();
-            $namespace = "";
-            foreach ($docNamespaces as $nsKey => $nsValue) {
-                if (strlen($nsKey) == 0) {
-                    if (strpos($nsValue, "svg")) {
-                        $nsKey = self::SVG_NAMESPACE;
-                        $namespace = self::SVG_NAMESPACE;
-                    }
-                }
-                if (strlen($nsKey) != 0) {
-                    $this->xmlDom->registerXPathNamespace($nsKey, $nsValue);
-                }
-            }
-            if ($namespace == "") {
-                $msg = "The svg namespace was not found (http://www.w3.org/2000/svg). This can lead to problem with the setting of attributes such as the color due to bad xpath selection.";
-                LogUtility::log2FrontEnd($msg, LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-                LogUtility::log2file($msg);
-            }
+
         }
 
     }
@@ -72,9 +55,14 @@ class XmlFile extends File
         return $this->xmlDom;
     }
 
-    public function setAttribute($string, $name)
+    public function setRootAttribute($string, $name)
     {
         XmlUtility::setAttribute($string, $name, $this->xmlDom);
+    }
+
+    public function getXmlText()
+    {
+        return XmlUtility::asHtml($this->getXmlDom());
     }
 
 }

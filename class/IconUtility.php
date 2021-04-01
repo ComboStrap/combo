@@ -12,9 +12,11 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . "/../class/XmlUtility.php");
-require_once(__DIR__ . '/../class/PluginUtility.php');
-require_once(__DIR__ . '/../class/ConfUtility.php');
+require_once(__DIR__ . "/XmlUtility.php");
+require_once(__DIR__ . '/PluginUtility.php');
+require_once(__DIR__ . '/ConfUtility.php');
+require_once(__DIR__ . '/SvgFile.php');
+
 
 /**
  * Class IconUtility
@@ -35,8 +37,7 @@ class IconUtility
     const CONF_ICONS_MEDIA_NAMESPACE_DEFAULT = ":" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME . ":icons";
     // Canonical name
     const NAME = "icon";
-    // Arbitrary default namespace to be able to query with xpath
-    const SVG_NAMESPACE = "svg";
+
 
     const ICON_LIBRARY_URLS = array(
         self::BOOTSTRAP => "https://raw.githubusercontent.com/twbs/icons/main/icons",
@@ -58,14 +59,14 @@ class IconUtility
 
     /**
      * The function used to render an icon
-     * @param $attributes -  the icon attributes
+     * @param TagAttributes $tagAttributes -  the icon attributes
      * @return bool|mixed - false if any error or the HTML
      */
-    static public function renderIconByAttributes($attributes)
+    static public function renderIconByAttributes($tagAttributes)
     {
 
         $name = "name";
-        if (!array_key_exists($name, $attributes)) {
+        if (!$tagAttributes->hasAttribute($name)) {
             LogUtility::msg("The attributes should have a name. It's mandatory for an icon.", LogUtility::LVL_MSG_ERROR, self::NAME);
             return false;
         }
@@ -73,7 +74,7 @@ class IconUtility
         /**
          * The attribute
          */
-        $iconNameAttribute = $attributes[$name];
+        $iconNameAttribute = $tagAttributes->getHtmlAttributeValue($name);
 
 
         // If the name have an extension, it's a file
@@ -178,10 +179,12 @@ class IconUtility
 
         if (file_exists($mediaFile)) {
 
-            return (new SvgFile($mediaFile))->getSvg($attributes);
+            return (new SvgFile($mediaFile))->getXmlText($tagAttributes);
 
         } else {
+
             return "";
+
         }
 
 

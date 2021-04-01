@@ -38,8 +38,6 @@ class InternalMediaLink
      */
     private $alt;
 
-    private $class;
-
     /**
      * Caching of external image
      * https://www.dokuwiki.org/images#caching
@@ -75,6 +73,7 @@ class InternalMediaLink
     private $align;
 
     private $description = null;
+
 
     /**
      * Image constructor.
@@ -147,8 +146,6 @@ class InternalMediaLink
         $media->setRequestedHeight($height);
         $title = $attributes['title'];
         $media->setTitle($title);
-        $class = $attributes['class'];
-        $media->addClass($class);
         $linking = $attributes['linking'];
         $media->setLinking($linking);
         $nocache = $attributes['cache'];
@@ -202,12 +199,12 @@ class InternalMediaLink
 
     /**
      * Return the same array than with the {@link self::parse()} method
-     * that is used in the renderer
+     * that is used in the {@link CallStack}
      */
-    public function getAttributes()
+    public function getHandleAttributes()
     {
         return array(
-            'type' => null, // ???
+            'type' => null, // ??? internal, external
             'src' => $this->getId(),
             'title' => $this->getTitle(),
             'align' => $this->getAlign(),
@@ -278,19 +275,7 @@ class InternalMediaLink
         $this->align = $align;
     }
 
-    public function addClass($class)
-    {
-        if(empty($this->class)) {
-            $this->class = $class;
-        } else {
-            $this->class .= " $class";
-        }
-    }
 
-    protected function getClass()
-    {
-        return $this->class;
-    }
 
     public function getCache()
     {

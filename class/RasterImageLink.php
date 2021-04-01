@@ -132,10 +132,10 @@ class RasterImageLink extends InternalMediaLink
              * Class
              */
             if ($lazyLoad) {
-                $this->addClass(LazyLoad::getClass());
+                $this->getComponentAttributes()->addClassName(LazyLoad::getClass());
             }
-            if (!empty($this->getClass())) {
-                $imgHTML .= ' class="' . $this->getClass() . '"';
+            if (!empty($this->getComponentAttributes()->getClass())) {
+                $imgHTML .= ' class="' . $this->getComponentAttributes()->getClass() . '"';
             }
 
             /**

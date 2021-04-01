@@ -54,10 +54,10 @@ class SvgImageLink extends InternalMediaLink
          * Class
          */
         if ($lazyLoad) {
-            $this->addClass("lazyload");
+            $this->getComponentAttributes()->addClassName("lazyload");
         }
-        if (!empty($this->getClass())) {
-            $imgHTML .= ' class="' . $this->getClass() . '"';
+        if (!empty($this->getComponentAttributes()->getClass())) {
+            $imgHTML .= ' class="' . $this->getComponentAttributes()->getClass() . '"';
         }
 
         /**
@@ -148,25 +148,24 @@ class SvgImageLink extends InternalMediaLink
     }
 
 
-
-
     /**
      * Render a link
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also (Use
+     * @param $tagAttributes
      * @return string
      */
-    public function renderMediaTag()
+    public function renderMediaTag($tagAttributes)
     {
         if ($this->getFile()->exists()) {
 
             if ($this->getFile()->getSize() > $this->getMaxInlineSize()) {
 
-               $imgHTML = $this->createImgHTMLTag();
+               $imgHTML = $this->createImgHTMLTag($tagAttributes);
 
             } else {
 
-                $imgHTML = $this->createInlineHTMLTag();
+                $imgHTML = $this->createInlineHTMLTag($tagAttributes);
 
             }
         } else {
@@ -270,13 +269,21 @@ class SvgImageLink extends InternalMediaLink
         return self::DEFAULT_MAX_INLINE_SIZE;
     }
 
-    private function createInlineHTMLTag()
+    private function createInlineHTMLTag($tagAttributes)
     {
         /**
          * inlineSVG from common.php
          */
-        return inlineSVG($this->getFile()->getPath());
+        return inlineSVG($this->getFile()->getXmlText($tagAttributes));
 
+    }
+
+    /**
+     * @return File|SvgFile
+     */
+    public function getFile()
+    {
+        return new SvgFile(mediaFN($this->getId()));
     }
 
 

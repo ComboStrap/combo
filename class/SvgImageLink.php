@@ -281,18 +281,7 @@ class SvgImageLink extends InternalMediaLink
     private function createInlineHTMLTag($tagAttributes)
     {
 
-        $svgXml = $this->getFile()->getXmlText($tagAttributes);
-
-        /**
-         * Optimization from inlineSVG from common.php
-         */
-        $svgXml = preg_replace('/<!--.*?(-->)/s', '', $svgXml); // comments
-        $svgXml = preg_replace('/<\?xml .*?\?>/i', '', $svgXml); // xml header
-        $svgXml = preg_replace('/<!DOCTYPE .*?>/i', '', $svgXml); // doc type
-        $svgXml = preg_replace('/>\s+</s', '><', $svgXml); // newlines between tags
-        $svgXml = trim($svgXml);
-
-        return $svgXml;
+        return $this->getFile()->getXmlText($tagAttributes);
 
     }
 
@@ -301,7 +290,7 @@ class SvgImageLink extends InternalMediaLink
      */
     public function getFile()
     {
-        return new SvgFile(mediaFN($this->getId()));
+        return SvgFile::createFromId($this->getId());
     }
 
 

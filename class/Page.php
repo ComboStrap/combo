@@ -15,7 +15,7 @@ use Locale;
  */
 require_once(__DIR__ . '/PluginUtility.php');
 
-class Page
+class Page extends File
 {
     const CANONICAL_PROPERTY = 'canonical';
     const TITLE_PROPERTY = 'title';

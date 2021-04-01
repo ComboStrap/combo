@@ -20,7 +20,7 @@ class XmlFile extends File
     /**
      * @var \SimpleXMLElement
      */
-    private $xmlDom;
+    private $xmlDom = null;
 
     /**
      * XmlFile constructor.
@@ -30,7 +30,7 @@ class XmlFile extends File
     {
         parent::__construct($path);
 
-        if (extension_loaded(XmlUtility::SIMPLE_XML_EXTENSION)) {
+        if ($this->isXmlExtensionLoaded()) {
             try {
                 $this->xmlDom = simplexml_load_file($this->getPath());
             } catch (\Exception $e) {
@@ -57,12 +57,27 @@ class XmlFile extends File
 
     public function setRootAttribute($string, $name)
     {
-        XmlUtility::setAttribute($string, $name, $this->xmlDom);
+        if ($this->isXmlExtensionLoaded()) {
+            XmlUtility::setAttribute($string, $name, $this->xmlDom);
+        }
     }
 
     public function getXmlText()
     {
-        return XmlUtility::asHtml($this->getXmlDom());
+        if ($this->isXmlExtensionLoaded()) {
+            return XmlUtility::asHtml($this->getXmlDom());
+        } else {
+            return file_get_contents($this->getPath());
+        }
     }
+
+    /**
+     * @return bool
+     */
+    public function isXmlExtensionLoaded()
+    {
+        return extension_loaded(XmlUtility::SIMPLE_XML_EXTENSION);
+    }
+
 
 }

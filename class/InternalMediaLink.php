@@ -125,11 +125,11 @@ class InternalMediaLink
         $cache = $callAttributes[5];// not sure what to do with that
         $linking = $callAttributes[6];// not sure what to do with that
 
-        $internalMedia = self::instantiateMediaLink($id);
+        $internalMedia = self::createFromId($id);
         $internalMedia->setTitle($title);
         $internalMedia->setRequestedWidth($width);
         $internalMedia->setRequestedHeight($height);
-        $internalMedia->setCache($cache);
+        $internalMedia->setNoCache($cache);
         $internalMedia->setLinking($linking);
         $internalMedia->setAlign($align);
         return $internalMedia;
@@ -144,7 +144,7 @@ class InternalMediaLink
     public static function createFromRenderAttributes(&$attributes)
     {
         $src = cleanID($attributes['src']);
-        $media = self::instantiateMediaLink($src);
+        $media = self::createFromId($src);
 
         if(isset($attributes[self::WIDTH_KEY])) {
             $width = $attributes[self::WIDTH_KEY];
@@ -168,7 +168,7 @@ class InternalMediaLink
         }
         if (isset($attributes[self::CACHE_KEY])) {
             $nocache = $attributes[self::CACHE_KEY];
-            $media->setCache($nocache);
+            $media->setNoCache($nocache);
             unset($attributes[self::CACHE_KEY]);
         }
         return $media;
@@ -203,7 +203,7 @@ class InternalMediaLink
      * @param $id
      * @return RasterImageLink|InternalMediaLink
      */
-    private static function instantiateMediaLink($id)
+    public static function createFromId($id)
     {
         $mime = mimetype($id)[1];
         if (substr($mime, 0, 5) == 'image') {
@@ -256,7 +256,7 @@ class InternalMediaLink
         return preg_match(' / ' . InternalMediaLink::INTERNAL_MEDIA_PATTERN . ' / msSi', $text);
     }
 
-    public function setCache($cache)
+    public function setNoCache($cache)
     {
         if($cache=="nocache") {
             $this->cache = false;

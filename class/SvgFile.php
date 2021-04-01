@@ -12,6 +12,9 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Cache\Cache;
+use dokuwiki\Cache\CacheRenderer;
+
 require_once(__DIR__ . '/XmlFile.php');
 
 class SvgFile extends XmlFile
@@ -34,24 +37,31 @@ class SvgFile extends XmlFile
     {
         parent::__construct($path);
 
-        // A namespace must be registered to be able to query it with xpath
-        $docNamespaces = $this->getXmlDom()->getDocNamespaces();
-        foreach ($docNamespaces as $nsKey => $nsValue) {
-            if (strlen($nsKey) == 0) {
-                if (strpos($nsValue, "svg")) {
-                    $nsKey = self::SVG_NAMESPACE;
-                    $this->namespace = self::SVG_NAMESPACE;
+        if ($this->isXmlExtensionLoaded()) {
+            // A namespace must be registered to be able to query it with xpath
+            $docNamespaces = $this->getXmlDom()->getDocNamespaces();
+            foreach ($docNamespaces as $nsKey => $nsValue) {
+                if (strlen($nsKey) == 0) {
+                    if (strpos($nsValue, "svg")) {
+                        $nsKey = self::SVG_NAMESPACE;
+                        $this->namespace = self::SVG_NAMESPACE;
+                    }
+                }
+                if (strlen($nsKey) != 0) {
+                    $this->getXmlDom()->registerXPathNamespace($nsKey, $nsValue);
                 }
             }
-            if (strlen($nsKey) != 0) {
-                $this->getXmlDom()->registerXPathNamespace($nsKey, $nsValue);
+            if ($this->namespace == "") {
+                $msg = "The svg namespace was not found (http://www.w3.org/2000/svg). This can lead to problem with the setting of attributes such as the color due to bad xpath selection.";
+                LogUtility::log2FrontEnd($msg, LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                LogUtility::log2file($msg);
             }
         }
-        if ($this->namespace == "") {
-            $msg = "The svg namespace was not found (http://www.w3.org/2000/svg). This can lead to problem with the setting of attributes such as the color due to bad xpath selection.";
-            LogUtility::log2FrontEnd($msg, LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-            LogUtility::log2file($msg);
-        }
+    }
+
+    public static function createFromId($id)
+    {
+        return new SvgFile(mediaFN($id));
     }
 
     /**
@@ -61,7 +71,7 @@ class SvgFile extends XmlFile
     public function getXmlText($tagAttributes = null)
     {
 
-        if($tagAttributes==null){
+        if ($tagAttributes == null) {
             $tagAttributes = TagAttributes::createEmpty();
         }
 
@@ -74,14 +84,14 @@ class SvgFile extends XmlFile
         // Width
         $widthName = "width";
         $widthValue = $tagAttributes->getValueAndRemove($widthName);
-        if(!empty($widthValue)) {
+        if (!empty($widthValue)) {
             $this->setRootAttribute($widthName, $widthValue);
         }
 
         // Height
         $heightName = "height";
         $heightValue = $tagAttributes->getValueAndRemove($heightName);
-        if(!empty($heightValue)) {
+        if (!empty($heightValue)) {
             $this->setRootAttribute($heightName, $heightValue);
         }
 
@@ -93,7 +103,6 @@ class SvgFile extends XmlFile
         }
 
 
-
         $toHtmlArray = $tagAttributes->toHtmlArrayWithProcessing();
         foreach ($toHtmlArray as $name => $value) {
             $this->setRootAttribute($name, $value);
@@ -103,19 +112,73 @@ class SvgFile extends XmlFile
 
     }
 
+    public function getOptimizedSvg($tagAttributes = null)
+    {
+        /**
+         * Optimization adapted from inlineSVG from common.php
+         */
+        $svgXml = $this->getXmlText($tagAttributes);
+        $svgXml = preg_replace('/<!--.*?(-->)/s', '', $svgXml); // comments
+        $svgXml = preg_replace('/<\?xml .*?\?>/i', '', $svgXml); // xml header
+        $svgXml = preg_replace('/xmlns:xlink="[a-z0-9\/.:]*"/i', '', $svgXml); // xmlns
+        $svgXml = preg_replace('/version="[0-9.]*"/i', '', $svgXml); // version
+        $svgXml = preg_replace('/<!DOCTYPE .*?>/i', '', $svgXml); // doc type
+        $svgXml = preg_replace('/>\s+</s', '><', $svgXml); // newlines between tags
+        $svgXml = preg_replace('/\s{2,}/s', ' ', $svgXml); // double space
+        return trim($svgXml);
+
+    }
+
     private function setDescendantPathAttribute($string, $string1)
     {
 
-        $namespace = $this->namespace;
-        if ($namespace != "") {
-            $pathsXml = $this->getXmlDom()->xpath("//$namespace:path");
-            foreach ($pathsXml as $pathXml) {
-                XmlUtility::setAttribute("fill", "currentColor", $pathXml);
+        if ($this->isXmlExtensionLoaded()) {
+            $namespace = $this->namespace;
+            if ($namespace != "") {
+                $pathsXml = $this->getXmlDom()->xpath("//$namespace:path");
+                foreach ($pathsXml as $pathXml) {
+                    XmlUtility::setAttribute("fill", "currentColor", $pathXml);
+                }
             }
         }
+
     }
 
+    public function getOptimizedSvgFile()
+    {
 
+        $cache = $this->getCache();
+        $dependencies = array(
+            'files' => [$this->getPath()]
+        );
+        $useCache = $cache->useCache($dependencies);
+        if ($useCache) {
+            $file = $cache->cache;
+        } else {
+            $content = $this->getOptimizedSvg();
+            $cache->storeCache($content);
+            $file = $cache->cache;
+        }
+        return $file;
 
+    }
+
+    public function hasSvgCache()
+    {
+
+        /**
+         * $cache->cache is the file
+         */
+        return file_exists($this->getCache()->cache);
+    }
+
+    /**
+     * @return Cache
+     */
+    private function getCache()
+    {
+        $cache = new Cache($this->getPath(), ".svg");
+        return $cache;
+    }
 
 }

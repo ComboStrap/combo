@@ -15,7 +15,9 @@ namespace ComboStrap;
 
 class File
 {
+
     private $path;
+
 
 
     /**
@@ -38,11 +40,13 @@ class File
     /**
      * @return false|int
      */
-    public function getSize(){
+    public function getSize()
+    {
         return filesize($this->path);
     }
 
-    public function exists(){
+    public function exists()
+    {
         return file_exists($this->path);
     }
 
@@ -50,6 +54,15 @@ class File
     {
         return $this->path;
     }
+
+    /**
+     * @return false|int - unix time stamp
+     */
+    public function getModifiedTime()
+    {
+        return filemtime($this->path);
+    }
+
 
 
 }

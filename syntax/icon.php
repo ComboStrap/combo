@@ -127,7 +127,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 }
                 return array(
                     PluginUtility::STATE=> $state,
-                    PluginUtility::ATTRIBUTES => $attributes->toArray());
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray());
 
 
         }
@@ -156,7 +156,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     /** @var Doku_Renderer_xhtml $renderer */
                     $state = $data[PluginUtility::STATE];
                     if ($state === DOKU_LEXER_SPECIAL) {
-                        $tagAttribute = TagAttributes::createFromArray($data[PluginUtility::ATTRIBUTES]);
+                        $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                         $renderer->doc .= IconUtility::renderIconByAttributes($tagAttribute);
                     }
 

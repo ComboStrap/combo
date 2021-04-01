@@ -8,6 +8,7 @@ use ComboStrap\RasterImageLink;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 use ComboStrap\TitleUtility;
 
 require_once(__DIR__ . '/../class/RasterImageLink.php');
@@ -149,12 +150,15 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                         /**
                          * First image of a card
                          */
-                        $media->getComponentAttributes()->addClassName("card-img-top");
-                        $renderer->doc .= $media->renderMediaTag();
+                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                        $tagAttributes->addClassName("card-img-top");
+                        $renderer->doc .= $media->renderMediaTag($tagAttributes);
                         $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
 
                     } else {
+
                         $renderer->doc .= $media->renderMediaTag();
+
                     }
 
                 } else {

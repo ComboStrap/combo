@@ -44,8 +44,7 @@ class TagAttributes
     public static function createFromTagMatch($match)
     {
         $htmlAttributes = PluginUtility::getTagAttributes($match);
-        $attributes = self::HtmlArrayToTagArray($htmlAttributes);
-        return new TagAttributes($attributes);
+        return self::createFromCallStackArray($htmlAttributes);
     }
 
     /**
@@ -62,13 +61,19 @@ class TagAttributes
         return new TagAttributes(array());
     }
 
+    public static function createFromCallStackArray($renderArray)
+    {
+        $attributes = self::CallStackArrayToInternalArray($renderArray);
+        return new TagAttributes($attributes);
+    }
+
     /**
      * Utility function to go from an html array to a tag array
      * Used during refactoring
      * @param array $htmlAttributes
      * @return array
      */
-    private static function HtmlArrayToTagArray(array $htmlAttributes)
+    private static function CallStackArrayToInternalArray(array $htmlAttributes)
     {
         $attributes = array();
         foreach ($htmlAttributes as $key => $attribute) {
@@ -91,10 +96,10 @@ class TagAttributes
 
     public function getClass()
     {
-        $this->getHtmlAttributeValue('class');
+        return $this->getHtmlAttributeValue('class');
     }
 
-    private function addAttributeValue($attributeName, $attributeValue)
+    public function addAttributeValue($attributeName, $attributeValue)
     {
         if (!$this->hasAttribute($attributeName)) {
             $this->attributes[$attributeName] = array();
@@ -120,7 +125,7 @@ class TagAttributes
         // Process the style
         $this->processStyle();
 
-        return $this->toHtmlArrayWithoutProcessing();
+        return $this->toCallStackArray();
 
     }
 
@@ -167,15 +172,15 @@ class TagAttributes
      */
     private function processStyle()
     {
-        $htmlArray = $this->toHtmlArrayWithoutProcessing();
+        $htmlArray = $this->toCallStackArray();
         PluginUtility::processStyle($htmlArray);
-        $this->attributes = self::HtmlArrayToTagArray($htmlArray);
+        $this->attributes = self::CallStackArrayToInternalArray($htmlArray);
     }
 
     /**
      * @return array
      */
-    private function toHtmlArrayWithoutProcessing()
+    public function toCallStackArray()
     {
         $array = array();
         foreach ($this->attributes as $key => $value) {
@@ -183,5 +188,7 @@ class TagAttributes
         }
         return $array;
     }
+
+
 
 }

@@ -56,7 +56,6 @@ class IconUtility
     const MATERIAL_DESIGN = "material-design";
 
 
-
     /**
      * The function used to render an icon
      * @param TagAttributes $tagAttributes -  the icon attributes
@@ -64,6 +63,7 @@ class IconUtility
      */
     static public function renderIconByAttributes($tagAttributes)
     {
+
 
         $name = "name";
         if (!$tagAttributes->hasAttribute($name)) {
@@ -108,8 +108,8 @@ class IconUtility
 
             // Bug: null file created when the stream could not get any byte
             // We delete them
-            if (file_exists($mediaFile)){
-                if (filesize($mediaFile)==0){
+            if (file_exists($mediaFile)) {
+                if (filesize($mediaFile) == 0) {
                     unlink($mediaFile);
                 }
             }
@@ -137,7 +137,7 @@ class IconUtility
                 $iconName = $iconNameAttribute;
                 if ($sepPosition != false) {
                     $library = substr($iconNameAttribute, 0, $sepPosition);
-                    $iconName = substr($iconNameAttribute, $sepPosition+1);
+                    $iconName = substr($iconNameAttribute, $sepPosition + 1);
                 }
 
                 // Get the qualified library name
@@ -179,7 +179,21 @@ class IconUtility
 
         if (file_exists($mediaFile)) {
 
-            return (new SvgFile($mediaFile))->getXmlText($tagAttributes);
+            $svgFile = new SvgFile($mediaFile);
+
+            /**
+             * Styling
+             * for line item such as feather (https://github.com/feathericons/feather#2-use)
+             * fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             *
+             * FYI: For whatever reason if you add a border the line icon are neater
+             * PluginUtility::addStyleProperty("border","1px solid transparent",$attributes);
+             */
+            $tagAttributes->addAttributeValue("width", "24px");
+            $tagAttributes->addAttributeValue("height", "24px");
+            $tagAttributes->addAttributeValue("fill", "currentColor");
+
+            return $svgFile->getXmlText($tagAttributes);
 
         } else {
 

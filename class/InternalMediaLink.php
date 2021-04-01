@@ -28,6 +28,11 @@ class InternalMediaLink
      */
     const INTERNAL_MEDIA = "internalmedia";
     const INTERNAL_MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
+    const LINKING_KEY = 'linking';
+    const TITLE_KEY = 'title';
+    const HEIGHT_KEY = 'height';
+    const WIDTH_KEY = 'width';
+    const CACHE_KEY = 'cache';
 
     private $id;
 
@@ -134,29 +139,46 @@ class InternalMediaLink
     /**
      * @param $attributes - the attributes created by the function {@link InternalMediaLink::getParseAttributes()}
      * @return RasterImageLink
+     * The known attributes are also deleted
      */
-    public static function createFromRenderAttributes($attributes)
+    public static function createFromRenderAttributes(&$attributes)
     {
         $src = cleanID($attributes['src']);
         $media = self::instantiateMediaLink($src);
 
-        $width = $attributes['width'];
-        $media->setRequestedWidth($width);
-        $height = $attributes['height'];
-        $media->setRequestedHeight($height);
-        $title = $attributes['title'];
-        $media->setTitle($title);
-        $linking = $attributes['linking'];
-        $media->setLinking($linking);
-        $nocache = $attributes['cache'];
-        $media->setCache($nocache);
+        if(isset($attributes[self::WIDTH_KEY])) {
+            $width = $attributes[self::WIDTH_KEY];
+            $media->setRequestedWidth($width);
+            unset($attributes[self::WIDTH_KEY]);
+        }
+        if (isset($attributes[self::HEIGHT_KEY])) {
+            $height = $attributes[self::HEIGHT_KEY];
+            $media->setRequestedHeight($height);
+            unset($attributes[self::HEIGHT_KEY]);
+        }
+        if (isset($attributes[self::TITLE_KEY])) {
+            $title = $attributes[self::TITLE_KEY];
+            $media->setTitle($title);
+            unset($attributes[self::TITLE_KEY]);
+        }
+        if ($attributes[self::LINKING_KEY]) {
+            $linking = $attributes[self::LINKING_KEY];
+            $media->setLinking($linking);
+            unset($attributes[self::LINKING_KEY]);
+        }
+        if (isset($attributes[self::CACHE_KEY])) {
+            $nocache = $attributes[self::CACHE_KEY];
+            $media->setCache($nocache);
+            unset($attributes[self::CACHE_KEY]);
+        }
         return $media;
 
     }
 
     public static function createFromRenderMatch($match)
     {
-        return self::createFromRenderAttributes(self::getParseAttributes($match));
+        $attributes = self::getParseAttributes($match);
+        return self::createFromRenderAttributes($attributes);
     }
 
     public function setLazyLoad($false)
@@ -206,12 +228,12 @@ class InternalMediaLink
         return array(
             'type' => null, // ??? internal, external
             'src' => $this->getId(),
-            'title' => $this->getTitle(),
+            self::TITLE_KEY => $this->getTitle(),
             'align' => $this->getAlign(),
-            'width' => $this->getRequestedWidth(),
-            'height' => $this->getRequestedHeight(),
-            'cache' => $this->getCache(),
-            'linking' => $this->getLinking()
+            self::WIDTH_KEY => $this->getRequestedWidth(),
+            self::HEIGHT_KEY => $this->getRequestedHeight(),
+            self::CACHE_KEY => $this->getCache(),
+            self::LINKING_KEY => $this->getLinking()
         );
     }
 

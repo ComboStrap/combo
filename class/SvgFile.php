@@ -61,33 +61,37 @@ class SvgFile extends XmlFile
     public function getXmlText($tagAttributes = null)
     {
 
+        if($tagAttributes==null){
+            $tagAttributes = TagAttributes::createEmpty();
+        }
+
         // Set the name (icon) attribute for test selection
         if ($tagAttributes->hasAttribute("name")) {
             $name = $tagAttributes->getValueAndRemove("name");
             $this->setRootAttribute('data-name', $name);
-
         }
 
         // Width
         $widthName = "width";
-        $widthValue = $tagAttributes->getValueAndRemove($widthName,"24px");
-        $this->setRootAttribute($widthName, $widthValue);
+        $widthValue = $tagAttributes->getValueAndRemove($widthName);
+        if(!empty($widthValue)) {
+            $this->setRootAttribute($widthName, $widthValue);
+        }
 
         // Height
         $heightName = "height";
-        $heightValue = $tagAttributes->getValueAndRemove($heightName,"24px");
-        $this->setRootAttribute($heightName, $heightValue);
+        $heightValue = $tagAttributes->getValueAndRemove($heightName);
+        if(!empty($heightValue)) {
+            $this->setRootAttribute($heightName, $heightValue);
+        }
 
 
         // Icon setting
-        $this->setDescendantPathAttribute("fill","currentColor");
+        $fill = $tagAttributes->getValueAndRemove("fill");
+        if (!empty($fill)) {
+            $this->setDescendantPathAttribute("fill", $fill);
+        }
 
-
-        // for line item such as feather (https://github.com/feathericons/feather#2-use)
-        // fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-
-        // FYI: For whatever reason if you add a border the line icon are neater
-        // PluginUtility::addStyleProperty("border","1px solid transparent",$attributes);
 
 
         $toHtmlArray = $tagAttributes->toHtmlArrayWithProcessing();

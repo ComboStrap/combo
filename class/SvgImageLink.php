@@ -38,8 +38,12 @@ class SvgImageLink extends InternalMediaLink
      */
     private $svgWeight;
 
-    private  function createImgHTMLTag()
+    private function createImgHTMLTag($tagAttributes = null)
     {
+        if ($tagAttributes == null) {
+            $tagAttributes = TagAttributes::createEmpty();
+        }
+
         $imgHTML = '<img';
 
         $lazyLoad = $this->getLazyLoad();
@@ -54,10 +58,10 @@ class SvgImageLink extends InternalMediaLink
          * Class
          */
         if ($lazyLoad) {
-            $this->getComponentAttributes()->addClassName("lazyload");
+            $tagAttributes->addClassName("lazyload");
         }
-        if (!empty($this->getComponentAttributes()->getClass())) {
-            $imgHTML .= ' class="' . $this->getComponentAttributes()->getClass() . '"';
+        if ($tagAttributes->hasAttribute("class")) {
+            $imgHTML .= ' class="' . $tagAttributes->getClass() . '"';
         }
 
         /**
@@ -155,13 +159,18 @@ class SvgImageLink extends InternalMediaLink
      * @param $tagAttributes
      * @return string
      */
-    public function renderMediaTag($tagAttributes)
+    public function renderMediaTag($tagAttributes = null)
     {
         if ($this->getFile()->exists()) {
 
-            if ($this->getFile()->getSize() > $this->getMaxInlineSize()) {
 
-               $imgHTML = $this->createImgHTMLTag($tagAttributes);
+            if (
+                $this->getFile()->getSize() > $this->getMaxInlineSize()
+                ||
+                $this->getLazyLoad()
+            ) {
+
+                $imgHTML = $this->createImgHTMLTag($tagAttributes);
 
             } else {
 
@@ -271,10 +280,19 @@ class SvgImageLink extends InternalMediaLink
 
     private function createInlineHTMLTag($tagAttributes)
     {
+
+        $svgXml = $this->getFile()->getXmlText($tagAttributes);
+
         /**
-         * inlineSVG from common.php
+         * Optimization from inlineSVG from common.php
          */
-        return inlineSVG($this->getFile()->getXmlText($tagAttributes));
+        $svgXml = preg_replace('/<!--.*?(-->)/s', '', $svgXml); // comments
+        $svgXml = preg_replace('/<\?xml .*?\?>/i', '', $svgXml); // xml header
+        $svgXml = preg_replace('/<!DOCTYPE .*?>/i', '', $svgXml); // doc type
+        $svgXml = preg_replace('/>\s+</s', '><', $svgXml); // newlines between tags
+        $svgXml = trim($svgXml);
+
+        return $svgXml;
 
     }
 

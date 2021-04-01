@@ -75,6 +75,10 @@ class SvgImage extends InternalMedia
     }
 
 
+    public function optimize(){
+        return inlineSVG($this->getPath());
+    }
+
     /**
      * Render a link
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}

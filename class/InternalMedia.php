@@ -102,6 +102,7 @@ class InternalMedia
      */
     public static function getParseAttributes($match)
     {
+        require_once(__DIR__. '/../../../../inc/parser/handler.php');
         return Doku_Handler_Parse_Media($match);
     }
 
@@ -366,5 +367,7 @@ class InternalMedia
         return mimetype($this->getId())[0];
 
     }
+
+
 
 }

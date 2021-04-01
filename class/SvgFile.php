@@ -75,7 +75,7 @@ class SvgFile extends XmlFile
 
         // Height
         $heightName = "height";
-        $heightValue = $tagAttributes->getValueAndRemove($widthName,"24px");
+        $heightValue = $tagAttributes->getValueAndRemove($heightName,"24px");
         $this->setRootAttribute($heightName, $heightValue);
 
 

@@ -12,6 +12,7 @@ use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
+use ComboStrap\SvgFile;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
@@ -186,8 +187,23 @@ $meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
 $meta[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
 
 /**
- * Lazy load image
+ * Lazy load svg
  */
 $meta[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
+
+/**
+ * Svg Optimization
+ */
+$meta[SvgFile::CONF_SVG_OPTIMIZATION_ENABLE] = array('onoff');
+
+/**
+ * Svg Optimization Inline
+ */
+$meta[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = array('string');
+
+/**
+ * Svg Upload Group Name
+ */
+$meta[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = array('string');
 
 

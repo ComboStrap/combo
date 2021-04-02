@@ -221,3 +221,18 @@ $conf["lazyLoadRasterImageEnable"] = 1;
  */
 $conf["lazyLoadSvgEnable"] = 1;
 
+/**
+ * Svg Optimization Disable {@link \ComboStrap\SvgFile::CONF_SVG_OPTIMIZATION_ENABLE}
+ */
+$conf["svgOptimizationEnable"] = 1;
+
+/**
+ * Svg Inline Max size {@link \ComboStrap\SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG}
+ */
+$conf["svgMaxInlineSizeKb"] = 2;
+
+/**
+ * The name of the group of user that can upload svg
+ * {@link action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME}
+ */
+$conf["svgUploadGroupName"] = "";

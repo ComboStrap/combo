@@ -48,11 +48,11 @@ class Auth
         $conf['superuser'] = $user;
         $conf['remoteuser'] = $user;
 
-        if($request!=null) {
+        if ($request != null) {
             $request->setServer('REMOTE_USER', $user);
         } else {
             global $INPUT;
-            $INPUT->server->set('REMOTE_USER',$user);
+            $INPUT->server->set('REMOTE_USER', $user);
         }
 
         // $_SERVER[] = $user;
@@ -88,13 +88,36 @@ class Auth
     public static function isAdmin()
     {
         global $INFO;
-        return $INFO['isadmin'];
+        if (!empty($INFO)) {
+            return $INFO['isadmin'];
+        } else {
+            return auth_isadmin(self::getUser(), self::getUserGroups());
+        }
+    }
+
+    public static function isMember($group)
+    {
+
+        return auth_isMember($group, self::getUser(), self::getUserGroups());
+
     }
 
     public static function isManager()
     {
         global $INFO;
         return $INFO['ismanager'];
+    }
+
+    private static function getUser()
+    {
+        global $INPUT;
+        return $INPUT->server->str('REMOTE_USER');
+    }
+
+    private static function getUserGroups()
+    {
+        global $USERINFO;
+        return is_array($USERINFO) ? $USERINFO['grps'] : array();
     }
 
 

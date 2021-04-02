@@ -13,6 +13,7 @@ use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
+use ComboStrap\SvgFile;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
@@ -159,6 +160,13 @@ $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "Th
  * Lazy load image
  */
 $lang[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the raster image only when they become visible");
-$lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Load the svg only when they become visible");
+
+/**
+ * Svg
+ */
+$lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Load a svg only when they become visible");
+$lang[SvgFile::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Reduce the size of the SVG by deleting non important meta");
+$lang[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "The maximum size in Kb of the SVG to be included as markup in the web page");
+$lang[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "The name of the group of users that can upload SVG");
 
 ?>

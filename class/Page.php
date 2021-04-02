@@ -79,7 +79,7 @@ class Page extends File
     {
 
         if (empty($id)) {
-            LogUtility::msg("A null page id was given");
+            LogUtility::msg("A null page id was given",LogUtility::LVL_MSG_WARNING,"support");
         }
 
         /**

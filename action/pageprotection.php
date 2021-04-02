@@ -84,6 +84,19 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     {
 
         $id = $event->data['id'];
+
+        /**
+         * When deleting a media, we get this id value
+         * This is not a page
+         */
+        if ($id=="*"){
+
+            if ($_SERVER['SCRIPT_NAME'] == "/lib/exe/mediamanager.php") {
+                return;
+            }
+
+        }
+
         /**
          * ACL ID have the root form
          */

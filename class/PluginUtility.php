@@ -902,10 +902,14 @@ class PluginUtility
 
     }
 
-    public static function getConfValue($confName)
+    public static function getConfValue($confName,$defaultValue = null)
     {
         global $conf;
-        return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
+        if (isset($conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName])){
+            return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
+        } else {
+            return $defaultValue;
+        }
     }
 
     /**

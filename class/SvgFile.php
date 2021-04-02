@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Action\Plugin;
 use dokuwiki\Cache\Cache;
 use dokuwiki\Cache\CacheRenderer;
 use DOMAttr;
@@ -31,6 +32,7 @@ class SvgFile extends XmlFile
      * Namespace (used to query with xpath only the svg node)
      */
     const SVG_NAMESPACE = "svg";
+    const CONF_SVG_OPTIMIZATION_ENABLE = "svgOptimizationEnable";
 
 
     public function __construct($path)
@@ -83,6 +85,15 @@ class SvgFile extends XmlFile
             $this->setDescendantPathAttribute("fill", $fill);
         }
 
+        if (!$tagAttributes->hasAttribute("preserveAspectRatio")){
+            /**
+             *
+             * Keep the same height
+             * Image in the Middle and border deleted when resizing
+             * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
+             */
+            $tagAttributes->addAttributeValue("preserveAspectRatio","xMidYMid slice");
+        }
 
         $toHtmlArray = $tagAttributes->toHtmlArrayWithProcessing();
         foreach ($toHtmlArray as $name => $value) {
@@ -123,6 +134,7 @@ class SvgFile extends XmlFile
     public function getOptimizedSvgFile()
     {
 
+
         $cache = $this->getCache();
         $dependencies = array(
             'files' => [$this->getPath()]
@@ -135,6 +147,7 @@ class SvgFile extends XmlFile
             $cache->storeCache($content);
             $file = $cache->cache;
         }
+
         return $file;
 
     }
@@ -159,47 +172,53 @@ class SvgFile extends XmlFile
 
     public function optimize()
     {
-        /**
-         * Optimization
-         * https://jakearchibald.github.io/svgomg/
-         */
 
-        foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
-            if (!empty($namespacePrefix) && $namespacePrefix!="svg") {
-                $this->removeNamespace($namespaceUri);
+        if ($this->shouldOptimize()) {
+            /**
+             * Optimization
+             * https://jakearchibald.github.io/svgomg/
+             */
+
+            foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
+                if (!empty($namespacePrefix) && $namespacePrefix != "svg") {
+                    $this->removeNamespace($namespaceUri);
+                }
             }
-        }
 
-        // Delete the svg namespace definition
-        // We don't delete the svg namespace because this is also the default and will delete all
-        $this->getXmlDom()->documentElement->removeAttributeNS("http://www.w3.org/2000/svg", "svg");
+            // Delete the svg namespace definition
+            // We don't delete the svg namespace because this is also the default and will delete all
+            $this->getXmlDom()->documentElement->removeAttributeNS("http://www.w3.org/2000/svg", "svg");
 
-        // Suppress all id
-        $attributesNameToDelete = ["id","style"];
-        foreach($attributesNameToDelete as $value) {
-            $nodes = $this->xpath("//@$value");
-            foreach ($nodes as $node) {
-                /** @var DOMAttr $node */
-                /** @var DOMElement $DOMNode */
-                $DOMNode = $node->parentNode;
-                $DOMNode->removeAttributeNode($node);
+            // Suppress all attribute id and style
+            $attributesNameToDelete = ["id", "style"];
+            foreach ($attributesNameToDelete as $value) {
+                $nodes = $this->xpath("//@$value");
+                foreach ($nodes as $node) {
+                    /** @var DOMAttr $node */
+                    /** @var DOMElement $DOMNode */
+                    $DOMNode = $node->parentNode;
+                    $DOMNode->removeAttributeNode($node);
+                }
             }
-        }
 
-        // Suppress root attribute
-        $attributesNameToDelete = ["version", "docname","width","height"];
-        foreach ($attributesNameToDelete as $childNode){
-            $this->removeRootAttribute($childNode);
-        }
+            // Suppress root attribute
+            $attributesNameToDelete = ["version", "docname", "width", "height"];
+            foreach ($attributesNameToDelete as $childNode) {
+                $this->removeRootAttribute($childNode);
+            }
 
-        // Suppress root metadata node
-        $childNodeToDelete = ["metadata"];
-        foreach ($childNodeToDelete as $childNode){
-            $this->removeRootChildNode($childNode);
+            // Suppress root metadata node
+            $childNodeToDelete = ["metadata", "defs"];
+            foreach ($childNodeToDelete as $childNode) {
+                $this->removeRootChildNode($childNode);
+            }
         }
     }
 
-
+    private function shouldOptimize()
+    {
+        return PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE);
+    }
 
 
 }

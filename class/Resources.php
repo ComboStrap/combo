@@ -34,7 +34,7 @@ class Resources
         return self::getAbsoluteResourcesDirectory() . "/snippet";
     }
 
-    private static function getAbsoluteResourcesDirectory()
+    public static function getAbsoluteResourcesDirectory()
     {
         return DOKU_PLUGIN . self::getRelativeResourceDirectory();
     }
@@ -51,6 +51,11 @@ class Resources
     private static function getRelativeResourceDirectory()
     {
         return PluginUtility::PLUGIN_BASE_NAME . "/" . self::RESOURCES_DIRECTORY_NAME;
+    }
+
+    public static function getConfResourceDirectory()
+    {
+        return self::getAbsoluteResourcesDirectory() . "/conf";
     }
 
 }

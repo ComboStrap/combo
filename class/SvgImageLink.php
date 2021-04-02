@@ -29,7 +29,7 @@ class SvgImageLink extends InternalMediaLink
      * The maximum size to be embedded
      * Above this size limit they are fetched
      */
-    const DEFAULT_MAX_INLINE_SIZE = 2048; // 2kb
+    const CONF_MAX_KB_SIZE_FOR_INLINE_SVG = "svgMaxInlineSize";
 
     /**
      * Lazy Load
@@ -67,9 +67,9 @@ class SvgImageLink extends InternalMediaLink
                 array(
                     'script' => [
                         array(
-                            "src"=>"https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
-                            "integrity"=>"sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
-                            "crossorigin"=>"anonymous"
+                            "src" => "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
+                            "integrity" => "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
+                            "crossorigin" => "anonymous"
                         )
                     ]
                 )
@@ -77,7 +77,6 @@ class SvgImageLink extends InternalMediaLink
 
             // Add lazy load snippet
             LazyLoad::addSnippet();
-
 
 
         }
@@ -307,7 +306,7 @@ class SvgImageLink extends InternalMediaLink
 
     private function getMaxInlineSize()
     {
-        return self::DEFAULT_MAX_INLINE_SIZE;
+        return PluginUtility::getConfValue(self::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
     }
 
     private function createInlineHTMLTag($tagAttributes)

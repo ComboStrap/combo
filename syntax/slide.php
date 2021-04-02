@@ -17,6 +17,13 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
     const TAG = "slide";
 
     /**
+     * @var int a slide counter
+     */
+    var $slideCounter = 0;
+
+    const EDIT_SECTION_TARGET = 'section';// 'plugin_combo_' . self::TAG;
+
+    /**
      * Syntax Type.
      *
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
@@ -105,7 +112,8 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                 $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::POSITION => $pos
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -113,9 +121,11 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                // Important otherwise we don't get an exit in the render
+                // +1 to go at the line ?
+                $endPosition = $pos + strlen($match) + 1;
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    PluginUtility::POSITION => $endPosition
                 );
 
 
@@ -142,6 +152,21 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
+
+                    // Id
+                    $this->slideCounter++;
+                    $name = "slide" . $this->slideCounter;
+
+                    // Section Edit button
+                    // for DokuWiki Greebo and more recent versions
+                    $position = $data[PluginUtility::POSITION];
+                    if (defined('SEC_EDIT_PATTERN')) {
+
+                        $renderer->startSectionEdit($position, array('target' => self::EDIT_SECTION_TARGET, 'name' => $name));
+                    } else {
+                        $renderer->startSectionEdit($position, self::EDIT_SECTION_TARGET, $name);
+                    }
+
                     $attributes = $data[PluginUtility::ATTRIBUTES];
 
                     $sizeAttribute = "size";
@@ -153,15 +178,15 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     switch ($size) {
                         case "lg":
                         case "large":
-                            PluginUtility::addClass2Attributes(self::TAG."-lg", $attributes);
+                            PluginUtility::addClass2Attributes(self::TAG . "-lg", $attributes);
                             break;
                         case "sm":
                         case "small":
-                            PluginUtility::addClass2Attributes(self::TAG."-sm", $attributes);
+                            PluginUtility::addClass2Attributes(self::TAG . "-sm", $attributes);
                             break;
                         case "xl":
                         case "extra-large":
-                            PluginUtility::addClass2Attributes(self::TAG."-xl", $attributes);
+                            PluginUtility::addClass2Attributes(self::TAG . "-xl", $attributes);
                             break;
                         default:
                             PluginUtility::addClass2Attributes(self::TAG, $attributes);
@@ -174,7 +199,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                      * By default, this is rounded
                      * BUt for a slide, this is by default not wanted
                      */
-                    PluginUtility::addStyleProperty("border-radius",0,$attributes);
+                    PluginUtility::addStyleProperty("border-radius", 0, $attributes);
 
                     $renderer->doc .= '<section';
                     if (sizeof($attributes) > 0) {
@@ -189,6 +214,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
                     $renderer->doc .= '</section>';
+                    $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
                     break;
             }
             return true;

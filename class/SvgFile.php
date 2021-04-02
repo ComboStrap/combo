@@ -121,8 +121,18 @@ class SvgFile extends XmlFile
     {
 
         if ($this->isXmlExtensionLoaded()) {
-            $namespace = self::SVG_NAMESPACE;
-            $pathsXml = $this->xpath("//$namespace:path");
+
+            /**
+             * If the file was optimized, the svg namespace
+             * is no more
+             */
+            $namespace = $this->getDocNamespaces();
+            if (isset($namespace[self::SVG_NAMESPACE])){
+                $query = "//$namespace:path";
+            } else {
+                $query = "//path";
+            }
+            $pathsXml = $this->xpath($query);
             foreach ($pathsXml as $pathXml) {
                 XmlUtility::setAttribute($attName, $attValue, $pathXml);
             }
@@ -187,7 +197,7 @@ class SvgFile extends XmlFile
 
             // Delete the svg namespace definition
             // We don't delete the svg namespace because this is also the default and will delete all
-            $this->getXmlDom()->documentElement->removeAttributeNS("http://www.w3.org/2000/svg", "svg");
+            $this->getXmlDom()->documentElement->removeAttributeNS("http://www.w3.org/2000/svg", self::SVG_NAMESPACE);
 
             // Suppress all attribute id and style
             $attributesNameToDelete = ["id", "style"];

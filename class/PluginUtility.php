@@ -86,6 +86,7 @@ class PluginUtility
     );
 
     const PARENT = "parent";
+    const POSITION = "position";
 
 
     /**

@@ -43,9 +43,14 @@ class XmlFile extends File
         if ($this->isXmlExtensionLoaded()) {
             try {
                 //https://www.php.net/manual/en/libxml.constants.php
-                $options = LIBXML_NOCDATA + LIBXML_NOBLANKS + LIBXML_NOEMPTYTAG + LIBXML_NSCLEAN + LIBXML_NOXMLDECL;
+                // No LIBXML_NOEMPTYTAG because the load of the logo.svg is hanging :(
+                $options = LIBXML_NOCDATA + LIBXML_NOBLANKS +  + LIBXML_NSCLEAN + LIBXML_NOXMLDECL ;
                 $this->xmlDom = new DOMDocument();
-                $this->xmlDom->load($this->getPath(), $options);
+                $xml =  file_get_contents($this->getPath());
+                $result = $this->xmlDom->loadXML($xml, $options);
+                if ($result===false){
+                    LogUtility::msg("Internal Error: Unable to load the DOM from the file ($this)",LogUtility::LVL_MSG_ERROR,"support");
+                }
                 // namespace error : Namespace prefix dc on format is not defined
                 // missing the ns declaration in the file. example:
                 // xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -137,6 +142,8 @@ class XmlFile extends File
                 $parentNode->removeAttributeNS($namespacePrefix, $node->localName);
             }
         }
+
+
 
 
 

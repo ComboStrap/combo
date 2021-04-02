@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use DOMDocument;
+use DOMElement;
 use SimpleXMLElement;
 
 /**
@@ -26,15 +27,15 @@ class XmlUtility
     /**
      * @param $attName
      * @param $attValue
-     * @param SimpleXMLElement $mediaSvgXml
+     * @param DOMElement $mediaSvgXml
      */
-    public static function setAttribute($attName, $attValue, SimpleXMLElement $mediaSvgXml)
+    public static function setAttribute($attName, $attValue, $mediaSvgXml)
     {
         $actualWidthValue = (string)$mediaSvgXml[$attName];
         if ($actualWidthValue != "") {
             $mediaSvgXml[$attName] = $attValue;
         } else {
-            $mediaSvgXml->addAttribute($attName, $attValue);
+            $mediaSvgXml->setAttribute($attName, $attValue);
         }
     }
 

@@ -12,13 +12,17 @@
 
 namespace ComboStrap;
 
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
+
 require_once(__DIR__ . '/File.php');
 
 class XmlFile extends File
 {
 
     /**
-     * @var \SimpleXMLElement
+     * @var DOMDocument
      */
     private $xmlDom = null;
 
@@ -32,7 +36,13 @@ class XmlFile extends File
 
         if ($this->isXmlExtensionLoaded()) {
             try {
-                $this->xmlDom = simplexml_load_file($this->getPath());
+                //https://www.php.net/manual/en/libxml.constants.php
+                $options = LIBXML_NOCDATA + LIBXML_NOBLANKS + LIBXML_NOEMPTYTAG + LIBXML_NSCLEAN;
+                $this->xmlDom = new DOMDocument();
+                $this->xmlDom->load($this->getPath(), $options);
+                // namespace error : Namespace prefix dc on format is not defined
+                // missing the ns declaration in the file. example:
+                // xmlns:dc="http://purl.org/dc/elements/1.1/"
             } catch (\Exception $e) {
                 /**
                  * Don't use {@link \ComboStrap\LogUtility::msg()}
@@ -58,14 +68,14 @@ class XmlFile extends File
     public function setRootAttribute($string, $name)
     {
         if ($this->isXmlExtensionLoaded()) {
-            XmlUtility::setAttribute($string, $name, $this->xmlDom);
+            $this->xmlDom->documentElement->setAttribute($string, $name);
         }
     }
 
     public function getXmlText()
     {
         if ($this->isXmlExtensionLoaded()) {
-            return XmlUtility::asHtml($this->getXmlDom());
+            return $this->getXmlDom()->saveHTML($this->getXmlDom()->ownerDocument);
         } else {
             return file_get_contents($this->getPath());
         }
@@ -76,8 +86,59 @@ class XmlFile extends File
      */
     public function isXmlExtensionLoaded()
     {
-        return extension_loaded(XmlUtility::SIMPLE_XML_EXTENSION);
+        // https://www.php.net/manual/en/dom.requirements.php
+        return extension_loaded("libxml");
+        // return extension_loaded(XmlUtility::SIMPLE_XML_EXTENSION);
     }
+
+    /**
+     * https://stackoverflow.com/questions/30257438/how-to-completely-remove-a-namespace-using-domdocument
+     * @param $namespace
+     */
+    function removeNamespace($namespace)
+    {
+        $xpath = new DOMXPath($this->xmlDom);
+
+        $nodes = $xpath->query("//*[namespace::{$namespace} and not(../namespace::{$namespace})]");
+        foreach ($nodes as $node) {
+            $ns_uri = $node->lookupNamespaceURI($namespace);
+            $node->removeAttributeNS($ns_uri, $namespace);
+        }
+    }
+
+    public function getDocNamespaces()
+    {
+        $xpath = new DOMXPath($this->getXmlDom());
+        // `namespace::*` means  selects all the namespace attribute of the context node
+        // See section 2 https://www.w3.org/TR/1999/REC-xpath-19991116/#location-paths
+        $DOMNodeList = $xpath->query('namespace::*', $this->getXmlDom()->ownerDocument);
+        $nameSpace = array();
+        foreach ($DOMNodeList as  $node) {
+            /** @var DOMElement $node */
+            $namespaceURI = $node->namespaceURI;
+            $localName = $node->prefix;
+            $nameSpace[$localName] = $namespaceURI;
+        }
+        return $nameSpace;
+    }
+
+    /**
+     * A wrapper that register namespace for the query
+     * with the defined prefix
+     * See comment:
+     * https://www.php.net/manual/en/domxpath.registernamespace.php#51480
+     * @param $query
+     * @return \DOMNodeList|false
+     */
+    public function xpath($query)
+    {
+        $xpath = new DOMXPath($this->getXmlDom());
+        foreach($this->getDocNamespaces() as $prefix => $namespaceUri)
+        $xpath->registerNamespace($prefix,$namespaceUri);
+        return $xpath->query($query, $this->getXmlDom());
+
+    }
+
 
 
 }

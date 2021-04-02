@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\Cache;
 use dokuwiki\Cache\CacheRenderer;
+use DOMXPath;
 
 require_once(__DIR__ . '/XmlFile.php');
 
@@ -24,39 +25,17 @@ class SvgFile extends XmlFile
     const CANONICAL = "svg";
 
     /**
-     * Arbitrary default namespace to be able to query with xpath
+     * Namespace (used to query with xpath only the svg node)
      */
     const SVG_NAMESPACE = "svg";
 
-    /**
-     * @var string svg namespace
-     */
-    private $namespace;
+
 
     public function __construct($path)
     {
         parent::__construct($path);
 
-        if ($this->isXmlExtensionLoaded()) {
-            // A namespace must be registered to be able to query it with xpath
-            $docNamespaces = $this->getXmlDom()->getDocNamespaces();
-            foreach ($docNamespaces as $nsKey => $nsValue) {
-                if (strlen($nsKey) == 0) {
-                    if (strpos($nsValue, "svg")) {
-                        $nsKey = self::SVG_NAMESPACE;
-                        $this->namespace = self::SVG_NAMESPACE;
-                    }
-                }
-                if (strlen($nsKey) != 0) {
-                    $this->getXmlDom()->registerXPathNamespace($nsKey, $nsValue);
-                }
-            }
-            if ($this->namespace == "") {
-                $msg = "The svg namespace was not found (http://www.w3.org/2000/svg). This can lead to problem with the setting of attributes such as the color due to bad xpath selection.";
-                LogUtility::log2FrontEnd($msg, LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-                LogUtility::log2file($msg);
-            }
-        }
+
     }
 
     public static function createFromId($id)
@@ -117,6 +96,7 @@ class SvgFile extends XmlFile
         /**
          * Optimization adapted from inlineSVG from common.php
          */
+        //$this->getXmlDom()->
         $svgXml = $this->getXmlText($tagAttributes);
         $svgXml = preg_replace('/<!--.*?(-->)/s', '', $svgXml); // comments
         $svgXml = preg_replace('/<\?xml .*?\?>/i', '', $svgXml); // xml header
@@ -129,17 +109,21 @@ class SvgFile extends XmlFile
 
     }
 
-    private function setDescendantPathAttribute($string, $string1)
+    /**
+     * Set this attribute to all descendant path object
+     * @param $attName
+     * @param $attValue
+     */
+    private function setDescendantPathAttribute($attName, $attValue)
     {
 
         if ($this->isXmlExtensionLoaded()) {
-            $namespace = $this->namespace;
-            if ($namespace != "") {
-                $pathsXml = $this->getXmlDom()->xpath("//$namespace:path");
-                foreach ($pathsXml as $pathXml) {
-                    XmlUtility::setAttribute("fill", "currentColor", $pathXml);
-                }
+            $namespace = self::SVG_NAMESPACE;
+            $pathsXml = $this->xpath("//$namespace:path");
+            foreach ($pathsXml as $pathXml) {
+                XmlUtility::setAttribute($attName, $attValue, $pathXml);
             }
+
         }
 
     }
@@ -180,5 +164,6 @@ class SvgFile extends XmlFile
         $cache = new Cache($this->getPath(), ".svg");
         return $cache;
     }
+
 
 }

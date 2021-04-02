@@ -14,7 +14,10 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\Cache;
 use dokuwiki\Cache\CacheRenderer;
+use DOMAttr;
+use DOMElement;
 use DOMXPath;
+use http\Exception\RuntimeException;
 
 require_once(__DIR__ . '/XmlFile.php');
 
@@ -28,7 +31,6 @@ class SvgFile extends XmlFile
      * Namespace (used to query with xpath only the svg node)
      */
     const SVG_NAMESPACE = "svg";
-
 
 
     public function __construct($path)
@@ -93,19 +95,9 @@ class SvgFile extends XmlFile
 
     public function getOptimizedSvg($tagAttributes = null)
     {
-        /**
-         * Optimization adapted from inlineSVG from common.php
-         */
-        //$this->getXmlDom()->
-        $svgXml = $this->getXmlText($tagAttributes);
-        $svgXml = preg_replace('/<!--.*?(-->)/s', '', $svgXml); // comments
-        $svgXml = preg_replace('/<\?xml .*?\?>/i', '', $svgXml); // xml header
-        $svgXml = preg_replace('/xmlns:xlink="[a-z0-9\/.:]*"/i', '', $svgXml); // xmlns
-        $svgXml = preg_replace('/version="[0-9.]*"/i', '', $svgXml); // version
-        $svgXml = preg_replace('/<!DOCTYPE .*?>/i', '', $svgXml); // doc type
-        $svgXml = preg_replace('/>\s+</s', '><', $svgXml); // newlines between tags
-        $svgXml = preg_replace('/\s{2,}/s', ' ', $svgXml); // double space
-        return trim($svgXml);
+        $this->optimize();
+
+        return $this->getXmlText($tagAttributes);
 
     }
 
@@ -164,6 +156,50 @@ class SvgFile extends XmlFile
         $cache = new Cache($this->getPath(), ".svg");
         return $cache;
     }
+
+    public function optimize()
+    {
+        /**
+         * Optimization
+         * https://jakearchibald.github.io/svgomg/
+         */
+
+        foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
+            if (!empty($namespacePrefix) && $namespacePrefix!="svg") {
+                $this->removeNamespace($namespaceUri);
+            }
+        }
+
+        // Delete the svg namespace definition
+        // We don't delete the svg namespace because this is also the default and will delete all
+        $this->getXmlDom()->documentElement->removeAttributeNS("http://www.w3.org/2000/svg", "svg");
+
+        // Suppress all id
+        $attributesNameToDelete = ["id","style"];
+        foreach($attributesNameToDelete as $value) {
+            $nodes = $this->xpath("//@$value");
+            foreach ($nodes as $node) {
+                /** @var DOMAttr $node */
+                /** @var DOMElement $DOMNode */
+                $DOMNode = $node->parentNode;
+                $DOMNode->removeAttributeNode($node);
+            }
+        }
+
+        // Suppress root attribute
+        $attributesNameToDelete = ["version", "docname","width","height"];
+        foreach ($attributesNameToDelete as $childNode){
+            $this->removeRootAttribute($childNode);
+        }
+
+        // Suppress root metadata node
+        $childNodeToDelete = ["metadata"];
+        foreach ($childNodeToDelete as $childNode){
+            $this->removeRootChildNode($childNode);
+        }
+    }
+
+
 
 
 }

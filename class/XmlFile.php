@@ -12,9 +12,15 @@
 
 namespace ComboStrap;
 
+use DOMAttr;
 use DOMDocument;
 use DOMElement;
+use DOMNode;
+use DOMNodeList;
 use DOMXPath;
+use Exception;
+use http\Exception\RuntimeException;
+
 
 require_once(__DIR__ . '/File.php');
 
@@ -37,13 +43,13 @@ class XmlFile extends File
         if ($this->isXmlExtensionLoaded()) {
             try {
                 //https://www.php.net/manual/en/libxml.constants.php
-                $options = LIBXML_NOCDATA + LIBXML_NOBLANKS + LIBXML_NOEMPTYTAG + LIBXML_NSCLEAN;
+                $options = LIBXML_NOCDATA + LIBXML_NOBLANKS + LIBXML_NOEMPTYTAG + LIBXML_NSCLEAN + LIBXML_NOXMLDECL;
                 $this->xmlDom = new DOMDocument();
                 $this->xmlDom->load($this->getPath(), $options);
                 // namespace error : Namespace prefix dc on format is not defined
                 // missing the ns declaration in the file. example:
                 // xmlns:dc="http://purl.org/dc/elements/1.1/"
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 /**
                  * Don't use {@link \ComboStrap\LogUtility::msg()}
                  * or you will get a recursion
@@ -60,7 +66,7 @@ class XmlFile extends File
 
     }
 
-    public function getXmlDom()
+    public function &getXmlDom()
     {
         return $this->xmlDom;
     }
@@ -93,31 +99,68 @@ class XmlFile extends File
 
     /**
      * https://stackoverflow.com/questions/30257438/how-to-completely-remove-a-namespace-using-domdocument
-     * @param $namespace
+     * @param $namespacePrefix
      */
-    function removeNamespace($namespace)
+    function removeNamespace($namespacePrefix)
     {
-        $xpath = new DOMXPath($this->xmlDom);
-
-        $nodes = $xpath->query("//*[namespace::{$namespace} and not(../namespace::{$namespace})]");
-        foreach ($nodes as $node) {
-            $ns_uri = $node->lookupNamespaceURI($namespace);
-            $node->removeAttributeNS($ns_uri, $namespace);
+        if (empty($namespacePrefix)) {
+            throw new \RuntimeException("The namespace is empty and should be specified");
         }
+
+
+        /**
+         * @var DOMNodeList $nodes
+         * finds all nodes that have a namespace node called $ns where their parent node doesn't also have the same namespace.
+         * @var DOMNodeList $nodes
+         */
+        $nodes = $this->xpath("//*[namespace-uri()='$namespacePrefix']");
+        foreach ($nodes as $node) {
+            /** @var DOMElement $node */
+            $node->parentNode->removeChild($node);
+        }
+
+        $nodes = $this->xpath("//@*[namespace-uri()='$namespacePrefix']");
+        foreach ($nodes as $node) {
+            /** @var DOMAttr $node */
+            /** @var DOMElement $DOMNode */
+            $DOMNode = $node->parentNode;
+            $DOMNode->removeAttributeNode($node);
+        }
+
+        //Node namespace can be select only from the document
+        $xpath = new DOMXPath($this->getXmlDom());
+        $DOMNodeList = $xpath->query("namespace::*", $this->getXmlDom()->ownerDocument);
+        foreach ($DOMNodeList as $node) {
+            $namespaceURI = $node->namespaceURI;
+            if ($namespaceURI == $namespacePrefix) {
+                $parentNode = $node->parentNode;
+                $parentNode->removeAttributeNS($namespacePrefix, $node->localName);
+            }
+        }
+
+
+
+
+
     }
 
     public function getDocNamespaces()
     {
         $xpath = new DOMXPath($this->getXmlDom());
-        // `namespace::*` means  selects all the namespace attribute of the context node
-        // See section 2 https://www.w3.org/TR/1999/REC-xpath-19991116/#location-paths
+        // `namespace::*` means selects all the namespace attribute of the context node
+        // namespace is an axes
+        // See https://www.w3.org/TR/1999/REC-xpath-19991116/#axes
+        // the namespace axis contains the namespace nodes of the context node; the axis will be empty unless the context node is an element
         $DOMNodeList = $xpath->query('namespace::*', $this->getXmlDom()->ownerDocument);
         $nameSpace = array();
-        foreach ($DOMNodeList as  $node) {
+        foreach ($DOMNodeList as $node) {
             /** @var DOMElement $node */
+
             $namespaceURI = $node->namespaceURI;
             $localName = $node->prefix;
-            $nameSpace[$localName] = $namespaceURI;
+            if ($namespaceURI != null) {
+                $nameSpace[$localName] = $namespaceURI;
+            }
         }
         return $nameSpace;
     }
@@ -128,17 +171,49 @@ class XmlFile extends File
      * See comment:
      * https://www.php.net/manual/en/domxpath.registernamespace.php#51480
      * @param $query
-     * @return \DOMNodeList|false
+     * @return DOMNodeList|false
      */
     public function xpath($query)
     {
         $xpath = new DOMXPath($this->getXmlDom());
-        foreach($this->getDocNamespaces() as $prefix => $namespaceUri)
-        $xpath->registerNamespace($prefix,$namespaceUri);
+        foreach ($this->getDocNamespaces() as $prefix => $namespaceUri)
+            $xpath->registerNamespace($prefix, $namespaceUri);
         return $xpath->query($query, $this->getXmlDom());
 
     }
 
+
+    public function removeRootAttribute($attribute)
+    {
+
+        // This function does not work
+        // $result = $this->getXmlDom()->documentElement->removeAttribute($attribute);
+
+        for ($i = 0; $i < $this->getXmlDom()->documentElement->attributes->length; $i++) {
+            if ($this->getXmlDom()->documentElement->attributes[$i]->name == $attribute) {
+                $result = $this->getXmlDom()->documentElement->removeAttributeNode($this->getXmlDom()->documentElement->attributes[$i]);
+                if ($result === false) {
+                    throw new \RuntimeException("Not able to delete the $attribute");
+                }
+                // There is no break here because you may find multiple version attribute for instance
+            }
+        }
+
+    }
+
+    public function removeRootChildNode($nodeName)
+    {
+        for ($i = 0; $i < $this->getXmlDom()->documentElement->childNodes->length; $i++) {
+            $childNode = &$this->getXmlDom()->documentElement->childNodes[$i];
+            if ($childNode->nodeName == $nodeName) {
+                $result = $this->getXmlDom()->documentElement->removeChild($childNode);
+                if ($result === false) {
+                    throw new \RuntimeException("Not able to delete the child node $nodeName");
+                }
+                break;
+            }
+        }
+    }
 
 
 }

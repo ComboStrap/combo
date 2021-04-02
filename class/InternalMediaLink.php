@@ -352,12 +352,19 @@ class InternalMediaLink
         return $this->linking;
     }
 
-    public function renderMediaTag($attributes)
+    /**
+     * @param TagAttributes $attributes
+     */
+    public function renderMediaTag(&$attributes = null)
     {
-        // hover
-        Animation::processOnHover($attributes);
-        // Position
-        Position::processPosition($attributes);
+        if($attributes==null){
+            $attributes = TagAttributes::createEmpty();
+        } else {
+            // hover
+            Animation::processOnHover($attributes);
+            // Position
+            Position::processPosition($attributes);
+        }
 
 
     }

@@ -111,7 +111,7 @@ class RasterImageLink extends InternalMediaLink
      * @param TagAttributes $attributes
      * @return string
      */
-    public function renderMediaTag($attributes)
+    public function renderMediaTag(&$attributes = null)
     {
 
         parent::renderMediaTag($attributes);

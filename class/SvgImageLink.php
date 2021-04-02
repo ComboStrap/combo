@@ -56,14 +56,38 @@ class SvgImageLink extends InternalMediaLink
          * Snippet
          */
         if ($lazyLoad) {
+
+
+            $snippetManager = PluginUtility::getSnippetManager();
+
+            // Based on https://github.com/iconic/SVGInjector/
+            // See also: https://github.com/iconfu/svg-inject
+            // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
+            $snippetManager->upsertHeadTagsForBar("svg-injector",
+                array(
+                    'script' => [
+                        array(
+                            "src"=>"https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
+                            "integrity"=>"sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
+                            "crossorigin"=>"anonymous"
+                        )
+                    ]
+                )
+            );
+
+            // Add lazy load snippet
             LazyLoad::addSnippet();
+
+
+
         }
 
         /**
          * Class
          */
         if ($lazyLoad) {
-            $tagAttributes->addClassName(LazyLoad::getClass());
+            $tagAttributes->addClassName('lozad-svg');
+            //$tagAttributes->addClassName(LazyLoad::getClass());
         }
         if ($tagAttributes->hasAttribute("class")) {
             $imgHTML .= ' class="' . $tagAttributes->getClass() . '"';
@@ -160,8 +184,15 @@ class SvgImageLink extends InternalMediaLink
      * @param $tagAttributes
      * @return string
      */
-    public function renderMediaTag($tagAttributes = null)
+    public function renderMediaTag(&$tagAttributes = null)
     {
+
+        /**
+         * For $tag Attributes preprocessing
+         * at the parent level for styling, ..
+         */
+        parent::renderMediaTag($tagAttributes);
+
         if ($this->getFile()->exists()) {
 
 

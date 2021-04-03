@@ -523,34 +523,6 @@ class LinkUtility
         return $this->type;
     }
 
-    /**
-     * Inherit the color of their parent and not from Dokuwiki
-     * @param $htmlLink
-     * @return bool|false|string
-     * @deprecated as we have taken the link creation over from dokuwiki
-     */
-    public
-    static function inheritColorFromParent($htmlLink)
-    {
-        /**
-         * The extra style for the link
-         */
-        $inlineStyle = StyleUtility::createInlineValue(self::STYLE_VALUE_WHEN_EXIST);
-        return HtmlUtility::addAttributeValue($htmlLink, "style", $inlineStyle);
-
-    }
-
-    /**
-     * Delete wikilink1 from the link
-     * @param $htmlLink
-     * @return bool|false|string
-     */
-    public
-    static function deleteDokuWikiClass($htmlLink)
-    {
-        // only wikilink1 (wikilink2 shows a red link if the page does not exist)
-        return HtmlUtility::deleteClassValue($htmlLink, self::CLASS_DOES_NOT_EXIST);
-    }
 
 
     /**

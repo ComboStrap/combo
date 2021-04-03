@@ -19,7 +19,6 @@ class File
     private $path;
 
 
-
     /**
      * File constructor.
      * @param $path
@@ -63,6 +62,11 @@ class File
         return filemtime($this->path);
     }
 
+    public function getFileNameWithoutExtension()
+    {
+        $ext = pathinfo($this->path, PATHINFO_EXTENSION);
+        return basename($this->path, $ext);
+    }
 
 
 }

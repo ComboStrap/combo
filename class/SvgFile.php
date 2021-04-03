@@ -79,10 +79,21 @@ class SvgFile extends XmlFile
         }
 
 
-        // Icon setting
+        // Icon will set by default a ''current color'' setting
         $fill = $tagAttributes->getValueAndRemove("fill");
+        $svgPaths = $this->getSvgPaths();
         if (!empty($fill)) {
-            $this->setDescendantPathAttribute("fill", $fill);
+            foreach ($svgPaths as $pathXml) {
+                XmlUtility::setAttribute("fill", $fill, $pathXml);
+            }
+        }
+
+        // Add a class for easy styling
+        for ($i=0;$i<$svgPaths->length;$i++) {
+
+            $stylingClass=$this->getFileNameWithoutExtension()."-".$i;
+            $this->addAttributeValue("class",$stylingClass,$svgPaths[$i]);
+
         }
 
         if (!$tagAttributes->hasAttribute("preserveAspectRatio")) {
@@ -112,32 +123,27 @@ class SvgFile extends XmlFile
 
     }
 
-    /**
-     * Set this attribute to all descendant path object
-     * @param $attName
-     * @param $attValue
-     */
-    private function setDescendantPathAttribute($attName, $attValue)
-    {
 
+    private function getSvgPaths()
+    {
         if ($this->isXmlExtensionLoaded()) {
 
             /**
              * If the file was optimized, the svg namespace
-             * is no more
+             * does not exist anymore
              */
             $namespace = $this->getDocNamespaces();
             if (isset($namespace[self::SVG_NAMESPACE])) {
-                $query = "//$namespace:path";
+                $svgNamespace = self::SVG_NAMESPACE;
+                $query = "//$svgNamespace:path";
             } else {
                 $query = "//path";
             }
-            $pathsXml = $this->xpath($query);
-            foreach ($pathsXml as $pathXml) {
-                XmlUtility::setAttribute($attName, $attValue, $pathXml);
-            }
-
+            return $this->xpath($query);
+        } else {
+            return array();
         }
+
 
     }
 
@@ -230,8 +236,10 @@ class SvgFile extends XmlFile
 
     private function shouldOptimize()
     {
-        return PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE);
+        return PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE,1);
     }
+
+
 
 
 }

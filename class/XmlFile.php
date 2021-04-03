@@ -104,27 +104,30 @@ class XmlFile extends File
 
     /**
      * https://stackoverflow.com/questions/30257438/how-to-completely-remove-a-namespace-using-domdocument
-     * @param $namespacePrefix
+     * @param $namespaceUri
      */
-    function removeNamespace($namespacePrefix)
+    function removeNamespace($namespaceUri)
     {
-        if (empty($namespacePrefix)) {
+        if (empty($namespaceUri)) {
             throw new \RuntimeException("The namespace is empty and should be specified");
         }
 
+        if (strpos($namespaceUri,"http")===false){
+            LogUtility::msg("Internal warning: The namespaceURI ($namespaceUri) does not seems to be an URI",LogUtility::LVL_MSG_WARNING,"support");
+        }
 
         /**
          * @var DOMNodeList $nodes
          * finds all nodes that have a namespace node called $ns where their parent node doesn't also have the same namespace.
          * @var DOMNodeList $nodes
          */
-        $nodes = $this->xpath("//*[namespace-uri()='$namespacePrefix']");
+        $nodes = $this->xpath("//*[namespace-uri()='$namespaceUri']");
         foreach ($nodes as $node) {
             /** @var DOMElement $node */
             $node->parentNode->removeChild($node);
         }
 
-        $nodes = $this->xpath("//@*[namespace-uri()='$namespacePrefix']");
+        $nodes = $this->xpath("//@*[namespace-uri()='$namespaceUri']");
         foreach ($nodes as $node) {
             /** @var DOMAttr $node */
             /** @var DOMElement $DOMNode */
@@ -137,9 +140,9 @@ class XmlFile extends File
         $DOMNodeList = $xpath->query("namespace::*", $this->getXmlDom()->ownerDocument);
         foreach ($DOMNodeList as $node) {
             $namespaceURI = $node->namespaceURI;
-            if ($namespaceURI == $namespacePrefix) {
+            if ($namespaceURI == $namespaceUri) {
                 $parentNode = $node->parentNode;
-                $parentNode->removeAttributeNS($namespacePrefix, $node->localName);
+                $parentNode->removeAttributeNS($namespaceUri, $node->localName);
             }
         }
 
@@ -183,9 +186,13 @@ class XmlFile extends File
     public function xpath($query)
     {
         $xpath = new DOMXPath($this->getXmlDom());
-        foreach ($this->getDocNamespaces() as $prefix => $namespaceUri)
-            $xpath->registerNamespace($prefix, $namespaceUri);
-        return $xpath->query($query, $this->getXmlDom());
+//        foreach ($this->getDocNamespaces() as $prefix => $namespaceUri){
+//            if(!empty($prefix)) {
+//                $xpath->registerNamespace($prefix, $namespaceUri);
+//            }
+//        }
+
+        return $xpath->query($query);
 
     }
 
@@ -218,6 +225,33 @@ class XmlFile extends File
                     throw new \RuntimeException("Not able to delete the child node $nodeName");
                 }
                 break;
+            }
+        }
+    }
+
+    /**
+     *
+     * Add a value to an attribute value
+     * Example
+     * <a class="actual">
+     *
+     * if you add "new"
+     * <a class="actual new">
+     *
+     * @param $attName
+     * @param $attValue
+     * @param DOMElement $xml
+     */
+    public function addAttributeValue($attName, $attValue, $xml)
+    {
+
+        if ($xml->hasAttribute($attName)) {
+            $xml->setAttribute($attName, $attValue);
+        } else {
+            $actualAttValue = $xml->getAttribute($attName);
+            $explodeArray = explode(" ", $actualAttValue);
+            if (!in_array($attValue,$explodeArray)) {
+                $xml->setAttribute($attName, (string)$actualAttValue . " $attValue");
             }
         }
     }

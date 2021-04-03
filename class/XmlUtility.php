@@ -26,16 +26,16 @@ class XmlUtility
 
     /**
      * @param $attName
-     * @param $attValue
-     * @param DOMElement $mediaSvgXml
+     * @param $newAttValue
+     * @param DOMElement $xml
      */
-    public static function setAttribute($attName, $attValue, $mediaSvgXml)
+    public static function setAttribute($attName, $newAttValue, $xml)
     {
-        $actualWidthValue = (string)$mediaSvgXml[$attName];
-        if ($actualWidthValue != "") {
-            $mediaSvgXml[$attName] = $attValue;
+        $attValue = (string)$xml[$attName];
+        if ($attValue != "") {
+            $xml[$attName] = $newAttValue;
         } else {
-            $mediaSvgXml->setAttribute($attName, $attValue);
+            $xml->setAttribute($attName, $newAttValue);
         }
     }
 
@@ -56,29 +56,7 @@ class XmlUtility
         }
     }
 
-    /**
-     *
-     * Add a value to an attribute value
-     * Example
-     * <a class="actual">
-     *
-     * if you add "new"
-     * <a class="actual new">
-     *
-     * @param $attName
-     * @param $attValue
-     * @param SimpleXMLElement $xml
-     */
-    public static function addAttributeValue($attName, $attValue, SimpleXMLElement $xml)
-    {
 
-        $actualAttValue = $xml[$attName];
-        if ($actualAttValue == null) {
-            $xml->addAttribute($attName, $attValue);
-        } else {
-            $xml[$attName] = (string)$actualAttValue . " $attValue";
-        }
-    }
 
     /**
      * Get a Simple XMl Element and returns it without the XML header (ie as HTML node)
@@ -172,6 +150,13 @@ class XmlUtility
         return $doc->saveXML($doc->documentElement) . DOKU_LF;
     }
 
+    /**
+     * note: Option for the loading of {@link XmlFile}
+     * have also this option
+     *
+     * @param $text
+     * @return string|string[]
+     */
     public static function extractTextWithoutCdata($text)
     {
         $text = str_replace("/*<![CDATA[*/","",$text);
@@ -185,6 +170,11 @@ class XmlUtility
         $text = preg_replace("/\r\n\s*\r\n/","\r\n",$text);
         $text = preg_replace("/\n\s*\n/","\n",$text);
         return $text;
+    }
+
+    public static function setClass($stylingClass, $path)
+    {
+
     }
 
 

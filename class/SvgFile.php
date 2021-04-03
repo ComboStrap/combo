@@ -85,14 +85,14 @@ class SvgFile extends XmlFile
             $this->setDescendantPathAttribute("fill", $fill);
         }
 
-        if (!$tagAttributes->hasAttribute("preserveAspectRatio")){
+        if (!$tagAttributes->hasAttribute("preserveAspectRatio")) {
             /**
              *
              * Keep the same height
              * Image in the Middle and border deleted when resizing
              * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
              */
-            $tagAttributes->addAttributeValue("preserveAspectRatio","xMidYMid slice");
+            $tagAttributes->addAttributeValue("preserveAspectRatio", "xMidYMid slice");
         }
 
         $toHtmlArray = $tagAttributes->toHtmlArrayWithProcessing();
@@ -127,7 +127,7 @@ class SvgFile extends XmlFile
              * is no more
              */
             $namespace = $this->getDocNamespaces();
-            if (isset($namespace[self::SVG_NAMESPACE])){
+            if (isset($namespace[self::SVG_NAMESPACE])) {
                 $query = "//$namespace:path";
             } else {
                 $query = "//path";
@@ -147,7 +147,10 @@ class SvgFile extends XmlFile
 
         $cache = $this->getCache();
         $dependencies = array(
-            'files' => [$this->getPath()]
+            'files' => [
+                $this->getPath(),
+                Resources::getComboHome() . "/plugin.info.txt"
+            ]
         );
         $useCache = $cache->useCache($dependencies);
         if ($useCache) {

@@ -58,4 +58,9 @@ class Resources
         return self::getAbsoluteResourcesDirectory() . "/conf";
     }
 
+    public static function getComboHome()
+    {
+        return DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME;
+    }
+
 }

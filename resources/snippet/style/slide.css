@@ -5,6 +5,7 @@
     margin: 0;
     width: 100%;
     display: block;
+    border-radius: 0;
 }
 
 .slide-md {

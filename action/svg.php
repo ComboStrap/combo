@@ -28,6 +28,10 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
          * {@link media_upload()}
          */
         $controller->register_hook('AUTH_ACL_CHECK', 'BEFORE', $this, 'svg_mime');
+        /**
+         * When the parsing of a page starts
+         */
+        $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'BEFORE', $this, 'svg_mime');
 
     }
 
@@ -55,7 +59,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
     {
 
         $isadmin = Auth::isAdmin();
-        $isMember = Auth::isMember("@".self::CONF_SVG_UPLOAD_GROUP_NAME);
+        $isMember = Auth::isMember("@" . self::CONF_SVG_UPLOAD_GROUP_NAME);
 
         if ($isadmin || $isMember) {
             /**
@@ -68,6 +72,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         }
 
     }
+
 
 
 }

@@ -42,9 +42,28 @@ class XmlFile extends File
 
         if ($this->isXmlExtensionLoaded()) {
             try {
-                //https://www.php.net/manual/en/libxml.constants.php
-                // No LIBXML_NOEMPTYTAG because the load of the logo.svg is hanging :(
-                $options = LIBXML_NOCDATA + LIBXML_NOBLANKS + +LIBXML_NSCLEAN + LIBXML_NOXMLDECL;
+                // https://www.php.net/manual/en/libxml.constants.php
+                $options = LIBXML_NOCDATA
+                    | LIBXML_NOBLANKS
+                    | LIBXML_NSCLEAN // Remove redundant namespace declarations
+                    | LIBXML_NOXMLDECL // Drop the XML declaration when saving a document
+                    | LIBXML_NONET // No network during load
+                ;
+
+                // HTML
+                $extension = $this->getExtension();
+                if (in_array($extension,["html","htm"])){
+                    // Options that cause the processus to hang if this is not for a html file
+                    // Empty tag option may also be used only on save
+                    //   at https://www.php.net/manual/en/domdocument.save.php
+                    //   and https://www.php.net/manual/en/domdocument.savexml.php
+                    $options = $options
+                        | LIBXML_NOEMPTYTAG
+                        | LIBXML_HTML_NOIMPLIED
+                        | LIBXML_HTML_NODEFDTD // No doctype
+                    ;
+                }
+
                 $this->xmlDom = new DOMDocument();
                 $xml = file_get_contents($this->getPath());
                 $result = $this->xmlDom->loadXML($xml, $options);
@@ -86,7 +105,10 @@ class XmlFile extends File
     public function getXmlText()
     {
         if ($this->isXmlExtensionLoaded()) {
-            return $this->getXmlDom()->saveHTML($this->getXmlDom()->ownerDocument);
+            $xmlText = $this->getXmlDom()->saveHTML($this->getXmlDom()->ownerDocument);
+            // Delete doctype (for svg optimization)
+            $xmlText = preg_replace('/^<!DOCTYPE.+?>/', '',$xmlText);
+            return trim($xmlText);
         } else {
             return file_get_contents($this->getPath());
         }
@@ -182,7 +204,7 @@ class XmlFile extends File
     {
         $xpath = new DOMXPath($this->getXmlDom());
         foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
-            if(!empty($prefix)) {
+            if (!empty($prefix)) {
                 $xpath->registerNamespace($prefix, $namespaceUri);
             }
         }
@@ -250,6 +272,10 @@ class XmlFile extends File
             }
         }
     }
+
+
+
+
 
 
 }

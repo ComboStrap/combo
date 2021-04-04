@@ -68,5 +68,10 @@ class File
         return basename($this->path, $ext);
     }
 
+    protected function getExtension()
+    {
+        return pathinfo($this->path, PATHINFO_EXTENSION);
+    }
+
 
 }

@@ -116,28 +116,25 @@ class Animation
 
     /**
      * Based on https://wowjs.uk/
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
     public static function processOnView(&$attributes)
     {
-        if (isset($attributes[self::ON_VIEW_ATTRIBUTE])) {
-            $onView = $attributes[self::ON_VIEW_ATTRIBUTE];
-            unset($attributes[self::ON_VIEW_ATTRIBUTE]);
-
+        if ($attributes->hasAttribute(self::ON_VIEW_ATTRIBUTE)) {
+            $onView = $attributes->getValueAndRemove(self::ON_VIEW_ATTRIBUTE);
 
             $animateClass = self::ANIMATE_CLASS;
-            PluginUtility::addClass2Attributes($animateClass, $attributes);
+            $attributes->addClassName($animateClass);
 
             $animationClass = "animate__" . $onView;
-            PluginUtility::addAttributeValue("data-animated-class", $animationClass, $attributes);
-            //PluginUtility::addClass2Attributes($animationClass,$attributes);
+            $attributes->addAttributeValue("data-animated-class", $animationClass);
 
+            // TODO: Add attributes
             //$delay = "animate__delay-2s";
             //PluginUtility::addClass2Attributes($delay, $attributes);
 
             $snippetManager = PluginUtility::getSnippetManager();
 
-            // self::wowInit($attributes);
             self::scrollMagicInit();
 
             $snippetManager->upsertHeadTagsForBar(self::ON_VIEW_ID,
@@ -164,6 +161,7 @@ class Animation
      *         When the user scrolls and reach this distance the hidden box is revealed.
      * Live  : Constantly check for new WOW elements on the page.
      * @param $attributes
+     * @deprecated - wow permits only one trigger by animation
      */
     private static function wowInit(&$attributes)
     {

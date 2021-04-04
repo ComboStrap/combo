@@ -143,6 +143,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $context = $data[PluginUtility::CONTEXT];
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $media = InternalMediaLink::createFromRenderAttributes($attributes);
+
                 if ($media->isImage()) {
 
                     if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {

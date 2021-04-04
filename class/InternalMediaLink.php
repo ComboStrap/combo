@@ -205,7 +205,7 @@ class InternalMediaLink
      */
     public static function createFromId($id)
     {
-        $mime = mimetype($id)[1];
+        $mime = mimetype(mediaFN($id))[1];
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime, 6) == "svg+xml") {
                 $internalMedia = new SvgImageLink($id);
@@ -213,7 +213,11 @@ class InternalMediaLink
                 $internalMedia = new RasterImageLink($id);
             }
         } else {
-            LogUtility::msg("Internal error: The media ($id) is not yet implemented", LogUtility::LVL_MSG_ERROR, "support");
+            if($mime==false){
+                LogUtility::msg("The mime type of the media ($id) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
+            } else {
+                LogUtility::msg("Internal error: The type ($mime) of media ($id) with the typ is not yet implemented", LogUtility::LVL_MSG_ERROR, "support");
+            }
             $internalMedia = new InternalMediaLink($id);
         }
         return $internalMedia;
@@ -360,6 +364,8 @@ class InternalMediaLink
             $attributes = TagAttributes::createEmpty();
         }
 
+        PluginUtility::processAlignAttributes($attributes);
+        PluginUtility::processSpacingAttributes($attributes);
 
         // hover
         Animation::processOnHover($attributes);

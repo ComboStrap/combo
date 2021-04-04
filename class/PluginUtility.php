@@ -227,8 +227,14 @@ class PluginUtility
         /**
          * Position and Stickiness
          */
-        Position::processStickiness($attributes);
+        Position::processStickiness($tagAttributes);
         Position::processPosition($tagAttributes);
+
+        /**
+         * Process the attributes that have an effect on the class
+         */
+        self::processSpacingAttributes($tagAttributes);
+        self::processAlignAttributes($tagAttributes);
 
         $attributes = $tagAttributes->toCallStackArray();
 
@@ -238,8 +244,7 @@ class PluginUtility
         // Process the style attributes if any
         self::processStyle($attributes);
 
-        // Process the attributes that have an effect on the class
-        self::processClass($attributes);
+
 
         self::processCollapse($attributes);
         // Then transform
@@ -796,32 +801,28 @@ class PluginUtility
         self::addAttributeValue("class", $classValue, $attributes);
     }
 
-    /**
-     * Process the attributes that have an impact on the class
-     * @param $attributes
-     */
-    private static function processClass(&$attributes)
-    {
+    public static function processAlignAttributes(&$attributes){
         // The class shortcut
         $align = "align";
-        if (array_key_exists($align, $attributes)) {
-            $alignValue = $attributes[$align];
-            unset($attributes[$align]);
+        if ($attributes->hasAttribute($align)) {
+            $alignValue = $attributes->getValueAndRemove($align);
             if ($alignValue == "center") {
-                if (array_key_exists("class", $attributes)) {
-                    $attributes["class"] .= " mx-auto";
-                } else {
-                    $attributes["class"] = "mx-auto";
-                }
+                $attributes->addClassName("mx-auto");
             }
         }
+    }
+    /**
+     * Process the attributes that have an impact on the class
+     * @param TagAttributes $attributes
+     */
+    public static function processSpacingAttributes(&$attributes)
+    {
 
         // Spacing is just a class
         $spacing = "spacing";
-        if (array_key_exists($spacing, $attributes)) {
+        if ($attributes->hasAttribute($spacing)) {
 
-            $spacingValue = $attributes[$spacing];
-            unset($attributes[$spacing]);
+            $spacingValue = $attributes->getValueAndRemove($spacing);
 
             $spacingNames = preg_split("/\s/", $spacingValue);
             $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
@@ -853,7 +854,7 @@ class PluginUtility
                     }
 
                 }
-                self::addClass2Attributes($spacingClass, $attributes);
+                $attributes->addClassName($spacingClass);
             }
         }
 

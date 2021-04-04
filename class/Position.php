@@ -30,16 +30,15 @@ class Position
 
     /**
      * Process stickiness
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
     public static function processStickiness(&$attributes)
     {
-        if (isset($attributes[self::STICKY_ATTRIBUTE])) {
-            $sticky = strtolower($attributes[self::STICKY_ATTRIBUTE]);
-            unset($attributes[self::STICKY_ATTRIBUTE]);
+        if ($attributes->hasAttribute(self::STICKY_ATTRIBUTE)) {
+            $sticky = strtolower($attributes->getValueAndRemove(self::STICKY_ATTRIBUTE));
             if ($sticky == "true") {
                 $stickyClass = self::STICKY_CLASS;
-                PluginUtility::addClass2Attributes($stickyClass, $attributes);
+                $attributes->addClassName($stickyClass);
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->upsertHeadTagsForBar(self::STICKY,
                     array(

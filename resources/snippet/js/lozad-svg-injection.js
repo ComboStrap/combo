@@ -5,9 +5,10 @@ window.addEventListener("load", function (event) {
             // Custom implementation to load the svg element
             SVGInjector(el, {
                     each: function (svg) {
-                        // Callback after each SVG is injected, to update the element
-                        el = svg;
-                    }
+                        // Style copy (max width)
+                        svg.style.cssText = el.style.cssText;
+                        el.dataset.class.split(" ").forEach(e => svg.classList.add(e));
+                    },
                 }
             )
         },

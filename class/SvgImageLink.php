@@ -65,6 +65,7 @@ class SvgImageLink extends InternalMediaLink
 
             // Based on https://github.com/iconic/SVGInjector/
             // See also: https://github.com/iconfu/svg-inject
+            // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
             $snippetManager->upsertHeadTagsForBar("svg-injector",
                 array(
@@ -85,26 +86,60 @@ class SvgImageLink extends InternalMediaLink
             LazyLoad::addLozadSnippet();
         }
 
+        $injectionClass = "";
         if ($svgInjection && $lazyLoad) {
             PluginUtility::getSnippetManager()->upsertJavascriptForBar("lozad-svg-injection");
-            $tagAttributes->addClassName("combo-lazy-svg-injection");
+            $injectionClass = "combo-lazy-svg-injection";
         } else if ($lazyLoad && !$svgInjection) {
             PluginUtility::getSnippetManager()->upsertJavascriptForBar("lozad-svg");
-            $tagAttributes->addClassName("combo-lazy-svg");
+            $injectionClass = "combo-lazy-svg";
         } else if ($svgInjection && !$lazyLoad) {
             PluginUtility::getSnippetManager()->upsertJavascriptForBar("svg-injector");
-            $tagAttributes->addClassName("combo-svg-injection");
+            $injectionClass = "combo-svg-injection";
         }
 
+        /**
+         * Style properties
+         * TODO: when {@link TagAttributes} supports the creation of style, use it instead
+         */
+        $styleProperties = "";
+        $widthValue = $this->getImgTagWidthValue();
+        if (!empty($widthValue)) {
+            $styleProperties .= 'max-width:' . $this->getImgTagWidthValue() . 'px';
+        }
+        if (!empty($this->getImgTagHeightValue())) {
+            if (!empty($styleProperties)) {
+                $styleProperties .= ";";
+            }
+            $styleProperties .= 'height:' . $this->getImgTagHeightValue() . 'px';
+        }
+        if (!empty($styleProperties)) {
+            $imgHTML .= ' style="' . $styleProperties . '"';
+        }
+
+        /**
+         * Class processing
+         * TODO: When the processing will attached total to tag attributes
+         */
+        PluginUtility::processAlignAttributes($tagAttributes);
 
 
         /**
          * Class
          */
-
-        if ($tagAttributes->hasAttribute("class")) {
-            $imgHTML .= ' class="' . $tagAttributes->getClass() . '"';
+        if ($svgInjection) {
+            $imgHTML .= ' class="' . $injectionClass . '"';
+            if ($tagAttributes->hasAttribute("class")) {
+                $imgHTML .= ' data-class="' . $tagAttributes->getClass() . '"';
+            }
+        } else {
+            $allClass = $injectionClass;
+            if ($tagAttributes->hasAttribute("class")) {
+                $allClass .= ' ' . $tagAttributes->getClass();
+            }
+            $imgHTML .= ' class="' . $allClass . '"';
         }
+
 
         /**
          * Src
@@ -114,13 +149,6 @@ class SvgImageLink extends InternalMediaLink
 
             $imgHTML .= " data-src=\"$srcValue\"";
 
-            /**
-             * max-width as asked
-             */
-            $widthValue = $this->getImgTagWidthValue();
-            if (!empty($widthValue)) {
-                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
-            }
 
             /**
              * Responsive image src set
@@ -129,14 +157,10 @@ class SvgImageLink extends InternalMediaLink
 
 
         } else {
+
             $imgHTML .= " src=\"$srcValue\"";
-            if (!empty($this->getImgTagWidthValue())) {
-                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
-            }
-            if (!empty($this->getImgTagHeightValue())) {
-                $imgHTML .= ' height="' . $this->getImgTagHeightValue() . '"';
-            }
         }
+
 
 
         /**
@@ -172,6 +196,16 @@ class SvgImageLink extends InternalMediaLink
             if ($this->getCache()) {
                 $att['cache'] = $this->getCache();
             }
+            /**
+             * Width and height are extern style properties
+             * Needed if the SVG is injected
+             * They are not the width and height of the SVG
+             * because the svg can fit
+             * They are more the max-width notion
+             */
+//            if (!empty($this->getRequestedWidth())){
+//                $att['w'] = $this->getRequestedWidth();
+//            }
             $direct = true;
             return ml($this->getId(), $att, $direct, '&', $absolute);
 

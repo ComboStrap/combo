@@ -237,8 +237,9 @@ class SvgFile extends XmlFile
      */
     private function getCache()
     {
-        $cache = new Cache($this->getPath(), ".svg");
-        return $cache;
+        $key = $this->getPath();
+
+        return new Cache($key, ".svg");
     }
 
     /**

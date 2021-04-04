@@ -204,7 +204,8 @@ class PluginUtility
      * HTML compatible
      * @param $attributes
      */
-    public static function array2HTMLAttributesAsArray(&$attributes){
+    public static function array2HTMLAttributesAsArray(&$attributes)
+    {
         /**
          * Temporary code to Migration to array to the new one
          * The attribute with the new format first
@@ -242,6 +243,7 @@ class PluginUtility
         self::processCollapse($attributes);
 
     }
+
     /**
      * Take an array  where the key is the attribute name
      * and return a HTML tag string
@@ -559,7 +561,7 @@ class PluginUtility
         if (array_key_exists($widthName, $attributes)) {
 
             $widthValue = trim($attributes[$widthName]);
-            if($widthValue=="fit"){
+            if ($widthValue == "fit") {
                 $widthValue = "fit-content";
             }
             $styleProperties['max-width'] = $widthValue;
@@ -587,7 +589,7 @@ class PluginUtility
             unset($attributes[$textAlign]);
         }
 
-        Shadow::process($attributes,$styleProperties);
+        Shadow::process($attributes, $styleProperties);
 
 
         if (sizeof($styleProperties) != 0) {
@@ -809,16 +811,23 @@ class PluginUtility
         self::addAttributeValue("class", $classValue, $attributes);
     }
 
-    public static function processAlignAttributes(&$attributes){
+    /**
+     * @param TagAttributes $attributes
+     */
+    public static function processAlignAttributes(&$attributes)
+    {
         // The class shortcut
         $align = "align";
         if ($attributes->hasAttribute($align)) {
             $alignValue = $attributes->getValueAndRemove($align);
             if ($alignValue == "center") {
                 $attributes->addClassName("mx-auto");
+                // Center should be a block (svg is not a block by default for instance)
+                $attributes->addClassName("d-block");
             }
         }
     }
+
     /**
      * Process the attributes that have an impact on the class
      * @param TagAttributes $attributes
@@ -925,10 +934,10 @@ class PluginUtility
 
     }
 
-    public static function getConfValue($confName,$defaultValue = null)
+    public static function getConfValue($confName, $defaultValue = null)
     {
         global $conf;
-        if (isset($conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName])){
+        if (isset($conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName])) {
             return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
         } else {
             return $defaultValue;
@@ -1088,7 +1097,7 @@ class PluginUtility
      * @param \Doku_Handler $handler
      * @return array
      */
-    public static function  handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
+    public static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
     {
         $tag = new Tag($tagName, array(), DOKU_LEXER_UNMATCHED, $handler);
         $sibling = $tag->getPreviousSibling();

@@ -267,7 +267,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                          */
                         if ($context == self::TAG) {
                             self::processButtonAttributesToHtmlAttributes($attributes);
-                            $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                            $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                             $renderer->doc .= '<button type="button" ' . $inlineAttributes . '>';
                         }
                         break;

@@ -263,3 +263,9 @@ $conf["svgOptimizationElementsToDelete"] = "script, style, title, desc";
  * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY}
  */
 $conf["svgOptimizationElementsToDeleteIfEmpty"] = "metadata, defs";
+
+/**
+ * {@link \ComboStrap\SvgFile::CONF_PRESERVE_ASPECT_RATIO_DEFAULT}
+ */
+
+$conf["svgPreserveAspectRatioDefault"] = "xMidYMid slice";

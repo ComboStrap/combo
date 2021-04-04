@@ -195,7 +195,7 @@ class syntax_plugin_combo_dropdown extends DokuWiki_Syntax_Plugin
                      * New namespace for data attribute
                      */
                     $dataToggleAttributeName = Bootstrap::getDataNamespace();
-                    $htmlAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $htmlAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                     $renderer->doc .= "<li $htmlAttributes>" . DOKU_LF
                         . "<a id=\"$dropDownId\" href=\"#\" class=\"nav-link dropdown-toggle active\" data{$dataToggleAttributeName}-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" title=\"$name\">$name </a>" . DOKU_LF
                         . '<div class="dropdown-menu" aria-labelledby="' . $dropDownId . '">' . DOKU_LF;

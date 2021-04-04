@@ -310,14 +310,14 @@ EOD;
         } else {
             $preAttributes['data-src'] = "file." . $language;
         }
-        $htmlCode = '<pre ' . PluginUtility::array2HTMLAttributes($preAttributes) . '>' . DOKU_LF;
+        $htmlCode = '<pre ' . PluginUtility::array2HTMLAttributesAsString($preAttributes) . '>' . DOKU_LF;
 
         /**
          * Code element
          */
         $htmlCode .= '<code ';
         PluginUtility::addClass2Attributes($addedClass, $attributes);
-        $htmlCode .= PluginUtility::array2HTMLAttributes($attributes) . ' >' . DOKU_LF;
+        $htmlCode .= PluginUtility::array2HTMLAttributesAsString($attributes) . ' >' . DOKU_LF;
         $renderer->doc .= $htmlCode;
 
     }

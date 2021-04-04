@@ -254,7 +254,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             if ($context == syntax_plugin_combo_card::TAG) {
                                 PluginUtility::addClass2Attributes("mb-0", $blockquoteAttributes);
                             }
-                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
+                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributesAsString($blockquoteAttributes);
                             $renderer->doc .= "<blockquote {$inlineBlockQuoteAttributes}>" . DOKU_LF;
                             break;
                         case self::TWEET:
@@ -282,14 +282,14 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                                 }
                             }
 
-                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
+                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributesAsString($blockquoteAttributes);
                             $renderer->doc .= "<blockquote $inlineBlockQuoteAttributes>" . DOKU_LF;
                             $renderer->doc .= "<p>" . DOKU_LF;
                             break;
                         default:
                             $class = "card";
                             PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
-                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributes($blockquoteAttributes);
+                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributesAsString($blockquoteAttributes);
                             $renderer->doc .= "<div {$inlineBlockQuoteAttributes}>" . DOKU_LF;
                             /**
                              * Add the card body directly,

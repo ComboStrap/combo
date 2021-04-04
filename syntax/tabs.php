@@ -82,7 +82,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
     public static function openTabPanelsElement(&$attributes)
     {
         PluginUtility::addClass2Attributes("tab-content", $attributes);
-        $html = "<div " . PluginUtility::array2HTMLAttributes($attributes) . ">" . DOKU_LF;
+        $html = "<div " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">" . DOKU_LF;
         $type = self::getComponentType($attributes);
         switch ($type) {
             case self::ENCLOSED_TABS_TYPE:
@@ -148,7 +148,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
          * Creating the li element
          */
         PluginUtility::addClass2Attributes("nav-item", $attributes);
-        $html = "<li " . PluginUtility::array2HTMLAttributes($attributes) . ">" . DOKU_LF;
+        $html = "<li " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">" . DOKU_LF;
 
         /**
          * Creating the a element
@@ -166,7 +166,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
         $htmlAttributes["role"] = "tab";
         $htmlAttributes['href'] = "#$panel";
 
-        $html .= "<a " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">";
+        $html .= "<a " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes) . ">";
         return $html;
     }
 
@@ -229,7 +229,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                 PluginUtility::addClass2Attributes("nav", $htmlAttributes);
                 PluginUtility::addClass2Attributes("nav-$skin", $htmlAttributes);
                 $htmlAttributes['role'] = 'tablist';
-                $html = "<ul " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">";
+                $html = "<ul " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes) . ">";
                 break;
             case self::ENCLOSED_TABS_TYPE:
             case self::ENCLOSED_PILLS_TYPE:
@@ -237,7 +237,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                  * The HTML opening for cards
                  */
                 PluginUtility::addClass2Attributes("card", $htmlAttributes);
-                $html = "<div " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">" . DOKU_LF .
+                $html = "<div " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes) . ">" . DOKU_LF .
                     "<div class=\"card-header\">" . DOKU_LF;
                 /**
                  * The HTML opening for the menu (UL)
@@ -246,7 +246,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                 PluginUtility::addClass2Attributes("nav", $ulHtmlAttributes);
                 PluginUtility::addClass2Attributes("nav-$skin", $ulHtmlAttributes);
                 PluginUtility::addClass2Attributes("card-header-$skin", $ulHtmlAttributes);
-                $html .= "<ul " . PluginUtility::array2HTMLAttributes($ulHtmlAttributes) . ">" . DOKU_LF;
+                $html .= "<ul " . PluginUtility::array2HTMLAttributesAsString($ulHtmlAttributes) . ">" . DOKU_LF;
                 break;
             default:
                 LogUtility::log2FrontEnd("The tabs type ($type) is unknown", LogUtility::LVL_MSG_ERROR, self::TAG);

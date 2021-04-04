@@ -470,7 +470,7 @@ class LinkUtility
             unset($this->attributes["title"]);
         }
         if (sizeof($this->attributes) > 0) {
-            $returnedHTML .= " " . PluginUtility::array2HTMLAttributes($this->attributes);
+            $returnedHTML .= " " . PluginUtility::array2HTMLAttributesAsString($this->attributes);
         }
         return $returnedHTML . ">";
 

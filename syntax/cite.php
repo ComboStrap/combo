@@ -168,7 +168,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                             StringUtility::addEolCharacterIfNotPresent($renderer->doc);
                             $renderer->doc .= "<footer class=\"blockquote-footer\"><cite";
                             if (sizeof($attributes) > 0) {
-                                $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                                $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                                 $renderer->doc .= " $inlineAttributes>";
                             } else {
                                 $renderer->doc .= '>';
@@ -180,7 +180,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                         default:
                             $renderer->doc .= "<cite";
                             if (sizeof($attributes) > 0) {
-                                $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                                $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                                 $renderer->doc .= " $inlineAttributes";
                             }
                             $renderer->doc .= ">";

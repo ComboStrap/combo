@@ -218,4 +218,5 @@ $meta[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = array('string');
 $meta[SvgFile::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = array('string');
 $meta[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = array('string');
 $meta[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = array('string');
+$meta[SvgFile::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = array('string');
 

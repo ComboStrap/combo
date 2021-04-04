@@ -201,8 +201,7 @@ class SvgImageLink extends InternalMediaLink
     {
 
         /**
-         * For $tag Attributes preprocessing
-         * at the parent level for styling, ..
+         * To init the properties
          */
         parent::renderMediaTag($tagAttributes);
 

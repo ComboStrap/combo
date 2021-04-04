@@ -313,7 +313,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $attributes["role"] = "tabpanel";
                             $attributes["aria-labelledby"] = $attributes["id"] . "-tab";
 
-                            $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>';
+                            $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>';
                             break;
 
                         default:

@@ -205,7 +205,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
                         } else {
                             $attributes["class"] = "{$classValue}";
                         }
-                        $renderer->doc .= '<div id="' . $idElementToCollapse . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '>';
+                        $renderer->doc .= '<div id="' . $idElementToCollapse . '" ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>';
 
                         // All element below will collapse
                         break;

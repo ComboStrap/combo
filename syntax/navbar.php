@@ -236,7 +236,7 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
                     }
 
 
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
 
                     $containerTag = "";
                     if ($this->containerInside) {

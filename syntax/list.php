@@ -107,7 +107,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
 
                 $html = '<ul';
                 if (sizeof($attributes)) {
-                    $html .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                    $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
                 }
                 $html .= '>';
 

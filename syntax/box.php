@@ -135,7 +135,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $renderer->doc .= '<div';
                     if (sizeof($attributes) > 0) {
-                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
                     }
                     $renderer->doc .= '>';
                     break;

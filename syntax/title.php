@@ -281,7 +281,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
         unset($attributes[self::LEVEL]);
         $html = '<h' . $level;
         if (sizeof($attributes) > 0) {
-            $html .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+            $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
         }
         $html .= ' >';
         $renderer->doc .= $html;

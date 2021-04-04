@@ -152,7 +152,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                     unset($attributesToRender[self::ATTRIBUTE_ROUNDED]);
                 }
 
-                $html = '<span ' . PluginUtility::array2HTMLAttributes($attributesToRender) . '>';
+                $html = '<span ' . PluginUtility::array2HTMLAttributesAsString($attributesToRender) . '>';
 
                 return array(
                     PluginUtility::STATE => $state,

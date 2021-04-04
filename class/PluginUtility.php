@@ -198,28 +198,23 @@ class PluginUtility
         return '<' . $tag . '.*?>';
     }
 
-    /**
-     * Take an array  where the key is the attribute name
-     * and return a HTML tag string
-     *
-     * The attribute name and value are escaped
-     *
-     * @param $attributes - combo attributes
-     * @return string
-     */
-    public static function array2HTMLAttributes($attributes)
-    {
 
+    /**
+     * Process the internal attributes and makes them
+     * HTML compatible
+     * @param $attributes
+     */
+    public static function array2HTMLAttributesAsArray(&$attributes){
         /**
          * Temporary code to Migration to array to the new one
          * The attribute with the new format first
          * and the older one at the end
          */
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+
         /**
          * Process animation (onHover, onView)
          */
-
         Animation::processOnHover($tagAttributes);
         Animation::processOnView($tagAttributes);
 
@@ -244,9 +239,22 @@ class PluginUtility
         // Process the style attributes if any
         self::processStyle($attributes);
 
-
-
         self::processCollapse($attributes);
+
+    }
+    /**
+     * Take an array  where the key is the attribute name
+     * and return a HTML tag string
+     *
+     * The attribute name and value are escaped
+     *
+     * @param $attributes - combo attributes
+     * @return string
+     */
+    public static function array2HTMLAttributesAsString($attributes)
+    {
+
+        self::array2HTMLAttributesAsArray($attributes);
         // Then transform
         $tagAttributeString = "";
         foreach ($attributes as $name => $value) {

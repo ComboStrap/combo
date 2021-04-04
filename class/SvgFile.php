@@ -68,6 +68,26 @@ class SvgFile extends XmlFile
         'http://www.vector.evaxdesign.sk',
     ];
 
+    /**
+     * Default SVG values
+     * https://github.com/svg/svgo/blob/master/plugins/_collections.js#L1579
+     * The key are exact (not lowercase) to be able to look them up
+     * for optimization
+     */
+    const SVG_DEFAULT_ATTRIBUTES_VALUE = array(
+        "x" => '0',
+        "y" => '0',
+        "width" => '100%',
+        "height" => '100%',
+        "preserveAspectRatio" => 'xMidYMid meet',
+        "zoomAndPan" => 'magnify',
+        "version" => '1.1',
+        "baseProfile" => 'none',
+        "contentScriptType" => 'application/ecmascript',
+        "contentStyleType" => 'text/css',
+    );
+    const CONF_PRESERVE_ASPECT_RATIO_DEFAULT = "svgPreserveAspectRatioDefault";
+
 
     public function __construct($path)
     {
@@ -102,19 +122,11 @@ class SvgFile extends XmlFile
             $this->setRootAttribute('data-name', $name);
         }
 
-        // Width
-        $widthName = "width";
-        $widthValue = $tagAttributes->getValueAndRemove($widthName);
-        if (!empty($widthValue)) {
-            $this->setRootAttribute($widthName, $widthValue);
-        }
-
-        // Height
-        $heightName = "height";
-        $heightValue = $tagAttributes->getValueAndRemove($heightName);
-        if (!empty($heightValue)) {
-            $this->setRootAttribute($heightName, $heightValue);
-        }
+        /**
+         * Width and height are in reality style properties.
+         *   ie the max-width style
+         * They are treated in {@link PluginUtility::processStyle()}
+         */
 
 
         // Icon will set by default a ''current color'' setting
@@ -140,8 +152,10 @@ class SvgFile extends XmlFile
              * Keep the same height
              * Image in the Middle and border deleted when resizing
              * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
+             * Default is xMidYMid meet
              */
-            $tagAttributes->addAttributeValue("preserveAspectRatio", "xMidYMid slice");
+            $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
+            $tagAttributes->addAttributeValue("preserveAspectRatio", $defaultAspectRatio);
         }
 
         $toHtmlArray = $tagAttributes->toHtmlArrayWithProcessing();
@@ -261,11 +275,42 @@ class SvgFile extends XmlFile
 
             // Delete the svg namespace definition
             // We don't delete the svg namespace because this is also the default and will delete all the content
+            $documentElement = $this->getXmlDom()->documentElement;
             if (!in_array("svg", $namespaceToKeep)) {
-                $this->getXmlDom()->documentElement->removeAttributeNS("http://www.w3.org/2000/svg", self::SVG_NAMESPACE);
+                $documentElement->removeAttributeNS("http://www.w3.org/2000/svg", self::SVG_NAMESPACE);
             }
 
-            // Suppress the attributes (by default id and style)
+            /**
+             * Delete empty namespace rules
+             */
+            foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
+                $nodes = $this->xpath("//*[namespace-uri()='$namespaceUri']");
+                $attributes = $this->xpath("//@*[namespace-uri()='$namespaceUri']");
+                if ($nodes->length == 0 && $attributes->length == 0) {
+                    $result = $documentElement->removeAttributeNS($namespaceUri, $namespacePrefix);
+                    if ($result === false) {
+                        LogUtility::msg("Internal error: The deletion of the empty namespace ($namespacePrefix:$namespaceUri) didn't succeed", LogUtility::LVL_MSG_WARNING, "support");
+                    }
+                }
+            }
+
+            /**
+             * Delete default value (version=1.1 for instance)
+             */
+            $defaultValues = self::SVG_DEFAULT_ATTRIBUTES_VALUE;
+            foreach ($documentElement->attributes as $attribute) {
+                /** @var DOMAttr $attribute */
+                $name = $attribute->name;
+                if (isset($defaultValues[$name])) {
+                    if ($defaultValues[$name] == $attribute->value) {
+                        $documentElement->removeAttributeNode($attribute);
+                    }
+                }
+            }
+
+            /**
+             * Suppress the attributes (by default id and style)
+             */
             $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style");
             $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
@@ -278,20 +323,22 @@ class SvgFile extends XmlFile
                 }
             }
 
-            // Remove viewBox attr which coincides with a width/height box.
-            // https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute
-            // Example:
-            // <svg width="100" height="50" viewBox="0 0 100 50">
-            // <svg width="100" height="50">
-            // https://github.com/svg/svgo/blob/master/plugins/removeViewBox.js
-            $widthAttributeValue = $this->getXmlDom()->documentElement->getAttribute("width");
+            /**
+             * Remove width/height that coincides with a viewBox attr
+             * https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute
+             * Example:
+             * <svg width="100" height="50" viewBox="0 0 100 50">
+             * <svg viewBox="0 0 100 50">
+             *
+             */
+            $widthAttributeValue = $documentElement->getAttribute("width");
             if (empty($widthAttributeValue)) {
                 $widthAttributeValue = $tagAttribute->getValue("width");
             }
             if (!empty($widthAttributeValue)) {
                 $widthPixel = Unit::toPixel($widthAttributeValue);
 
-                $heightAttributeValue = $this->getXmlDom()->documentElement->getAttribute("height");
+                $heightAttributeValue = $documentElement->getAttribute("height");
                 if (empty($heightAttributeValue)) {
                     $heightAttributeValue = $tagAttribute->getValue("height");
                 }
@@ -299,9 +346,9 @@ class SvgFile extends XmlFile
                     $heightPixel = Unit::toPixel($heightAttributeValue);
 
                     // ViewBox
-                    $viewBoxAttribute = $this->getXmlDom()->documentElement->getAttribute("viewBox");
+                    $viewBoxAttribute = $documentElement->getAttribute("viewBox");
                     if (!empty($viewBoxAttribute)) {
-                        $viewBoxAttributeAsArray = StringUtility::explodeAndTrim($viewBoxAttribute," ");
+                        $viewBoxAttributeAsArray = StringUtility::explodeAndTrim($viewBoxAttribute, " ");
 
                         if (sizeof($viewBoxAttributeAsArray) == 4) {
                             $minX = $viewBoxAttributeAsArray[0];
@@ -314,8 +361,8 @@ class SvgFile extends XmlFile
                                 $widthViewPort == $widthPixel &
                                 $heightViewPort == $heightPixel
                             ) {
-                                $this->getXmlDom()->documentElement->removeAttribute("width");
-                                $this->getXmlDom()->documentElement->removeAttribute("height");
+                                $documentElement->removeAttribute("width");
+                                $documentElement->removeAttribute("height");
                             }
 
                         }
@@ -324,9 +371,11 @@ class SvgFile extends XmlFile
             }
 
 
-            // Suppress script metadata node
-            // Delete of:
-            //   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
+            /**
+             * Suppress script metadata node
+             * Delete of:
+             *   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
+             */
             $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
             foreach ($elementsToDelete as $elementToDelete) {

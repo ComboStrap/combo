@@ -172,5 +172,6 @@ $lang[SvgFile::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getUrl(Svg
 $lang[SvgFile::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The attribute deleted during optimization");
 $lang[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The element deleted if empty");
 $lang[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The element always deleted");
+$lang[SvgFile::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg - Default value for the preserveAspectRatio attribute");
 
 ?>

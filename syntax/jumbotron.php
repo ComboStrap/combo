@@ -147,7 +147,7 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
                 }
 
                 PluginUtility::addClass2Attributes($jumbotronClass, $attributes);
-                $html = '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+                $html = '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>' . DOKU_LF;
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,

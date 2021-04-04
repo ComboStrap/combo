@@ -73,7 +73,7 @@ class syntax_plugin_combo_hr extends DokuWiki_Syntax_Plugin
                 $attributes = PluginUtility::getTagAttributes($match);
                 $html = "<hr>";
                 if (sizeof($attributes)>0){
-                    $html = "<hr ".PluginUtility::array2HTMLAttributes($attributes).">";
+                    $html = "<hr ".PluginUtility::array2HTMLAttributesAsString($attributes).">";
                 }
                 return array(
                     PluginUtility::STATE => $state,

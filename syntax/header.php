@@ -80,7 +80,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
                         case syntax_plugin_combo_blockquote::TAG:
                         case syntax_plugin_combo_card::TAG:
                             PluginUtility::addClass2Attributes("card-header", $htmlAttributes);
-                            $inlineAttributes = PluginUtility::array2HTMLAttributes($htmlAttributes);
+                            $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($htmlAttributes);
                             $html = "<div {$inlineAttributes}>" . DOKU_LF;
                             break;
                     }

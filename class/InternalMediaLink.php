@@ -33,6 +33,7 @@ class InternalMediaLink
     const HEIGHT_KEY = 'height';
     const WIDTH_KEY = 'width';
     const CACHE_KEY = 'cache';
+    const ALIGN_KEY = 'align';
 
     private $id;
 
@@ -170,6 +171,11 @@ class InternalMediaLink
             $nocache = $attributes[self::CACHE_KEY];
             $media->setNoCache($nocache);
             unset($attributes[self::CACHE_KEY]);
+        }
+        if (isset($attributes[self::ALIGN_KEY])) {
+            $align = $attributes[self::ALIGN_KEY];
+            $media->setAlign($align);
+            unset($attributes[self::ALIGN_KEY]);
         }
         return $media;
 
@@ -362,16 +368,16 @@ class InternalMediaLink
     {
         if ($attributes == null) {
             $attributes = TagAttributes::createEmpty();
+            if (!empty($this->getRequestedWidth())) {
+                $attributes->addAttributeValue("width", $this->getRequestedWidth());
+            }
+            if (!empty($this->getRequestedHeight())) {
+                $attributes->addAttributeValue("height", $this->getRequestedHeight());
+            }
+            if (!empty($this->align)){
+                $attributes->addAttributeValue("align", $this->align);
+            }
         }
-
-        PluginUtility::processAlignAttributes($attributes);
-        PluginUtility::processSpacingAttributes($attributes);
-
-        // hover
-        Animation::processOnHover($attributes);
-        // Position
-        Position::processPosition($attributes);
-
 
     }
 

@@ -173,7 +173,7 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
                         unset($attributes[self::ATTRIBUTE_ROUNDED]);
                     }
 
-                    $renderer->doc .= '<span ' . PluginUtility::array2HTMLAttributes($attributes) . '>';
+                    $renderer->doc .= '<span ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>';
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

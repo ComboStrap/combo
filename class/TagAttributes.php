@@ -26,6 +26,7 @@ class TagAttributes
      * @var array of attribute name that contains an array of unique value
      */
     private $attributes;
+    private $styleDeclaration = array();
 
     /**
      * ComponentAttributes constructor.
@@ -129,10 +130,10 @@ class TagAttributes
     public function toHtmlArrayWithProcessing()
     {
 
-        // Process the style
-        $this->processStyle();
+        $htmlArray = $this->toCallStackArray();
+        PluginUtility::array2HTMLAttributesAsArray($htmlArray);
 
-        return $this->toCallStackArray();
+        return $htmlArray;
 
     }
 
@@ -174,15 +175,7 @@ class TagAttributes
         return $value;
     }
 
-    /**
-     * Temporary Refactoring function
-     */
-    private function processStyle()
-    {
-        $htmlArray = $this->toCallStackArray();
-        PluginUtility::processStyle($htmlArray);
-        $this->attributes = self::CallStackArrayToInternalArray($htmlArray);
-    }
+
 
     /**
      * @return array
@@ -203,6 +196,11 @@ class TagAttributes
             $value = $this->getXmlAttributeValue($attributeName);
         }
         return $value;
+    }
+
+    public function addStyleDeclaration($property, $value)
+    {
+        $this->styleDeclaration[$property]=$value;
     }
 
 

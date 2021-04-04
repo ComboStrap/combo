@@ -272,7 +272,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     /**
                      * Card
                      */
-                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>' . DOKU_LF;
 
                     /**
                      * Illustrations

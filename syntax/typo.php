@@ -114,7 +114,7 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
                         PluginUtility::addClass2Attributes("lead", $attributes);
                     }
                 }
-                $html = "<p " . PluginUtility::array2HTMLAttributes($attributes) . ">";
+                $html = "<p " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">";
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,

@@ -200,7 +200,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
                     } else {
                         $attributes["class"] .= "col";
                     }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                     $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;
                     break;
 

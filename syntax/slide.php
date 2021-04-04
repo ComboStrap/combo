@@ -203,7 +203,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
                     $renderer->doc .= '<section';
                     if (sizeof($attributes) > 0) {
-                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
                     }
                     $renderer->doc .= '>';
                     break;

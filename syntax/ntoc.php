@@ -281,7 +281,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                      */
                     $list = "<list";
                     if (sizeof($attributes) > 0) {
-                        $list .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                        $list .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
                     }
                     $list .= ">";
 
@@ -301,7 +301,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                             $headerAttributes["background-color"] = "light";
                             PluginUtility::addStyleProperty("border-bottom", "1px solid #e5e5e5", $headerAttributes);
                         }
-                        $list .= '<li ' . PluginUtility::array2HTMLAttributes($headerAttributes) . '>' . $tpl . '</li>';
+                        $list .= '<li ' . PluginUtility::array2HTMLAttributesAsString($headerAttributes) . '>' . $tpl . '</li>';
                     }
                     $pageNum = 0;
 

@@ -143,7 +143,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
                 PluginUtility::addClass2Attributes(self::COMBO_LIST_ITEM_CLASS, $attributes);
                 $html = '<li';
                 if (sizeof($attributes)) {
-                    $html .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                    $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
                 }
                 $html .= '>';
                 return array(

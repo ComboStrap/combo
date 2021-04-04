@@ -196,7 +196,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
                         unset($attributes["expand"]);
                     }
 
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                     $renderer->doc .= "<ul {$inlineAttributes}>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :

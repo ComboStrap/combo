@@ -13,19 +13,21 @@
 namespace ComboStrap;
 
 /**
- * The library
- * https://github.com/aFarkas/lazysizes
+ * This one support background loading
+ * https://github.com/ApoorvSaxena/lozad.js
+ *
  *
  * TODO: implement no script pattern ? the https://github.com/aFarkas/lazysizes#the-noscript-pattern
  *
- * This one support background loading
- * https://github.com/ApoorvSaxena/lozad.js
  */
 class LazyLoad
 {
 
     /**
-     * Which loaders to use
+     * Lozad was choosen because
+     * it was easier to add svg injection
+     * it supports background image
+     * it's most used (JsDelivr stats)
      */
     const ACTIVE = self::LOZAD_ID;
 
@@ -102,8 +104,9 @@ class LazyLoad
     /**
      * Add lozad
      * Support background image
+     * https://github.com/ApoorvSaxena/lozad.js
      */
-    private static function addLozadSnippet()
+    public static function addLozadSnippet()
     {
 
         $snippetManager = PluginUtility::getSnippetManager();
@@ -122,7 +125,10 @@ class LazyLoad
             )
         );
 
-        $snippetManager->upsertJavascriptForBar(self::LOZAD_ID);
+        /**
+         * The snippet depend on the image type and features
+         * and was added in the code
+         */
 
 
     }

@@ -106,7 +106,7 @@ class InternalMediaLink
      */
     public static function getParseAttributes($match)
     {
-        require_once(__DIR__. '/../../../../inc/parser/handler.php');
+        require_once(__DIR__ . '/../../../../inc/parser/handler.php');
         return Doku_Handler_Parse_Media($match);
     }
 
@@ -146,7 +146,7 @@ class InternalMediaLink
         $src = cleanID($attributes['src']);
         $media = self::createFromId($src);
 
-        if(isset($attributes[self::WIDTH_KEY])) {
+        if (isset($attributes[self::WIDTH_KEY])) {
             $width = $attributes[self::WIDTH_KEY];
             $media->setRequestedWidth($width);
             unset($attributes[self::WIDTH_KEY]);
@@ -207,7 +207,7 @@ class InternalMediaLink
     {
         $mime = mimetype($id)[1];
         if (substr($mime, 0, 5) == 'image') {
-            if (substr($mime,6)=="svg+xml"){
+            if (substr($mime, 6) == "svg+xml") {
                 $internalMedia = new SvgImageLink($id);
             } else {
                 $internalMedia = new RasterImageLink($id);
@@ -258,7 +258,7 @@ class InternalMediaLink
 
     public function setNoCache($cache)
     {
-        if($cache=="nocache") {
+        if ($cache == "nocache") {
             $this->cache = false;
         }
     }
@@ -275,7 +275,7 @@ class InternalMediaLink
 
     public function getRequestedWidth()
     {
-        if ($this->linkWidth==0){
+        if ($this->linkWidth == 0) {
             return null; // empty
         } else {
             return $this->linkWidth;
@@ -296,7 +296,6 @@ class InternalMediaLink
     {
         $this->align = $align;
     }
-
 
 
     public function getCache()
@@ -357,14 +356,15 @@ class InternalMediaLink
      */
     public function renderMediaTag(&$attributes = null)
     {
-        if($attributes==null){
+        if ($attributes == null) {
             $attributes = TagAttributes::createEmpty();
-        } else {
-            // hover
-            Animation::processOnHover($attributes);
-            // Position
-            Position::processPosition($attributes);
         }
+
+
+        // hover
+        Animation::processOnHover($attributes);
+        // Position
+        Position::processPosition($attributes);
 
 
     }

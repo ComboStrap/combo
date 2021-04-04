@@ -64,11 +64,13 @@ EOF;
 
     }
 
+    /**
+     * @param TagAttributes $attributes
+     */
     public static function processPosition(&$attributes)
     {
-        if (isset($attributes[self::POSITION_ATTRIBUTE])) {
-            $position = strtolower($attributes[self::POSITION_ATTRIBUTE]);
-            unset($attributes[self::POSITION_ATTRIBUTE]);
+        if ($attributes->hasAttribute(self::POSITION_ATTRIBUTE)) {
+            $position = strtolower($attributes->getValueAndRemove(self::POSITION_ATTRIBUTE));
             if (Bootstrap::getBootStrapMajorVersion() < Bootstrap::BootStrapFiveMajorVersion) {
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->upsertCssSnippetForBar(self::POSITION_SNIPPET_ID);
@@ -79,54 +81,54 @@ EOF;
             switch ($position) {
                 case "top-left":
                 case "left-top":
-                    PluginUtility::addClass2Attributes("position-absolute top-0 start-0 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-0 start-0 translate-middle");
                     break;
                 case "top-quartile-1":
                 case "quartile-1-top":
                     self::addQuartileCss();
-                    PluginUtility::addClass2Attributes("position-absolute top-0 start-25 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-0 start-25 translate-middle");
                     break;
                 case "top-center":
                 case "center-top":
-                    PluginUtility::addClass2Attributes("position-absolute top-0 start-50 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-0 start-50 translate-middle");
                     break;
                 case "top-quartile-3":
                 case "quartile-3-top":
                     self::addQuartileCss();
-                    PluginUtility::addClass2Attributes("position-absolute top-0 start-75 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-0 start-75 translate-middle");
                     break;
                 case "top-right":
                 case "right-top":
-                    PluginUtility::addClass2Attributes("position-absolute top-0 start-100 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-0 start-100 translate-middle");
                     break;
                 case "left-quartile-1":
                 case "quartile-1-left":
                     self::addQuartileCss();
-                    PluginUtility::addClass2Attributes("position-absolute top-25 start-0 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-25 start-0 translate-middle");
                     break;
                 case "left-center":
                 case "center-left":
-                    PluginUtility::addClass2Attributes("position-absolute top-50 start-0 translate-middle", $attributes);
+                $attributes->addClassName("position-absolute top-50 start-0 translate-middle");
                     break;
                 case "center-center":
                 case "center":
-                    PluginUtility::addClass2Attributes("position-absolute top-50 start-50 translate-middle", $attributes);
+                $attributes->addClassName("position-absolute top-50 start-50 translate-middle");
                     break;
                 case "right-center":
                 case "center-right":
-                    PluginUtility::addClass2Attributes("position-absolute top-50 start-100 translate-middle", $attributes);
+                $attributes->addClassName("position-absolute top-50 start-100 translate-middle");
                     break;
                 case "bottom-left":
                 case "left-bottom":
-                    PluginUtility::addClass2Attributes("position-absolute top-100 start-0 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-100 start-0 translate-middle");
                     break;
                 case "bottom-center":
                 case "center-bottom":
-                    PluginUtility::addClass2Attributes("position-absolute top-100 start-50 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-100 start-50 translate-middle");
                     break;
                 case "bottom-right":
                 case "right-bottom":
-                    PluginUtility::addClass2Attributes("position-absolute top-100 start-100 translate-middle", $attributes);
+                    $attributes->addClassName("position-absolute top-100 start-100 translate-middle");
                     break;
 
             }

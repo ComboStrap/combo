@@ -48,7 +48,7 @@ class TagAttributes
     }
 
     /**
-     * @param $array - the array got from the {@link TagAttributes::toArray()} that is passed between the {@link SyntaxPlugin::handle()} and {@link SyntaxPlugin::render()}  method
+     * @param $array - the array got from the {@link TagAttributes::toInternalArray()} that is passed between the {@link SyntaxPlugin::handle()} and {@link SyntaxPlugin::render()}  method
      * @return TagAttributes
      */
     public static function createFromArray($array)
@@ -104,7 +104,14 @@ class TagAttributes
         if (!$this->hasAttribute($attributeName)) {
             $this->attributes[$attributeName] = array();
         }
-        $this->attributes[$attributeName][$attributeValue] = true;
+
+        /**
+         * It may be in the form "value1 value2"
+         */
+        $values = StringUtility::explodeAndTrim($attributeValue," ");
+        foreach ($values as $value) {
+            $this->attributes[$attributeName][$value] = true;
+        }
     }
 
     public function hasAttribute($attributeName)
@@ -146,7 +153,7 @@ class TagAttributes
     /**
      * @return array - the storage format returned from the {@link SyntaxPlugin::handle()}  method
      */
-    public function toArray()
+    public function toInternalArray()
     {
         return $this->attributes;
     }

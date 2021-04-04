@@ -34,7 +34,11 @@ class SvgImageLink extends InternalMediaLink
     /**
      * Lazy Load
      */
-    const CONF_LAZY_LOAD_ENABLE = "lazyLoadSvgEnable";
+    const CONF_LAZY_LOAD_ENABLE = "svgLazyLoadEnable";
+    /**
+     * Svg Injection
+     */
+    const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
 
     private $svgWidth;
@@ -52,12 +56,11 @@ class SvgImageLink extends InternalMediaLink
         $imgHTML = '<img';
 
         $lazyLoad = $this->getLazyLoad();
+        $svgInjection = PluginUtility::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
         /**
          * Snippet
          */
-        if ($lazyLoad) {
-
-
+        if ($svgInjection) {
             $snippetManager = PluginUtility::getSnippetManager();
 
             // Based on https://github.com/iconic/SVGInjector/
@@ -74,20 +77,31 @@ class SvgImageLink extends InternalMediaLink
                     ]
                 )
             );
+        }
+
+        if ($lazyLoad) {
 
             // Add lazy load snippet
-            LazyLoad::addSnippet();
-
-
+            LazyLoad::addLozadSnippet();
         }
+
+        if ($svgInjection && $lazyLoad) {
+            PluginUtility::getSnippetManager()->upsertJavascriptForBar("lozad-svg-injection");
+            $tagAttributes->addClassName("combo-lazy-svg-injection");
+        } else if ($lazyLoad && !$svgInjection) {
+            PluginUtility::getSnippetManager()->upsertJavascriptForBar("lozad-svg");
+            $tagAttributes->addClassName("combo-lazy-svg");
+        } else if ($svgInjection && !$lazyLoad) {
+            PluginUtility::getSnippetManager()->upsertJavascriptForBar("svg-injector");
+            $tagAttributes->addClassName("combo-svg-injection");
+        }
+
+
 
         /**
          * Class
          */
-        if ($lazyLoad) {
-            $tagAttributes->addClassName('lozad-svg');
-            //$tagAttributes->addClassName(LazyLoad::getClass());
-        }
+
         if ($tagAttributes->hasAttribute("class")) {
             $imgHTML .= ' class="' . $tagAttributes->getClass() . '"';
         }
@@ -197,8 +211,6 @@ class SvgImageLink extends InternalMediaLink
 
             if (
                 $this->getFile()->getSize() > $this->getMaxInlineSize()
-                ||
-                $this->getLazyLoad()
             ) {
 
                 $imgHTML = $this->createImgHTMLTag($tagAttributes);

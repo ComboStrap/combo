@@ -214,12 +214,17 @@ $conf["defaultShadowLevel"] = "medium";
 /**
  * Lazy loading {@link \ComboStrap\RasterImageLink::CONF_LAZY_LOAD_ENABLE}
  */
-$conf["lazyLoadRasterImageEnable"] = 1;
+$conf["rasterImageLazyLoadEnable"] = 1;
 
 /**
  * Lazy loading {@link \ComboStrap\SvgImageLink::CONF_LAZY_LOAD_ENABLE}
  */
-$conf["lazyLoadSvgEnable"] = 1;
+$conf["svgLazyLoadEnable"] = 1;
+
+/**
+ * Lazy loading {@link \ComboStrap\SvgImageLink::CONF_SVG_INJECTION_ENABLE}
+ */
+$conf["svgInjectionEnable"] = 1;
 
 /**
  * Svg Optimization Disable {@link \ComboStrap\SvgFile::CONF_SVG_OPTIMIZATION_ENABLE}
@@ -236,3 +241,25 @@ $conf["svgMaxInlineSizeKb"] = 2;
  * {@link action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME}
  */
 $conf["svgUploadGroupName"] = "";
+
+/**
+ * Svg Optimization
+ * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP}
+ * The attribute to delete separates by a ,
+ */
+$conf["svgOptimizationNamespacesToKeep"] = "";
+
+/**
+ * Svg Optimization
+ * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
+ * The attribute to delete separates by a ,
+ */
+$conf["svgOptimizationAttributesToDelete"] = "id, style";
+/**
+ * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE}
+ */
+$conf["svgOptimizationElementsToDelete"] = "script, style, title, desc";
+/**
+ * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY}
+ */
+$conf["svgOptimizationElementsToDeleteIfEmpty"] = "metadata, defs";

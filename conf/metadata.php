@@ -187,9 +187,14 @@ $meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
 $meta[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
 
 /**
- * Lazy load svg
+ * Big Svg Lazy load
  */
 $meta[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
+
+/**
+ * Big Svg Injection
+ */
+$meta[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = array('onoff');
 
 /**
  * Svg Optimization
@@ -206,4 +211,11 @@ $meta[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = array('string');
  */
 $meta[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = array('string');
 
+/**
+ * Svg The attribute that are deleted with the optimization
+ * {@link SvgFile::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
+ */
+$meta[SvgFile::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = array('string');
+$meta[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = array('string');
+$meta[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = array('string');
 

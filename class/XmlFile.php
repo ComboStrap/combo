@@ -44,12 +44,12 @@ class XmlFile extends File
             try {
                 //https://www.php.net/manual/en/libxml.constants.php
                 // No LIBXML_NOEMPTYTAG because the load of the logo.svg is hanging :(
-                $options = LIBXML_NOCDATA + LIBXML_NOBLANKS +  + LIBXML_NSCLEAN + LIBXML_NOXMLDECL ;
+                $options = LIBXML_NOCDATA + LIBXML_NOBLANKS + +LIBXML_NSCLEAN + LIBXML_NOXMLDECL;
                 $this->xmlDom = new DOMDocument();
-                $xml =  file_get_contents($this->getPath());
+                $xml = file_get_contents($this->getPath());
                 $result = $this->xmlDom->loadXML($xml, $options);
-                if ($result===false){
-                    LogUtility::msg("Internal Error: Unable to load the DOM from the file ($this)",LogUtility::LVL_MSG_ERROR,"support");
+                if ($result === false) {
+                    LogUtility::msg("Internal Error: Unable to load the DOM from the file ($this)", LogUtility::LVL_MSG_ERROR, "support");
                 }
                 // namespace error : Namespace prefix dc on format is not defined
                 // missing the ns declaration in the file. example:
@@ -112,8 +112,8 @@ class XmlFile extends File
             throw new \RuntimeException("The namespace is empty and should be specified");
         }
 
-        if (strpos($namespaceUri,"http")===false){
-            LogUtility::msg("Internal warning: The namespaceURI ($namespaceUri) does not seems to be an URI",LogUtility::LVL_MSG_WARNING,"support");
+        if (strpos($namespaceUri, "http") === false) {
+            LogUtility::msg("Internal warning: The namespaceURI ($namespaceUri) does not seems to be an URI", LogUtility::LVL_MSG_WARNING, "support");
         }
 
         /**
@@ -145,11 +145,6 @@ class XmlFile extends File
                 $parentNode->removeAttributeNS($namespaceUri, $node->localName);
             }
         }
-
-
-
-
-
 
 
     }
@@ -186,11 +181,11 @@ class XmlFile extends File
     public function xpath($query)
     {
         $xpath = new DOMXPath($this->getXmlDom());
-//        foreach ($this->getDocNamespaces() as $prefix => $namespaceUri){
-//            if(!empty($prefix)) {
-//                $xpath->registerNamespace($prefix, $namespaceUri);
-//            }
-//        }
+        foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
+            if(!empty($prefix)) {
+                $xpath->registerNamespace($prefix, $namespaceUri);
+            }
+        }
 
         return $xpath->query($query);
 
@@ -250,7 +245,7 @@ class XmlFile extends File
         } else {
             $actualAttValue = $xml->getAttribute($attName);
             $explodeArray = explode(" ", $actualAttValue);
-            if (!in_array($attValue,$explodeArray)) {
+            if (!in_array($attValue, $explodeArray)) {
                 $xml->setAttribute($attName, (string)$actualAttValue . " $attValue");
             }
         }

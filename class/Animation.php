@@ -34,13 +34,12 @@ class Animation
 
     /**
      * Process hover animation
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
     public static function processOnHover(&$attributes)
     {
-        if (isset($attributes[self::ON_HOVER_ATTRIBUTE])) {
-            $hover = strtolower($attributes[self::ON_HOVER_ATTRIBUTE]);
-            unset($attributes[self::ON_HOVER_ATTRIBUTE]);
+        if ($attributes->hasAttribute(self::ON_HOVER_ATTRIBUTE)) {
+            $hover = strtolower($attributes->getValueAndRemove(self::ON_HOVER_ATTRIBUTE));
             $hoverAnimations = preg_split("/\s/", $hover);
 
             $comboDataHoverClasses = "";
@@ -58,7 +57,7 @@ class Animation
                                 )
                             ]
                         ));
-                    PluginUtility::addClass2Attributes("hvr-$hover", $attributes);
+                    $attributes->addClassName("hvr-$hover");
 
                 } else {
 
@@ -102,9 +101,9 @@ class Animation
                 PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::ON_HOVER_SNIPPET_ID);
 
                 // Smooth Transition in and out of hover
-                PluginUtility::addClass2Attributes("combo-hover-easing", $attributes);
+                $attributes->addClassName("combo-hover-easing");
 
-                PluginUtility::addAttributeValue("data-hover-class", trim($comboDataHoverClasses), $attributes);
+                $attributes->addAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
                 PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::ON_HOVER_SNIPPET_ID);

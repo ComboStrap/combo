@@ -25,7 +25,7 @@ class RasterImageLink extends InternalMediaLink
 {
 
     const CANONICAL = "image";
-    const CONF_LAZY_LOAD_ENABLE = "lazyLoadRasterImageEnable";
+    const CONF_LAZY_LOAD_ENABLE = "rasterImageLazyLoadEnable";
 
 
     private $imageWidth;
@@ -120,20 +120,20 @@ class RasterImageLink extends InternalMediaLink
 
             $imgHTML = '<img';
 
-            $lazyLoad = $this->getLazyLoad();
+
             /**
-             * Snippet
+             * Snippet Lazy load
              */
+            $lazyLoad = $this->getLazyLoad();
             if ($lazyLoad) {
-                LazyLoad::addSnippet();
+                LazyLoad::addLozadSnippet();
+                PluginUtility::getSnippetManager()->upsertJavascriptForBar("lozad-raster");
+                $attributes->addClassName("combo-lazy-raster");
             }
 
             /**
              * Class
              */
-            if ($lazyLoad) {
-                $attributes->addClassName(LazyLoad::getClass());
-            }
             if (!empty($attributes->getClass())) {
                 $imgHTML .= ' class="' . $attributes->getClass() . '"';
             }

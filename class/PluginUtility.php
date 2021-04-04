@@ -209,24 +209,37 @@ class PluginUtility
      */
     public static function array2HTMLAttributes($attributes)
     {
-        // Process the style attributes if any
-        self::processStyle($attributes);
 
-        // Process the attributes that have an effect on the class
-        self::processClass($attributes);
-
+        /**
+         * Temporary code to Migration to array to the new one
+         * The attribute with the new format first
+         * and the older one at the end
+         */
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
         /**
          * Process animation (onHover, onView)
          */
-        Animation::processOnHover($attributes);
-        Animation::processOnView($attributes);
+
+        Animation::processOnHover($tagAttributes);
+        Animation::processOnView($tagAttributes);
 
 
         /**
          * Position and Stickiness
          */
         Position::processStickiness($attributes);
-        Position::processPosition($attributes);
+        Position::processPosition($tagAttributes);
+
+        $attributes = $tagAttributes->toCallStackArray();
+
+        /**
+         * Old attributes manipulation with an array
+         */
+        // Process the style attributes if any
+        self::processStyle($attributes);
+
+        // Process the attributes that have an effect on the class
+        self::processClass($attributes);
 
         self::processCollapse($attributes);
         // Then transform
@@ -798,7 +811,7 @@ class PluginUtility
                 if (array_key_exists("class", $attributes)) {
                     $attributes["class"] .= " mx-auto";
                 } else {
-                    $attributes["class"] = " mx-auto";
+                    $attributes["class"] = "mx-auto";
                 }
             }
         }

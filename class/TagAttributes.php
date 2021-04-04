@@ -96,7 +96,7 @@ class TagAttributes
 
     public function getClass()
     {
-        return $this->getHtmlAttributeValue('class');
+        return $this->getXmlAttributeValue('class');
     }
 
     public function addAttributeValue($attributeName, $attributeValue)
@@ -140,7 +140,7 @@ class TagAttributes
      * @param $attributeName
      * @return string|null a HTML value in the form 'value1 value2...'
      */
-    public function getHtmlAttributeValue($attributeName)
+    public function getXmlAttributeValue($attributeName)
     {
         if ($this->hasAttribute($attributeName)) {
             $keys = array_keys($this->attributes[$attributeName]);
@@ -168,7 +168,7 @@ class TagAttributes
     {
         $value = $default;
         if ($this->hasAttribute($attributeName)) {
-            $value = $this->getHtmlAttributeValue($attributeName);
+            $value = $this->getXmlAttributeValue($attributeName);
             unset($this->attributes[$attributeName]);
         }
         return $value;
@@ -191,11 +191,19 @@ class TagAttributes
     {
         $array = array();
         foreach ($this->attributes as $key => $value) {
-            $array[$key] = $this->getHtmlAttributeValue($key);
+            $array[$key] = $this->getXmlAttributeValue($key);
         }
         return $array;
     }
 
+    public function getValue($attributeName, $default = null)
+    {
+        $value = $default;
+        if ($this->hasAttribute($attributeName)) {
+            $value = $this->getXmlAttributeValue($attributeName);
+        }
+        return $value;
+    }
 
 
 }

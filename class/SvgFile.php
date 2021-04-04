@@ -12,16 +12,12 @@
 
 namespace ComboStrap;
 
-use dokuwiki\Action\Plugin;
 use dokuwiki\Cache\Cache;
-use dokuwiki\Cache\CacheRenderer;
 use DOMAttr;
 use DOMElement;
-use DOMNode;
-use DOMXPath;
-use http\Exception\RuntimeException;
 
 require_once(__DIR__ . '/XmlFile.php');
+require_once(__DIR__ . '/Unit.php');
 
 class SvgFile extends XmlFile
 {
@@ -42,6 +38,35 @@ class SvgFile extends XmlFile
     const CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE = "svgOptimizationAttributesToDelete";
     const CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY = "svgOptimizationElementsToDeleteIfEmpty";
     const CONF_OPTIMIZATION_ELEMENTS_TO_DELETE = "svgOptimizationElementsToDelete";
+
+    /**
+     * The namespace of the editors
+     * https://github.com/svg/svgo/blob/master/plugins/_collections.js#L1841
+     */
+    const EDITOR_NAMESPACE = [
+        'http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd',
+        'http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd',
+        'http://www.inkscape.org/namespaces/inkscape',
+        'http://www.bohemiancoding.com/sketch/ns',
+        'http://ns.adobe.com/AdobeIllustrator/10.0/',
+        'http://ns.adobe.com/Graphs/1.0/',
+        'http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/',
+        'http://ns.adobe.com/Variables/1.0/',
+        'http://ns.adobe.com/SaveForWeb/1.0/',
+        'http://ns.adobe.com/Extensibility/1.0/',
+        'http://ns.adobe.com/Flows/1.0/',
+        'http://ns.adobe.com/ImageReplacement/1.0/',
+        'http://ns.adobe.com/GenericCustomNamespace/1.0/',
+        'http://ns.adobe.com/XPath/1.0/',
+        'http://schemas.microsoft.com/visio/2003/SVGExtensions/',
+        'http://taptrix.com/vectorillustrator/svg_extensions',
+        'http://www.figma.com/figma/ns',
+        'http://purl.org/dc/elements/1.1/',
+        'http://creativecommons.org/ns#',
+        'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+        'http://www.serif.com/',
+        'http://www.vector.evaxdesign.sk',
+    ];
 
 
     public function __construct($path)
@@ -65,6 +90,10 @@ class SvgFile extends XmlFile
 
         if ($tagAttributes == null) {
             $tagAttributes = TagAttributes::createEmpty();
+        }
+
+        if ($this->shouldOptimize()) {
+            $this->optimize($tagAttributes);
         }
 
         // Set the name (icon) attribute for test selection
@@ -202,19 +231,29 @@ class SvgFile extends XmlFile
      * Optimization
      * Based on https://jakearchibald.github.io/svgomg/
      * (gui of https://github.com/svg/svgo)
+     * @param TagAttributes $tagAttribute
      */
-    public function optimize()
+    public function optimize(&$tagAttribute = null)
     {
+
+        if ($tagAttribute == null) {
+            $tagAttribute = TagAttributes::createEmpty();
+        }
 
         if ($this->shouldOptimize()) {
 
+            /**
+             * Delete Editor namespace
+             * https://github.com/svg/svgo/blob/master/plugins/removeEditorsNSData.js
+             */
             $confNamespaceToKeeps = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP);
-            $namespaceToKeep = StringUtility::explodeAndTrim($confNamespaceToKeeps,",");
+            $namespaceToKeep = StringUtility::explodeAndTrim($confNamespaceToKeeps, ",");
             foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
                 if (
                     !empty($namespacePrefix)
                     && $namespacePrefix != "svg"
                     && !in_array($namespacePrefix, $namespaceToKeep)
+                    && in_array($namespaceUri, self::EDITOR_NAMESPACE)
                 ) {
                     $this->removeNamespace($namespaceUri);
                 }
@@ -222,13 +261,13 @@ class SvgFile extends XmlFile
 
             // Delete the svg namespace definition
             // We don't delete the svg namespace because this is also the default and will delete all the content
-            if(!in_array("svg",$namespaceToKeep)) {
+            if (!in_array("svg", $namespaceToKeep)) {
                 $this->getXmlDom()->documentElement->removeAttributeNS("http://www.w3.org/2000/svg", self::SVG_NAMESPACE);
             }
 
-            // Suppress all attribute id and style
+            // Suppress the attributes (by default id and style)
             $attributeConfToDelete = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE, "id, style");
-            $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete,",");
+            $attributesNameToDelete = StringUtility::explodeAndTrim($attributeConfToDelete, ",");
             foreach ($attributesNameToDelete as $value) {
                 $nodes = $this->xpath("//@$value");
                 foreach ($nodes as $node) {
@@ -239,17 +278,57 @@ class SvgFile extends XmlFile
                 }
             }
 
-            // Suppress root attribute
-            $attributesNameToDelete = ["version", "docname", "width", "height"];
-            foreach ($attributesNameToDelete as $attributeNameToDelete) {
-                $this->removeRootAttribute($attributeNameToDelete);
+            // Remove viewBox attr which coincides with a width/height box.
+            // https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute
+            // Example:
+            // <svg width="100" height="50" viewBox="0 0 100 50">
+            // <svg width="100" height="50">
+            // https://github.com/svg/svgo/blob/master/plugins/removeViewBox.js
+            $widthAttributeValue = $this->getXmlDom()->documentElement->getAttribute("width");
+            if (empty($widthAttributeValue)) {
+                $widthAttributeValue = $tagAttribute->getValue("width");
             }
+            if (!empty($widthAttributeValue)) {
+                $widthPixel = Unit::toPixel($widthAttributeValue);
+
+                $heightAttributeValue = $this->getXmlDom()->documentElement->getAttribute("height");
+                if (empty($heightAttributeValue)) {
+                    $heightAttributeValue = $tagAttribute->getValue("height");
+                }
+                if (!empty($heightAttributeValue)) {
+                    $heightPixel = Unit::toPixel($heightAttributeValue);
+
+                    // ViewBox
+                    $viewBoxAttribute = $this->getXmlDom()->documentElement->getAttribute("viewBox");
+                    if (!empty($viewBoxAttribute)) {
+                        $viewBoxAttributeAsArray = StringUtility::explodeAndTrim($viewBoxAttribute," ");
+
+                        if (sizeof($viewBoxAttributeAsArray) == 4) {
+                            $minX = $viewBoxAttributeAsArray[0];
+                            $minY = $viewBoxAttributeAsArray[1];
+                            $widthViewPort = $viewBoxAttributeAsArray[2];
+                            $heightViewPort = $viewBoxAttributeAsArray[3];
+                            if (
+                                $minX === "0" &
+                                $minY === "0" &
+                                $widthViewPort == $widthPixel &
+                                $heightViewPort == $heightPixel
+                            ) {
+                                $this->getXmlDom()->documentElement->removeAttribute("width");
+                                $this->getXmlDom()->documentElement->removeAttribute("height");
+                            }
+
+                        }
+                    }
+                }
+            }
+
 
             // Suppress script metadata node
             // Delete of:
             //   * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
             $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style");
-            $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf,",");
+            $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
             foreach ($elementsToDelete as $elementToDelete) {
                 $nodes = $this->xpath("//$elementToDelete");
                 foreach ($nodes as $node) {

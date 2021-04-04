@@ -74,7 +74,7 @@ class IconUtility
         /**
          * The attribute
          */
-        $iconNameAttribute = $tagAttributes->getHtmlAttributeValue($name);
+        $iconNameAttribute = $tagAttributes->getXmlAttributeValue($name);
 
 
         // If the name have an extension, it's a file

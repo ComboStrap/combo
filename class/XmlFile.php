@@ -107,6 +107,7 @@ class XmlFile extends File
         if ($this->isXmlExtensionLoaded()) {
             $xmlText = $this->getXmlDom()->saveHTML($this->getXmlDom()->ownerDocument);
             // Delete doctype (for svg optimization)
+            // php has only doctype manipulation for HTML
             $xmlText = preg_replace('/^<!DOCTYPE.+?>/', '',$xmlText);
             return trim($xmlText);
         } else {

@@ -132,6 +132,11 @@ class RasterImageLink extends InternalMediaLink
             }
 
             /**
+             * To get the real class
+             */
+            $attributes->process();
+
+            /**
              * Class
              */
             if (!empty($attributes->getClass())) {
@@ -148,7 +153,7 @@ class RasterImageLink extends InternalMediaLink
                 /**
                  * Placeholder
                  */
-                $imgHTML .= " ".LazyLoad::getPlaceholderAttributes($srcValue);
+                $imgHTML .= " " . LazyLoad::getPlaceholderAttributes($srcValue);
 
                 /**
                  * max-width as asked
@@ -159,12 +164,15 @@ class RasterImageLink extends InternalMediaLink
                 /**
                  * Responsive image src set building
                  */
-                $srcSet = "";
+                // Smallest size always on otherwise for small image, there is no image at all
+                // in the set
                 $smWidth = 300;
-                if ($widthValue > $smWidth) {
-                    $src300Url = $this->getUrl(true, $smWidth);
-                    $srcSet = "$src300Url {$smWidth}w";
+                if ($widthValue<$smWidth){
+                    $smWidth = $widthValue;
                 }
+                $src300Url = $this->getUrl(true, $smWidth);
+                $srcSet = "$src300Url {$smWidth}w";
+
                 $mediumWith = 600;
                 if ($widthValue > $mediumWith) {
                     $srcMediumUrl = $this->getUrl(true, $mediumWith);
@@ -203,8 +211,9 @@ class RasterImageLink extends InternalMediaLink
              * Title
              */
             if (!empty($this->getTitle())) {
-                $imgHTML .= ' alt = "' . $this->getTitle() . '"';
+                $imgHTML .= ' alt="' . $this->getTitle() . '"';
             }
+
 
 
             $imgHTML .= '>';

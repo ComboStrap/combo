@@ -256,7 +256,7 @@ class InternalMediaLink
             'type' => null, // ??? internal, external
             'src' => $this->getId(),
             self::TITLE_KEY => $this->getTitle(),
-            'align' => $this->getAlign(),
+            self::ALIGN_KEY => $this->getAlign(),
             self::WIDTH_KEY => $this->getRequestedWidth(),
             self::HEIGHT_KEY => $this->getRequestedHeight(),
             self::CACHE_KEY => $this->getCache(),
@@ -285,22 +285,21 @@ class InternalMediaLink
 
     public function setNoCache($cache)
     {
-        if ($cache == "nocache") {
-            $this->cache = false;
-        }
+        $this->getAttributes()->addAttributeValue(self::CACHE_KEY, $cache);
     }
 
     public function getRequestedHeight()
     {
-        return $this->getAttributes()->getValue("height", null);
+        return $this->getAttributes()->getValue(self::HEIGHT_KEY, null);
     }
 
     /**
      * The requested height
+     * @param $height
      */
     public function setRequestedHeight($height)
     {
-        $this->getAttributes()->addAttributeValue("height", $height);
+        $this->getAttributes()->addAttributeValue(self::HEIGHT_KEY, $height);
     }
 
     /**
@@ -308,7 +307,7 @@ class InternalMediaLink
      */
     public function getRequestedWidth()
     {
-        return $this->getAttributes()->getValue("width", null);
+        return $this->getAttributes()->getValue(self::WIDTH_KEY, null);
     }
 
     /**
@@ -316,7 +315,7 @@ class InternalMediaLink
      */
     public function setRequestedWidth($width)
     {
-        $this->getAttributes()->addAttributeValue("width", $width);
+        $this->getAttributes()->addAttributeValue(self::WIDTH_KEY, $width);
     }
 
     public function setLinking($linking)
@@ -332,18 +331,18 @@ class InternalMediaLink
      */
     protected function setAlign($align)
     {
-        $this->getAttributes()->addAttributeValue("align", $align);
+        $this->getAttributes()->addAttributeValue(self::ALIGN_KEY, $align);
     }
 
 
     public function getCache()
     {
-        return $this->cache;
+        return $this->getAttributes()->getValue(self::CACHE_KEY, null);
     }
 
     protected function getTitle()
     {
-        return $this->getAlt();
+        return $this->getAttributes()->getValue(self::TITLE_KEY, null);
     }
 
     /**
@@ -351,27 +350,27 @@ class InternalMediaLink
      */
     protected function setTitle($title)
     {
-        $this->alt = $title;
+        $this->getAttributes()->addAttributeValue(self::TITLE_KEY,$title);
     }
 
     private function setAlt($title)
     {
-        $this->alt = $title;
+        $this->setTitle($title);
     }
 
     public function setDescription($description)
     {
-        $this->description = $description;
+        $this->setTitle($description);
     }
 
     public function getDescription()
     {
-        return $this->description;
+        return $this->getTitle();
     }
 
     public function getAlt()
     {
-        return $this->alt;
+        return $this->getTitle();
     }
 
     public function __toString()
@@ -381,12 +380,12 @@ class InternalMediaLink
 
     private function getAlign()
     {
-        return $this->getAttributes()->getValue("align", null);
+        return $this->getAttributes()->getValue(self::ALIGN_KEY, null);
     }
 
     private function getLinking()
     {
-        return $this->linking;
+        return $this->getAttributes()->getValue("linking", null);
     }
 
     /**

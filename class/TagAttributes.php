@@ -206,5 +206,28 @@ class TagAttributes
         $this->styleDeclaration[$property]=$value;
     }
 
+    public function process()
+    {
+        /**
+         * Process animation (onHover, onView)
+         */
+        Animation::processOnHover($this);
+        Animation::processOnView($this);
+
+
+        /**
+         * Position and Stickiness
+         */
+        Position::processStickiness($this);
+        Position::processPosition($this);
+
+        /**
+         * Process the attributes that have an effect on the class
+         */
+        PluginUtility::processSpacingAttributes($this);
+        PluginUtility::processAlignAttributes($this);
+
+    }
+
 
 }

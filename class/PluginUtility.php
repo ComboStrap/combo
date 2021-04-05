@@ -212,26 +212,7 @@ class PluginUtility
          * and the older one at the end
          */
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-
-        /**
-         * Process animation (onHover, onView)
-         */
-        Animation::processOnHover($tagAttributes);
-        Animation::processOnView($tagAttributes);
-
-
-        /**
-         * Position and Stickiness
-         */
-        Position::processStickiness($tagAttributes);
-        Position::processPosition($tagAttributes);
-
-        /**
-         * Process the attributes that have an effect on the class
-         */
-        self::processSpacingAttributes($tagAttributes);
-        self::processAlignAttributes($tagAttributes);
-
+        $tagAttributes->process();
         $attributes = $tagAttributes->toCallStackArray();
 
         /**

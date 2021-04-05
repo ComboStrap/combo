@@ -102,8 +102,9 @@ class TagAttributes
 
     public function addAttributeValue($attributeName, $attributeValue)
     {
-        if (!$this->hasAttribute($attributeName)) {
-            $this->attributes[$attributeName] = array();
+        $attLower = strtolower($attributeName);
+        if (!$this->hasAttribute($attLower)) {
+            $this->attributes[$attLower] = array();
         }
 
         /**
@@ -111,13 +112,14 @@ class TagAttributes
          */
         $values = StringUtility::explodeAndTrim($attributeValue," ");
         foreach ($values as $value) {
-            $this->attributes[$attributeName][$value] = true;
+            $this->attributes[$attLower][$value] = true;
         }
     }
 
     public function hasAttribute($attributeName)
     {
-        return isset($this->attributes[$attributeName]);
+        $lowerAtt = strtolower($attributeName);
+        return isset($this->attributes[$lowerAtt]);
     }
 
     /**
@@ -191,9 +193,10 @@ class TagAttributes
 
     public function getValue($attributeName, $default = null)
     {
+        $lowerAttribute = strtolower($attributeName);
         $value = $default;
-        if ($this->hasAttribute($attributeName)) {
-            $value = $this->getXmlAttributeValue($attributeName);
+        if ($this->hasAttribute($lowerAttribute)) {
+            $value = $this->getXmlAttributeValue($lowerAttribute);
         }
         return $value;
     }

@@ -58,6 +58,15 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
     public function svg_mime(Doku_Event &$event)
     {
 
+        self::allowSvgIfAuthorized();
+
+    }
+
+    /**
+     *
+     */
+    public static function allowSvgIfAuthorized()
+    {
         $isadmin = Auth::isAdmin();
         $isMember = Auth::isMember("@" . self::CONF_SVG_UPLOAD_GROUP_NAME);
 
@@ -72,7 +81,6 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         }
 
     }
-
 
 
 }

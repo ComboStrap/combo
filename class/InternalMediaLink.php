@@ -50,14 +50,6 @@ class InternalMediaLink
      */
     private $cache = true;
 
-    /**
-     * @var int The requested height on the link
-     */
-    private $linkHeight;
-    /**
-     * @var int The requested with on the link
-     */
-    private $linkWidth;
 
     /**
      * Link value:
@@ -70,15 +62,12 @@ class InternalMediaLink
      */
     private $linking;
 
-    /**
-     * Render attribute
-     *   * 'center'
-     *   * 'right'
-     *   * 'left'
-     */
-    private $align;
 
     private $description = null;
+    /**
+     * @var TagAttributes
+     */
+    private $attributes;
 
 
     /**
@@ -96,6 +85,7 @@ class InternalMediaLink
         if ($id != $this->id) {
             LogUtility::msg("Internal error: The media id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, "support");
         }
+        $this->attributes = TagAttributes::createEmpty();
     }
 
 
@@ -177,6 +167,10 @@ class InternalMediaLink
             $media->setAlign($align);
             unset($attributes[self::ALIGN_KEY]);
         }
+
+        foreach ($attributes as $key => $value) {
+            $media->setAttribute($key, $value);
+        }
         return $media;
 
     }
@@ -184,6 +178,29 @@ class InternalMediaLink
     public static function createFromRenderMatch($match)
     {
         $attributes = self::getParseAttributes($match);
+
+        // Add the non-standard attribute in the form name=value
+        // Capture the link as first capture group
+        // You can test the pattern against
+        // {{ :logo.svg?10x200&nocache&preserveAspectRatio=none }}
+        $matches = array();
+        $found = preg_match("/{{\s*([a-z:?=&.x0-9A-Z]*)\s*\|?.*}}/", $match, $matches);
+        if ($found) {
+            $link = $matches[1];
+            $positionQueryCharacter = strpos($link, "?");
+            if ($positionQueryCharacter !== false) {
+                $queryParameters = substr($link, $positionQueryCharacter + 1);
+                $parameters = StringUtility::explodeAndTrim($queryParameters, "&");
+                foreach ($parameters as $parameter) {
+                    $equalCharacterPosition = strpos($parameter, "=");
+                    if ($equalCharacterPosition !== false) {
+                        $parameterProp = explode("=", $parameter);
+                        $attributes[$parameterProp[0]] = $parameterProp[1];
+                    }
+                }
+            }
+        }
+
         return self::createFromRenderAttributes($attributes);
     }
 
@@ -219,7 +236,7 @@ class InternalMediaLink
                 $internalMedia = new RasterImageLink($id);
             }
         } else {
-            if($mime==false){
+            if ($mime == false) {
                 LogUtility::msg("The mime type of the media ($id) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
             } else {
                 LogUtility::msg("Internal error: The type ($mime) of media ($id) with the typ is not yet implemented", LogUtility::LVL_MSG_ERROR, "support");
@@ -275,26 +292,31 @@ class InternalMediaLink
 
     public function getRequestedHeight()
     {
-        return $this->linkHeight;
+        return $this->getAttributes()->getValue("height", null);
     }
 
+    /**
+     * The requested height
+     */
     public function setRequestedHeight($height)
     {
-        $this->linkHeight = $height;
+        $this->getAttributes()->addAttributeValue("height", $height);
     }
 
+    /**
+     * The requested width
+     */
     public function getRequestedWidth()
     {
-        if ($this->linkWidth == 0) {
-            return null; // empty
-        } else {
-            return $this->linkWidth;
-        }
+        return $this->getAttributes()->getValue("width", null);
     }
 
+    /**
+     * The requested width
+     */
     public function setRequestedWidth($width)
     {
-        $this->linkWidth = $width;
+        $this->getAttributes()->addAttributeValue("width", $width);
     }
 
     public function setLinking($linking)
@@ -302,9 +324,15 @@ class InternalMediaLink
         $this->linking = $linking;
     }
 
+    /**
+     * Render attribute
+     *   * 'center'
+     *   * 'right'
+     *   * 'left'
+     */
     protected function setAlign($align)
     {
-        $this->align = $align;
+        $this->getAttributes()->addAttributeValue("align", $align);
     }
 
 
@@ -353,7 +381,7 @@ class InternalMediaLink
 
     private function getAlign()
     {
-        return $this->align;
+        return $this->getAttributes()->getValue("align", null);
     }
 
     private function getLinking()
@@ -367,16 +395,7 @@ class InternalMediaLink
     public function renderMediaTag(&$attributes = null)
     {
         if ($attributes == null) {
-            $attributes = TagAttributes::createEmpty();
-            if (!empty($this->getRequestedWidth())) {
-                $attributes->addAttributeValue("width", $this->getRequestedWidth());
-            }
-            if (!empty($this->getRequestedHeight())) {
-                $attributes->addAttributeValue("height", $this->getRequestedHeight());
-            }
-            if (!empty($this->align)){
-                $attributes->addAttributeValue("align", $this->align);
-            }
+            $attributes = $this->getAttributes();
         }
 
     }
@@ -395,6 +414,22 @@ class InternalMediaLink
     public function getFile()
     {
         return new File(mediaFN($this->getId()));
+    }
+
+    public function getAttributes()
+    {
+
+        return $this->attributes;
+    }
+
+    public function setAttribute($key, $value)
+    {
+        $this->getAttributes()->addAttributeValue($key, $value);
+    }
+
+    public function getAttribute($key)
+    {
+        return $this->getAttributes()->getValue($key, null);
     }
 
 

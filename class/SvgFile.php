@@ -28,7 +28,7 @@ class SvgFile extends XmlFile
     /**
      * Namespace (used to query with xpath only the svg node)
      */
-    const SVG_NAMESPACE = "svg";
+    const SVG_NAMESPACE_PREFIX = "svg";
     const CONF_SVG_OPTIMIZATION_ENABLE = "svgOptimizationEnable";
 
     /**
@@ -87,6 +87,7 @@ class SvgFile extends XmlFile
         "contentStyleType" => 'text/css',
     );
     const CONF_PRESERVE_ASPECT_RATIO_DEFAULT = "svgPreserveAspectRatioDefault";
+    const SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg";
 
 
     public function __construct($path)
@@ -131,10 +132,11 @@ class SvgFile extends XmlFile
 
         // Icon will set by default a ''current color'' setting
         $fill = $tagAttributes->getValueAndRemove("fill");
-        $svgPaths = $this->getSvgPaths();
         if (!empty($fill)) {
-            foreach ($svgPaths as $pathXml) {
-                XmlUtility::setAttribute("fill", $fill, $pathXml);
+            $svgPaths = $this->getSvgPaths();
+            foreach ($svgPaths as $pathDomElement) {
+                /** @var DOMElement $pathDomElement */
+                $pathDomElement->setAttribute("fill", $fill);
             }
         }
 
@@ -185,11 +187,11 @@ class SvgFile extends XmlFile
              * does not exist anymore
              */
             $namespace = $this->getDocNamespaces();
-            if (isset($namespace[self::SVG_NAMESPACE])) {
-                $svgNamespace = self::SVG_NAMESPACE;
+            if (isset($namespace[self::SVG_NAMESPACE_PREFIX])) {
+                $svgNamespace = self::SVG_NAMESPACE_PREFIX;
                 $query = "//$svgNamespace:path";
             } else {
-                $query = "//path";
+                $query = "//*[local-name()='path']";
             }
             return $this->xpath($query);
         } else {
@@ -274,16 +276,10 @@ class SvgFile extends XmlFile
                 }
             }
 
-            // Delete the svg namespace definition
-            // We don't delete the svg namespace because this is also the default and will delete all the content
-            $documentElement = $this->getXmlDom()->documentElement;
-            if (!in_array("svg", $namespaceToKeep)) {
-                $documentElement->removeAttributeNS("http://www.w3.org/2000/svg", self::SVG_NAMESPACE);
-            }
-
             /**
              * Delete empty namespace rules
              */
+            $documentElement = $this->getXmlDom()->documentElement;
             foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
                 $nodes = $this->xpath("//*[namespace-uri()='$namespaceUri']");
                 $attributes = $this->xpath("//@*[namespace-uri()='$namespaceUri']");
@@ -294,6 +290,7 @@ class SvgFile extends XmlFile
                     }
                 }
             }
+
 
             /**
              * Delete default value (version=1.1 for instance)
@@ -354,8 +351,8 @@ class SvgFile extends XmlFile
                         if (sizeof($viewBoxAttributeAsArray) == 4) {
                             $minX = $viewBoxAttributeAsArray[0];
                             $minY = $viewBoxAttributeAsArray[1];
-                            $widthViewPort = $viewBoxAttributeAsArray[2];
-                            $heightViewPort = $viewBoxAttributeAsArray[3];
+                            $widthViewPort = intval($viewBoxAttributeAsArray[2]);
+                            $heightViewPort = intval($viewBoxAttributeAsArray[3]);
                             if (
                                 $minX === "0" &
                                 $minY === "0" &
@@ -400,6 +397,14 @@ class SvgFile extends XmlFile
                         $element->parentNode->removeChild($element);
                     }
                 }
+            }
+
+            /**
+             * Delete the svg prefix namespace definition
+             * At the end to be able to query with svg as prefix
+             */
+            if (!in_array("svg", $namespaceToKeep)) {
+                $documentElement->removeAttributeNS(self::SVG_NAMESPACE_URI, self::SVG_NAMESPACE_PREFIX);
             }
 
         }

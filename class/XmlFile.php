@@ -52,7 +52,7 @@ class XmlFile extends File
 
                 // HTML
                 $extension = $this->getExtension();
-                if (in_array($extension,["html","htm"])){
+                if (in_array($extension, ["html", "htm"])) {
                     // Options that cause the processus to hang if this is not for a html file
                     // Empty tag option may also be used only on save
                     //   at https://www.php.net/manual/en/domdocument.save.php
@@ -108,7 +108,7 @@ class XmlFile extends File
             $xmlText = $this->getXmlDom()->saveHTML($this->getXmlDom()->ownerDocument);
             // Delete doctype (for svg optimization)
             // php has only doctype manipulation for HTML
-            $xmlText = preg_replace('/^<!DOCTYPE.+?>/', '',$xmlText);
+            $xmlText = preg_replace('/^<!DOCTYPE.+?>/', '', $xmlText);
             return trim($xmlText);
         } else {
             return file_get_contents($this->getPath());
@@ -199,14 +199,22 @@ class XmlFile extends File
      * See comment:
      * https://www.php.net/manual/en/domxpath.registernamespace.php#51480
      * @param $query
+     * @param string $defaultNamespace
      * @return DOMNodeList|false
      */
     public function xpath($query)
     {
         $xpath = new DOMXPath($this->getXmlDom());
         foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
+            /**
+             * You can't register an empty prefix
+             * Default namespace (without a prefix) can only be accessed by the local-name() and namespace-uri() attributes.
+             */
             if (!empty($prefix)) {
-                $xpath->registerNamespace($prefix, $namespaceUri);
+                $result = $xpath->registerNamespace($prefix, $namespaceUri);
+                if (!$result) {
+                    LogUtility::msg("Not able to register the prefix ($prefix) for the namespace uri ($namespaceUri)");
+                }
             }
         }
 
@@ -273,10 +281,6 @@ class XmlFile extends File
             }
         }
     }
-
-
-
-
 
 
 }

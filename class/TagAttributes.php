@@ -78,12 +78,17 @@ class TagAttributes
     {
         $attributes = array();
         foreach ($htmlAttributes as $key => $attribute) {
-            $explodeArray = explode(" ", $attribute);
-            $arrayValues = array();
-            foreach ($explodeArray as $explodeValue){
-                $arrayValues[$explodeValue]=true;
+            if(is_string($attribute)){
+                $explodeArray = explode(" ", $attribute);
+                $arrayValues = array();
+                foreach ($explodeArray as $explodeValue){
+                    $arrayValues[$explodeValue]=true;
+                }
+                $attributes[$key] = $arrayValues;
+            } else {
+                LogUtility::msg("The variable value ($attribute) of the key ($key) is not a string and was ignored",LogUtility::LVL_MSG_ERROR,"support");
             }
-            $attributes[$key] = $arrayValues;
+
         }
         return $attributes;
     }

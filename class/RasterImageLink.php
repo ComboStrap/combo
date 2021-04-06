@@ -174,7 +174,7 @@ class RasterImageLink extends InternalMediaLink
                 $srcSet = "$src300Url {$smWidth}w";
 
                 $mediumWith = 600;
-                if ($widthValue > $mediumWith) {
+                if ($widthValue >= $mediumWith) {
                     $srcMediumUrl = $this->getUrl(true, $mediumWith);
                     if (!empty($srcSet)) {
                         $srcSet .= ", ";
@@ -182,7 +182,7 @@ class RasterImageLink extends InternalMediaLink
                     $srcSet .= "$srcMediumUrl {$mediumWith}w";
                 }
                 $largeWidth = 900;
-                if ($widthValue > $largeWidth) {
+                if ($widthValue >= $largeWidth) {
                     $srcLargeUrl = $this->getUrl(true, $largeWidth);
                     if (!empty($srcSet)) {
                         $srcSet .= ", ";

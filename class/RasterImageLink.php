@@ -163,16 +163,13 @@ class RasterImageLink extends InternalMediaLink
 
                 /**
                  * Responsive image src set building
+                 * We have chosen 300, 600, 900
+                 * Also seen from google 320w, 480w, 800w"
                  */
-                // Smallest size always on otherwise for small image, there is no image at all
-                // in the set
                 $smWidth = 300;
-                if ($widthValue<$smWidth){
-                    $smWidth = $widthValue;
-                }
-                $src300Url = $this->getUrl(true, $smWidth);
-                $srcSet = "$src300Url {$smWidth}w";
+                $srcSet = $this->getUrl(true, $smWidth);
 
+                // From 600 and above
                 $mediumWith = 600;
                 if ($widthValue >= $mediumWith) {
                     $srcMediumUrl = $this->getUrl(true, $mediumWith);
@@ -181,6 +178,7 @@ class RasterImageLink extends InternalMediaLink
                     }
                     $srcSet .= "$srcMediumUrl {$mediumWith}w";
                 }
+                // From 900 and above
                 $largeWidth = 900;
                 if ($widthValue >= $largeWidth) {
                     $srcLargeUrl = $this->getUrl(true, $largeWidth);
@@ -189,8 +187,14 @@ class RasterImageLink extends InternalMediaLink
                     }
                     $srcSet .= "$srcLargeUrl {$largeWidth}w";
                 }
+
                 if (!empty($srcSet)) {
-                    $imgHTML .= " data-sizes=\"auto\" data-srcset=\"$srcSet\"";
+                    // Ref https://developers.google.com/search/docs/advanced/guidelines/google-images#responsive-images
+                    $mediumBrowserWidth = $mediumWith + 20;
+                    $largeBrowserWidth = $largeWidth + 20;
+                    $sizes = "sizes=\"{$smWidth}w, (min-width: {$mediumBrowserWidth}px) {$mediumWith}w, (min-width: {$largeBrowserWidth}px) {$largeWidth}w\"";
+                    $imgHTML .= " $sizes ";
+                    $imgHTML .= " data-srcset=\"$srcSet\"";
                 }
 
 

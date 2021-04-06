@@ -59,7 +59,7 @@ $lang[IconUtility::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getUrl("icon#con
  * Css Optimization
  */
 $lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = PluginUtility::getUrl("css:optimization", "Css Optimization") . ' - If enabled, the DokuWiki Stylesheet for a public user will be minimized';
-$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getUrl("css:optimization", "Css Optimization") . ' - If disabled, the DokuWiki Stylesheet will not be loaded for a public user';
+$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getUrl("css:optimization", "Css Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
 
 /**
  * Metdataviewer

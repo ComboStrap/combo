@@ -254,6 +254,9 @@ EOD;
         if ($language == "apache") {
             $language = "apacheconf";
         }
+        if ($language == "babel") {
+            $language = "javascript";
+        }
 
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);
         PluginUtility::addClass2Attributes('language-' . $language, $attributes);

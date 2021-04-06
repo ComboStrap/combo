@@ -167,7 +167,8 @@ class RasterImageLink extends InternalMediaLink
                  * Also seen from google 320w, 480w, 800w"
                  */
                 $smWidth = 300;
-                $srcSet = $this->getUrl(true, $smWidth);
+                $smUrl = $this->getUrl(true, $smWidth);
+                $srcSet = "$smUrl {$smWidth}w";
 
                 // From 600 and above
                 $mediumWith = 600;
@@ -192,7 +193,8 @@ class RasterImageLink extends InternalMediaLink
                     // Ref https://developers.google.com/search/docs/advanced/guidelines/google-images#responsive-images
                     $mediumBrowserWidth = $mediumWith + 20;
                     $largeBrowserWidth = $largeWidth + 20;
-                    $sizes = "sizes=\"{$smWidth}w, (min-width: {$mediumBrowserWidth}px) {$mediumWith}w, (min-width: {$largeBrowserWidth}px) {$largeWidth}w\"";
+                    $mediaUnit = "px"; // if the unit is in ''w'', the pixel ratio kick in
+                    $sizes = "sizes=\"{$smWidth}$mediaUnit, (min-width: {$mediumBrowserWidth}px) {$mediumWith}$mediaUnit, (min-width: {$largeBrowserWidth}$mediaUnit) {$largeWidth}w\"";
                     $imgHTML .= " $sizes ";
                     $imgHTML .= " data-srcset=\"$srcSet\"";
                 }

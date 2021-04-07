@@ -12,6 +12,8 @@
 
 namespace ComboStrap;
 
+require_once(__DIR__ . '/Snippet.php');
+
 /**
  * @package ComboStrap
  * A component to manage the extra HTML that
@@ -26,36 +28,33 @@ namespace ComboStrap;
 class SnippetManager
 {
 
-    /**
-     * The head in css format
-     * We need to add the style node
-     */
-    const CSS_TYPE = "css";
-    /**
-     * The head in javascript
-     * We need to wrap it in a script node
-     */
-    const JS_TYPE = "js";
-    /**
-     * A tag head in array format
-     * No need
-     */
-    const TAG_TYPE = "tag";
-
     const COMBO_CLASS_PREFIX = "combo-";
 
 
     /**
-     * @var array the content array of all heads
+     *
+     * The scope is used for snippet that are not added
+     * by the syntax plugin but by the actions plugin
+     * It's also used in the cache because not all bars
+     * may render at the same time due to the other been cached.
+     *
+     * There is two scope:
+     *   * {@link SnippetManager::$snippetsByBarScope}
+     *   * or {@link SnippetManager::$snippetsByRequestScope}
      */
-    private $headsByBar = array();
+
+    /**
+     * @var array all snippets scope to the bar level
+     */
+    private $snippetsByBarScope = array();
 
     /**
      * @var array heads that are unique on a request scope
      */
-    private $headsByRequest = array();
+    private $snippetsByRequestScope = array();
 
     /**
+     * Just an utility variable to get the bar processed that needs snippet.
      * @var array the processed bar
      */
     private $barsProcessed = array();
@@ -77,30 +76,32 @@ class SnippetManager
      * @param $snippetId
      * @param string|null $css - the css
      *   if null, the file $snippetId.css is searched in the `style` directory
+     * @return Snippet
+     * @deprecated use {@link SnippetManager::attachCssSnippetForBar()} instead
      */
-    public function upsertCssSnippetForBar($snippetId, $css = null)
+    public function &upsertCssSnippetForBar($snippetId, $css = null)
     {
-        global $ID;
-        $bar = $ID;
-        if ($css == null) {
-            $css = $this->getCssRulesFromFile($snippetId);
+        $snippet = &$this->attachCssSnippetForBar($snippetId);
+        if ($css != null) {
+            $snippet->setContent($css);
         }
-        $this->headsByBar[$bar][self::CSS_TYPE][$snippetId] = $css;
+        return $snippet;
 
     }
 
     /**
      * @param $snippetId
      * @param $script - javascript code if null, it will search in the js directory
+     * @return Snippet
+     * @deprecated use {@link SnippetManager::attachJavascriptSnippetForBar()} instead
      */
-    public function upsertJavascriptForBar($snippetId, $script = null)
+    public function &upsertJavascriptForBar($snippetId, $script = null)
     {
-        global $ID;
-        $bar = $ID;
-        if ($script == null) {
-            $script = $this->getJavascriptContentFromFile($snippetId);
+        $snippet = &$this->attachJavascriptSnippetForBar($snippetId);
+        if ($script != null) {
+            $snippet->setContent($script);
         }
-        $this->headsByBar[$bar][self::JS_TYPE][$snippetId] = $script;
+        return $snippet;
     }
 
     /**
@@ -111,7 +112,11 @@ class SnippetManager
     {
         global $ID;
         $bar = $ID;
-        $this->headsByBar[$bar][self::TAG_TYPE][$snippetId] = $componentTags;
+        $heads = &$this->snippetsByBarScope[$bar][Snippet::TAG_TYPE][$snippetId];
+        if(!isset($heads)){
+            $heads = new Snippet($snippetId,Snippet::TAG_TYPE);
+        }
+        $heads->setTags($componentTags);
     }
 
 
@@ -138,7 +143,7 @@ class SnippetManager
          * Delete the bar, page
          */
         $distinctSnippets = array();
-        $allSnippets = [$this->headsByBar, $this->headsByRequest];
+        $allSnippets = [$this->snippetsByBarScope, $this->snippetsByRequestScope];
         foreach ($allSnippets as $snippets) {
             foreach ($snippets as $barOrPageId => $snippetTypes) {
                 foreach ($snippetTypes as $snippetType => $snippetId) {
@@ -169,7 +174,7 @@ class SnippetManager
         $dokuWikiHeadsSrc = array();
         foreach ($distinctSnippets as $snippetType => $snippetBySnippetId) {
             switch ($snippetType) {
-                case self::JS_TYPE:
+                case Snippet::TYPE_JS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
                         $dokuWikiHeadsFormatContent["script"][] = array(
                             "class" => self::getClassFromSnippetId($snippetId),
@@ -177,7 +182,7 @@ class SnippetManager
                         );
                     }
                     break;
-                case self::CSS_TYPE:
+                case Snippet::TYPE_CSS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
                         $dokuWikiHeadsFormatContent["style"][] = array(
                             "class" => self::getClassFromSnippetId($snippetId),
@@ -185,13 +190,13 @@ class SnippetManager
                         );
                     }
                     break;
-                case self::TAG_TYPE:
+                case Snippet::TAG_TYPE:
                     foreach ($snippetBySnippetId as $snippetId => $snippetTags) {
-                        foreach($snippetTags as $snippetType => $heads) {
+                        foreach ($snippetTags as $snippetType => $heads) {
                             $classFromSnippetId = self::getClassFromSnippetId($snippetId);
                             foreach ($heads as $head) {
-                                if(isset($head["class"])){
-                                    $head["class"] = $head["class"]." ". $classFromSnippetId;
+                                if (isset($head["class"])) {
+                                    $head["class"] = $head["class"] . " " . $classFromSnippetId;
                                 } else {
                                     $head["class"] = $classFromSnippetId;
                                 }
@@ -206,9 +211,9 @@ class SnippetManager
         /**
          * Merge the content head node at the last position of the head ref node
          */
-        foreach ($dokuWikiHeadsFormatContent as $headsNodeType => $headsData){
-            foreach ($headsData as $heads){
-                $dokuWikiHeadsSrc[$headsNodeType][]=$heads;
+        foreach ($dokuWikiHeadsFormatContent as $headsNodeType => $headsData) {
+            foreach ($headsData as $heads) {
+                $dokuWikiHeadsSrc[$headsNodeType][] = $heads;
             }
 
         }
@@ -219,63 +224,29 @@ class SnippetManager
      * Empty the snippets
      * This is used to render the snippet only once
      * The snippets renders first in the head
-     * and otherwise at the end of the document.
+     * and otherwise at the end of the document
+     * if the user are using another template or are in edit mode
      */
     public function close()
     {
-        $this->headsByBar = array();
-        $this->headsByRequest = array();
+        $this->snippetsByBarScope = array();
+        $this->snippetsByRequestScope = array();
         $this->barsProcessed = array();
     }
 
-    public function getData()
-    {
-        return $this->headsByBar;
-    }
 
     /**
-     * @param $tagName - the tag name
-     * @return false|string - the specific javascript content for the tag
+     * @param $snippetId
+     * @param array $tags - upsert a tag each time that this function is called
      */
-    private function getJavascriptContentFromFile($tagName)
-    {
-
-        $path = Resources::getSnippetResourceDirectory() . "/js/" . strtolower($tagName) . ".js";
-        if (file_exists($path)) {
-            return file_get_contents($path);
-        } else {
-            LogUtility::msg("The javascript file ($path) was not found", LogUtility::LVL_MSG_WARNING, $tagName);
-            return "";
-        }
-
-    }
-
-    /**
-     * @param $tagName
-     * @return false|string - the css content of the css file
-     */
-    private function getCssRulesFromFile($tagName)
-    {
-
-        $path = Resources::getSnippetResourceDirectory() . "/style/" . strtolower($tagName) . ".css";
-        if (file_exists($path)) {
-            return file_get_contents($path);
-        } else {
-            LogUtility::msg("The css file ($path) was not found", LogUtility::LVL_MSG_WARNING, $tagName);
-            return "";
-        }
-
-    }
-
-    /**
-     * @param $comboTag
-     * @param $htmlTag
-     * @param array $htmlAttributes - upsert a tag each time that this function is called
-     */
-    public function upsertHeadTagForRequest($comboTag, $htmlTag, array $htmlAttributes)
+    public function upsertHeadTagForRequest($snippetId, array $tags)
     {
         $id = PluginUtility::getPageId();
-        $this->headsByRequest[$id][self::TAG_TYPE][$comboTag][$htmlTag] = [$htmlAttributes];
+        $snippet = &$this->snippetsByRequestScope[$id][Snippet::TAG_TYPE][$snippetId];
+        if (!isset($snippet)){
+            $snippet = new Snippet($snippetId,Snippet::TAG_TYPE);
+        }
+        $snippet->setTags($tags);
     }
 
     /**
@@ -301,19 +272,19 @@ class SnippetManager
      */
     public function addSnippetsFromCacheForBar($bar, $snippets)
     {
-        if (!isset($this->headsByBar[$bar])) {
-            $this->headsByBar[$bar] = $snippets;
+        if (!isset($this->snippetsByBarScope[$bar])) {
+            $this->snippetsByBarScope[$bar] = $snippets;
         } else {
             // Bad data
-            $data = var_export($this->headsByBar[$bar], true);
+            $data = var_export($this->snippetsByBarScope[$bar], true);
             LogUtility::msg("Internal error: Snippets for the bar ($bar) have been added while the bar was cached. The snippets added are ($data). This snippet should be added at the request level", LogUtility::LVL_MSG_ERROR);
         }
     }
 
     public function getSnippetsForBar($bar)
     {
-        if (isset($this->headsByBar[$bar])) {
-            return $this->headsByBar[$bar];
+        if (isset($this->snippetsByBarScope[$bar])) {
+            return $this->snippetsByBarScope[$bar];
         } else {
             return null;
         }
@@ -323,30 +294,92 @@ class SnippetManager
     /**
      * Add a javascript snippet at a request level
      * (Meaning that it should never be cached)
-     * @param $comboComponent
+     * @param $snippetId
      * @param $script
+     * @return Snippet
      */
-    public function upsertJavascriptSnippetForRequest($comboComponent, $script = null)
+    public function &upsertJavascriptSnippetForRequest($snippetId, $script = null)
     {
-
-        $id = PluginUtility::getPageId();
-        if ($script == null) {
-            $script = $this->getJavascriptContentFromFile($comboComponent);
+        $snippet = &$this->attachJavascriptSnippetForRequest($snippetId);
+        if ($script!=null){
+            $snippet->setContent($script);
         }
-
-        $this->headsByRequest[$id][self::JS_TYPE][$comboComponent] = $script;
+        return $snippet;
 
     }
 
-    public function upsertCssSnippetForRequest($comboComponent, $script = null)
+    /**
+     * @param $snippetId
+     * @param null $script
+     * @return Snippet
+     */
+    public function &upsertCssSnippetForRequest($snippetId, $script = null)
     {
-        $id = PluginUtility::getPageId();
-        if ($script == null) {
-            $script = $this->getCssRulesFromFile($comboComponent);
+        $snippet = &$this->attachCssSnippetForRequest($snippetId);
+        if ($script!=null){
+            $snippet->setContent($script);
         }
+        return $snippet;
+    }
 
-        $this->headsByRequest[$id][self::CSS_TYPE][$comboComponent] = $script;
+    /**
+     * @param $snippetId
+     * @return Snippet a snippet scoped at the bar level
+     */
+    public function &attachCssSnippetForBar($snippetId)
+    {
+        return $this->attachSnippetFromBar($snippetId, Snippet::TYPE_CSS);
+    }
 
+    /**
+     * @param $snippetId
+     * @return Snippet a snippet scoped at the request scope
+     */
+    public function &attachCssSnippetForRequest($snippetId)
+    {
+        return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS);
+    }
+
+    /**
+     * @param $snippetId
+     * @return Snippet a snippet scoped at the bar level
+     */
+    public function &attachJavascriptSnippetForBar($snippetId)
+    {
+        return $this->attachSnippetFromBar($snippetId, Snippet::TYPE_JS);
+    }
+
+    /**
+     * @param $snippetId
+     * @return Snippet a snippet scoped at the request level
+     */
+    public function &attachJavascriptSnippetForRequest($snippetId)
+    {
+        return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_JS);
+    }
+
+    private function &attachSnippetFromBar($snippetId, $type)
+    {
+        global $ID;
+        $bar = $ID;
+        $snippetFromArray = &$this->snippetsByBarScope[$bar][$type][$snippetId];
+        if (!isset($snippetFromArray)) {
+            $snippet = new Snippet($snippetId, $type);
+            $snippetFromArray = $snippet;
+        }
+        return $snippetFromArray;
+    }
+
+    private function &attachSnippetFromRequest($snippetId, $type)
+    {
+        global $ID;
+        $bar = $ID;
+        $snippetFromArray = &$this->snippetsByRequestScope[$bar][$type][$snippetId];
+        if (!isset($snippetFromArray)) {
+            $snippet = new Snippet($snippetId, $type);
+            $snippetFromArray = $snippet;
+        }
+        return $snippetFromArray;
     }
 
 

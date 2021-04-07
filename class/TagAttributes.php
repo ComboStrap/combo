@@ -78,15 +78,24 @@ class TagAttributes
     {
         $attributes = array();
         foreach ($htmlAttributes as $key => $attribute) {
-            if(is_string($attribute)){
+            /**
+             * Life is hard
+             */
+            if (is_bool($attribute)) {
+                $attribute = var_export($attribute, true);
+            }
+            /**
+             * Life is harder
+             */
+            if (is_string($attribute)) {
                 $explodeArray = explode(" ", $attribute);
                 $arrayValues = array();
-                foreach ($explodeArray as $explodeValue){
-                    $arrayValues[$explodeValue]=true;
+                foreach ($explodeArray as $explodeValue) {
+                    $arrayValues[$explodeValue] = true;
                 }
                 $attributes[$key] = $arrayValues;
             } else {
-                LogUtility::msg("The variable value ($attribute) of the key ($key) is not a string and was ignored",LogUtility::LVL_MSG_ERROR,"support");
+                LogUtility::msg("The variable value ($attribute) of the key ($key) is not a string and was ignored", LogUtility::LVL_MSG_ERROR, "support");
             }
 
         }
@@ -115,7 +124,7 @@ class TagAttributes
         /**
          * It may be in the form "value1 value2"
          */
-        $values = StringUtility::explodeAndTrim($attributeValue," ");
+        $values = StringUtility::explodeAndTrim($attributeValue, " ");
         foreach ($values as $value) {
             $this->attributes[$attLower][$value] = true;
         }
@@ -151,7 +160,11 @@ class TagAttributes
     public function getXmlAttributeValue($attributeName)
     {
         if ($this->hasAttribute($attributeName)) {
-            $keys = array_keys($this->attributes[$attributeName]);
+            $value = $this->attributes[$attributeName];
+            if (!is_array($value)) {
+                LogUtility::msg("Internal Error: The value ($value) is not an array", LogUtility::LVL_MSG_ERROR, "support");
+            }
+            $keys = array_keys($value);
             return implode(" ", $keys);
         } else {
             return null;
@@ -183,7 +196,6 @@ class TagAttributes
     }
 
 
-
     /**
      * @return array
      */
@@ -208,7 +220,7 @@ class TagAttributes
 
     public function addStyleDeclaration($property, $value)
     {
-        $this->styleDeclaration[$property]=$value;
+        $this->styleDeclaration[$property] = $value;
     }
 
     public function process()

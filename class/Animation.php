@@ -53,7 +53,8 @@ class Animation
                                     "rel" => "stylesheet",
                                     "href" => "https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css",
                                     "integrity" => "sha512-csw0Ma4oXCAgd/d4nTcpoEoz4nYvvnk21a8VA2h2dzhPAvjbUIK6V3si7/g/HehwdunqqW18RwCJKpD7rL67Xg==",
-                                    "crossorigin" => "anonymous"
+                                    "crossorigin" => "anonymous",
+                                    "preload" => true
                                 )
                             ]
                         ));
@@ -98,7 +99,8 @@ class Animation
             if (!empty($comboDataHoverClasses)) {
 
                 // Grow, float and easing are in the css
-                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::ON_HOVER_SNIPPET_ID);
+                PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::ON_HOVER_SNIPPET_ID)
+                    ->setCritical(false);
 
                 // Smooth Transition in and out of hover
                 $attributes->addClassName("combo-hover-easing");
@@ -147,7 +149,8 @@ class Animation
                                 "rel" => "stylesheet",
                                 "href" => "https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css",
                                 "integrity" => "sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8=",
-                                "crossorigin" => "anonymous"
+                                "crossorigin" => "anonymous",
+                                "preload" => true
                             )
                         ]
                 ));

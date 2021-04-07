@@ -23,7 +23,7 @@ class Animation
     const ON_HOVER_SNIPPET_ID = "onhover";
 
     const ON_VIEW_ATTRIBUTE = "onview";
-    const ON_VIEW_ID = "onview";
+    const ON_VIEW_SNIPPET_ID = "onview";
     const ANIMATE_CLASS = "animate__animated";
 
     /**
@@ -46,18 +46,19 @@ class Animation
             foreach ($hoverAnimations as $hover) {
 
                 if (in_array($hover, self::HOVER_ANIMATIONS)) {
-                    PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::ON_HOVER_SNIPPET_ID,
-                        array("link" =>
-                            [
-                                array(
-                                    "rel" => "stylesheet",
-                                    "href" => "https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css",
-                                    "integrity" => "sha512-csw0Ma4oXCAgd/d4nTcpoEoz4nYvvnk21a8VA2h2dzhPAvjbUIK6V3si7/g/HehwdunqqW18RwCJKpD7rL67Xg==",
-                                    "crossorigin" => "anonymous",
-                                    "preload" => true
-                                )
-                            ]
-                        ));
+                    PluginUtility::getSnippetManager()->attachTagsForBar(self::ON_HOVER_SNIPPET_ID)
+                        ->setTags(
+                            array("link" =>
+                                [
+                                    array(
+                                        "rel" => "stylesheet",
+                                        "href" => "https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css",
+                                        "integrity" => "sha512-csw0Ma4oXCAgd/d4nTcpoEoz4nYvvnk21a8VA2h2dzhPAvjbUIK6V3si7/g/HehwdunqqW18RwCJKpD7rL67Xg==",
+                                        "crossorigin" => "anonymous"
+                                    )
+                                ]
+                            ))
+                        ->setCritical(false);
                     $attributes->addClassName("hvr-$hover");
 
                 } else {
@@ -73,7 +74,7 @@ class Animation
                      * Shadow translation between animation name
                      * and class
                      */
-                    switch ($hover){
+                    switch ($hover) {
                         case "shadow":
                             $hover = Shadow::getDefaultClass();
                             break;
@@ -99,7 +100,8 @@ class Animation
             if (!empty($comboDataHoverClasses)) {
 
                 // Grow, float and easing are in the css
-                PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::ON_HOVER_SNIPPET_ID)
+                PluginUtility::getSnippetManager()
+                    ->attachCssSnippetForBar(self::ON_HOVER_SNIPPET_ID)
                     ->setCritical(false);
 
                 // Smooth Transition in and out of hover
@@ -108,7 +110,7 @@ class Animation
                 $attributes->addAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
-                PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::ON_HOVER_SNIPPET_ID);
+                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::ON_HOVER_SNIPPET_ID);
 
             }
 
@@ -139,7 +141,7 @@ class Animation
 
             self::scrollMagicInit();
 
-            $snippetManager->upsertHeadTagsForBar(self::ON_VIEW_ID,
+            $snippetManager->upsertTagsForBar(self::ON_VIEW_SNIPPET_ID,
 
                 array(
 
@@ -196,7 +198,7 @@ window.addEventListener("load", function(event) {
 });
 EOF;
         $snippetManager->upsertJavascriptForBar($wowSnippetId, $js);
-        $snippetManager->upsertHeadTagsForBar($wowSnippetId,
+        $snippetManager->upsertTagsForBar($wowSnippetId,
 
             array(
                 "script" =>
@@ -220,7 +222,7 @@ EOF;
 
         $scrollMagicSnippetId = "scroll-magic";
         $snippetManager->upsertJavascriptForBar($scrollMagicSnippetId);
-        $snippetManager->upsertHeadTagsForBar($scrollMagicSnippetId,
+        $snippetManager->upsertTagsForBar($scrollMagicSnippetId,
             array(
                 "script" =>
                     [

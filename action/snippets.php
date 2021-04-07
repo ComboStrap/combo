@@ -34,11 +34,26 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     public function register(Doku_Event_Handler $controller)
     {
 
+        /**
+         * To add the snippets in the header
+         */
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'componentSnippetHead', array());
-        $controller->register_hook('DOKUWIKI_DONE', 'BEFORE', $this, 'close', array());
+
+        /**
+         * To add the snippets in the content
+         * if they have not been added to the header
+         */
         $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'componentSnippetContent', array());
 
+        /**
+         * To reset the value
+         */
+        $controller->register_hook('DOKUWIKI_DONE', 'BEFORE', $this, 'close', array());
 
+
+        /**
+         * To log the cache used by bar
+         */
         $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'barParsed', array());
 
     }
@@ -102,7 +117,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $bars = $snippetManager->getBarsOfPage();
         foreach ($bars as $bar => $servedFromCache) {
 
-            // Add cache meta for info
+            // Add cache information into the head meta
             $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $bar, "content" => var_export($servedFromCache, true));
 
             // Get or store the data
@@ -110,8 +125,8 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
             // if the bar was served from the cache
             if ($servedFromCache) {
-                // Retrieve snippets from previous run
 
+                // Retrieve snippets from previous run
                 $data = $cache->retrieveCache();
 
                 if (!empty($data)) {

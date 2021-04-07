@@ -186,7 +186,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                     switch ($bootstrapVersion) {
                         case 5:
                             // https://getbootstrap.com/docs/5.0/examples/masonry/
-                            PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::TAG,
+                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::TAG,
                                 array(
                                     "script" => [
                                         array(

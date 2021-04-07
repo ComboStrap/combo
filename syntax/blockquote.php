@@ -259,7 +259,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             break;
                         case self::TWEET:
 
-                            PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::TWEET,
+                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::TWEET,
                                 array("script" =>
                                     array(
                                         array(

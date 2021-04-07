@@ -61,7 +61,7 @@ class LazyLoad
 
         $snippetManager = PluginUtility::getSnippetManager();
 
-        $snippetManager->upsertHeadTagsForBar(self::LAZY_SIDE_ID,
+        $snippetManager->upsertTagsForBar(self::LAZY_SIDE_ID,
             array(
                 'script' => [
                     array(
@@ -112,7 +112,7 @@ class LazyLoad
         $snippetManager = PluginUtility::getSnippetManager();
 
         // https://www.jsdelivr.com/package/npm/lozad
-        $snippetManager->upsertHeadTagsForBar(self::LOZAD_ID,
+        $snippetManager->upsertTagsForBar(self::LOZAD_ID,
             array(
                 'script' => [
                     array(

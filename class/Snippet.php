@@ -151,13 +151,23 @@ class Snippet
     /**
      * Set all tags at once.
      * @param array $tags
+     * @return Snippet
      */
     public function setTags(array $tags)
     {
         $this->headsTags = $tags;
+        return $this;
     }
 
+    public function getTags()
+    {
+        return $this->headsTags;
+    }
 
+    public function getCritical()
+    {
+        return $this->critical;
+    }
 
 
 }

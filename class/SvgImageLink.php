@@ -67,7 +67,7 @@ class SvgImageLink extends InternalMediaLink
             // See also: https://github.com/iconfu/svg-inject
             // !! There is a fork: https://github.com/tanem/svg-injector !!
             // Fallback ? : https://github.com/iconic/SVGInjector/#per-element-png-fallback
-            $snippetManager->upsertHeadTagsForBar("svg-injector",
+            $snippetManager->upsertTagsForBar("svg-injector",
                 array(
                     'script' => [
                         array(

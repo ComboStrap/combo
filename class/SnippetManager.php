@@ -106,17 +106,14 @@ class SnippetManager
 
     /**
      * @param $snippetId
-     * @param array $componentTags - an array of tags without content where the key is the node type and the value a array of attributes array
+     * @param array $tags - an array of tags without content where the key is the node type and the value a array of attributes array
+     * @return Snippet
      */
-    public function upsertHeadTagsForBar($snippetId, $componentTags)
+    public function &upsertTagsForBar($snippetId, $tags)
     {
-        global $ID;
-        $bar = $ID;
-        $heads = &$this->snippetsByBarScope[$bar][Snippet::TAG_TYPE][$snippetId];
-        if(!isset($heads)){
-            $heads = new Snippet($snippetId,Snippet::TAG_TYPE);
-        }
-        $heads->setTags($componentTags);
+        $snippet = &$this->attachTagsForBar($snippetId);
+        $snippet->setTags($tags);
+        return $snippet;
     }
 
 
@@ -140,25 +137,23 @@ class SnippetManager
     public function getSnippets()
     {
         /**
-         * Delete the bar, page
+         *
+         * Delete the bar, page scope
          */
-        $distinctSnippets = array();
-        $allSnippets = [$this->snippetsByBarScope, $this->snippetsByRequestScope];
-        foreach ($allSnippets as $snippets) {
-            foreach ($snippets as $barOrPageId => $snippetTypes) {
+        $distinctSnippetIdByType = array();
+        $allSnippets = array(
+            "bar" => $this->snippetsByBarScope,
+            "page" => $this->snippetsByRequestScope
+        );
+        foreach ($allSnippets as $snippetsScoped) {
+            foreach ($snippetsScoped as $barOrPageId => $snippetTypes) {
                 foreach ($snippetTypes as $snippetType => $snippetId) {
-                    if (is_array($snippetId)) {
-                        if (isset($distinctSnippets[$snippetType])) {
-                            $actualSnippetId = $distinctSnippets[$snippetType];
-                            $mergeSnippetId = array_merge($actualSnippetId, $snippetId);
-                        } else {
-                            $mergeSnippetId = $snippetId;
-                        }
+                    $snippetIdsInArray = &$distinctSnippetIdByType[$snippetType];
+                    if (isset($snippetIdsInArray)) {
+                        $snippetIdsInArray = array_merge($snippetIdsInArray, $snippetId);
                     } else {
-                        // css and javascript script
-                        $mergeSnippetId = $snippetId;
+                        $snippetIdsInArray = $snippetId;
                     }
-                    $distinctSnippets[$snippetType] = $mergeSnippetId;
                 }
             }
         }
@@ -172,27 +167,32 @@ class SnippetManager
          */
         $dokuWikiHeadsFormatContent = array();
         $dokuWikiHeadsSrc = array();
-        foreach ($distinctSnippets as $snippetType => $snippetBySnippetId) {
+        foreach ($distinctSnippetIdByType as $snippetType => $snippetBySnippetId) {
             switch ($snippetType) {
                 case Snippet::TYPE_JS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
+                        /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["script"][] = array(
                             "class" => self::getClassFromSnippetId($snippetId),
-                            "_data" => $snippet
+                            "_data" => $snippet->getContent(),
+                            "critical" => $snippet->getCritical()
                         );
                     }
                     break;
                 case Snippet::TYPE_CSS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
+                        /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["style"][] = array(
                             "class" => self::getClassFromSnippetId($snippetId),
-                            "_data" => $snippet
+                            "_data" => $snippet->getContent(),
+                            "critical" => $snippet->getCritical()
                         );
                     }
                     break;
                 case Snippet::TAG_TYPE:
-                    foreach ($snippetBySnippetId as $snippetId => $snippetTags) {
-                        foreach ($snippetTags as $snippetType => $heads) {
+                    foreach ($snippetBySnippetId as $snippetId => $tagsSnippet) {
+                        /** @var Snippet $tagsSnippet */
+                        foreach ($tagsSnippet->getTags() as $snippetType => $heads) {
                             $classFromSnippetId = self::getClassFromSnippetId($snippetId);
                             foreach ($heads as $head) {
                                 if (isset($head["class"])) {
@@ -200,6 +200,7 @@ class SnippetManager
                                 } else {
                                     $head["class"] = $classFromSnippetId;
                                 }
+                                $head["critical"] = $tagsSnippet->getCritical();
                                 $dokuWikiHeadsSrc[$snippetType][] = $head;
                             }
                         }
@@ -215,7 +216,6 @@ class SnippetManager
             foreach ($headsData as $heads) {
                 $dokuWikiHeadsSrc[$headsNodeType][] = $heads;
             }
-
         }
         return $dokuWikiHeadsSrc;
     }
@@ -243,8 +243,8 @@ class SnippetManager
     {
         $id = PluginUtility::getPageId();
         $snippet = &$this->snippetsByRequestScope[$id][Snippet::TAG_TYPE][$snippetId];
-        if (!isset($snippet)){
-            $snippet = new Snippet($snippetId,Snippet::TAG_TYPE);
+        if (!isset($snippet)) {
+            $snippet = new Snippet($snippetId, Snippet::TAG_TYPE);
         }
         $snippet->setTags($tags);
     }
@@ -301,7 +301,7 @@ class SnippetManager
     public function &upsertJavascriptSnippetForRequest($snippetId, $script = null)
     {
         $snippet = &$this->attachJavascriptSnippetForRequest($snippetId);
-        if ($script!=null){
+        if ($script != null) {
             $snippet->setContent($script);
         }
         return $snippet;
@@ -316,7 +316,7 @@ class SnippetManager
     public function &upsertCssSnippetForRequest($snippetId, $script = null)
     {
         $snippet = &$this->attachCssSnippetForRequest($snippetId);
-        if ($script!=null){
+        if ($script != null) {
             $snippet->setContent($script);
         }
         return $snippet;
@@ -380,6 +380,17 @@ class SnippetManager
             $snippetFromArray = $snippet;
         }
         return $snippetFromArray;
+    }
+
+    public function &attachTagsForBar($snippetId)
+    {
+        global $ID;
+        $bar = $ID;
+        $heads = &$this->snippetsByBarScope[$bar][Snippet::TAG_TYPE][$snippetId];
+        if (!isset($heads)) {
+            $heads = new Snippet($snippetId, Snippet::TAG_TYPE);
+        }
+        return $heads;
     }
 
 

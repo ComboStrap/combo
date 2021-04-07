@@ -40,7 +40,7 @@ class Position
                 $stickyClass = self::STICKY_CLASS;
                 $attributes->addClassName($stickyClass);
                 $snippetManager = PluginUtility::getSnippetManager();
-                $snippetManager->upsertHeadTagsForBar(self::STICKY,
+                $snippetManager->upsertTagsForBar(self::STICKY,
                     array(
                         "script" => [
                             array(

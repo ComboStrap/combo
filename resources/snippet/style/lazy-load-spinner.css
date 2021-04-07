@@ -1,17 +1,8 @@
-.lazyload {
-    opacity: 0;
-}
-
-.lazyloading {
-    opacity: 1;
-    transition: opacity 300ms;
-}
-
 @keyframes spinner {
     to {transform: rotate(360deg);}
 }
 
-.lazyloading:before {
+.lazy-loading:before {
     content: '';
     box-sizing: border-box;
     position: absolute;
@@ -26,5 +17,3 @@
     border-top-color: #07d;
     animation: spinner .6s linear infinite;
 }
-
-

@@ -215,11 +215,6 @@ class PluginUtility
         $tagAttributes->process();
         $attributes = $tagAttributes->toCallStackArray();
 
-        /**
-         * Old attributes manipulation with an array
-         */
-
-        self::processCollapse($attributes);
 
     }
 
@@ -235,17 +230,10 @@ class PluginUtility
     public static function array2HTMLAttributesAsString($attributes)
     {
 
-        self::array2HTMLAttributesAsArray($attributes);
-        // Then transform
-        $tagAttributeString = "";
-        foreach ($attributes as $name => $value) {
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+        $tagAttributes->process();
+        return $tagAttributes->toHTMLAttributesString();
 
-            if ($name !== "type") {
-                $tagAttributeString .= hsc($name) . '="' . self::escape(StringUtility::toString($value)) . '" ';
-            }
-
-        }
-        return trim($tagAttributeString);
     }
 
     /**
@@ -450,7 +438,7 @@ class PluginUtility
         // Style
         $styleAttributeName = "style";
         if ($attributes->hasAttribute($styleAttributeName)) {
-            $properties = explode(";", $attributes[$styleAttributeName]);
+            $properties = explode(";", $attributes->getValueAndRemove($styleAttributeName));
             foreach ($properties as $property) {
                 list($key, $value) = explode(":", $property);
                 if ($key != "") {
@@ -565,7 +553,6 @@ class PluginUtility
         }
 
         Shadow::process($attributes);
-
 
 
     }
@@ -955,17 +942,16 @@ class PluginUtility
     /**
      * The collapse attribute are the same
      * for all component except a link
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
-    private static function processCollapse(&$attributes)
+    public static function processCollapse(&$attributes)
     {
 
         $collapse = "collapse";
-        if (array_key_exists($collapse, $attributes)) {
-            $targetId = $attributes[$collapse];
-            unset($attributes[$collapse]);
-            $attributes['data-toggle'] = "collapse";
-            $attributes['data-target'] = $targetId;
+        if ($attributes->hasAttribute($collapse)) {
+            $targetId = $attributes->getValueAndRemove($collapse);
+            $attributes->addAttributeValue('data-toggle', "collapse");
+            $attributes->addAttributeValue('data-target', $targetId);
         }
     }
 

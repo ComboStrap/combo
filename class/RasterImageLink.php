@@ -114,8 +114,6 @@ class RasterImageLink extends InternalMediaLink
 
         if ($this->getFile()->exists()) {
 
-            $imgHTML = '<img';
-
 
             /**
              * Snippet Lazy load
@@ -145,11 +143,11 @@ class RasterImageLink extends InternalMediaLink
              */
             $imgTagHeightValue = $this->getImgTagHeightValue();
             if (!empty($imgTagHeightValue)) {
-                $imgHTML .= ' height="' . $imgTagHeightValue . 'px"';
+                $attributes->addAttributeValue("height", $imgTagHeightValue . 'px');
                 // By default, the browser with a height auto due to the img-fluid class
                 // takes the value of the width
                 // To constraint it, we use max-height
-                $attributes->addStyleDeclaration("max-height",$imgTagHeightValue);
+                $attributes->addStyleDeclaration("max-height", $imgTagHeightValue."px");
             }
             $widthValue = $this->getImgTagWidthValue();
 
@@ -165,7 +163,7 @@ class RasterImageLink extends InternalMediaLink
              */
             if (!empty($widthValue)) {
 
-                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . 'px"';
+                $attributes->addAttributeValue("width", $this->getImgTagWidthValue() . 'px');
 
                 /**
                  * Responsive image src set building
@@ -232,7 +230,7 @@ class RasterImageLink extends InternalMediaLink
                 /**
                  * Sizes is added in all cases (lazy loading or not)
                  */
-                $imgHTML .= " sizes=\"$sizes\"";
+                $attributes->addAttributeValue("sizes", $sizes);
 
                 /**
                  * Lazy load
@@ -242,12 +240,12 @@ class RasterImageLink extends InternalMediaLink
                     /**
                      * Placeholder
                      */
-                    $imgHTML .= " " . LazyLoad::getPlaceholderAttributes($srcValue);
-                    $imgHTML .= " data-srcset=\"$srcSet\"";
+                    LazyLoad::addPlaceholderAttributes($attributes,$srcValue);
+                    $attributes->addAttributeValue("data-srcset", $srcSet);
 
                 } else {
 
-                    $imgHTML .= " srcset=\"$srcSet\"";
+                    $attributes->addAttributeValue("srcset", $srcSet);
 
                 }
 
@@ -256,11 +254,11 @@ class RasterImageLink extends InternalMediaLink
                 // No width, no responsive possibility
                 if ($lazyLoad) {
 
-                    $imgHTML .= " data-src=\"$srcValue\"";
+                    $attributes->addAttributeValue("data-src", $srcValue);
 
                 } else {
 
-                    $imgHTML .= " src=\"$srcValue\"";
+                    $attributes->addAttributeValue("src", $srcValue);
 
                 }
 
@@ -270,30 +268,15 @@ class RasterImageLink extends InternalMediaLink
             /**
              * Title
              */
-            if (!empty($this->getTitle())) {
-                $imgHTML .= ' alt="' . $this->getTitle() . '"';
-            }
+            $attributes->addAttributeValueIfNotEmpty("alt", $this->getTitle());
+
 
             /**
-             * To get the real class
+             *
              */
-            $attributes->process();
+            $htmlAttributes = $attributes->toHTMLAttributesString();
 
-            /**
-             * Class
-             */
-            if (!empty($attributes->getClass())) {
-                $imgHTML .= ' class="' . $attributes->getClass() . '"';
-            }
-
-            /**
-             * Style
-             */
-            if (!empty($attributes->getStyle())) {
-                $imgHTML .= ' style="' . $attributes->getStyle() . '"';
-            }
-
-            $imgHTML .= '>';
+            $imgHTML = "<img $htmlAttributes>";
 
         } else {
 
@@ -419,9 +402,9 @@ class RasterImageLink extends InternalMediaLink
         }
 
         $width = $localWidth;
-        if ($width==null){
+        if ($width == null) {
             $width = $this->getRequestedWidth();
-            if (empty($width)){
+            if (empty($width)) {
                 $width = $this->getMediaWidth();
             }
         }
@@ -491,8 +474,6 @@ class RasterImageLink extends InternalMediaLink
     {
         return true;
     }
-
-
 
 
 }

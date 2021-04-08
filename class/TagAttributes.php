@@ -27,6 +27,7 @@ class TagAttributes
      */
     private $attributes;
     private $styleDeclaration = array();
+    private $wasProcessed = false;
 
     /**
      * ComponentAttributes constructor.
@@ -119,8 +120,18 @@ class TagAttributes
         return PluginUtility::array2InlineStyle($this->styleDeclaration);
     }
 
+    /**
+     * Add an attribute with its value if the value is not empty
+     * @param $attributeName
+     * @param $attributeValue
+     */
     public function addAttributeValue($attributeName, $attributeValue)
     {
+
+        if (empty($attributeValue)){
+            LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead", LogUtility::LVL_MSG_WARNING,"support");
+        }
+        
         $attLower = strtolower($attributeName);
         if (!$this->hasAttribute($attLower)) {
             $this->attributes[$attLower] = array();
@@ -131,7 +142,14 @@ class TagAttributes
          */
         $values = StringUtility::explodeAndTrim($attributeValue, " ");
         foreach ($values as $value) {
-            $this->attributes[$attLower][$value] = true;
+            $this->attributes[$attLower][trim($value)] = true;
+        }
+
+    }
+
+    public function addAttributeValueIfNotEmpty($attributeName,$attributeValue){
+        if (!empty($attributeValue)) {
+            $this->addAttributeValue($attributeName,$attributeValue);
         }
     }
 
@@ -151,10 +169,7 @@ class TagAttributes
     public function toHtmlArrayWithProcessing()
     {
 
-        $htmlArray = $this->toCallStackArray();
-        PluginUtility::array2HTMLAttributesAsArray($htmlArray);
-
-        return $htmlArray;
+        return $this->toCallStackArray();
 
     }
 
@@ -210,6 +225,10 @@ class TagAttributes
         foreach ($this->attributes as $key => $value) {
             $array[$key] = $this->getXmlAttributeValue($key);
         }
+        $style = $this->getStyle();
+        if (!empty($style)) {
+            $array["style"] = $style;
+        }
         return $array;
     }
 
@@ -230,6 +249,12 @@ class TagAttributes
 
     public function process()
     {
+        if ($this->wasProcessed) {
+            LogUtility::msg("Internal Error: The attributes were already processed", LogUtility::LVL_MSG_ERROR, "support");
+        } else {
+            $this->wasProcessed = true;
+        }
+
         /**
          * Process animation (onHover, onView)
          */
@@ -253,6 +278,7 @@ class TagAttributes
          * Process the style attributes if any
          */
         PluginUtility::processStyle($this);
+        PluginUtility::processCollapse($this);
 
     }
 
@@ -269,4 +295,20 @@ class TagAttributes
     }
 
 
+    public function toHTMLAttributesString()
+    {
+
+        $attributes = $this->toHtmlArrayWithProcessing();
+        // Then transform
+        $tagAttributeString = "";
+        foreach ($attributes as $name => $value) {
+
+            if ($name !== "type") {
+                $tagAttributeString .= hsc($name) . '="' . PluginUtility::escape(StringUtility::toString($value)) . '" ';
+            }
+
+        }
+        return trim($tagAttributeString);
+
+    }
 }

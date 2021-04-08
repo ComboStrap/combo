@@ -137,34 +137,46 @@ class InternalMediaLink
         $src = cleanID($attributes['src']);
         $media = self::createFromId($src);
 
-        if (isset($attributes[self::WIDTH_KEY])) {
+        if (key_exists(self::WIDTH_KEY, $attributes)) {
             $width = $attributes[self::WIDTH_KEY];
-            $media->setRequestedWidth($width);
+            if (!empty($width)) {
+                $media->setRequestedWidth($width);
+            }
             unset($attributes[self::WIDTH_KEY]);
         }
-        if (isset($attributes[self::HEIGHT_KEY])) {
+        if (key_exists(self::HEIGHT_KEY, $attributes)) {
             $height = $attributes[self::HEIGHT_KEY];
-            $media->setRequestedHeight($height);
+            if (!empty($height)) {
+                $media->setRequestedHeight($height);
+            }
             unset($attributes[self::HEIGHT_KEY]);
         }
-        if (isset($attributes[self::TITLE_KEY])) {
+        if (key_exists(self::TITLE_KEY, $attributes)) {
             $title = $attributes[self::TITLE_KEY];
-            $media->setTitle($title);
+            if (!empty($title)) {
+                $media->setTitle($title);
+            }
             unset($attributes[self::TITLE_KEY]);
         }
-        if ($attributes[self::LINKING_KEY]) {
+        if (key_exists(self::LINKING_KEY, $attributes)) {
             $linking = $attributes[self::LINKING_KEY];
-            $media->setLinking($linking);
+            if (!empty($linking)) {
+                $media->setLinking($linking);
+            }
             unset($attributes[self::LINKING_KEY]);
         }
-        if (isset($attributes[self::CACHE_KEY])) {
+        if (key_exists(self::CACHE_KEY, $attributes)) {
             $nocache = $attributes[self::CACHE_KEY];
-            $media->setNoCache($nocache);
+            if (!empty($nocache)) {
+                $media->setNoCache($nocache);
+            }
             unset($attributes[self::CACHE_KEY]);
         }
-        if (isset($attributes[self::ALIGN_KEY])) {
+        if (key_exists(self::ALIGN_KEY,$attributes)) {
             $align = $attributes[self::ALIGN_KEY];
-            $media->setAlign($align);
+            if (empty($align)) {
+                $media->setAlign($align);
+            }
             unset($attributes[self::ALIGN_KEY]);
         }
 
@@ -350,7 +362,7 @@ class InternalMediaLink
      */
     protected function setTitle($title)
     {
-        $this->getAttributes()->addAttributeValue(self::TITLE_KEY,$title);
+        $this->getAttributes()->addAttributeValue(self::TITLE_KEY, $title);
     }
 
     private function setAlt($title)

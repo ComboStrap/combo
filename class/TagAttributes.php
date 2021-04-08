@@ -131,7 +131,7 @@ class TagAttributes
         if (empty($attributeValue)){
             LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead", LogUtility::LVL_MSG_WARNING,"support");
         }
-        
+
         $attLower = strtolower($attributeName);
         if (!$this->hasAttribute($attLower)) {
             $this->attributes[$attLower] = array();
@@ -168,7 +168,7 @@ class TagAttributes
      */
     public function toHtmlArrayWithProcessing()
     {
-
+        $this->process();
         return $this->toCallStackArray();
 
     }

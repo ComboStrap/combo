@@ -174,7 +174,7 @@ class InternalMediaLink
         }
         if (key_exists(self::ALIGN_KEY,$attributes)) {
             $align = $attributes[self::ALIGN_KEY];
-            if (empty($align)) {
+            if (!empty($align)) {
                 $media->setAlign($align);
             }
             unset($attributes[self::ALIGN_KEY]);

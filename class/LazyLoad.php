@@ -94,7 +94,8 @@ class LazyLoad
                 break;
             case self::LOZAD_ID:
                 // https://github.com/ApoorvSaxena/lozad.js#large-image-improvment
-                $placeholder = "data-placeholder-background=\"#e5534b\"";
+                $placeholderColor = self::getPlaceholderColor();
+                $placeholder = "data-placeholder-background=\"$placeholderColor\"";
                 break;
         }
 
@@ -146,5 +147,12 @@ class LazyLoad
             default:
                 throw new \RuntimeException("The active lazy loaded is unknown (" . self::ACTIVE . ")");
         }
+    }
+
+    /**
+     * @return string - the lazy loading placeholder color
+     */
+    private static function getPlaceholderColor(){
+        return "#cbf1ea";
     }
 }

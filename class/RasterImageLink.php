@@ -67,16 +67,12 @@ class RasterImageLink extends InternalMediaLink
             $att = array();
 
             // Width is driving the computation
-            $urlWidth = $localWidth;
-            if ($urlWidth == null) {
-                $urlWidth = $this->getImgTagWidthValue();
-            }
-            if (!empty($urlWidth)) {
+            if ($localWidth != null && $localWidth != $this->getMediaWidth()) {
 
-                $att['w'] = $urlWidth;
+                $att['w'] = $localWidth;
 
                 // Height
-                $height = $this->getImgTagHeightValue($urlWidth);
+                $height = $this->getImgTagHeightValue($localWidth);
                 if (!empty($height)) {
                     $att['h'] = $height;
                 }
@@ -123,11 +119,12 @@ class RasterImageLink extends InternalMediaLink
 
             /**
              * Snippet Lazy load
+             * To add it to the class name
              */
             $lazyLoad = $this->getLazyLoad();
             if ($lazyLoad) {
                 LazyLoad::addLozadSnippet();
-                PluginUtility::getSnippetManager()->upsertJavascriptForBar("lozad-raster");
+                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-raster");
                 $attributes->addClassName("combo-lazy-raster");
             }
 
@@ -151,111 +148,127 @@ class RasterImageLink extends InternalMediaLink
             }
 
             /**
+             * width and height to give the dimension ratio
+             * They have an effect on the space reservation
+             * but not on responsive image at all
+             * To allow responsive height, the height style property is set at auto
+             * (ie img-fluid in bootstrap)
+             */
+            if (!empty($this->getImgTagHeightValue())) {
+                $imgHTML .= ' height="' . $this->getImgTagHeightValue() . '"';
+            }
+            $widthValue = $this->getImgTagWidthValue();
+
+            /**
              * Src
              */
             $srcValue = $this->getUrl();
-            if ($lazyLoad) {
 
+            /**
+             * Srcset and sizes for responsive image
+             * Width is mandatory for responsive image
+             * Ref https://developers.google.com/search/docs/advanced/guidelines/google-images#responsive-images
+             */
+            if (!empty($widthValue)) {
 
-                /**
-                 * Placeholder
-                 */
-                $imgHTML .= " " . LazyLoad::getPlaceholderAttributes($srcValue);
-
-                /**
-                 * width and height to give the dimension ratio
-                 * They have an effect on the space reservation
-                 * but not on responsive image at all
-                 * To allow responsive height, the height style property should be set at auto
-                 * (ie img-fluid in bootstrap)
-                 */
-                if (!empty($this->getImgTagHeightValue())) {
-                    $imgHTML .= ' height="' . $this->getImgTagHeightValue() . '"';
-                }
-                $widthValue = $this->getImgTagWidthValue();
+                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
 
                 /**
-                 * Width is mandatory for responsive image
+                 * Responsive image src set building
+                 * We have chosen
+                 *   * 375: Iphone6
+                 *   * 768: Ipad
+                 *   * 1024: Ipad Pro
+                 *
                  */
-                if (!empty($widthValue)) {
+                // The image margin applied
+                $imageMargin = 20;
 
-                    $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
-
-                    /**
-                     * Responsive image src set building
-                     * We have chosen
-                     *   * 375: Iphone6
-                     *   * 768: Ipad
-                     *   * 1024: Ipad Pro
-                     *
-                     */
-                    // The image margin applied
-                    $imageMargin = 20;
-
-                    // Small
-                    $smBreakPointWidth = 375;
-                    $smWidth = $smBreakPointWidth - $imageMargin;
-                    if ($widthValue >= $smWidth) {
-                        $smUrl = $this->getUrl(true, $smWidth);
-                        $srcSet = "$smUrl {$smWidth}w";
-                        $sizes = $this->getSizes($smBreakPointWidth, $smWidth);
+                // Small
+                $smBreakPointWidth = 375;
+                $smWidth = $smBreakPointWidth - $imageMargin;
+                if ($widthValue >= $smWidth) {
+                    $smUrl = $this->getUrl(true, $smWidth);
+                    $srcSet = "$smUrl {$smWidth}w";
+                    $sizes = $this->getSizes($smBreakPointWidth, $smWidth);
 
 
-                        // Medium
-                        $mediumBreakpointWith = 768;
-                        $mediumWith = $mediumBreakpointWith - $imageMargin;
-                        if ($widthValue >= $mediumWith) {
-                            $srcMediumUrl = $this->getUrl(true, $mediumWith);
+                    // Medium
+                    $mediumBreakpointWith = 768;
+                    $mediumWith = $mediumBreakpointWith - $imageMargin;
+                    if ($widthValue >= $mediumWith) {
+                        $srcMediumUrl = $this->getUrl(true, $mediumWith);
+                        if (!empty($srcSet)) {
+                            $srcSet .= ", ";
+                            $sizes .= ", ";
+                        }
+                        $srcSet .= "$srcMediumUrl {$mediumWith}w";
+                        $sizes .= $this->getSizes($mediumBreakpointWith, $mediumWith);
+
+                        // Large
+                        $largeBreakpointWidth = 1024;
+                        $largeWidth = $largeBreakpointWidth - $imageMargin;
+                        if ($widthValue >= $largeWidth) {
+                            $srcLargeUrl = $this->getUrl(true, $largeWidth);
                             if (!empty($srcSet)) {
                                 $srcSet .= ", ";
                                 $sizes .= ", ";
                             }
-                            $srcSet .= "$srcMediumUrl {$mediumWith}w";
-                            $sizes .= $this->getSizes($mediumBreakpointWith, $mediumWith);
-
-                            // Large
-                            $largeBreakpointWidth = 1024;
-                            $largeWidth = $largeBreakpointWidth - $imageMargin;
-                            if ($widthValue >= $largeWidth) {
-                                $srcLargeUrl = $this->getUrl(true, $largeWidth);
-                                if (!empty($srcSet)) {
-                                    $srcSet .= ", ";
-                                    $sizes .= ", ";
-                                }
-                                $srcSet .= "$srcLargeUrl {$largeWidth}w";
-                                $sizes .= $this->getSizes($largeBreakpointWidth, $largeWidth);
-                            }
-
+                            $srcSet .= "$srcLargeUrl {$largeWidth}w";
+                            $sizes .= $this->getSizes($largeBreakpointWidth, $largeWidth);
                         }
-                    }
 
-                    // Add the last one
-                    // two times not empty to beat the linter
-                    // otherwise it thinks that sizes may be not initialized
-                    if (!empty($srcSet) && !empty($sizes)) {
-                        $srcSet .= ", ";
-                        $sizes .= ", ";
-                    } else {
-                        $srcSet = "";
-                        $sizes = "";
                     }
-                    $srcUrl = $this->getUrl(true, $widthValue);
-                    $srcSet .= "$srcUrl {$widthValue}w";
-                    $sizes .= "{$widthValue}px";
+                }
 
-                    // Ref https://developers.google.com/search/docs/advanced/guidelines/google-images#responsive-images
-                    $imgHTML .= " sizes=\"$sizes\"";
+                // Add the last one
+                // two times not empty to beat the linter
+                // otherwise it thinks that $sizes may be not initialized
+                if (!empty($srcSet) && !empty($sizes)) {
+                    $srcSet .= ", ";
+                    $sizes .= ", ";
+                } else {
+                    $srcSet = "";
+                    $sizes = "";
+                }
+                $srcUrl = $this->getUrl(true);
+                $srcSet .= "$srcUrl {$widthValue}w";
+                $sizes .= "{$widthValue}px";
+
+                /**
+                 * Sizes is added in all cases (lazy loading or not)
+                 */
+                $imgHTML .= " sizes=\"$sizes\"";
+
+                /**
+                 * Lazy load
+                 */
+                if ($lazyLoad) {
+
+                    /**
+                     * Placeholder
+                     */
+                    $imgHTML .= " " . LazyLoad::getPlaceholderAttributes($srcValue);
                     $imgHTML .= " data-srcset=\"$srcSet\"";
 
                 } else {
-                    // No width
+
+                    $imgHTML .= " srcset=\"$srcSet\"";
+
                 }
 
             } else {
 
-                //$imgHTML .= " src=\"$srcValue\"";
+                // No width, no responsive possibility
+                if ($lazyLoad) {
 
+                    $imgHTML .= " data-src=\"$srcValue\"";
 
+                } else {
+
+                    $imgHTML .= " src=\"$srcValue\"";
+
+                }
 
             }
 
@@ -458,6 +471,8 @@ class RasterImageLink extends InternalMediaLink
     {
         return true;
     }
+
+
 
 
 }

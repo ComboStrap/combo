@@ -135,17 +135,6 @@ class RasterImageLink extends InternalMediaLink
              */
             $attributes->addClassName("img-fluid");
 
-            /**
-             * To get the real class
-             */
-            $attributes->process();
-
-            /**
-             * Class
-             */
-            if (!empty($attributes->getClass())) {
-                $imgHTML .= ' class="' . $attributes->getClass() . '"';
-            }
 
             /**
              * width and height to give the dimension ratio
@@ -154,8 +143,13 @@ class RasterImageLink extends InternalMediaLink
              * To allow responsive height, the height style property is set at auto
              * (ie img-fluid in bootstrap)
              */
-            if (!empty($this->getImgTagHeightValue())) {
-                $imgHTML .= ' height="' . $this->getImgTagHeightValue() . '"';
+            $imgTagHeightValue = $this->getImgTagHeightValue();
+            if (!empty($imgTagHeightValue)) {
+                $imgHTML .= ' height="' . $imgTagHeightValue . 'px"';
+                // By default, the browser with a height auto due to the img-fluid class
+                // takes the value of the width
+                // To constraint it, we use max-height
+                $attributes->addStyleDeclaration("max-height",$imgTagHeightValue);
             }
             $widthValue = $this->getImgTagWidthValue();
 
@@ -171,7 +165,7 @@ class RasterImageLink extends InternalMediaLink
              */
             if (!empty($widthValue)) {
 
-                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
+                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . 'px"';
 
                 /**
                  * Responsive image src set building
@@ -280,6 +274,24 @@ class RasterImageLink extends InternalMediaLink
                 $imgHTML .= ' alt="' . $this->getTitle() . '"';
             }
 
+            /**
+             * To get the real class
+             */
+            $attributes->process();
+
+            /**
+             * Class
+             */
+            if (!empty($attributes->getClass())) {
+                $imgHTML .= ' class="' . $attributes->getClass() . '"';
+            }
+
+            /**
+             * Style
+             */
+            if (!empty($attributes->getStyle())) {
+                $imgHTML .= ' style="' . $attributes->getStyle() . '"';
+            }
 
             $imgHTML .= '>';
 
@@ -360,7 +372,7 @@ class RasterImageLink extends InternalMediaLink
     /**
      * @return int - the width value attribute in a img
      */
-    private function getImgTagWidthValue()
+    public function getImgTagWidthValue()
     {
         $linkWidth = $this->getRequestedWidth();
         if (empty($linkWidth)) {
@@ -395,26 +407,34 @@ class RasterImageLink extends InternalMediaLink
      * @param null $localWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
      * @return int the height value attribute in a img
      */
-    private function getImgTagHeightValue($localWidth = null)
+    public function getImgTagHeightValue($localWidth = null)
     {
 
         /**
          * Height default
          */
-        $linkHeight = $this->getRequestedHeight();
-        if (empty($linkHeight)) {
-            $linkHeight = $this->getMediaHeight();
+        $height = $this->getRequestedHeight();
+        if (empty($height)) {
+            $height = $this->getMediaHeight();
+        }
+
+        $width = $localWidth;
+        if ($width==null){
+            $width = $this->getRequestedWidth();
+            if (empty($width)){
+                $width = $this->getMediaWidth();
+            }
         }
 
         /**
          * Scale the height by size parameter
          */
-        if (!empty($linkHeight) &&
-            !empty($localWidth) &&
+        if (!empty($height) &&
+            !empty($width) &&
             !empty($this->getMediaWidth()) &&
             $this->getMediaWidth() != 0
         ) {
-            $linkHeight = $linkHeight * ($localWidth / $this->getMediaWidth());
+            $height = $height * ($width / $this->getMediaWidth());
         }
 
         /**
@@ -424,7 +444,7 @@ class RasterImageLink extends InternalMediaLink
          * This is important because the security token is based on width and height
          * and therefore the fetch will failed
          */
-        return intval($linkHeight);
+        return intval($height);
 
     }
 

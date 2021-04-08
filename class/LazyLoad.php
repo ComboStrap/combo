@@ -77,27 +77,22 @@ class LazyLoad
          * lazysizes adds the class lazy loading while the images are loading
          * and the class lazyloaded as soon as the image is loaded.
          */
-        $snippetManager->upsertCssSnippetForBar(self::LAZY_SIDE_ID);
+        $snippetManager->attachCssSnippetForBar(self::LAZY_SIDE_ID);
 
     }
 
     public static function getPlaceholderAttributes($srcValue)
     {
-        $placeholder = "";
-        switch (self::ACTIVE) {
-            case self::LAZY_SIDE_ID:
-                // Modern transparent srcset pattern
-                // normal src attribute with a transparent or low quality image as srcset value
-                // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
-                $placeholder = "src=\"$srcValue\"";
-                $placeholder .= " srcset=\"data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\"";
-                break;
-            case self::LOZAD_ID:
-                // https://github.com/ApoorvSaxena/lozad.js#large-image-improvment
-                $placeholderColor = self::getPlaceholderColor();
-                $placeholder = "data-placeholder-background=\"$placeholderColor\"";
-                break;
-        }
+
+        // Modern transparent srcset pattern
+        // normal src attribute with a transparent or low quality image as srcset value
+        // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
+        $placeholder = "src=\"$srcValue\"";
+        $placeholder .= " srcset=\"data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\"";
+
+        // https://github.com/ApoorvSaxena/lozad.js#large-image-improvment
+        $placeholderColor = self::getPlaceholderColor();
+        $placeholder .= "data-placeholder-background=\"$placeholderColor\"";
 
         return $placeholder;
     }
@@ -117,15 +112,20 @@ class LazyLoad
             array(
                 'script' => [
                     array(
-                        "src"=>"https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
-                        "integrity"=>"sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=",
-                        "crossorigin"=>"anonymous"
+                        "src" => "https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js",
+                        "integrity" => "sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=",
+                        "crossorigin" => "anonymous"
 
                     )
                 ]
             )
         );
 
+        /**
+         * Add the fading effect
+         */
+        $snippetId = "lazy-load-fade";
+        $snippetManager->attachCssSnippetForBar($snippetId);
         /**
          * The snippet depend on the image type and features
          * and was added in the code
@@ -152,7 +152,8 @@ class LazyLoad
     /**
      * @return string - the lazy loading placeholder color
      */
-    private static function getPlaceholderColor(){
+    private static function getPlaceholderColor()
+    {
         return "#cbf1ea";
     }
 }

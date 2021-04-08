@@ -33,23 +33,24 @@ class Shadow
     const CONF_LARGE_LEVEL_VALUE = "large";
     const CONF_EXTRA_LARGE_LEVEL_VALUE = "extra-large";
 
-    public static function process(&$attributes, &$styleProperties)
+    /**
+     * @param TagAttributes $attributes
+     */
+    public static function process(&$attributes)
     {
         $elevationValue = "";
 
-        if (array_key_exists(self::ELEVATION_ATT, $attributes)) {
-            $elevationValue = $attributes[self::ELEVATION_ATT];
-            unset($attributes[self::ELEVATION_ATT]);
-        } else if (array_key_exists(self::SHADOW_ATT, $attributes)) {
-            $elevationValue = $attributes[self::SHADOW_ATT];
-            unset($attributes[self::SHADOW_ATT]);
+        if ($attributes->hasAttribute(self::ELEVATION_ATT)) {
+            $elevationValue = $attributes->getValueAndRemove(self::ELEVATION_ATT);
+        } else if ($attributes->hasAttribute(self::SHADOW_ATT)) {
+            $elevationValue = $attributes->getValueAndRemove(self::SHADOW_ATT);
         }
 
         if (!empty($elevationValue)) {
 
             $shadowClass = self::getClass($elevationValue);
             if (!empty($shadowClass)) {
-                PluginUtility::addClass2Attributes($shadowClass, $attributes);
+                $attributes->addClassName($shadowClass);
             }
 
         }
@@ -102,10 +103,13 @@ class Shadow
         }
     }
 
+    /**
+     * @param TagAttributes $attributes
+     */
     public
     static function addMediumElevation(&$attributes)
     {
-        PluginUtility::addClass2Attributes(self::MEDIUM_ELEVATION_CLASS, $attributes);
+        $attributes->addClassName(self::MEDIUM_ELEVATION_CLASS);
     }
 
 }

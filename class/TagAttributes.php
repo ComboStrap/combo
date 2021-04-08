@@ -114,6 +114,11 @@ class TagAttributes
         return $this->getXmlAttributeValue('class');
     }
 
+    public function getStyle()
+    {
+        return PluginUtility::array2InlineStyle($this->styleDeclaration);
+    }
+
     public function addAttributeValue($attributeName, $attributeValue)
     {
         $attLower = strtolower($attributeName);
@@ -220,7 +225,7 @@ class TagAttributes
 
     public function addStyleDeclaration($property, $value)
     {
-        $this->styleDeclaration[$property] = $value;
+        ArrayUtility::addIfNotSet($this->styleDeclaration, $property, $value);
     }
 
     public function process()
@@ -244,6 +249,23 @@ class TagAttributes
         PluginUtility::processSpacingAttributes($this);
         PluginUtility::processAlignAttributes($this);
 
+        /**
+         * Process the style attributes if any
+         */
+        PluginUtility::processStyle($this);
+
+    }
+
+    public function hasStyleDeclaration($styleDeclaration)
+    {
+        return isset($this->styleDeclaration[$styleDeclaration]);
+    }
+
+    public function getAndRemoveStyleDeclaration($styleDeclaration)
+    {
+        $styleValue = $this->styleDeclaration[$styleDeclaration];
+        unset($this->styleDeclaration[$styleDeclaration]);
+        return $styleValue;
     }
 
 

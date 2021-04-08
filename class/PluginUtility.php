@@ -218,8 +218,6 @@ class PluginUtility
         /**
          * Old attributes manipulation with an array
          */
-        // Process the style attributes if any
-        self::processStyle($attributes);
 
         self::processCollapse($attributes);
 
@@ -445,60 +443,58 @@ class PluginUtility
      * This method will takes attributes
      * and process the plugin styling attribute such as width and height
      * to put them in a style HTML attribute
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
     public static function processStyle(&$attributes)
     {
         // Style
         $styleAttributeName = "style";
-        $styleProperties = array();
-        if (array_key_exists($styleAttributeName, $attributes)) {
-            foreach (explode(";", $attributes[$styleAttributeName]) as $property) {
+        if ($attributes->hasAttribute($styleAttributeName)) {
+            $properties = explode(";", $attributes[$styleAttributeName]);
+            foreach ($properties as $property) {
                 list($key, $value) = explode(":", $property);
                 if ($key != "") {
-                    $styleProperties[$key] = $value;
+                    $attributes->addStyleDeclaration($key, $value);
                 }
             }
         }
 
         // Skin
         $skinAttributes = "skin";
-        if (array_key_exists($skinAttributes, $attributes)) {
-            $skinValue = $attributes[$skinAttributes];
-            unset($attributes[$skinAttributes]);
-            if (array_key_exists("type", $attributes)) {
-                $type = $attributes["type"];
+        if ($attributes->hasAttribute($skinAttributes)) {
+            $skinValue = $attributes->getValueAndRemove($skinAttributes);
+            if ($attributes->hasAttribute("type")) {
+                $type = $attributes->getValueAndRemove("type");
                 if (isset(ColorUtility::$colors[$type])) {
                     $color = ColorUtility::$colors[$type];
                     switch ($skinValue) {
                         case "contained":
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $color[ColorUtility::COLOR]);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
+                            $attributes->addStyleDeclaration(ColorUtility::COLOR, $color[ColorUtility::COLOR]);
+                            $attributes->addStyleDeclaration(ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
+                            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
                             Shadow::addMediumElevation($attributes);
                             break;
                         case "filled":
                         case "solid":
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $color[ColorUtility::COLOR]);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
+                            $attributes->addStyleDeclaration(ColorUtility::COLOR, $color[ColorUtility::COLOR]);
+                            $attributes->addStyleDeclaration(ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
+                            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
                             break;
                         case "outline":
                             $primaryColor = $color[ColorUtility::COLOR];
                             if ($primaryColor === "#fff") {
                                 $primaryColor = $color[ColorUtility::BACKGROUND_COLOR];
                             }
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $primaryColor);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, "transparent");
+                            $attributes->addStyleDeclaration(ColorUtility::COLOR, $primaryColor);
+                            $attributes->addStyleDeclaration(ColorUtility::BACKGROUND_COLOR, "transparent");
                             $borderColor = $color[ColorUtility::BACKGROUND_COLOR];
-                            if (isset($styleProperties[ColorUtility::BORDER_COLOR])) {
+                            if ($attributes->hasStyleDeclaration(ColorUtility::BORDER_COLOR)) {
                                 // Color in the `border` attribute
                                 // takes precedence in the `border-color` if located afterwards
                                 // We don't take the risk
-                                $borderColor = $styleProperties[ColorUtility::BORDER_COLOR];
-                                unset($styleProperties[ColorUtility::BORDER_COLOR]);
+                                $borderColor = $attributes->getAndRemoveStyleDeclaration(ColorUtility::BORDER_COLOR);
                             }
-                            ArrayUtility::addIfNotSet($styleProperties, "border", "1px solid " . $borderColor);
+                            $attributes->addStyleDeclaration("border", "1px solid " . $borderColor);
 
                             break;
                         case "text":
@@ -506,9 +502,9 @@ class PluginUtility
                             if ($primaryColor === "#fff") {
                                 $primaryColor = $color[ColorUtility::BACKGROUND_COLOR];
                             }
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $primaryColor);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, "transparent");
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, "transparent");
+                            $attributes->addStyleDeclaration(ColorUtility::COLOR, $primaryColor);
+                            $attributes->addStyleDeclaration(ColorUtility::BACKGROUND_COLOR, "transparent");
+                            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, "transparent");
                             break;
                     }
                 }
@@ -518,15 +514,15 @@ class PluginUtility
         // Color
         $colorAttributes = ["color", "background-color", "border-color"];
         foreach ($colorAttributes as $colorAttribute) {
-            if (array_key_exists($colorAttribute, $attributes)) {
-                $colorValue = $attributes[$colorAttribute];
+            if ($attributes->hasAttribute($colorAttribute)) {
+                $colorValue = $attributes->getValueAndRemove($colorAttribute);
                 $gradientPrefix = 'gradient-';
                 if (strpos($colorValue, $gradientPrefix) === 0) {
                     $mainColorValue = substr($colorValue, strlen($gradientPrefix));
-                    $styleProperties['background-image'] = 'linear-gradient(to top,#fff 0,' . self::getColorValue($mainColorValue) . ' 100%)';
-                    $styleProperties['background-color'] = 'unset!important';
+                    $attributes->addStyleDeclaration('background-image', 'linear-gradient(to top,#fff 0,' . self::getColorValue($mainColorValue) . ' 100%)');
+                    $attributes->addStyleDeclaration('background-color', 'unset!important');
                 } else {
-                    $styleProperties[$colorAttribute] = self::getColorValue($colorValue);
+                    $attributes->addStyleDeclaration($colorAttribute, self::getColorValue($colorValue));
                 }
 
                 if ($colorAttribute == "border-color") {
@@ -534,25 +530,24 @@ class PluginUtility
                 }
 
 
-                unset($attributes[$colorAttribute]);
             }
         }
 
         $widthName = "width";
-        if (array_key_exists($widthName, $attributes)) {
+        if ($attributes->hasAttribute($widthName)) {
 
-            $widthValue = trim($attributes[$widthName]);
+            $widthValue = trim($attributes->getValueAndRemove($widthName));
             if ($widthValue == "fit") {
                 $widthValue = "fit-content";
             }
-            $styleProperties['max-width'] = $widthValue;
+            $attributes->addStyleDeclaration('max-width', $widthValue);
 
-            unset($attributes[$widthName]);
         }
 
         $heightName = "height";
-        if (array_key_exists($heightName, $attributes)) {
-            $styleProperties[$heightName] = trim($attributes[$heightName]);
+        if ($attributes->hasAttribute($heightName)) {
+            $heightValue = trim($attributes->getValueAndRemove($heightName));
+            $attributes->addStyleDeclaration("max-height", $heightValue);
             /**
              * Overflow auto means that positioning element on the edge with the
              * will clip them with the {@link Position::processPosition()} position attribute
@@ -561,21 +556,17 @@ class PluginUtility
              *        $styleProperties["overflow"] = "auto";
              * }
              */
-            unset($attributes[$heightName]);
         }
 
         $textAlign = "text-align";
-        if (array_key_exists($textAlign, $attributes)) {
-            $styleProperties[$textAlign] = trim($attributes[$textAlign]);
-            unset($attributes[$textAlign]);
+        if ($attributes->hasAttribute($textAlign)) {
+            $textAlignValue = trim($attributes->getValueAndRemove($textAlign));
+            $attributes->addStyleDeclaration($textAlign, $textAlignValue);
         }
 
-        Shadow::process($attributes, $styleProperties);
+        Shadow::process($attributes);
 
 
-        if (sizeof($styleProperties) != 0) {
-            $attributes[$styleAttributeName] = PluginUtility::array2InlineStyle($styleProperties);
-        }
 
     }
 
@@ -879,21 +870,21 @@ class PluginUtility
      * to see a border
      * Doc
      * https://combostrap.com/styling/color#border_color
-     * @param array $styleProperties
+     * @param TagAttributes $tagAttributes
      */
-    private static function checkDefaultBorderColorAttributes(array &$styleProperties)
+    private static function checkDefaultBorderColorAttributes(&$tagAttributes)
     {
         /**
          * border color was set without the width
          * setting the width
          */
         if (!(
-            isset($styleProperties["border"])
+            $tagAttributes->hasStyleDeclaration("border")
             ||
-            isset($styleProperties["border-width"])
+            $tagAttributes->hasStyleDeclaration("border-width")
         )
         ) {
-            $styleProperties["border-width"] = "1px";
+            $tagAttributes->addStyleDeclaration("border-width", "1px");
         }
         /**
          * border color was set without the style
@@ -901,16 +892,16 @@ class PluginUtility
          */
         if (!
         (
-            isset($styleProperties["border"])
+            $tagAttributes->hasStyleDeclaration("border")
             ||
-            isset($styleProperties["border-style"])
+            $tagAttributes->hasStyleDeclaration("border-style")
         )
         ) {
-            $styleProperties["border-style"] = "solid";
+            $tagAttributes->addStyleDeclaration("border-style", "solid");
 
         }
-        if (!isset($styleProperties["border-radius"])) {
-            $styleProperties["border-radius"] = ".25rem";
+        if (!$tagAttributes->hasStyleDeclaration("border-radius")) {
+            $tagAttributes->addStyleDeclaration("border-radius", ".25rem");
         }
 
     }

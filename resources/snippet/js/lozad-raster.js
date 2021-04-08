@@ -2,10 +2,16 @@ window.addEventListener("load", function (event) {
     // lazy loads elements with the below selector
     const observer = lozad('.combo-lazy-raster', {
         load: function (el) {
-            el.onload = function () {
-                el.classList.add('combo-lazy-fade')
-            };
-            el.srcset = el.dataset.srcset;
+
+            el.classList.add('combo-lazy-fade')
+
+            if (el.hasAttribute("data-srcset")) {
+                el.srcset = el.dataset.srcset;
+            }
+            debugger;
+            if (el.hasAttribute("data-src")) {
+                el.src = el.dataset.src;
+            }
         },
         loaded: function (el) {
             // Custom implementation on a loaded element

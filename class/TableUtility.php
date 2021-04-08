@@ -18,10 +18,12 @@ namespace ComboStrap;
  * @package ComboStrap
  *
  * @see <a href="https://datatables.net/examples/styling/bootstrap4">DataTables (May be)</a>
- * 
+ *
  */
 class TableUtility
 {
+
+    const TABLE_SNIPPET_ID = "table";
 
     static function tableOpen($renderer, $pos)
     {
@@ -37,7 +39,12 @@ class TableUtility
         }
         // table-responsive and
         $bootResponsiveClass = 'table-responsive';
-        $bootTableClass = 'table table-hover table-striped';
+
+        // Add non-fluid to not have a table that takes 100% of the space
+        // Otherwise we can't have floating element at the right and the visual space is to big
+        PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::TABLE_SNIPPET_ID);
+
+        $bootTableClass = 'table table-non-fluid table-hover table-striped';
 
         $renderer->doc .= '<div class="' . $class . ' ' . $bootResponsiveClass . '"><table class="inline ' . $bootTableClass . '">' . DOKU_LF;
     }

@@ -132,6 +132,13 @@ class RasterImageLink extends InternalMediaLink
             }
 
             /**
+             * Responsive image
+             * https://getbootstrap.com/docs/5.0/content/images/
+             * to apply max-width: 100%; and height: auto;
+             */
+            $attributes->addClassName("img-fluid");
+
+            /**
              * To get the real class
              */
             $attributes->process();
@@ -156,59 +163,99 @@ class RasterImageLink extends InternalMediaLink
                 $imgHTML .= " " . LazyLoad::getPlaceholderAttributes($srcValue);
 
                 /**
-                 * max-width as asked
+                 * width and height to give the dimension ratio
+                 * They have an effect on the space reservation
+                 * but not on responsive image at all
+                 * To allow responsive height, the height style property should be set at auto
+                 * (ie img-fluid in bootstrap)
                  */
-                $widthValue = $this->getImgTagWidthValue();
-                $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
-
-                /**
-                 * Responsive image src set building
-                 * We have chosen 300, 600, 900
-                 * Also seen from google 320w, 480w, 800w"
-                 */
-                $smWidth = 300;
-                $smUrl = $this->getUrl(true, $smWidth);
-                $srcSet = "$smUrl {$smWidth}w";
-
-                // From 600 and above
-                $mediumWith = 600;
-                if ($widthValue >= $mediumWith) {
-                    $srcMediumUrl = $this->getUrl(true, $mediumWith);
-                    if (!empty($srcSet)) {
-                        $srcSet .= ", ";
-                    }
-                    $srcSet .= "$srcMediumUrl {$mediumWith}w";
-                }
-                // From 900 and above
-                $largeWidth = 900;
-                if ($widthValue >= $largeWidth) {
-                    $srcLargeUrl = $this->getUrl(true, $largeWidth);
-                    if (!empty($srcSet)) {
-                        $srcSet .= ", ";
-                    }
-                    $srcSet .= "$srcLargeUrl {$largeWidth}w";
-                }
-
-                if (!empty($srcSet)) {
-                    // Ref https://developers.google.com/search/docs/advanced/guidelines/google-images#responsive-images
-                    $mediumBrowserWidth = $mediumWith + 20;
-                    $largeBrowserWidth = $largeWidth + 20;
-                    $mediaUnit = "px"; // if the unit is in ''w'', the pixel ratio kick in
-                    $sizes = "sizes=\"{$smWidth}$mediaUnit, (min-width: {$mediumBrowserWidth}px) {$mediumWith}$mediaUnit, (min-width: {$largeBrowserWidth}$mediaUnit) {$largeWidth}w\"";
-                    $imgHTML .= " $sizes ";
-                    $imgHTML .= " data-srcset=\"$srcSet\"";
-                }
-
-
-            } else {
-
-                $imgHTML .= " src=\"$srcValue\"";
-                if (!empty($this->getImgTagWidthValue())) {
-                    $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
-                }
                 if (!empty($this->getImgTagHeightValue())) {
                     $imgHTML .= ' height="' . $this->getImgTagHeightValue() . '"';
                 }
+                $widthValue = $this->getImgTagWidthValue();
+
+                /**
+                 * Width is mandatory for responsive image
+                 */
+                if (!empty($widthValue)) {
+
+                    $imgHTML .= ' width="' . $this->getImgTagWidthValue() . '"';
+
+                    /**
+                     * Responsive image src set building
+                     * We have chosen
+                     *   * 375: Iphone6
+                     *   * 768: Ipad
+                     *   * 1024: Ipad Pro
+                     *
+                     */
+                    // The image margin applied
+                    $imageMargin = 20;
+
+                    // Small
+                    $smBreakPointWidth = 375;
+                    $smWidth = $smBreakPointWidth - $imageMargin;
+                    if ($widthValue >= $smWidth) {
+                        $smUrl = $this->getUrl(true, $smWidth);
+                        $srcSet = "$smUrl {$smWidth}w";
+                        $sizes = $this->getSizes($smBreakPointWidth, $smWidth);
+
+
+                        // Medium
+                        $mediumBreakpointWith = 768;
+                        $mediumWith = $mediumBreakpointWith - $imageMargin;
+                        if ($widthValue >= $mediumWith) {
+                            $srcMediumUrl = $this->getUrl(true, $mediumWith);
+                            if (!empty($srcSet)) {
+                                $srcSet .= ", ";
+                                $sizes .= ", ";
+                            }
+                            $srcSet .= "$srcMediumUrl {$mediumWith}w";
+                            $sizes .= $this->getSizes($mediumBreakpointWith, $mediumWith);
+
+                            // Large
+                            $largeBreakpointWidth = 1024;
+                            $largeWidth = $largeBreakpointWidth - $imageMargin;
+                            if ($widthValue >= $largeWidth) {
+                                $srcLargeUrl = $this->getUrl(true, $largeWidth);
+                                if (!empty($srcSet)) {
+                                    $srcSet .= ", ";
+                                    $sizes .= ", ";
+                                }
+                                $srcSet .= "$srcLargeUrl {$largeWidth}w";
+                                $sizes .= $this->getSizes($largeBreakpointWidth, $largeWidth);
+                            }
+
+                        }
+                    }
+
+                    // Add the last one
+                    // two times not empty to beat the linter
+                    // otherwise it thinks that sizes may be not initialized
+                    if (!empty($srcSet) && !empty($sizes)) {
+                        $srcSet .= ", ";
+                        $sizes .= ", ";
+                    } else {
+                        $srcSet = "";
+                        $sizes = "";
+                    }
+                    $srcUrl = $this->getUrl(true, $widthValue);
+                    $srcSet .= "$srcUrl {$widthValue}w";
+                    $sizes .= "{$widthValue}px";
+
+                    // Ref https://developers.google.com/search/docs/advanced/guidelines/google-images#responsive-images
+                    $imgHTML .= " sizes=\"$sizes\"";
+                    $imgHTML .= " data-srcset=\"$srcSet\"";
+
+                } else {
+                    // No width
+                }
+
+            } else {
+
+                //$imgHTML .= " src=\"$srcValue\"";
+
+
 
             }
 
@@ -219,7 +266,6 @@ class RasterImageLink extends InternalMediaLink
             if (!empty($this->getTitle())) {
                 $imgHTML .= ' alt="' . $this->getTitle() . '"';
             }
-
 
 
             $imgHTML .= '>';
@@ -377,6 +423,40 @@ class RasterImageLink extends InternalMediaLink
         } else {
             return PluginUtility::getConfValue(RasterImageLink::CONF_LAZY_LOAD_ENABLE);
         }
+    }
+
+    /**
+     * @param $screenWidth
+     * @param $imageWidth
+     * @return string sizes with a dpi correction if
+     */
+    private function getSizes($screenWidth, $imageWidth)
+    {
+
+        if ($this->getWithDpiCorrection()) {
+            $dpiBase = 96;
+            $sizes = "(max-width: {$screenWidth}px) and (min-resolution:" . (3 * $dpiBase) . "dpi) " . intval($imageWidth / 3) . "px";
+            $sizes .= ", (max-width: {$screenWidth}px) and (min-resolution:" . (2 * $dpiBase) . "dpi) " . intval($imageWidth / 2) . "px";
+            $sizes .= ", (max-width: {$screenWidth}px) and (min-resolution:" . (1 * $dpiBase) . "dpi) {$imageWidth}px";
+        } else {
+            $sizes = "(max-width: {$screenWidth}px) {$imageWidth}px";
+        }
+        return $sizes;
+    }
+
+    /**
+     * Return if the DPI correction is enabled or not for responsive image
+     *
+     * Mobile have a higher DPI and can then fit a bigger image on a smaller size.
+     *
+     * This can be disturbing when debugging responsive sizing image
+     * If you want also to use less bandwidth, this is also useful.
+     *
+     * @return bool
+     */
+    private function getWithDpiCorrection()
+    {
+        return true;
     }
 
 

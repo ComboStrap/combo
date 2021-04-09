@@ -42,8 +42,10 @@ class Shadow
 
         if ($attributes->hasComponentAttribute(self::ELEVATION_ATT)) {
             $elevationValue = $attributes->getValueAndRemove(self::ELEVATION_ATT);
-        } else if ($attributes->hasComponentAttribute(self::SHADOW_ATT)) {
-            $elevationValue = $attributes->getValueAndRemove(self::SHADOW_ATT);
+        } else {
+            if ($attributes->hasComponentAttribute(self::SHADOW_ATT)) {
+                $elevationValue = $attributes->getValueAndRemove(self::SHADOW_ATT);
+            }
         }
 
         if (!empty($elevationValue)) {

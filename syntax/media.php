@@ -99,7 +99,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
-                $attributes = InternalMediaLink::getParseAttributes($match);
+                $media = InternalMediaLink::createFromRenderMatch($match);
+                $attributes = $media->toCallStackArray();
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parent = $tag->getParent();
                 $parentTag = "";

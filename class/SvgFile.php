@@ -331,14 +331,14 @@ class SvgFile extends XmlFile
              */
             $widthAttributeValue = $documentElement->getAttribute("width");
             if (empty($widthAttributeValue)) {
-                $widthAttributeValue = $tagAttribute->getValue("width");
+                $widthAttributeValue = $tagAttribute->getComponentAttributeValue("width");
             }
             if (!empty($widthAttributeValue)) {
                 $widthPixel = Unit::toPixel($widthAttributeValue);
 
                 $heightAttributeValue = $documentElement->getAttribute("height");
                 if (empty($heightAttributeValue)) {
-                    $heightAttributeValue = $tagAttribute->getValue("height");
+                    $heightAttributeValue = $tagAttribute->getComponentAttributeValue("height");
                 }
                 if (!empty($heightAttributeValue)) {
                     $heightPixel = Unit::toPixel($heightAttributeValue);

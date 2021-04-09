@@ -33,6 +33,10 @@ class InternalMediaLink
     const HEIGHT_KEY = 'height';
     const WIDTH_KEY = 'width';
     const CACHE_KEY = 'cache';
+    const TYPE_KEY = "type";
+
+    // Pattern to capture the link as first capture group
+    const LINK_PATTERN = "{{\s*([a-z0-9A-Z:?=&.x\-_]*)\s*\|?.*}}";
 
     private $id;
 
@@ -69,6 +73,8 @@ class InternalMediaLink
      * @var string the alt attribute value (known as the title for dokuwiki)
      */
     private $title;
+    private $requestHeight;
+    private $requestedWidth;
 
 
     /**
@@ -139,6 +145,14 @@ class InternalMediaLink
         unset($attributes['src']);
         $media = self::createFromId($src);
 
+        /**
+         * Type must be the type of the media link
+         * but we don't use it actually
+         * we delete it them if present
+         */
+        if (key_exists(self::TYPE_KEY, $attributes)) {
+            unset($attributes[self::TYPE_KEY]);
+        }
         if (key_exists(self::WIDTH_KEY, $attributes)) {
             $width = $attributes[self::WIDTH_KEY];
             if (!empty($width)) {
@@ -194,11 +208,9 @@ class InternalMediaLink
         $attributes = self::getParseAttributes($match);
 
         // Add the non-standard attribute in the form name=value
-        // Capture the link as first capture group
-        // You can test the pattern against
-        // {{ :logo.svg?10x200&nocache&preserveAspectRatio=none }}
         $matches = array();
-        $found = preg_match("/{{\s*([a-z:?=&.x0-9A-Z]*)\s*\|?.*}}/", $match, $matches);
+        $pattern = self::LINK_PATTERN;
+        $found = preg_match("/$pattern/", $match, $matches);
         if ($found) {
             $link = $matches[1];
             $positionQueryCharacter = strpos($link, "?");
@@ -264,10 +276,10 @@ class InternalMediaLink
      * Return the same array than with the {@link self::parse()} method
      * that is used in the {@link CallStack}
      */
-    public function getHandleAttributes()
+    public function toCallStackArray()
     {
-        return array(
-            'type' => null, // ??? internal, external
+        $array = array(
+            'type' => null, // ??? internal, external media
             'src' => $this->getId(),
             self::TITLE_KEY => $this->getTitle(),
             TagAttributes::ALIGN_KEY => $this->getAlign(),
@@ -276,6 +288,9 @@ class InternalMediaLink
             self::CACHE_KEY => $this->getCache(),
             self::LINKING_KEY => $this->getLinking()
         );
+        // Add the extra attribute
+        $array = array_merge($this->getAttributes()->toCallStackArray(),$array);
+        return $array;
     }
 
     /**
@@ -304,7 +319,7 @@ class InternalMediaLink
 
     public function getRequestedHeight()
     {
-        return $this->getAttributes()->getValue(self::HEIGHT_KEY, null);
+        return $this->requestHeight;
     }
 
     /**
@@ -313,7 +328,7 @@ class InternalMediaLink
      */
     public function setRequestedHeight($height)
     {
-        $this->getAttributes()->addComponentAttributeValue(self::HEIGHT_KEY, $height);
+        $this->requestHeight = $height;
     }
 
     /**
@@ -321,15 +336,16 @@ class InternalMediaLink
      */
     public function getRequestedWidth()
     {
-        return $this->getAttributes()->getValue(self::WIDTH_KEY, null);
+        return $this->requestedWidth;
     }
 
     /**
      * The requested width
+     * @param $width
      */
     public function setRequestedWidth($width)
     {
-        $this->getAttributes()->addComponentAttributeValue(self::WIDTH_KEY, $width);
+        $this->requestedWidth = $width;
     }
 
     public function setLinking($linking)
@@ -395,12 +411,12 @@ class InternalMediaLink
 
     private function getAlign()
     {
-        return $this->getAttributes()->getValue(TagAttributes::ALIGN_KEY, null);
+        return $this->getAttributes()->getComponentAttributeValue(TagAttributes::ALIGN_KEY, null);
     }
 
     private function getLinking()
     {
-        return $this->getAttributes()->getValue("linking", null);
+        return $this->getAttributes()->getComponentAttributeValue("linking", null);
     }
 
     /**
@@ -443,8 +459,10 @@ class InternalMediaLink
 
     public function getAttribute($key)
     {
-        return $this->getAttributes()->getValue($key, null);
+        return $this->getAttributes()->getComponentAttributeValue($key, null);
     }
+
+
 
 
 }

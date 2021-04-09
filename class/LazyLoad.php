@@ -40,6 +40,7 @@ class LazyLoad
     const LOZAD_ID = "lozad";
     const TRANSPARENT_GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
     const CANONICAL = "lazy";
+    const DEFAULT_COLOR = "#cbf1ea";
 
 
     public static function addSnippet()
@@ -155,6 +156,6 @@ class LazyLoad
      */
     public static function getPlaceholderColor()
     {
-        return PluginUtility::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, "#cbf1ea");
+        return PluginUtility::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, self::DEFAULT_COLOR);
     }
 }

@@ -229,6 +229,7 @@ class TagAttributes
             PluginUtility::processStyle($this);
             PluginUtility::processCollapse($this);
 
+
             /**
              * Create the final html attributes array
              */
@@ -331,7 +332,7 @@ class TagAttributes
         return $array;
     }
 
-    public function getValue($attributeName, $default = null)
+    public function getComponentAttributeValue($attributeName, $default = null)
     {
         $lowerAttribute = strtolower($attributeName);
         $value = $default;

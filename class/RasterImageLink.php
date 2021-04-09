@@ -153,9 +153,32 @@ class RasterImageLink extends InternalMediaLink
             $widthValue = $this->getImgTagWidthValue();
 
             /**
-             * Src
+             * Src is always set, this is the default
+             * src attribute is served to browsers that do not take the srcset attribute into account.
              */
             $srcValue = $this->getUrl();
+            $attributes->addHtmlAttributeValue("src", $srcValue);
+
+            /**
+             * Responsive image src set building
+             * We have chosen
+             *   * 375: Iphone6
+             *   * 768: Ipad
+             *   * 1024: Ipad Pro
+             *
+             */
+            // The image margin applied
+            $imageMargin = 20;
+
+            // Small
+            $smallBreakPointWidth = 576;
+            $smWidth = $smallBreakPointWidth - $imageMargin;
+            // Medium
+            $mediumBreakpointWith = 768;
+            $mediumWith = $mediumBreakpointWith - $imageMargin;
+            // Large
+            $largeBreakpointWidth = 992;
+            $largeWidth = $largeBreakpointWidth - $imageMargin;
 
             /**
              * Srcset and sizes for responsive image
@@ -166,20 +189,7 @@ class RasterImageLink extends InternalMediaLink
 
                 $attributes->addHtmlAttributeValue("width", $this->getImgTagWidthValue() . 'px');
 
-                /**
-                 * Responsive image src set building
-                 * We have chosen
-                 *   * 375: Iphone6
-                 *   * 768: Ipad
-                 *   * 1024: Ipad Pro
-                 *
-                 */
-                // The image margin applied
-                $imageMargin = 20;
 
-                // XSmall
-                $smallBreakPointWidth = 576;
-                $smWidth = $smallBreakPointWidth - $imageMargin;
                 if ($widthValue >= $smWidth) {
                     $smUrl = $this->getUrl(true, $smWidth);
                     $srcSet = "$smUrl {$smWidth}w";
@@ -187,8 +197,6 @@ class RasterImageLink extends InternalMediaLink
 
 
                     // Medium
-                    $mediumBreakpointWith = 768;
-                    $mediumWith = $mediumBreakpointWith - $imageMargin;
                     if ($widthValue >= $mediumWith) {
                         $srcMediumUrl = $this->getUrl(true, $mediumWith);
                         if (!empty($srcSet)) {
@@ -199,8 +207,6 @@ class RasterImageLink extends InternalMediaLink
                         $sizes .= $this->getSizes($mediumBreakpointWith, $mediumWith);
 
                         // Large
-                        $largeBreakpointWidth = 992;
-                        $largeWidth = $largeBreakpointWidth - $imageMargin;
                         if ($widthValue >= $largeWidth) {
                             $srcLargeUrl = $this->getUrl(true, $largeWidth);
                             if (!empty($srcSet)) {
@@ -241,7 +247,14 @@ class RasterImageLink extends InternalMediaLink
                     /**
                      * Placeholder
                      */
-                    LazyLoad::addPlaceholderAttributes($attributes,$srcValue);
+                    // Modern transparent srcset pattern
+                    // normal src attribute with a transparent or low quality image as srcset value
+                    // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
+                    // srcset is a base64 encoded transparent gif
+                    $attributes->addHtmlAttributeValue("srcset", LazyLoad::TRANSPARENT_GIF);
+
+                    LazyLoad::addPlaceholderBackground($attributes);
+
                     $attributes->addHtmlAttributeValue("data-srcset", $srcSet);
 
                 } else {
@@ -255,11 +268,9 @@ class RasterImageLink extends InternalMediaLink
                 // No width, no responsive possibility
                 if ($lazyLoad) {
 
+                    LazyLoad::addPlaceholderBackground($attributes);
+                    $attributes->addHtmlAttributeValue("src", LazyLoad::TRANSPARENT_GIF);
                     $attributes->addHtmlAttributeValue("data-src", $srcValue);
-
-                } else {
-
-                    $attributes->addHtmlAttributeValue("src", $srcValue);
 
                 }
 

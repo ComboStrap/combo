@@ -136,6 +136,7 @@ class InternalMediaLink
     public static function createFromRenderAttributes(&$attributes)
     {
         $src = cleanID($attributes['src']);
+        unset($attributes['src']);
         $media = self::createFromId($src);
 
         if (key_exists(self::WIDTH_KEY, $attributes)) {

@@ -36,6 +36,7 @@ class LazyLoad
      */
     const LAZY_SIDE_ID = "lazy-sizes";
     const LOZAD_ID = "lozad";
+    const TRANSPARENT_GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
 
     public static function addSnippet()
@@ -83,20 +84,14 @@ class LazyLoad
 
     /**
      * @param TagAttributes $attributes
-     * @param $srcValue
      */
-    public static function addPlaceholderAttributes(&$attributes, $srcValue)
+    public static function addPlaceholderBackground(&$attributes)
     {
 
-        // Modern transparent srcset pattern
-        // normal src attribute with a transparent or low quality image as srcset value
-        // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
-        $attributes->addComponentAttributeValue("src",$srcValue);
-        $attributes->addComponentAttributeValue("srcset","data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==");
-
         // https://github.com/ApoorvSaxena/lozad.js#large-image-improvment
-        $placeholderColor = self::getPlaceholderColor();
-        $attributes->addComponentAttributeValue("data-placeholder-background","$placeholderColor");
+        $placeholderColor = LazyLoad::getPlaceholderColor();
+        $attributes->addHtmlAttributeValue("data-placeholder-background","$placeholderColor");
+
 
     }
 
@@ -155,7 +150,7 @@ class LazyLoad
     /**
      * @return string - the lazy loading placeholder color
      */
-    private static function getPlaceholderColor()
+    public static function getPlaceholderColor()
     {
         return "#cbf1ea";
     }

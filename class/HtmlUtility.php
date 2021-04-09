@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 use DOMDocument;
 use DOMNode;
+use Exception;
 use SimpleXMLElement;
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -87,14 +88,9 @@ class HtmlUtility
         if (empty($left)) {
             throw new \RuntimeException("The left text should not be empty");
         }
-        /**
-         * The @ is to suppress the error because of HTML5 tag such as footer
-         * https://stackoverflow.com/questions/6090667/php-domdocument-errors-warnings-on-html5-tags
-         */
-        $leftDocument = new DOMDocument();
-        $leftDocument->loadHTML($left);
-        $rightDocument = new DOMDocument();
-        $rightDocument->loadHTML($right);
+
+        $leftDocument = self::load($left);
+        $rightDocument = self::load($right);
 
         $error = "";
         self::diffNode($leftDocument, $rightDocument, $error);
@@ -234,5 +230,24 @@ class HtmlUtility
             }
         }
 
+    }
+
+    private static function &load($text)
+    {
+        $document = new DOMDocument('1.0', 'UTF-8');
+        try {
+            // & is in raw url and when in a value gives an error
+            // https://www.php.net/manual/en/function.htmlspecialchars.php
+            // because we use it only in src attribute, we make the switch here
+            $text = str_replace("&","&amp;",$text);
+            $document->loadHTML($text);
+        } catch (Exception $exception){
+            if (strpos($exception->getMessage(),"htmlParseEntityRef: expecting ';' in Entity")!==false){
+                throw new \RuntimeException("You forgot to call htmlentities in src, url ? Somewhere. Error: ".$exception->getMessage());
+            } else {
+                throw new \RuntimeException($exception);
+            }
+        }
+        return $document;
     }
 }

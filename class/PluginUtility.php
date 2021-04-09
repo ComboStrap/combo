@@ -237,7 +237,6 @@ class PluginUtility
     {
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-        $tagAttributes->process();
         return $tagAttributes->toHTMLString();
 
     }

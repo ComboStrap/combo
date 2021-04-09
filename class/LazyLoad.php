@@ -23,6 +23,8 @@ namespace ComboStrap;
 class LazyLoad
 {
 
+    const CONF_LAZY_LOADING_PLACEHOLDER_COLOR = "lazyLoadingPlaceholderColor";
+
     /**
      * Lozad was choosen because
      * it was easier to add svg injection
@@ -37,6 +39,7 @@ class LazyLoad
     const LAZY_SIDE_ID = "lazy-sizes";
     const LOZAD_ID = "lozad";
     const TRANSPARENT_GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+    const CANONICAL = "lazy";
 
 
     public static function addSnippet()
@@ -152,6 +155,6 @@ class LazyLoad
      */
     public static function getPlaceholderColor()
     {
-        return "#cbf1ea";
+        return PluginUtility::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, "#cbf1ea");
     }
 }

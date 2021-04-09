@@ -211,10 +211,6 @@ $conf["defaultPageType"] = "article";
  */
 $conf["defaultShadowLevel"] = "medium";
 
-/**
- * Lazy loading {@link \ComboStrap\RasterImageLink::CONF_LAZY_LOAD_ENABLE}
- */
-$conf["rasterImageLazyLoadEnable"] = 1;
 
 /**
  * Lazy loading {@link \ComboStrap\SvgImageLink::CONF_LAZY_LOAD_ENABLE}
@@ -269,3 +265,25 @@ $conf["svgOptimizationElementsToDeleteIfEmpty"] = "metadata, defs";
  */
 
 $conf["svgPreserveAspectRatioDefault"] = "xMidYMid slice";
+
+/**
+ * Lazy loading {@link \ComboStrap\RasterImageLink::CONF_LAZY_LOADING_ENABLE}
+ */
+$conf["rasterImageLazyLoadingEnable"] = 1;
+
+/**
+ * {@link \ComboStrap\RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN}
+ */
+$conf["responsiveImageMargin"] = "20px";
+
+/**
+ * {@link \ComboStrap\RasterImageLink::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION}
+ */
+$conf["responsiveImageDpiCorrection"] = 1;
+
+/**
+ * {@link \ComboStrap\LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR
+ */
+$conf["lazyLoadingPlaceholderColor"] = "#cbf1ea";
+
+

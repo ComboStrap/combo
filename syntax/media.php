@@ -75,7 +75,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        $enable = $this->getConf(RasterImageLink::CONF_LAZY_LOAD_ENABLE);
+        $enable = $this->getConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE);
         if (!$enable) {
 
             // Inside a card, we need to take over

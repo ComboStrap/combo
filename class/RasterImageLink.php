@@ -25,8 +25,12 @@ class RasterImageLink extends InternalMediaLink
 {
 
     const CANONICAL = "image";
-    const CONF_LAZY_LOAD_ENABLE = "rasterImageLazyLoadEnable";
+    const CONF_LAZY_LOADING_ENABLE = "rasterImageLazyLoadingEnable";
+
     const RESPONSIVE_CLASS = "img-fluid";
+
+    const CONF_RESPONSIVE_IMAGE_MARGIN = "responsiveImageMargin";
+    const CONF_RESPONSIVE_IMAGE_DPI_CORRECTION = "responsiveImageDpiCorrection";
 
 
     private $imageWidth;
@@ -148,7 +152,7 @@ class RasterImageLink extends InternalMediaLink
                 // By default, the browser with a height auto due to the img-fluid class
                 // takes the value of the width
                 // To constraint it, we use max-height
-                $attributes->addStyleDeclaration("max-height", $imgTagHeightValue."px");
+                $attributes->addStyleDeclaration("max-height", $imgTagHeightValue . "px");
             }
             $widthValue = $this->getImgTagWidthValue();
 
@@ -168,8 +172,11 @@ class RasterImageLink extends InternalMediaLink
              *
              */
             // The image margin applied
-            $imageMargin = 20;
+            $imageMargin = PluginUtility::getConfValue(self::CONF_RESPONSIVE_IMAGE_MARGIN,"20px");
 
+            // Xsmall
+            $extraSmallBreakPointWidth = 375;
+            $xsmWidth = $extraSmallBreakPointWidth - $imageMargin;
             // Small
             $smallBreakPointWidth = 576;
             $smWidth = $smallBreakPointWidth - $imageMargin;
@@ -189,34 +196,33 @@ class RasterImageLink extends InternalMediaLink
 
                 $attributes->addHtmlAttributeValue("width", $this->getImgTagWidthValue() . 'px');
 
+                // Xs
+                if ($widthValue >= $xsmWidth) {
+                    $xsmUrl = $this->getUrl(true, $xsmWidth);
+                    $srcSet = "$xsmUrl {$xsmWidth}w";
+                    $sizes = $this->getSizes($extraSmallBreakPointWidth, $xsmWidth);
 
-                if ($widthValue >= $smWidth) {
-                    $smUrl = $this->getUrl(true, $smWidth);
-                    $srcSet = "$smUrl {$smWidth}w";
-                    $sizes = $this->getSizes($smallBreakPointWidth, $smWidth);
+                    // Small
+                    if ($widthValue >= $smWidth) {
 
+                        $smUrl = $this->getUrl(true, $smWidth);
+                        $srcSet .= ", $smUrl {$smWidth}w";
+                        $sizes .= ", ".$this->getSizes($smallBreakPointWidth, $smWidth);
 
-                    // Medium
-                    if ($widthValue >= $mediumWith) {
-                        $srcMediumUrl = $this->getUrl(true, $mediumWith);
-                        if (!empty($srcSet)) {
-                            $srcSet .= ", ";
-                            $sizes .= ", ";
-                        }
-                        $srcSet .= "$srcMediumUrl {$mediumWith}w";
-                        $sizes .= $this->getSizes($mediumBreakpointWith, $mediumWith);
+                        // Medium
+                        if ($widthValue >= $mediumWith) {
+                            $srcMediumUrl = $this->getUrl(true, $mediumWith);
+                            $srcSet .= ", $srcMediumUrl {$mediumWith}w";
+                            $sizes .= ", ".$this->getSizes($mediumBreakpointWith, $mediumWith);
 
-                        // Large
-                        if ($widthValue >= $largeWidth) {
-                            $srcLargeUrl = $this->getUrl(true, $largeWidth);
-                            if (!empty($srcSet)) {
-                                $srcSet .= ", ";
-                                $sizes .= ", ";
+                            // Large
+                            if ($widthValue >= $largeWidth) {
+                                $srcLargeUrl = $this->getUrl(true, $largeWidth);
+                                $srcSet .= ", $srcLargeUrl {$largeWidth}w";
+                                $sizes .= ", ".$this->getSizes($largeBreakpointWidth, $largeWidth);
                             }
-                            $srcSet .= "$srcLargeUrl {$largeWidth}w";
-                            $sizes .= $this->getSizes($largeBreakpointWidth, $largeWidth);
-                        }
 
+                        }
                     }
                 }
 
@@ -295,13 +301,15 @@ class RasterImageLink extends InternalMediaLink
             $imgHTML = "<span class=\"text-danger\">The image ($this) does not exist</span>";
 
         }
+
         return $imgHTML;
     }
 
     /**
      * @return int - the width of the image from the file
      */
-    public function getMediaWidth()
+    public
+    function getMediaWidth()
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWidth;
@@ -310,13 +318,15 @@ class RasterImageLink extends InternalMediaLink
     /**
      * @return int - the height of the image from the file
      */
-    public function getMediaHeight()
+    public
+    function getMediaHeight()
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWeight;
     }
 
-    private function analyzeImageIfNeeded()
+    private
+    function analyzeImageIfNeeded()
     {
 
         if (!$this->wasAnalyzed) {
@@ -356,7 +366,8 @@ class RasterImageLink extends InternalMediaLink
      *
      * @return bool true if we could extract the dimensions
      */
-    public function isAnalyzable()
+    public
+    function isAnalyzable()
     {
         $this->analyzeImageIfNeeded();
         return $this->analyzable;
@@ -367,7 +378,8 @@ class RasterImageLink extends InternalMediaLink
     /**
      * @return int - the width value attribute in a img
      */
-    public function getImgTagWidthValue()
+    public
+    function getImgTagWidthValue()
     {
         $linkWidth = $this->getRequestedWidth();
         if (empty($linkWidth)) {
@@ -402,7 +414,8 @@ class RasterImageLink extends InternalMediaLink
      * @param null $localWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
      * @return int the height value attribute in a img
      */
-    public function getImgTagHeightValue($localWidth = null)
+    public
+    function getImgTagHeightValue($localWidth = null)
     {
 
         /**
@@ -443,13 +456,14 @@ class RasterImageLink extends InternalMediaLink
 
     }
 
-    public function getLazyLoad()
+    public
+    function getLazyLoad()
     {
         $lazyLoad = parent::getLazyLoad();
         if ($lazyLoad !== null) {
             return $lazyLoad;
         } else {
-            return PluginUtility::getConfValue(RasterImageLink::CONF_LAZY_LOAD_ENABLE);
+            return PluginUtility::getConfValue(RasterImageLink::CONF_LAZY_LOADING_ENABLE);
         }
     }
 
@@ -458,7 +472,8 @@ class RasterImageLink extends InternalMediaLink
      * @param $imageWidth
      * @return string sizes with a dpi correction if
      */
-    private function getSizes($screenWidth, $imageWidth)
+    private
+    function getSizes($screenWidth, $imageWidth)
     {
 
         if ($this->getWithDpiCorrection()) {
@@ -482,7 +497,8 @@ class RasterImageLink extends InternalMediaLink
      *
      * @return bool
      */
-    private function getWithDpiCorrection()
+    private
+    function getWithDpiCorrection()
     {
         return true;
     }

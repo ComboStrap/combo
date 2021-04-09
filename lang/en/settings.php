@@ -2,6 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
@@ -156,10 +157,7 @@ $lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default
  */
 $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "The default level applied to a shadow attributes");
 
-/**
- * Lazy load image
- */
-$lang[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the raster image only when they become visible");
+
 
 /**
  * Svg
@@ -174,4 +172,16 @@ $lang[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = PluginUtility::g
 $lang[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The element always deleted");
 $lang[SvgFile::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg - Default value for the preserveAspectRatio attribute");
 
+
+/**
+ * Lazy load image
+ */
+$lang[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the raster image only when they become visible");
+$lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Responsive image sizing: If unchecked, the size DPI correction will not be applied");
+$lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Responsive image sizing: The image margin applied to screen size");
+
+/**
+ * Lazy loading
+ */
+$lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(LazyLoad::CANONICAL, "The placeholder background color");
 ?>

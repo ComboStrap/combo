@@ -2,6 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
@@ -181,10 +182,6 @@ $meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
     Shadow::CONF_EXTRA_LARGE_LEVEL_VALUE
 ));
 
-/**
- * Lazy load image
- */
-$meta[RasterImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
 
 /**
  * Big Svg Lazy load
@@ -220,3 +217,14 @@ $meta[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = array('string');
 $meta[SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = array('string');
 $meta[SvgFile::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = array('string');
 
+/**
+ * Raster Lazy load image
+ */
+$meta[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = array('onoff');
+$meta[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = array('string');
+$meta[RasterImageLink::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION] = array('onoff');
+
+/**
+ * Lazy loading
+ */
+$meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("strinf");

@@ -40,9 +40,9 @@ class Shadow
     {
         $elevationValue = "";
 
-        if ($attributes->hasAttribute(self::ELEVATION_ATT)) {
+        if ($attributes->hasComponentAttribute(self::ELEVATION_ATT)) {
             $elevationValue = $attributes->getValueAndRemove(self::ELEVATION_ATT);
-        } else if ($attributes->hasAttribute(self::SHADOW_ATT)) {
+        } else if ($attributes->hasComponentAttribute(self::SHADOW_ATT)) {
             $elevationValue = $attributes->getValueAndRemove(self::SHADOW_ATT);
         }
 

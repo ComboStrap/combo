@@ -66,7 +66,7 @@ class IconUtility
 
 
         $name = "name";
-        if (!$tagAttributes->hasAttribute($name)) {
+        if (!$tagAttributes->hasComponentAttribute($name)) {
             LogUtility::msg("The attributes should have a name. It's mandatory for an icon.", LogUtility::LVL_MSG_ERROR, self::NAME);
             return false;
         }
@@ -189,9 +189,9 @@ class IconUtility
              * FYI: For whatever reason if you add a border the line icon are neater
              * PluginUtility::addStyleProperty("border","1px solid transparent",$attributes);
              */
-            $tagAttributes->addAttributeValue("width", "24px");
-            $tagAttributes->addAttributeValue("height", "24px");
-            $tagAttributes->addAttributeValue("fill", "currentColor");
+            $tagAttributes->addComponentAttributeValue("width", "24px");
+            $tagAttributes->addComponentAttributeValue("height", "24px");
+            $tagAttributes->addComponentAttributeValue("fill", "currentColor");
 
             return $svgFile->getOptimizedSvg($tagAttributes);
 

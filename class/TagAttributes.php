@@ -15,28 +15,57 @@ namespace ComboStrap;
 use dokuwiki\Extension\SyntaxPlugin;
 
 /**
- * An helper to create manipulate component attributes
- * It checks the uniqueness of the value for an attribute
+ * An helper to create manipulate component and html attributes
+ *
+ * You can:
+ *   * declare component attribute after parsing
+ *   * declare Html attribute during parsing
+ *   * output the final HTML attributes at the end of the process with the function {@link TagAttributes::toHTMLString()}
+ *
+ * Component attributes have precedence on HTML attributes.
+ *
  * @package ComboStrap
  */
 class TagAttributes
 {
+    const ALIGN_KEY = 'align';
 
     /**
-     * @var array of attribute name that contains an array of unique value
+     * @var array attribute that were set on a component
      */
-    private $attributes;
+    private $componentAttributes;
+
+    /**
+     * @var array the style declaration array
+     */
     private $styleDeclaration = array();
-    private $wasProcessed = false;
+
+    /**
+     * @var bool - set when the transformation from component attribute to html attribute
+     * was done to avoid circular problem
+     */
+    private $componentToHtmlAttributeProcessingWasDone = false;
+
+    /**
+     * @var array - html attributes set in the code. This is needed to make a difference
+     * on attribute name that are the same such as the component attribute `width` that is
+     * transformed as a style `max-width` but exists also as attribute of an image for instance
+     */
+    private $htmlAttributes = array();
+
+    /**
+     * @var array - the final html array
+     */
+    private $finalHtmlArray = array();
 
     /**
      * ComponentAttributes constructor.
      * Use the static create function to instantiate this object
-     * @param array $attributes
+     * @param array $componentAttributes
      */
-    private function __construct($attributes = array())
+    private function __construct($componentAttributes = array())
     {
-        $this->attributes = $attributes;
+        $this->componentAttributes = $componentAttributes;
     }
 
     /**
@@ -106,7 +135,7 @@ class TagAttributes
     public function addClassName($className)
     {
 
-        $this->addAttributeValue('class', $className);
+        $this->addComponentAttributeValue('class', $className);
 
     }
 
@@ -125,16 +154,16 @@ class TagAttributes
      * @param $attributeName
      * @param $attributeValue
      */
-    public function addAttributeValue($attributeName, $attributeValue)
+    public function addComponentAttributeValue($attributeName, $attributeValue)
     {
 
-        if (empty($attributeValue)){
-            LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead", LogUtility::LVL_MSG_WARNING,"support");
+        if (empty($attributeValue)) {
+            LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead", LogUtility::LVL_MSG_WARNING, "support");
         }
 
         $attLower = strtolower($attributeName);
-        if (!$this->hasAttribute($attLower)) {
-            $this->attributes[$attLower] = array();
+        if (!$this->hasComponentAttribute($attLower)) {
+            $this->componentAttributes[$attLower] = array();
         }
 
         /**
@@ -142,21 +171,23 @@ class TagAttributes
          */
         $values = StringUtility::explodeAndTrim($attributeValue, " ");
         foreach ($values as $value) {
-            $this->attributes[$attLower][trim($value)] = true;
+            $this->componentAttributes[$attLower][trim($value)] = true;
         }
 
     }
 
-    public function addAttributeValueIfNotEmpty($attributeName,$attributeValue){
+
+    public function addComponentAttributeValueIfNotEmpty($attributeName, $attributeValue)
+    {
         if (!empty($attributeValue)) {
-            $this->addAttributeValue($attributeName,$attributeValue);
+            $this->addComponentAttributeValue($attributeName, $attributeValue);
         }
     }
 
-    public function hasAttribute($attributeName)
+    public function hasComponentAttribute($attributeName)
     {
         $lowerAtt = strtolower($attributeName);
-        return isset($this->attributes[$lowerAtt]);
+        return isset($this->componentAttributes[$lowerAtt]);
     }
 
     /**
@@ -166,11 +197,79 @@ class TagAttributes
      * For historic reason, data passed between the handle and the render
      * can still be in this format
      */
-    public function toHtmlArrayWithProcessing()
+    public function toHtmlArray()
     {
-        $this->process();
-        return $this->toCallStackArray();
+        if (!$this->componentToHtmlAttributeProcessingWasDone) {
 
+            $this->componentToHtmlAttributeProcessingWasDone = true;
+
+
+            /**
+             * Process animation (onHover, onView)
+             */
+            Animation::processOnHover($this);
+            Animation::processOnView($this);
+
+
+            /**
+             * Position and Stickiness
+             */
+            Position::processStickiness($this);
+            Position::processPosition($this);
+
+            /**
+             * Process the attributes that have an effect on the class
+             */
+            PluginUtility::processSpacingAttributes($this);
+            PluginUtility::processAlignAttributes($this);
+
+            /**
+             * Process the style attributes if any
+             */
+            PluginUtility::processStyle($this);
+            PluginUtility::processCollapse($this);
+
+            /**
+             * Create the final html attributes array
+             */
+            $this->finalHtmlArray = $this->htmlAttributes;
+
+            // copy the unknown component attributes
+            $excludedAttribute = ["script", "type"];
+            foreach ($this->componentAttributes as $key => $arrayValue) {
+                if (!in_array($key, $excludedAttribute)) {
+                    $value = implode(array_keys($arrayValue), " ");
+                    $this->finalHtmlArray[$key]=$value;
+                }
+            }
+            // Copy the style
+            $this->finalHtmlArray["style"]=$this->getStyle();
+
+        }
+
+
+        return $this->finalHtmlArray;
+
+    }
+
+    /**
+     * HTML attribute are attributes
+     * that are not transformed to HTML
+     * (We make a difference between a high level attribute
+     * that we have in the written document set on a component
+     * @param $key
+     * @param $value
+     */
+    public function addHtmlAttributeValue($key, $value)
+    {
+        $this->htmlAttributes[$key] = $value;
+    }
+
+    public function addHtmlAttributeValueIfNotEmpty($key, $value)
+    {
+        if (!empty($value)) {
+            $this->addHtmlAttributeValue($key, $value);
+        }
     }
 
     /**
@@ -179,8 +278,8 @@ class TagAttributes
      */
     public function getXmlAttributeValue($attributeName)
     {
-        if ($this->hasAttribute($attributeName)) {
-            $value = $this->attributes[$attributeName];
+        if ($this->hasComponentAttribute($attributeName)) {
+            $value = $this->componentAttributes[$attributeName];
             if (!is_array($value)) {
                 LogUtility::msg("Internal Error: The value ($value) is not an array", LogUtility::LVL_MSG_ERROR, "support");
             }
@@ -196,7 +295,7 @@ class TagAttributes
      */
     public function toInternalArray()
     {
-        return $this->attributes;
+        return $this->componentAttributes;
     }
 
     /**
@@ -208,9 +307,9 @@ class TagAttributes
     public function getValueAndRemove($attributeName, $default = null)
     {
         $value = $default;
-        if ($this->hasAttribute($attributeName)) {
+        if ($this->hasComponentAttribute($attributeName)) {
             $value = $this->getXmlAttributeValue($attributeName);
-            unset($this->attributes[$attributeName]);
+            unset($this->componentAttributes[$attributeName]);
         }
         return $value;
     }
@@ -222,7 +321,7 @@ class TagAttributes
     public function toCallStackArray()
     {
         $array = array();
-        foreach ($this->attributes as $key => $value) {
+        foreach ($this->componentAttributes as $key => $value) {
             $array[$key] = $this->getXmlAttributeValue($key);
         }
         $style = $this->getStyle();
@@ -236,7 +335,7 @@ class TagAttributes
     {
         $lowerAttribute = strtolower($attributeName);
         $value = $default;
-        if ($this->hasAttribute($lowerAttribute)) {
+        if ($this->hasComponentAttribute($lowerAttribute)) {
             $value = $this->getXmlAttributeValue($lowerAttribute);
         }
         return $value;
@@ -247,40 +346,6 @@ class TagAttributes
         ArrayUtility::addIfNotSet($this->styleDeclaration, $property, $value);
     }
 
-    public function process()
-    {
-        if ($this->wasProcessed) {
-            LogUtility::msg("Internal Error: The attributes were already processed", LogUtility::LVL_MSG_ERROR, "support");
-        } else {
-            $this->wasProcessed = true;
-        }
-
-        /**
-         * Process animation (onHover, onView)
-         */
-        Animation::processOnHover($this);
-        Animation::processOnView($this);
-
-
-        /**
-         * Position and Stickiness
-         */
-        Position::processStickiness($this);
-        Position::processPosition($this);
-
-        /**
-         * Process the attributes that have an effect on the class
-         */
-        PluginUtility::processSpacingAttributes($this);
-        PluginUtility::processAlignAttributes($this);
-
-        /**
-         * Process the style attributes if any
-         */
-        PluginUtility::processStyle($this);
-        PluginUtility::processCollapse($this);
-
-    }
 
     public function hasStyleDeclaration($styleDeclaration)
     {
@@ -295,20 +360,17 @@ class TagAttributes
     }
 
 
-    public function toHTMLAttributesString()
+    public function toHTMLString()
     {
 
-        $attributes = $this->toHtmlArrayWithProcessing();
-        // Then transform
         $tagAttributeString = "";
-        foreach ($attributes as $name => $value) {
+        foreach ($this->toHtmlArray() as $name => $value) {
 
-            if ($name !== "type") {
-                $tagAttributeString .= hsc($name) . '="' . PluginUtility::escape(StringUtility::toString($value)) . '" ';
-            }
+            $tagAttributeString .= hsc($name) . '="' . PluginUtility::escape(StringUtility::toString($value)) . '" ';
 
         }
-        return trim($tagAttributeString);
+        return $tagAttributeString;
+
 
     }
 }

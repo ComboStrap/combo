@@ -33,16 +33,12 @@ class InternalMediaLink
     const HEIGHT_KEY = 'height';
     const WIDTH_KEY = 'width';
     const CACHE_KEY = 'cache';
-    const ALIGN_KEY = 'align';
 
     private $id;
 
     private $lazyLoad = null;
 
-    /**
-     * @var string the alt attribute value (known as the title for dokuwiki)
-     */
-    private $alt;
+
 
     /**
      * Caching of external image
@@ -68,6 +64,11 @@ class InternalMediaLink
      * @var TagAttributes
      */
     private $attributes;
+
+    /**
+     * @var string the alt attribute value (known as the title for dokuwiki)
+     */
+    private $title;
 
 
     /**
@@ -172,12 +173,12 @@ class InternalMediaLink
             }
             unset($attributes[self::CACHE_KEY]);
         }
-        if (key_exists(self::ALIGN_KEY,$attributes)) {
-            $align = $attributes[self::ALIGN_KEY];
+        if (key_exists(TagAttributes::ALIGN_KEY,$attributes)) {
+            $align = $attributes[TagAttributes::ALIGN_KEY];
             if (!empty($align)) {
                 $media->setAlign($align);
             }
-            unset($attributes[self::ALIGN_KEY]);
+            unset($attributes[TagAttributes::ALIGN_KEY]);
         }
 
         foreach ($attributes as $key => $value) {
@@ -268,7 +269,7 @@ class InternalMediaLink
             'type' => null, // ??? internal, external
             'src' => $this->getId(),
             self::TITLE_KEY => $this->getTitle(),
-            self::ALIGN_KEY => $this->getAlign(),
+            TagAttributes::ALIGN_KEY => $this->getAlign(),
             self::WIDTH_KEY => $this->getRequestedWidth(),
             self::HEIGHT_KEY => $this->getRequestedHeight(),
             self::CACHE_KEY => $this->getCache(),
@@ -297,7 +298,7 @@ class InternalMediaLink
 
     public function setNoCache($cache)
     {
-        $this->getAttributes()->addAttributeValue(self::CACHE_KEY, $cache);
+        $this->cache = $cache;
     }
 
     public function getRequestedHeight()
@@ -311,7 +312,7 @@ class InternalMediaLink
      */
     public function setRequestedHeight($height)
     {
-        $this->getAttributes()->addAttributeValue(self::HEIGHT_KEY, $height);
+        $this->getAttributes()->addComponentAttributeValue(self::HEIGHT_KEY, $height);
     }
 
     /**
@@ -327,7 +328,7 @@ class InternalMediaLink
      */
     public function setRequestedWidth($width)
     {
-        $this->getAttributes()->addAttributeValue(self::WIDTH_KEY, $width);
+        $this->getAttributes()->addComponentAttributeValue(self::WIDTH_KEY, $width);
     }
 
     public function setLinking($linking)
@@ -340,21 +341,22 @@ class InternalMediaLink
      *   * 'center'
      *   * 'right'
      *   * 'left'
+     * @param $align
      */
     protected function setAlign($align)
     {
-        $this->getAttributes()->addAttributeValue(self::ALIGN_KEY, $align);
+        $this->getAttributes()->addComponentAttributeValue(TagAttributes::ALIGN_KEY, $align);
     }
 
 
     public function getCache()
     {
-        return $this->getAttributes()->getValue(self::CACHE_KEY, null);
+        return $this->cache;
     }
 
     protected function getTitle()
     {
-        return $this->getAttributes()->getValue(self::TITLE_KEY, null);
+        return $this->title;
     }
 
     /**
@@ -362,7 +364,7 @@ class InternalMediaLink
      */
     protected function setTitle($title)
     {
-        $this->getAttributes()->addAttributeValue(self::TITLE_KEY, $title);
+        $this->title = $title;
     }
 
     private function setAlt($title)
@@ -392,7 +394,7 @@ class InternalMediaLink
 
     private function getAlign()
     {
-        return $this->getAttributes()->getValue(self::ALIGN_KEY, null);
+        return $this->getAttributes()->getValue(TagAttributes::ALIGN_KEY, null);
     }
 
     private function getLinking()
@@ -435,7 +437,7 @@ class InternalMediaLink
 
     public function setAttribute($key, $value)
     {
-        $this->getAttributes()->addAttributeValue($key, $value);
+        $this->getAttributes()->addComponentAttributeValue($key, $value);
     }
 
     public function getAttribute($key)

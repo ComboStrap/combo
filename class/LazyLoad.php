@@ -91,12 +91,12 @@ class LazyLoad
         // Modern transparent srcset pattern
         // normal src attribute with a transparent or low quality image as srcset value
         // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
-        $attributes->addAttributeValue("src",$srcValue);
-        $attributes->addAttributeValue("srcset","data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==");
+        $attributes->addComponentAttributeValue("src",$srcValue);
+        $attributes->addComponentAttributeValue("srcset","data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==");
 
         // https://github.com/ApoorvSaxena/lozad.js#large-image-improvment
         $placeholderColor = self::getPlaceholderColor();
-        $attributes->addAttributeValue("data-placeholder-background","$placeholderColor");
+        $attributes->addComponentAttributeValue("data-placeholder-background","$placeholderColor");
 
     }
 

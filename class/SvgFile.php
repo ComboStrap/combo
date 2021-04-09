@@ -118,7 +118,7 @@ class SvgFile extends XmlFile
         }
 
         // Set the name (icon) attribute for test selection
-        if ($tagAttributes->hasAttribute("name")) {
+        if ($tagAttributes->hasComponentAttribute("name")) {
             $name = $tagAttributes->getValueAndRemove("name");
             $this->setRootAttribute('data-name', $name);
         }
@@ -148,7 +148,7 @@ class SvgFile extends XmlFile
 
         }
 
-        if (!$tagAttributes->hasAttribute("preserveAspectRatio")) {
+        if (!$tagAttributes->hasComponentAttribute("preserveAspectRatio")) {
             /**
              *
              * Keep the same height
@@ -157,10 +157,10 @@ class SvgFile extends XmlFile
              * Default is xMidYMid meet
              */
             $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
-            $tagAttributes->addAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+            $tagAttributes->addComponentAttributeValue("preserveAspectRatio", $defaultAspectRatio);
         }
 
-        $toHtmlArray = $tagAttributes->toHtmlArrayWithProcessing();
+        $toHtmlArray = $tagAttributes->toHtmlArray();
         foreach ($toHtmlArray as $name => $value) {
             $this->setRootAttribute($name, $value);
         }

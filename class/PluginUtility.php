@@ -88,6 +88,12 @@ class PluginUtility
     const PARENT = "parent";
     const POSITION = "position";
 
+    /**
+     * Class to center an element
+     * Center should be a block (svg is not a block by default for instance)
+     */
+    const CENTER_CLASS = "mx-auto d-block";
+
 
     /**
      * The URL base of the documentation
@@ -232,7 +238,7 @@ class PluginUtility
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
         $tagAttributes->process();
-        return $tagAttributes->toHTMLAttributesString();
+        return $tagAttributes->toHTMLString();
 
     }
 
@@ -437,7 +443,7 @@ class PluginUtility
     {
         // Style
         $styleAttributeName = "style";
-        if ($attributes->hasAttribute($styleAttributeName)) {
+        if ($attributes->hasComponentAttribute($styleAttributeName)) {
             $properties = explode(";", $attributes->getValueAndRemove($styleAttributeName));
             foreach ($properties as $property) {
                 list($key, $value) = explode(":", $property);
@@ -449,9 +455,9 @@ class PluginUtility
 
         // Skin
         $skinAttributes = "skin";
-        if ($attributes->hasAttribute($skinAttributes)) {
+        if ($attributes->hasComponentAttribute($skinAttributes)) {
             $skinValue = $attributes->getValueAndRemove($skinAttributes);
-            if ($attributes->hasAttribute("type")) {
+            if ($attributes->hasComponentAttribute("type")) {
                 $type = $attributes->getValueAndRemove("type");
                 if (isset(ColorUtility::$colors[$type])) {
                     $color = ColorUtility::$colors[$type];
@@ -502,7 +508,7 @@ class PluginUtility
         // Color
         $colorAttributes = ["color", "background-color", "border-color"];
         foreach ($colorAttributes as $colorAttribute) {
-            if ($attributes->hasAttribute($colorAttribute)) {
+            if ($attributes->hasComponentAttribute($colorAttribute)) {
                 $colorValue = $attributes->getValueAndRemove($colorAttribute);
                 $gradientPrefix = 'gradient-';
                 if (strpos($colorValue, $gradientPrefix) === 0) {
@@ -522,7 +528,7 @@ class PluginUtility
         }
 
         $widthName = "width";
-        if ($attributes->hasAttribute($widthName)) {
+        if ($attributes->hasComponentAttribute($widthName)) {
 
             $widthValue = trim($attributes->getValueAndRemove($widthName));
             if ($widthValue == "fit") {
@@ -533,7 +539,7 @@ class PluginUtility
         }
 
         $heightName = "height";
-        if ($attributes->hasAttribute($heightName)) {
+        if ($attributes->hasComponentAttribute($heightName)) {
             $heightValue = trim($attributes->getValueAndRemove($heightName));
             $attributes->addStyleDeclaration("max-height", $heightValue);
             /**
@@ -547,7 +553,7 @@ class PluginUtility
         }
 
         $textAlign = "text-align";
-        if ($attributes->hasAttribute($textAlign)) {
+        if ($attributes->hasComponentAttribute($textAlign)) {
             $textAlignValue = trim($attributes->getValueAndRemove($textAlign));
             $attributes->addStyleDeclaration($textAlign, $textAlignValue);
         }
@@ -777,12 +783,10 @@ class PluginUtility
     {
         // The class shortcut
         $align = "align";
-        if ($attributes->hasAttribute($align)) {
+        if ($attributes->hasComponentAttribute($align)) {
             $alignValue = $attributes->getValueAndRemove($align);
             if ($alignValue == "center") {
-                $attributes->addClassName("mx-auto");
-                // Center should be a block (svg is not a block by default for instance)
-                $attributes->addClassName("d-block");
+                $attributes->addClassName(PluginUtility::CENTER_CLASS);
             }
         }
     }
@@ -796,7 +800,7 @@ class PluginUtility
 
         // Spacing is just a class
         $spacing = "spacing";
-        if ($attributes->hasAttribute($spacing)) {
+        if ($attributes->hasComponentAttribute($spacing)) {
 
             $spacingValue = $attributes->getValueAndRemove($spacing);
 
@@ -948,10 +952,10 @@ class PluginUtility
     {
 
         $collapse = "collapse";
-        if ($attributes->hasAttribute($collapse)) {
+        if ($attributes->hasComponentAttribute($collapse)) {
             $targetId = $attributes->getValueAndRemove($collapse);
-            $attributes->addAttributeValue('data-toggle', "collapse");
-            $attributes->addAttributeValue('data-target', $targetId);
+            $attributes->addComponentAttributeValue('data-toggle', "collapse");
+            $attributes->addComponentAttributeValue('data-target', $targetId);
         }
     }
 

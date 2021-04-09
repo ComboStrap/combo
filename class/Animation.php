@@ -38,7 +38,7 @@ class Animation
      */
     public static function processOnHover(&$attributes)
     {
-        if ($attributes->hasAttribute(self::ON_HOVER_ATTRIBUTE)) {
+        if ($attributes->hasComponentAttribute(self::ON_HOVER_ATTRIBUTE)) {
             $hover = strtolower($attributes->getValueAndRemove(self::ON_HOVER_ATTRIBUTE));
             $hoverAnimations = preg_split("/\s/", $hover);
 
@@ -108,7 +108,7 @@ class Animation
                 // Smooth Transition in and out of hover
                 $attributes->addClassName("combo-hover-easing");
 
-                $attributes->addAttributeValue("data-hover-class", trim($comboDataHoverClasses));
+                $attributes->addHtmlAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 
                 // The javascript that manage the hover effect by adding the class in the data-hover class
                 $snippetManager->attachJavascriptSnippetForBar(self::ON_HOVER_SNIPPET_ID);
@@ -125,14 +125,14 @@ class Animation
      */
     public static function processOnView(&$attributes)
     {
-        if ($attributes->hasAttribute(self::ON_VIEW_ATTRIBUTE)) {
+        if ($attributes->hasComponentAttribute(self::ON_VIEW_ATTRIBUTE)) {
             $onView = $attributes->getValueAndRemove(self::ON_VIEW_ATTRIBUTE);
 
             $animateClass = self::ANIMATE_CLASS;
             $attributes->addClassName($animateClass);
 
             $animationClass = "animate__" . $onView;
-            $attributes->addAttributeValue("data-animated-class", $animationClass);
+            $attributes->addHtmlAttributeValue("data-animated-class", $animationClass);
 
             // TODO: Add attributes
             //$delay = "animate__delay-2s";

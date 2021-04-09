@@ -129,12 +129,12 @@ class SvgImageLink extends InternalMediaLink
          */
         if ($svgInjection) {
             $imgHTML .= ' class="' . $injectionClass . '"';
-            if ($tagAttributes->hasAttribute("class")) {
+            if ($tagAttributes->hasComponentAttribute("class")) {
                 $imgHTML .= ' data-class="' . $tagAttributes->getClass() . '"';
             }
         } else {
             $allClass = $injectionClass;
-            if ($tagAttributes->hasAttribute("class")) {
+            if ($tagAttributes->hasComponentAttribute("class")) {
                 $allClass .= ' ' . $tagAttributes->getClass();
             }
             $imgHTML .= ' class="' . $allClass . '"';

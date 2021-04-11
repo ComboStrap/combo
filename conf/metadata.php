@@ -227,4 +227,4 @@ $meta[RasterImageLink::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION] = array('onoff');
 /**
  * Lazy loading
  */
-$meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("strinf");
+$meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("string");

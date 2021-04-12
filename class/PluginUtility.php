@@ -519,7 +519,7 @@ class PluginUtility
                 }
 
                 if ($colorAttribute == "border-color") {
-                    self::checkDefaultBorderColorAttributes($styleProperties);
+                    self::checkDefaultBorderColorAttributes($attributes);
                 }
 
 

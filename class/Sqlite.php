@@ -52,13 +52,22 @@ class Sqlite
         $metaDir = $conf['metadir'];
         $init = true;
         if (self::$sqlite != null) {
-            $dbFile = self::$sqlite->getAdapter()->getDbFile();
-            if (file_exists($dbFile)) {
-                if (strpos($dbFile, $metaDir) === 0) {
-                    $init = false;
-                } else {
-                    self::$sqlite->getAdapter()->closedb();
-                    self::$sqlite = null;
+            $adapter = self::$sqlite->getAdapter();
+            /**
+             * Adapter may be null
+             * It happens when the SQLite & PDO SQLite
+             * are not installed
+             * ie: SQLite & PDO SQLite support missing
+             */
+            if($adapter!=null) {
+                $dbFile = $adapter->getDbFile();
+                if (file_exists($dbFile)) {
+                    if (strpos($dbFile, $metaDir) === 0) {
+                        $init = false;
+                    } else {
+                        self::$sqlite->getAdapter()->closedb();
+                        self::$sqlite = null;
+                    }
                 }
             }
         }
@@ -71,13 +80,13 @@ class Sqlite
             if (self::$sqlite == null) {
                 # TODO: Man we cannot get the message anymore ['SqliteMandatory'];
                 $sqliteMandatoryMessage = "The Sqlite Plugin is mandatory. Some functionalities of the Combostraps Plugin may not work.";
-                msg($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
+                LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR,"support");
                 return null;
             }
             $adapter = self::$sqlite->getAdapter();
             if ($adapter == null) {
                 $sqliteMandatoryMessage = "The Sqlite Php Extension is mandatory. It seems that it's not available on this installation.";
-                msg($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
+                LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR,"support");
                 return null;
             }
 

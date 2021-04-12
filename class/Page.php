@@ -116,15 +116,7 @@ class Page extends File
         return new Page(PluginUtility::getPageId());
     }
 
-    public static function isDirectoryId($id)
-    {
-        /**
-         * {@link search_universal} triggers ACL check
-         * with id of the form :path:*
-         * for directory
-         */
-        return StringUtility::endWiths($id, ":*");
-    }
+
 
 
     /**

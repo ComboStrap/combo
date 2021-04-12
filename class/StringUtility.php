@@ -192,4 +192,13 @@ class StringUtility
         return array_map('trim', explode($delimiter, $confNamespaceToKeeps));
     }
 
+    public static function lastIndexOf($haystack, $needle)
+    {
+        /**
+         * strRpos
+         * and not strpos
+         */
+        return strrpos($haystack, $needle);
+    }
+
 }

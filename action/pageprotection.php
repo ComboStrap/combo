@@ -2,12 +2,15 @@
 
 
 use ComboStrap\Auth;
+use ComboStrap\DokuPath;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Page;
 use ComboStrap\PageProtection;
+use ComboStrap\StringUtility;
 
 require_once(__DIR__ . '/../class/LowQualityPage.php');
 require_once(__DIR__ . '/../class/PageProtection.php');
+require_once(__DIR__ . '/../class/DokuPath.php');
 
 /**
  *
@@ -89,7 +92,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
          * When deleting a media, we get this id value
          * This is not a page
          */
-        if ($id=="*"){
+        if (StringUtility::endWiths($id, "*")) {
 
             if ($_SERVER['SCRIPT_NAME'] == "/lib/exe/mediamanager.php") {
                 return;
@@ -101,11 +104,8 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
          * ACL ID have the root form
          */
         $cleanId = cleanID($id);
-        if (Page::isDirectoryId($id)){
-
-            return;
-
-        } else {
+        $dokuPath = DokuPath::createFromId($id);
+        if ($dokuPath->isPage()) {
 
             $user = $event->data['user'];
             $page = new Page($cleanId);

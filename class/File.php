@@ -68,9 +68,16 @@ class File
         return basename($this->path, $ext);
     }
 
-    protected function getExtension()
+    public function getExtension()
     {
         return pathinfo($this->path, PATHINFO_EXTENSION);
+    }
+
+
+
+    public function getFileName()
+    {
+        return pathinfo($this->path, PATHINFO_FILENAME);
     }
 
 

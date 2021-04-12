@@ -313,11 +313,17 @@ class action_plugin_combo_urlmessage extends ActionPlugin
     private static function sessionClose()
     {
         // Close the session
-        $result = session_write_close();
-        if (!$result) {
-            // Session is really not a well known mechanism
-            // Set this error in a info level to not fail the test
-            LogUtility::msg("Failure to write the session", LogUtility::LVL_MSG_INFO);
+        $phpVersion =  phpversion();
+        if ($phpVersion>"7.2.0") {
+            /** @noinspection PhpVoidFunctionResultUsedInspection */
+            $result = session_write_close();
+            if (!$result) {
+                // Session is really not a well known mechanism
+                // Set this error in a info level to not fail the test
+                LogUtility::msg("Failure to write the session", LogUtility::LVL_MSG_INFO);
+            }
+        } else {
+            session_write_close();
         }
 
     }

@@ -151,7 +151,7 @@ class XmlUtility
     }
 
     /**
-     * note: Option for the loading of {@link XmlFile}
+     * note: Option for the loading of {@link XmlDocument}
      * have also this option
      *
      * @param $text

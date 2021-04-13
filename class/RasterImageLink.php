@@ -64,7 +64,7 @@ class RasterImageLink extends InternalMediaLink
     public function getUrl($absolute = true, $localWidth = null)
     {
 
-        if ($this->getFile()->exists()) {
+        if ($this->exists()) {
 
             /**
              * Link attribute
@@ -117,7 +117,7 @@ class RasterImageLink extends InternalMediaLink
 
         parent::renderMediaTag($attributes);
 
-        if ($this->getFile()->exists()) {
+        if ($this->exists()) {
 
 
             /**
@@ -331,14 +331,14 @@ class RasterImageLink extends InternalMediaLink
 
         if (!$this->wasAnalyzed) {
 
-            if ($this->getFile()->exists()) {
+            if ($this->exists()) {
 
                 /**
                  * Based on {@link media_image_preview_size()}
                  * $dimensions = media_image_preview_size($this->id, '', false);
                  */
                 $imageInfo = array();
-                $imageSize = getimagesize($this->getFile()->getPath(), $imageInfo);
+                $imageSize = getimagesize($this->getPath(), $imageInfo);
                 if ($imageSize === false) {
                     $this->analyzable = false;
                     LogUtility::msg("The image ($this) could not be analyzed", LogUtility::LVL_MSG_ERROR, "image");

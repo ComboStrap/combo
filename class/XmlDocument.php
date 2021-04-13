@@ -15,17 +15,17 @@ namespace ComboStrap;
 use DOMAttr;
 use DOMDocument;
 use DOMElement;
-use DOMNode;
 use DOMNodeList;
 use DOMXPath;
 use Exception;
-use http\Exception\RuntimeException;
 
 
 require_once(__DIR__ . '/File.php');
 
-class XmlFile extends File
+class XmlDocument
 {
+    const HTML_TYPE = "html";
+    const XML_TYPE = "xml";
 
     /**
      * @var DOMDocument
@@ -34,11 +34,12 @@ class XmlFile extends File
 
     /**
      * XmlFile constructor.
-     * @param $path
+     * @param $text
+     * @param $type - HTML or not
      */
-    public function __construct($path)
+    public function __construct($text, $type = self::XML_TYPE)
     {
-        parent::__construct($path);
+
 
         if ($this->isXmlExtensionLoaded()) {
             try {
@@ -51,8 +52,7 @@ class XmlFile extends File
                 ;
 
                 // HTML
-                $extension = $this->getExtension();
-                if (in_array($extension, ["html", "htm"])) {
+                if ($type == self::HTML_TYPE) {
                     // Options that cause the processus to hang if this is not for a html file
                     // Empty tag option may also be used only on save
                     //   at https://www.php.net/manual/en/domdocument.save.php
@@ -65,8 +65,7 @@ class XmlFile extends File
                 }
 
                 $this->xmlDom = new DOMDocument();
-                $xml = file_get_contents($this->getPath());
-                $result = $this->xmlDom->loadXML($xml, $options);
+                $result = $this->xmlDom->loadXML($text, $options);
                 if ($result === false) {
                     LogUtility::msg("Internal Error: Unable to load the DOM from the file ($this)", LogUtility::LVL_MSG_ERROR, "support");
                 }
@@ -88,6 +87,18 @@ class XmlFile extends File
 
         }
 
+    }
+
+    /**
+     * @param File $file
+     */
+    public static function createFromPath($file)
+    {
+        $mime = XmlDocument::XML_TYPE;
+        if (in_array($file->getExtension(), ["html", "htm"])) {
+            $mime = XmlDocument::HTML_TYPE;
+        }
+        return new XmlDocument($file->getContent(),$mime);
     }
 
     public function &getXmlDom()

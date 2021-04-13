@@ -16,10 +16,10 @@ use dokuwiki\Cache\Cache;
 use DOMAttr;
 use DOMElement;
 
-require_once(__DIR__ . '/XmlFile.php');
+require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/Unit.php');
 
-class SvgFile extends XmlFile
+class SvgDocument extends XmlDocument
 {
 
 
@@ -90,16 +90,19 @@ class SvgFile extends XmlFile
     const SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg";
 
 
-    public function __construct($path)
+    public function __construct($text)
     {
-        parent::__construct($path);
-
+        parent::__construct($text);
 
     }
 
-    public static function createFromId($id)
+    /**
+     * @param File $file
+     * @return SvgDocument
+     */
+    public static function createFromPath($file)
     {
-        return new SvgFile(mediaFN($id));
+        return new SvgDocument($file->getContent());
     }
 
     /**
@@ -201,48 +204,7 @@ class SvgFile extends XmlFile
 
     }
 
-    public function getOptimizedSvgFile()
-    {
 
-
-        $cache = $this->getCache();
-        $dependencies = array(
-            'files' => [
-                $this->getPath(),
-                Resources::getComboHome() . "/plugin.info.txt"
-            ]
-        );
-        $useCache = $cache->useCache($dependencies);
-        if ($useCache) {
-            $file = $cache->cache;
-        } else {
-            $content = $this->getOptimizedSvg();
-            $cache->storeCache($content);
-            $file = $cache->cache;
-        }
-
-        return $file;
-
-    }
-
-    public function hasSvgCache()
-    {
-
-        /**
-         * $cache->cache is the file
-         */
-        return file_exists($this->getCache()->cache);
-    }
-
-    /**
-     * @return Cache
-     */
-    private function getCache()
-    {
-        $key = $this->getPath();
-
-        return new Cache($key, ".svg");
-    }
 
     /**
      * Optimization

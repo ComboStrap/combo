@@ -2,8 +2,9 @@
 
 
 use ComboStrap\Auth;
+use ComboStrap\File;
 use ComboStrap\Resources;
-use ComboStrap\SvgFile;
+use ComboStrap\SvgDocument;
 
 if (!defined('DOKU_INC')) exit;
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
@@ -20,6 +21,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
     public function register(Doku_Event_Handler $controller)
     {
+
         $controller->register_hook('FETCH_MEDIA_STATUS', 'BEFORE', $this, 'svg_optimization');
 
 
@@ -41,9 +43,22 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         if ($event->data['ext'] != 'svg') return;
         if ($event->data['status'] >= 400) return; // ACLs and precondition checks
 
-        if ($this->getConf(SvgFile::CONF_SVG_OPTIMIZATION_ENABLE, true)) {
-            $svgFile = new SvgFile($event->data['file']);
-            $file = $svgFile->getOptimizedSvgFile();
+        if ($this->getConf(SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE, true)) {
+
+            $file = new File($event->data['file']);
+
+            $cache = new \ComboStrap\Cache($file);
+
+            // https://www.dokuwiki.org/devel:event:fetch_media_status
+            $cacheParameter = $event->data['cache'];
+            $cache->setMaxAgeInSec($cacheParameter);
+            if (!$cache->cacheUsable()) {
+                $svgFile = SvgDocument::createFromPath($file);
+                $content = $svgFile->getOptimizedSvg();
+                $cache->storeCache($content);
+            }
+            $file = $cache->getFile()->getPath();
+
             $event->data['file'] = $file;
         }
 

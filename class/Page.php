@@ -7,15 +7,16 @@ use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use RuntimeException;
-use Locale;
+
 
 
 /**
  * Page
  */
 require_once(__DIR__ . '/PluginUtility.php');
+require_once(__DIR__ . '/DokuPath.php');
 
-class Page extends File
+class Page extends DokuPath
 {
     const CANONICAL_PROPERTY = 'canonical';
     const TITLE_PROPERTY = 'title';
@@ -91,6 +92,8 @@ class Page extends File
         if ($this->id !== $id) {
             LogUtility::msg("Internal error, the page id ({$id}) is not conform and should be `{$this->id}`)", LogUtility::LVL_MSG_ERROR);
         }
+
+        parent::__construct($this->id,DokuPath::PAGE_TYPE);
 
     }
 
@@ -201,9 +204,9 @@ class Page extends File
 
     }
 
-    static function createFromId($id)
+    static function createFromId($id, $type = DokuPath::PAGE_TYPE)
     {
-        return new Page($id);
+        return new Page($id, $type);
     }
 
     /**

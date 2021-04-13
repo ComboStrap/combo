@@ -114,8 +114,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = new RasterImageLink($defaultFacebookImage);
-                if ($image->getFile()->exists()) {
+                $image = new InternalMediaLink($defaultFacebookImage);
+                if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {
                     if ($defaultFacebookImage != "logo-facebook.png") {
@@ -129,7 +129,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (!empty($facebookImages)) {
             foreach ($facebookImages as $facebookImage) {
 
-                if (!$facebookImage->getFile()->exists()) {
+                if (!$facebookImage->exists()) {
                     LogUtility::msg("The image ($facebookImage) does not exist and was not added", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 } else {
 

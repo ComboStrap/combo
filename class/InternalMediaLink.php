@@ -19,7 +19,7 @@ require_once(__DIR__ . '/SvgImageLink.php');
  * Represent a media link
  * @package ComboStrap
  */
-class InternalMediaLink
+class InternalMediaLink extends DokuPath
 {
 
     /**
@@ -77,12 +77,14 @@ class InternalMediaLink
     private $requestedWidth;
 
 
+
     /**
      * Image constructor.
      * @param $id
      */
     public function __construct($id)
     {
+
         /**
          * The id of image should starts with the root `:`
          * otherwise the image does not exist
@@ -92,6 +94,10 @@ class InternalMediaLink
         if ($id != $this->id) {
             LogUtility::msg("Internal error: The media id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, "support");
         }
+
+        parent::__construct($id,DokuPath::MEDIA_TYPE);
+
+
         $this->attributes = TagAttributes::createEmpty();
     }
 
@@ -240,21 +246,16 @@ class InternalMediaLink
         return $this->lazyLoad;
     }
 
-    public function getMime()
-    {
-
-        return mimetype($this->getId())[1];
-
-    }
-
 
     /**
      * @param $id
+     * @param string $type - optional, we already know that this is a media, the linter is not happy otherwise
      * @return RasterImageLink|InternalMediaLink
      */
-    public static function createFromId($id)
+    public static function createFromId($id, $type = DokuPath::MEDIA_TYPE)
     {
-        $mime = mimetype(mediaFN($id))[1];
+        $dokuPath = DokuPath::createFromId($id,$type);
+        $mime = $dokuPath->getKnownMime();
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime, 6) == "svg+xml") {
                 $internalMedia = new SvgImageLink($id);
@@ -362,6 +363,9 @@ class InternalMediaLink
      */
     protected function setAlign($align)
     {
+        /**
+         * Align is already a component attribute
+         */
         $this->getAttributes()->addComponentAttributeValue(TagAttributes::ALIGN_KEY, $align);
     }
 
@@ -430,16 +434,6 @@ class InternalMediaLink
 
     }
 
-    public function isImage()
-    {
-        return substr($this->getMime(), 0, 5) == 'image';
-    }
-
-    public function getExtension()
-    {
-        return mimetype($this->getId())[0];
-
-    }
 
     public function getFile()
     {

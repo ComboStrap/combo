@@ -15,7 +15,7 @@ namespace ComboStrap;
 require_once(__DIR__ . "/XmlUtility.php");
 require_once(__DIR__ . '/PluginUtility.php');
 require_once(__DIR__ . '/ConfUtility.php');
-require_once(__DIR__ . '/SvgFile.php');
+require_once(__DIR__ . '/SvgDocument.php');
 
 
 /**
@@ -179,7 +179,7 @@ class IconUtility
 
         if (file_exists($mediaFile)) {
 
-            $svgFile = new SvgFile($mediaFile);
+            $svgFile = new SvgDocument($mediaFile);
 
             /**
              * Styling

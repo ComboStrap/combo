@@ -183,7 +183,7 @@ class SvgImageLink extends InternalMediaLink
     public function getUrl($absolute = true)
     {
 
-        if ($this->getFile()->exists()) {
+        if ($this->exists()) {
 
             /**
              * Link attribute
@@ -239,11 +239,11 @@ class SvgImageLink extends InternalMediaLink
          */
         parent::renderMediaTag($tagAttributes);
 
-        if ($this->getFile()->exists()) {
+        if ($this->exists()) {
 
 
             if (
-                $this->getFile()->getSize() > $this->getMaxInlineSize()
+                $this->getSize() > $this->getMaxInlineSize()
             ) {
 
                 $imgHTML = $this->createImgHTMLTag($tagAttributes);
@@ -357,17 +357,11 @@ class SvgImageLink extends InternalMediaLink
     private function createInlineHTMLTag($tagAttributes)
     {
 
-        return $this->getFile()->getXmlText($tagAttributes);
+        return SvgDocument::createFromPath($this)->getXmlText($tagAttributes);
 
     }
 
-    /**
-     * @return File|SvgFile
-     */
-    public function getFile()
-    {
-        return SvgFile::createFromId($this->getId());
-    }
+
 
     public function getLazyLoad()
     {

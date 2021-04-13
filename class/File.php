@@ -13,10 +13,16 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Cache\Cache;
+
 class File
 {
 
     private $path;
+    /**
+     * @var Cache
+     */
+    private $fileCache;
 
 
     /**
@@ -74,10 +80,29 @@ class File
     }
 
 
-
     public function getFileName()
     {
         return pathinfo($this->path, PATHINFO_FILENAME);
+    }
+
+    public function isImage()
+    {
+        return substr($this->getMime(), 0, 5) == 'image';
+    }
+
+    public function getMime()
+    {
+        return mimetype($this->getFileName(), false)[1];
+    }
+
+    public function getKnownMime()
+    {
+        return mimetype($this->getFileName(), true)[1];
+    }
+
+    public function getContent()
+    {
+        return file_get_contents($this->getPath());
     }
 
 

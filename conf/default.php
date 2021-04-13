@@ -223,7 +223,7 @@ $conf["svgLazyLoadEnable"] = 1;
 $conf["svgInjectionEnable"] = 1;
 
 /**
- * Svg Optimization Disable {@link \ComboStrap\SvgFile::CONF_SVG_OPTIMIZATION_ENABLE}
+ * Svg Optimization Disable {@link \ComboStrap\SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE}
  */
 $conf["svgOptimizationEnable"] = 1;
 
@@ -240,28 +240,28 @@ $conf["svgUploadGroupName"] = "";
 
 /**
  * Svg Optimization
- * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP}
+ * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP}
  * The attribute to delete separates by a ,
  */
 $conf["svgOptimizationNamespacesToKeep"] = "";
 
 /**
  * Svg Optimization
- * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
+ * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
  * The attribute to delete separates by a ,
  */
 $conf["svgOptimizationAttributesToDelete"] = "id, style";
 /**
- * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE}
+ * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE}
  */
 $conf["svgOptimizationElementsToDelete"] = "script, style, title, desc";
 /**
- * {@link \ComboStrap\SvgFile::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY}
+ * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY}
  */
 $conf["svgOptimizationElementsToDeleteIfEmpty"] = "metadata, defs";
 
 /**
- * {@link \ComboStrap\SvgFile::CONF_PRESERVE_ASPECT_RATIO_DEFAULT}
+ * {@link \ComboStrap\SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT}
  */
 
 $conf["svgPreserveAspectRatioDefault"] = "xMidYMid slice";

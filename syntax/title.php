@@ -153,7 +153,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => PluginUtility::escape($match),
+                    PluginUtility::PAYLOAD => PluginUtility::htmlEncode($match),
                 );
 
             case DOKU_LEXER_EXIT :
@@ -222,7 +222,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                     $context = $data[PluginUtility::CONTEXT];
                     $title = $attributes[self::TITLE];
                     $renderer->doc .=  self::renderOpeningTag($context, $attributes,$renderer);
-                    $renderer->doc .= PluginUtility::escape($title);
+                    $renderer->doc .= PluginUtility::htmlEncode($title);
                     $renderer->doc .= self::renderClosingTag($context, $attributes);
                     break;
                 case DOKU_LEXER_ENTER:

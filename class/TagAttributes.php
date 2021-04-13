@@ -365,10 +365,20 @@ class TagAttributes
     {
 
         $tagAttributeString = "";
+
+        $urlEncoding = ["href","src","data-src","data-srcset"];
         foreach ($this->toHtmlArray() as $name => $value) {
 
             if(!empty($value)) {
-                $tagAttributeString .= hsc($name) . '="' . PluginUtility::escape(StringUtility::toString($value)) . '" ';
+                /**
+                 * Following the rule 2 to encode the value
+                 * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
+                 */
+                $stringValue = StringUtility::toString($value);
+                if (!in_array($name, $urlEncoding)){
+                    $stringValue = PluginUtility::htmlEncode($stringValue);
+                }
+                $tagAttributeString .= PluginUtility::htmlEncode($name) . '="' . $stringValue . '" ';
             }
 
         }

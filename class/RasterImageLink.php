@@ -31,6 +31,7 @@ class RasterImageLink extends InternalMediaLink
 
     const CONF_RESPONSIVE_IMAGE_MARGIN = "responsiveImageMargin";
     const CONF_RESPONSIVE_IMAGE_DPI_CORRECTION = "responsiveImageDpiCorrection";
+    const LAZY_CLASS = "combo-lazy-raster";
 
 
     private $imageWidth;
@@ -88,7 +89,14 @@ class RasterImageLink extends InternalMediaLink
                 $att['cache'] = $this->getCache();
             }
             $direct = true;
-            return ml($this->getId(), $att, $direct, '&', $absolute);
+            /**
+             * This URL encoding is mandatory
+             * The below function uses them when
+             * there is a width and
+             * use them not otherwise
+             */
+            $urlEncodedAnd = '&amp;';
+            return ml($this->getId(), $att, $direct, $urlEncodedAnd, $absolute);
 
         } else {
 
@@ -128,7 +136,7 @@ class RasterImageLink extends InternalMediaLink
             if ($lazyLoad) {
                 LazyLoad::addLozadSnippet();
                 PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-raster");
-                $attributes->addClassName("combo-lazy-raster");
+                $attributes->addClassName(self::LAZY_CLASS);
             }
 
             /**
@@ -149,9 +157,10 @@ class RasterImageLink extends InternalMediaLink
             $imgTagHeightValue = $this->getImgTagHeightValue();
             if (!empty($imgTagHeightValue)) {
                 $attributes->addHtmlAttributeValue("height", $imgTagHeightValue . 'px');
-                // By default, the browser with a height auto due to the img-fluid class
-                // takes the value of the width
-                // To constraint it, we use max-height
+                /**
+                 * By default, the browser with a height auto due to the img-fluid class
+                 * takes the value of the width. To constraint it, we use max-height
+                 */
                 $attributes->addStyleDeclaration("max-height", $imgTagHeightValue . "px");
             }
             $widthValue = $this->getImgTagWidthValue();
@@ -160,7 +169,7 @@ class RasterImageLink extends InternalMediaLink
              * Src is always set, this is the default
              * src attribute is served to browsers that do not take the srcset attribute into account.
              */
-            $srcValue = $this->getUrl();
+            $srcValue = $this->getUrl(true,$widthValue);
             $attributes->addHtmlAttributeValue("src", $srcValue);
 
             /**
@@ -172,7 +181,7 @@ class RasterImageLink extends InternalMediaLink
              *
              */
             // The image margin applied
-            $imageMargin = PluginUtility::getConfValue(self::CONF_RESPONSIVE_IMAGE_MARGIN,"20px");
+            $imageMargin = PluginUtility::getConfValue(self::CONF_RESPONSIVE_IMAGE_MARGIN, "20px");
 
             // Xsmall
             $extraSmallBreakPointWidth = 375;
@@ -207,19 +216,19 @@ class RasterImageLink extends InternalMediaLink
 
                         $smUrl = $this->getUrl(true, $smWidth);
                         $srcSet .= ", $smUrl {$smWidth}w";
-                        $sizes .= ", ".$this->getSizes($smallBreakPointWidth, $smWidth);
+                        $sizes .= ", " . $this->getSizes($smallBreakPointWidth, $smWidth);
 
                         // Medium
                         if ($widthValue >= $mediumWith) {
                             $srcMediumUrl = $this->getUrl(true, $mediumWith);
                             $srcSet .= ", $srcMediumUrl {$mediumWith}w";
-                            $sizes .= ", ".$this->getSizes($mediumBreakpointWith, $mediumWith);
+                            $sizes .= ", " . $this->getSizes($mediumBreakpointWith, $mediumWith);
 
                             // Large
                             if ($widthValue >= $largeWidth) {
                                 $srcLargeUrl = $this->getUrl(true, $largeWidth);
                                 $srcSet .= ", $srcLargeUrl {$largeWidth}w";
-                                $sizes .= ", ".$this->getSizes($largeBreakpointWidth, $largeWidth);
+                                $sizes .= ", " . $this->getSizes($largeBreakpointWidth, $largeWidth);
                             }
 
                         }
@@ -236,14 +245,25 @@ class RasterImageLink extends InternalMediaLink
                     $srcSet = "";
                     $sizes = "";
                 }
-                $srcUrl = $this->getUrl(true);
-                $srcSet .= "$srcUrl {$widthValue}w";
-                $sizes .= "{$widthValue}px";
+
+                /**
+                 * If the image is really small,
+                 * there is no set
+                 */
+                if (!empty($srcSet)) {
+                    $srcUrl = $this->getUrl(true);
+                    $srcSet .= "$srcUrl {$widthValue}w";
+                }
 
                 /**
                  * Sizes is added in all cases (lazy loading or not)
+                 * if there is more than one
                  */
-                $attributes->addHtmlAttributeValue("sizes", $sizes);
+                if (!empty($sizes)) {
+                    $sizes .= "{$widthValue}px";
+                    $attributes->addHtmlAttributeValue("sizes", $sizes);
+                }
+
 
                 /**
                  * Lazy load
@@ -265,7 +285,9 @@ class RasterImageLink extends InternalMediaLink
 
                 } else {
 
-                    $attributes->addHtmlAttributeValue("srcset", $srcSet);
+                    if (!empty($srcSet)) {
+                        $attributes->addHtmlAttributeValue("srcset", $srcSet);
+                    }
 
                 }
 

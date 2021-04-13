@@ -759,9 +759,19 @@ class PluginUtility
         return $callingId;
     }
 
-    public static function escape($payload)
+    /**
+     * Transform special HTML characters to entity
+     * Example:
+     * <hello>world</hello>
+     * to
+     * "&lt;hello&gt;world&lt;/hello&gt;"
+     *
+     * @param $text
+     * @return string
+     */
+    public static function htmlEncode($text)
     {
-        return hsc($payload);
+        return htmlspecialchars($text, ENT_QUOTES);
     }
 
 
@@ -963,7 +973,7 @@ class PluginUtility
      */
     public static function addAsHtmlComment($string)
     {
-        print_r('<!-- ' . self::escape($string) . '-->');
+        print_r('<!-- ' . self::htmlEncode($string) . '-->');
     }
 
     public static function getResourceBaseUrl()
@@ -1047,7 +1057,7 @@ class PluginUtility
         if (!in_array($context, self::PRESERVE_LEFT_WHITE_SPACE_COMPONENTS)) {
             $payload = ltrim($payload);
         }
-        return PluginUtility::escape($payload);
+        return PluginUtility::htmlEncode($payload);
     }
 
     /**

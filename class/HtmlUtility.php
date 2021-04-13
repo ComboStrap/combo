@@ -239,7 +239,9 @@ class HtmlUtility
             // & is in raw url and when in a value gives an error
             // https://www.php.net/manual/en/function.htmlspecialchars.php
             // because we use it only in src attribute, we make the switch here
-            $text = str_replace("&","&amp;",$text);
+            if (strpos($text,"&amp;")===false) {
+                $text = str_replace("&", "&amp;", $text);
+            }
             $document->loadHTML($text);
         } catch (Exception $exception){
             if (strpos($exception->getMessage(),"htmlParseEntityRef: expecting ';' in Entity")!==false){

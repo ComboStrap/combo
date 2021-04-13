@@ -367,10 +367,12 @@ class TagAttributes
         $tagAttributeString = "";
         foreach ($this->toHtmlArray() as $name => $value) {
 
-            $tagAttributeString .= hsc($name) . '="' . PluginUtility::escape(StringUtility::toString($value)) . '" ';
+            if(!empty($value)) {
+                $tagAttributeString .= hsc($name) . '="' . PluginUtility::escape(StringUtility::toString($value)) . '" ';
+            }
 
         }
-        return $tagAttributeString;
+        return trim($tagAttributeString);
 
 
     }

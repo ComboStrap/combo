@@ -25,9 +25,10 @@ class DokuPath extends File
         $this->type = $type;
 
         /**
-         * ACL check does not have the type
-         * of id
+         * ACL check does not care about the type of id
          * https://www.dokuwiki.org/devel:event:auth_acl_check
+         * https://github.com/splitbrain/dokuwiki/issues/3476
+         *
          * We check if there is an extension
          * If this is the case, this is a media
          */

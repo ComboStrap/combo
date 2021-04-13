@@ -68,10 +68,13 @@ class File
         return filemtime($this->path);
     }
 
-    public function getFileNameWithoutExtension()
+    /**
+     * @return string the last part of the path without the extension
+     */
+    public function getBaseNameWithoutExtension()
     {
-        $ext = pathinfo($this->path, PATHINFO_EXTENSION);
-        return basename($this->path, $ext);
+
+        return pathinfo($this->path, PATHINFO_FILENAME);
     }
 
     public function getExtension()
@@ -80,9 +83,12 @@ class File
     }
 
 
-    public function getFileName()
+    /**
+     * @return array|string|string[] the last part of the path (ie name + extension)
+     */
+    public function getBaseName()
     {
-        return pathinfo($this->path, PATHINFO_FILENAME);
+        return pathinfo($this->path, PATHINFO_BASENAME);
     }
 
     public function isImage()
@@ -92,12 +98,12 @@ class File
 
     public function getMime()
     {
-        return mimetype($this->getFileName(), false)[1];
+        return mimetype($this->getBaseName(), false)[1];
     }
 
     public function getKnownMime()
     {
-        return mimetype($this->getFileName(), true)[1];
+        return mimetype($this->getBaseName(), true)[1];
     }
 
     public function getContent()

@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+require_once (__DIR__.'/LogUtility.php');
 
 use helper_plugin_sqlite;
 

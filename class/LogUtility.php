@@ -12,6 +12,7 @@
 
 namespace ComboStrap;
 
+require_once (__DIR__.'/PluginUtility.php');
 
 class LogUtility
 {

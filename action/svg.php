@@ -45,7 +45,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
         if ($this->getConf(SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE, true)) {
 
-            $file = new File($event->data['file']);
+            $file = File::createFromPath($event->data['file']);
 
             $cache = new \ComboStrap\Cache($file);
 

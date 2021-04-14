@@ -80,7 +80,7 @@ class Cache
 
     public function getFile()
     {
-        return new File($this->fileCache->cache);
+        return File::createFromPath($this->fileCache->cache);
     }
 
 

@@ -87,9 +87,9 @@ class IconUtility
                 $mediaTplFile = DokuPath::createMediaPathFromId(tpl_incdir() . 'images/' . $iconNameAttribute);
                 if (!$mediaTplFile->exists()) {
                     // Trying to see if it's not in the template images directory
-                    $message = "\n The media file could not be found in the media or template library. If you want an icon from the material design icon library, indicate a name without extension.";
-                    $message .= "\n Media File Library tested: $mediaFile";
-                    $message .= "\n Media Template Library tested: $mediaTplFile";
+                    $message = "The media file could not be found in the media or template library. If you want an icon from the material design icon library, indicate a name without extension.";
+                    $message .= "<BR> Media File Library tested: $mediaFile";
+                    $message .= "<BR> Media Template Library tested: $mediaTplFile";
                     LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::NAME);
                     return false;
                 } else {

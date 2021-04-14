@@ -186,6 +186,7 @@ $meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
 /**
  * Big Svg Lazy load
  */
+require_once(__DIR__ . '/../class/SvgImageLink.php');
 $meta[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
 
 /**

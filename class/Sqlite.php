@@ -55,7 +55,7 @@ class Sqlite
             $adapter = self::$sqlite->getAdapter();
             /**
              * Adapter may be null
-             * It happens when the SQLite & PDO SQLite
+             * when the SQLite & PDO SQLite
              * are not installed
              * ie: SQLite & PDO SQLite support missing
              */

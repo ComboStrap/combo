@@ -12,7 +12,7 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/SvgImageLink.php');
+require_once(__DIR__ . '/DokuPath.php');
 
 /**
  * Class InternalMedia
@@ -258,8 +258,12 @@ class InternalMediaLink extends DokuPath
         $mime = $dokuPath->getKnownMime();
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime, 6) == "svg+xml") {
+                // The require is here because Svg Image Link is child of Internal Media Link (extends)
+                require_once(__DIR__ . '/SvgImageLink.php');
                 $internalMedia = new SvgImageLink($id);
             } else {
+                // The require is here because Raster Image Link is child of Internal Media Link (extends)
+                require_once(__DIR__ . '/RasterImageLink.php');
                 $internalMedia = new RasterImageLink($id);
             }
         } else {

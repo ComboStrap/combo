@@ -38,6 +38,9 @@ class LazyLoad
      */
     const LAZY_SIDE_ID = "lazy-sizes";
     const LOZAD_ID = "lozad";
+    /**
+     * Base64 transparent gif
+     */
     const TRANSPARENT_GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
     const CANONICAL = "lazy";
     const DEFAULT_COLOR = "#cbf1ea";

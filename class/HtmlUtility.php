@@ -30,7 +30,6 @@ class HtmlUtility
 {
 
 
-
     /**
      * Return a formatted HTML that does take into account the {@link DOKU_LF}
      * @param $text
@@ -115,6 +114,7 @@ class HtmlUtility
      * @param DOMNode $rightNode
      * Tip: To get the text of a node:
      * $leftNode->ownerDocument->saveHTML($leftNode)
+     * @param $error
      */
     private static function diffNode(DOMNode $leftNode, DOMNode $rightNode, &$error)
     {
@@ -137,31 +137,49 @@ class HtmlUtility
                 $leftAttributes = array();
                 for ($i = 0; $i < $leftAttributesLength; $i++) {
                     $leftAtt = $leftNode->attributes->item($i);
-                    $leftAttributes[$leftAtt->nodeName]=$leftAtt;
+                    $leftAttributes[$leftAtt->nodeName] = $leftAtt;
                 }
                 ksort($leftAttributes);
                 $rightAttributes = array();
                 for ($i = 0; $i < $rightNodeAttributes->length; $i++) {
                     $rightAtt = $rightNodeAttributes->item($i);
-                    $rightAttributes[$rightAtt->nodeName]=$rightAtt;
+                    $rightAttributes[$rightAtt->nodeName] = $rightAtt;
                 }
 
-                foreach($leftAttributes as $leftAttName => $leftAtt){
+                foreach ($leftAttributes as $leftAttName => $leftAtt) {
+                    /** @var \DOMAttr $leftAtt */
                     $rightAtt = $rightAttributes[$leftAttName];
-                    if ($rightAtt==null){
+                    if ($rightAtt == null) {
                         $error .= "The attribute (" . $leftAtt->getNodePath() . ") does not exist on the right side\n";
                     } else {
                         unset($rightAttributes[$leftAttName]);
                         $leftAttValue = $leftAtt->nodeValue;
                         $rightAttValue = $rightAtt->nodeValue;
                         if ($leftAttValue != $rightAttValue) {
-                            $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
+                            if ($leftAtt->name === "class") {
+                                $leftClasses = preg_split("/\s/", $leftAttValue);
+                                $rightClasses = preg_split("/\s/", $rightAttValue);
+                                foreach ($leftClasses as $leftClass) {
+                                    if (!in_array($leftClass, $rightClasses)) {
+                                        $error .= "The left class attribute (" . $leftAtt->getNodePath() . ") has the value (" . $leftClass . ") that is not present in the right node)\n";
+                                    } else {
+                                        // Delete the value
+                                        $key = array_search($leftClass, $rightClasses);
+                                        unset($rightClasses[$key]);
+                                    }
+                                }
+                                foreach ($rightClasses as $rightClass){
+                                    $error .= "The right class attribute (" . $leftAtt->getNodePath() . ") has the value (" . $rightClass . ") that is not present in the left node)\n";
+                                }
+                            } else {
+                                $error .= "The attribute (" . $leftAtt->getNodePath() . ") have different values (" . $leftAttValue . "," . $rightAttValue . ")\n";
+                            }
                         }
                     }
                 }
 
                 ksort($rightAttributes);
-                foreach($rightAttributes as $rightAttName => $rightAtt){
+                foreach ($rightAttributes as $rightAttName => $rightAtt) {
                     $error .= "The attribute (" . $rightAttName . ") of the node (" . $rightAtt->getNodePath() . ") does not exist on the left side\n";
                 }
             }
@@ -210,13 +228,13 @@ class HtmlUtility
                     }
 
                     if ($rightChildNode != null) {
-                        if ($leftChildNode!=null) {
+                        if ($leftChildNode != null) {
                             self::diffNode($leftChildNode, $rightChildNode, $error);
                         } else {
                             $error .= "The right node (" . $rightChildNode->getNodePath() . ") does not exist in the left document.\n";
                         }
                     } else {
-                        if ($leftChildNode!=null) {
+                        if ($leftChildNode != null) {
                             $error .= "The left node (" . $leftChildNode->getNodePath() . ") does not exist in the right document.\n";
                         }
                     }
@@ -239,13 +257,13 @@ class HtmlUtility
             // & is in raw url and when in a value gives an error
             // https://www.php.net/manual/en/function.htmlspecialchars.php
             // because we use it only in src attribute, we make the switch here
-            if (strpos($text,"&amp;")===false) {
+            if (strpos($text, "&amp;") === false) {
                 $text = str_replace("&", "&amp;", $text);
             }
             $document->loadHTML($text);
-        } catch (Exception $exception){
-            if (strpos($exception->getMessage(),"htmlParseEntityRef: expecting ';' in Entity")!==false){
-                throw new \RuntimeException("You forgot to call htmlentities in src, url ? Somewhere. Error: ".$exception->getMessage());
+        } catch (Exception $exception) {
+            if (strpos($exception->getMessage(), "htmlParseEntityRef: expecting ';' in Entity") !== false) {
+                throw new \RuntimeException("You forgot to call htmlentities in src, url ? Somewhere. Error: " . $exception->getMessage());
             } else {
                 throw new \RuntimeException($exception);
             }

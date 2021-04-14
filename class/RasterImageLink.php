@@ -129,17 +129,6 @@ class RasterImageLink extends InternalMediaLink
 
 
             /**
-             * Snippet Lazy load
-             * To add it to the class name
-             */
-            $lazyLoad = $this->getLazyLoad();
-            if ($lazyLoad) {
-                LazyLoad::addLozadSnippet();
-                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-raster");
-                $attributes->addClassName(self::LAZY_CLASS);
-            }
-
-            /**
              * Responsive image
              * https://getbootstrap.com/docs/5.0/content/images/
              * to apply max-width: 100%; and height: auto;
@@ -165,12 +154,8 @@ class RasterImageLink extends InternalMediaLink
             }
             $widthValue = $this->getImgTagWidthValue();
 
-            /**
-             * Src is always set, this is the default
-             * src attribute is served to browsers that do not take the srcset attribute into account.
-             */
-            $srcValue = $this->getUrl(true,$widthValue);
-            $attributes->addHtmlAttributeValue("src", $srcValue);
+
+            $srcValue = $this->getUrl(true, $widthValue);
 
             /**
              * Responsive image src set building
@@ -195,6 +180,7 @@ class RasterImageLink extends InternalMediaLink
             // Large
             $largeBreakpointWidth = 992;
             $largeWidth = $largeBreakpointWidth - $imageMargin;
+
 
             /**
              * Srcset and sizes for responsive image
@@ -268,20 +254,43 @@ class RasterImageLink extends InternalMediaLink
                 /**
                  * Lazy load
                  */
+                $lazyLoad = $this->getLazyLoad();
                 if ($lazyLoad) {
 
                     /**
-                     * Placeholder
+                     * Snippet Lazy loading
                      */
-                    // Modern transparent srcset pattern
-                    // normal src attribute with a transparent or low quality image as srcset value
-                    // https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
-                    // srcset is a base64 encoded transparent gif
-                    $attributes->addHtmlAttributeValue("srcset", LazyLoad::TRANSPARENT_GIF);
+                    LazyLoad::addLozadSnippet();
+                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-raster");
+                    $attributes->addClassName(self::LAZY_CLASS);
+
+                    /**
+                     * A small image has no srcset
+                     *
+                     */
+                    if (!empty($srcSet)) {
+
+                        /**
+                         * Src is always set, this is the default
+                         * src attribute is served to browsers that do not take the srcset attribute into account.
+                         * When lazy loading, we set the srcset to a transparent image to not download the image in the src
+                         * https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
+                         */
+                        $attributes->addHtmlAttributeValue("src", $srcValue);
+                        $attributes->addHtmlAttributeValue("srcset", LazyLoad::TRANSPARENT_GIF);
+                        $attributes->addHtmlAttributeValue("data-srcset", $srcSet);
+
+                    } else {
+
+                        /**
+                         * Small image but there is no little improvement
+                         */
+                        $attributes->addHtmlAttributeValue("data-src", $srcValue);
+
+                    }
 
                     LazyLoad::addPlaceholderBackground($attributes);
 
-                    $attributes->addHtmlAttributeValue("data-srcset", $srcSet);
 
                 } else {
 
@@ -294,6 +303,7 @@ class RasterImageLink extends InternalMediaLink
             } else {
 
                 // No width, no responsive possibility
+                $lazyLoad = $this->getLazyLoad();
                 if ($lazyLoad) {
 
                     LazyLoad::addPlaceholderBackground($attributes);
@@ -310,12 +320,10 @@ class RasterImageLink extends InternalMediaLink
              */
             $attributes->addHtmlAttributeValueIfNotEmpty("alt", $this->getTitle());
 
-
             /**
-             *
+             * Create the img element
              */
             $htmlAttributes = $attributes->toHTMLString();
-
             $imgHTML = "<img $htmlAttributes>";
 
         } else {

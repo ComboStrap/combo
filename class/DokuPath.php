@@ -18,8 +18,11 @@ class DokuPath extends File
 
     /**
      * DokuPath constructor.
+     *
+     * protected and not private
+     * otherwise the cascading init will not work
      */
-    public function __construct($id,$type)
+    protected function __construct($id,$type)
     {
         $this->id = $id;
         $this->type = $type;
@@ -63,6 +66,11 @@ class DokuPath extends File
         return new DokuPath($id, $type);
     }
 
+    public static function createMediaPathFromId($id)
+    {
+        return DokuPath::createFromId($id,DokuPath::MEDIA_TYPE);
+    }
+
     /**
      * @return bool true if this id represents a page
      */
@@ -91,6 +99,11 @@ class DokuPath extends File
          * (for directory ?)
          */
         return StringUtility::endWiths($this->id, ":*");
+    }
+
+    public function __toString()
+    {
+        return $this->id;
     }
 
 

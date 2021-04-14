@@ -89,6 +89,11 @@ class SvgDocument extends XmlDocument
     const CONF_PRESERVE_ASPECT_RATIO_DEFAULT = "svgPreserveAspectRatioDefault";
     const SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg";
 
+    /**
+     * @var string - a name identifier that is added in the SVG
+     */
+    private $name;
+
 
     public function __construct($text)
     {
@@ -102,7 +107,9 @@ class SvgDocument extends XmlDocument
      */
     public static function createFromPath($file)
     {
-        return new SvgDocument($file->getContent());
+        $svg = new SvgDocument($file->getContent());
+        $svg->setName($file->getBaseNameWithoutExtension());
+        return $svg;
     }
 
     /**
@@ -144,11 +151,13 @@ class SvgDocument extends XmlDocument
         }
 
         // Add a class for easy styling
-        for ($i = 0; $i < $svgPaths->length; $i++) {
+        if (!empty($this->name)) {
+            for ($i = 0; $i < $svgPaths->length; $i++) {
 
-            $stylingClass = $this->getFileNameWithoutExtension() . "-" . $i;
-            $this->addAttributeValue("class", $stylingClass, $svgPaths[$i]);
+                $stylingClass = $this->name . "-" . $i;
+                $this->addAttributeValue("class", $stylingClass, $svgPaths[$i]);
 
+            }
         }
 
         if (!$tagAttributes->hasComponentAttribute("preserveAspectRatio")) {
@@ -375,6 +384,11 @@ class SvgDocument extends XmlDocument
     private function shouldOptimize()
     {
         return PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE, 1);
+    }
+
+    private function setName($getBaseNameWithoutExtension)
+    {
+        $this->name = name;
     }
 
 

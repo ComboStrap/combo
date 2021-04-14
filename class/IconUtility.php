@@ -79,14 +79,13 @@ class IconUtility
 
         // If the name have an extension, it's a file
         // Otherwise, it's an icon from the library
-        $path = pathinfo($iconNameAttribute);
-        if ($path['extension'] != "") {
+        $mediaFile = DokuPath::createMediaPathFromId($iconNameAttribute);
+        if (!empty($mediaFile->getExtension())) {
             // loop through candidates until a match was found:
-            $mediaFile = mediaFN($iconNameAttribute);
             // May be an icon from the templates
-            if (!file_exists($mediaFile)) {
-                $mediaTplFile = tpl_incdir() . 'images/' . $iconNameAttribute;
-                if (!file_exists($mediaTplFile)) {
+            if (!$mediaFile->exists()) {
+                $mediaTplFile = DokuPath::createMediaPathFromId(tpl_incdir() . 'images/' . $iconNameAttribute);
+                if (!$mediaTplFile->exists()) {
                     // Trying to see if it's not in the template images directory
                     $message = "\n The media file could not be found in the media or template library. If you want an icon from the material design icon library, indicate a name without extension.";
                     $message .= "\n Media File Library tested: $mediaFile";
@@ -104,27 +103,26 @@ class IconUtility
             // It may be a icon already downloaded
             $iconNameSpace = ConfUtility::getConf(self::CONF_ICONS_MEDIA_NAMESPACE);
             $mediaId = $iconNameSpace . ":" . $iconNameAttribute . ".svg";
-            $mediaFile = mediaFN($mediaId);
+            $mediaFile = DokuPath::createMediaPathFromId($mediaId);
 
             // Bug: null file created when the stream could not get any byte
             // We delete them
-            if (file_exists($mediaFile)) {
-                if (filesize($mediaFile) == 0) {
-                    unlink($mediaFile);
+            if ($mediaFile->exists()) {
+                if ($mediaFile->getSize() == 0) {
+                    $mediaFile->remove();
                 }
             }
 
-            if (!file_exists($mediaFile)) {
+            if (!$mediaFile->exists()) {
 
                 /**
                  * Download the icon
                  */
 
                 // Create the target directory if it does not exist
-                $pathInfo = pathinfo($mediaFile);
-                $iconDir = $pathInfo['dirname'];
-                if (!file_exists($iconDir)) {
-                    $filePointer = mkdir($iconDir, $mode = 0770, $recursive = true);
+                $iconDir = $mediaFile->getParent();
+                if (!$iconDir->exists()) {
+                    $filePointer = $iconDir->createAsDirectory();
                     if ($filePointer == false) {
                         LogUtility::msg("The icon directory ($iconDir) could not be created.", LogUtility::LVL_MSG_ERROR, self::NAME);
                         return false;
@@ -160,7 +158,7 @@ class IconUtility
                 $filePointer = @fopen($downloadUrl, 'r');
                 if ($filePointer != false) {
 
-                    $numberOfByte = @file_put_contents($mediaFile, $filePointer);
+                    $numberOfByte = @file_put_contents($mediaFile->getPath(), $filePointer);
                     if ($numberOfByte != false) {
                         LogUtility::msg("The icon ($iconName) from the library ($library) was downloaded to ($mediaId)", LogUtility::LVL_MSG_INFO, self::NAME);
                     } else {
@@ -177,9 +175,9 @@ class IconUtility
 
         }
 
-        if (file_exists($mediaFile)) {
+        if ($mediaFile->exists()) {
 
-            $svgFile = new SvgDocument($mediaFile);
+            $svgFile = SvgDocument::createFromPath($mediaFile);
 
             /**
              * Styling
@@ -206,10 +204,10 @@ class IconUtility
 
     /**
      * @param $iconName
-     * @param $mediaFile
+     * @param $mediaFilePath
      * @deprecated Old code to download icon from the material design api
      */
-    public static function downloadIconFromMaterialDesignApi($iconName, $mediaFile)
+    public static function downloadIconFromMaterialDesignApi($iconName, $mediaFilePath)
     {
         // Try the official API
         // Read the icon meta of
@@ -232,11 +230,11 @@ class IconUtility
             // Call to the API
             // https://dev.materialdesignicons.com/contribute/site/api
             $downloadUrl = "https://materialdesignicons.com/api/download/icon/svg/$iconId";
-            $filePointer = file_put_contents($mediaFile, fopen($downloadUrl, 'r'));
+            $filePointer = file_put_contents($mediaFilePath, fopen($downloadUrl, 'r'));
             if ($filePointer == false) {
-                LogUtility::msg("The file ($downloadUrl) could not be downloaded to ($mediaFile)", LogUtility::LVL_MSG_ERROR, self::NAME);
+                LogUtility::msg("The file ($downloadUrl) could not be downloaded to ($mediaFilePath)", LogUtility::LVL_MSG_ERROR, self::NAME);
             } else {
-                LogUtility::msg("The material design icon ($iconName) was downloaded to ($mediaFile)", LogUtility::LVL_MSG_INFO, self::NAME);
+                LogUtility::msg("The material design icon ($iconName) was downloaded to ($mediaFilePath)", LogUtility::LVL_MSG_INFO, self::NAME);
             }
 
         }

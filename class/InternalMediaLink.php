@@ -12,6 +12,8 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 require_once(__DIR__ . '/DokuPath.php');
 
 /**
@@ -81,8 +83,12 @@ class InternalMediaLink extends DokuPath
     /**
      * Image constructor.
      * @param $id
+     *
+     * Protected and not private
+     * to allow cascading init
+     * If private, the parent attributes are null
      */
-    public function __construct($id)
+    protected function __construct($id)
     {
 
         /**
@@ -96,7 +102,6 @@ class InternalMediaLink extends DokuPath
         }
 
         parent::__construct($id,DokuPath::MEDIA_TYPE);
-
 
         $this->attributes = TagAttributes::createEmpty();
     }
@@ -119,7 +124,7 @@ class InternalMediaLink extends DokuPath
      * @param array $callAttributes
      * @return InternalMediaLink
      */
-    public static function createFromCallAttributes(array $callAttributes)
+    public static function createFromIndexAttributes(array $callAttributes)
     {
         $id = $callAttributes[0]; // path
         $title = $callAttributes[1];
@@ -145,7 +150,7 @@ class InternalMediaLink extends DokuPath
      * @return RasterImageLink
      * The known attributes are also deleted
      */
-    public static function createFromRenderAttributes(&$attributes)
+    public static function createFromPropertyArray(&$attributes)
     {
         $src = cleanID($attributes['src']);
         unset($attributes['src']);
@@ -233,7 +238,7 @@ class InternalMediaLink extends DokuPath
             }
         }
 
-        return self::createFromRenderAttributes($attributes);
+        return self::createFromPropertyArray($attributes);
     }
 
     public function setLazyLoad($false)
@@ -281,7 +286,7 @@ class InternalMediaLink extends DokuPath
      * Return the same array than with the {@link self::parse()} method
      * that is used in the {@link CallStack}
      */
-    public function toCallStackArray()
+    public function toPropertyArray()
     {
         $array = array(
             'type' => null, // ??? internal, external media
@@ -296,6 +301,34 @@ class InternalMediaLink extends DokuPath
         // Add the extra attribute
         $array = array_merge($this->getAttributes()->toCallStackArray(),$array);
         return $array;
+    }
+
+    /**
+     * A function to set explicitly which array format
+     * is used in the returned data of a {@link SyntaxPlugin::handle()}
+     * (which ultimately is stored in the {@link CallStack)
+     *
+     * This is to make the difference with the {@link InternalMediaLink::createFromIndexAttributes()}
+     * that is indexed by number (ie without property name)
+     *
+     * @return array
+     */
+    public function toCallStackArray()
+    {
+        return $this->toPropertyArray();
+    }
+
+    /**
+     * A function to explicitly create an internal media from
+     * a call stack array that we get in the {@link SyntaxPlugin::render()}
+     * from the {@link InternalMediaLink::toCallStackArray()}
+     *
+     * @param $array
+     * @return InternalMediaLink|RasterImageLink|SvgImageLink
+     */
+    public static function createFromCallStackArray($array)
+    {
+        return self::createFromPropertyArray($array);
     }
 
     /**
@@ -438,11 +471,6 @@ class InternalMediaLink extends DokuPath
 
     }
 
-
-    public function getFile()
-    {
-        return new File(mediaFN($this->getId()));
-    }
 
     public function getAttributes()
     {

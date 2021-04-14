@@ -93,7 +93,7 @@ class Page extends DokuPath
             LogUtility::msg("Internal error, the page id ({$id}) is not conform and should be `{$this->id}`)", LogUtility::LVL_MSG_ERROR);
         }
 
-        parent::__construct($this->id,DokuPath::PAGE_TYPE);
+        parent::createFromId($this->id,DokuPath::PAGE_TYPE);
 
     }
 
@@ -1000,7 +1000,7 @@ class Page extends DokuPath
             if (empty($firstImage)) {
                 return null;
             } else {
-                return new RasterImageLink($firstImage);
+                return InternalMediaLink::createFromId($firstImage);
             }
         }
         return null;
@@ -1011,7 +1011,7 @@ class Page extends DokuPath
      * An array of images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
-     * @return RasterImageLink[]
+     * @return InternalMediaLink[]
      */
     public
     function getImageSet()
@@ -1027,10 +1027,10 @@ class Page extends DokuPath
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = new RasterImageLink(cleanID($imageIdFromMeta));
+                    $images[] = InternalMediaLink::createFromId(cleanID($imageIdFromMeta));
                 }
             } else {
-                $images = array(new RasterImageLink(cleanID($imageMeta)));
+                $images = array(InternalMediaLink::createFromId(cleanID($imageMeta)));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {

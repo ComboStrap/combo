@@ -29,7 +29,7 @@ class File
      * File constructor.
      * @param $path
      */
-    public function __construct($path)
+    protected function __construct($path)
     {
         $this->path = $path;
     }
@@ -109,6 +109,28 @@ class File
     public function getContent()
     {
         return file_get_contents($this->getPath());
+    }
+
+    public function remove()
+    {
+        unlink($this->getPath());
+    }
+
+    public function getParent()
+    {
+        return new File(pathinfo($this->path, PATHINFO_DIRNAME));
+    }
+
+    public function createAsDirectory()
+    {
+
+        return mkdir($this->getPath(), $mode = 0770, $recursive = true);
+    }
+
+    public static function createFromPath($path)
+    {
+        return new File($path);
+
     }
 
 

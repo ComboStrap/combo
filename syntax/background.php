@@ -131,8 +131,9 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 }
                 if ($callImage!=null) {
                     $callImage->deleteCall();
-                    $image = InternalMediaLink::createFromCallAttributes($callImage->getAttributes());
-                    $openingTag->setAttribute("img",$image->toCallStackArray());
+                    $imageAttribute = $callImage->getAttributes();
+                    $image = InternalMediaLink::createFromCallStackArray($imageAttribute);
+                    $openingTag->setAttribute("img",$image->toPropertyArray());
                 }
                 return array(
                     PluginUtility::STATE => $state

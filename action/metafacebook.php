@@ -64,7 +64,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
 
         $page = new Page($ID);
-        if(!$page->existInFs()){
+        if (!$page->existInFs()) {
             return;
         }
 
@@ -108,13 +108,13 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
         /**
-         * @var RasterImageLink[]
+         * @var InternalMediaLink[]
          */
         $facebookImages = $page->getImageSet();
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = new InternalMediaLink($defaultFacebookImage);
+                $image = InternalMediaLink::createFromId($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {
@@ -127,7 +127,23 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             }
         }
         if (!empty($facebookImages)) {
+
+            /**
+             * One of image/jpeg, image/gif or image/png
+             * As stated here: https://developers.facebook.com/docs/sharing/webmasters#images
+             **/
+            $facebookMime = ["image/jpeg","image/gif","image/png"];
             foreach ($facebookImages as $facebookImage) {
+
+                if(!in_array($facebookImage->getMime(),$facebookMime)){
+                    continue;
+                }
+
+                /** @var RasterImageLink $facebookImage */
+                if (!($facebookImage instanceof RasterImageLink)) {
+                    LogUtility::msg("Internal: The image ($facebookImage) is not a raster image and this should not be the case for facebook", LogUtility::LVL_MSG_ERROR, "support");
+                    continue;
+                }
 
                 if (!$facebookImage->exists()) {
                     LogUtility::msg("The image ($facebookImage) does not exist and was not added", LogUtility::LVL_MSG_ERROR, self::CANONICAL);

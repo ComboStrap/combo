@@ -45,7 +45,7 @@ class Unit
             $digit = $digit * (float) $conversions[$unit];
         }
 
-        return ceil($digit);
+        return $digit;
     }
 
 

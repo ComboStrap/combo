@@ -250,7 +250,7 @@ class SvgDocument extends XmlDocument
             /**
              * Delete empty namespace rules
              */
-            $documentElement = $this->getXmlDom()->documentElement;
+            $documentElement = &$this->getXmlDom()->documentElement;
             foreach ($this->getDocNamespaces() as $namespacePrefix => $namespaceUri) {
                 $nodes = $this->xpath("//*[namespace-uri()='$namespaceUri']");
                 $attributes = $this->xpath("//@*[namespace-uri()='$namespaceUri']");
@@ -322,11 +322,11 @@ class SvgDocument extends XmlDocument
                         if (sizeof($viewBoxAttributeAsArray) == 4) {
                             $minX = $viewBoxAttributeAsArray[0];
                             $minY = $viewBoxAttributeAsArray[1];
-                            $widthViewPort = intval($viewBoxAttributeAsArray[2]);
-                            $heightViewPort = intval($viewBoxAttributeAsArray[3]);
+                            $widthViewPort = $viewBoxAttributeAsArray[2];
+                            $heightViewPort = $viewBoxAttributeAsArray[3];
                             if (
-                                $minX === "0" &
-                                $minY === "0" &
+                                $minX == 0 &
+                                $minY == 0 &
                                 $widthViewPort == $widthPixel &
                                 $heightViewPort == $heightPixel
                             ) {
@@ -348,7 +348,7 @@ class SvgDocument extends XmlDocument
             $elementsToDeleteConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE, "script, style");
             $elementsToDelete = StringUtility::explodeAndTrim($elementsToDeleteConf, ",");
             foreach ($elementsToDelete as $elementToDelete) {
-                $nodes = $this->xpath("//$elementToDelete");
+                $nodes = $this->xpath("//*[local-name()='$elementToDelete']");
                 foreach ($nodes as $node) {
                     /** @var DOMElement $node */
                     $node->parentNode->removeChild($node);
@@ -361,7 +361,7 @@ class SvgDocument extends XmlDocument
             $elementsToDeleteIfEmptyConf = PluginUtility::getConfValue(self::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY, "metadata, defs, g");
             $elementsToDeleteIfEmpty = StringUtility::explodeAndTrim($elementsToDeleteIfEmptyConf);
             foreach ($elementsToDeleteIfEmpty as $elementToDeleteIfEmpty) {
-                $elementNodeList = $this->xpath("//$elementToDeleteIfEmpty");
+                $elementNodeList = $this->xpath("//*[local-name()='$elementToDeleteIfEmpty']");
                 foreach ($elementNodeList as $element) {
                     /** @var DOMElement $element */
                     if (!$element->hasChildNodes()) {
@@ -386,9 +386,9 @@ class SvgDocument extends XmlDocument
         return PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE, 1);
     }
 
-    private function setName($getBaseNameWithoutExtension)
+    private function setName($name)
     {
-        $this->name = name;
+        $this->name = $name;
     }
 
 

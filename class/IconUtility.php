@@ -187,9 +187,9 @@ class IconUtility
              * FYI: For whatever reason if you add a border the line icon are neater
              * PluginUtility::addStyleProperty("border","1px solid transparent",$attributes);
              */
-            $tagAttributes->addComponentAttributeValue("width", "24px");
-            $tagAttributes->addComponentAttributeValue("height", "24px");
-            $tagAttributes->addComponentAttributeValue("fill", "currentColor");
+            $tagAttributes->addHtmlAttributeValue("width", "24px");
+            $tagAttributes->addHtmlAttributeValue("height", "24px");
+            $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
 
             return $svgFile->getOptimizedSvg($tagAttributes);
 

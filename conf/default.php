@@ -287,3 +287,8 @@ $conf["responsiveImageDpiCorrection"] = 1;
 $conf["lazyLoadingPlaceholderColor"] = "#cbf1ea";
 
 
+/**
+ * {@link \ComboStrap\InternalMediaLink::CONF_IMAGE_ENABLE}
+ */
+$conf["imageEnable"] = 1;
+

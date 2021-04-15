@@ -183,7 +183,7 @@ class SvgDocument extends XmlDocument
 
     public function getOptimizedSvg($tagAttributes = null)
     {
-        $this->optimize();
+        $this->optimize($tagAttributes);
 
         return $this->getXmlText($tagAttributes);
 

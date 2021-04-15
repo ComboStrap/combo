@@ -1,15 +1,11 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
-// must be run within Dokuwiki
-use ComboStrap\RasterImageLink;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
+use ComboStrap\RasterImageLink;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
-use ComboStrap\TitleUtility;
 
 require_once(__DIR__ . '/../class/RasterImageLink.php');
 
@@ -21,10 +17,6 @@ if (!defined('DOKU_INC')) die();
  */
 class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 {
-
-    // The > in the pattern below is to be able to handle plugin
-    // that uses a pattern such as {{changes>.}} from the change plugin
-    // https://github.com/cosmocode/changes/blob/master/syntax.php
 
 
     const TAG = "media";
@@ -75,10 +67,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        $enable = $this->getConf(RasterImageLink::CONF_LAZY_LOADING_ENABLE);
+        $enable = $this->getConf(InternalMediaLink::CONF_IMAGE_ENABLE,1);
         if (!$enable) {
 
-            // Inside a card, we need to take over
+            // Inside a card, we need to take over and enable it
             $modes = [
                 PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
             ];
@@ -183,6 +175,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 break;
 
             case "metadata":
+
                 /**
                  * Keep track of the metadata
                  * @var Doku_Renderer_metadata $renderer

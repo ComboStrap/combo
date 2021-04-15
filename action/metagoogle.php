@@ -1,13 +1,9 @@
 <?php
 
-use ComboStrap\RasterImageLink;
-use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataUtility;
-use ComboStrap\PluginUtility;
 use ComboStrap\Page;
+use ComboStrap\RasterImageLink;
 use ComboStrap\Site;
-use ComboStrap\StringUtility;
 
 if (!defined('DOKU_INC')) die();
 
@@ -67,7 +63,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             return;
         }
         $page = new Page($ID);
-        if(!$page->existInFs()){
+        if (!$page->existInFs()) {
             return;
         }
 
@@ -183,29 +179,53 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 }
                 $ldJson["publisher"] = $publisher;
 
-
+                /**
+                 * Image must belong to the page
+                 * https://developers.google.com/search/docs/guides/sd-policies#images
+                 *
+                 * Image may have IPTC metadata: not yet implemented
+                 * https://developers.google.com/search/docs/advanced/appearance/image-rights-metadata
+                 *
+                 * Image must have the supported format
+                 * https://developers.google.com/search/docs/advanced/guidelines/google-images#supported-image-formats
+                 * BMP, GIF, JPEG, PNG, WebP, and SVG
+                 */
+                $supportedMime = [
+                    "image/bmp",
+                    "image/gif",
+                    "image/jpeg",
+                    "image/png",
+                    "image/webp",
+                    "image/svg+xml",
+                ];
                 $imagesSet = $page->getImageSet();
                 $schemaImages = array();
-                foreach ($imagesSet as $imageId) {
-                    $image = new RasterImageLink($imageId);
-                    if ($image->exists()) {
-                        $imageObjectSchema = array(
-                            "@type" => "ImageObject",
-                            "url" => $image->getAbsoluteUrl()
-                        );
-                        if ($image->isAnalyzable()) {
-                            if (!empty($image->getMediaWidth())) {
-                                $imageObjectSchema["width"] = $image->getMediaWidth();
+                foreach ($imagesSet as $image) {
+
+                    $mime = $image->getMime();
+                    if (in_array($mime, $supportedMime)) {
+                        if ($image->exists()) {
+                            $imageObjectSchema = array(
+                                "@type" => "ImageObject",
+                                "url" => $image->getAbsoluteUrl()
+                            );
+                            if ($image instanceof RasterImageLink) {
+                                if ($image->isAnalyzable()) {
+                                    if (!empty($image->getMediaWidth())) {
+                                        $imageObjectSchema["width"] = $image->getMediaWidth();
+                                    }
+                                    if (!empty($image->getMediaHeight())) {
+                                        $imageObjectSchema["height"] = $image->getMediaHeight();
+                                    }
+                                }
                             }
-                            if (!empty($image->getMediaHeight())) {
-                                $imageObjectSchema["height"] = $image->getMediaHeight();
-                            }
+                            $schemaImages[] = $imageObjectSchema;
+                        } else {
+                            LogUtility::msg("The image ($image) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         }
-                        $schemaImages[] = $imageObjectSchema;
-                    } else {
-                        LogUtility::msg("The image ($imageId) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     }
                 }
+
                 if (!empty($schemaImages)) {
                     $ldJson["image"] = $schemaImages;
                 }

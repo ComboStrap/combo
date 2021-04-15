@@ -21,7 +21,7 @@ require_once(__DIR__ . '/DokuPath.php');
  * Represent a media link
  * @package ComboStrap
  */
-class InternalMediaLink extends DokuPath
+abstract class InternalMediaLink extends DokuPath
 {
 
     /**
@@ -39,6 +39,9 @@ class InternalMediaLink extends DokuPath
 
     // Pattern to capture the link as first capture group
     const LINK_PATTERN = "{{\s*([a-z0-9A-Z:?=&.x\-_]*)\s*\|?.*}}";
+
+    const CONF_IMAGE_ENABLE = "imageEnable";
+    const CANONICAL="image";
 
     private $id;
 
@@ -274,10 +277,11 @@ class InternalMediaLink extends DokuPath
         } else {
             if ($mime == false) {
                 LogUtility::msg("The mime type of the media ($id) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
+                $internalMedia = new RasterImageLink($id);
             } else {
-                LogUtility::msg("Internal error: The type ($mime) of media ($id) with the typ is not yet implemented", LogUtility::LVL_MSG_ERROR, "support");
+                LogUtility::msg("The type ($mime) of media ($id) is not an image", LogUtility::LVL_MSG_ERROR, "image");
+                $internalMedia = null;
             }
-            $internalMedia = new InternalMediaLink($id);
         }
         return $internalMedia;
     }
@@ -488,7 +492,7 @@ class InternalMediaLink extends DokuPath
         return $this->getAttributes()->getComponentAttributeValue($key, null);
     }
 
-
+    public abstract function getAbsoluteUrl();
 
 
 }

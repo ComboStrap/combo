@@ -2,6 +2,7 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\IconUtility;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
@@ -229,3 +230,8 @@ $meta[RasterImageLink::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION] = array('onoff');
  * Lazy loading
  */
 $meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("string");
+
+/**
+ * Internal media
+ */
+$meta[InternalMediaLink::CONF_IMAGE_ENABLE] = array('onoff');

@@ -1,6 +1,8 @@
 <?php
 
 
+require_once (__DIR__.'/../class/Cache.php');
+
 use ComboStrap\Auth;
 use ComboStrap\File;
 use ComboStrap\Resources;

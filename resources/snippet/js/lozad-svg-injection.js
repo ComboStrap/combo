@@ -6,6 +6,8 @@ window.addEventListener("load", function (event) {
             SVGInjector(el, {
                     each: function (svg) {
                         // Style copy (max width)
+                        // If any error, svg is a string with the error
+                        // Example: Unable to load SVG file: http://doku/_media/ui/preserveaspectratio.svg
                         svg.style.cssText = el.style.cssText;
                         el.dataset.class.split(" ").forEach(e => svg.classList.add(e));
                     },

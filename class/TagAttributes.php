@@ -231,20 +231,58 @@ class TagAttributes
 
 
             /**
-             * Create the final html attributes array
+             * Create a non-sorted temporary html attributes array
              */
-            $this->finalHtmlArray = $this->htmlAttributes;
+            $tempHtmlArray = $this->htmlAttributes;
 
             // copy the unknown component attributes
             $excludedAttribute = ["script", "type"];
             foreach ($this->componentAttributes as $key => $arrayValue) {
                 if (!in_array($key, $excludedAttribute)) {
                     $value = implode(array_keys($arrayValue), " ");
-                    $this->finalHtmlArray[$key]=$value;
+                    $tempHtmlArray[$key] = $value;
                 }
             }
             // Copy the style
-            $this->finalHtmlArray["style"]=$this->getStyle();
+            $tempHtmlArray["style"] = $this->getStyle();
+
+            /**
+             * Sort by attribute
+             * https://datacadamia.com/web/html/attribute#order
+             */
+            $sortedArray = array();
+            $once = "once";
+            $multiple = "multiple";
+            $orderPatterns = [
+                "class" => $once,
+                "id" => $once,
+                "name" => $once,
+                "data-.*" => $multiple,
+                "src.*" => $multiple,
+                "for" => $once,
+                "type" => $once,
+                "href" => $once,
+                "value" => $once,
+                "title" => $once,
+                "alt" => $once,
+                "role" => $once,
+                "aria-*" => $multiple];
+            foreach ($orderPatterns as $pattern => $type) {
+                foreach ($tempHtmlArray as $name => $value) {
+                    $searchPattern = "^$pattern$";
+                    if (preg_match("/$searchPattern/", $name)) {
+                        $sortedArray[$name] = $value;
+                        unset($tempHtmlArray[$name]);
+                        if ($type == $once) {
+                            break;
+                        }
+                    }
+                }
+            }
+            foreach ($tempHtmlArray as $name => $value) {
+                $sortedArray[$name] = $value;
+            }
+            $this->finalHtmlArray = $sortedArray;
 
         }
 
@@ -366,16 +404,16 @@ class TagAttributes
 
         $tagAttributeString = "";
 
-        $urlEncoding = ["href","src","data-src","data-srcset"];
+        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
         foreach ($this->toHtmlArray() as $name => $value) {
 
-            if(!empty($value)) {
+            if (!empty($value)) {
                 /**
                  * Following the rule 2 to encode the value
                  * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
                  */
                 $stringValue = StringUtility::toString($value);
-                if (!in_array($name, $urlEncoding)){
+                if (!in_array($name, $urlEncoding)) {
                     $stringValue = PluginUtility::htmlEncode($stringValue);
                 }
                 $tagAttributeString .= PluginUtility::htmlEncode($name) . '="' . $stringValue . '" ';

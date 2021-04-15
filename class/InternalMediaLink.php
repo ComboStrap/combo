@@ -263,7 +263,17 @@ abstract class InternalMediaLink extends DokuPath
     public static function createFromId($id, $type = DokuPath::MEDIA_TYPE)
     {
         $dokuPath = DokuPath::createFromId($id,$type);
-        $mime = $dokuPath->getKnownMime();
+        if ($dokuPath->getExtension()=="svg"){
+            /**
+             * The mime type is set when uploading, not when
+             * viewing.
+             * Because they are internal image, the svg was already uploaded
+             * Therefore, no authorization scheme here
+             */
+            $mime = "image/svg+xml";
+        } else {
+            $mime = $dokuPath->getKnownMime();
+        }
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime, 6) == "svg+xml") {
                 // The require is here because Svg Image Link is child of Internal Media Link (extends)

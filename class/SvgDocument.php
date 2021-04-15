@@ -169,7 +169,16 @@ class SvgDocument extends XmlDocument
              * Default is xMidYMid meet
              */
             $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
-            $tagAttributes->addComponentAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+            $tagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+        } else {
+            /**
+             * Svg attribute are case sensitive
+             * but not the component attribute
+             * we get the value and set it then as HTML to have the good casing
+             * on this attribute
+             */
+            $aspectRatio = $tagAttributes->getValueAndRemove("preserveAspectRatio");
+            $tagAttributes->addHTMLAttributeValue("preserveAspectRatio", $aspectRatio);
         }
 
         $toHtmlArray = $tagAttributes->toHtmlArray();

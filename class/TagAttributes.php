@@ -269,6 +269,9 @@ class TagAttributes
                 "aria-*" => $multiple];
             foreach ($orderPatterns as $pattern => $type) {
                 foreach ($tempHtmlArray as $name => $value) {
+                    if(empty($value)){
+                        break;
+                    }
                     $searchPattern = "^$pattern$";
                     if (preg_match("/$searchPattern/", $name)) {
                         $sortedArray[$name] = $value;
@@ -280,7 +283,9 @@ class TagAttributes
                 }
             }
             foreach ($tempHtmlArray as $name => $value) {
-                $sortedArray[$name] = $value;
+                if (!empty($value)) {
+                    $sortedArray[$name] = $value;
+                }
             }
             $this->finalHtmlArray = $sortedArray;
 

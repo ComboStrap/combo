@@ -192,7 +192,7 @@ class Icon
                 $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
             }
 
-            $svgImageLink = SvgImageLink::createFromId(
+            $svgImageLink = SvgImageLink::createMediaPathFromId(
                 $mediaDokuPath->getId(),
                 $tagAttributes
             );

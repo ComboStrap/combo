@@ -18,7 +18,7 @@
  */
 
 
-use ComboStrap\IconUtility;
+use ComboStrap\Icon;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Prism;
 
@@ -67,14 +67,14 @@ $conf['MinimalNamesCountForAutomaticCanonical'] = 0;
 
 /**
  * Icon Namespace
- * See {@link IconUtility::CONF_ICONS_MEDIA_NAMESPACE}
- * See {@link IconUtility::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT}
+ * See {@link Icon::CONF_ICONS_MEDIA_NAMESPACE}
+ * See {@link Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT}
  */
 $conf['icons_namespace'] = ":combostrap:icons";
 
 /**
  * Default library
- * See {@link IconUtility::CONF_DEFAULT_ICON_LIBRARYE}
+ * See {@link Icon::CONF_DEFAULT_ICON_LIBRARYE}
  */
 $conf['defaultIconLibrary'] = "material-design";
 

@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\AdsUtility;
-use ComboStrap\IconUtility;
+use ComboStrap\Icon;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
@@ -63,7 +63,7 @@ $meta[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = arra
  * Icon namespace where the downloaded icon are stored
  */
 require_once(__DIR__ . '/../syntax/icon.php');
-$meta[IconUtility::CONF_ICONS_MEDIA_NAMESPACE] = array('string');
+$meta[Icon::CONF_ICONS_MEDIA_NAMESPACE] = array('string');
 
 /**
  * Css optimization

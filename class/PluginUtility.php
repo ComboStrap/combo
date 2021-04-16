@@ -9,7 +9,7 @@ use TestRequest;
 
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
-require_once(__DIR__ . '/IconUtility.php');
+require_once(__DIR__ . '/Icon.php');
 require_once(__DIR__ . '/StringUtility.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/RenderUtility.php');
@@ -640,7 +640,7 @@ class PluginUtility
      * Create an URL to the documentation website
      * @param $canonical - canonical id or slug
      * @param $text -  the text of the link
-     * @param bool $withIcon - used to break the recursion with the message in the {@link IconUtility}
+     * @param bool $withIcon - used to break the recursion with the message in the {@link Icon}
      * @return string - an url
      */
     public static function getUrl($canonical, $text, $withIcon = true)

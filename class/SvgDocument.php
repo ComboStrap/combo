@@ -124,7 +124,7 @@ class SvgDocument extends XmlDocument
         }
 
         if ($this->shouldOptimize()) {
-            $this->optimize($tagAttributes);
+            $this->optimize();
         }
 
         // Set the name (icon) attribute for test selection
@@ -192,7 +192,7 @@ class SvgDocument extends XmlDocument
 
     public function getOptimizedSvg($tagAttributes = null)
     {
-        $this->optimize($tagAttributes);
+        $this->optimize();
 
         return $this->getXmlText($tagAttributes);
 
@@ -228,14 +228,9 @@ class SvgDocument extends XmlDocument
      * Optimization
      * Based on https://jakearchibald.github.io/svgomg/
      * (gui of https://github.com/svg/svgo)
-     * @param TagAttributes $tagAttribute
      */
-    public function optimize(&$tagAttribute = null)
+    public function optimize()
     {
-
-        if ($tagAttribute == null) {
-            $tagAttribute = TagAttributes::createEmpty();
-        }
 
         if ($this->shouldOptimize()) {
 
@@ -310,16 +305,10 @@ class SvgDocument extends XmlDocument
              *
              */
             $widthAttributeValue = $documentElement->getAttribute("width");
-            if (empty($widthAttributeValue)) {
-                $widthAttributeValue = $tagAttribute->getComponentAttributeValue("width");
-            }
             if (!empty($widthAttributeValue)) {
                 $widthPixel = Unit::toPixel($widthAttributeValue);
 
                 $heightAttributeValue = $documentElement->getAttribute("height");
-                if (empty($heightAttributeValue)) {
-                    $heightAttributeValue = $tagAttribute->getComponentAttributeValue("height");
-                }
                 if (!empty($heightAttributeValue)) {
                     $heightPixel = Unit::toPixel($heightAttributeValue);
 
@@ -390,7 +379,7 @@ class SvgDocument extends XmlDocument
         }
     }
 
-    private function shouldOptimize()
+    public function shouldOptimize()
     {
         return PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE, 1);
     }

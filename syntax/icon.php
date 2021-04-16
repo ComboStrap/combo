@@ -4,14 +4,14 @@
  *
  */
 
-use ComboStrap\IconUtility;
+use ComboStrap\Icon;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
-require_once(__DIR__ . '/../class/IconUtility.php');
+require_once(__DIR__ . '/../class/Icon.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
@@ -157,7 +157,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     $state = $data[PluginUtility::STATE];
                     if ($state === DOKU_LEXER_SPECIAL) {
                         $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                        $renderer->doc .= IconUtility::renderIconByAttributes($tagAttribute);
+                        $renderer->doc .= Icon::renderIconByAttributes($tagAttribute);
                     }
 
                 }

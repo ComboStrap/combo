@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\AdsUtility;
-use ComboStrap\IconUtility;
+use ComboStrap\Icon;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
@@ -55,7 +55,7 @@ $lang[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = Plug
 $lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getUrl("best:end:page:name", action_plugin_combo_urlmanager::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getUrl("id:redirect", "ID redirect") . ' (0 to disable)';
 
 
-$lang[IconUtility::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getUrl("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
+$lang[Icon::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getUrl("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
 
 /**
  * Css Optimization

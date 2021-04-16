@@ -31,7 +31,7 @@ require_once(__DIR__ . '/SvgDocument.php');
  * Injection via javascript to avoid problem with the php svgsimple library
  * https://www.npmjs.com/package/svg-injector
  */
-class IconUtility
+class Icon
 {
     const CONF_ICONS_MEDIA_NAMESPACE = "icons_namespace";
     const CONF_ICONS_MEDIA_NAMESPACE_DEFAULT = ":" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME . ":icons";
@@ -177,21 +177,42 @@ class IconUtility
 
         if ($mediaFile->exists()) {
 
-            $svgFile = SvgDocument::createFromPath($mediaFile);
+            /**
+             * Dimension
+             * After optimization, the width and height of the svg are gone
+             * but we set them on the style attribute
+             */
+            if (!$tagAttributes->hasComponentAttribute("width")) {
+                $tagAttributes->addComponentAttributeValue("width", "24");
+            }
+            if (!$tagAttributes->hasComponentAttribute("height")) {
+                $tagAttributes->addComponentAttributeValue("height", "24");
+            }
 
             /**
              * Styling
-             * for line item such as feather (https://github.com/feathericons/feather#2-use)
-             * fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             * Set the current color if not set
              *
-             * FYI: For whatever reason if you add a border the line icon are neater
-             * PluginUtility::addStyleProperty("border","1px solid transparent",$attributes);
+             * The color can be set:
+             *   * on fill (surface)
+             *   * on stroke (line)
+             *
+             * Feather set it on the stroke
+             * Example: view-source:https://raw.githubusercontent.com/feathericons/feather/master/icons/airplay.svg
+             *
+             * By default, the icon should have this property when downloaded
+             * but if this not the case (such as for Material design), we set them
              */
-            $tagAttributes->addHtmlAttributeValue("width", "24px");
-            $tagAttributes->addHtmlAttributeValue("height", "24px");
-            $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
+            $svgDocument = SvgDocument::createFromPath($mediaFile);
+            $documentElement = $svgDocument->getXmlDom()->documentElement;
+            if (!$documentElement->hasAttribute("fill")) {
+                /**
+                 * Note: if fill is not set to current color, the default is black
+                 */
+                $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
+            }
 
-            return $svgFile->getOptimizedSvg($tagAttributes);
+            return $svgDocument->getOptimizedSvg($tagAttributes);
 
         } else {
 

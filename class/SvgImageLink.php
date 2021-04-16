@@ -42,20 +42,12 @@ class SvgImageLink extends InternalMediaLink
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
 
-    private $svgWidth;
-    /**
-     * @var int
-     */
-    private $svgWeight;
-
-
     private function createImgHTMLTag($tagAttributes = null)
     {
         if ($tagAttributes == null) {
             $tagAttributes = TagAttributes::createEmpty();
         }
 
-        $imgHTML = '<img';
 
         $lazyLoad = $this->getLazyLoad();
         $svgInjection = PluginUtility::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
@@ -82,65 +74,32 @@ class SvgImageLink extends InternalMediaLink
             );
         }
 
+        // Add lazy load snippet
         if ($lazyLoad) {
-
-            // Add lazy load snippet
             LazyLoad::addLozadSnippet();
         }
-
-        $injectionClass = "";
-        if ($svgInjection && $lazyLoad) {
-            PluginUtility::getSnippetManager()->upsertJavascriptForBar("lozad-svg-injection");
-            $injectionClass = "combo-lazy-svg-injection";
-        } else if ($lazyLoad && !$svgInjection) {
-            PluginUtility::getSnippetManager()->upsertJavascriptForBar("lozad-svg");
-            $injectionClass = "combo-lazy-svg";
-        } else if ($svgInjection && !$lazyLoad) {
-            PluginUtility::getSnippetManager()->upsertJavascriptForBar("svg-injector");
-            $injectionClass = "combo-svg-injection";
-        }
-
-        /**
-         * Style properties
-         * TODO: when {@link TagAttributes} supports the creation of style, use it instead
-         */
-        $styleProperties = "";
-        $widthValue = $this->getImgTagWidthValue();
-        if (!empty($widthValue)) {
-            $styleProperties .= 'max-width:' . $this->getImgTagWidthValue() . 'px';
-        }
-        if (!empty($this->getImgTagHeightValue())) {
-            if (!empty($styleProperties)) {
-                $styleProperties .= ";";
-            }
-            $styleProperties .= 'height:' . $this->getImgTagHeightValue() . 'px';
-        }
-        if (!empty($styleProperties)) {
-            $imgHTML .= ' style="' . $styleProperties . '"';
-        }
-
-        /**
-         * Class processing
-         * TODO: When the processing will attached total to tag attributes
-         */
-        PluginUtility::processAlignAttributes($tagAttributes);
 
 
         /**
          * Class
+         * functionalClass is not added
+         * as a normal class when injected
+         * This is why, it's not added in the {@link TagAttributes}
          */
-        if ($svgInjection) {
-            $imgHTML .= ' class="' . $injectionClass . '"';
-            if ($tagAttributes->hasComponentAttribute("class")) {
-                $imgHTML .= ' data-class="' . $tagAttributes->getClass() . '"';
-            }
-        } else {
-            $allClass = $injectionClass;
-            if ($tagAttributes->hasComponentAttribute("class")) {
-                $allClass .= ' ' . $tagAttributes->getClass();
-            }
-            $imgHTML .= ' class="' . $allClass . '"';
+        $functionalClass = "";
+        if ($svgInjection && $lazyLoad) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg-injection");
+            $functionalClass = "combo-lazy-svg-injection";
+        } else if ($lazyLoad && !$svgInjection) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg");
+            $functionalClass = "combo-lazy-svg";
+        } else if ($svgInjection && !$lazyLoad) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
+            $functionalClass = "combo-svg-injection";
         }
+
+
+
 
 
         /**
@@ -149,18 +108,16 @@ class SvgImageLink extends InternalMediaLink
         $srcValue = $this->getUrl();
         if ($lazyLoad) {
 
-            $imgHTML .= " data-src=\"$srcValue\"";
-
+            $tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
 
             /**
-             * Responsive image src set
-             * is not needed for svg
+             * Note: Responsive image srcset is not needed for svg
              */
-
 
         } else {
 
-            $imgHTML .= " src=\"$srcValue\"";
+            $tagAttributes->addHtmlAttributeValue("src", $srcValue);
+
         }
 
 
@@ -168,12 +125,25 @@ class SvgImageLink extends InternalMediaLink
          * Title
          */
         if (!empty($this->getTitle())) {
-            $imgHTML .= ' alt = "' . $this->getTitle() . '"';
+            $tagAttributes->addHtmlAttributeValue("alt", $this->getTitle());
         }
 
+        /**
+         * Class into data-class for injection
+         */
+        if ($svgInjection) {
+            if ($tagAttributes->hasComponentAttribute("class")) {
+                $tagAttributes->addHtmlAttributeValue("data-class", $tagAttributes->getValueAndRemove("class"));
+            }
+        }
+        // Add the functional class
+        $tagAttributes->addClassName($functionalClass);
 
-        $imgHTML .= '>';
-        return $imgHTML;
+        /**
+         * Return the image
+         */
+        return '<img '.$tagAttributes->toHTMLString().'>';
+
     }
 
 
@@ -247,10 +217,16 @@ class SvgImageLink extends InternalMediaLink
                 $this->getSize() > $this->getMaxInlineSize()
             ) {
 
+                /**
+                 * Img tag
+                 */
                 $imgHTML = $this->createImgHTMLTag($tagAttributes);
 
             } else {
 
+                /**
+                 * Svg tag
+                 */
                 $imgHTML = file_get_contents($this->getSvgFile($tagAttributes));
 
             }
@@ -264,101 +240,10 @@ class SvgImageLink extends InternalMediaLink
         return $imgHTML;
     }
 
-    /**
-     * @return int - the width of the image from the file
-     */
-    public function getMediaWidth()
-    {
-        return $this->svgWidth;
-    }
-
-    /**
-     * @return int - the height of the image from the file
-     */
-    public function getMediaHeight()
-    {
-        return $this->svgWeight;
-    }
-
-
-    /**
-     * @return int - the width value attribute in a img
-     */
-    private function getImgTagWidthValue()
-    {
-        $linkWidth = $this->getRequestedWidth();
-        if (empty($linkWidth)) {
-            if (empty($this->getRequestedHeight())) {
-
-                $linkWidth = $this->getMediaWidth();
-
-            } else {
-
-                // Height is not empty
-                // We derive the width from it
-                if ($this->getMediaHeight() != 0
-                    && !empty($this->getMediaHeight())
-                    && !empty($this->getMediaWidth())
-                ) {
-                    $linkWidth = $this->getMediaWidth() * ($this->getRequestedHeight() / $this->getMediaHeight());
-                }
-
-            }
-        }
-        /**
-         * Rounding to integer
-         * The fetch.php file takes int as value for width and height
-         * making a rounding if we pass a double (such as 37.5)
-         * This is important because the security token is based on width and height
-         * and therefore the fetch will failed
-         */
-        return intval($linkWidth);
-    }
-
-    /**
-     * @return int the height value attribute in a img
-     */
-    private function getImgTagHeightValue()
-    {
-
-        /**
-         * Height default
-         */
-        $linkHeight = $this->getRequestedHeight();
-        if (empty($linkHeight)) {
-            $linkHeight = $this->getMediaHeight();
-        }
-
-        /**
-         * Scale the height by size parameter
-         */
-        if (!empty($linkHeight) &&
-            !empty($localWidth) &&
-            !empty($this->getMediaWidth()) &&
-            $this->getMediaWidth() != 0
-        ) {
-            $linkHeight = $linkHeight * ($localWidth / $this->getMediaWidth());
-        }
-
-        /**
-         * Rounding to integer
-         * The fetch.php file takes int as value for width and height
-         * making a rounding if we pass a double (such as 37.5)
-         * This is important because the security token is based on width and height
-         * and therefore the fetch will failed
-         */
-        return intval($linkHeight);
-
-    }
-
     private function getMaxInlineSize()
     {
         return PluginUtility::getConfValue(self::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
     }
-
-
-
-
 
 
     public function getLazyLoad()

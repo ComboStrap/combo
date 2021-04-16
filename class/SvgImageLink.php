@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 require_once(__DIR__ . '/InternalMediaLink.php');
 require_once(__DIR__ . '/PluginUtility.php');
+require_once(__DIR__ . '/SvgDocument.php');
 
 /**
  * Image
@@ -46,6 +47,8 @@ class SvgImageLink extends InternalMediaLink
      * @var int
      */
     private $svgWeight;
+
+
 
     private function createImgHTMLTag($tagAttributes = null)
     {

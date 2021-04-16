@@ -505,4 +505,5 @@ abstract class InternalMediaLink extends DokuPath
     public abstract function getAbsoluteUrl();
 
 
+
 }

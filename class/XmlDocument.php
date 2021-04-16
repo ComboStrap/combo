@@ -85,6 +85,14 @@ class XmlDocument
                 }
             }
 
+        } else {
+
+            /**
+             * If the XML module is not present
+             */
+            LogUtility::msg("The php `libxml` module was not found on your installation, the xml/svg file could not be modified / instantiated", LogUtility::LVL_MSG_ERROR, "support");
+
+
         }
 
     }
@@ -92,48 +100,51 @@ class XmlDocument
     /**
      * @param File $file
      */
-    public static function createFromPath($file)
+    public
+    static function createFromPath($file)
     {
         $mime = XmlDocument::XML_TYPE;
         if (in_array($file->getExtension(), ["html", "htm"])) {
             $mime = XmlDocument::HTML_TYPE;
         }
-        return new XmlDocument($file->getContent(),$mime);
+        return new XmlDocument($file->getContent(), $mime);
     }
 
-    public function &getXmlDom()
+    public
+    function &getXmlDom()
     {
         return $this->xmlDom;
     }
 
-    public function setRootAttribute($string, $name)
+    public
+    function setRootAttribute($string, $name)
     {
         if ($this->isXmlExtensionLoaded()) {
             $this->xmlDom->documentElement->setAttribute($string, $name);
         }
     }
 
-    public function getXmlText()
+    public
+    function getXmlText()
     {
-        if ($this->isXmlExtensionLoaded()) {
-            $xmlText = $this->getXmlDom()->saveHTML($this->getXmlDom()->ownerDocument);
-            // Delete doctype (for svg optimization)
-            // php has only doctype manipulation for HTML
-            $xmlText = preg_replace('/^<!DOCTYPE.+?>/', '', $xmlText);
-            return trim($xmlText);
-        } else {
-            return file_get_contents($this->getPath());
-        }
+
+        $xmlText = $this->getXmlDom()->saveHTML($this->getXmlDom()->ownerDocument);
+        // Delete doctype (for svg optimization)
+        // php has only doctype manipulation for HTML
+        $xmlText = preg_replace('/^<!DOCTYPE.+?>/', '', $xmlText);
+        return trim($xmlText);
+
+
     }
 
     /**
      * @return bool
      */
-    public function isXmlExtensionLoaded()
+    public
+    function isXmlExtensionLoaded()
     {
         // https://www.php.net/manual/en/dom.requirements.php
         return extension_loaded("libxml");
-        // return extension_loaded(XmlUtility::SIMPLE_XML_EXTENSION);
     }
 
     /**
@@ -183,7 +194,8 @@ class XmlDocument
 
     }
 
-    public function getDocNamespaces()
+    public
+    function getDocNamespaces()
     {
         $xpath = new DOMXPath($this->getXmlDom());
         // `namespace::*` means selects all the namespace attribute of the context node
@@ -213,7 +225,8 @@ class XmlDocument
      * @param string $defaultNamespace
      * @return DOMNodeList|false
      */
-    public function xpath($query)
+    public
+    function xpath($query)
     {
         $xpath = new DOMXPath($this->getXmlDom());
         foreach ($this->getDocNamespaces() as $prefix => $namespaceUri) {
@@ -234,7 +247,8 @@ class XmlDocument
     }
 
 
-    public function removeRootAttribute($attribute)
+    public
+    function removeRootAttribute($attribute)
     {
 
         // This function does not work
@@ -252,7 +266,8 @@ class XmlDocument
 
     }
 
-    public function removeRootChildNode($nodeName)
+    public
+    function removeRootChildNode($nodeName)
     {
         for ($i = 0; $i < $this->getXmlDom()->documentElement->childNodes->length; $i++) {
             $childNode = &$this->getXmlDom()->documentElement->childNodes[$i];
@@ -279,9 +294,9 @@ class XmlDocument
      * @param $attValue
      * @param DOMElement $xml
      */
-    public function addAttributeValue($attName, $attValue, $xml)
+    public
+    function addAttributeValue($attName, $attValue, $xml)
     {
-
         if ($xml->hasAttribute($attName)) {
             $xml->setAttribute($attName, $attValue);
         } else {

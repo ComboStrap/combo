@@ -1,8 +1,8 @@
 <?php
 
-
 namespace ComboStrap;
 
+require_once(__DIR__ . '/File.php');
 
 class DokuPath extends File
 {
@@ -106,6 +106,13 @@ class DokuPath extends File
         return $this->id;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
 
 

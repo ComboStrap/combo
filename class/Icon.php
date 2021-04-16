@@ -12,10 +12,9 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . "/XmlUtility.php");
 require_once(__DIR__ . '/PluginUtility.php');
 require_once(__DIR__ . '/ConfUtility.php');
-require_once(__DIR__ . '/SvgDocument.php');
+require_once(__DIR__ . '/SvgImageLink.php');
 
 
 /**
@@ -72,55 +71,52 @@ class Icon
         }
 
         /**
-         * The attribute
+         * The Name
          */
-        $iconNameAttribute = $tagAttributes->getXmlAttributeValue($name);
+        $iconNameAttribute = $tagAttributes->getValueAndRemove($name);
 
+        /**
+         * If the name have an extension, it's a file from the media directory
+         * Otherwise, it's an icon from a library
+         */
+        $mediaDokuPath = DokuPath::createMediaPathFromId($iconNameAttribute);
+        if (!empty($mediaDokuPath->getExtension())) {
 
-        // If the name have an extension, it's a file
-        // Otherwise, it's an icon from the library
-        $mediaFile = DokuPath::createMediaPathFromId($iconNameAttribute);
-        if (!empty($mediaFile->getExtension())) {
             // loop through candidates until a match was found:
             // May be an icon from the templates
-            if (!$mediaFile->exists()) {
-                $mediaTplFile = File::createFromPath(Resources::getImagesDirectory() . '/' . $iconNameAttribute);
-                if (!$mediaTplFile->exists()) {
-                    // Trying to see if it's not in the template images directory
-                    $message = "The media file could not be found in the media or template library. If you want an icon from the material design icon library, indicate a name without extension.";
-                    $message .= "<BR> Media File Library tested: $mediaFile";
-                    $message .= "<BR> Media Template Library tested: $mediaTplFile";
-                    LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::NAME);
-                    return false;
-                } else {
-                    $mediaFile = $mediaTplFile;
-                }
+            if (!$mediaDokuPath->exists()) {
+
+                // Trying to see if it's not in the template images directory
+                $message = "The media file could not be found in the media library. If you want an icon from an icon library, indicate a name without extension.";
+                $message .= "<BR> Media File Library tested: $mediaDokuPath";
+                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::NAME);
+                return false;
+
             }
 
         } else {
 
-
             // It may be a icon already downloaded
             $iconNameSpace = ConfUtility::getConf(self::CONF_ICONS_MEDIA_NAMESPACE);
             $mediaId = $iconNameSpace . ":" . $iconNameAttribute . ".svg";
-            $mediaFile = DokuPath::createMediaPathFromId($mediaId);
+            $mediaDokuPath = DokuPath::createMediaPathFromId($mediaId);
 
             // Bug: null file created when the stream could not get any byte
             // We delete them
-            if ($mediaFile->exists()) {
-                if ($mediaFile->getSize() == 0) {
-                    $mediaFile->remove();
+            if ($mediaDokuPath->exists()) {
+                if ($mediaDokuPath->getSize() == 0) {
+                    $mediaDokuPath->remove();
                 }
             }
 
-            if (!$mediaFile->exists()) {
+            if (!$mediaDokuPath->exists()) {
 
                 /**
                  * Download the icon
                  */
 
                 // Create the target directory if it does not exist
-                $iconDir = $mediaFile->getParent();
+                $iconDir = $mediaDokuPath->getParent();
                 if (!$iconDir->exists()) {
                     $filePointer = $iconDir->createAsDirectory();
                     if ($filePointer == false) {
@@ -158,7 +154,7 @@ class Icon
                 $filePointer = @fopen($downloadUrl, 'r');
                 if ($filePointer != false) {
 
-                    $numberOfByte = @file_put_contents($mediaFile->getPath(), $filePointer);
+                    $numberOfByte = @file_put_contents($mediaDokuPath->getPath(), $filePointer);
                     if ($numberOfByte != false) {
                         LogUtility::msg("The icon ($iconName) from the library ($library) was downloaded to ($mediaId)", LogUtility::LVL_MSG_INFO, self::NAME);
                     } else {
@@ -175,7 +171,7 @@ class Icon
 
         }
 
-        if ($mediaFile->exists()) {
+        if ($mediaDokuPath->exists()) {
 
             /**
              * Dimension
@@ -183,36 +179,21 @@ class Icon
              * but we set them on the style attribute
              */
             if (!$tagAttributes->hasComponentAttribute("width")) {
-                $tagAttributes->addComponentAttributeValue("width", "24");
+                $tagAttributes->addComponentAttributeValue("width", "24px");
             }
             if (!$tagAttributes->hasComponentAttribute("height")) {
-                $tagAttributes->addComponentAttributeValue("height", "24");
+                $tagAttributes->addComponentAttributeValue("height", "24px");
             }
-
             /**
-             * Styling
-             * Set the current color if not set
-             *
-             * The color can be set:
-             *   * on fill (surface)
-             *   * on stroke (line)
-             *
-             * Feather set it on the stroke
-             * Example: view-source:https://raw.githubusercontent.com/feathericons/feather/master/icons/airplay.svg
-             *
-             * By default, the icon should have this property when downloaded
-             * but if this not the case (such as for Material design), we set them
+             * The icon type is used to set the color styling
+             * and responsive properties
              */
-            $svgDocument = SvgDocument::createFromPath($mediaFile);
-            $documentElement = $svgDocument->getXmlDom()->documentElement;
-            if (!$documentElement->hasAttribute("fill")) {
-                /**
-                 * Note: if fill is not set to current color, the default is black
-                 */
-                $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
+            if (!$tagAttributes->hasComponentAttribute("type")) {
+                $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
             }
 
-            return $svgDocument->getOptimizedSvg($tagAttributes);
+            $svgImageLink = SvgImageLink::createFromId($mediaDokuPath->getId());
+            return $svgImageLink->renderMediaTag($tagAttributes);
 
         } else {
 
@@ -228,7 +209,8 @@ class Icon
      * @param $mediaFilePath
      * @deprecated Old code to download icon from the material design api
      */
-    public static function downloadIconFromMaterialDesignApi($iconName, $mediaFilePath)
+    public
+    static function downloadIconFromMaterialDesignApi($iconName, $mediaFilePath)
     {
         // Try the official API
         // Read the icon meta of

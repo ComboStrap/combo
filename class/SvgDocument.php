@@ -88,6 +88,8 @@ class SvgDocument extends XmlDocument
     );
     const CONF_PRESERVE_ASPECT_RATIO_DEFAULT = "svgPreserveAspectRatioDefault";
     const SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg";
+    const ICON_TYPE = "icon";
+    const ILLUSTRATION_TYPE = "illustration";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -114,7 +116,7 @@ class SvgDocument extends XmlDocument
 
     /**
      * @param TagAttributes $tagAttributes
-     * @return false|string
+     * @return string
      */
     public function getXmlText($tagAttributes = null)
     {
@@ -138,20 +140,74 @@ class SvgDocument extends XmlDocument
          *   ie the max-width style
          * They are treated in {@link PluginUtility::processStyle()}
          */
+        $type = $tagAttributes->getValueAndRemove("type", self::ILLUSTRATION_TYPE);
+        switch ($type) {
+            case self::ICON_TYPE:
+                /**
+                 * Styling
+                 * Set the current color if not set
+                 *
+                 * The color can be set:
+                 *   * on fill (surface)
+                 *   * on stroke (line)
+                 *
+                 * Feather set it on the stroke
+                 * Example: view-source:https://raw.githubusercontent.com/feathericons/feather/master/icons/airplay.svg
+                 *
+                 * By default, the icon should have this property when downloaded
+                 * but if this not the case (such as for Material design), we set them
+                 */
+                $documentElement = $this->getXmlDom()->documentElement;
+                if (!$documentElement->hasAttribute("fill")) {
+                    /**
+                     * Note: if fill is not set to current color, the default is black
+                     */
+                    $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
+                } else {
 
+                    if ($tagAttributes->hasComponentAttribute("color")) {
+                        /**
+                         * If the color is set, we overwrite fill if not set to none
+                         */
+                        $fillValue = $documentElement->getAttribute("fill");
+                        if ($fillValue != "none") {
+                            $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
+                        }
+                    }
+                }
+                break;
+            default:
+                /**
+                 * Illustration / Image
+                 */
+                /**
+                 * Responsive SVG
+                 */
+                if (!$tagAttributes->hasComponentAttribute("preserveAspectRatio")) {
+                    /**
+                     *
+                     * Keep the same height
+                     * Image in the Middle and border deleted when resizing
+                     * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
+                     * Default is xMidYMid meet
+                     */
+                    $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
+                    $tagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
+                }
 
-        // Icon will set by default a ''current color'' setting
-        $fill = $tagAttributes->getValueAndRemove("fill");
-        if (!empty($fill)) {
-            $svgPaths = $this->getSvgPaths();
-            foreach ($svgPaths as $pathDomElement) {
-                /** @var DOMElement $pathDomElement */
-                $pathDomElement->setAttribute("fill", $fill);
-            }
+                /**
+                 * Responsive to the container
+                 */
+                $tagAttributes->addStyleDeclaration("width","100%");
+                $tagAttributes->addStyleDeclaration("height","100%");
+                break;
+
         }
 
-        // Add a class for easy styling
+
+        // Add a class on each path for easy styling
         if (!empty($this->name)) {
+            $svgPaths = $this->xpath("//*[local-name()='path']");
             for ($i = 0; $i < $svgPaths->length; $i++) {
 
                 $stylingClass = $this->name . "-" . $i;
@@ -160,27 +216,23 @@ class SvgDocument extends XmlDocument
             }
         }
 
-        if (!$tagAttributes->hasComponentAttribute("preserveAspectRatio")) {
-            /**
-             *
-             * Keep the same height
-             * Image in the Middle and border deleted when resizing
-             * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio
-             * Default is xMidYMid meet
-             */
-            $defaultAspectRatio = PluginUtility::getConfValue(self::CONF_PRESERVE_ASPECT_RATIO_DEFAULT, "xMidYMid slice");
-            $tagAttributes->addHTMLAttributeValue("preserveAspectRatio", $defaultAspectRatio);
-        } else {
-            /**
-             * Svg attribute are case sensitive
-             * but not the component attribute
-             * we get the value and set it then as HTML to have the good casing
-             * on this attribute
-             */
-            $aspectRatio = $tagAttributes->getValueAndRemove("preserveAspectRatio");
-            $tagAttributes->addHTMLAttributeValue("preserveAspectRatio", $aspectRatio);
+        /**
+         * Svg attribute are case sensitive
+         * but not the component attribute key
+         * we get the value and set it then as HTML to have the good casing
+         * on this attribute
+         */
+        $caseSensitives = [ "preserveAspectRatio" ];
+        foreach($caseSensitives as $caseSensitive) {
+            if ($tagAttributes->hasComponentAttribute($caseSensitive)) {
+                $aspectRatio = $tagAttributes->getValueAndRemove($caseSensitive);
+                $tagAttributes->addHTMLAttributeValue($caseSensitive, $aspectRatio);
+            }
         }
 
+        /**
+         * Set the attributes to the root
+         */
         $toHtmlArray = $tagAttributes->toHtmlArray();
         foreach ($toHtmlArray as $name => $value) {
             $this->setRootAttribute($name, $value);
@@ -221,7 +273,6 @@ class SvgDocument extends XmlDocument
 
 
     }
-
 
 
     /**

@@ -61,14 +61,19 @@ class DokuPath extends File
      * @param string $type
      * @return DokuPath
      */
-    public static function createFromId($id, $type = self::UNKNOWN_TYPE)
+    public static function createPageFromId($id)
     {
-        return new DokuPath($id, $type);
+        return new DokuPath($id, DokuPath::PAGE_TYPE);
     }
 
     public static function createMediaPathFromId($id)
     {
-        return DokuPath::createFromId($id,DokuPath::MEDIA_TYPE);
+        return new DokuPath($id,DokuPath::MEDIA_TYPE);
+    }
+
+    public static function createUnknownFromId($id)
+    {
+        return new DokuPath($id,DokuPath::UNKNOWN_TYPE);
     }
 
     /**
@@ -107,11 +112,11 @@ class DokuPath extends File
     }
 
     /**
-     * @return mixed
+     * @return string - the id (fully qualified and normalized)
      */
     public function getId()
     {
-        return $this->id;
+        return cleanID($this->id);
     }
 
 

@@ -175,6 +175,19 @@ class SvgDocument extends XmlDocument
                         }
                     }
                 }
+                /**
+                 * Using a icon in the navbrand component of bootstrap
+                 * require the set of width and height otherwise
+                 * the svg has a calculated width of null
+                 * and the bar component are below the brand text
+                 *
+                 */
+                $width = $tagAttributes->getValueAndRemove(InternalMediaLink::WIDTH_KEY,"24");
+                $qualifiedWidth = TagAttributes::toPixelLengthIfNoSpecified($width);
+                $tagAttributes->addHtmlAttributeValue("width", $qualifiedWidth);
+                $height = $tagAttributes->getValueAndRemove(InternalMediaLink::HEIGHT_KEY,"24");
+                $qualifiedHeight = TagAttributes::toPixelLengthIfNoSpecified($height);
+                $tagAttributes->addHtmlAttributeValue("height", $qualifiedHeight);
                 break;
             default:
                 /**

@@ -186,7 +186,7 @@ class Icon
             }
             /**
              * The icon type is used to set the color styling
-             * and responsive properties
+             * and the disable the responsive properties
              */
             if (!$tagAttributes->hasComponentAttribute("type")) {
                 $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);

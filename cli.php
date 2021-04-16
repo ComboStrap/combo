@@ -262,7 +262,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
             $id = $row['ID'];
             if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
-                Page::createFromId($id)->deleteInDb();
+                Page::createPageFromId($id)->deleteInDb();
             }
         }
 

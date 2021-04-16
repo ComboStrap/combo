@@ -258,7 +258,7 @@ class SvgImageLink extends InternalMediaLink
     {
 
         $cache = new Cache($this, $this->tagAttributes);
-        if (!$cache->cacheUsable()) {
+        if (!$cache->isCacheUsable()) {
             $content = SvgDocument::createFromPath($this)->getXmlText($this->tagAttributes);
             $cache->storeCache($content);
         }

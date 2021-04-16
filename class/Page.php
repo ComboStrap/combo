@@ -93,7 +93,7 @@ class Page extends DokuPath
             LogUtility::msg("Internal error, the page id ({$id}) is not conform and should be `{$this->id}`)", LogUtility::LVL_MSG_ERROR);
         }
 
-        parent::createFromId($this->id,DokuPath::PAGE_TYPE);
+        parent::__construct($this->id,DokuPath::PAGE_TYPE);
 
     }
 
@@ -204,9 +204,9 @@ class Page extends DokuPath
 
     }
 
-    static function createFromId($id, $type = DokuPath::PAGE_TYPE)
+    static function createPageFromId($id)
     {
-        return new Page($id, $type);
+        return new Page($id);
     }
 
     /**
@@ -226,7 +226,7 @@ class Page extends DokuPath
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            return self::createFromId($id)->setCanonical($canonical);
+            return self::createPageFromId($id)->setCanonical($canonical);
         }
 
 
@@ -242,11 +242,11 @@ class Page extends DokuPath
         foreach ($res2arr as $row) {
             $id = $row['ID'];
 
-            return self::createFromId($id)
+            return self::createPageFromId($id)
                 ->setCanonical($canonical);
         }
 
-        return self::createFromId($canonical);
+        return self::createPageFromId($canonical);
 
     }
 
@@ -343,7 +343,7 @@ class Page extends DokuPath
             $urlPath = parse_url($url, PHP_URL_PATH);
             $id = substr(str_replace("/", ":", $urlPath), 1);
         }
-        return self::createFromId($id);
+        return self::createPageFromId($id);
     }
 
     private function setCanonical($canonical)
@@ -1000,7 +1000,7 @@ class Page extends DokuPath
             if (empty($firstImage)) {
                 return null;
             } else {
-                return InternalMediaLink::createFromId($firstImage);
+                return InternalMediaLink::createMediaPathFromId($firstImage);
             }
         }
         return null;
@@ -1027,10 +1027,10 @@ class Page extends DokuPath
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = InternalMediaLink::createFromId(cleanID($imageIdFromMeta));
+                    $images[] = InternalMediaLink::createMediaPathFromId(cleanID($imageIdFromMeta));
                 }
             } else {
-                $images = array(InternalMediaLink::createFromId(cleanID($imageMeta)));
+                $images = array(InternalMediaLink::createMediaPathFromId(cleanID($imageMeta)));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {

@@ -100,7 +100,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
 
         }
 
-        $dokuPath = DokuPath::createFromId($id);
+        $dokuPath = DokuPath::createUnknownFromId($id);
         if ($dokuPath->isPage()) {
             /**
              * ACL ID have the root form

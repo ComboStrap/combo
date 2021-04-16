@@ -229,7 +229,7 @@ abstract class InternalMediaLink extends DokuPath
      */
     public static function createMediaPathFromId($id, $tagAttributes = null)
     {
-        $dokuPath = DokuPath::createFromId($id, DokuPath::MEDIA_TYPE);
+        $dokuPath = DokuPath::createMediaPathFromId($id);
         if ($dokuPath->getExtension() == "svg") {
             /**
              * The mime type is set when uploading, not when

@@ -71,7 +71,7 @@ class Cache
     }
 
 
-    public function cacheUsable()
+    public function isCacheUsable()
     {
         if ($this->maxAge == 0) {
             return false;

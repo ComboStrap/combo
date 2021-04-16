@@ -141,6 +141,21 @@ class TagAttributes
         return $attributes;
     }
 
+    /**
+     *
+     * @param $value
+     * @return string return a CSS property with pixel as unit if the unit is not specified
+     */
+    public static function toPixelLengthIfNoSpecified($value)
+    {
+        if (preg_match("/^[0-9]*$/", $value)) {
+            return $value . "px";
+        } else {
+            return $value;
+        }
+
+    }
+
     public function addClassName($className)
     {
 
@@ -370,7 +385,7 @@ class TagAttributes
 
 
     /**
-     * @return array - an array of key string and value
+     * @return array - an array of key string and value of the component attributes
      */
     public function toCallStackArray()
     {
@@ -442,7 +457,7 @@ class TagAttributes
 
     public function getComponentAttributes()
     {
-        return $this->componentAttributes;
+        return $this->toCallStackArray();
     }
 
     public function removeComponentAttributeIfPresent($attributeName)

@@ -297,7 +297,14 @@ class XmlDocument
     public
     function addAttributeValue($attName, $attValue, $xml)
     {
-        if ($xml->hasAttribute($attName)) {
+
+        /**
+         * Empty condition is better than {@link DOMElement::hasAttribute()}
+         * because even if the dom element has the attribute, the value
+         * may be empty
+         */
+        $value = $xml->getAttribute($attName);
+        if (empty($value)) {
             $xml->setAttribute($attName, $attValue);
         } else {
             $actualAttValue = $xml->getAttribute($attName);
@@ -306,6 +313,7 @@ class XmlDocument
                 $xml->setAttribute($attName, (string)$actualAttValue . " $attValue");
             }
         }
+
     }
 
 

@@ -475,12 +475,12 @@ abstract class InternalMediaLink extends DokuPath
     }
 
     /**
-     * @param TagAttributes $attributes
+     * @param TagAttributes $tagAttributes
      */
-    public function renderMediaTag(&$attributes = null)
+    public function renderMediaTag(&$tagAttributes = null)
     {
-        if ($attributes == null) {
-            $attributes = $this->getAttributes();
+        if ($tagAttributes == null) {
+            $tagAttributes = $this->getAttributes();
         }
 
     }

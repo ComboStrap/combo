@@ -141,7 +141,7 @@ class TagAttributes
 
     public function getClass()
     {
-        return $this->getXmlAttributeValue('class');
+        return $this->getValue('class');
     }
 
     public function getStyle()
@@ -318,9 +318,10 @@ class TagAttributes
 
     /**
      * @param $attributeName
+     * @param null $default
      * @return string|null a HTML value in the form 'value1 value2...'
      */
-    public function getXmlAttributeValue($attributeName)
+    public function getValue($attributeName, $default = null)
     {
         if ($this->hasComponentAttribute($attributeName)) {
             $value = $this->componentAttributes[$attributeName];
@@ -330,7 +331,7 @@ class TagAttributes
             $keys = array_keys($value);
             return implode(" ", $keys);
         } else {
-            return null;
+            return $default;
         }
     }
 
@@ -352,7 +353,7 @@ class TagAttributes
     {
         $value = $default;
         if ($this->hasComponentAttribute($attributeName)) {
-            $value = $this->getXmlAttributeValue($attributeName);
+            $value = $this->getValue($attributeName);
             unset($this->componentAttributes[$attributeName]);
         }
         return $value;
@@ -366,7 +367,7 @@ class TagAttributes
     {
         $array = array();
         foreach ($this->componentAttributes as $key => $value) {
-            $array[$key] = $this->getXmlAttributeValue($key);
+            $array[$key] = $this->getValue($key);
         }
         $style = $this->getStyle();
         if (!empty($style)) {
@@ -380,7 +381,7 @@ class TagAttributes
         $lowerAttribute = strtolower($attributeName);
         $value = $default;
         if ($this->hasComponentAttribute($lowerAttribute)) {
-            $value = $this->getXmlAttributeValue($lowerAttribute);
+            $value = $this->getValue($lowerAttribute);
         }
         return $value;
     }
@@ -429,4 +430,10 @@ class TagAttributes
 
 
     }
+
+   public function getComponentAttributes(){
+        return $this->componentAttributes;
+   }
+
+
 }

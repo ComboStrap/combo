@@ -49,7 +49,6 @@ class SvgImageLink extends InternalMediaLink
     private $svgWeight;
 
 
-
     private function createImgHTMLTag($tagAttributes = null)
     {
         if ($tagAttributes == null) {
@@ -165,7 +164,6 @@ class SvgImageLink extends InternalMediaLink
         }
 
 
-
         /**
          * Title
          */
@@ -253,9 +251,11 @@ class SvgImageLink extends InternalMediaLink
 
             } else {
 
-                $imgHTML = $this->createInlineHTMLTag($tagAttributes);
+                $imgHTML = file_get_contents($this->getSvgFile($tagAttributes));
 
             }
+
+
         } else {
 
             $imgHTML = "<span class=\"text-danger\">The svg ($this) does not exist</span>";
@@ -316,10 +316,9 @@ class SvgImageLink extends InternalMediaLink
     }
 
     /**
-     * @param null $localWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
      * @return int the height value attribute in a img
      */
-    private function getImgTagHeightValue($localWidth = null)
+    private function getImgTagHeightValue()
     {
 
         /**
@@ -357,12 +356,8 @@ class SvgImageLink extends InternalMediaLink
         return PluginUtility::getConfValue(self::CONF_MAX_KB_SIZE_FOR_INLINE_SVG, 2) * 1024;
     }
 
-    private function createInlineHTMLTag($tagAttributes)
-    {
 
-        return SvgDocument::createFromPath($this)->getXmlText($tagAttributes);
 
-    }
 
 
 
@@ -374,6 +369,21 @@ class SvgImageLink extends InternalMediaLink
         } else {
             return PluginUtility::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
         }
+    }
+
+    /**
+     * @param TagAttributes $tagAttributes
+     */
+    public function getSvgFile($tagAttributes)
+    {
+
+        $cache = new Cache($this, $tagAttributes);
+        if (!$cache->cacheUsable()) {
+            $content = SvgDocument::createFromPath($this)->getXmlText($tagAttributes);
+            $cache->storeCache($content);
+        }
+        return $cache->getFile()->getPath();
+
     }
 
 }

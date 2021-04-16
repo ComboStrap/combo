@@ -15,24 +15,44 @@ class Cache
      */
     private $path;
     /**
-     * @var Cache
+     * @var \dokuwiki\Cache\Cache
      */
     private $fileCache;
     private $maxAge;
 
+
     /**
      * Cache constructor.
      */
-    public function __construct(File $path)
+    public function __construct(File $path, TagAttributes &$tagAttributes)
     {
         $this->path = $path;
-        $key = $this->path->getPath();
-        $this->fileCache = new \dokuwiki\Cache\Cache($key, $this->path->getExtension());
+
+
+        /**
+         * Cache Attribute
+         */
+        $cacheParameter = $tagAttributes->getValueAndRemove('cache', -1);
+        $this->setMaxAgeInSec($cacheParameter);
+
+        /**
+         * Cache Key Construction
+         */
+        $cacheKey = $this->path->getPath();
+        foreach ($tagAttributes->getComponentAttributes() as $name => $value) {
+            $cacheKey .= "&" . $name . "=" . $value;
+        }
+
+        $this->fileCache = new \dokuwiki\Cache\Cache($cacheKey, $this->path->getExtension());
+
     }
 
-    public static function createFromPath(File $file)
+    public static function createFromPath(File $file, $tagAttributes = null)
     {
-        return new Cache($file);
+        if ($tagAttributes == null) {
+            $tagAttributes = TagAttributes::createEmpty();
+        }
+        return new Cache($file, $tagAttributes);
     }
 
 
@@ -82,7 +102,6 @@ class Cache
     {
         return File::createFromPath($this->fileCache->cache);
     }
-
 
 
 }

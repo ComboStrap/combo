@@ -1,12 +1,14 @@
 <?php
 
 
-require_once (__DIR__.'/../class/Cache.php');
+require_once(__DIR__ . '/../class/Cache.php');
 
 use ComboStrap\Auth;
 use ComboStrap\File;
 use ComboStrap\Resources;
 use ComboStrap\SvgDocument;
+use ComboStrap\SvgImageLink;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) exit;
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
@@ -39,30 +41,33 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
     }
 
+    /**
+     * @param Doku_Event $event
+     * https://www.dokuwiki.org/devel:event:fetch_media_status
+     */
     public function svg_optimization(Doku_Event &$event)
     {
 
         if ($event->data['ext'] != 'svg') return;
         if ($event->data['status'] >= 400) return; // ACLs and precondition checks
 
-        if ($this->getConf(SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE, true)) {
 
-            $file = File::createFromPath($event->data['file']);
-
-            $cache = new \ComboStrap\Cache($file);
-
-            // https://www.dokuwiki.org/devel:event:fetch_media_status
-            $cacheParameter = $event->data['cache'];
-            $cache->setMaxAgeInSec($cacheParameter);
-            if (!$cache->cacheUsable()) {
-                $svgFile = SvgDocument::createFromPath($file);
-                $content = $svgFile->getOptimizedSvg();
-                $cache->storeCache($content);
-            }
-            $file = $cache->getFile()->getPath();
-
-            $event->data['file'] = $file;
+        $tagAttributes = TagAttributes::createEmpty();
+        $width = $event->data['width'];
+        if ($width != 0) {
+            $tagAttributes->addComponentAttributeValue("width", $width);
         }
+        $height = $event->data['height'];
+        if ($height != 0) {
+            $tagAttributes->addComponentAttributeValue("height", $height);
+        }
+        $tagAttributes->addComponentAttributeValue("cache", $event->data['cache']);
+
+        $event->data["mime"] = "image/svg+xml";
+        $id = $event->data["media"];
+        $svgImageLink = SvgImageLink::createFromId($id);
+        $event->data['file'] = $svgImageLink->getSvgFile($tagAttributes);
+
 
     }
 

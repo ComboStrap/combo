@@ -112,6 +112,11 @@ class TagAttributes
     {
         $attributes = array();
         foreach ($htmlAttributes as $key => $attribute) {
+
+            if (empty($attribute)) {
+                continue;
+            }
+
             /**
              * Life is hard
              */
@@ -273,7 +278,7 @@ class TagAttributes
                 "aria-*" => $multiple];
             foreach ($orderPatterns as $pattern => $type) {
                 foreach ($tempHtmlArray as $name => $value) {
-                    if(empty($value)){
+                    if (empty($value)) {
                         break;
                     }
                     $searchPattern = "^$pattern$";
@@ -365,7 +370,7 @@ class TagAttributes
 
 
     /**
-     * @return array
+     * @return array - an array of key string and value
      */
     public function toCallStackArray()
     {
@@ -435,9 +440,18 @@ class TagAttributes
 
     }
 
-   public function getComponentAttributes(){
+    public function getComponentAttributes()
+    {
         return $this->componentAttributes;
-   }
+    }
+
+    public function removeComponentAttributeIfPresent($attributeName)
+    {
+        if ($this->hasComponentAttribute($attributeName)) {
+            unset($this->componentAttributes[$attributeName]);
+        }
+
+    }
 
 
 }

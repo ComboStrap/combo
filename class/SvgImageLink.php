@@ -76,6 +76,16 @@ class SvgImageLink extends InternalMediaLink
             LazyLoad::addLozadSnippet();
         }
 
+        /**
+         * Remove the cache attribute
+         * (no cache for the img tag)
+         */
+        $this->tagAttributes->removeComponentAttributeIfPresent(InternalMediaLink::CACHE_KEY);
+
+        /**
+         * Remove linking (not yet implemented)
+         */
+        $this->tagAttributes->removeComponentAttributeIfPresent(InternalMediaLink::LINKING_KEY);
 
         /**
          * Class
@@ -94,9 +104,6 @@ class SvgImageLink extends InternalMediaLink
             PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
             $functionalClass = "combo-svg-injection";
         }
-
-
-
 
 
         /**
@@ -139,11 +146,9 @@ class SvgImageLink extends InternalMediaLink
         /**
          * Return the image
          */
-        return '<img '.$this->tagAttributes->toHTMLString().'>';
+        return '<img ' . $this->tagAttributes->toHTMLString() . '>';
 
     }
-
-
 
 
     public function getAbsoluteUrl()
@@ -162,16 +167,9 @@ class SvgImageLink extends InternalMediaLink
 
         if ($this->exists()) {
 
-            /**
-             * Link attribute
-             * No width and height
-             * There are embedded in the inline
-             * or set in the img element
-             * No need to resize, the browser do it
-             */
+
             $att = array();
 
-                $att['cache'] = "to change";
 
             /**
              * Width and height are extern style properties
@@ -180,11 +178,18 @@ class SvgImageLink extends InternalMediaLink
              * because the svg can fit
              * They are more the max-width notion
              */
-//            if (!empty($this->getRequestedWidth())){
-//                $att['w'] = $this->getRequestedWidth();
-//            }
+            if (!empty($this->getRequestedWidth())){
+                $att['w'] = $this->getRequestedWidth();
+            }
+            if (!empty($this->getRequestedHeight())){
+                $att['h'] = $this->getRequestedHeight();
+            }
+            $cache = $this->getCache();
+            if (!empty($cache)) {
+                $att[InternalMediaLink::CACHE_KEY] = $cache;
+            }
             $direct = true;
-            return ml($this->getId(), $att, $direct, '&', $absolute);
+            return ml($this->getId(), $att, $direct, InternalMediaLink::URL_ENCODED_AND, $absolute);
 
         } else {
 

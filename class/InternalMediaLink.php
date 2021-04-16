@@ -56,6 +56,12 @@ abstract class InternalMediaLink extends DokuPath
     const CONF_IMAGE_ENABLE = "imageEnable";
     const CANONICAL = "image";
 
+    /**
+     * This URL encoding is mandatory for the {@link ml} function
+     * when there is a width and use them not otherwise
+     */
+    const URL_ENCODED_AND = '&amp;';
+
     private $id;
 
     private $lazyLoad = null;
@@ -133,7 +139,7 @@ abstract class InternalMediaLink extends DokuPath
         $tagAttributes->addComponentAttributeValue(TagAttributes::ALIGN_KEY, $align);
         $tagAttributes->addComponentAttributeValue(self::WIDTH_KEY, $width);
         $tagAttributes->addComponentAttributeValue(self::HEIGHT_KEY, $height);
-        $tagAttributes->addComponentAttributeValue(self::CACHE_KEY, self::toComponentCacheValue($cache));
+        $tagAttributes->addComponentAttributeValue(self::CACHE_KEY, $cache);
         $tagAttributes->addComponentAttributeValue(self::LINKING_KEY, $linking);
 
         return self::createMediaPathFromId($id, $tagAttributes);
@@ -141,11 +147,14 @@ abstract class InternalMediaLink extends DokuPath
     }
 
     /**
+     * A function to explicitly create an internal media from
+     * a call stack array (ie key string and value) that we get in the {@link SyntaxPlugin::render()}
+     * from the {@link InternalMediaLink::toCallStackArray()}
+     *
      * @param $attributes - the attributes created by the function {@link InternalMediaLink::getParseAttributes()}
-     * @return RasterImageLink
-     * The known attributes are also deleted
+     * @return InternalMediaLink|RasterImageLink|SvgImageLink
      */
-    public static function createFromPropertyArray(&$attributes)
+    public static function createFromCallStackArray(&$attributes)
     {
 
         $src = cleanID($attributes['src']);
@@ -162,9 +171,6 @@ abstract class InternalMediaLink extends DokuPath
             unset($attributes[self::TYPE_KEY]);
         }
 
-        if (key_exists(self::CACHE_KEY, $attributes)) {
-            $attributes[self::CACHE_KEY] = self::toComponentCacheValue($attributes[self::CACHE_KEY]);
-        }
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
@@ -172,6 +178,10 @@ abstract class InternalMediaLink extends DokuPath
 
     }
 
+    /**
+     * @param $match - the match of the renderer (just a shortcut)
+     * @return InternalMediaLink|RasterImageLink|SvgImageLink|null
+     */
     public static function createFromRenderMatch($match)
     {
         $attributes = self::getParseAttributes($match);
@@ -196,27 +206,9 @@ abstract class InternalMediaLink extends DokuPath
             }
         }
 
-        return self::createFromPropertyArray($attributes);
+        return self::createFromCallStackArray($attributes);
     }
 
-    /**
-     * Cache transformation
-     * From Image cache value (https://www.dokuwiki.org/images#caching)
-     * to {@link Cache::setMaxAgeInSec()}
-     */
-    private static function toComponentCacheValue($cacheValue)
-    {
-        switch ($cacheValue) {
-            case "nocache":
-                return -1;
-            case "recache":
-                global $conf;
-                return $conf['cachetime'];
-            default:
-                return $cacheValue;
-        }
-
-    }
 
 
     public function setLazyLoad($false)
@@ -273,25 +265,6 @@ abstract class InternalMediaLink extends DokuPath
         return $internalMedia;
     }
 
-    /**
-     * Return the same array than with the {@link self::parse()} method
-     * that is used in the {@link CallStack}
-     */
-    public function toPropertyArray()
-    {
-        $array = array(
-            'type' => null, // ??? internal, external media
-            'src' => $this->getId(),
-            self::TITLE_KEY => $this->getTitle(),
-            TagAttributes::ALIGN_KEY => $this->getAlign(),
-            self::WIDTH_KEY => $this->getRequestedWidth(),
-            self::HEIGHT_KEY => $this->getRequestedHeight(),
-            self::CACHE_KEY => $this->getCache(),
-            self::LINKING_KEY => $this->getLinking()
-        );
-        // Add the extra attribute
-        return array_merge($this->getTagAttributes()->toCallStackArray(), $array);
-    }
 
     /**
      * A function to set explicitly which array format
@@ -301,25 +274,28 @@ abstract class InternalMediaLink extends DokuPath
      * This is to make the difference with the {@link InternalMediaLink::createFromIndexAttributes()}
      * that is indexed by number (ie without property name)
      *
-     * @return array
+     *
+     * Return the same array than with the {@link self::parse()} method
+     * that is used in the {@link CallStack}
+     *
+     * @return array of key string and value
      */
     public function toCallStackArray()
     {
-        return $this->toPropertyArray();
+        /**
+         * The only attributes that are not in the {@link InternalMediaLink::$tagAttributes}
+         * component attributes are type and src
+         */
+        $array = array(
+            'type' => null, // internal, external media, not used
+            'src' => $this->getId()
+        );
+        // Add the extra attribute
+        return array_merge($this->tagAttributes->toCallStackArray(), $array);
+
     }
 
-    /**
-     * A function to explicitly create an internal media from
-     * a call stack array that we get in the {@link SyntaxPlugin::render()}
-     * from the {@link InternalMediaLink::toCallStackArray()}
-     *
-     * @param $array
-     * @return InternalMediaLink|RasterImageLink|SvgImageLink
-     */
-    public static function createFromCallStackArray($array)
-    {
-        return self::createFromPropertyArray($array);
-    }
+
 
     /**
      * @return string the wiki syntax
@@ -381,7 +357,6 @@ abstract class InternalMediaLink extends DokuPath
     {
         return $this->getTagAttributes()->getComponentAttributeValue("linking", null);
     }
-
 
 
     public function getTagAttributes()

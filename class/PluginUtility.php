@@ -533,6 +533,12 @@ class PluginUtility
             if ($widthValue == "fit") {
                 $widthValue = "fit-content";
             }
+            /**
+             * If there is only numbers, add pixel as unit
+             */
+            if (preg_match("/[0-9]*/",$widthValue)){
+                $widthValue .= "px";
+            }
             $attributes->addStyleDeclaration('max-width', $widthValue);
 
         }

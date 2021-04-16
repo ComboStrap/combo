@@ -135,7 +135,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
                 $context = $data[PluginUtility::CONTEXT];
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $media = InternalMediaLink::createFromPropertyArray($attributes);
+                $media = InternalMediaLink::createFromCallStackArray($attributes);
 
                 if ($media->isImage()) {
 

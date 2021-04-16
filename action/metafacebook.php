@@ -114,7 +114,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = InternalMediaLink::createFromId($defaultFacebookImage);
+                $image = InternalMediaLink::createMediaPathFromId($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {

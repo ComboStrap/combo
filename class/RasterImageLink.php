@@ -89,14 +89,8 @@ class RasterImageLink extends InternalMediaLink
                 $att['cache'] = $this->getCache();
             }
             $direct = true;
-            /**
-             * This URL encoding is mandatory
-             * The below function uses them when
-             * there is a width and
-             * use them not otherwise
-             */
-            $urlEncodedAnd = '&amp;';
-            return ml($this->getId(), $att, $direct, $urlEncodedAnd, $absolute);
+
+            return ml($this->getId(), $att, $direct, InternalMediaLink::URL_ENCODED_AND, $absolute);
 
         } else {
 
@@ -117,13 +111,11 @@ class RasterImageLink extends InternalMediaLink
      * Render a link
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
      * A media can be a video also (Use
-     * @param TagAttributes $tagAttributes
      * @return string
      */
-    public function renderMediaTag(&$tagAttributes = null)
+    public function renderMediaTag()
     {
 
-        parent::renderMediaTag($tagAttributes);
 
         if ($this->exists()) {
 
@@ -133,7 +125,7 @@ class RasterImageLink extends InternalMediaLink
              * https://getbootstrap.com/docs/5.0/content/images/
              * to apply max-width: 100%; and height: auto;
              */
-            $tagAttributes->addClassName(self::RESPONSIVE_CLASS);
+            $this->tagAttributes->addClassName(self::RESPONSIVE_CLASS);
 
 
             /**
@@ -145,12 +137,12 @@ class RasterImageLink extends InternalMediaLink
              */
             $imgTagHeightValue = $this->getImgTagHeightValue();
             if (!empty($imgTagHeightValue)) {
-                $tagAttributes->addHtmlAttributeValue("height", $imgTagHeightValue . 'px');
+                $this->tagAttributes->addHtmlAttributeValue("height", $imgTagHeightValue . 'px');
                 /**
                  * By default, the browser with a height auto due to the img-fluid class
                  * takes the value of the width. To constraint it, we use max-height
                  */
-                $tagAttributes->addStyleDeclaration("max-height", $imgTagHeightValue . "px");
+                $this->tagAttributes->addStyleDeclaration("max-height", $imgTagHeightValue . "px");
             }
             $widthValue = $this->getImgTagWidthValue();
 
@@ -189,7 +181,7 @@ class RasterImageLink extends InternalMediaLink
              */
             if (!empty($widthValue)) {
 
-                $tagAttributes->addHtmlAttributeValue("width", $this->getImgTagWidthValue() . 'px');
+                $this->tagAttributes->addHtmlAttributeValue("width", $this->getImgTagWidthValue() . 'px');
 
                 // Xs
                 if ($widthValue >= $xsmWidth) {
@@ -247,7 +239,7 @@ class RasterImageLink extends InternalMediaLink
                  */
                 if (!empty($sizes)) {
                     $sizes .= "{$widthValue}px";
-                    $tagAttributes->addHtmlAttributeValue("sizes", $sizes);
+                    $this->tagAttributes->addHtmlAttributeValue("sizes", $sizes);
                 }
 
 
@@ -262,7 +254,7 @@ class RasterImageLink extends InternalMediaLink
                      */
                     LazyLoad::addLozadSnippet();
                     PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-raster");
-                    $tagAttributes->addClassName(self::LAZY_CLASS);
+                    $this->tagAttributes->addClassName(self::LAZY_CLASS);
 
                     /**
                      * A small image has no srcset
@@ -276,26 +268,26 @@ class RasterImageLink extends InternalMediaLink
                          * When lazy loading, we set the srcset to a transparent image to not download the image in the src
                          * https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
                          */
-                        $tagAttributes->addHtmlAttributeValue("src", $srcValue);
-                        $tagAttributes->addHtmlAttributeValue("srcset", LazyLoad::TRANSPARENT_GIF);
-                        $tagAttributes->addHtmlAttributeValue("data-srcset", $srcSet);
+                        $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
+                        $this->tagAttributes->addHtmlAttributeValue("srcset", LazyLoad::TRANSPARENT_GIF);
+                        $this->tagAttributes->addHtmlAttributeValue("data-srcset", $srcSet);
 
                     } else {
 
                         /**
                          * Small image but there is no little improvement
                          */
-                        $tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
+                        $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
 
                     }
 
-                    LazyLoad::addPlaceholderBackground($tagAttributes);
+                    LazyLoad::addPlaceholderBackground($this->tagAttributes);
 
 
                 } else {
 
                     if (!empty($srcSet)) {
-                        $tagAttributes->addHtmlAttributeValue("srcset", $srcSet);
+                        $this->tagAttributes->addHtmlAttributeValue("srcset", $srcSet);
                     }
 
                 }
@@ -306,9 +298,9 @@ class RasterImageLink extends InternalMediaLink
                 $lazyLoad = $this->getLazyLoad();
                 if ($lazyLoad) {
 
-                    LazyLoad::addPlaceholderBackground($tagAttributes);
-                    $tagAttributes->addHtmlAttributeValue("src", LazyLoad::TRANSPARENT_GIF);
-                    $tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
+                    LazyLoad::addPlaceholderBackground($this->tagAttributes);
+                    $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::TRANSPARENT_GIF);
+                    $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
 
                 }
 
@@ -318,12 +310,12 @@ class RasterImageLink extends InternalMediaLink
             /**
              * Title
              */
-            $tagAttributes->addHtmlAttributeValueIfNotEmpty("alt", $this->getTitle());
+            $this->tagAttributes->addHtmlAttributeValueIfNotEmpty("alt", $this->getTitle());
 
             /**
              * Create the img element
              */
-            $htmlAttributes = $tagAttributes->toHTMLString();
+            $htmlAttributes = $this->tagAttributes->toHTMLString();
             $imgHTML = "<img $htmlAttributes>";
 
         } else {

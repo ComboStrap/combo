@@ -34,6 +34,20 @@ class Cache
          * Cache Attribute
          */
         $cacheParameter = $tagAttributes->getValueAndRemove('cache', -1);
+        /**
+         * Cache transformation
+         * From Image cache value (https://www.dokuwiki.org/images#caching)
+         * to {@link Cache::setMaxAgeInSec()}
+         */
+        switch ($cacheParameter) {
+            case "nocache":
+                $cacheParameter = -1;
+                break;
+            case "recache":
+                global $conf;
+                $cacheParameter = $conf['cachetime'];
+                break;
+        }
         $this->setMaxAgeInSec($cacheParameter);
 
         /**

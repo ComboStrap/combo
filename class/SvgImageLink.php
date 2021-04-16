@@ -42,11 +42,8 @@ class SvgImageLink extends InternalMediaLink
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
 
-    private function createImgHTMLTag($tagAttributes = null)
+    private function createImgHTMLTag()
     {
-        if ($tagAttributes == null) {
-            $tagAttributes = TagAttributes::createEmpty();
-        }
 
 
         $lazyLoad = $this->getLazyLoad();
@@ -108,7 +105,7 @@ class SvgImageLink extends InternalMediaLink
         $srcValue = $this->getUrl();
         if ($lazyLoad) {
 
-            $tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
+            $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
 
             /**
              * Note: Responsive image srcset is not needed for svg
@@ -116,7 +113,7 @@ class SvgImageLink extends InternalMediaLink
 
         } else {
 
-            $tagAttributes->addHtmlAttributeValue("src", $srcValue);
+            $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
 
         }
 
@@ -125,27 +122,36 @@ class SvgImageLink extends InternalMediaLink
          * Title
          */
         if (!empty($this->getTitle())) {
-            $tagAttributes->addHtmlAttributeValue("alt", $this->getTitle());
+            $this->tagAttributes->addHtmlAttributeValue("alt", $this->getTitle());
         }
 
         /**
          * Class into data-class for injection
          */
         if ($svgInjection) {
-            if ($tagAttributes->hasComponentAttribute("class")) {
-                $tagAttributes->addHtmlAttributeValue("data-class", $tagAttributes->getValueAndRemove("class"));
+            if ($this->tagAttributes->hasComponentAttribute("class")) {
+                $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAndRemove("class"));
             }
         }
         // Add the functional class
-        $tagAttributes->addClassName($functionalClass);
+        $this->tagAttributes->addClassName($functionalClass);
 
         /**
          * Return the image
          */
-        return '<img '.$tagAttributes->toHTMLString().'>';
+        return '<img '.$this->tagAttributes->toHTMLString().'>';
 
     }
 
+
+
+
+    public function getAbsoluteUrl()
+    {
+
+        return $this->getUrl(true);
+
+    }
 
     /**
      * @param bool $absolute - use for semantic data
@@ -164,9 +170,9 @@ class SvgImageLink extends InternalMediaLink
              * No need to resize, the browser do it
              */
             $att = array();
-            if ($this->getCache()) {
-                $att['cache'] = $this->getCache();
-            }
+
+                $att['cache'] = "to change";
+
             /**
              * Width and height are extern style properties
              * Needed if the SVG is injected
@@ -187,28 +193,14 @@ class SvgImageLink extends InternalMediaLink
         }
     }
 
-    public function getAbsoluteUrl()
-    {
-
-        return $this->getUrl(true);
-
-    }
-
-
     /**
      * Render a link
      * Snippet derived from {@link \Doku_Renderer_xhtml::internalmedia()}
-     * A media can be a video also (Use
-     * @param $tagAttributes
+     * A media can be a video also
      * @return string
      */
-    public function renderMediaTag(&$tagAttributes = null)
+    public function renderMediaTag()
     {
-
-        /**
-         * To init the properties
-         */
-        parent::renderMediaTag($tagAttributes);
 
         if ($this->exists()) {
 
@@ -220,14 +212,14 @@ class SvgImageLink extends InternalMediaLink
                 /**
                  * Img tag
                  */
-                $imgHTML = $this->createImgHTMLTag($tagAttributes);
+                $imgHTML = $this->createImgHTMLTag();
 
             } else {
 
                 /**
                  * Svg tag
                  */
-                $imgHTML = file_get_contents($this->getSvgFile($tagAttributes));
+                $imgHTML = file_get_contents($this->getSvgFile());
 
             }
 
@@ -256,15 +248,13 @@ class SvgImageLink extends InternalMediaLink
         }
     }
 
-    /**
-     * @param TagAttributes $tagAttributes
-     */
-    public function getSvgFile($tagAttributes)
+
+    public function getSvgFile()
     {
 
-        $cache = new Cache($this, $tagAttributes);
+        $cache = new Cache($this, $this->tagAttributes);
         if (!$cache->cacheUsable()) {
-            $content = SvgDocument::createFromPath($this)->getXmlText($tagAttributes);
+            $content = SvgDocument::createFromPath($this)->getXmlText($this->tagAttributes);
             $cache->storeCache($content);
         }
         return $cache->getFile()->getPath();

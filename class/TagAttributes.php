@@ -82,7 +82,7 @@ class TagAttributes
      * @param $array - the array got from the {@link TagAttributes::toInternalArray()} that is passed between the {@link SyntaxPlugin::handle()} and {@link SyntaxPlugin::render()}  method
      * @return TagAttributes
      */
-    public static function createFromArray($array)
+    public static function createFromInternalArray($array)
     {
         return new TagAttributes($array);
     }
@@ -92,6 +92,10 @@ class TagAttributes
         return new TagAttributes(array());
     }
 
+    /**
+     * @param $renderArray - an array of key value pair
+     * @return TagAttributes
+     */
     public static function createFromCallStackArray($renderArray)
     {
         $attributes = self::CallStackArrayToInternalArray($renderArray);

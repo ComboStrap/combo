@@ -26,6 +26,7 @@ class Cache
      */
     public function __construct(File $path, TagAttributes &$tagAttributes)
     {
+
         $this->path = $path;
 
 

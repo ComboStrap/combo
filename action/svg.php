@@ -65,8 +65,8 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
         $event->data["mime"] = "image/svg+xml";
         $id = $event->data["media"];
-        $svgImageLink = SvgImageLink::createFromId($id);
-        $event->data['file'] = $svgImageLink->getSvgFile($tagAttributes);
+        $svgImageLink = SvgImageLink::createMediaPathFromId($id,$tagAttributes);
+        $event->data['file'] = $svgImageLink->getSvgFile();
 
 
     }

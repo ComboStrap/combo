@@ -30,31 +30,6 @@ abstract class InternalMediaLink extends DokuPath
      */
     const INTERNAL_MEDIA = "internalmedia";
     const INTERNAL_MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
-    const LINKING_KEY = 'linking';
-    const TITLE_KEY = 'title';
-    const HEIGHT_KEY = 'height';
-    const WIDTH_KEY = 'width';
-    const CACHE_KEY = 'cache';
-    const TYPE_KEY = "type";
-
-    // Pattern to capture the link as first capture group
-    const LINK_PATTERN = "{{\s*([a-z0-9A-Z:?=&.x\-_]*)\s*\|?.*}}";
-
-    const CONF_IMAGE_ENABLE = "imageEnable";
-    const CANONICAL="image";
-
-    private $id;
-
-    private $lazyLoad = null;
-
-
-
-    /**
-     * Caching of external image
-     * https://www.dokuwiki.org/images#caching
-     */
-    private $cache = true;
-
 
     /**
      * Link value:
@@ -65,33 +40,45 @@ abstract class InternalMediaLink extends DokuPath
      *
      * @var
      */
-    private $linking;
-
-
-    private $description = null;
-    /**
-     * @var TagAttributes
-     */
-    private $attributes;
-
+    const LINKING_KEY = 'linking';
     /**
      * @var string the alt attribute value (known as the title for dokuwiki)
      */
-    private $title;
-    private $requestHeight;
-    private $requestedWidth;
+    const TITLE_KEY = 'title';
+    const HEIGHT_KEY = 'height';
+    const WIDTH_KEY = 'width';
+    const CACHE_KEY = 'cache';
+    const TYPE_KEY = "type";
 
+    // Pattern to capture the link as first capture group
+    const LINK_PATTERN = "{{\s*([a-z0-9A-Z:?=&.x\-_]*)\s*\|?.*}}";
+
+    const CONF_IMAGE_ENABLE = "imageEnable";
+    const CANONICAL = "image";
+
+    private $id;
+
+    private $lazyLoad = null;
+
+
+    private $description = null;
+
+    /**
+     * @var TagAttributes
+     */
+    protected $tagAttributes;
 
 
     /**
      * Image constructor.
      * @param $id
+     * @param TagAttributes $tagAttributes
      *
      * Protected and not private
      * to allow cascading init
      * If private, the parent attributes are null
      */
-    protected function __construct($id)
+    protected function __construct($id, $tagAttributes = null)
     {
 
         /**
@@ -104,9 +91,13 @@ abstract class InternalMediaLink extends DokuPath
             LogUtility::msg("Internal error: The media id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, "support");
         }
 
-        parent::__construct($id,DokuPath::MEDIA_TYPE);
+        parent::__construct($id, DokuPath::MEDIA_TYPE);
 
-        $this->attributes = TagAttributes::createEmpty();
+        if ($tagAttributes == null) {
+            $this->tagAttributes = TagAttributes::createEmpty();
+        } else {
+            $this->tagAttributes = $tagAttributes;
+        }
     }
 
 
@@ -123,7 +114,7 @@ abstract class InternalMediaLink extends DokuPath
     }
 
     /**
-     * Create an image from internal call media attributes
+     * Create an image from dokuwiki internal call media attributes
      * @param array $callAttributes
      * @return InternalMediaLink
      */
@@ -131,20 +122,21 @@ abstract class InternalMediaLink extends DokuPath
     {
         $id = $callAttributes[0]; // path
         $title = $callAttributes[1];
-        $align = $callAttributes[2]; // not sure what to do with that
+        $align = $callAttributes[2];
         $width = $callAttributes[3];
         $height = $callAttributes[4];
-        $cache = $callAttributes[5];// not sure what to do with that
-        $linking = $callAttributes[6];// not sure what to do with that
+        $cache = $callAttributes[5];
+        $linking = $callAttributes[6];
 
-        $internalMedia = self::createFromId($id);
-        $internalMedia->setTitle($title);
-        $internalMedia->setRequestedWidth($width);
-        $internalMedia->setRequestedHeight($height);
-        $internalMedia->setNoCache($cache);
-        $internalMedia->setLinking($linking);
-        $internalMedia->setAlign($align);
-        return $internalMedia;
+        $tagAttributes = TagAttributes::createEmpty();
+        $tagAttributes->addComponentAttributeValue(self::TITLE_KEY, $title);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::ALIGN_KEY, $align);
+        $tagAttributes->addComponentAttributeValue(self::WIDTH_KEY, $width);
+        $tagAttributes->addComponentAttributeValue(self::HEIGHT_KEY, $height);
+        $tagAttributes->addComponentAttributeValue(self::CACHE_KEY, self::toComponentCacheValue($cache));
+        $tagAttributes->addComponentAttributeValue(self::LINKING_KEY, $linking);
+
+        return self::createMediaPathFromId($id, $tagAttributes);
 
     }
 
@@ -155,65 +147,28 @@ abstract class InternalMediaLink extends DokuPath
      */
     public static function createFromPropertyArray(&$attributes)
     {
+
         $src = cleanID($attributes['src']);
-        unset($attributes['src']);
-        $media = self::createFromId($src);
+        unset($attributes["src"]);
 
         /**
          * Type must be the type of the media link
          * but we don't use it actually
          * we delete it them if present
+         *
+         * All other are valid component attribute
          */
         if (key_exists(self::TYPE_KEY, $attributes)) {
             unset($attributes[self::TYPE_KEY]);
         }
-        if (key_exists(self::WIDTH_KEY, $attributes)) {
-            $width = $attributes[self::WIDTH_KEY];
-            if (!empty($width)) {
-                $media->setRequestedWidth($width);
-            }
-            unset($attributes[self::WIDTH_KEY]);
-        }
-        if (key_exists(self::HEIGHT_KEY, $attributes)) {
-            $height = $attributes[self::HEIGHT_KEY];
-            if (!empty($height)) {
-                $media->setRequestedHeight($height);
-            }
-            unset($attributes[self::HEIGHT_KEY]);
-        }
-        if (key_exists(self::TITLE_KEY, $attributes)) {
-            $title = $attributes[self::TITLE_KEY];
-            if (!empty($title)) {
-                $media->setTitle($title);
-            }
-            unset($attributes[self::TITLE_KEY]);
-        }
-        if (key_exists(self::LINKING_KEY, $attributes)) {
-            $linking = $attributes[self::LINKING_KEY];
-            if (!empty($linking)) {
-                $media->setLinking($linking);
-            }
-            unset($attributes[self::LINKING_KEY]);
-        }
+
         if (key_exists(self::CACHE_KEY, $attributes)) {
-            $nocache = $attributes[self::CACHE_KEY];
-            if (!empty($nocache)) {
-                $media->setNoCache($nocache);
-            }
-            unset($attributes[self::CACHE_KEY]);
-        }
-        if (key_exists(TagAttributes::ALIGN_KEY,$attributes)) {
-            $align = $attributes[TagAttributes::ALIGN_KEY];
-            if (!empty($align)) {
-                $media->setAlign($align);
-            }
-            unset($attributes[TagAttributes::ALIGN_KEY]);
+            $attributes[self::CACHE_KEY] = self::toComponentCacheValue($attributes[self::CACHE_KEY]);
         }
 
-        foreach ($attributes as $key => $value) {
-            $media->setAttribute($key, $value);
-        }
-        return $media;
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+
+        return self::createMediaPathFromId($src, $tagAttributes);
 
     }
 
@@ -244,6 +199,26 @@ abstract class InternalMediaLink extends DokuPath
         return self::createFromPropertyArray($attributes);
     }
 
+    /**
+     * Cache transformation
+     * From Image cache value (https://www.dokuwiki.org/images#caching)
+     * to {@link Cache::setMaxAgeInSec()}
+     */
+    private static function toComponentCacheValue($cacheValue)
+    {
+        switch ($cacheValue) {
+            case "nocache":
+                return -1;
+            case "recache":
+                global $conf;
+                return $conf['cachetime'];
+            default:
+                return $cacheValue;
+        }
+
+    }
+
+
     public function setLazyLoad($false)
     {
         $this->lazyLoad = $false;
@@ -257,13 +232,13 @@ abstract class InternalMediaLink extends DokuPath
 
     /**
      * @param $id
-     * @param string $type - optional, we already know that this is a media, the linter is not happy otherwise
+     * @param TagAttributes $tagAttributes
      * @return RasterImageLink|InternalMediaLink
      */
-    public static function createFromId($id, $type = DokuPath::MEDIA_TYPE)
+    public static function createMediaPathFromId($id, $tagAttributes = null)
     {
-        $dokuPath = DokuPath::createFromId($id,$type);
-        if ($dokuPath->getExtension()=="svg"){
+        $dokuPath = DokuPath::createFromId($id, DokuPath::MEDIA_TYPE);
+        if ($dokuPath->getExtension() == "svg") {
             /**
              * The mime type is set when uploading, not when
              * viewing.
@@ -278,21 +253,23 @@ abstract class InternalMediaLink extends DokuPath
             if (substr($mime, 6) == "svg+xml") {
                 // The require is here because Svg Image Link is child of Internal Media Link (extends)
                 require_once(__DIR__ . '/SvgImageLink.php');
-                $internalMedia = new SvgImageLink($id);
+                $internalMedia = new SvgImageLink($id, $tagAttributes);
             } else {
                 // The require is here because Raster Image Link is child of Internal Media Link (extends)
                 require_once(__DIR__ . '/RasterImageLink.php');
-                $internalMedia = new RasterImageLink($id);
+                $internalMedia = new RasterImageLink($id, $tagAttributes);
             }
         } else {
             if ($mime == false) {
                 LogUtility::msg("The mime type of the media ($id) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
-                $internalMedia = new RasterImageLink($id);
+                $internalMedia = new RasterImageLink($id, $tagAttributes);
             } else {
                 LogUtility::msg("The type ($mime) of media ($id) is not an image", LogUtility::LVL_MSG_ERROR, "image");
                 $internalMedia = null;
             }
         }
+
+
         return $internalMedia;
     }
 
@@ -313,8 +290,7 @@ abstract class InternalMediaLink extends DokuPath
             self::LINKING_KEY => $this->getLinking()
         );
         // Add the extra attribute
-        $array = array_merge($this->getAttributes()->toCallStackArray(),$array);
-        return $array;
+        return array_merge($this->getTagAttributes()->toCallStackArray(), $array);
     }
 
     /**
@@ -364,100 +340,32 @@ abstract class InternalMediaLink extends DokuPath
         return preg_match(' / ' . InternalMediaLink::INTERNAL_MEDIA_PATTERN . ' / msSi', $text);
     }
 
-    public function setNoCache($cache)
-    {
-        $this->cache = $cache;
-    }
 
     public function getRequestedHeight()
     {
-        return $this->requestHeight;
+        return $this->tagAttributes->getValue(self::HEIGHT_KEY);
     }
 
-    /**
-     * The requested height
-     * @param $height
-     */
-    public function setRequestedHeight($height)
-    {
-        $this->requestHeight = $height;
-    }
 
     /**
      * The requested width
      */
     public function getRequestedWidth()
     {
-        return $this->requestedWidth;
-    }
-
-    /**
-     * The requested width
-     * @param $width
-     */
-    public function setRequestedWidth($width)
-    {
-        $this->requestedWidth = $width;
-    }
-
-    public function setLinking($linking)
-    {
-        $this->linking = $linking;
-    }
-
-    /**
-     * Render attribute
-     *   * 'center'
-     *   * 'right'
-     *   * 'left'
-     * @param $align
-     */
-    protected function setAlign($align)
-    {
-        /**
-         * Align is already a component attribute
-         */
-        $this->getAttributes()->addComponentAttributeValue(TagAttributes::ALIGN_KEY, $align);
+        return $this->tagAttributes->getValue(self::WIDTH_KEY);
     }
 
 
     public function getCache()
     {
-        return $this->cache;
+        return $this->tagAttributes->getValue(self::CACHE_KEY);
     }
 
     protected function getTitle()
     {
-        return $this->title;
+        return $this->tagAttributes->getValue(self::TITLE_KEY);
     }
 
-    /**
-     * @param $title - the alt of the link
-     */
-    protected function setTitle($title)
-    {
-        $this->title = $title;
-    }
-
-    private function setAlt($title)
-    {
-        $this->setTitle($title);
-    }
-
-    public function setDescription($description)
-    {
-        $this->setTitle($description);
-    }
-
-    public function getDescription()
-    {
-        return $this->getTitle();
-    }
-
-    public function getAlt()
-    {
-        return $this->getTitle();
-    }
 
     public function __toString()
     {
@@ -466,44 +374,29 @@ abstract class InternalMediaLink extends DokuPath
 
     private function getAlign()
     {
-        return $this->getAttributes()->getComponentAttributeValue(TagAttributes::ALIGN_KEY, null);
+        return $this->getTagAttributes()->getComponentAttributeValue(TagAttributes::ALIGN_KEY, null);
     }
 
     private function getLinking()
     {
-        return $this->getAttributes()->getComponentAttributeValue("linking", null);
+        return $this->getTagAttributes()->getComponentAttributeValue("linking", null);
     }
+
+
+
+    public function getTagAttributes()
+    {
+
+        return $this->tagAttributes;
+    }
+
 
     /**
-     * @param TagAttributes $tagAttributes
+     * @return string - the HTML
      */
-    public function renderMediaTag(&$tagAttributes = null)
-    {
-        if ($tagAttributes == null) {
-            $tagAttributes = $this->getAttributes();
-        }
-
-    }
-
-
-    public function getAttributes()
-    {
-
-        return $this->attributes;
-    }
-
-    public function setAttribute($key, $value)
-    {
-        $this->getAttributes()->addComponentAttributeValue($key, $value);
-    }
-
-    public function getAttribute($key)
-    {
-        return $this->getAttributes()->getComponentAttributeValue($key, null);
-    }
+    public abstract function renderMediaTag();
 
     public abstract function getAbsoluteUrl();
-
 
 
 }

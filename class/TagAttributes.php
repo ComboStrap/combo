@@ -47,6 +47,7 @@ class TagAttributes
      */
     const LINKING_KEY = 'linking';
     const WIDTH_KEY = 'width';
+    const REV_KEY = "rev";
 
     /**
      * @var array attribute that were set on a component

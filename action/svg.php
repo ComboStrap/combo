@@ -51,7 +51,9 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         if ($event->data['ext'] != 'svg') return;
         if ($event->data['status'] >= 400) return; // ACLs and precondition checks
 
+        foreach ($_REQUEST as $name => $value){
 
+        }
         $tagAttributes = TagAttributes::createEmpty();
         $width = $event->data['width'];
         if ($width != 0) {

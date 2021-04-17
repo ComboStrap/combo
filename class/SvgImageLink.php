@@ -204,11 +204,17 @@ class SvgImageLink extends InternalMediaLink
                          * the sizing should apply to img
                          */
                         break;
-
                 }
 
                 if (!empty($value)) {
                     $att[$newName] = trim($value);
+                }
+
+                /**
+                 * Cache bursting
+                 */
+                if (!$this->tagAttributes->hasComponentAttribute(TagAttributes::REV_KEY)){
+                    $att[TagAttributes::REV_KEY] = $this->getRevision();
                 }
 
 

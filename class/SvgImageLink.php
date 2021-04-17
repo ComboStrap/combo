@@ -182,7 +182,7 @@ class SvgImageLink extends InternalMediaLink
                          * This attribute should not come in the
                          * img tag
                          */
-                        $this->tagAttributes->removeComponentAttributeIfPresent($name);
+                        //$this->tagAttributes->removeComponentAttributeIfPresent($name);
                         break;
                     case TagAttributes::ALIGN_KEY:
                         /**

@@ -7,9 +7,18 @@ window.addEventListener("load", function (event) {
                     each: function (svg) {
                         // Style copy (max width)
                         // If any error, svg is a string with the error
-                        // Example: Unable to load SVG file: http://doku/_media/ui/preserveaspectratio.svg
-                        svg.style.cssText = el.style.cssText;
-                        el.dataset.class.split(" ").forEach(e => svg.classList.add(e));
+                        // Example: `Unable to load SVG file: http://doku/_media/ui/preserveaspectratio.svg`
+                        if (typeof svg === 'object') {
+                            if (el.hasOwnProperty("style")) {
+                                svg.style.cssText = el.style.cssText;
+                            }
+                            if (el.hasOwnProperty("dataset")) {
+                                let dataSet = el.dataset;
+                                if (dataSet.hasOwnProperty("class")) {
+                                    dataSet.class.split(" ").forEach(e => svg.classList.add(e));
+                                }
+                            }
+                        }
                     },
                 }
             )

@@ -57,6 +57,7 @@ class TagAttributes
      */
     const BUSTER_KEY = "buster";
 
+
     /**
      * @var array attribute that were set on a component
      */
@@ -177,6 +178,11 @@ class TagAttributes
      */
     public static function toPixelLengthIfNoSpecified($value)
     {
+        /**
+         * A length value may be also `fit-content`
+         * we just check that if there is only number,
+         * we add the pixel
+         */
         if (preg_match("/^[0-9]*$/", $value)) {
             return $value . "px";
         } else {

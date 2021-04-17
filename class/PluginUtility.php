@@ -93,6 +93,7 @@ class PluginUtility
      * Center should be a block (svg is not a block by default for instance)
      */
     const CENTER_CLASS = "mx-auto d-block";
+    const RIGHT_CLASS = "float-right d-block";
 
 
     /**
@@ -533,13 +534,8 @@ class PluginUtility
             if ($widthValue == "fit") {
                 $widthValue = "fit-content";
             }
-            /**
-             * If there is only numbers, add pixel as unit
-             */
-            if (preg_match("/[0-9]*/",$widthValue)){
-                $widthValue .= "px";
-            }
-            $attributes->addStyleDeclaration('max-width', $widthValue);
+
+            $attributes->addStyleDeclaration('max-width', TagAttributes::toPixelLengthIfNoSpecified($widthValue));
 
         }
 
@@ -797,11 +793,20 @@ class PluginUtility
     public static function processAlignAttributes(&$attributes)
     {
         // The class shortcut
-        $align = "align";
+        $align = TagAttributes::ALIGN_KEY;
         if ($attributes->hasComponentAttribute($align)) {
             $alignValue = $attributes->getValueAndRemove($align);
-            if ($alignValue == "center") {
-                $attributes->addClassName(PluginUtility::CENTER_CLASS);
+            switch ($alignValue) {
+                case "center":
+                    $attributes->addClassName(PluginUtility::CENTER_CLASS);
+                    break;
+                case "right":
+                    $attributes->addClassName(PluginUtility::RIGHT_CLASS);
+
+                    // position relative and z-index are needed to put the float above
+                    $attributes->addStyleDeclaration("position","relative!important");
+                    $attributes->addStyleDeclaration("z-index",1);
+                    break;
             }
         }
     }

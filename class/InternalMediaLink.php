@@ -32,7 +32,7 @@ abstract class InternalMediaLink extends DokuPath
     const INTERNAL_MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
 
     // Pattern to capture the link as first capture group
-    const LINK_PATTERN = "{{\s*([a-z0-9A-Z:?=&.x\-_]*)\s*\|?.*}}";
+    const LINK_PATTERN = "{{\s*([^|\s]*)\s*\|?.*}}";
 
     const CONF_IMAGE_ENABLE = "imageEnable";
     const CANONICAL = "image";

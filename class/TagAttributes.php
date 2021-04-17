@@ -47,7 +47,15 @@ class TagAttributes
      */
     const LINKING_KEY = 'linking';
     const WIDTH_KEY = 'width';
-    const REV_KEY = "rev";
+
+    /**
+     * buster got the same value
+     * that the `rev` attribute (ie mtime)
+     * We don't use rev as cache buster because Dokuwiki still thinks
+     * that this is an old file and search in the attic
+     * as seen in the function {@link mediaFN()}
+     */
+    const BUSTER_KEY = "buster";
 
     /**
      * @var array attribute that were set on a component

@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../class/Cache.php');
 
 use ComboStrap\Auth;
 use ComboStrap\File;
+use ComboStrap\LogUtility;
 use ComboStrap\Resources;
 use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
@@ -51,9 +52,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         if ($event->data['ext'] != 'svg') return;
         if ($event->data['status'] >= 400) return; // ACLs and precondition checks
 
-        foreach ($_REQUEST as $name => $value){
 
-        }
         $tagAttributes = TagAttributes::createEmpty();
         $width = $event->data['width'];
         if ($width != 0) {
@@ -65,9 +64,32 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         }
         $tagAttributes->addComponentAttributeValue("cache", $event->data['cache']);
 
+        /**
+         * Add the extra attributes
+         */
+        foreach ($_REQUEST as $name => $value) {
+            switch ($name) {
+                case "media":
+                case "w":
+                case "h":
+                case "cache":
+                case TagAttributes::BUSTER_KEY:
+                case "rev":
+                case "tok": // A checker
+                    // Nothing to do, we take them
+                    break;
+                default:
+                    if (!empty($value)) {
+                        $tagAttributes->addComponentAttributeValue($name, $value);
+                    } else {
+                        LogUtility::msg("Internal Error: the value of the query name ($name) is empty", LogUtility::LVL_MSG_WARNING, SvgImageLink::CANONICAL);
+                    }
+            }
+        }
+
         $event->data["mime"] = "image/svg+xml";
         $id = $event->data["media"];
-        $svgImageLink = SvgImageLink::createMediaPathFromId($id,$tagAttributes);
+        $svgImageLink = SvgImageLink::createMediaPathFromId($id, $tagAttributes);
         $event->data['file'] = $svgImageLink->getSvgFile();
 
 

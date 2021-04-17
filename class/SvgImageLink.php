@@ -80,12 +80,12 @@ class SvgImageLink extends InternalMediaLink
          * Remove the cache attribute
          * (no cache for the img tag)
          */
-        $this->tagAttributes->removeComponentAttributeIfPresent(InternalMediaLink::CACHE_KEY);
+        $this->tagAttributes->removeComponentAttributeIfPresent(TagAttributes::CACHE_KEY);
 
         /**
          * Remove linking (not yet implemented)
          */
-        $this->tagAttributes->removeComponentAttributeIfPresent(InternalMediaLink::LINKING_KEY);
+        $this->tagAttributes->removeComponentAttributeIfPresent(TagAttributes::LINKING_KEY);
 
         /**
          * Class
@@ -167,27 +167,54 @@ class SvgImageLink extends InternalMediaLink
 
         if ($this->exists()) {
 
-
-            $att = array();
-
-
             /**
-             * Width and height are extern style properties
-             * Needed if the SVG is injected
-             * They are not the width and height of the SVG
-             * because the svg can fit
-             * They are more the max-width notion
+             * Create an array that will cary the attributes
              */
-            if (!empty($this->getRequestedWidth())){
-                $att['w'] = $this->getRequestedWidth();
+            $att = array();
+            $componentAttributes = $this->tagAttributes->getComponentAttributes();
+            foreach ($componentAttributes as $name => $value) {
+
+
+                $newName = $name;
+                switch ($name) {
+                    default:
+                        /**
+                         * This attribute should not come in the
+                         * img tag
+                         */
+                        $this->tagAttributes->removeComponentAttributeIfPresent($name);
+                        break;
+                    case TagAttributes::ALIGN_KEY:
+                        /**
+                         * We don't remove align because,
+                         * the align should apply to img
+                         */
+                        break;
+                    case TagAttributes::WIDTH_KEY:
+                        $newName = "w";
+                        /**
+                         * We don't remove width because,
+                         * the sizing should apply to img
+                         */
+                        break;
+                    case TagAttributes::HEIGHT_KEY:
+                        $newName = "h";
+                        /**
+                         * We don't remove height because,
+                         * the sizing should apply to img
+                         */
+                        break;
+
+                }
+
+                if (!empty($value)) {
+                    $att[$newName] = trim($value);
+                }
+
+
             }
-            if (!empty($this->getRequestedHeight())){
-                $att['h'] = $this->getRequestedHeight();
-            }
-            $cache = $this->getCache();
-            if (!empty($cache)) {
-                $att[InternalMediaLink::CACHE_KEY] = $cache;
-            }
+
+
             $direct = true;
             return ml($this->getId(), $att, $direct, InternalMediaLink::URL_ENCODED_AND, $absolute);
 

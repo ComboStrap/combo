@@ -29,6 +29,24 @@ use dokuwiki\Extension\SyntaxPlugin;
 class TagAttributes
 {
     const ALIGN_KEY = 'align';
+    /**
+     * @var string the alt attribute value (known as the title for dokuwiki)
+     */
+    const TITLE_KEY = 'title';
+    const CACHE_KEY = 'cache';
+    const TYPE_KEY = "type";
+    const HEIGHT_KEY = 'height';
+    /**
+     * Link value:
+     *   * 'nolink'
+     *   * 'direct': directly to the image
+     *   * 'linkonly': show only a url
+     *   * 'details': go to the details media viewer
+     *
+     * @var
+     */
+    const LINKING_KEY = 'linking';
+    const WIDTH_KEY = 'width';
 
     /**
      * @var array attribute that were set on a component
@@ -130,9 +148,11 @@ class TagAttributes
                 $explodeArray = explode(" ", $attribute);
                 $arrayValues = array();
                 foreach ($explodeArray as $explodeValue) {
+
                     $arrayValues[$explodeValue] = true;
                 }
-                $attributes[$key] = $arrayValues;
+                $lowerKey = strtolower($key);
+                $attributes[$lowerKey] = $arrayValues;
             } else {
                 LogUtility::msg("The variable value ($attribute) of the key ($key) is not a string and was ignored", LogUtility::LVL_MSG_ERROR, "support");
             }

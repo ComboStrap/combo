@@ -8,6 +8,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Page;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -161,7 +162,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
             foreach ($twitterImages as $twitterImage) {
                 if ($twitterImage->exists()) {
                     $twitterMeta[self::META_IMAGE] = $twitterImage->getAbsoluteUrl();
-                    $title = $twitterImage->getTagAttributes()->getComponentAttributeValue(InternalMediaLink::TITLE_KEY);
+                    $title = $twitterImage->getTagAttributes()->getComponentAttributeValue(TagAttributes::TITLE_KEY);
                     if (!empty($title)) {
                         $twitterMeta[self::META_IMAGE_ALT] = $title;
                     }

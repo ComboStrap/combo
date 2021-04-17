@@ -182,10 +182,10 @@ class SvgDocument extends XmlDocument
                  * and the bar component are below the brand text
                  *
                  */
-                $width = $tagAttributes->getValueAndRemove(InternalMediaLink::WIDTH_KEY,"24");
+                $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY,"24");
                 $qualifiedWidth = TagAttributes::toPixelLengthIfNoSpecified($width);
                 $tagAttributes->addHtmlAttributeValue("width", $qualifiedWidth);
-                $height = $tagAttributes->getValueAndRemove(InternalMediaLink::HEIGHT_KEY,"24");
+                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY,"24");
                 $qualifiedHeight = TagAttributes::toPixelLengthIfNoSpecified($height);
                 $tagAttributes->addHtmlAttributeValue("height", $qualifiedHeight);
                 break;

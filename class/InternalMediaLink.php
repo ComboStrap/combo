@@ -31,25 +31,6 @@ abstract class InternalMediaLink extends DokuPath
     const INTERNAL_MEDIA = "internalmedia";
     const INTERNAL_MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
 
-    /**
-     * Link value:
-     *   * 'nolink'
-     *   * 'direct': directly to the image
-     *   * 'linkonly': show only a url
-     *   * 'details': go to the details media viewer
-     *
-     * @var
-     */
-    const LINKING_KEY = 'linking';
-    /**
-     * @var string the alt attribute value (known as the title for dokuwiki)
-     */
-    const TITLE_KEY = 'title';
-    const HEIGHT_KEY = 'height';
-    const WIDTH_KEY = 'width';
-    const CACHE_KEY = 'cache';
-    const TYPE_KEY = "type";
-
     // Pattern to capture the link as first capture group
     const LINK_PATTERN = "{{\s*([a-z0-9A-Z:?=&.x\-_]*)\s*\|?.*}}";
 
@@ -135,12 +116,12 @@ abstract class InternalMediaLink extends DokuPath
         $linking = $callAttributes[6];
 
         $tagAttributes = TagAttributes::createEmpty();
-        $tagAttributes->addComponentAttributeValue(self::TITLE_KEY, $title);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::TITLE_KEY, $title);
         $tagAttributes->addComponentAttributeValue(TagAttributes::ALIGN_KEY, $align);
-        $tagAttributes->addComponentAttributeValue(self::WIDTH_KEY, $width);
-        $tagAttributes->addComponentAttributeValue(self::HEIGHT_KEY, $height);
-        $tagAttributes->addComponentAttributeValue(self::CACHE_KEY, $cache);
-        $tagAttributes->addComponentAttributeValue(self::LINKING_KEY, $linking);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, $width);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, $height);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::CACHE_KEY, $cache);
+        $tagAttributes->addComponentAttributeValue(TagAttributes::LINKING_KEY, $linking);
 
         return self::createMediaPathFromId($id, $tagAttributes);
 
@@ -167,8 +148,8 @@ abstract class InternalMediaLink extends DokuPath
          *
          * All other are valid component attribute
          */
-        if (key_exists(self::TYPE_KEY, $attributes)) {
-            unset($attributes[self::TYPE_KEY]);
+        if (key_exists(TagAttributes::TYPE_KEY, $attributes)) {
+            unset($attributes[TagAttributes::TYPE_KEY]);
         }
 
 
@@ -319,7 +300,7 @@ abstract class InternalMediaLink extends DokuPath
 
     public function getRequestedHeight()
     {
-        return $this->tagAttributes->getValue(self::HEIGHT_KEY);
+        return $this->tagAttributes->getValue(TagAttributes::HEIGHT_KEY);
     }
 
 
@@ -328,18 +309,18 @@ abstract class InternalMediaLink extends DokuPath
      */
     public function getRequestedWidth()
     {
-        return $this->tagAttributes->getValue(self::WIDTH_KEY);
+        return $this->tagAttributes->getValue(TagAttributes::WIDTH_KEY);
     }
 
 
     public function getCache()
     {
-        return $this->tagAttributes->getValue(self::CACHE_KEY);
+        return $this->tagAttributes->getValue(TagAttributes::CACHE_KEY);
     }
 
     protected function getTitle()
     {
-        return $this->tagAttributes->getValue(self::TITLE_KEY);
+        return $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
     }
 
 

@@ -95,6 +95,8 @@ class PluginUtility
     const CENTER_CLASS = "mx-auto d-block";
     const RIGHT_CLASS = "float-right d-block";
 
+    const EDIT_SECTION_TARGET = 'section';
+
 
     /**
      * The URL base of the documentation
@@ -542,6 +544,8 @@ class PluginUtility
         $heightName = "height";
         if ($attributes->hasComponentAttribute($heightName)) {
             $heightValue = trim($attributes->getValueAndRemove($heightName));
+            // Without the height value and only max-height, a box will collapse
+            $attributes->addStyleDeclaration("height", $heightValue);
             $attributes->addStyleDeclaration("max-height", $heightValue);
             /**
              * Overflow auto means that positioning element on the edge with the
@@ -804,8 +808,8 @@ class PluginUtility
                     $attributes->addClassName(PluginUtility::RIGHT_CLASS);
 
                     // position relative and z-index are needed to put the float above
-                    $attributes->addStyleDeclaration("position","relative!important");
-                    $attributes->addStyleDeclaration("z-index",1);
+                    $attributes->addStyleDeclaration("position", "relative!important");
+                    $attributes->addStyleDeclaration("z-index", 1);
                     break;
             }
         }
@@ -1161,6 +1165,23 @@ class PluginUtility
             return trim(substr(0, $spacePosition));
         }
 
+    }
+
+    public static function startSection($renderer, $position, $name)
+    {
+        /**
+         * New Dokuwiki Version
+         * for DokuWiki Greebo and more recent versions
+         */
+        if (defined('SEC_EDIT_PATTERN')) {
+            $renderer->startSectionEdit($position, array('target' => self::EDIT_SECTION_TARGET, 'name' => $name));
+        } else {
+            /**
+             * Old version
+             */
+            /** @noinspection PhpParamsInspection */
+            $renderer->startSectionEdit($position, self::EDIT_SECTION_TARGET, $name);
+        }
     }
 
 

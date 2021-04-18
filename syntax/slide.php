@@ -21,7 +21,6 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
      */
     var $slideCounter = 0;
 
-    const EDIT_SECTION_TARGET = 'section';// 'plugin_combo_' . self::TAG;
 
     /**
      * Syntax Type.
@@ -153,20 +152,17 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    // Id
-                    $this->slideCounter++;
-                    $name = "slide" . $this->slideCounter;
-
-                    // Section Edit button
-                    // for DokuWiki Greebo and more recent versions
+                    /**
+                     * Section Edit
+                     */
                     $position = $data[PluginUtility::POSITION];
-                    if (defined('SEC_EDIT_PATTERN')) {
+                    $this->slideCounter++;
+                    $name = self::TAG . $this->slideCounter;
+                    PluginUtility::startSection($renderer, $position, $name);
 
-                        $renderer->startSectionEdit($position, array('target' => self::EDIT_SECTION_TARGET, 'name' => $name));
-                    } else {
-                        $renderer->startSectionEdit($position, self::EDIT_SECTION_TARGET, $name);
-                    }
-
+                    /**
+                     * Attributes
+                     */
                     $attributes = $data[PluginUtility::ATTRIBUTES];
 
                     $sizeAttribute = "size";
@@ -213,8 +209,17 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= '</section>';
+
+                    /**
+                     * End section
+                     */
                     $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+
+                    /**
+                     * End component
+                     */
+                    $renderer->doc .= '</section>';
+
                     break;
             }
             return true;

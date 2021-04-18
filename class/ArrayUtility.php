@@ -24,12 +24,12 @@ class ArrayUtility
 
         $content .= '<ul>';
         foreach ($toPrint as $key => $value) {
-            if (is_array ( $value )){
-                $content .= '<li>' . $key . ' : ' ;
-                self::formatAsHtmlList($value, $content );
+            if (is_array($value)) {
+                $content .= '<li>' . $key . ' : ';
+                self::formatAsHtmlList($value, $content);
                 $content .= '</li>';
             } else {
-                if (preg_match('/date|created|modified/i',  $key ) && is_numeric($value)){
+                if (preg_match('/date|created|modified/i', $key) && is_numeric($value)) {
                     $value = date(DateTime::ISO8601, $value);
                 }
                 $stringValue = var_export($value, true);
@@ -48,20 +48,36 @@ class ArrayUtility
      */
     public static function filterArrayByKey(array &$array, $pattern)
     {
-        foreach($array as $key => &$value){
-            if (preg_match('/'.$pattern.'/i',$key)){
+        foreach ($array as $key => &$value) {
+            if (preg_match('/' . $pattern . '/i', $key)) {
                 unset($array[$key]);
             }
-            if (is_array($value)){
-                self::filterArrayByKey($value,$pattern);
+            if (is_array($value)) {
+                self::filterArrayByKey($value, $pattern);
             }
         }
     }
 
     public static function addIfNotSet(array &$array, $key, $value)
     {
-        if (!isset($array[$key])){
+        if (!isset($array[$key])) {
             $array[$key] = $value;
         }
+    }
+
+    /**
+     * @param $array
+     * @return int|string|null - the last key of an array
+     * There is a method {@link array_key_last()} but this is only available on 7.3
+     * This function will also reset the internal pointer
+     */
+    public static function array_key_last(&$array)
+    {
+        // move the internal pointer to the end of the array
+        end($array);
+        $key = key($array);
+        // By default, the pointer is on the first element
+        reset($array);
+        return $key;
     }
 }

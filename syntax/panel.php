@@ -34,6 +34,8 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     private $accordionCounter = 0;
     private $tabCounter = 0;
 
+    private $sectionCounter = 0;
+
     private static function getTags()
     {
         return [self::TAG, self::OLD_TAB_PANEL_TAG];
@@ -116,23 +118,36 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-
         /**
          * Only inside tabs and accordion
          * and tabpanels for history
          */
-        if (in_array($mode,
+        $show = in_array($mode,
             [
                 PluginUtility::getModeForComponent(syntax_plugin_combo_tabs::TAG),
                 PluginUtility::getModeForComponent(syntax_plugin_combo_accordion::TAG),
                 PluginUtility::getModeForComponent(syntax_plugin_combo_tabpanels::TAG)
-            ])) {
+            ]);
 
+        /**
+         * In preview, the panel may be alone
+         * due to the section edit button
+         */
+        if (!$show) {
+            global $ACT;
+            if ($ACT==="preview"){
+                $show = true;
+            }
+        }
+
+        /**
+         * Let's connect
+         */
+        if ($show) {
             foreach (self::getTags() as $tag) {
                 $pattern = PluginUtility::getContainerTagPattern($tag);
                 $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
             }
-
         }
 
     }
@@ -194,7 +209,13 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $tagAttributes["id"] = $id;
                             break;
                         default:
-                            LogUtility::msg("An id should be given for the context ($context)", LogUtility::LVL_MSG_ERROR, self::TAG);
+                            /**
+                             * In preview mode, we may get only the panel
+                             */
+                            global $ACT;
+                            if ($ACT!="preview") {
+                                LogUtility::msg("An id should be given for the context ($context)", LogUtility::LVL_MSG_ERROR, self::TAG);
+                            }
                     }
                 } else {
 
@@ -226,7 +247,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                                 }
                             }
                         } else {
-                            LogUtility::msg("The direct element above a " . self::OLD_TAB_PANEL_TAG . " should be a `tabs` and not a `".$siblingTag->getName()."`", LogUtility::LVL_MSG_ERROR, "tabs");
+                            LogUtility::msg("The direct element above a " . self::OLD_TAB_PANEL_TAG . " should be a `tabs` and not a `" . $siblingTag->getName() . "`", LogUtility::LVL_MSG_ERROR, "tabs");
                         }
                     }
                 }
@@ -235,7 +256,8 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::POSITION => $pos
                 );
 
             case DOKU_LEXER_UNMATCHED:
@@ -259,10 +281,17 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     }
                 }
 
+                /**
+                 * Section
+                 * +1 to go at the line
+                 */
+                $endPosition = $pos + strlen($match) + 1;
+
                 return
                     array(
                         PluginUtility::STATE => $state,
-                        PluginUtility::CONTEXT => $openingTag->getContext()
+                        PluginUtility::CONTEXT => $openingTag->getContext(),
+                        PluginUtility::POSITION => $endPosition
                     );
 
 
@@ -292,6 +321,15 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
+
+                    /**
+                     * Section (Edit button)
+                     */
+                    $position = $data[PluginUtility::POSITION];
+                    $this->sectionCounter++;
+                    $name = "section" . self::TAG . $this->sectionCounter;
+                    PluginUtility::startSection($renderer, $position, $name);
+
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
                         case syntax_plugin_combo_accordion::TAG:
@@ -317,7 +355,14 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             break;
 
                         default:
-                            LogUtility::log2FrontEnd("The context ($context) is unknown in enter rendering", LogUtility::LVL_MSG_ERROR, self::TAG);
+                            /**
+                             * The panel may be alone in preview
+                             * due to the section edit button
+                             */
+                            global $ACT;
+                            if ($ACT!="preview") {
+                                LogUtility::log2FrontEnd("The context ($context) is unknown in enter rendering", LogUtility::LVL_MSG_ERROR, self::TAG);
+                            }
                             break;
                     }
 
@@ -326,11 +371,19 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
                         case syntax_plugin_combo_accordion::TAG:
-                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF . "</div>" . DOKU_LF;
+                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF ;
                             break;
-                        default:
-                            $renderer->doc .= "</div>";
+
                     }
+                    /**
+                     * End section
+                     */
+                    $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+
+                    /**
+                     * End panel
+                     */
+                    $renderer->doc .= "</div>". DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

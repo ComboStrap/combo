@@ -51,6 +51,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * @var int a counter for an unknown card type
      */
     private $cardCounter = 0;
+    private $sectionCounter = 0;
 
 
     /**
@@ -173,10 +174,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                // A card alone
-
                 $attributes = PluginUtility::getTagAttributes($match);
-
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
 
                 $parentTag = $tag->getParent();
@@ -192,6 +190,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 /** A card without context */
                 PluginUtility::addClass2Attributes("card", $attributes);
+
                 /**
                  * Image illustration is checked on exit
                  * but we add the attributes now to avoid null exception
@@ -207,7 +206,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::POSITION => $pos
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -224,9 +224,13 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $openingTag->addAttribute(self::HAS_IMAGE_ILLUSTRATION_KEY, true);
                 }
                 $context = $openingTag->getContext();
+
+                // +1 to go at the line ?
+                $endPosition = $pos + strlen($match) + 1;
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::POSITION => $endPosition
                 );
 
 
@@ -257,6 +261,13 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER:
 
+                    /**
+                     * Section (Edit button)
+                     */
+                    $position = $data[PluginUtility::POSITION];
+                    $this->sectionCounter++;
+                    $name = "section" . self::TAG . $this->sectionCounter;
+                    PluginUtility::startSection($renderer, $position, $name);
 
                     /**
                      * Bootstrap five does not include masonry
@@ -286,6 +297,11 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT:
+
+
+                    /**
+                     * End card-body
+                     */
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
                         case syntax_plugin_combo_cardcolumns::TAG:
@@ -298,11 +314,20 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                             if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
                                 $renderer->doc .= '</div>';
                             }
-                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
+                            $renderer->doc .= '</div>' . DOKU_LF ;
                             break;
                         default:
-                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
+                            $renderer->doc .= '</div>' . DOKU_LF ;
                     }
+                    /**
+                     * End section
+                     */
+                    $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                    /**
+                     * End card
+                     */
+                    $renderer->doc .= "</div>" . DOKU_LF;
+
                     break;
 
                 case DOKU_LEXER_UNMATCHED:

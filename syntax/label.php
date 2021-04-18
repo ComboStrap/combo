@@ -123,7 +123,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
                 $tag = new Tag(self::TAG, array(), $state, $handler);
@@ -184,7 +184,14 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
                             break;
                         default:
-                            LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
+                            /**
+                             * The panel may be alone in preview
+                             * due to the section edit button
+                             */
+                            global $ACT;
+                            if ($ACT != "preview") {
+                                LogUtility::log2FrontEnd("The context ($context) of the label is unknown in enter", LogUtility::LVL_MSG_WARNING, self::TAG);
+                            }
                     }
                     break;
 
@@ -214,7 +221,14 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
                             break;
                         default:
-                            LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
+                            /**
+                             * The panel may be alone in preview
+                             * due to the section edit button
+                             */
+                            global $ACT;
+                            if ($ACT != "preview") {
+                                LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
+                            }
 
                     }
                     break;

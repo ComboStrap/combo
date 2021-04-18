@@ -16,7 +16,6 @@ namespace ComboStrap;
 require_once(__DIR__ . '/Call.php');
 
 use Doku_Handler;
-use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
 use RuntimeException;
@@ -119,7 +118,11 @@ class Tag
 
         } else {
             // The tag is not yet in the stack
-            $this->position = sizeof($this->calls);
+
+            // Get the last position
+            // We use get_last and not sizeof
+            // because some plugin may delete element of the stack
+            $this->position = ArrayUtility::array_key_last($this->calls) + 1;
             if ($attributes == null) {
                 $this->attributes = array();
             } else {
@@ -235,6 +238,22 @@ class Tag
              */
             while ($callStackPosition > 0) {
 
+
+                /**
+                 * If element were deleted,
+                 * the previous calls may be empty
+                 * make sure that we got something
+                 */
+                while (!isset($this->calls[$callStackPosition]) && $callStackPosition > 0) {
+                    $callStackPosition = $this->position - 1;
+                }
+                if ($callStackPosition <= 0) {
+                    break;
+                }
+
+                /**
+                 * Get the previous call
+                 */
                 $previousCallArray = $this->calls[$callStackPosition];
                 $previousCall = new Call($previousCallArray);
                 $parentCallState = $previousCall->getState();

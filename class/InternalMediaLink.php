@@ -43,6 +43,15 @@ abstract class InternalMediaLink extends DokuPath
      */
     const URL_ENCODED_AND = '&amp;';
 
+    /**
+     * Default image linking value
+     */
+    const CONF_DEFAULT_LINKING = "defaultImageLinking";
+    const CONF_LINKING_DIRECT_VALUE = 'direct';
+    const CONF_LINKING_NOLINK_VALUE = 'nolink';
+    const CONF_LINKING_DETAILS_VALUE = 'details';
+    const CONF_LINKING_LINKONLY_VALUE = "linkonly";
+
     private $id;
 
     private $lazyLoad = null;
@@ -171,6 +180,11 @@ abstract class InternalMediaLink extends DokuPath
     {
         $attributes = self::getParseAttributes($match);
 
+        /**
+         * Do we have a linking attribute
+         */
+        $linkingAttributeFound = false;
+
         // Add the non-standard attribute in the form name=value
         $matches = array();
         $pattern = self::LINK_PATTERN;
@@ -186,11 +200,20 @@ abstract class InternalMediaLink extends DokuPath
                     if ($equalCharacterPosition !== false) {
                         $parameterProp = explode("=", $parameter);
                         $attributes[$parameterProp[0]] = $parameterProp[1];
+                    } else {
+                        if ($linkingAttributeFound == false
+                            &&
+                            preg_match('/(nolink|direct|linkonly|details)/i', $parameter)) {
+                            $linkingAttributeFound = true;
+                        }
                     }
                 }
             }
         }
 
+        if (!$linkingAttributeFound) {
+            $attributes[TagAttributes::LINKING_KEY] = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::CONF_LINKING_DIRECT_VALUE);
+        }
         return self::createFromCallStackArray($attributes);
     }
 
@@ -379,7 +402,7 @@ abstract class InternalMediaLink extends DokuPath
          */
         $linking = $this->tagAttributes->getValueAndRemove(TagAttributes::LINKING_KEY);
         switch ($linking) {
-            case "linkonly": // show only a url
+            case self::CONF_LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(
                     $this->getId(),
                     array(
@@ -394,10 +417,10 @@ abstract class InternalMediaLink extends DokuPath
                     $title = $this->getBaseName();
                 }
                 return $imageLink->toHtmlEnterTag("a") . $title . "</a>";
-            case 'nolink':
+            case self::CONF_LINKING_NOLINK_VALUE:
                 return $this->renderMediaTag();
             default:
-            case 'direct':
+            case self::CONF_LINKING_DIRECT_VALUE:
                 //directly to the image
                 $src = ml(
                     $this->getId(),
@@ -413,7 +436,7 @@ abstract class InternalMediaLink extends DokuPath
                     $this->renderMediaTag() .
                     "</a>";
 
-            case 'details':
+            case self::CONF_LINKING_DETAILS_VALUE:
                 //go to the details media viewer
                 $src = ml(
                     $this->getId(),

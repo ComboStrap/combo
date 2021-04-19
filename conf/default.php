@@ -292,3 +292,9 @@ $conf["lazyLoadingPlaceholderColor"] = "#cbf1ea";
  */
 $conf["imageEnable"] = 1;
 
+/**
+ * Default linking value
+ * {@link \ComboStrap\InternalMediaLink::CONF_DEFAULT_LINKING}
+ */
+$conf["defaultImageLinking"] = "direct";
+

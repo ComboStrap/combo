@@ -189,6 +189,8 @@ $lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(Laz
 /**
  * Image
  */
-$lang[InternalMediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(InternalMediaLink::CANONICAL,"If unchecked, the image component will be disabled")
+$lang[InternalMediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(InternalMediaLink::CANONICAL,"If unchecked, the image component will be disabled");
+
+$lang[InternalMediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(InternalMediaLink::CANONICAL,"The default link option from an internal image.");
 
 ?>

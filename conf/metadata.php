@@ -235,3 +235,13 @@ $meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("string");
  * Internal media
  */
 $meta[InternalMediaLink::CONF_IMAGE_ENABLE] = array('onoff');
+
+/**
+ * Internal media default linking
+ */
+$meta[InternalMediaLink::CONF_DEFAULT_LINKING] = array('multichoice', '_choices' => array(
+    InternalMediaLink::CONF_LINKING_DIRECT_VALUE,
+    InternalMediaLink::CONF_LINKING_DETAILS_VALUE,
+    InternalMediaLink::CONF_LINKING_LINKONLY_VALUE,
+    InternalMediaLink::CONF_LINKING_NOLINK_VALUE,
+));

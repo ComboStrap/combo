@@ -113,6 +113,13 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             default:
                                 LogUtility::log2FrontEnd("The label is included in the $grandFatherName component and this is unexpected", LogUtility::LVL_MSG_WARNING, self::TAG);
                         }
+                    } else {
+                        /**
+                         * An panel may render alone in preview
+                         */
+                        if ($parentTag->getContext() == syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE) {
+                            $context = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE;
+                        }
                     }
                 }
 
@@ -179,19 +186,18 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $dataNamespace = Bootstrap::getDataNamespace();
                             $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
                             break;
-                        case  syntax_plugin_combo_tabs::TAG:
+                        case syntax_plugin_combo_tabs::TAG:
                             $attributes = $data[PluginUtility::ATTRIBUTES];
                             $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
                             break;
+                        case syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE:
+                            $attributes = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
+                            $renderer->doc .= "<ul style=\"list-style-type: none;padding-inline-start: 0;\">";
+                            $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
+                            break;
                         default:
-                            /**
-                             * The panel may be alone in preview
-                             * due to the section edit button
-                             */
-                            global $ACT;
-                            if ($ACT != "preview") {
-                                LogUtility::log2FrontEnd("The context ($context) of the label is unknown in enter", LogUtility::LVL_MSG_WARNING, self::TAG);
-                            }
+                            LogUtility::log2FrontEnd("The context ($context) of the label is unknown in enter", LogUtility::LVL_MSG_WARNING, self::TAG);
+
                     }
                     break;
 
@@ -217,18 +223,16 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse $showClass\" aria-labelledby=\"$headingId\" data-{$dataNamespace}parent=\"#$headingId\">";
                             $renderer->doc .= "<div class=\"card-body\">" . DOKU_LF;
                             break;
-                        case  syntax_plugin_combo_tabs::TAG:
+                        case syntax_plugin_combo_tabs::TAG:
                             $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
                             break;
+                        case syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE:
+                            $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
+                            $renderer->doc .= "</ul>";
+                            break;
                         default:
-                            /**
-                             * The panel may be alone in preview
-                             * due to the section edit button
-                             */
-                            global $ACT;
-                            if ($ACT != "preview") {
-                                LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
-                            }
+                            LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
+
 
                     }
                     break;

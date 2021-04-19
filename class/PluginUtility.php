@@ -1184,6 +1184,46 @@ class PluginUtility
         }
     }
 
+    /**
+     * Add an enter call to the stack
+     * @param \Doku_Handler $handler
+     * @param $tagName
+     * @param array $callStackArray
+     */
+    public static function addEnterCall(
+        \Doku_Handler &$handler,
+        $tagName,
+        $callStackArray = array()
+    )
+    {
+        $pluginName = PluginUtility::getComponentName($tagName);
+        $handler->addPluginCall(
+            $pluginName,
+            $callStackArray,
+            DOKU_LEXER_ENTER,
+            null,
+            null
+        );
+    }
+
+    /**
+     * Add an end call dynamically
+     * @param \Doku_Handler $handler
+     * @param $tagName
+     * @param array $callStackArray
+     */
+    public static function addEndCall(\Doku_Handler $handler, $tagName,$callStackArray = array())
+    {
+        $pluginName = PluginUtility::getComponentName($tagName);
+        $handler->addPluginCall(
+            $pluginName,
+            $callStackArray,
+            DOKU_LEXER_END,
+            null,
+            null
+        );
+    }
+
 
 }
 

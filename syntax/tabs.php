@@ -186,7 +186,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
      * @param $attributes
      * @return string - the opening HTML code of the tab navigational header
      */
-    private static function openNavigationalTabsElement(&$attributes)
+    public static function openNavigationalTabsElement(&$attributes)
     {
         $htmlAttributes = $attributes;
         /**
@@ -464,7 +464,6 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                                 $lastLabelCall = $handler->calls[$lastPosition];
                                 $lastLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
                                 $navigationalCallElements[] = $lastLabelCall;
-                                continue;
                             }
 
                         }

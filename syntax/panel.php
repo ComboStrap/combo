@@ -7,6 +7,7 @@
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -27,6 +28,16 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     const OLD_TAB_PANEL_TAG = 'tabpanel';
     const STATE = 'state';
     const SELECTED = 'selected';
+
+    /**
+     * When the panel is alone in the edit due to the sectioning
+     */
+    const CONTEXT_PREVIEW_ALONE = "preview_alone";
+    const CONTEXT_PREVIEW_ALONE_ATTRIBUTES = array(
+        self::SELECTED=>"true",
+        TagAttributes::ID_KEY => "alone",
+        TagAttributes::TYPE_KEY => syntax_plugin_combo_tabs::ENCLOSED_TABS_TYPE
+    );
 
     /**
      * @var int a counter to give an id to the accordion panel
@@ -135,7 +146,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
          */
         if (!$show) {
             global $ACT;
-            if ($ACT==="preview"){
+            if ($ACT === "preview") {
                 $show = true;
             }
         }
@@ -192,7 +203,16 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                 if ($parent != null) {
                     $context = $parent->getName();
                 } else {
-                    $context = $tagName;
+                    /**
+                     * The panel may be alone in preview
+                     * due to the section edit button
+                     */
+                    global $ACT;
+                    if ($ACT == "preview") {
+                        $context = self::CONTEXT_PREVIEW_ALONE;
+                    } else {
+                        $context = $tagName;
+                    }
                 }
 
 
@@ -208,14 +228,12 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             $id = $context . $this->tabCounter;
                             $tagAttributes["id"] = $id;
                             break;
+                        case self::CONTEXT_PREVIEW_ALONE:
+                            $tagAttributes["id"] = "alone";
+                            break;
                         default:
-                            /**
-                             * In preview mode, we may get only the panel
-                             */
-                            global $ACT;
-                            if ($ACT!="preview") {
-                                LogUtility::msg("An id should be given for the context ($context)", LogUtility::LVL_MSG_ERROR, self::TAG);
-                            }
+                            LogUtility::msg("An id should be given for the context ($context)", LogUtility::LVL_MSG_ERROR, self::TAG);
+
                     }
                 } else {
 
@@ -353,16 +371,12 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
                             $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>';
                             break;
-
+                        case self::CONTEXT_PREVIEW_ALONE:
+                            $aloneAttributes = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
+                            $renderer->doc .= syntax_plugin_combo_tabs::openTabPanelsElement($aloneAttributes);
+                            break;
                         default:
-                            /**
-                             * The panel may be alone in preview
-                             * due to the section edit button
-                             */
-                            global $ACT;
-                            if ($ACT!="preview") {
-                                LogUtility::log2FrontEnd("The context ($context) is unknown in enter rendering", LogUtility::LVL_MSG_ERROR, self::TAG);
-                            }
+                            LogUtility::log2FrontEnd("The context ($context) is unknown in enter rendering", LogUtility::LVL_MSG_ERROR, self::TAG);
                             break;
                     }
 
@@ -371,7 +385,11 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
                         case syntax_plugin_combo_accordion::TAG:
-                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF ;
+                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
+                            break;
+                        case self::CONTEXT_PREVIEW_ALONE:
+                            $aloneVariable = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
+                            $renderer->doc .= syntax_plugin_combo_tabs::closeTabPanelsElement($aloneVariable);
                             break;
 
                     }
@@ -383,7 +401,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     /**
                      * End panel
                      */
-                    $renderer->doc .= "</div>". DOKU_LF;
+                    $renderer->doc .= "</div>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

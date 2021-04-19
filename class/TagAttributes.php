@@ -47,6 +47,7 @@ class TagAttributes
      */
     const LINKING_KEY = 'linking';
     const WIDTH_KEY = 'width';
+    const ID_KEY = "id";
 
     /**
      * buster got the same value
@@ -56,6 +57,7 @@ class TagAttributes
      * as seen in the function {@link mediaFN()}
      */
     const BUSTER_KEY = "buster";
+
 
 
     /**

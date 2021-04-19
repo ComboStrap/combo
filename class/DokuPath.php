@@ -15,14 +15,22 @@ class DokuPath extends File
      * @var string
      */
     private $finalType;
+    /**
+     * @var string|null
+     */
+    private $rev;
 
     /**
      * DokuPath constructor.
      *
      * protected and not private
      * otherwise the cascading init will not work
+     *
+     * @param string $id - the id
+     * @param string $type - the type (media or page)
+     * @param string $rev - the revision (mtime)
      */
-    protected function __construct($id,$type)
+    protected function __construct($id, $type, $rev = null)
     {
         $this->id = $id;
         $this->type = $type;
@@ -35,21 +43,30 @@ class DokuPath extends File
          * We check if there is an extension
          * If this is the case, this is a media
          */
-        if ($type==self::UNKNOWN_TYPE) {
+        if ($type == self::UNKNOWN_TYPE) {
             $lastPosition = StringUtility::lastIndexOf($this->id, ".");
             if ($lastPosition === FALSE) {
-                $type=self::PAGE_TYPE;
+                $type = self::PAGE_TYPE;
             } else {
-                $type=self::MEDIA_TYPE;
+                $type = self::MEDIA_TYPE;
             }
         }
         $this->finalType = $type;
+        $this->rev = $rev;
 
 
-        if ($type==self::MEDIA_TYPE){
-            $path = mediaFN($id);
+        if ($type == self::MEDIA_TYPE) {
+            if (!empty($rev)) {
+                $path = mediaFN($id, $rev);
+            } else {
+                $path = mediaFN($id);
+            }
         } else {
-            $path = wikiFN($id);
+            if (!empty($rev)) {
+                $path = wikiFN($id, $rev);
+            } else {
+                $path = wikiFN($id);
+            }
         }
         parent::__construct($path);
     }
@@ -58,7 +75,6 @@ class DokuPath extends File
     /**
      *
      * @param $id
-     * @param string $type
      * @return DokuPath
      */
     public static function createPageFromId($id)
@@ -66,14 +82,14 @@ class DokuPath extends File
         return new DokuPath($id, DokuPath::PAGE_TYPE);
     }
 
-    public static function createMediaPathFromId($id)
+    public static function createMediaPathFromId($id, $rev= '')
     {
-        return new DokuPath($id,DokuPath::MEDIA_TYPE);
+        return new DokuPath($id, DokuPath::MEDIA_TYPE, $rev);
     }
 
     public static function createUnknownFromId($id)
     {
-        return new DokuPath($id,DokuPath::UNKNOWN_TYPE);
+        return new DokuPath($id, DokuPath::UNKNOWN_TYPE);
     }
 
     /**
@@ -93,7 +109,6 @@ class DokuPath extends File
         }
 
     }
-
 
 
     public function isGlob()
@@ -119,7 +134,20 @@ class DokuPath extends File
         return cleanID($this->id);
     }
 
-
+    /**
+     * The dokuwiki revision value
+     * as seen in the {@link basicinfo()} function
+     * is the {@link File::getModifiedTime()} of the file
+     *
+     * Let op passing a revision to Dokuwiki will
+     * make ti search to the history
+     * The actual file will then not be found
+     *
+     * @return string|null
+     */
+    public function getRevision(){
+        return $this->rev;
+    }
 
 
 }

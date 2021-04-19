@@ -133,15 +133,7 @@ class File
 
     }
 
-    /**
-     * The dokuwiki revision value
-     * as seen in the {@link basicinfo()} function
-     *
-     * @return false|int
-     */
-    public function getRevision(){
-        return @filemtime($this->path);
-    }
+
 
 
 

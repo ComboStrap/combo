@@ -64,9 +64,20 @@ class TagAttributes
     const NATURAL_SIZING_ELEMENT = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
 
     /**
+     * The logical attributes that are not becoming HTML attributes
+     */
+    const HTML_EXCLUDED_ATTRIBUTES = [
+        self::SCRIPT_KEY,
+        TagAttributes::TYPE_KEY,
+        TagAttributes::LINKING_KEY,
+        TagAttributes::CACHE_KEY
+    ];
+
+    /**
      * The inline element
      */
     const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL];
+    const SCRIPT_KEY = "script";
 
 
     /**
@@ -130,7 +141,7 @@ class TagAttributes
 
     public static function createEmpty()
     {
-        return new TagAttributes(null, array());
+        return new TagAttributes();
     }
 
     /**
@@ -309,9 +320,8 @@ class TagAttributes
             $tempHtmlArray = $this->htmlAttributes;
 
             // copy the unknown component attributes
-            $excludedAttribute = ["script", "type"];
             foreach ($this->componentAttributes as $key => $arrayValue) {
-                if (!in_array($key, $excludedAttribute)) {
+                if (!in_array($key, self::HTML_EXCLUDED_ATTRIBUTES)) {
                     $value = implode(array_keys($arrayValue), " ");
                     $tempHtmlArray[$key] = $value;
                 }
@@ -379,8 +389,13 @@ class TagAttributes
      */
     public function addHtmlAttributeValue($key, $value)
     {
+        if (empty($value)) {
+            LogUtility::msg("The value of the HTML attribute is empty, use the if empty function instead", LogUtility::LVL_MSG_ERROR, "support");
+        }
         $this->htmlAttributes[$key] = $value;
+
     }
+
 
     public function addHtmlAttributeValueIfNotEmpty($key, $value)
     {

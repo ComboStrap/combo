@@ -67,6 +67,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         /**
          * Add the extra attributes
          */
+        $rev = null;
         foreach ($_REQUEST as $name => $value) {
             switch ($name) {
                 case "media":
@@ -75,6 +76,8 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
                 case "cache":
                 case TagAttributes::BUSTER_KEY:
                 case "rev":
+                    $rev = $value;
+                    break;
                 case "tok": // A checker
                     // Nothing to do, we take them
                     break;
@@ -89,7 +92,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
         $event->data["mime"] = "image/svg+xml";
         $id = $event->data["media"];
-        $svgImageLink = SvgImageLink::createMediaPathFromId($id, $tagAttributes);
+        $svgImageLink = SvgImageLink::createMediaPathFromId($id, $rev, $tagAttributes);
         $event->data['file'] = $svgImageLink->getSvgFile();
 
 

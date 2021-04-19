@@ -135,8 +135,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
                 $context = $data[PluginUtility::CONTEXT];
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $media = InternalMediaLink::createFromCallStackArray($attributes);
-
+                $media = InternalMediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                 if ($media->isImage()) {
 
                     if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {
@@ -144,14 +143,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                         /**
                          * First image of a card
                          */
-                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                        $tagAttributes->addClassName("card-img-top");
-                        $renderer->doc .= $media->renderMediaTag($tagAttributes);
+                        $media->getTagAttributes()->addClassName("card-img-top");
+                        $renderer->doc .= $media->renderMediaTag();
                         $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
 
                     } else {
 
-                        $renderer->doc .= $media->renderMediaTag();
+                        $renderer->doc .= $media->renderMediaTagWithLink();
 
                     }
 

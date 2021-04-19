@@ -60,12 +60,14 @@ abstract class InternalMediaLink extends DokuPath
      * Image constructor.
      * @param $id
      * @param TagAttributes $tagAttributes
+     * @param string $rev - mtime
      *
      * Protected and not private
      * to allow cascading init
      * If private, the parent attributes are null
+     *
      */
-    protected function __construct($id, $tagAttributes = null)
+    protected function __construct($id, $tagAttributes = null, $rev = null)
     {
 
         /**
@@ -78,7 +80,7 @@ abstract class InternalMediaLink extends DokuPath
             LogUtility::msg("Internal error: The media id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, "support");
         }
 
-        parent::__construct($id, DokuPath::MEDIA_TYPE);
+        parent::__construct($id, DokuPath::MEDIA_TYPE, $rev);
 
         if ($tagAttributes == null) {
             $this->tagAttributes = TagAttributes::createEmpty();
@@ -134,9 +136,10 @@ abstract class InternalMediaLink extends DokuPath
      * from the {@link InternalMediaLink::toCallStackArray()}
      *
      * @param $attributes - the attributes created by the function {@link InternalMediaLink::getParseAttributes()}
+     * @param $rev - the mtime
      * @return InternalMediaLink|RasterImageLink|SvgImageLink
      */
-    public static function createFromCallStackArray(&$attributes)
+    public static function createFromCallStackArray(&$attributes, $rev = null)
     {
 
         $src = cleanID($attributes['src']);
@@ -156,7 +159,7 @@ abstract class InternalMediaLink extends DokuPath
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
-        return self::createMediaPathFromId($src, $tagAttributes);
+        return self::createMediaPathFromId($src, $rev, $tagAttributes);
 
     }
 
@@ -192,7 +195,6 @@ abstract class InternalMediaLink extends DokuPath
     }
 
 
-
     public function setLazyLoad($false)
     {
         $this->lazyLoad = $false;
@@ -207,11 +209,18 @@ abstract class InternalMediaLink extends DokuPath
     /**
      * @param $id
      * @param TagAttributes $tagAttributes
+     * @param string $rev
      * @return RasterImageLink|InternalMediaLink
      */
-    public static function createMediaPathFromId($id, $tagAttributes = null)
+    public static function createMediaPathFromId($id, $rev = null, $tagAttributes = null)
     {
-        $dokuPath = DokuPath::createMediaPathFromId($id);
+        if (is_object($rev)) {
+            LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");
+        }
+        if (!($tagAttributes instanceof TagAttributes) && $tagAttributes != null) {
+            LogUtility::msg("TagAttributes is not an instance of Tag Attributes", LogUtility::LVL_MSG_ERROR, "support");
+        }
+        $dokuPath = DokuPath::createMediaPathFromId($id, $rev);
         if ($dokuPath->getExtension() == "svg") {
             /**
              * The mime type is set when uploading, not when
@@ -228,7 +237,7 @@ abstract class InternalMediaLink extends DokuPath
             if (substr($mime, 6) == "svg+xml") {
                 // The require is here because Svg Image Link is child of Internal Media Link (extends)
                 require_once(__DIR__ . '/SvgImageLink.php');
-                $internalMedia = new SvgImageLink($id, $tagAttributes);
+                $internalMedia = new SvgImageLink($id, $tagAttributes, $rev);
             } else {
                 // The require is here because Raster Image Link is child of Internal Media Link (extends)
                 require_once(__DIR__ . '/RasterImageLink.php');
@@ -277,7 +286,6 @@ abstract class InternalMediaLink extends DokuPath
         return array_merge($this->tagAttributes->toCallStackArray(), $array);
 
     }
-
 
 
     /**
@@ -338,19 +346,96 @@ abstract class InternalMediaLink extends DokuPath
 
     private function getLinking()
     {
-        return $this->getTagAttributes()->getComponentAttributeValue("linking", null);
+        return $this->getTagAttributes()->getComponentAttributeValue(TagAttributes::LINKING_KEY, null);
     }
 
 
-    public function getTagAttributes()
+    public function &getTagAttributes()
     {
-
         return $this->tagAttributes;
     }
 
+    /**
+     * @return string - the HTML of the image inside a link if asked
+     */
+    public function renderMediaTagWithLink()
+    {
+
+        /**
+         * Link to the media
+         *
+         */
+        $imageLink = TagAttributes::createEmpty();
+        // https://www.dokuwiki.org/config:target
+        global $conf;
+        $target = $conf['target']['media'];
+        $imageLink->addHtmlAttributeValueIfNotEmpty("target", $target);
+        if (!empty($target)) {
+            $imageLink->addHtmlAttributeValue("rel", 'noopener');
+        }
+
+        /**
+         * Do we add a link to the image ?
+         */
+        $linking = $this->tagAttributes->getValueAndRemove(TagAttributes::LINKING_KEY);
+        switch ($linking) {
+            case "linkonly": // show only a url
+                $src = ml(
+                    $this->getId(),
+                    array(
+                        'id' => $this->getId(),
+                        'cache' => $this->getCache(),
+                        'rev' => $this->getRevision()
+                    )
+                );
+                $imageLink->addHtmlAttributeValue("href", $src);
+                $title = $this->getTitle();
+                if (empty($title)) {
+                    $title = $this->getBaseName();
+                }
+                return $imageLink->toHtmlEnterTag("a") . $title . "</a>";
+            case 'nolink':
+                return $this->renderMediaTag();
+            default:
+            case 'direct':
+                //directly to the image
+                $src = ml(
+                    $this->getId(),
+                    array(
+                        'id' => $this->getId(),
+                        'cache' => $this->getCache(),
+                        'rev' => $this->getRevision()
+                    ),
+                    true
+                );
+                $imageLink->addHtmlAttributeValue("href", $src);
+                return $imageLink->toHtmlEnterTag("a") .
+                    $this->renderMediaTag() .
+                    "</a>";
+
+            case 'details':
+                //go to the details media viewer
+                $src = ml(
+                    $this->getId(),
+                    array(
+                        'id' => $this->getId(),
+                        'cache' => $this->getCache(),
+                        'rev' => $this->getRevision()
+                    ),
+                    false
+                );
+                $imageLink->addHtmlAttributeValue("href", $src);
+                return $imageLink->toHtmlEnterTag("a") .
+                    $this->renderMediaTag() .
+                    "</a>";
+
+        }
+
+
+    }
 
     /**
-     * @return string - the HTML
+     * @return string - the HTML of the image
      */
     public abstract function renderMediaTag();
 

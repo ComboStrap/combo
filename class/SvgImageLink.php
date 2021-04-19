@@ -45,10 +45,11 @@ class SvgImageLink extends InternalMediaLink
      * SvgImageLink constructor.
      * @param $id
      * @param TagAttributes $tagAttributes
+     * @param string $rev
      */
-    public function __construct($id, $tagAttributes = null)
+    public function __construct($id, $tagAttributes = null, $rev='')
     {
-        parent::__construct($id, $tagAttributes);
+        parent::__construct($id, $tagAttributes, $rev);
         $this->getTagAttributes()->setTag(self::CANONICAL);
     }
 

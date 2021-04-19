@@ -58,6 +58,16 @@ class TagAttributes
      */
     const BUSTER_KEY = "buster";
 
+    /**
+     * The element that have an width and height
+     */
+    const NATURAL_SIZING_ELEMENT = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
+
+    /**
+     * The inline element
+     */
+    const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL];
+
 
     /**
      * @var array attribute that were set on a component
@@ -518,7 +528,7 @@ class TagAttributes
         return $enterTag . ">";
     }
 
-    public function getHtmlTag()
+    public function getLogicalTag()
     {
         return $this->tag;
     }

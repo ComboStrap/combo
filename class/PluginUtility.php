@@ -543,9 +543,16 @@ class PluginUtility
         $heightName = TagAttributes::HEIGHT_KEY;
         if ($attributes->hasComponentAttribute($heightName)) {
             $heightValue = trim($attributes->getValueAndRemove($heightName));
-            // Without the height value and only max-height, a box will collapse
-            $attributes->addStyleDeclaration("height", $heightValue);
-            $attributes->addStyleDeclaration("max-height", $heightValue);
+
+
+            if (in_array($attributes->getLogicalTag(), TagAttributes::NATURAL_SIZING_ELEMENT)) {
+                // A element with a natural height is responsive, we set only the max-height
+                // the height would make it non-responsive
+                $attributes->addStyleDeclaration("max-height", $heightValue);
+            } else {
+                // Without the height value, a block display will collapse
+                $attributes->addStyleDeclaration("height", $heightValue);
+            }
             /**
              * Overflow auto means that positioning element on the edge with the
              * will clip them with the {@link Position::processPosition()} position attribute
@@ -818,7 +825,7 @@ class PluginUtility
              * (svg is not a block by default for instance)
              * ! this should not be the case for flex block such as a row !
              */
-            if ($attributes->getHtmlTag()=="svg"){
+            if (in_array($attributes->getLogicalTag(),TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
                 $attributes->addClassName("d-block");
             }
         }

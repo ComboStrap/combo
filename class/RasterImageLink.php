@@ -64,7 +64,7 @@ class RasterImageLink extends InternalMediaLink
     public function __construct($id, $tagAttributes = null)
     {
         parent::__construct($id, $tagAttributes);
-        $this->getTagAttributes()->setTag("img");
+        $this->getTagAttributes()->setTag(self::CANONICAL);
 
     }
 

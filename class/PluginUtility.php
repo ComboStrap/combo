@@ -556,9 +556,11 @@ class PluginUtility
                      * max-width applies only for screen bigger than the width
                      */
                     $onTheFlyClass = "dynamic-width-$widthValue";
-                    $styleDeclaration ="@media (min-width: ${widthSinceBreakpoint}px) { .$onTheFlyClass { max-width: $qualifiedWidthValue } } .$onTheFlyClass { max-width:100% }";
+                    // The order of the declaration is important, this one must come first
+                    $mostImportantStyleDeclaration = ".$onTheFlyClass { max-width:100% }";
+                    $styleDeclaration = "$mostImportantStyleDeclaration @media (min-width: ${widthSinceBreakpoint}px) { .$onTheFlyClass { max-width: $qualifiedWidthValue } }";
                     $attributes->addClassName($onTheFlyClass);
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar($onTheFlyClass,$styleDeclaration);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar($onTheFlyClass, $styleDeclaration);
                 }
             } else {
                 $attributes->addStyleDeclaration('max-width', TagAttributes::toPixelLengthIfNoSpecified($widthValue));

@@ -12,6 +12,7 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -172,30 +173,20 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " " . self::TAG;
-                    } else {
-                        $attributes["class"] = self::TAG;
-                    }
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $attributes->addClassName("row");
 
-                    $type = "";
-                    if (isset($attributes['type'])) {
-                        $type = $attributes['type'];
-                        unset($attributes['type']);
-                    }
-
-                    if ($type=="auto"){
-                        PluginUtility::addClass2Attributes("row-cols-auto",$attributes);
+                    $type = $attributes->getValueAndRemove(TagAttributes::TYPE_KEY);
+                    if ($type == "auto") {
+                        $attributes->addClassName("row-cols-auto");
                     }
                     if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
                         && $type == "auto") {
                         // row-cols-auto is not in 4.0
-                        PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::SNIPPET_ID);
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
                     }
 
-                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-                    $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;
+                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

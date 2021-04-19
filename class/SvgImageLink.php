@@ -41,6 +41,17 @@ class SvgImageLink extends InternalMediaLink
      */
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
+    /**
+     * SvgImageLink constructor.
+     * @param $id
+     * @param TagAttributes $tagAttributes
+     */
+    public function __construct($id, $tagAttributes = null)
+    {
+        parent::__construct($id, $tagAttributes);
+        $this->getTagAttributes()->setTag("svg");
+    }
+
 
     private function createImgHTMLTag()
     {
@@ -146,7 +157,7 @@ class SvgImageLink extends InternalMediaLink
         /**
          * Return the image
          */
-        return '<img ' . $this->tagAttributes->toHTMLString() . '>';
+        return '<img ' . $this->tagAttributes->toHTMLAttributeString() . '>';
 
     }
 

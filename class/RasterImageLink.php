@@ -56,6 +56,18 @@ class RasterImageLink extends InternalMediaLink
      */
     private $mime;
 
+    /**
+     * RasterImageLink constructor.
+     * @param $id
+     * @param TagAttributes $tagAttributes
+     */
+    public function __construct($id, $tagAttributes = null)
+    {
+        parent::__construct($id, $tagAttributes);
+        $this->getTagAttributes()->setTag("img");
+
+    }
+
 
     /**
      * @param bool $absolute - use for semantic data
@@ -315,7 +327,7 @@ class RasterImageLink extends InternalMediaLink
             /**
              * Create the img element
              */
-            $htmlAttributes = $this->tagAttributes->toHTMLString();
+            $htmlAttributes = $this->tagAttributes->toHTMLAttributeString();
             $imgHTML = "<img $htmlAttributes>";
 
         } else {

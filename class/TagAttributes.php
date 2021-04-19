@@ -20,7 +20,7 @@ use dokuwiki\Extension\SyntaxPlugin;
  * You can:
  *   * declare component attribute after parsing
  *   * declare Html attribute during parsing
- *   * output the final HTML attributes at the end of the process with the function {@link TagAttributes::toHTMLString()}
+ *   * output the final HTML attributes at the end of the process with the function {@link TagAttributes::toHTMLAttributeString()}
  *
  * Component attributes have precedence on HTML attributes.
  *
@@ -59,7 +59,6 @@ class TagAttributes
     const BUSTER_KEY = "buster";
 
 
-
     /**
      * @var array attribute that were set on a component
      */
@@ -89,12 +88,21 @@ class TagAttributes
     private $finalHtmlArray = array();
 
     /**
+     * @var string the functional tag to which the attributes applies
+     * It's not an HTML tag (a div can have a flex display or a block and they don't carry this information)
+     * The tag gives also context for the attributes (ie an div has no natural width while an img has)
+     */
+    private $tag;
+
+    /**
      * ComponentAttributes constructor.
      * Use the static create function to instantiate this object
+     * @param $tag - tag (the tag gives context for the attributes (ie an div has no natural width while an img has)
      * @param array $componentAttributes
      */
-    private function __construct($componentAttributes = array())
+    private function __construct($componentAttributes = array(), $tag = null)
     {
+        $this->tag = $tag;
         $this->componentAttributes = $componentAttributes;
     }
 
@@ -105,31 +113,25 @@ class TagAttributes
     public static function createFromTagMatch($match)
     {
         $htmlAttributes = PluginUtility::getTagAttributes($match);
-        return self::createFromCallStackArray($htmlAttributes);
+        $tag = PluginUtility::getTag($match);
+        return self::createFromCallStackArray($htmlAttributes, $tag);
     }
 
-    /**
-     * @param $array - the array got from the {@link TagAttributes::toInternalArray()} that is passed between the {@link SyntaxPlugin::handle()} and {@link SyntaxPlugin::render()}  method
-     * @return TagAttributes
-     */
-    public static function createFromInternalArray($array)
-    {
-        return new TagAttributes($array);
-    }
 
     public static function createEmpty()
     {
-        return new TagAttributes(array());
+        return new TagAttributes(null, array());
     }
 
     /**
      * @param $renderArray - an array of key value pair
+     * @param string $logicalTag - the logical tag for which this attribute will apply
      * @return TagAttributes
      */
-    public static function createFromCallStackArray($renderArray)
+    public static function createFromCallStackArray($renderArray, $logicalTag = null)
     {
         $attributes = self::CallStackArrayToInternalArray($renderArray);
-        return new TagAttributes($attributes);
+        return new TagAttributes($attributes, $logicalTag);
     }
 
     /**
@@ -466,7 +468,7 @@ class TagAttributes
     }
 
 
-    public function toHTMLString()
+    public function toHTMLAttributeString()
     {
 
         $tagAttributeString = "";
@@ -503,6 +505,27 @@ class TagAttributes
             unset($this->componentAttributes[$attributeName]);
         }
 
+    }
+
+    public function toHtmlEnterTag($htmlTag)
+    {
+
+        $enterTag = "<" . $htmlTag;
+        $attributeString = $this->toHTMLAttributeString();
+        if (!empty($attributeString)) {
+            $enterTag .= " " . $attributeString;
+        }
+        return $enterTag . ">";
+    }
+
+    public function getHtmlTag()
+    {
+        return $this->tag;
+    }
+
+    public function setTag($tag)
+    {
+        $this->tag = $tag;
     }
 
 

@@ -90,10 +90,9 @@ class PluginUtility
 
     /**
      * Class to center an element
-     * Center should be a block (svg is not a block by default for instance)
      */
-    const CENTER_CLASS = "mx-auto d-block";
-    const RIGHT_CLASS = "float-right d-block";
+    const CENTER_CLASS = "mx-auto";
+    const RIGHT_CLASS = "float-right";
 
     const EDIT_SECTION_TARGET = 'section';
 
@@ -240,7 +239,7 @@ class PluginUtility
     {
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-        return $tagAttributes->toHTMLString();
+        return $tagAttributes->toHTMLAttributeString();
 
     }
 
@@ -529,7 +528,7 @@ class PluginUtility
             }
         }
 
-        $widthName = "width";
+        $widthName = TagAttributes::WIDTH_KEY;
         if ($attributes->hasComponentAttribute($widthName)) {
 
             $widthValue = trim($attributes->getValueAndRemove($widthName));
@@ -541,7 +540,7 @@ class PluginUtility
 
         }
 
-        $heightName = "height";
+        $heightName = TagAttributes::HEIGHT_KEY;
         if ($attributes->hasComponentAttribute($heightName)) {
             $heightValue = trim($attributes->getValueAndRemove($heightName));
             // Without the height value and only max-height, a box will collapse
@@ -811,6 +810,16 @@ class PluginUtility
                     $attributes->addStyleDeclaration("position", "relative!important");
                     $attributes->addStyleDeclaration("z-index", 1);
                     break;
+            }
+
+            /**
+             * For inline element,
+             * center should be a block
+             * (svg is not a block by default for instance)
+             * ! this should not be the case for flex block such as a row !
+             */
+            if ($attributes->getHtmlTag()=="svg"){
+                $attributes->addClassName("d-block");
             }
         }
     }
@@ -1212,7 +1221,7 @@ class PluginUtility
      * @param $tagName
      * @param array $callStackArray
      */
-    public static function addEndCall(\Doku_Handler $handler, $tagName,$callStackArray = array())
+    public static function addEndCall(\Doku_Handler $handler, $tagName, $callStackArray = array())
     {
         $pluginName = PluginUtility::getComponentName($tagName);
         $handler->addPluginCall(

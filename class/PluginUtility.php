@@ -536,7 +536,33 @@ class PluginUtility
                 $widthValue = "fit-content";
             }
 
-            $attributes->addStyleDeclaration('max-width', TagAttributes::toPixelLengthIfNoSpecified($widthValue));
+            if (in_array($attributes->getLogicalTag(), TagAttributes::NATURAL_SIZING_ELEMENT)) {
+                /**
+                 * For an image, if the max-width is bigger than the screen, the image is out of the screen
+                 */
+                if (is_numeric($widthValue)) {
+                    $qualifiedWidthValue = TagAttributes::toPixelLengthIfNoSpecified($widthValue);
+                    $widthSinceBreakpoint = RasterImageLink::BREAKPOINTS["lg"];
+                    foreach (RasterImageLink::BREAKPOINTS as $breakpoint) {
+                        if ($widthValue < $breakpoint) {
+                            $widthSinceBreakpoint = $breakpoint;
+                            break;
+                        }
+                    }
+                    /**
+                     * Media CSS declaration
+                     * cannot be inline
+                     * We inject then dynamically a rule
+                     * max-width applies only for screen bigger than the width
+                     */
+                    $onTheFlyClass = "dynamic-width-$widthValue";
+                    $styleDeclaration ="@media (min-width: ${widthSinceBreakpoint}px) { .$onTheFlyClass { max-width: $qualifiedWidthValue } } .$onTheFlyClass { max-width:100% }";
+                    $attributes->addClassName($onTheFlyClass);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar($onTheFlyClass,$styleDeclaration);
+                }
+            } else {
+                $attributes->addStyleDeclaration('max-width', TagAttributes::toPixelLengthIfNoSpecified($widthValue));
+            }
 
         }
 
@@ -579,7 +605,8 @@ class PluginUtility
      * @param string $color a color value
      * @return string
      */
-    public static function getColorValue($color)
+    public
+    static function getColorValue($color)
     {
         if ($color[0] == "#") {
             $colorValue = $color;
@@ -603,7 +630,8 @@ class PluginUtility
     /**
      * Return the name of the requested script
      */
-    public static function getRequestScript()
+    public
+    static function getRequestScript()
     {
         $scriptPath = null;
         $testPropertyValue = self::getPropertyValue("SCRIPT_NAME");
@@ -632,7 +660,8 @@ class PluginUtility
      * This is used to test script that are not supported by the dokuwiki test framework
      * such as css.php
      */
-    public static function getPropertyValue($name, $default = null)
+    public
+    static function getPropertyValue($name, $default = null)
     {
         global $INPUT;
         $value = $INPUT->str($name);
@@ -655,7 +684,8 @@ class PluginUtility
      * @param bool $withIcon - used to break the recursion with the message in the {@link Icon}
      * @return string - an url
      */
-    public static function getUrl($canonical, $text, $withIcon = true)
+    public
+    static function getUrl($canonical, $text, $withIcon = true)
     {
         /** @noinspection SpellCheckingInspection */
 
@@ -678,7 +708,8 @@ class PluginUtility
      * @param array $defaultAttributes - the default configuration attributes
      * @return array - a merged array
      */
-    public static function mergeAttributes(array $inlineAttributes, array $defaultAttributes = array())
+    public
+    static function mergeAttributes(array $inlineAttributes, array $defaultAttributes = array())
     {
         return array_merge($defaultAttributes, $inlineAttributes);
     }
@@ -693,7 +724,8 @@ class PluginUtility
      * @param $tag
      * @return string - a pattern
      */
-    public static function getLeafContainerTagPattern($tag)
+    public
+    static function getLeafContainerTagPattern($tag)
     {
         return '<' . $tag . '.*?>.*?<\/' . $tag . '>';
     }
@@ -704,7 +736,8 @@ class PluginUtility
      * @param $match
      * @return string the content
      */
-    public static function getTagContent($match)
+    public
+    static function getTagContent($match)
     {
         // From the first >
         $start = strpos($match, ">");
@@ -735,7 +768,8 @@ class PluginUtility
      * An indicator array should be provided
      * @return string
      */
-    public static function getRequestId()
+    public
+    static function getRequestId()
     {
 
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
@@ -758,7 +792,8 @@ class PluginUtility
      * but the one of the page
      * @return string
      */
-    public static function getPageId()
+    public
+    static function getPageId()
     {
         global $ID;
         global $INFO;
@@ -781,7 +816,8 @@ class PluginUtility
      * @param $text
      * @return string
      */
-    public static function htmlEncode($text)
+    public
+    static function htmlEncode($text)
     {
         return htmlspecialchars($text, ENT_QUOTES);
     }
@@ -792,7 +828,8 @@ class PluginUtility
      * @param $classValue
      * @param array $attributes
      */
-    public static function addClass2Attributes($classValue, array &$attributes)
+    public
+    static function addClass2Attributes($classValue, array &$attributes)
     {
         self::addAttributeValue("class", $classValue, $attributes);
     }
@@ -800,7 +837,8 @@ class PluginUtility
     /**
      * @param TagAttributes $attributes
      */
-    public static function processAlignAttributes(&$attributes)
+    public
+    static function processAlignAttributes(&$attributes)
     {
         // The class shortcut
         $align = TagAttributes::ALIGN_KEY;
@@ -825,7 +863,7 @@ class PluginUtility
              * (svg is not a block by default for instance)
              * ! this should not be the case for flex block such as a row !
              */
-            if (in_array($attributes->getLogicalTag(),TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
+            if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
                 $attributes->addClassName("d-block");
             }
         }
@@ -835,7 +873,8 @@ class PluginUtility
      * Process the attributes that have an impact on the class
      * @param TagAttributes $attributes
      */
-    public static function processSpacingAttributes(&$attributes)
+    public
+    static function processSpacingAttributes(&$attributes)
     {
 
         // Spacing is just a class
@@ -886,7 +925,8 @@ class PluginUtility
      * @param $value
      * @param array $attributes
      */
-    public static function addStyleProperty($property, $value, array &$attributes)
+    public
+    static function addStyleProperty($property, $value, array &$attributes)
     {
         if (isset($attributes["style"])) {
             $attributes["style"] .= ";$property:$value";
@@ -903,7 +943,8 @@ class PluginUtility
      * https://combostrap.com/styling/color#border_color
      * @param TagAttributes $tagAttributes
      */
-    private static function checkDefaultBorderColorAttributes(&$tagAttributes)
+    private
+    static function checkDefaultBorderColorAttributes(&$tagAttributes)
     {
         /**
          * border color was set without the width
@@ -937,7 +978,8 @@ class PluginUtility
 
     }
 
-    public static function getConfValue($confName, $defaultValue = null)
+    public
+    static function getConfValue($confName, $defaultValue = null)
     {
         global $conf;
         if (isset($conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName])) {
@@ -951,7 +993,8 @@ class PluginUtility
      * @param $match
      * @return null|string - return the tag name or null if not found
      */
-    public static function getTag($match)
+    public
+    static function getTag($match)
     {
 
         // Trim to start clean
@@ -988,7 +1031,8 @@ class PluginUtility
      * for all component except a link
      * @param TagAttributes $attributes
      */
-    public static function processCollapse(&$attributes)
+    public
+    static function processCollapse(&$attributes)
     {
 
         $collapse = "collapse";
@@ -1002,12 +1046,14 @@ class PluginUtility
     /**
      * @param string $string add a command into HTML
      */
-    public static function addAsHtmlComment($string)
+    public
+    static function addAsHtmlComment($string)
     {
         print_r('<!-- ' . self::htmlEncode($string) . '-->');
     }
 
-    public static function getResourceBaseUrl()
+    public
+    static function getResourceBaseUrl()
     {
         return DOKU_URL . 'lib/plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/resources';
     }
@@ -1016,7 +1062,8 @@ class PluginUtility
      * @param $TAG - the name of the tag that should correspond to the name of the css file in the style directory
      * @return string - a inline style element to inject in the page or blank if no file exists
      */
-    public static function getTagStyle($TAG)
+    public
+    static function getTagStyle($TAG)
     {
         $script = self::getCssRules($TAG);
         if (!empty($script)) {
@@ -1033,7 +1080,8 @@ class PluginUtility
      * @param $mode
      * @return bool
      */
-    public static function disablePreformatted($mode)
+    public
+    static function disablePreformatted($mode)
     {
         if (
             $mode == 'preformatted'
@@ -1046,12 +1094,14 @@ class PluginUtility
         }
     }
 
-    public static function getComponentName($tag)
+    public
+    static function getComponentName($tag)
     {
         return strtolower(PluginUtility::PLUGIN_BASE_NAME) . "_" . $tag;
     }
 
-    public static function addAttributeValue($attribute, $value, array &$attributes)
+    public
+    static function addAttributeValue($attribute, $value, array &$attributes)
     {
         if (array_key_exists($attribute, $attributes) && $attributes[$attribute] !== "") {
             $attributes[$attribute] .= " {$value}";
@@ -1065,12 +1115,14 @@ class PluginUtility
      * this is a convenient way to the the snippet manager
      * @return SnippetManager
      */
-    public static function getSnippetManager()
+    public
+    static function getSnippetManager()
     {
         return SnippetManager::get();
     }
 
-    public static function initSnippetManager()
+    public
+    static function initSnippetManager()
     {
         SnippetManager::init();
     }
@@ -1080,7 +1132,8 @@ class PluginUtility
      * @param $data - the data from {@link PluginUtility::handleAndReturnUnmatchedData()}
      * @return string
      */
-    public static function renderUnmatched($data)
+    public
+    static function renderUnmatched($data)
     {
 
         $payload = $data[self::PAYLOAD];
@@ -1099,7 +1152,8 @@ class PluginUtility
      * @param \Doku_Handler $handler
      * @return array
      */
-    public static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
+    public
+    static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
     {
         $tag = new Tag($tagName, array(), DOKU_LEXER_UNMATCHED, $handler);
         $sibling = $tag->getPreviousSibling();
@@ -1114,7 +1168,8 @@ class PluginUtility
         );
     }
 
-    public static function setConf($key, $value, $namespace = 'plugin')
+    public
+    static function setConf($key, $value, $namespace = 'plugin')
     {
         global $conf;
         if ($namespace != null) {
@@ -1137,7 +1192,8 @@ class PluginUtility
      * @param $match
      * @return false|string|null
      */
-    private static function getPreprocessEnterTag($match)
+    private
+    static function getPreprocessEnterTag($match)
     {
         // Until the first >
         $pos = strpos($match, ">");
@@ -1168,7 +1224,8 @@ class PluginUtility
      * @param $match
      * @return false|string|null
      */
-    public static function getSyntaxTagNameFromMatch($match)
+    public
+    static function getSyntaxTagNameFromMatch($match)
     {
         $preprocessMatch = PluginUtility::getPreprocessEnterTag($match);
 
@@ -1183,7 +1240,8 @@ class PluginUtility
 
     }
 
-    public static function startSection($renderer, $position, $name)
+    public
+    static function startSection($renderer, $position, $name)
     {
         /**
          * New Dokuwiki Version
@@ -1206,7 +1264,8 @@ class PluginUtility
      * @param $tagName
      * @param array $callStackArray
      */
-    public static function addEnterCall(
+    public
+    static function addEnterCall(
         \Doku_Handler &$handler,
         $tagName,
         $callStackArray = array()
@@ -1228,7 +1287,8 @@ class PluginUtility
      * @param $tagName
      * @param array $callStackArray
      */
-    public static function addEndCall(\Doku_Handler $handler, $tagName, $callStackArray = array())
+    public
+    static function addEndCall(\Doku_Handler $handler, $tagName, $callStackArray = array())
     {
         $pluginName = PluginUtility::getComponentName($tagName);
         $handler->addPluginCall(

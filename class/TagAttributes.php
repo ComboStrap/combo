@@ -207,6 +207,7 @@ class TagAttributes
          * A length value may be also `fit-content`
          * we just check that if there is only number,
          * we add the pixel
+         * Same as {@link is_numeric()} ?
          */
         if (preg_match("/^[0-9]*$/", $value)) {
             return $value . "px";

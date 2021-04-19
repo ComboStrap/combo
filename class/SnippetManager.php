@@ -315,7 +315,18 @@ class SnippetManager
      */
     public function &upsertCssSnippetForRequest($snippetId, $script = null)
     {
-        $snippet = &$this->attachCssSnippetForRequest($snippetId);
+        $snippet = &$this->attachCssSnippetForRequest($snippetId, $script);
+        return $snippet;
+    }
+
+    /**
+     * @param $snippetId
+     * @param string $script - the css snippet to add, otherwise it takes the file
+     * @return Snippet a snippet scoped at the bar level
+     */
+    public function &attachCssSnippetForBar($snippetId, $script=null)
+    {
+        $snippet = $this->attachSnippetFromBar($snippetId, Snippet::TYPE_CSS);
         if ($script != null) {
             $snippet->setContent($script);
         }
@@ -324,20 +335,16 @@ class SnippetManager
 
     /**
      * @param $snippetId
-     * @return Snippet a snippet scoped at the bar level
-     */
-    public function &attachCssSnippetForBar($snippetId)
-    {
-        return $this->attachSnippetFromBar($snippetId, Snippet::TYPE_CSS);
-    }
-
-    /**
-     * @param $snippetId
+     * @param string $script -  the css if any, otherwise the css file will be taken
      * @return Snippet a snippet scoped at the request scope
      */
-    public function &attachCssSnippetForRequest($snippetId)
+    public function &attachCssSnippetForRequest($snippetId, $script = null)
     {
-        return $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS);
+        $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS);
+        if ($script != null) {
+            $snippet->setContent($script);
+        }
+        return $snippet;
     }
 
     /**

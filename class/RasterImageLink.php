@@ -33,6 +33,14 @@ class RasterImageLink extends InternalMediaLink
     const CONF_RESPONSIVE_IMAGE_DPI_CORRECTION = "responsiveImageDpiCorrection";
     const LAZY_CLASS = "combo-lazy-raster";
 
+    const BREAKPOINTS =
+        array(
+            "xs" => 375,
+            "sm" => 576,
+            "md" => 768,
+            "lg" => 992
+        );
+
 
     private $imageWidth;
     /**
@@ -173,16 +181,16 @@ class RasterImageLink extends InternalMediaLink
             $imageMargin = PluginUtility::getConfValue(self::CONF_RESPONSIVE_IMAGE_MARGIN, "20px");
 
             // Xsmall
-            $extraSmallBreakPointWidth = 375;
+            $extraSmallBreakPointWidth = self::BREAKPOINTS["xs"];
             $xsmWidth = $extraSmallBreakPointWidth - $imageMargin;
             // Small
-            $smallBreakPointWidth = 576;
+            $smallBreakPointWidth = self::BREAKPOINTS["sm"];
             $smWidth = $smallBreakPointWidth - $imageMargin;
             // Medium
-            $mediumBreakpointWith = 768;
+            $mediumBreakpointWith = self::BREAKPOINTS["md"];
             $mediumWith = $mediumBreakpointWith - $imageMargin;
             // Large
-            $largeBreakpointWidth = 992;
+            $largeBreakpointWidth = self::BREAKPOINTS["lg"];
             $largeWidth = $largeBreakpointWidth - $imageMargin;
 
 
@@ -193,7 +201,7 @@ class RasterImageLink extends InternalMediaLink
              */
             if (!empty($widthValue)) {
 
-                $this->tagAttributes->addHtmlAttributeValue("width", $this->getImgTagWidthValue() . 'px');
+                $this->tagAttributes->addHtmlAttributeValue("width", TagAttributes::toPixelLengthIfNoSpecified($this->getImgTagWidthValue()));
 
                 // Xs
                 if ($widthValue >= $xsmWidth) {

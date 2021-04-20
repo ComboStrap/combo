@@ -19,7 +19,6 @@
 
 
 use ComboStrap\Icon;
-use ComboStrap\MetadataUtility;
 use ComboStrap\Prism;
 
 
@@ -157,13 +156,14 @@ $conf['excludedQualityRulesFromDynamicMonitoring'] = 'words_by_section_avg_min,w
 $conf['disableDynamicQualityMonitoring'] = 0;
 
 /**
+ * Link
  * Class in link {@link \ComboStrap\LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME}
+ * Enable {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
+ * MultiLines {@link syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK}
  */
 $conf['useDokuwikiLinkClassName'] = 0;
-/**
- * Class in link {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
- */
 $conf['disableLink'] = 0;
+$conf['enableMultiLinesLink'] = 0;
 
 /**
  * Twitter

@@ -42,8 +42,10 @@ class LinkUtility
      * are valid
      *
      * Get the content until | or ]
+     * No line break allowed
      */
-    const ENTRY_PATTERN = "\[\[[^\|\]]*(?=.*\]\])";
+    const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
+    const ENTRY_PATTERN_MULTI_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
     const EXIT_PATTERN = "\]\]";
 
     /**

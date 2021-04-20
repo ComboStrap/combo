@@ -112,11 +112,13 @@ $lang[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = Plugin
  */
 $lang[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - If chosen, the quality rules will not be monitored.)";
 $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - Disable the Quality Dynamic Monitoring feature (the quality message will not appear anymore)";
+
 /**
- * Dokuwiki Class Name
+ * Link
  */
-$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
 $lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
+$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
+$lang[syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - If checked, a link may spawn multilines";
 
 /**
  * Twitter
@@ -190,7 +192,6 @@ $lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(Laz
  * Image
  */
 $lang[InternalMediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(InternalMediaLink::CANONICAL,"If unchecked, the image component will be disabled");
-
 $lang[InternalMediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(InternalMediaLink::CANONICAL,"The default link option from an internal image.");
 
 ?>

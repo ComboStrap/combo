@@ -554,5 +554,16 @@ class TagAttributes
         $this->tag = $tag;
     }
 
+    public function removeComponentAttribute($attribute)
+    {
+        $lowerAtt = strtolower($attribute);
+        if (isset($this->componentAttributes[$lowerAtt])) {
+            unset($this->componentAttributes[$lowerAtt]);
+        } else {
+            LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR, "support");
+        }
+
+    }
+
 
 }

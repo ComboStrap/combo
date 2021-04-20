@@ -221,11 +221,21 @@ EOD;
     /**
      * Add the first block of prism
      * @param \Doku_Renderer_xhtml $renderer
-     * @param $attributes
+     * @param TagAttributes $attributes
      * @param \DokuWiki_Syntax_Plugin $plugin
      */
     public static function htmlEnter(\Doku_Renderer_xhtml $renderer, $attributes, \DokuWiki_Syntax_Plugin $plugin)
     {
+
+        /**
+         * Display none, no rendering
+         */
+        $display = $attributes->getValueAndRemove("display");
+        if ($display != null) {
+            if ($display == "none") {
+                return;
+            }
+        }
 
         $theme = $plugin->getConf(Prism::CONF_PRISM_THEME);
         /**
@@ -237,7 +247,7 @@ EOD;
         /**
          * Add HTML
          */
-        $language = strtolower($attributes["type"]);
+        $language = strtolower($attributes->getValueAndRemove(TagAttributes::TYPE_KEY));
         if ($language == "dw") {
             $language = "html";
         }
@@ -259,74 +269,91 @@ EOD;
         }
 
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);
-        PluginUtility::addClass2Attributes('language-' . $language, $attributes);
-        if (array_key_exists("line-numbers", $attributes)) {
-            unset($attributes["line-numbers"]);
-            PluginUtility::addClass2Attributes('line-numbers', $attributes);
+        $attributes->addClassName('language-' . $language);
+
+        if ($attributes->hasComponentAttribute("line-numbers")) {
+            $attributes->removeComponentAttribute("line-numbers");
+            $attributes->addClassName('line-numbers');
         }
 
         /**
-         * Pre element
+         * Pre element the bar
          */
-        $preAttributes = [];
+        $preAttributes = TagAttributes::createEmpty();
         $addedClass = 'combo_' . $plugin->getPluginComponent();
-        PluginUtility::addClass2Attributes($addedClass, $preAttributes);
+        $preAttributes->addClassName($addedClass);
+        $attributes->addClassName($addedClass);
         // Command line
-        if (array_key_exists("prompt", $attributes)) {
-            PluginUtility::addClass2Attributes("command-line", $preAttributes);
-            $preAttributes["data-prompt"] = $attributes["prompt"];
-            unset($attributes["prompt"]);
+        if ($attributes->hasComponentAttribute("prompt")) {
+            $preAttributes->addClassName("command-line");
+            $preAttributes->addHtmlAttributeValue("data-prompt", $attributes->getValueAndRemove("prompt"));
         } else {
             switch ($language) {
                 case "bash":
-                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
-                    $preAttributes["data-prompt"] = $plugin->getConf(self::CONF_BASH_PROMPT);
+                    $preAttributes->addClassName("command-line");
+                    $preAttributes->addHtmlAttributeValue("data-prompt", $plugin->getConf(self::CONF_BASH_PROMPT));
                     break;
                 case "batch":
-                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
-                    $powerShell = trim($plugin->getConf(self::CONF_BATCH_PROMPT));
-                    if (!empty($powerShell)) {
-                        if (!strpos($powerShell, -1) == ">") {
-                            $powerShell .= ">";
+                    $preAttributes->addClassName("command-line");
+                    $batch = trim($plugin->getConf(self::CONF_BATCH_PROMPT));
+                    if (!empty($batch)) {
+                        if (!strpos($batch, -1) == ">") {
+                            $batch .= ">";
                         }
                     }
-                    $preAttributes["data-prompt"] = $powerShell;
+                    $preAttributes->addHtmlAttributeValue("data-prompt", $batch);
                     break;
                 case "powershell":
-                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
+                    $preAttributes->addClassName("command-line");
                     $powerShell = trim($plugin->getConf(self::CONF_POWERSHELL_PROMPT));
                     if (!empty($powerShell)) {
                         if (!strpos($powerShell, -1) == ">") {
                             $powerShell .= ">";
                         }
                     }
-                    $preAttributes["data-prompt"] = $powerShell;
+                    $preAttributes->addHtmlAttributeValue("data-prompt", $powerShell);
                     break;
             }
         }
+
         // Download
-        $preAttributes['data-download-link'] = true;
-        if (array_key_exists(syntax_plugin_combo_code::FILE_PATH_KEY, $attributes)) {
-            $preAttributes['data-src'] = $attributes[syntax_plugin_combo_code::FILE_PATH_KEY];
-            unset($attributes[syntax_plugin_combo_code::FILE_PATH_KEY]);
-            $preAttributes['data-download-link-label'] = "Download " . $preAttributes['data-src'];
+        $preAttributes->addHtmlAttributeValue('data-download-link', true);
+        if ($attributes->hasComponentAttribute(syntax_plugin_combo_code::FILE_PATH_KEY)) {
+            $fileSrc = $attributes->getValueAndRemove(syntax_plugin_combo_code::FILE_PATH_KEY);
+            $preAttributes->addHtmlAttributeValue('data-src', $fileSrc);
+            $preAttributes->addHtmlAttributeValue('data-download-link-label', "Download " . $fileSrc);
         } else {
-            $preAttributes['data-src'] = "file." . $language;
+            $preAttributes->addHtmlAttributeValue('data-src', "file." . $language);
         }
-        $htmlCode = '<pre ' . PluginUtility::array2HTMLAttributesAsString($preAttributes) . '>' . DOKU_LF;
+        $htmlCode = $preAttributes->toHtmlEnterTag("pre") . DOKU_LF;
 
         /**
          * Code element
          */
-        $htmlCode .= '<code ';
-        PluginUtility::addClass2Attributes($addedClass, $attributes);
-        $htmlCode .= PluginUtility::array2HTMLAttributesAsString($attributes) . ' >' . DOKU_LF;
+        $htmlCode .= $attributes->toHtmlEnterTag('code') . DOKU_LF;
+
+        /**
+         * Return
+         */
         $renderer->doc .= $htmlCode;
 
     }
 
-    public static function htmlExit(\Doku_Renderer_xhtml $renderer)
+    /**
+     * @param Doku_Renderer_xhtml $renderer
+     * @param TagAttributes $attributes
+     */
+    public static function htmlExit(\Doku_Renderer_xhtml $renderer, $attributes)
     {
+        /**
+         * Display none, no rendering
+         */
+        $display = $attributes->getValueAndRemove("display");
+        if ($display != null) {
+            if ($display == "none") {
+                return;
+            }
+        }
         $renderer->doc .= '</code>' . DOKU_LF . '</pre>' . DOKU_LF;
     }
 

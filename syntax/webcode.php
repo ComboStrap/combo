@@ -18,8 +18,6 @@
  */
 
 // must be run within Dokuwiki
-use ComboStrap\Site;
-use ComboStrap\SnippetManager;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;

@@ -7,6 +7,8 @@
 use ComboStrap\Prism;
 use ComboStrap\StringUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../class/StringUtility.php');
 require_once(__DIR__ . '/../class/Prism.php');
@@ -114,10 +116,26 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                $data = PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+                /**
+                 * Attribute are send for display = none
+                 */
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $tagAttributes = $tag->getParent()->getAttributes();
+                $data[PluginUtility::ATTRIBUTES] = $tagAttributes;
+                return $data;
 
             case DOKU_LEXER_EXIT :
-                return array(PluginUtility::STATE => $state);
+                /**
+                 * Tag Attributes are passed
+                 * because it's possible to not display a code with the display attributes = none
+                 */
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $tagAttributes = $tag->getOpeningTag()->getAttributes();
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES=>$tagAttributes
+                );
 
 
         }
@@ -146,16 +164,21 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     Prism::htmlEnter($renderer, $attributes, $this);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $display = $attributes->getValue("display");
+                    if ($display!="none") {
+                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    }
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    Prism::htmlExit($renderer);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    Prism::htmlExit($renderer,$attributes);
                     break;
 
             }

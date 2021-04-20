@@ -187,9 +187,9 @@ class StringUtility
         return strrpos($string, $suffix ) === $suffixStartPosition;
     }
 
-    public static function explodeAndTrim($confNamespaceToKeeps, $delimiter=",")
+    public static function explodeAndTrim($string, $delimiter=",")
     {
-        return array_map('trim', explode($delimiter, $confNamespaceToKeeps));
+        return array_map('trim', explode($delimiter, $string));
     }
 
     public static function lastIndexOf($haystack, $needle)

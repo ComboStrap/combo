@@ -409,11 +409,16 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         // WebConsole style sheet
                         $iframeHtml .= '<link rel="stylesheet" type="text/css" href="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-iframe.css?ver=' . self::WEB_CSS_VERSION . '"/>';
 
+                        // A little margin to make it neater
+                        // that can be overwritten via cascade
+                        $iframeHtml .= '<style>body { margin:10px } /* default margin */</style>';
+
+                        // The css
                         if (array_key_exists('css', $codes)) {
                             $iframeHtml .= '<!-- The CSS code -->';
                             $iframeHtml .= '<style>' . $codes['css'] . '</style>';
                         };
-                        $iframeHtml .= '</head><body style="margin:10px">';
+                        $iframeHtml .= '</head><body>';
                         if (array_key_exists('html', $codes)) {
                             $iframeHtml .= '<!-- The HTML code -->';
                             $iframeHtml .= $codes['html'];

@@ -245,7 +245,7 @@ class Tag
                  * make sure that we got something
                  */
                 while (!isset($this->calls[$callStackPosition]) && $callStackPosition > 0) {
-                    $callStackPosition = $this->position - 1;
+                    $callStackPosition = $callStackPosition - 1;
                 }
                 if ($callStackPosition <= 0) {
                     break;

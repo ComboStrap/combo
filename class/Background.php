@@ -23,6 +23,9 @@ class Background
      * Logical attribute / not public
      */
     const BACKGROUND_IMAGE_URL = 'background-image-url';
+    const BACKGROUND_IMAGE_WIDTH = 'background-image-width';
+    const BACKGROUND_IMAGE_HEIGHT = 'background-image-height' ;
+    const BACKGROUND_IMAGE_CACHE = 'background-image-cache';
 
     /**
      * The page canonical of the documentation
@@ -41,8 +44,18 @@ class Background
             $backgroundImageStyleValue = $tagAttributes->getValueAndRemove(self::BACKGROUND_IMAGE);
         } else {
             if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_IMAGE_URL)){
-                $valueAndRemove = $tagAttributes->getValueAndRemove(self::BACKGROUND_IMAGE_URL);
-                $backgroundImageStyleValue = "url(". $valueAndRemove.")";
+                $callStackImage = array();
+                $callStackImage[InternalMediaLink::SRC_KEY] = $tagAttributes->getValueAndRemove(self::BACKGROUND_IMAGE_URL);
+                $callStackImage[TagAttributes::WIDTH_KEY] = $tagAttributes->getValueAndRemove(self::BACKGROUND_IMAGE_WIDTH);
+                $callStackImage[TagAttributes::HEIGHT_KEY] = $tagAttributes->getValueAndRemove(self::BACKGROUND_IMAGE_HEIGHT);
+                $callStackImage[TagAttributes::CACHE_KEY] = $tagAttributes->getValueAndRemove(self::BACKGROUND_IMAGE_CACHE);
+                $media = InternalMediaLink::createFromCallStackArray($callStackImage);
+                $url = $media->getUrl();
+                if ($url!==false) {
+                    $backgroundImageStyleValue = "url(" . $url . ")";
+                } else {
+                    LogUtility::msg("The image ($media) does not exist",LogUtility::LVL_MSG_WARNING,self::CANONICAL);
+                }
             }
         }
         if (!empty($backgroundImageStyleValue)){
@@ -89,21 +102,25 @@ class Background
         foreach ($mediaCallStackArray as $key => $property) {
             switch ($key) {
                 case TagAttributes::LINKING_KEY:
+                case TagAttributes::TITLE_KEY:
+                case TagAttributes::ALIGN_KEY:
+                default:
                     /**
                      * Attributes not taken
                      */
                     break;
-                case "src":
+                case InternalMediaLink::SRC_KEY:
                     $backgroundProperties[self::BACKGROUND_IMAGE_URL] = $property;
                     break;
-                case TagAttributes::CACHE_KEY:
-                default:
-                    /**
-                     * Attributes taken
-                     */
-                    $backgroundProperties[$key] = $property;
+                case TagAttributes::WIDTH_KEY:
+                    $backgroundProperties[self::BACKGROUND_IMAGE_WIDTH] = $property;
                     break;
-
+                case TagAttributes::HEIGHT_KEY:
+                    $backgroundProperties[self::BACKGROUND_IMAGE_HEIGHT] = $property;
+                    break;
+                case TagAttributes::CACHE_KEY:
+                    $backgroundProperties[self::BACKGROUND_IMAGE_CACHE] = $property;
+                    break;
             }
         }
         return $backgroundProperties;

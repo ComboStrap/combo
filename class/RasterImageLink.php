@@ -92,6 +92,13 @@ class RasterImageLink extends InternalMediaLink
              */
             $att = array();
 
+            /**
+             * local width
+             */
+            if ($localWidth==null && $this->getRequestedWidth()!=null){
+                $localWidth = $this->getRequestedWidth();
+            }
+
             // Width is driving the computation
             if ($localWidth != null && $localWidth != $this->getMediaWidth()) {
 
@@ -106,7 +113,7 @@ class RasterImageLink extends InternalMediaLink
             }
 
             if ($this->getCache()) {
-                $att['cache'] = $this->getCache();
+                $att[TagAttributes::CACHE_KEY] = $this->getCache();
             }
             $direct = true;
 
@@ -114,7 +121,7 @@ class RasterImageLink extends InternalMediaLink
 
         } else {
 
-            return null;
+            return false;
 
         }
     }

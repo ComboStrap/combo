@@ -140,7 +140,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 $attributes = PluginUtility::mergeAttributes($tagAttributes, $defaultAttributes);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
-                $parentTagName = self::getParent($tag);
+                $parentTagName = $tag->getParent();
 
 
                 return array(

@@ -51,6 +51,11 @@ abstract class InternalMediaLink extends DokuPath
     const CONF_LINKING_NOLINK_VALUE = 'nolink';
     const CONF_LINKING_DETAILS_VALUE = 'details';
     const CONF_LINKING_LINKONLY_VALUE = "linkonly";
+    const SRC_KEY = "src";
+    /**
+     * The dokuwiki media property
+     */
+    const DOKUWIKI_QUERY_MEDIA_PROPERTY = ["w","h"];
 
     private $id;
 
@@ -199,7 +204,13 @@ abstract class InternalMediaLink extends DokuPath
                     $equalCharacterPosition = strpos($parameter, "=");
                     if ($equalCharacterPosition !== false) {
                         $parameterProp = explode("=", $parameter);
-                        $attributes[$parameterProp[0]] = $parameterProp[1];
+                        $key = $parameterProp[0];
+                        if (!in_array($key,self::DOKUWIKI_QUERY_MEDIA_PROPERTY)) {
+                            /**
+                             * exclude already parsed w=xxxx and h=wwww
+                             */
+                            $attributes[$key] = $parameterProp[1];
+                        }
                     } else {
                         if ($linkingAttributeFound == false
                             &&

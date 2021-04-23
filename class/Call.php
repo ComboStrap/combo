@@ -32,9 +32,9 @@ class Call
      * Call constructor.
      * @param $call - the instruction array (ie called a call)
      */
-    public function __construct($call)
+    public function __construct(&$call)
     {
-        $this->call = $call;
+        $this->call = &$call;
     }
 
     /**
@@ -148,7 +148,7 @@ class Call
     /**
      * @return mixed the data returned from the {@link DokuWiki_Syntax_Plugin::handle} (ie attributes, payload, ...)
      */
-    public function getPluginData()
+    public function &getPluginData()
     {
         return $this->call[1][1];
     }
@@ -194,5 +194,15 @@ class Call
                     return null;
                 }
         }
+    }
+
+    public function removeAttributes()
+    {
+
+        $data = &$this->getPluginData();
+        if (isset($data[PluginUtility::ATTRIBUTES])) {
+            unset($data[PluginUtility::ATTRIBUTES]);
+        }
+
     }
 }

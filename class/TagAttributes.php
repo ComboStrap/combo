@@ -189,6 +189,7 @@ class TagAttributes
                 $lowerKey = strtolower($key);
                 $attributes[$lowerKey] = $arrayValues;
             } else {
+
                 LogUtility::msg("The variable value ($attribute) of the key ($key) is not a string and was ignored", LogUtility::LVL_MSG_ERROR, "support");
             }
 

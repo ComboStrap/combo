@@ -813,4 +813,14 @@ class Tag
     {
         return $this->position == sizeof($this->calls);
     }
+
+    public function removeAttributes()
+    {
+        if (!$this->isCurrent()) {
+            $call = new Call($this->calls[$this->position]);
+            $call->removeAttributes();
+        } else {
+            LogUtility::msg("Internal error: This is not logic to remove the attributes of the current node because it's not yet created, not yet in the stack. Don't add them to the constructor signature.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        }
+    }
 }

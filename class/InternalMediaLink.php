@@ -174,7 +174,7 @@ abstract class InternalMediaLink extends DokuPath
 
     /**
      * @param $match - the match of the renderer (just a shortcut)
-     * @return InternalMediaLink|RasterImageLink|SvgImageLink|null
+     * @return InternalMediaLink
      */
     public static function createFromRenderMatch($match)
     {

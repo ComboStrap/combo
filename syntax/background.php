@@ -2,10 +2,12 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\LinkUtility;
 use ComboStrap\RasterImageLink;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -31,6 +33,40 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
     const TAG = "background";
     const TAG_SHORT = "bg";
+    const ERROR = "error";
+
+
+    /**
+     * Return a background array with background properties
+     * from a media {@link InternalMediaLink::toCallStackArray()}
+     * @param array $mediaCallStackArray
+     * @return array
+     */
+    public static function toBackgroundCallStackArray(array $mediaCallStackArray)
+    {
+        $backgroundProperties = [];
+        foreach ($mediaCallStackArray as $key => $property) {
+            switch ($key) {
+                case TagAttributes::LINKING_KEY:
+                    /**
+                     * Attributes not taken
+                     */
+                    break;
+                case "src":
+                    $backgroundProperties["background-image"] = $property;
+                    break;
+                case TagAttributes::CACHE_KEY:
+                default:
+                    /**
+                     * Attributes taken
+                     */
+                    $backgroundProperties[$key] = $property;
+                    break;
+
+            }
+        }
+        return $backgroundProperties;
+    }
 
     /**
      * Syntax Type.
@@ -123,20 +159,45 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG,array(),$state,$handler);
+                $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
+                $backgroundAttributes = $openingTag->getAttributes();
+                $openingTag->removeAttributes(); // background has no rendering, saving space
+                /**
+                 * Collect the image
+                 */
                 $callImage = $openingTag->getDescendant(syntax_plugin_combo_media::TAG);
-                if ($callImage==null){
+                if ($callImage == null) {
+                    /**
+                     * if the media of Combo is not used, try to retrieve the media of dokuwiki
+                     * @var $callImage
+                     */
                     $callImage = $openingTag->getDescendant(InternalMediaLink::INTERNAL_MEDIA);
                 }
-                if ($callImage!=null) {
+                if ($callImage != null) {
                     $callImage->deleteCall();
                     $imageAttribute = $callImage->getAttributes();
                     $image = InternalMediaLink::createFromCallStackArray($imageAttribute);
-                    $openingTag->setAttribute("img",$image->toCallStackArray());
+                    $backgroundImageAttribute = self::toBackgroundCallStackArray($image->toCallStackArray());
+                    $backgroundAttributes = PluginUtility::mergeAttributes($backgroundAttributes, $backgroundImageAttribute);
                 }
+
+                $parent = $openingTag->getParent();
+                if ($parent==null){
+                    $error = "A background should have a parent";
+                } else {
+                    foreach($backgroundAttributes as $key => $value) {
+                        $parent->setAttribute($key, $value);
+                    }
+                    $error= "";
+                }
+                /**
+                 * Return state to not
+                 * break the call stack state (enter, exit)
+                 */
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    self::ERROR => $error,
                 );
 
 
@@ -162,21 +223,14 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
-                case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $renderer->doc .= '<div';
-                    if (sizeof($attributes) > 0) {
-                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-                    }
-                    $renderer->doc .= '>';
-                    break;
-
-                case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    break;
 
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= '</div>';
+                    $error = $data[self::ERROR];
+                    if (!empty($error)){
+                        $class = LinkUtility::TEXT_ERROR_CLASS;
+                        $renderer->doc .="<p class=\"$class\"'>$error</p>";
+                    }
+
                     break;
             }
             return true;

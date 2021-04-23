@@ -67,21 +67,6 @@ class LinkUtility
     const ATTRIBUTE_IMAGE = 'image';
 
 
-    /**
-     * Style to cancel the dokuwiki styling
-     * when the page linked exists
-     * Is a constant to be able to use it in the test
-     * background is transparent, otherwise, you may see a rectangle with a link in button
-     */
-    const STYLE_VALUE_WHEN_EXIST =
-        array(
-            "background-color" => "transparent",
-            "border-color" => "inherit",
-            "color" => "inherit",
-            "background-image" => "unset",
-            "padding" => "unset"
-        );
-
 
     /**
      * Class added to the type of link
@@ -89,6 +74,7 @@ class LinkUtility
      * but this configuration permits to turn it back
      */
     const CONF_USE_DOKUWIKI_CLASS_NAME = "useDokuwikiLinkClassName";
+    const TEXT_ERROR_CLASS = "text-danger";
 
     /**
      * @var mixed
@@ -996,7 +982,7 @@ class LinkUtility
         if ($oldClassName) {
             return "wikilink2";
         } else {
-            return "text-danger";
+            return self::TEXT_ERROR_CLASS;
         }
     }
 

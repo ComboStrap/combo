@@ -5,7 +5,7 @@
     margin: 0;
     width: 100%;
     display: block;
-    border-radius: 0;
+    border-radius: 0; /* not rounded */
 }
 
 .slide-md {

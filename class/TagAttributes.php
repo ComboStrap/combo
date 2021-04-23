@@ -315,6 +315,10 @@ class TagAttributes
             PluginUtility::processStyle($this);
             PluginUtility::processCollapse($this);
 
+            /**
+             * Background
+             */
+            Background::processBackgroundAttributes($this);
 
             /**
              * Create a non-sorted temporary html attributes array
@@ -565,6 +569,8 @@ class TagAttributes
         }
 
     }
+
+
 
 
 }

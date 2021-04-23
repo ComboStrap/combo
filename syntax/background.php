@@ -2,6 +2,7 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Background;
 use ComboStrap\LinkUtility;
 use ComboStrap\RasterImageLink;
 use ComboStrap\InternalMediaLink;
@@ -35,38 +36,6 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     const TAG_SHORT = "bg";
     const ERROR = "error";
 
-
-    /**
-     * Return a background array with background properties
-     * from a media {@link InternalMediaLink::toCallStackArray()}
-     * @param array $mediaCallStackArray
-     * @return array
-     */
-    public static function toBackgroundCallStackArray(array $mediaCallStackArray)
-    {
-        $backgroundProperties = [];
-        foreach ($mediaCallStackArray as $key => $property) {
-            switch ($key) {
-                case TagAttributes::LINKING_KEY:
-                    /**
-                     * Attributes not taken
-                     */
-                    break;
-                case "src":
-                    $backgroundProperties["background-image"] = $property;
-                    break;
-                case TagAttributes::CACHE_KEY:
-                default:
-                    /**
-                     * Attributes taken
-                     */
-                    $backgroundProperties[$key] = $property;
-                    break;
-
-            }
-        }
-        return $backgroundProperties;
-    }
 
     /**
      * Syntax Type.
@@ -178,7 +147,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                     $callImage->deleteCall();
                     $imageAttribute = $callImage->getAttributes();
                     $image = InternalMediaLink::createFromCallStackArray($imageAttribute);
-                    $backgroundImageAttribute = self::toBackgroundCallStackArray($image->toCallStackArray());
+                    $backgroundImageAttribute = Background::fromMediaToBackgroundCallStackArray($image->toCallStackArray());
                     $backgroundAttributes = PluginUtility::mergeAttributes($backgroundAttributes, $backgroundImageAttribute);
                 }
 

@@ -5,7 +5,6 @@ namespace ComboStrap;
 
 
 use syntax_plugin_combo_preformatted;
-use TestRequest;
 
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
@@ -21,6 +20,7 @@ require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/Shadow.php');
 require_once(__DIR__ . '/TagAttributes.php');
 require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/Background.php');
 
 
 /**
@@ -506,24 +506,22 @@ class PluginUtility
             }
         }
 
-        // Color
-        $colorAttributes = ["color", "background-color", "border-color"];
+        /**
+         * Text and border Color
+         * For background color, see {@link TagAttributes::processBackground()}
+        */
+        $colorAttributes = ["color", "border-color"];
         foreach ($colorAttributes as $colorAttribute) {
             if ($attributes->hasComponentAttribute($colorAttribute)) {
                 $colorValue = $attributes->getValueAndRemove($colorAttribute);
-                $gradientPrefix = 'gradient-';
-                if (strpos($colorValue, $gradientPrefix) === 0) {
-                    $mainColorValue = substr($colorValue, strlen($gradientPrefix));
-                    $attributes->addStyleDeclaration('background-image', 'linear-gradient(to top,#fff 0,' . self::getColorValue($mainColorValue) . ' 100%)');
-                    $attributes->addStyleDeclaration('background-color', 'unset!important');
-                } else {
-                    $attributes->addStyleDeclaration($colorAttribute, self::getColorValue($colorValue));
+                switch($colorAttribute){
+                    case "color":
+                        $attributes->addStyleDeclaration($colorAttribute, self::getColorValue($colorValue));
+                        break;
+                    case "border-color":
+                            self::checkDefaultBorderColorAttributes($attributes);
+                        break;
                 }
-
-                if ($colorAttribute == "border-color") {
-                    self::checkDefaultBorderColorAttributes($attributes);
-                }
-
 
             }
         }

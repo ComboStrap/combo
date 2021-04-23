@@ -15,6 +15,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "slide";
+    const CONF_ENABLE_SECTION_EDITING = "enableSlideSectionEditing";
 
     /**
      * @var int a slide counter
@@ -155,10 +156,12 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     /**
                      * Section Edit
                      */
-                    $position = $data[PluginUtility::POSITION];
-                    $this->slideCounter++;
-                    $name = self::TAG . $this->slideCounter;
-                    PluginUtility::startSection($renderer, $position, $name);
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING,1)) {
+                        $position = $data[PluginUtility::POSITION];
+                        $this->slideCounter++;
+                        $name = self::TAG . $this->slideCounter;
+                        PluginUtility::startSection($renderer, $position, $name);
+                    }
 
                     /**
                      * Attributes
@@ -191,11 +194,6 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
                     PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
 
-                    /**
-                     * By default, this is rounded
-                     * BUt for a slide, this is by default not wanted
-                     */
-                    PluginUtility::addStyleProperty("border-radius", 0, $attributes);
 
                     $renderer->doc .= '<section';
                     if (sizeof($attributes) > 0) {
@@ -213,7 +211,9 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     /**
                      * End section
                      */
-                    $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING,1)) {
+                        $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                    }
 
                     /**
                      * End component

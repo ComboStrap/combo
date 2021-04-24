@@ -97,35 +97,7 @@ class CallStack
         return new CallStack($handler);
     }
 
-    public function goToNextOpeningTag($tagName)
-    {
 
-        while ($this->pointer < $this->maxIndex) {
-            $this->pointer += 1;
-
-            /**
-             * Array index are sequence number
-             * that may be deleted. We get then empty gap
-             */
-            if (isset($this->handler->calls[$this->pointer])) {
-                $call = new Call($this->handler->calls[$this->pointer]);
-                if ($call->getTagName() == $tagName && $call->getState() == DOKU_LEXER_ENTER) {
-                    break;
-                }
-            }
-
-        }
-
-    }
-
-    public function getCurrentTag()
-    {
-        if (isset($this->handler->calls[$this->pointer])) {
-            return Tag::createFromCall($this->handler, $this->pointer);
-        } else {
-            return null;
-        }
-    }
 
 
 }

@@ -71,6 +71,11 @@ class Tag
      * in the handler process (ie not yet created in the stack)
      */
     private $tagCall;
+    /**
+     * The maximum key number position of the stack
+     * @var int|string|null
+     */
+    private $maxPosition;
 
 
     /**
@@ -106,7 +111,8 @@ class Tag
             $this->calls = &$handler->calls;
         }
         $this->handler = &$handler;
-        if ($position != null) {
+        $this->maxPosition = ArrayUtility::array_key_last($this->calls);
+        if ($position !== null) {
             $this->position = $position;
             /**
              * A shortcut access variable to the call of the tag
@@ -131,6 +137,11 @@ class Tag
         }
 
 
+    }
+
+    public static function createFromHandler(Doku_Handler &$handler)
+    {
+        return self::createFromCall($handler, 0);
     }
 
 
@@ -240,15 +251,7 @@ class Tag
              */
             while ($callStackPosition > 0) {
 
-
-                /**
-                 * If element were deleted,
-                 * the previous calls may be empty
-                 * make sure that we got something
-                 */
-                while (!isset($this->calls[$callStackPosition]) && $callStackPosition > 0) {
-                    $callStackPosition = $callStackPosition - 1;
-                }
+                $callStackPosition = $this->getPreviousPositionNonEmpty($callStackPosition);
                 if ($callStackPosition <= 0) {
                     break;
                 }
@@ -823,6 +826,61 @@ class Tag
             $call->removeAttributes();
         } else {
             LogUtility::msg("Internal error: This is not logic to remove the attributes of the current node because it's not yet created, not yet in the stack. Don't add them to the constructor signature.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        }
+    }
+
+    public function getNextOpeningTag($tagName)
+    {
+        $position = $this->position;
+        while ($this->toNextPositionNonEmpty($position)) {
+
+            $call = new Call($this->handler->calls[$position]);
+            if ($call->getTagName() == $tagName && $call->getState() == DOKU_LEXER_ENTER) {
+                return self::createFromCall($this->handler, $position);
+            }
+
+        }
+        return null;
+    }
+
+    /**
+     *
+     * If element were deleted,
+     * the previous calls may be empty
+     * make sure that we got something
+     *
+     * @param $callStackPosition
+     * @return int|mixed
+     */
+    public function getPreviousPositionNonEmpty($callStackPosition)
+    {
+
+        while (!isset($this->calls[$callStackPosition]) && $callStackPosition > 0) {
+            $callStackPosition = $callStackPosition - 1;
+        }
+        return $callStackPosition;
+    }
+
+    /**
+     *
+     * Increment the callStackPosition to a non-empty call stack position
+     *
+     * Array index are sequence number that may be deleted. We get then empty gap.
+     * This function increments the pointer and return false if the end of the stack was reached
+     *
+     * @param $callStackPointer
+     * @return true|false - If this is the end of the stack, return false, otherwise return true
+     */
+    public function toNextPositionNonEmpty(&$callStackPointer)
+    {
+        $callStackPointer = $callStackPointer + 1;
+        while (!isset($this->calls[$callStackPointer]) && $callStackPointer < $this->maxPosition) {
+            $callStackPointer = $callStackPointer + 1;
+        }
+        if (!isset($this->calls[$callStackPointer])) {
+            return false;
+        } else {
+            return true;
         }
     }
 }

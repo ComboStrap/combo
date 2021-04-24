@@ -139,7 +139,7 @@ class Tag
 
     }
 
-    public static function createFromHandler(Doku_Handler &$handler)
+    public static function createDocumentStartFromHandler(Doku_Handler &$handler)
     {
         return self::createFromCall($handler, 0);
     }
@@ -883,4 +883,71 @@ class Tag
             return true;
         }
     }
+
+    public function getNextClosingTag($tagName)
+    {
+        $position = $this->position;
+        while ($this->toNextPositionNonEmpty($position)) {
+
+            $call = new Call($this->handler->calls[$position]);
+            if ($call->getTagName() == $tagName && $call->getState() == DOKU_LEXER_EXIT) {
+                return self::createFromCall($this->handler, $position);
+            }
+
+        }
+        return null;
+    }
+
+    /**
+     * @return Tag|null the next children or null - the tag should be an enter tag
+     */
+    public function getNextChild()
+    {
+        if ($this->getState() !== DOKU_LEXER_ENTER) {
+            // The tag ($this) is not an enter tag and has therefore no children."
+            return null;
+        }
+        $position = $this->position;
+        $result = $this->toNextPositionNonEmpty($position);
+        if ($result === false) {
+            return null;
+        } else {
+            return self::createFromCall($this->handler, $position);
+        }
+
+    }
+
+    public function getChildren()
+    {
+        if ($this->getState() !== DOKU_LEXER_ENTER) {
+            // The tag ($this) is not an enter tag and has therefore no children."
+            return null;
+        }
+        $children = [];
+        $level = 0;
+        $position = $this->position;
+        while ($this->toNextPositionNonEmpty($position)) {
+
+            $call = new Call($this->handler->calls[$position]);
+            $state = $call->getState();
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                    $level += 1;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $level -= 1;
+                    break;
+            }
+            if ($level < 0) {
+                break;
+            } else {
+                if (!in_array($state, [DOKU_LEXER_EXIT, DOKU_LEXER_UNMATCHED])) {
+                    $children[] = self::createFromCall($this->handler, $position);
+                }
+            }
+        }
+        return $children;
+    }
+
+
 }

@@ -166,20 +166,33 @@ class TagAttributes
         $attributes = array();
         foreach ($htmlAttributes as $key => $attribute) {
 
-            if (empty($attribute)) {
+            /**
+             * null is not a string or a boolean
+             */
+            if ($attribute === null) {
                 continue;
             }
 
             /**
              * Life is hard
              */
-            if (is_bool($attribute)) {
+            if (is_bool($attribute) || is_numeric($attribute)) {
                 $attribute = var_export($attribute, true);
             }
+
             /**
              * Life is harder
              */
             if (is_string($attribute)) {
+
+                /**
+                 * false is considered as empty, this code should be in
+                 * the is_string block
+                 */
+                if (empty($attribute)) {
+                    continue;
+                }
+
                 $explodeArray = explode(" ", $attribute);
                 $arrayValues = array();
                 foreach ($explodeArray as $explodeValue) {
@@ -569,8 +582,6 @@ class TagAttributes
         }
 
     }
-
-
 
 
 }

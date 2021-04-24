@@ -151,22 +151,16 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                     $backgroundAttributes = PluginUtility::mergeAttributes($backgroundAttributes, $backgroundImageAttribute);
                 }
 
-                $parent = $openingTag->getParent();
-                if ($parent==null){
-                    $error = "A background should have a parent";
-                } else {
-                    foreach($backgroundAttributes as $key => $value) {
-                        $parent->setAttribute($key, $value);
-                    }
-                    $error= "";
+
+                foreach ($backgroundAttributes as $key => $value) {
+                    $openingTag->setAttribute($key, $value);
                 }
+
                 /**
-                 * Return state to not
-                 * break the call stack state (enter, exit)
+                 * Return state
                  */
                 return array(
-                    PluginUtility::STATE => $state,
-                    self::ERROR => $error,
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -193,13 +187,17 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
 
+                case DOKU_LEXER_ENTER:
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $tagAttributes->addClassName(self::TAG);
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+                    break;
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
                 case DOKU_LEXER_EXIT :
-                    $error = $data[self::ERROR];
-                    if (!empty($error)){
-                        $class = LinkUtility::TEXT_ERROR_CLASS;
-                        $renderer->doc .="<p class=\"$class\"'>$error</p>";
-                    }
-
+                    $renderer->doc .= "</div>";
                     break;
             }
             return true;

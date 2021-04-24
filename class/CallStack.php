@@ -16,6 +16,26 @@ namespace ComboStrap;
 class CallStack
 {
 
+    private $handler;
+
+    private $pointer = -1;
+    /**
+     * The max key of the calls
+     * @var int|null
+     */
+    private $maxIndex;
+
+    /**
+     * CallStack constructor.
+     * The call stack is split in the handler in the calls variable and callWriter->calls variable
+     * @param \Doku_Handler
+     */
+    public function __construct(&$handler)
+    {
+        $this->handler = $handler;
+        $this->maxIndex = ArrayUtility::array_key_last($handler->calls);
+    }
+
     /**
      * Delete from the call stack
      * @param $calls
@@ -72,7 +92,40 @@ class CallStack
 
     }
 
+    public static function createFromHandler(\Doku_Handler &$handler)
+    {
+        return new CallStack($handler);
+    }
 
+    public function goToNextOpeningTag($tagName)
+    {
+
+        while ($this->pointer < $this->maxIndex) {
+            $this->pointer += 1;
+
+            /**
+             * Array index are sequence number
+             * that may be deleted. We get then empty gap
+             */
+            if (isset($this->handler->calls[$this->pointer])) {
+                $call = new Call($this->handler->calls[$this->pointer]);
+                if ($call->getTagName() == $tagName && $call->getState() == DOKU_LEXER_ENTER) {
+                    break;
+                }
+            }
+
+        }
+
+    }
+
+    public function getCurrentTag()
+    {
+        if (isset($this->handler->calls[$this->pointer])) {
+            return Tag::createFromCall($this->handler, $this->pointer);
+        } else {
+            return null;
+        }
+    }
 
 
 }

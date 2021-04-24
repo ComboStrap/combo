@@ -149,13 +149,15 @@ class Tag
     }
 
     /**
-     * From a call to a node
-     * @param array $callArray
+     * From a call position to a tag
+     * @param Doku_Handler $handler
      * @param $position - the position in the call stack (ie in the array)
      * @return Tag
      */
-    private function call2Tag(&$callArray, $position)
+    public static function createFromCall(&$handler, $position)
     {
+
+        $callArray = &$handler->calls[$position];
         $call = new Call($callArray);
 
         $attributes = $call->getAttributes();
@@ -182,7 +184,7 @@ class Tag
             }
         }
 
-        return new Tag($name, $attributes, $state, $this->handler, $position);
+        return new Tag($name, $attributes, $state, $handler, $position);
     }
 
     public function isChildOf($tag)
@@ -287,7 +289,7 @@ class Tag
 
             }
             if (isset($previousCallArray)) {
-                return $this->call2Tag($previousCallArray, $callStackPosition);
+                return $this->createFromCall($this->handler, $callStackPosition);
             } else {
                 return false;
             }
@@ -436,7 +438,7 @@ class Tag
          * that there is no sibling
          */
         if ($treeLevel == 0) {
-            return self::call2Tag($callArray, $counter);
+            return self::createFromCall($this->handler, $counter);
         }
         return null;
 
@@ -470,7 +472,7 @@ class Tag
 
         }
         if (isset($previousCallArray)) {
-            return $this->call2Tag($previousCallArray, $descendantCounter);
+            return $this->createFromCall($this->handler, $descendantCounter);
         } else {
             return false;
         }
@@ -543,7 +545,7 @@ class Tag
                      * We don't take text
                      */
                     //if ($state!=DOKU_LEXER_UNMATCHED) {
-                    $descendants[] = self::call2Tag($childCallArray, $index);
+                    $descendants[] = self::createFromCall($this->handler, $index);
                     //}
                 }
                 /**
@@ -796,7 +798,7 @@ class Tag
     public function getDocumentStartTag()
     {
         if (sizeof($this->calls) > 0) {
-            return $this->call2Tag($this->calls[0], 0);
+            return $this->createFromCall($this->handler, 0);
         } else {
             throw new RuntimeException("The stack is empty, there is no root tag");
         }

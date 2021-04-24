@@ -44,6 +44,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const PARSING_STATE_SUCCESSFUL = "successful";
     const STATUS = "status";
     const CANONICAL = "frontmatter";
+    const CONF_ENABLE_SECTION_EDITING = 'enableFrontMatterSectionEditing';
 
     /**
      * Syntax Type.
@@ -197,6 +198,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             $this->closeParsing($json);
 
             $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+            $result[PluginUtility::POSITION]=[$pos,$pos + strlen($match) + 1];
 
             return $result;
         }
@@ -221,10 +223,22 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             case 'xhtml':
                 global $ID;
                 /** @var Doku_Renderer_xhtml $renderer */
+
                 $state = $data[self::STATUS];
                 if ($state == self::PARSING_STATE_ERROR) {
                     $json = $data[PluginUtility::PAYLOAD];
                     LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. See the errors it by clicking on <a href=\"https://jsonformatter.curiousconcept.com/?data=" . urlencode($json) . "\">this link</a>.", LogUtility::LVL_MSG_ERROR);
+                }
+
+                /**
+                 * Section
+                 */
+                list($startPosition,$endPosition) =  $data[PluginUtility::POSITION];
+                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING,1)) {
+                    $position = $startPosition;
+                    $name = self::CANONICAL;
+                    PluginUtility::startSection($renderer, $position, $name);
+                    $renderer->finishSectionEdit($endPosition);
                 }
                 break;
             case Analytics::RENDERER_FORMAT:

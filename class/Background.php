@@ -79,7 +79,7 @@ class Background
                     LogUtility::msg("An image and a linear gradient color are exclusive because a linear gradient color creates an image. You can't use the linear color (" . $colorValue . ") and the image (".$backgroundImageStyleValue.")",LogUtility::LVL_MSG_WARNING,self::CANONICAL);
                 } else {
                     $mainColorValue = substr($colorValue, strlen($gradientPrefix));
-                    $tagAttributes->addStyleDeclaration(self::BACKGROUND_IMAGE, 'linear-gradient(to top,#fff 0,' . PluginUtility::getColorValue($mainColorValue) . ' 100%)');
+                    $tagAttributes->addStyleDeclaration(self::BACKGROUND_IMAGE, 'linear-gradient(to top,#fff 0,' . ColorUtility::getColorValue($mainColorValue) . ' 100%)');
                     $tagAttributes->addStyleDeclaration(self::BACKGROUND_COLOR, 'unset!important');
                 }
             } else {

@@ -516,7 +516,7 @@ class PluginUtility
                 $colorValue = $attributes->getValueAndRemove($colorAttribute);
                 switch($colorAttribute){
                     case "color":
-                        $attributes->addStyleDeclaration($colorAttribute, self::getColorValue($colorValue));
+                        $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
                         break;
                     case "border-color":
                             self::checkDefaultBorderColorAttributes($attributes);
@@ -598,33 +598,6 @@ class PluginUtility
         Shadow::process($attributes);
 
 
-    }
-
-    /**
-     * Return a combostrap value to a web color value
-     * @param string $color a color value
-     * @return string
-     */
-    public
-    static function getColorValue($color)
-    {
-        if ($color[0] == "#") {
-            $colorValue = $color;
-        } else {
-            // Custom Css variable
-            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-            switch ($bootstrapVersion) {
-                case Bootstrap::BootStrapFiveMajorVersion:
-                    $colorValue = "bs-" . $color;
-                    break;
-                default:
-                    $colorValue = $color;
-                    break;
-            }
-            $colorValue = "var(--" . $colorValue . ")";
-
-        }
-        return $colorValue;
     }
 
     /**
@@ -1240,6 +1213,11 @@ class PluginUtility
 
     }
 
+    /**
+     * @param \Doku_Renderer_xhtml $renderer
+     * @param $position
+     * @param $name
+     */
     public
     static function startSection($renderer, $position, $name)
     {

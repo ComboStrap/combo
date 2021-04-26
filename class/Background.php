@@ -32,6 +32,11 @@ class Background
      */
     const CANONICAL = "background";
 
+    /**
+     * A component attributes to store backgrounds
+     */
+    const BACKGROUNDS = "backgrounds";
+
 
     public static function processBackgroundAttributes(TagAttributes &$tagAttributes)
     {
@@ -87,6 +92,22 @@ class Background
             }
         }
 
+        /**
+         * Backgrounds
+         */
+        if ($tagAttributes->hasComponentAttribute(self::BACKGROUNDS)) {
+            $backgrounds = $tagAttributes->getValueAsArrayAndRemove(self::BACKGROUNDS);
+            $backgroundHTML = "";
+            foreach ($backgrounds as $background) {
+                PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::CANONICAL);
+                $backgroundTagAttribute = TagAttributes::createFromCallStackArray($background);
+                $backgroundTagAttribute->addClassName(self::CANONICAL);
+                $backgroundHTMLEnter = $backgroundTagAttribute->toHtmlEnterTag("div");
+                $backgroundHTML .= $backgroundHTMLEnter ."</div>";
+            }
+            $tagAttributes->addHtmlAfterEnterTag($backgroundHTML);
+        }
+
 
     }
 
@@ -125,4 +146,6 @@ class Background
         }
         return $backgroundProperties;
     }
+
+
 }

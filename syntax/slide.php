@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -64,14 +65,6 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-
-        /**
-         * header mode is disable to take over
-         * and replace it with {@link syntax_plugin_combo_title}
-         */
-        if ($mode == "header") {
-            return false;
-        }
 
         if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
             return PluginUtility::disablePreformatted($mode);
@@ -156,7 +149,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     /**
                      * Section Edit
                      */
-                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING,1)) {
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                         $position = $data[PluginUtility::POSITION];
                         $this->slideCounter++;
                         $name = self::TAG . $this->slideCounter;
@@ -166,40 +159,35 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     /**
                      * Attributes
                      */
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
                     $sizeAttribute = "size";
                     $size = "md";
-                    if (array_key_exists($sizeAttribute, $attributes)) {
-                        $size = $attributes[$sizeAttribute];
-                        unset($attributes[$sizeAttribute]);
+                    if ($attributes->hasComponentAttribute($sizeAttribute)) {
+                        $size = $attributes->getValueAndRemove($sizeAttribute);
                     }
                     switch ($size) {
                         case "lg":
                         case "large":
-                            PluginUtility::addClass2Attributes(self::TAG . "-lg", $attributes);
+                            $attributes->addClassName(self::TAG . "-lg");
                             break;
                         case "sm":
                         case "small":
-                            PluginUtility::addClass2Attributes(self::TAG . "-sm", $attributes);
+                            $attributes->addClassName(self::TAG . "-sm");
                             break;
                         case "xl":
                         case "extra-large":
-                            PluginUtility::addClass2Attributes(self::TAG . "-xl", $attributes);
+                            $attributes->addClassName(self::TAG . "-xl");
                             break;
                         default:
-                            PluginUtility::addClass2Attributes(self::TAG, $attributes);
+                            $attributes->addClassName(self::TAG);
                             break;
                     }
 
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
 
 
-                    $renderer->doc .= '<section';
-                    if (sizeof($attributes) > 0) {
-                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-                    }
-                    $renderer->doc .= '>';
+                    $renderer->doc .= $attributes->toHtmlEnterTag("section");
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -211,7 +199,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     /**
                      * End section
                      */
-                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING,1)) {
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                         $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
                     }
 

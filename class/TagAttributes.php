@@ -116,6 +116,13 @@ class TagAttributes
     private $tag;
 
     /**
+     * An html that should be added after the enter tag
+     * (used for instance to add metadata  such as backgrounds, illustration image for cards ,...
+     * @var string
+     */
+    private $htmlAfterEnterTag;
+
+    /**
      * ComponentAttributes constructor.
      * Use the static create function to instantiate this object
      * @param $tag - tag (the tag gives context for the attributes (ie an div has no natural width while an img has)
@@ -158,13 +165,19 @@ class TagAttributes
     /**
      * Utility function to go from an html array to a tag array
      * Used during refactoring
-     * @param array $htmlAttributes
+     * @param array $callStackAttributes
      * @return array
      */
-    private static function CallStackArrayToInternalArray(array $htmlAttributes)
+    private static function CallStackArrayToInternalArray(array $callStackAttributes)
     {
+
         $attributes = array();
-        foreach ($htmlAttributes as $key => $attribute) {
+        foreach ($callStackAttributes as $key => $attribute) {
+
+            /**
+             * Key are always lower
+             */
+            $lowerKey = strtolower($key);
 
             /**
              * null is not a string or a boolean
@@ -174,10 +187,12 @@ class TagAttributes
             }
 
             /**
-             * Life is hard
+             *
+             * Boolean and numeric to string
              */
             if (is_bool($attribute) || is_numeric($attribute)) {
-                $attribute = var_export($attribute, true);
+                $attributes[$lowerKey] = $attribute;
+                continue;
             }
 
             /**
@@ -186,8 +201,8 @@ class TagAttributes
             if (is_string($attribute)) {
 
                 /**
-                 * false is considered as empty, this code should be in
-                 * the is_string block
+                 * false is considered as empty, that's why this code is
+                 * in the is_string block
                  */
                 if (empty($attribute)) {
                     continue;
@@ -199,12 +214,23 @@ class TagAttributes
 
                     $arrayValues[$explodeValue] = true;
                 }
-                $lowerKey = strtolower($key);
                 $attributes[$lowerKey] = $arrayValues;
-            } else {
-
-                LogUtility::msg("The variable value ($attribute) of the key ($key) is not a string and was ignored", LogUtility::LVL_MSG_ERROR, "support");
+                continue;
             }
+
+            /**
+             * Array
+             */
+            if (is_array($attribute)) {
+                $attributes[$lowerKey] = $attribute;
+                continue;
+            }
+
+            /**
+             * Not processed
+             */
+            LogUtility::msg("The variable value ($attribute) of the key ($key) is not a string, a boolean, a numeric or an array and was ignored", LogUtility::LVL_MSG_ERROR, "support");
+
 
         }
         return $attributes;
@@ -338,7 +364,9 @@ class TagAttributes
              */
             $tempHtmlArray = $this->htmlAttributes;
 
-            // copy the unknown component attributes
+            /**
+             * copy the unknown component attributes
+             */
             foreach ($this->componentAttributes as $key => $arrayValue) {
                 if (!in_array($key, self::HTML_EXCLUDED_ATTRIBUTES)) {
                     $value = implode(array_keys($arrayValue), " ");
@@ -559,7 +587,13 @@ class TagAttributes
         if (!empty($attributeString)) {
             $enterTag .= " " . $attributeString;
         }
-        return $enterTag . ">";
+        $enterTag .= ">";
+
+        if (!empty($this->htmlAfterEnterTag)){
+            $enterTag .= $this->htmlAfterEnterTag;
+        }
+        return $enterTag;
+
     }
 
     public function getLogicalTag()
@@ -580,6 +614,25 @@ class TagAttributes
         } else {
             LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR, "support");
         }
+
+    }
+
+    /**
+     * @param $html - an html that should be closed and added after the enter tag
+     */
+    public function addHtmlAfterEnterTag($html)
+    {
+        $this->htmlAfterEnterTag .= $html;
+    }
+
+    public function getValueAsArrayAndRemove($attributeName, $default = array())
+    {
+        $value = $default;
+        if ($this->hasComponentAttribute($attributeName)) {
+            $value = $this->componentAttributes[$attributeName];
+            unset($this->componentAttributes[$attributeName]);
+        }
+        return $value;
 
     }
 

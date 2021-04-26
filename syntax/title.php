@@ -11,6 +11,7 @@ if (!defined('DOKU_INC')) die();
 /**
  * Class syntax_plugin_combo_title
  * Title in container component
+ * Taking over {@link \dokuwiki\Parsing\ParserMode\Header}
  */
 class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 {
@@ -89,9 +90,13 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
         return array('formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
+    /**
+     * Less than {@link \dokuwiki\Parsing\ParserMode\Header::getSort()}
+     * @return int
+     */
     function getSort()
     {
-        return 201;
+        return 49;
     }
 
 
@@ -221,14 +226,14 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $context = $data[PluginUtility::CONTEXT];
                     $title = $attributes[self::TITLE];
-                    $renderer->doc .=  self::renderOpeningTag($context, $attributes,$renderer);
+                    self::renderOpeningTag($context, $attributes,$renderer);
                     $renderer->doc .= PluginUtility::htmlEncode($title);
                     $renderer->doc .= self::renderClosingTag($context, $attributes);
                     break;
                 case DOKU_LEXER_ENTER:
                     $parentTag = $data[PluginUtility::CONTEXT];
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $renderer->doc .= self::renderOpeningTag($parentTag, $attributes, $renderer);
+                    self::renderOpeningTag($parentTag, $attributes, $renderer);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -250,7 +255,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
      * @param $attributes
      * @param Doku_Renderer_xhtml $renderer
      */
-    static function renderOpeningTag($context, $attributes, $renderer)
+    static function renderOpeningTag($context, $attributes, &$renderer)
     {
 
         /**

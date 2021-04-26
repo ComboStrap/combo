@@ -59,7 +59,10 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        /**
+         * normal (and not block) is important to not create p_open calls
+         */
+        return 'normal';
     }
 
     /**
@@ -131,7 +134,6 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 $backgroundAttributes = $openingTag->getAttributes();
-                $openingTag->removeAttributes(); // background has no rendering, saving space
                 /**
                  * Collect the image
                  */
@@ -151,13 +153,26 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                     $backgroundAttributes = PluginUtility::mergeAttributes($backgroundAttributes, $backgroundImageAttribute);
                 }
 
-
-                foreach ($backgroundAttributes as $key => $value) {
-                    $openingTag->setAttribute($key, $value);
+                /**
+                 * Set the backgrounds attributes
+                 * to the parent
+                 */
+                $parentTag = $openingTag->getParent();
+                if ($parentTag != null) {
+                    if ($parentTag->getName() == Background::BACKGROUNDS) {
+                        $parentTag = $parentTag->getParent();
+                    }
+                    $backgrounds = $parentTag->getAttribute(Background::BACKGROUNDS);
+                    if ($backgrounds == null) {
+                        $backgrounds = [$backgroundAttributes];
+                    } else {
+                        $backgrounds[] = $backgroundAttributes;
+                    }
+                    $parentTag->setAttribute(Background::BACKGROUNDS, $backgrounds);
                 }
 
                 /**
-                 * Return state
+                 * Return state to keep the call stack structure
                  */
                 return array(
                     PluginUtility::STATE => $state
@@ -188,17 +203,18 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $tagAttributes->addClassName(self::TAG);
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+                case DOKU_LEXER_EXIT :
+                    /**
+                     * background is print via the {@link Background::processBackgroundAttributes()}
+                     */
                     break;
                 case DOKU_LEXER_UNMATCHED:
+                    /**
+                     * In case anyone put text where it should not
+                     */
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
-                case DOKU_LEXER_EXIT :
-                    $renderer->doc .= "</div>";
-                    break;
+
             }
             return true;
         }

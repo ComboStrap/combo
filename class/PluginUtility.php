@@ -92,7 +92,10 @@ class PluginUtility
      * Class to center an element
      */
     const CENTER_CLASS = "mx-auto";
-    const RIGHT_CLASS = "float-right";
+    /**
+     * Float right class
+     */
+    const FLOAT_RIGHT_CLASS = "float-right";
 
     const EDIT_SECTION_TARGET = 'section';
 
@@ -577,7 +580,8 @@ class PluginUtility
                 $attributes->addStyleDeclaration("max-height", $heightValue);
             } else {
                 // Without the height value, a block display will collapse
-                $attributes->addStyleDeclaration("height", $heightValue);
+                // min-height and not height to not constraint the box
+                $attributes->addStyleDeclaration("min-height", $heightValue);
             }
             /**
              * Overflow auto means that positioning element on the edge with the
@@ -822,11 +826,9 @@ class PluginUtility
                     $attributes->addClassName(PluginUtility::CENTER_CLASS);
                     break;
                 case "right":
-                    $attributes->addClassName(PluginUtility::RIGHT_CLASS);
+                    $attributes->addStyleDeclaration("margin-left", "auto");
+                    $attributes->addStyleDeclaration("width", "fit-content");
 
-                    // position relative and z-index are needed to put the float above
-                    $attributes->addStyleDeclaration("position", "relative!important");
-                    $attributes->addStyleDeclaration("z-index", 1);
                     break;
             }
 
@@ -839,6 +841,25 @@ class PluginUtility
             if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
                 $attributes->addClassName("d-block");
             }
+        }
+    }
+
+    public static function processFloat(&$attributes){
+        // The class shortcut
+        $float = TagAttributes::FLOAT_KEY;
+        if ($attributes->hasComponentAttribute($float)) {
+            $alignValue = $attributes->getValueAndRemove($float);
+            switch ($alignValue) {
+                case "left":
+                    $attributes->addClassName("float-left");
+                    break;
+                case "right":
+                    $attributes->addClassName(PluginUtility::FLOAT_RIGHT_CLASS);
+                    break;
+            }
+            // position relative and z-index are needed to put the float above
+            $attributes->addStyleDeclaration("position", "relative!important");
+            $attributes->addStyleDeclaration("z-index", 1);
         }
     }
 

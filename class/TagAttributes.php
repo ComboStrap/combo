@@ -78,6 +78,8 @@ class TagAttributes
      */
     const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL];
     const SCRIPT_KEY = "script";
+    const TRANSFORM = "transform";
+    const FLOAT_KEY = "float";
 
 
     /**
@@ -343,6 +345,11 @@ class TagAttributes
             Position::processPosition($this);
 
             /**
+             * Float
+             */
+            PluginUtility::processFloat($this);
+
+            /**
              * Process the attributes that have an effect on the class
              */
             PluginUtility::processSpacingAttributes($this);
@@ -358,6 +365,15 @@ class TagAttributes
              * Background
              */
             Background::processBackgroundAttributes($this);
+
+            /**
+             * Transform
+             */
+            if ($this->hasComponentAttribute(self::TRANSFORM)){
+                $transformValue = $this->getValueAndRemove(self::TRANSFORM);
+                $this->addStyleDeclaration("transform",$transformValue);
+            }
+
 
             /**
              * Create a non-sorted temporary html attributes array

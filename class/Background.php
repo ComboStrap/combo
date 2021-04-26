@@ -45,27 +45,35 @@ class Background
          * Backgrounds set with the {@link \syntax_plugin_combo_background} component
          */
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUNDS)) {
+            PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::CANONICAL);
             $backgrounds = $tagAttributes->getValueAsArrayAndRemove(self::BACKGROUNDS);
             switch (sizeof($backgrounds)) {
                 case 1:
                     // Only one background was specified
                     $background = $backgrounds[0];
-                    $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_ID, $background[self::BACKGROUND_IMAGE_ID]);
-                    $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_WIDTH, $background[self::BACKGROUND_IMAGE_WIDTH]);
-                    $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_HEIGHT, $background[self::BACKGROUND_IMAGE_HEIGHT]);
-                    $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_CACHE, $background[self::BACKGROUND_IMAGE_CACHE]);
-                    if (isset($background[ColorUtility::COLOR])) {
-                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_COLOR, $background[ColorUtility::COLOR]);
+                    if (!isset($background[TagAttributes::TRANSFORM])) {
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_ID, $background[self::BACKGROUND_IMAGE_ID]);
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_WIDTH, $background[self::BACKGROUND_IMAGE_WIDTH]);
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_HEIGHT, $background[self::BACKGROUND_IMAGE_HEIGHT]);
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_CACHE, $background[self::BACKGROUND_IMAGE_CACHE]);
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_COLOR, $background[self::BACKGROUND_COLOR]);
+                    } else {
+                        $backgroundTagAttribute = TagAttributes::createFromCallStackArray($background);
+                        $backgroundTagAttribute->addClassName(self::CANONICAL);
+                        $backgroundHTML = "<div class=\"backgrounds\">".
+                            $backgroundTagAttribute->toHtmlEnterTag("div").
+                            "</div>".
+                            "</div>";
+                        $tagAttributes->addHtmlAfterEnterTag($backgroundHTML);
                     }
                     break;
                 default:
                     /**
-                     * /* More than one background
-                     * /* This backgrounds should have been set on the backgrounds
+                     * More than one background
+                     * This backgrounds should have been set on the backgrounds
                      */
                     $backgroundHTML = "";
                     foreach ($backgrounds as $background) {
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::CANONICAL);
                         $backgroundTagAttribute = TagAttributes::createFromCallStackArray($background);
                         $backgroundTagAttribute->addClassName(self::CANONICAL);
                         $backgroundHTMLEnter = $backgroundTagAttribute->toHtmlEnterTag("div");

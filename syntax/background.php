@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
+use ComboStrap\ColorUtility;
 use ComboStrap\LinkUtility;
 use ComboStrap\RasterImageLink;
 use ComboStrap\InternalMediaLink;
@@ -35,6 +36,21 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     const TAG = "background";
     const TAG_SHORT = "bg";
     const ERROR = "error";
+
+    /**
+     * @param $match
+     * return the background internal component attribute
+     *
+     */
+    private static function getBackgroundAttribute($match)
+    {
+        $attributes = PluginUtility::getTagAttributes($match);
+        if (isset($attributes[ColorUtility::COLOR])){
+            $attributes[Background::BACKGROUND_COLOR]=$attributes[ColorUtility::COLOR];
+            unset($attributes[ColorUtility::COLOR]);
+        }
+        return $attributes;
+    }
 
 
     /**
@@ -123,7 +139,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $defaultAttributes = array();
-                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = self::getBackgroundAttribute($match);
                 $attributes = PluginUtility::mergeAttributes($attributes, $defaultAttributes);
                 return array(
                     PluginUtility::STATE => $state,
@@ -131,7 +147,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_SPECIAL :
-                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = self::getBackgroundAttribute($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 return $this->setAttributesToParentAndReturnData($tag, $attributes,$state);
 

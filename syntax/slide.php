@@ -160,6 +160,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                      * Attributes
                      */
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $attributes->addClassName(self::TAG);
 
                     $sizeAttribute = "size";
                     $size = "md";
@@ -180,7 +181,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                             $attributes->addClassName(self::TAG . "-xl");
                             break;
                         default:
-                            $attributes->addClassName(self::TAG);
+                            $attributes->addClassName(self::TAG . "-md");
                             break;
                     }
 
@@ -188,6 +189,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
 
                     $renderer->doc .= $attributes->toHtmlEnterTag("section");
+                    $renderer->doc .= "<div class=\"slide-body\" style=\"z-index:1;position: relative;\">";
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -196,6 +198,10 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
+                    /**
+                     * End body
+                     */
+                    $renderer->doc .= '</div>';
                     /**
                      * End section
                      */

@@ -191,7 +191,7 @@ class TagAttributes
              * Boolean and numeric to string
              */
             if (is_bool($attribute) || is_numeric($attribute)) {
-                $attributes[$lowerKey] = $attribute;
+                $attributes[$lowerKey] = [$attribute => true];
                 continue;
             }
 
@@ -497,12 +497,13 @@ class TagAttributes
 
     /**
      * @return array - an array of key string and value of the component attributes
+     * This array is saved on the disk
      */
     public function toCallStackArray()
     {
         $array = array();
         foreach ($this->componentAttributes as $key => $value) {
-            $array[$key] = $this->getValue($key);
+            $array[$key] = StringUtility::toString($this->getValue($key));
         }
         $style = $this->getStyle();
         if (!empty($style)) {
@@ -589,7 +590,7 @@ class TagAttributes
         }
         $enterTag .= ">";
 
-        if (!empty($this->htmlAfterEnterTag)){
+        if (!empty($this->htmlAfterEnterTag)) {
             $enterTag .= $this->htmlAfterEnterTag;
         }
         return $enterTag;

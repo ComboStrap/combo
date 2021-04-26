@@ -99,7 +99,11 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
         foreach ($this->getTags() as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $emptyPattern = PluginUtility::getEmptyTagPattern($tag);
+            $this->Lexer->addSpecialPattern($emptyPattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
+
+
     }
 
 
@@ -119,12 +123,17 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $defaultAttributes = array();
-                $inlineAttributes = PluginUtility::getTagAttributes($match);
-                $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
+                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = PluginUtility::mergeAttributes($attributes, $defaultAttributes);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes
                 );
+
+            case DOKU_LEXER_SPECIAL :
+                $attributes = PluginUtility::getTagAttributes($match);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
+                return $this->setAttributesToParentAndReturnData($tag, $attributes,$state);
 
             case DOKU_LEXER_UNMATCHED :
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
@@ -134,8 +143,9 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 $tag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $tag->getOpeningTag();
                 $backgroundAttributes = $openingTag->getAttributes();
+
                 /**
-                 * Collect the image
+                 * Collect the image if any
                  */
                 $callImage = $openingTag->getDescendant(syntax_plugin_combo_media::TAG);
                 if ($callImage == null) {
@@ -153,30 +163,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                     $backgroundAttributes = PluginUtility::mergeAttributes($backgroundAttributes, $backgroundImageAttribute);
                 }
 
-                /**
-                 * Set the backgrounds attributes
-                 * to the parent
-                 */
-                $parentTag = $openingTag->getParent();
-                if ($parentTag != null) {
-                    if ($parentTag->getName() == Background::BACKGROUNDS) {
-                        $parentTag = $parentTag->getParent();
-                    }
-                    $backgrounds = $parentTag->getAttribute(Background::BACKGROUNDS);
-                    if ($backgrounds == null) {
-                        $backgrounds = [$backgroundAttributes];
-                    } else {
-                        $backgrounds[] = $backgroundAttributes;
-                    }
-                    $parentTag->setAttribute(Background::BACKGROUNDS, $backgrounds);
-                }
-
-                /**
-                 * Return state to keep the call stack structure
-                 */
-                return array(
-                    PluginUtility::STATE => $state
-                );
+                return $this->setAttributesToParentAndReturnData($openingTag, $backgroundAttributes,$state);
 
 
         }
@@ -203,10 +190,20 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
-                case DOKU_LEXER_EXIT :
                     /**
                      * background is print via the {@link Background::processBackgroundAttributes()}
                      */
+                    break;
+                case DOKU_LEXER_EXIT :
+                case DOKU_LEXER_SPECIAL :
+                    /**
+                     * Print any error
+                     */
+                    if (isset($data[self::ERROR])) {
+                        $class = LinkUtility::TEXT_ERROR_CLASS;
+                        $error = $data[self::ERROR];
+                        $renderer->doc .= "<p class=\"$class\">$error</p>" . DOKU_LF;
+                    }
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     /**
@@ -226,6 +223,49 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     private function getTags()
     {
         return [self::TAG, self::TAG_SHORT];
+    }
+
+    /**
+     * @param Tag $openingTag
+     * @param array $backgroundAttributes
+     * @param $state
+     * @return array
+     */
+    public function setAttributesToParentAndReturnData(Tag $openingTag, array $backgroundAttributes, $state)
+    {
+
+        /**
+         * The data array
+         */
+        $data = array(
+            PluginUtility::STATE => $state
+        );
+
+        /**
+         * Set the backgrounds attributes
+         * to the parent
+         */
+        $parentTag = $openingTag->getParent();
+
+        if ($parentTag != null) {
+            if ($parentTag->getName() == Background::BACKGROUNDS) {
+                $parentTag = $parentTag->getParent();
+            }
+            $backgrounds = $parentTag->getAttribute(Background::BACKGROUNDS);
+            if ($backgrounds == null) {
+                $backgrounds = [$backgroundAttributes];
+            } else {
+                $backgrounds[] = $backgroundAttributes;
+            }
+            $parentTag->setAttribute(Background::BACKGROUNDS, $backgrounds);
+        } else {
+            $data[self::ERROR] = "A background should have a parent";
+        }
+
+        /**
+         * Return state to keep the call stack structure
+         */
+        return $data;
     }
 
 

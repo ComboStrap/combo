@@ -5,6 +5,7 @@
 use ComboStrap\Background;
 use ComboStrap\ColorUtility;
 use ComboStrap\LinkUtility;
+use ComboStrap\Position;
 use ComboStrap\RasterImageLink;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
@@ -265,7 +266,17 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
         if ($parentTag != null) {
             if ($parentTag->getName() == Background::BACKGROUNDS) {
+                /**
+                 * The backgrounds node
+                 * (is already relative)
+                 */
                 $parentTag = $parentTag->getParent();
+            } else {
+                /**
+                 * Another node should be relative
+                 * with a background
+                 */
+                $parentTag->setAttributeIfNotPresent(Position::POSITION_ATTRIBUTE, "relative");
             }
             $backgrounds = $parentTag->getAttribute(Background::BACKGROUNDS);
             if ($backgrounds == null) {
@@ -274,6 +285,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 $backgrounds[] = $backgroundAttributes;
             }
             $parentTag->setAttribute(Background::BACKGROUNDS, $backgrounds);
+
         } else {
             $data[self::ERROR] = "A background should have a parent";
         }

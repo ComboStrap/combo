@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\AdsUtility;
+use ComboStrap\Float;
 use ComboStrap\Icon;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\LazyLoad;
@@ -245,4 +246,16 @@ $meta[InternalMediaLink::CONF_DEFAULT_LINKING] = array('multichoice', '_choices'
     InternalMediaLink::CONF_LINKING_DETAILS_VALUE,
     InternalMediaLink::CONF_LINKING_LINKONLY_VALUE,
     InternalMediaLink::CONF_LINKING_NOLINK_VALUE,
+));
+
+/**
+ * Default breakpoint
+ */
+$meta[Float::CONF_FLOAT_DEFAULT_BREAKPOINT] = array('multichoice', '_choices' => array(
+    "xs",
+    "sm",
+    "md",
+    "lg",
+    "xl",
+    "xxl"
 ));

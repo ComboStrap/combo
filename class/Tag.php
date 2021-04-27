@@ -949,5 +949,13 @@ class Tag
         return $children;
     }
 
+    public function setAttributeIfNotPresent($key, $value)
+    {
+        if (!isset($this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key])){
+            $this->setAttribute($key, $value);
+        }
+
+    }
+
 
 }

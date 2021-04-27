@@ -76,7 +76,7 @@ class TagAttributes
     /**
      * The inline element
      */
-    const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL];
+    const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL,RasterImageLink::CANONICAL];
     const SCRIPT_KEY = "script";
     const TRANSFORM = "transform";
     const FLOAT_KEY = "float";
@@ -347,7 +347,7 @@ class TagAttributes
             /**
              * Float
              */
-            PluginUtility::processFloat($this);
+            Float::processFloat($this);
 
             /**
              * Process the attributes that have an effect on the class

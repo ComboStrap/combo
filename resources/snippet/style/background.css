@@ -1,10 +1,3 @@
-.bg {
-    z-index: -1;
-    position: absolute;
-    right: 0;
-    top: 0;
-}
-
 .backgrounds {
     position: absolute !important; /* not in the normal flow */
     right: 0;
@@ -40,4 +33,12 @@
     transform: translate3d(0px, 0px, 0px);
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
+}
+
+/* For a image */
+.background-img {
+    position: absolute !important; /* not in the normal flow */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }

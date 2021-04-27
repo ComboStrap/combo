@@ -21,6 +21,7 @@ require_once(__DIR__ . '/Shadow.php');
 require_once(__DIR__ . '/TagAttributes.php');
 require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/Background.php');
+require_once(__DIR__ . '/Float.php');
 
 
 /**
@@ -92,10 +93,7 @@ class PluginUtility
      * Class to center an element
      */
     const CENTER_CLASS = "mx-auto";
-    /**
-     * Float right class
-     */
-    const FLOAT_RIGHT_CLASS = "float-right";
+
 
     const EDIT_SECTION_TARGET = 'section';
 
@@ -821,6 +819,7 @@ class PluginUtility
         $align = TagAttributes::ALIGN_KEY;
         if ($attributes->hasComponentAttribute($align)) {
             $alignValue = $attributes->getValueAndRemove($align);
+            $attributes->addClassName("d-block");
             switch ($alignValue) {
                 case "center":
                     $attributes->addClassName(PluginUtility::CENTER_CLASS);
@@ -828,7 +827,6 @@ class PluginUtility
                 case "right":
                     $attributes->addStyleDeclaration("margin-left", "auto");
                     $attributes->addStyleDeclaration("width", "fit-content");
-
                     break;
             }
 
@@ -841,25 +839,6 @@ class PluginUtility
             if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
                 $attributes->addClassName("d-block");
             }
-        }
-    }
-
-    public static function processFloat(&$attributes){
-        // The class shortcut
-        $float = TagAttributes::FLOAT_KEY;
-        if ($attributes->hasComponentAttribute($float)) {
-            $alignValue = $attributes->getValueAndRemove($float);
-            switch ($alignValue) {
-                case "left":
-                    $attributes->addClassName("float-left");
-                    break;
-                case "right":
-                    $attributes->addClassName(PluginUtility::FLOAT_RIGHT_CLASS);
-                    break;
-            }
-            // position relative and z-index are needed to put the float above
-            $attributes->addStyleDeclaration("position", "relative!important");
-            $attributes->addStyleDeclaration("z-index", 1);
         }
     }
 

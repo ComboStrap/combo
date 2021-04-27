@@ -186,6 +186,16 @@ abstract class InternalMediaLink extends DokuPath
         $attributes = self::getParseAttributes($match);
 
         /**
+         * The align attribute on an image parse
+         * is a float right
+         * ComboStrap does a difference between a block right and a float right
+         */
+        if ($attributes[TagAttributes::ALIGN_KEY]==="right"){
+            unset($attributes[TagAttributes::ALIGN_KEY]);
+            $attributes[TagAttributes::FLOAT_KEY]="right";
+        }
+
+        /**
          * Do we have a linking attribute
          */
         $linkingAttributeFound = false;

@@ -56,7 +56,7 @@ class Position
                 $jsSnippet = <<<EOF
 var stickyElements = Sticksy.initializeAll('.$stickyClass',{topSpacing: $topSpacing})
 EOF;
-                $snippetManager->upsertJavascriptForBar(self::STICKY, $jsSnippet);
+                $snippetManager->attachJavascriptSnippetForBar(self::STICKY, $jsSnippet);
             }
 
         }
@@ -107,15 +107,15 @@ EOF;
                     break;
                 case "left-center":
                 case "center-left":
-                $attributes->addClassName("position-absolute top-50 start-0 translate-middle");
+                    $attributes->addClassName("position-absolute top-50 start-0 translate-middle");
                     break;
                 case "center-center":
                 case "center":
-                $attributes->addClassName("position-absolute top-50 start-50 translate-middle");
+                    $attributes->addClassName("position-absolute top-50 start-50 translate-middle");
                     break;
                 case "right-center":
                 case "center-right":
-                $attributes->addClassName("position-absolute top-50 start-100 translate-middle");
+                    $attributes->addClassName("position-absolute top-50 start-100 translate-middle");
                     break;
                 case "bottom-left":
                 case "left-bottom":
@@ -128,6 +128,16 @@ EOF;
                 case "bottom-right":
                 case "right-bottom":
                     $attributes->addClassName("position-absolute top-100 start-100 translate-middle");
+                    break;
+                case "relative":
+                case "absolute":
+                case "fixed":
+                case "static":
+                    /**
+                     * The css value are also supported
+                     * (to define that for instance the parent of a background should be at minimum relative)
+                     */
+                    $attributes->addStyleDeclaration("position", $position);
                     break;
 
             }

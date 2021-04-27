@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\AdsUtility;
+use ComboStrap\Float;
 use ComboStrap\Icon;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\LazyLoad;
@@ -161,7 +162,6 @@ $lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default
 $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "The default level applied to a shadow attributes");
 
 
-
 /**
  * Svg
  */
@@ -191,7 +191,12 @@ $lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(Laz
 /**
  * Image
  */
-$lang[InternalMediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(InternalMediaLink::CANONICAL,"If unchecked, the image component will be disabled");
-$lang[InternalMediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(InternalMediaLink::CANONICAL,"The default link option from an internal image.");
+$lang[InternalMediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(InternalMediaLink::CANONICAL, "If unchecked, the image component will be disabled");
+$lang[InternalMediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(InternalMediaLink::CANONICAL, "The default link option from an internal image.");
+
+/**
+ * Float
+ */
+$lang[Float::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getUrl(Float::CANONICAL, "The default breakpoint that applies to floated value (left, right, none)");
 
 ?>

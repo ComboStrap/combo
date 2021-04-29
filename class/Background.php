@@ -127,7 +127,8 @@ class Background
         if (!empty($backgroundImageStyleValue)) {
             if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_OPACITY)) {
                 $opacity = $tagAttributes->getValueAndRemove(self::BACKGROUND_OPACITY);
-                $backgroundImageStyleValue = "linear-gradient(to right, rgba(255,255,255, $opacity) 0 100%)," . $backgroundImageStyleValue;
+                $finalOpacity = 1 - $opacity;
+                $backgroundImageStyleValue = "linear-gradient(to right, rgba(255,255,255, $finalOpacity) 0 100%)," . $backgroundImageStyleValue;
             }
             $tagAttributes->addStyleDeclaration(self::BACKGROUND_IMAGE, $backgroundImageStyleValue);
         }

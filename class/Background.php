@@ -10,32 +10,44 @@ namespace ComboStrap;
 class Background
 {
     /**
-     * Logical attribute
+     * Background Logical attribute / Public
      */
     const BACKGROUND_COLOR = 'background-color';
+    const BACKGROUND_OPACITY = "background-opacity";
+    const BACKGROUND_FILL = "background-fill";
+    const BACKGROUND_POSITION = "background-position";
 
     /**
-     * HTML attribute / not public
+     * CSS attribute / not public
      */
     const BACKGROUND_IMAGE = 'background-image';
+    const BACKGROUND_SIZE = "background-size";
+    const BACKGROUND_REPEAT = "background-repeat";
 
     /**
-     * Logical attribute / not public
+     * Logical attribute / not public to go from image to background image
      */
     const BACKGROUND_IMAGE_ID = 'background-image-id';
     const BACKGROUND_IMAGE_WIDTH = 'background-image-width';
     const BACKGROUND_IMAGE_HEIGHT = 'background-image-height';
     const BACKGROUND_IMAGE_CACHE = 'background-image-cache';
 
+
     /**
      * The page canonical of the documentation
      */
     const CANONICAL = "background";
-
     /**
      * A component attributes to store backgrounds
      */
     const BACKGROUNDS = "backgrounds";
+
+    /**
+     * This default are making the background responsive
+     */
+    const DEFAULT_ATTRIBUTES = array(
+        Background::BACKGROUND_FILL => "cover"
+    );
 
 
     public static function processBackgroundAttributes(TagAttributes &$tagAttributes)
@@ -57,12 +69,15 @@ class Background
                         $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_HEIGHT, $background[self::BACKGROUND_IMAGE_HEIGHT]);
                         $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE_CACHE, $background[self::BACKGROUND_IMAGE_CACHE]);
                         $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_COLOR, $background[self::BACKGROUND_COLOR]);
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_OPACITY, $background[self::BACKGROUND_OPACITY]);
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_POSITION, $background[self::BACKGROUND_POSITION]);
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_FILL, $background[self::BACKGROUND_FILL]);
                     } else {
                         $backgroundTagAttribute = TagAttributes::createFromCallStackArray($background);
                         $backgroundTagAttribute->addClassName(self::CANONICAL);
-                        $backgroundHTML = "<div class=\"backgrounds\">".
-                            $backgroundTagAttribute->toHtmlEnterTag("div").
-                            "</div>".
+                        $backgroundHTML = "<div class=\"backgrounds\">" .
+                            $backgroundTagAttribute->toHtmlEnterTag("div") .
+                            "</div>" .
                             "</div>";
                         $tagAttributes->addHtmlAfterEnterTag($backgroundHTML);
                     }
@@ -85,10 +100,13 @@ class Background
         }
 
         /**
-         * Image background is set by the user
+         * Background-image attribute
          */
         $backgroundImageStyleValue = "";
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_IMAGE)) {
+            /**
+             * Image background is set by the user
+             */
             $backgroundImageStyleValue = $tagAttributes->getValueAndRemove(self::BACKGROUND_IMAGE);
         } else {
             if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_IMAGE_ID)) {
@@ -107,7 +125,31 @@ class Background
             }
         }
         if (!empty($backgroundImageStyleValue)) {
+            if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_OPACITY)) {
+                $opacity = $tagAttributes->getValueAndRemove(self::BACKGROUND_OPACITY);
+                $backgroundImageStyleValue = "linear-gradient(to right, rgba(255,255,255, $opacity) 0 100%)," . $backgroundImageStyleValue;
+            }
             $tagAttributes->addStyleDeclaration(self::BACKGROUND_IMAGE, $backgroundImageStyleValue);
+        }
+
+        /**
+         * Background-fill
+         */
+        if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_FILL)) {
+            $backgroundFill = $tagAttributes->getValueAndRemove(self::BACKGROUND_FILL);
+            switch ($backgroundFill) {
+                case "cover":
+                default: // it makes the background responsive
+                    $tagAttributes->addStyleDeclaration(self::BACKGROUND_SIZE, $backgroundFill);
+                    $tagAttributes->addStyleDeclaration(self::BACKGROUND_REPEAT, "no-repeat");
+                    $tagAttributes->addStyleDeclaration(self::BACKGROUND_POSITION, "center center");
+                    break;
+                case "tile":
+                    // background size is then "auto" (ie repeat), the default
+                    // background position is not needed (the tile start on the left top corner)
+                    $tagAttributes->addStyleDeclaration(self::BACKGROUND_REPEAT, "repeat");
+                    break;
+            }
         }
 
         /**

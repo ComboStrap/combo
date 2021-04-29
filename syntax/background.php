@@ -3,14 +3,11 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
-use ComboStrap\ColorUtility;
-use ComboStrap\LinkUtility;
-use ComboStrap\Position;
-use ComboStrap\RasterImageLink;
 use ComboStrap\InternalMediaLink;
+use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Position;
 use ComboStrap\Tag;
-use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -39,18 +36,21 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     const ERROR = "error";
 
     /**
+     * Function used in the special and enter tag
      * @param $match
-     * return the background internal component attribute
-     *
+     * @return array
      */
-    private static function getBackgroundAttribute($match)
+    private static function getAttributesAndAddBackgroundPrefix($match)
     {
+        $defaultAttributes = Background::DEFAULT_ATTRIBUTES;
         $attributes = PluginUtility::getTagAttributes($match);
-        if (isset($attributes[ColorUtility::COLOR])){
-            $attributes[Background::BACKGROUND_COLOR]=$attributes[ColorUtility::COLOR];
-            unset($attributes[ColorUtility::COLOR]);
+        foreach ($attributes as $key => $attribute) {
+            $newKey = strtolower("background-$key");
+            $attributes[$newKey] = $attribute;
+            unset($attributes[$key]);
         }
-        return $attributes;
+        return PluginUtility::mergeAttributes($attributes, $defaultAttributes);
+
     }
 
 
@@ -139,18 +139,20 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultAttributes = array();
-                $attributes = self::getBackgroundAttribute($match);
-                $attributes = PluginUtility::mergeAttributes($attributes, $defaultAttributes);
+
+                /**
+                 * Get and Add the background prefix
+                 */
+                $attributes = self::getAttributesAndAddBackgroundPrefix($match);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes
                 );
 
             case DOKU_LEXER_SPECIAL :
-                $attributes = self::getBackgroundAttribute($match);
+                $attributes = self::getAttributesAndAddBackgroundPrefix($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
-                return $this->setAttributesToParentAndReturnData($tag, $attributes,$state);
+                return $this->setAttributesToParentAndReturnData($tag, $attributes, $state);
 
             case DOKU_LEXER_UNMATCHED :
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
@@ -180,7 +182,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                     $backgroundAttributes = PluginUtility::mergeAttributes($backgroundAttributes, $backgroundImageAttribute);
                 }
 
-                return $this->setAttributesToParentAndReturnData($openingTag, $backgroundAttributes,$state);
+                return $this->setAttributesToParentAndReturnData($openingTag, $backgroundAttributes, $state);
 
 
         }

@@ -42,6 +42,10 @@ abstract class InternalMediaLink extends DokuPath
      * when there is a width and use them not otherwise
      */
     const URL_ENCODED_AND = '&amp;';
+    /**
+     * Used in dokuwiki syntax
+     */
+    const URL_AND = "&";
 
     /**
      * Default image linking value
@@ -52,10 +56,12 @@ abstract class InternalMediaLink extends DokuPath
     const CONF_LINKING_DETAILS_VALUE = 'details';
     const CONF_LINKING_LINKONLY_VALUE = "linkonly";
     const SRC_KEY = "src";
+
     /**
-     * The dokuwiki media property
+     * The dokuwiki media property used in a link
      */
-    const DOKUWIKI_QUERY_MEDIA_PROPERTY = ["w","h"];
+    const DOKUWIKI_QUERY_MEDIA_PROPERTY = ["w", "h"];
+
 
     private $id;
 
@@ -111,7 +117,6 @@ abstract class InternalMediaLink extends DokuPath
      *
      * @param $match
      * @return array
-     * @deprecated This function takes the first digit as the width due to the pattern of the width and height parsing
      */
     public static function getParseAttributes($match)
     {
@@ -185,16 +190,29 @@ abstract class InternalMediaLink extends DokuPath
      */
     public static function createFromRenderMatch($match)
     {
+        /**
+         * Even if deprecated because of dimension we use
+         * it to handle the other attributes such as cache, an align
+         */
         $attributes = self::getParseAttributes($match);
+
+        /**
+         * The {@link InternalMediaLink::getParseAttributes() previous function}
+         * takes the first digit as the width
+         * (bad pattern for the width and height parsing)
+         * We set them to null and parse them below
+         */
+        $attributes[TagAttributes::WIDTH_KEY] = null;
+        $attributes[TagAttributes::HEIGHT_KEY] = null;
 
         /**
          * The align attribute on an image parse
          * is a float right
          * ComboStrap does a difference between a block right and a float right
          */
-        if ($attributes[TagAttributes::ALIGN_KEY]==="right"){
+        if ($attributes[TagAttributes::ALIGN_KEY] === "right") {
             unset($attributes[TagAttributes::ALIGN_KEY]);
-            $attributes[TagAttributes::FLOAT_KEY]="right";
+            $attributes[Float::FLOAT_KEY] = "right";
         }
 
         /**
@@ -211,23 +229,36 @@ abstract class InternalMediaLink extends DokuPath
             $positionQueryCharacter = strpos($link, "?");
             if ($positionQueryCharacter !== false) {
                 $queryParameters = substr($link, $positionQueryCharacter + 1);
-                $parameters = StringUtility::explodeAndTrim($queryParameters, "&");
+                $parameters = StringUtility::explodeAndTrim($queryParameters, InternalMediaLink::URL_AND);
                 foreach ($parameters as $parameter) {
                     $equalCharacterPosition = strpos($parameter, "=");
                     if ($equalCharacterPosition !== false) {
                         $parameterProp = explode("=", $parameter);
                         $key = $parameterProp[0];
-                        if (!in_array($key,self::DOKUWIKI_QUERY_MEDIA_PROPERTY)) {
+                        if (!in_array($key, self::DOKUWIKI_QUERY_MEDIA_PROPERTY)) {
                             /**
                              * exclude already parsed w=xxxx and h=wwww
                              */
                             $attributes[$key] = $parameterProp[1];
                         }
                     } else {
+                        /**
+                         * Linking
+                         */
                         if ($linkingAttributeFound == false
                             &&
                             preg_match('/(nolink|direct|linkonly|details)/i', $parameter)) {
                             $linkingAttributeFound = true;
+                        }
+                        /**
+                         * Sizing (wxh)
+                         */
+                        $sizing = [];
+                        if (preg_match('/([0-9]+)(x([0-9]+))?/', $parameter, $sizing)) {
+                            $attributes[TagAttributes::WIDTH_KEY] = $sizing[1];
+                            if (isset($sizing[3])) {
+                                $attributes[TagAttributes::HEIGHT_KEY] = $sizing[3];
+                            }
                         }
                     }
                 }
@@ -356,7 +387,7 @@ abstract class InternalMediaLink extends DokuPath
 
     public function getRequestedHeight()
     {
-        return $this->tagAttributes->getValue(TagAttributes::HEIGHT_KEY);
+        return $this->tagAttributes->getValueAsString(TagAttributes::HEIGHT_KEY);
     }
 
 
@@ -365,18 +396,18 @@ abstract class InternalMediaLink extends DokuPath
      */
     public function getRequestedWidth()
     {
-        return $this->tagAttributes->getValue(TagAttributes::WIDTH_KEY);
+        return $this->tagAttributes->getValueAsString(TagAttributes::WIDTH_KEY);
     }
 
 
     public function getCache()
     {
-        return $this->tagAttributes->getValue(TagAttributes::CACHE_KEY);
+        return $this->tagAttributes->getValueAsString(TagAttributes::CACHE_KEY);
     }
 
     protected function getTitle()
     {
-        return $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
+        return $this->tagAttributes->getValueAsString(TagAttributes::TITLE_KEY);
     }
 
 
@@ -423,7 +454,7 @@ abstract class InternalMediaLink extends DokuPath
         /**
          * Do we add a link to the image ?
          */
-        $linking = $this->tagAttributes->getValueAndRemove(TagAttributes::LINKING_KEY);
+        $linking = $this->tagAttributes->getValueAsStringAndRemove(TagAttributes::LINKING_KEY);
         switch ($linking) {
             case self::CONF_LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(

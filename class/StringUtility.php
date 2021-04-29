@@ -183,11 +183,11 @@ class StringUtility
 
     public static function endWiths($string, $suffix)
     {
-        $suffixStartPosition = strlen($string) - strlen($suffix );
-        return strrpos($string, $suffix ) === $suffixStartPosition;
+        $suffixStartPosition = strlen($string) - strlen($suffix);
+        return strrpos($string, $suffix) === $suffixStartPosition;
     }
 
-    public static function explodeAndTrim($string, $delimiter=",")
+    public static function explodeAndTrim($string, $delimiter = ",")
     {
         return array_map('trim', explode($delimiter, $string));
     }
@@ -199,6 +199,11 @@ class StringUtility
          * and not strpos
          */
         return strrpos($haystack, $needle);
+    }
+
+    public static function startWiths($string, $prefix)
+    {
+        return strrpos($string, $prefix) === 0;
     }
 
 }

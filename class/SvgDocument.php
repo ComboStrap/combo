@@ -131,7 +131,7 @@ class SvgDocument extends XmlDocument
 
         // Set the name (icon) attribute for test selection
         if ($tagAttributes->hasComponentAttribute("name")) {
-            $name = $tagAttributes->getValueAndRemove("name");
+            $name = $tagAttributes->getValueAsStringAndRemove("name");
             $this->setRootAttribute('data-name', $name);
         }
 
@@ -140,7 +140,7 @@ class SvgDocument extends XmlDocument
          *   ie the max-width style
          * They are treated in {@link PluginUtility::processStyle()}
          */
-        $type = $tagAttributes->getValueAndRemove("type", self::ILLUSTRATION_TYPE);
+        $type = $tagAttributes->getValueAsStringAndRemove("type", self::ILLUSTRATION_TYPE);
         switch ($type) {
             case self::ICON_TYPE:
                 /**
@@ -182,10 +182,10 @@ class SvgDocument extends XmlDocument
                  * and the bar component are below the brand text
                  *
                  */
-                $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY,"24");
+                $width = $tagAttributes->getValueAsStringAndRemove(TagAttributes::WIDTH_KEY,"24");
                 $qualifiedWidth = TagAttributes::toPixelLengthIfNoSpecified($width);
                 $tagAttributes->addHtmlAttributeValue("width", $qualifiedWidth);
-                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY,"24");
+                $height = $tagAttributes->getValueAsStringAndRemove(TagAttributes::HEIGHT_KEY,"24");
                 $qualifiedHeight = TagAttributes::toPixelLengthIfNoSpecified($height);
                 $tagAttributes->addHtmlAttributeValue("height", $qualifiedHeight);
                 break;
@@ -238,7 +238,7 @@ class SvgDocument extends XmlDocument
         $caseSensitives = [ "preserveAspectRatio" ];
         foreach($caseSensitives as $caseSensitive) {
             if ($tagAttributes->hasComponentAttribute($caseSensitive)) {
-                $aspectRatio = $tagAttributes->getValueAndRemove($caseSensitive);
+                $aspectRatio = $tagAttributes->getValueAsStringAndRemove($caseSensitive);
                 $tagAttributes->addHTMLAttributeValue($caseSensitive, $aspectRatio);
             }
         }

@@ -42,14 +42,14 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
      */
     private static function getAttributesAndAddBackgroundPrefix($match)
     {
-        $defaultAttributes = Background::DEFAULT_ATTRIBUTES;
+
         $attributes = PluginUtility::getTagAttributes($match);
         foreach ($attributes as $key => $attribute) {
             $newKey = strtolower("background-$key");
             $attributes[$newKey] = $attribute;
             unset($attributes[$key]);
         }
-        return PluginUtility::mergeAttributes($attributes, $defaultAttributes);
+        return $attributes;
 
     }
 
@@ -177,9 +177,8 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 if ($callImage != null) {
                     $callImage->deleteCall();
                     $imageAttribute = $callImage->getAttributes();
-                    $image = InternalMediaLink::createFromCallStackArray($imageAttribute);
-                    $backgroundImageAttribute = Background::fromMediaToBackgroundCallStackArray($image->toCallStackArray());
-                    $backgroundAttributes = PluginUtility::mergeAttributes($backgroundAttributes, $backgroundImageAttribute);
+                    $backgroundImageAttribute = Background::fromMediaToBackgroundImageStackArray($imageAttribute);
+                    $backgroundAttributes[Background::BACKGROUND_IMAGE] = $backgroundImageAttribute;
                 }
 
                 return $this->setAttributesToParentAndReturnData($openingTag, $backgroundAttributes, $state);
@@ -275,10 +274,12 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 $parentTag = $parentTag->getParent();
             } else {
                 /**
-                 * Another node should be relative
-                 * with a background
+                 * Another parent node
+                 * With a image background, the node should be relative
                  */
-                $parentTag->setAttributeIfNotPresent(Position::POSITION_ATTRIBUTE, "relative");
+                if (isset($backgroundAttributes[Background::BACKGROUND_IMAGE])){
+                    $parentTag->setAttributeIfNotPresent(Position::POSITION_ATTRIBUTE, "relative");
+                }
             }
             $backgrounds = $parentTag->getAttribute(Background::BACKGROUNDS);
             if ($backgrounds == null) {

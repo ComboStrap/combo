@@ -8,16 +8,17 @@ class Float
 {
     const CANONICAL = "float";
     const CONF_FLOAT_DEFAULT_BREAKPOINT = "floatDefaultBreakpoint";
+    const FLOAT_KEY = "float";
 
     public static function processFloat(&$attributes)
     {
         // The class shortcut
-        $float = TagAttributes::FLOAT_KEY;
+        $float = self::FLOAT_KEY;
         if ($attributes->hasComponentAttribute($float)) {
             $floatValue = $attributes->getValueAndRemove($float);
             $floatedValues = StringUtility::explodeAndTrim($floatValue, " ");
             foreach ($floatedValues as $floatedValue) {
-                switch ($floatValue) {
+                switch ($floatedValue) {
                     case "left":
                     case "right":
                     case "none":

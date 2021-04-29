@@ -73,7 +73,7 @@ class Icon
         /**
          * The Name
          */
-        $iconNameAttribute = $tagAttributes->getValue($name);
+        $iconNameAttribute = $tagAttributes->getValueAsString($name);
 
         /**
          * If the name have an extension, it's a file from the media directory

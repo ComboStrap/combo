@@ -176,7 +176,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $attributes->addClassName("row");
 
-                    $type = $attributes->getValueAndRemove(TagAttributes::TYPE_KEY);
+                    $type = $attributes->getValueAsStringAndRemove(TagAttributes::TYPE_KEY);
                     if ($type == "auto") {
                         $attributes->addClassName("row-cols-auto");
                     }

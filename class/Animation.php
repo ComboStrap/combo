@@ -39,7 +39,7 @@ class Animation
     public static function processOnHover(&$attributes)
     {
         if ($attributes->hasComponentAttribute(self::ON_HOVER_ATTRIBUTE)) {
-            $hover = strtolower($attributes->getValueAndRemove(self::ON_HOVER_ATTRIBUTE));
+            $hover = strtolower($attributes->getValueAsStringAndRemove(self::ON_HOVER_ATTRIBUTE));
             $hoverAnimations = preg_split("/\s/", $hover);
 
             $comboDataHoverClasses = "";
@@ -126,7 +126,7 @@ class Animation
     public static function processOnView(&$attributes)
     {
         if ($attributes->hasComponentAttribute(self::ON_VIEW_ATTRIBUTE)) {
-            $onView = $attributes->getValueAndRemove(self::ON_VIEW_ATTRIBUTE);
+            $onView = $attributes->getValueAsStringAndRemove(self::ON_VIEW_ATTRIBUTE);
 
             $animateClass = self::ANIMATE_CLASS;
             $attributes->addClassName($animateClass);

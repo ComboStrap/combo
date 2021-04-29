@@ -165,7 +165,7 @@ class syntax_plugin_combo_slide extends DokuWiki_Syntax_Plugin
                     $sizeAttribute = "size";
                     $size = "md";
                     if ($attributes->hasComponentAttribute($sizeAttribute)) {
-                        $size = $attributes->getValueAndRemove($sizeAttribute);
+                        $size = $attributes->getValueAsStringAndRemove($sizeAttribute);
                     }
                     switch ($size) {
                         case "lg":

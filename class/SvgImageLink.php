@@ -149,7 +149,7 @@ class SvgImageLink extends InternalMediaLink
          */
         if ($svgInjection) {
             if ($this->tagAttributes->hasComponentAttribute("class")) {
-                $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAndRemove("class"));
+                $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAsStringAndRemove("class"));
             }
         }
         // Add the functional class
@@ -166,15 +166,15 @@ class SvgImageLink extends InternalMediaLink
     public function getAbsoluteUrl()
     {
 
-        return $this->getUrl(true);
+        return $this->getUrl();
 
     }
 
     /**
-     * @param bool $absolute - use for semantic data
+     * @param string $ampersand $absolute - the & separator (should be encoded for HTML but not for CSS)
      * @return string|null
      */
-    public function getUrl($absolute = true)
+    public function getUrl($ampersand = InternalMediaLink::URL_ENCODED_AND)
     {
 
         if ($this->exists()) {
@@ -234,7 +234,7 @@ class SvgImageLink extends InternalMediaLink
 
 
             $direct = true;
-            return ml($this->getId(), $att, $direct, InternalMediaLink::URL_ENCODED_AND, $absolute);
+            return ml($this->getId(), $att, $direct, $ampersand, true);
 
         } else {
 

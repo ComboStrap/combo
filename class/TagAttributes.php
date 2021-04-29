@@ -79,7 +79,8 @@ class TagAttributes
     const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL,RasterImageLink::CANONICAL];
     const SCRIPT_KEY = "script";
     const TRANSFORM = "transform";
-    const FLOAT_KEY = "float";
+
+    const CANONICAL = "tag";
 
 
     /**
@@ -268,7 +269,7 @@ class TagAttributes
 
     public function getClass()
     {
-        return $this->getValue('class');
+        return $this->getValueAsString('class');
     }
 
     public function getStyle()
@@ -289,16 +290,33 @@ class TagAttributes
         }
 
         $attLower = strtolower($attributeName);
-        if (!$this->hasComponentAttribute($attLower)) {
-            $this->componentAttributes[$attLower] = array();
-        }
 
-        /**
-         * It may be in the form "value1 value2"
-         */
-        $values = StringUtility::explodeAndTrim($attributeValue, " ");
-        foreach ($values as $value) {
-            $this->componentAttributes[$attLower][trim($value)] = true;
+        if (is_string($attributeValue)) {
+            if (!$this->hasComponentAttribute($attLower)) {
+                $this->componentAttributes[$attLower] = array();
+            }
+
+            /**
+             * It may be in the form "value1 value2"
+             */
+            $values = StringUtility::explodeAndTrim($attributeValue, " ");
+            foreach ($values as $value) {
+                $this->componentAttributes[$attLower][trim($value)] = true;
+            }
+        } else {
+            if (is_numeric($attributeValue) || is_bool($attributeValue)){
+
+                $this->componentAttributes[$attLower][$attributeValue] = true;
+
+            } else {
+
+                if (is_array($attributeValue)) {
+                    $this->componentAttributes[$attLower] = $attributeValue;
+                } else {
+                    LogUtility::msg("Internal Error: The value ($attributeValue) is not a string, a number, a boolean nor an array", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                }
+
+            }
         }
 
     }
@@ -370,7 +388,7 @@ class TagAttributes
              * Transform
              */
             if ($this->hasComponentAttribute(self::TRANSFORM)){
-                $transformValue = $this->getValueAndRemove(self::TRANSFORM);
+                $transformValue = $this->getValueAsStringAndRemove(self::TRANSFORM);
                 $this->addStyleDeclaration("transform",$transformValue);
             }
 
@@ -472,7 +490,7 @@ class TagAttributes
      * @param null $default
      * @return string|null a HTML value in the form 'value1 value2...'
      */
-    public function getValue($attributeName, $default = null)
+    public function getValueAsString($attributeName, $default = null)
     {
         if ($this->hasComponentAttribute($attributeName)) {
             $value = $this->componentAttributes[$attributeName];
@@ -500,11 +518,11 @@ class TagAttributes
      * @param $default
      * @return string|null
      */
-    public function getValueAndRemove($attributeName, $default = null)
+    public function getValueAsStringAndRemove($attributeName, $default = null)
     {
         $value = $default;
         if ($this->hasComponentAttribute($attributeName)) {
-            $value = $this->getValue($attributeName);
+            $value = $this->getValueAsString($attributeName);
             unset($this->componentAttributes[$attributeName]);
         }
         return $value;
@@ -519,7 +537,7 @@ class TagAttributes
     {
         $array = array();
         foreach ($this->componentAttributes as $key => $value) {
-            $array[$key] = StringUtility::toString($this->getValue($key));
+            $array[$key] = StringUtility::toString($this->getValueAsString($key));
         }
         $style = $this->getStyle();
         if (!empty($style)) {
@@ -533,7 +551,7 @@ class TagAttributes
         $lowerAttribute = strtolower($attributeName);
         $value = $default;
         if ($this->hasComponentAttribute($lowerAttribute)) {
-            $value = $this->getValue($lowerAttribute);
+            $value = $this->getValueAsString($lowerAttribute);
         }
         return $value;
     }
@@ -642,7 +660,7 @@ class TagAttributes
         $this->htmlAfterEnterTag .= $html;
     }
 
-    public function getValueAsArrayAndRemove($attributeName, $default = array())
+    public function getValueAndRemove($attributeName, $default = array())
     {
         $value = $default;
         if ($this->hasComponentAttribute($attributeName)) {
@@ -652,6 +670,8 @@ class TagAttributes
         return $value;
 
     }
+
+
 
 
 }

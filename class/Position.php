@@ -35,7 +35,7 @@ class Position
     public static function processStickiness(&$attributes)
     {
         if ($attributes->hasComponentAttribute(self::STICKY_ATTRIBUTE)) {
-            $sticky = strtolower($attributes->getValueAndRemove(self::STICKY_ATTRIBUTE));
+            $sticky = strtolower($attributes->getValueAsStringAndRemove(self::STICKY_ATTRIBUTE));
             if ($sticky == "true") {
                 $stickyClass = self::STICKY_CLASS;
                 $attributes->addClassName($stickyClass);
@@ -69,7 +69,7 @@ EOF;
     public static function processPosition(&$attributes)
     {
         if ($attributes->hasComponentAttribute(self::POSITION_ATTRIBUTE)) {
-            $position = strtolower($attributes->getValueAndRemove(self::POSITION_ATTRIBUTE));
+            $position = strtolower($attributes->getValueAsStringAndRemove(self::POSITION_ATTRIBUTE));
             if (Bootstrap::getBootStrapMajorVersion() < Bootstrap::BootStrapFiveMajorVersion) {
                 $snippetManager = PluginUtility::getSnippetManager();
                 $snippetManager->attachCssSnippetForBar(self::POSITION_SNIPPET_ID);

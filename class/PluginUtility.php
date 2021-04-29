@@ -446,7 +446,7 @@ class PluginUtility
         // Style
         $styleAttributeName = "style";
         if ($attributes->hasComponentAttribute($styleAttributeName)) {
-            $properties = explode(";", $attributes->getValueAndRemove($styleAttributeName));
+            $properties = explode(";", $attributes->getValueAsStringAndRemove($styleAttributeName));
             foreach ($properties as $property) {
                 list($key, $value) = explode(":", $property);
                 if ($key != "") {
@@ -458,9 +458,9 @@ class PluginUtility
         // Skin
         $skinAttributes = "skin";
         if ($attributes->hasComponentAttribute($skinAttributes)) {
-            $skinValue = $attributes->getValueAndRemove($skinAttributes);
+            $skinValue = $attributes->getValueAsStringAndRemove($skinAttributes);
             if ($attributes->hasComponentAttribute("type")) {
-                $type = $attributes->getValueAndRemove("type");
+                $type = $attributes->getValueAsStringAndRemove("type");
                 if (isset(ColorUtility::$colors[$type])) {
                     $color = ColorUtility::$colors[$type];
                     switch ($skinValue) {
@@ -514,7 +514,7 @@ class PluginUtility
         $colorAttributes = ["color", "border-color"];
         foreach ($colorAttributes as $colorAttribute) {
             if ($attributes->hasComponentAttribute($colorAttribute)) {
-                $colorValue = $attributes->getValueAndRemove($colorAttribute);
+                $colorValue = $attributes->getValueAsStringAndRemove($colorAttribute);
                 switch($colorAttribute){
                     case "color":
                         $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
@@ -530,7 +530,7 @@ class PluginUtility
         $widthName = TagAttributes::WIDTH_KEY;
         if ($attributes->hasComponentAttribute($widthName)) {
 
-            $widthValue = trim($attributes->getValueAndRemove($widthName));
+            $widthValue = trim($attributes->getValueAsStringAndRemove($widthName));
             if ($widthValue == "fit") {
                 $widthValue = "fit-content";
             }
@@ -569,7 +569,7 @@ class PluginUtility
 
         $heightName = TagAttributes::HEIGHT_KEY;
         if ($attributes->hasComponentAttribute($heightName)) {
-            $heightValue = trim($attributes->getValueAndRemove($heightName));
+            $heightValue = trim($attributes->getValueAsStringAndRemove($heightName));
 
 
             if (in_array($attributes->getLogicalTag(), TagAttributes::NATURAL_SIZING_ELEMENT)) {
@@ -593,7 +593,7 @@ class PluginUtility
 
         $textAlign = "text-align";
         if ($attributes->hasComponentAttribute($textAlign)) {
-            $textAlignValue = trim($attributes->getValueAndRemove($textAlign));
+            $textAlignValue = trim($attributes->getValueAsStringAndRemove($textAlign));
             $attributes->addStyleDeclaration($textAlign, $textAlignValue);
         }
 
@@ -818,7 +818,7 @@ class PluginUtility
         // The class shortcut
         $align = TagAttributes::ALIGN_KEY;
         if ($attributes->hasComponentAttribute($align)) {
-            $alignValue = $attributes->getValueAndRemove($align);
+            $alignValue = $attributes->getValueAsStringAndRemove($align);
             $attributes->addClassName("d-block");
             switch ($alignValue) {
                 case "center":
@@ -854,7 +854,7 @@ class PluginUtility
         $spacing = "spacing";
         if ($attributes->hasComponentAttribute($spacing)) {
 
-            $spacingValue = $attributes->getValueAndRemove($spacing);
+            $spacingValue = $attributes->getValueAsStringAndRemove($spacing);
 
             $spacingNames = preg_split("/\s/", $spacingValue);
             $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
@@ -1010,7 +1010,7 @@ class PluginUtility
 
         $collapse = "collapse";
         if ($attributes->hasComponentAttribute($collapse)) {
-            $targetId = $attributes->getValueAndRemove($collapse);
+            $targetId = $attributes->getValueAsStringAndRemove($collapse);
             $attributes->addComponentAttributeValue('data-toggle', "collapse");
             $attributes->addComponentAttributeValue('data-target', $targetId);
         }

@@ -181,7 +181,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_UNMATCHED :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $display = $attributes->getValue("display");
+                    $display = $attributes->getValueAsString("display");
                     if ($display!="none") {
                         $renderer->doc .= PluginUtility::renderUnmatched($data);
                     }

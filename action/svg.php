@@ -4,10 +4,8 @@
 require_once(__DIR__ . '/../class/Cache.php');
 
 use ComboStrap\Auth;
-use ComboStrap\File;
 use ComboStrap\LogUtility;
 use ComboStrap\Resources;
-use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\TagAttributes;
 

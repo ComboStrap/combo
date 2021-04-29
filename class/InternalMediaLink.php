@@ -108,8 +108,10 @@ abstract class InternalMediaLink extends DokuPath
     /**
      * Parse the img dokuwiki syntax
      * The output can be used to create an image object with the {@link self::createFromRenderAttributes()} function
+     *
      * @param $match
      * @return array
+     * @deprecated This function takes the first digit as the width due to the pattern of the width and height parsing
      */
     public static function getParseAttributes($match)
     {

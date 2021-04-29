@@ -33,7 +33,7 @@ class Cache
         /**
          * Cache Attribute
          */
-        $cacheParameter = $tagAttributes->getValueAsStringAndRemove('cache', -1);
+        $cacheParameter = $tagAttributes->getValueAndRemove('cache', -1);
         /**
          * Cache transformation
          * From Image cache value (https://www.dokuwiki.org/images#caching)

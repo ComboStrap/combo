@@ -230,7 +230,7 @@ EOD;
         /**
          * Display none, no rendering
          */
-        $display = $attributes->getValueAsStringAndRemove("display");
+        $display = $attributes->getValueAndRemove("display");
         if ($display != null) {
             if ($display == "none") {
                 return;
@@ -247,7 +247,7 @@ EOD;
         /**
          * Add HTML
          */
-        $language = strtolower($attributes->getValueAsStringAndRemove(TagAttributes::TYPE_KEY));
+        $language = strtolower($attributes->getValueAndRemove(TagAttributes::TYPE_KEY));
         if ($language == "dw") {
             $language = "html";
         }
@@ -286,7 +286,7 @@ EOD;
         // Command line
         if ($attributes->hasComponentAttribute("prompt")) {
             $preAttributes->addClassName("command-line");
-            $preAttributes->addHtmlAttributeValue("data-prompt", $attributes->getValueAsStringAndRemove("prompt"));
+            $preAttributes->addHtmlAttributeValue("data-prompt", $attributes->getValueAndRemove("prompt"));
         } else {
             switch ($language) {
                 case "bash":
@@ -319,7 +319,7 @@ EOD;
         // Download
         $preAttributes->addHtmlAttributeValue('data-download-link', true);
         if ($attributes->hasComponentAttribute(syntax_plugin_combo_code::FILE_PATH_KEY)) {
-            $fileSrc = $attributes->getValueAsStringAndRemove(syntax_plugin_combo_code::FILE_PATH_KEY);
+            $fileSrc = $attributes->getValueAndRemove(syntax_plugin_combo_code::FILE_PATH_KEY);
             $preAttributes->addHtmlAttributeValue('data-src', $fileSrc);
             $preAttributes->addHtmlAttributeValue('data-download-link-label', "Download " . $fileSrc);
         } else {
@@ -348,7 +348,7 @@ EOD;
         /**
          * Display none, no rendering
          */
-        $display = $attributes->getValueAsStringAndRemove("display");
+        $display = $attributes->getValueAndRemove("display");
         if ($display != null) {
             if ($display == "none") {
                 return;

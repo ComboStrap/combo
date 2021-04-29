@@ -88,8 +88,14 @@ class SvgDocument extends XmlDocument
     );
     const CONF_PRESERVE_ASPECT_RATIO_DEFAULT = "svgPreserveAspectRatioDefault";
     const SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg";
+
+
+    /**
+     * Type of svg
+     */
     const ICON_TYPE = "icon";
     const ILLUSTRATION_TYPE = "illustration";
+    const TILE_TYPE = "tile";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -131,7 +137,7 @@ class SvgDocument extends XmlDocument
 
         // Set the name (icon) attribute for test selection
         if ($tagAttributes->hasComponentAttribute("name")) {
-            $name = $tagAttributes->getValueAsStringAndRemove("name");
+            $name = $tagAttributes->getValueAndRemove("name");
             $this->setRootAttribute('data-name', $name);
         }
 
@@ -140,9 +146,10 @@ class SvgDocument extends XmlDocument
          *   ie the max-width style
          * They are treated in {@link PluginUtility::processStyle()}
          */
-        $type = $tagAttributes->getValueAsStringAndRemove("type", self::ILLUSTRATION_TYPE);
+        $type = $tagAttributes->getValueAndRemove(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
         switch ($type) {
             case self::ICON_TYPE:
+            case self::TILE_TYPE:
                 /**
                  * Styling
                  * Set the current color if not set
@@ -182,10 +189,16 @@ class SvgDocument extends XmlDocument
                  * and the bar component are below the brand text
                  *
                  */
-                $width = $tagAttributes->getValueAsStringAndRemove(TagAttributes::WIDTH_KEY,"24");
+                if ($type==self::ICON_TYPE){
+                    $defaultWidth = "24";
+                } else {
+                    // tile
+                    $defaultWidth = "192";
+                }
+                $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY,$defaultWidth);
                 $qualifiedWidth = TagAttributes::toPixelLengthIfNoSpecified($width);
                 $tagAttributes->addHtmlAttributeValue("width", $qualifiedWidth);
-                $height = $tagAttributes->getValueAsStringAndRemove(TagAttributes::HEIGHT_KEY,"24");
+                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY,$qualifiedWidth);
                 $qualifiedHeight = TagAttributes::toPixelLengthIfNoSpecified($height);
                 $tagAttributes->addHtmlAttributeValue("height", $qualifiedHeight);
                 break;
@@ -238,7 +251,7 @@ class SvgDocument extends XmlDocument
         $caseSensitives = [ "preserveAspectRatio" ];
         foreach($caseSensitives as $caseSensitive) {
             if ($tagAttributes->hasComponentAttribute($caseSensitive)) {
-                $aspectRatio = $tagAttributes->getValueAsStringAndRemove($caseSensitive);
+                $aspectRatio = $tagAttributes->getValueAndRemove($caseSensitive);
                 $tagAttributes->addHTMLAttributeValue($caseSensitive, $aspectRatio);
             }
         }

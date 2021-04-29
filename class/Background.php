@@ -91,40 +91,52 @@ class Background
                 /**
                  * Image background is set by the user
                  */
-                $backgroundImageStyleValue = $tagAttributes->getValueAsStringAndRemove(self::BACKGROUND_IMAGE);
+                $backgroundImageStyleValue = $tagAttributes->getValueAndRemove(self::BACKGROUND_IMAGE);
 
             } else {
 
                 if (is_array($backgroundImageValue)) {
+
+                    /**
+                     * Background-fill for background image
+                     */
+                    $backgroundFill = $tagAttributes->getValueAndRemove(self::BACKGROUND_FILL, "cover");
+                    switch ($backgroundFill) {
+                        case "cover":
+                            // it makes the background responsive
+                            $tagAttributes->addStyleDeclaration(self::BACKGROUND_SIZE, $backgroundFill);
+                            $tagAttributes->addStyleDeclaration(self::BACKGROUND_REPEAT, "no-repeat");
+                            $tagAttributes->addStyleDeclaration(self::BACKGROUND_POSITION, "center center");
+
+                            /**
+                             * The type of image is important for the processing of SVG
+                             */
+                            $backgroundImageValue[TagAttributes::TYPE_KEY]=SvgDocument::ILLUSTRATION_TYPE;
+                            break;
+                        case "tile":
+                            // background size is then "auto" (ie repeat), the default
+                            // background position is not needed (the tile start on the left top corner)
+                            $tagAttributes->addStyleDeclaration(self::BACKGROUND_REPEAT, "repeat");
+
+                            /**
+                             * The type of image is important for the processing of SVG
+                             * A tile needs to have a width and a height
+                             */
+                            $backgroundImageValue[TagAttributes::TYPE_KEY]=SvgDocument::TILE_TYPE;
+                            break;
+                        case "css":
+                            // custom, set by the user in own css stylesheet, nothing to do
+                            break;
+                        default:
+                            LogUtility::msg("The background `fill` attribute ($backgroundFill) is unknown. If you want to take over the filling via css, set the `fill` value to `css`.", self::CANONICAL);
+                            break;
+                    }
+
                     $media = InternalMediaLink::createFromCallStackArray($backgroundImageValue);
                     $url = $media->getUrl("&");
                     if ($url !== false) {
 
                         $backgroundImageStyleValue = "url(" . $url . ")";
-
-                        /**
-                         * Background-fill for background image
-                         */
-                        $backgroundFill = $tagAttributes->getValueAsStringAndRemove(self::BACKGROUND_FILL, "cover");
-                        switch ($backgroundFill) {
-                            case "cover":
-                                // it makes the background responsive
-                                $tagAttributes->addStyleDeclaration(self::BACKGROUND_SIZE, $backgroundFill);
-                                $tagAttributes->addStyleDeclaration(self::BACKGROUND_REPEAT, "no-repeat");
-                                $tagAttributes->addStyleDeclaration(self::BACKGROUND_POSITION, "center center");
-                                break;
-                            case "tile":
-                                // background size is then "auto" (ie repeat), the default
-                                // background position is not needed (the tile start on the left top corner)
-                                $tagAttributes->addStyleDeclaration(self::BACKGROUND_REPEAT, "repeat");
-                                break;
-                            case "css":
-                                // custom, set by the user in own css stylesheet, nothing to do
-                                break;
-                            default:
-                                LogUtility::msg("The background `fill` attribute ($backgroundFill) is unknown. If you want to take over the filling via css, set the `fill` value to `css`.", self::CANONICAL);
-                                break;
-                        }
 
 
                     } else {
@@ -138,7 +150,7 @@ class Background
         }
         if (!empty($backgroundImageStyleValue)) {
             if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_OPACITY)) {
-                $opacity = $tagAttributes->getValueAsStringAndRemove(self::BACKGROUND_OPACITY);
+                $opacity = $tagAttributes->getValueAndRemove(self::BACKGROUND_OPACITY);
                 $finalOpacity = 1 - $opacity;
                 $backgroundImageStyleValue = "linear-gradient(to right, rgba(255,255,255, $finalOpacity) 0 100%)," . $backgroundImageStyleValue;
             }
@@ -153,7 +165,7 @@ class Background
          */
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_COLOR)) {
 
-            $colorValue = $tagAttributes->getValueAsStringAndRemove(self::BACKGROUND_COLOR);
+            $colorValue = $tagAttributes->getValueAndRemove(self::BACKGROUND_COLOR);
 
             $gradientPrefix = 'gradient-';
             if (strpos($colorValue, $gradientPrefix) === 0) {

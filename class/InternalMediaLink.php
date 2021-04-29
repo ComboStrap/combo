@@ -387,7 +387,7 @@ abstract class InternalMediaLink extends DokuPath
 
     public function getRequestedHeight()
     {
-        return $this->tagAttributes->getValueAsString(TagAttributes::HEIGHT_KEY);
+        return $this->tagAttributes->getValue(TagAttributes::HEIGHT_KEY);
     }
 
 
@@ -396,18 +396,18 @@ abstract class InternalMediaLink extends DokuPath
      */
     public function getRequestedWidth()
     {
-        return $this->tagAttributes->getValueAsString(TagAttributes::WIDTH_KEY);
+        return $this->tagAttributes->getValue(TagAttributes::WIDTH_KEY);
     }
 
 
     public function getCache()
     {
-        return $this->tagAttributes->getValueAsString(TagAttributes::CACHE_KEY);
+        return $this->tagAttributes->getValue(TagAttributes::CACHE_KEY);
     }
 
     protected function getTitle()
     {
-        return $this->tagAttributes->getValueAsString(TagAttributes::TITLE_KEY);
+        return $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
     }
 
 
@@ -454,7 +454,7 @@ abstract class InternalMediaLink extends DokuPath
         /**
          * Do we add a link to the image ?
          */
-        $linking = $this->tagAttributes->getValueAsStringAndRemove(TagAttributes::LINKING_KEY);
+        $linking = $this->tagAttributes->getValueAndRemove(TagAttributes::LINKING_KEY);
         switch ($linking) {
             case self::CONF_LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(

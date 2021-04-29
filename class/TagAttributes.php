@@ -76,7 +76,7 @@ class TagAttributes
     /**
      * The inline element
      */
-    const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL,RasterImageLink::CANONICAL];
+    const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
     const SCRIPT_KEY = "script";
     const TRANSFORM = "transform";
 
@@ -181,59 +181,7 @@ class TagAttributes
              * Key are always lower
              */
             $lowerKey = strtolower($key);
-
-            /**
-             * null is not a string or a boolean
-             */
-            if ($attribute === null) {
-                continue;
-            }
-
-            /**
-             *
-             * Boolean and numeric to string
-             */
-            if (is_bool($attribute) || is_numeric($attribute)) {
-                $attributes[$lowerKey] = [$attribute => true];
-                continue;
-            }
-
-            /**
-             * Life is harder
-             */
-            if (is_string($attribute)) {
-
-                /**
-                 * false is considered as empty, that's why this code is
-                 * in the is_string block
-                 */
-                if (empty($attribute)) {
-                    continue;
-                }
-
-                $explodeArray = explode(" ", $attribute);
-                $arrayValues = array();
-                foreach ($explodeArray as $explodeValue) {
-
-                    $arrayValues[$explodeValue] = true;
-                }
-                $attributes[$lowerKey] = $arrayValues;
-                continue;
-            }
-
-            /**
-             * Array
-             */
-            if (is_array($attribute)) {
-                $attributes[$lowerKey] = $attribute;
-                continue;
-            }
-
-            /**
-             * Not processed
-             */
-            LogUtility::msg("The variable value ($attribute) of the key ($key) is not a string, a boolean, a numeric or an array and was ignored", LogUtility::LVL_MSG_ERROR, "support");
-
+            $attributes[$lowerKey] = $attribute;
 
         }
         return $attributes;
@@ -269,7 +217,7 @@ class TagAttributes
 
     public function getClass()
     {
-        return $this->getValueAsString('class');
+        return $this->getValue('class');
     }
 
     public function getStyle()
@@ -290,34 +238,32 @@ class TagAttributes
         }
 
         $attLower = strtolower($attributeName);
+        if ($this->hasComponentAttribute($attLower)) {
+            $actual = $this->componentAttributes[$attLower];
+        }
 
-        if (is_string($attributeValue)) {
-            if (!$this->hasComponentAttribute($attLower)) {
-                $this->componentAttributes[$attLower] = array();
+        if ($attributeName === "class") {
+            if (!is_string($attributeValue)) {
+                LogUtility::msg("The value ($attributeValue) for the `class` attribute is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
-
             /**
              * It may be in the form "value1 value2"
              */
-            $values = StringUtility::explodeAndTrim($attributeValue, " ");
-            foreach ($values as $value) {
-                $this->componentAttributes[$attLower][trim($value)] = true;
-            }
-        } else {
-            if (is_numeric($attributeValue) || is_bool($attributeValue)){
-
-                $this->componentAttributes[$attLower][$attributeValue] = true;
-
+            $newValues = StringUtility::explodeAndTrim($attributeValue, " ");
+            if (!empty($actual)) {
+                $actualValues = StringUtility::explodeAndTrim($actual, " ");
             } else {
-
-                if (is_array($attributeValue)) {
-                    $this->componentAttributes[$attLower] = $attributeValue;
-                } else {
-                    LogUtility::msg("Internal Error: The value ($attributeValue) is not a string, a number, a boolean nor an array", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                }
-
+                $actualValues = [];
             }
+            $newValues = PluginUtility::mergeAttributes($newValues, $actualValues);
+            $this->componentAttributes[$attLower] = implode(" ", $newValues);
+        } else {
+            if (!empty($actual)){
+                LogUtility::msg("The attribute ($attLower) has already a value ($actual). Adding another value ($attributeValue) is not yet implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            }
+            $this->componentAttributes[$attLower] = $attributeValue;
         }
+
 
     }
 
@@ -387,9 +333,9 @@ class TagAttributes
             /**
              * Transform
              */
-            if ($this->hasComponentAttribute(self::TRANSFORM)){
-                $transformValue = $this->getValueAsStringAndRemove(self::TRANSFORM);
-                $this->addStyleDeclaration("transform",$transformValue);
+            if ($this->hasComponentAttribute(self::TRANSFORM)) {
+                $transformValue = $this->getValueAndRemove(self::TRANSFORM);
+                $this->addStyleDeclaration("transform", $transformValue);
             }
 
 
@@ -401,9 +347,8 @@ class TagAttributes
             /**
              * copy the unknown component attributes
              */
-            foreach ($this->componentAttributes as $key => $arrayValue) {
+            foreach ($this->componentAttributes as $key => $value) {
                 if (!in_array($key, self::HTML_EXCLUDED_ATTRIBUTES)) {
-                    $value = implode(array_keys($arrayValue), " ");
                     $tempHtmlArray[$key] = $value;
                 }
             }
@@ -490,15 +435,10 @@ class TagAttributes
      * @param null $default
      * @return string|null a HTML value in the form 'value1 value2...'
      */
-    public function getValueAsString($attributeName, $default = null)
+    public function getValue($attributeName, $default = null)
     {
         if ($this->hasComponentAttribute($attributeName)) {
-            $value = $this->componentAttributes[$attributeName];
-            if (!is_array($value)) {
-                LogUtility::msg("Internal Error: The value ($value) is not an array", LogUtility::LVL_MSG_ERROR, "support");
-            }
-            $keys = array_keys($value);
-            return implode(" ", $keys);
+            return $this->componentAttributes[$attributeName];
         } else {
             return $default;
         }
@@ -518,11 +458,11 @@ class TagAttributes
      * @param $default
      * @return string|null
      */
-    public function getValueAsStringAndRemove($attributeName, $default = null)
+    public function getValueAndRemove($attributeName, $default = null)
     {
         $value = $default;
         if ($this->hasComponentAttribute($attributeName)) {
-            $value = $this->getValueAsString($attributeName);
+            $value = $this->getValue($attributeName);
             unset($this->componentAttributes[$attributeName]);
         }
         return $value;
@@ -537,7 +477,9 @@ class TagAttributes
     {
         $array = array();
         foreach ($this->componentAttributes as $key => $value) {
-            $array[$key] = StringUtility::toString($this->getValueAsString($key));
+            if (!empty($value)) {
+                $array[$key] = StringUtility::toString($value);
+            }
         }
         $style = $this->getStyle();
         if (!empty($style)) {
@@ -551,7 +493,7 @@ class TagAttributes
         $lowerAttribute = strtolower($attributeName);
         $value = $default;
         if ($this->hasComponentAttribute($lowerAttribute)) {
-            $value = $this->getValueAsString($lowerAttribute);
+            $value = $this->getValue($lowerAttribute);
         }
         return $value;
     }
@@ -658,17 +600,6 @@ class TagAttributes
     public function addHtmlAfterEnterTag($html)
     {
         $this->htmlAfterEnterTag .= $html;
-    }
-
-    public function getValueAndRemove($attributeName, $default = array())
-    {
-        $value = $default;
-        if ($this->hasComponentAttribute($attributeName)) {
-            $value = $this->componentAttributes[$attributeName];
-            unset($this->componentAttributes[$attributeName]);
-        }
-        return $value;
-
     }
 
 

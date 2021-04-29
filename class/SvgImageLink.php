@@ -47,7 +47,7 @@ class SvgImageLink extends InternalMediaLink
      * @param TagAttributes $tagAttributes
      * @param string $rev
      */
-    public function __construct($id, $tagAttributes = null, $rev='')
+    public function __construct($id, $tagAttributes = null, $rev = '')
     {
         parent::__construct($id, $tagAttributes, $rev);
         $this->getTagAttributes()->setTag(self::CANONICAL);
@@ -149,7 +149,7 @@ class SvgImageLink extends InternalMediaLink
          */
         if ($svgInjection) {
             if ($this->tagAttributes->hasComponentAttribute("class")) {
-                $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAsStringAndRemove("class"));
+                $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAndRemove("class"));
             }
         }
         // Add the functional class
@@ -180,58 +180,52 @@ class SvgImageLink extends InternalMediaLink
         if ($this->exists()) {
 
             /**
-             * Create an array that will cary the attributes
+             * We remove align and linking because,
+             * they should apply only to img
+             */
+            $notUrlAttributes = [TagAttributes::ALIGN_KEY, TagAttributes::LINKING_KEY];
+
+            /**
+             *
+             * Create the array $att that will cary the query
+             * parameter for the URL
              */
             $att = array();
             $componentAttributes = $this->tagAttributes->getComponentAttributes();
             foreach ($componentAttributes as $name => $value) {
 
+                if (!in_array($name, $notUrlAttributes)) {
+                    $newName = $name;
+                    switch ($name) {
+                        case TagAttributes::WIDTH_KEY:
+                            $newName = "w";
+                            /**
+                             * We don't remove width because,
+                             * the sizing should apply to img
+                             */
+                            break;
+                        case TagAttributes::HEIGHT_KEY:
+                            $newName = "h";
+                            /**
+                             * We don't remove height because,
+                             * the sizing should apply to img
+                             */
+                            break;
+                    }
 
-                $newName = $name;
-                switch ($name) {
-                    default:
-                        /**
-                         * This attribute should not come in the
-                         * img tag
-                         */
-                        //$this->tagAttributes->removeComponentAttributeIfPresent($name);
-                        break;
-                    case TagAttributes::ALIGN_KEY:
-                        /**
-                         * We don't remove align because,
-                         * the align should apply to img
-                         */
-                        break;
-                    case TagAttributes::WIDTH_KEY:
-                        $newName = "w";
-                        /**
-                         * We don't remove width because,
-                         * the sizing should apply to img
-                         */
-                        break;
-                    case TagAttributes::HEIGHT_KEY:
-                        $newName = "h";
-                        /**
-                         * We don't remove height because,
-                         * the sizing should apply to img
-                         */
-                        break;
+                    if (!empty($value)) {
+                        $att[$newName] = trim($value);
+                    }
                 }
-
-                if (!empty($value)) {
-                    $att[$newName] = trim($value);
-                }
-
-                /**
-                 * Cache bursting
-                 */
-                if (!$this->tagAttributes->hasComponentAttribute(TagAttributes::BUSTER_KEY)){
-                    $att[TagAttributes::BUSTER_KEY] = $this->getRevision();
-                }
-
 
             }
 
+            /**
+             * Cache bursting
+             */
+            if (!$this->tagAttributes->hasComponentAttribute(TagAttributes::BUSTER_KEY) && !empty($this->getRevision())) {
+                $att[TagAttributes::BUSTER_KEY] = $this->getRevision();
+            }
 
             $direct = true;
             return ml($this->getId(), $att, $direct, $ampersand, true);

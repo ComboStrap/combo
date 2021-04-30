@@ -8,24 +8,42 @@
     border-radius: 0; /* not rounded */
 }
 
+.slide-sm {
+    padding: 1rem 2rem
+}
+
 .slide-md {
     padding: 2rem 4rem;
 }
 
 .slide-xl {
-    padding-top: 8rem;
-    padding-bottom: 8rem;
+    padding: 4rem 8rem;
 }
 
 .slide-lg {
-    padding-top: 6rem;
-    padding-bottom: 6rem;
+    padding: 3rem 6rem;
 }
 
-.slide-sm {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+@media (max-width: 768px) {
+
+    .slide-sm {
+        padding: 1rem 1rem
+    }
+
+    .slide-md {
+        padding: 2rem 2rem;
+    }
+
+    .slide-xl {
+        padding: 4rem 4rem;
+    }
+
+    .slide-lg {
+        padding: 3rem 3rem;
+    }
 }
+
+
 
 
 .bg-slide-light {

@@ -278,6 +278,10 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
         $type = $attributes["type"];
         if ($type != 0) {
             PluginUtility::addClass2Attributes("display-" . $type, $attributes);
+            /**
+             * Make Bootstrap display responsive
+             */
+            PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
         }
         if (isset($attributes[self::TITLE])) {
             unset($attributes[self::TITLE]);

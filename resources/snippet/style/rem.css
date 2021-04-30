@@ -1,5 +1,6 @@
 html {
     font-size: 1rem;
+    line-height:1rem;
 }
 
 @media (max-width: 768px) {

@@ -102,10 +102,17 @@ class SvgDocument extends XmlDocument
      */
     private $name;
 
+    /**
+     * @var boolean do the svg should be optimized
+     */
+    private $shouldBeOptimized;
+
 
     public function __construct($text)
     {
         parent::__construct($text);
+
+        $this->shouldBeOptimized = PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE, 1);
 
     }
 
@@ -189,16 +196,16 @@ class SvgDocument extends XmlDocument
                  * and the bar component are below the brand text
                  *
                  */
-                if ($type==self::ICON_TYPE){
+                if ($type == self::ICON_TYPE) {
                     $defaultWidth = "24";
                 } else {
                     // tile
                     $defaultWidth = "192";
                 }
-                $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY,$defaultWidth);
+                $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY, $defaultWidth);
                 $qualifiedWidth = TagAttributes::toPixelLengthIfNoSpecified($width);
                 $tagAttributes->addHtmlAttributeValue("width", $qualifiedWidth);
-                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY,$qualifiedWidth);
+                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY, $qualifiedWidth);
                 $qualifiedHeight = TagAttributes::toPixelLengthIfNoSpecified($height);
                 $tagAttributes->addHtmlAttributeValue("height", $qualifiedHeight);
                 break;
@@ -224,8 +231,8 @@ class SvgDocument extends XmlDocument
                 /**
                  * Responsive to the container
                  */
-                $tagAttributes->addStyleDeclaration("width","100%");
-                $tagAttributes->addStyleDeclaration("height","100%");
+                $tagAttributes->addStyleDeclaration("width", "100%");
+                $tagAttributes->addStyleDeclaration("height", "100%");
                 break;
 
         }
@@ -248,8 +255,8 @@ class SvgDocument extends XmlDocument
          * we get the value and set it then as HTML to have the good casing
          * on this attribute
          */
-        $caseSensitives = [ "preserveAspectRatio" ];
-        foreach($caseSensitives as $caseSensitive) {
+        $caseSensitives = ["preserveAspectRatio"];
+        foreach ($caseSensitives as $caseSensitive) {
             if ($tagAttributes->hasComponentAttribute($caseSensitive)) {
                 $aspectRatio = $tagAttributes->getValueAndRemove($caseSensitive);
                 $tagAttributes->addHTMLAttributeValue($caseSensitive, $aspectRatio);
@@ -274,6 +281,14 @@ class SvgDocument extends XmlDocument
 
         return $this->getXmlText($tagAttributes);
 
+    }
+
+    /**
+     * @param $boolean
+     */
+    public function setShouldBeOptimized($boolean)
+    {
+        $this->shouldBeOptimized = $boolean;
     }
 
 
@@ -458,7 +473,9 @@ class SvgDocument extends XmlDocument
 
     public function shouldOptimize()
     {
-        return PluginUtility::getConfValue(self::CONF_SVG_OPTIMIZATION_ENABLE, 1);
+
+        return $this->shouldBeOptimized;
+
     }
 
     private function setName($name)

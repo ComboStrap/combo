@@ -167,14 +167,17 @@ abstract class InternalMediaLink extends DokuPath
         unset($attributes["src"]);
 
         /**
-         * Type must be the type of the media link
-         * but we don't use it actually
-         * we delete it them if present
-         *
-         * All other are valid component attribute
+         * Type for Dokuwiki is the type of the media link (internal, external, ...)
+         * This is also a ComboStrap attribute where we set the type of a SVG
+         * We delete only the dokuwiki type that we don't use
+         * otherwise we get an error because the type has already be set
          */
         if (key_exists(TagAttributes::TYPE_KEY, $attributes)) {
-            unset($attributes[TagAttributes::TYPE_KEY]);
+            $comboType = [self::INTERNAL_MEDIA];
+            $type = $attributes[TagAttributes::TYPE_KEY];
+            if (in_array($type, $comboType)) {
+                unset($attributes[TagAttributes::TYPE_KEY]);
+            }
         }
 
 

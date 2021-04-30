@@ -173,9 +173,9 @@ abstract class InternalMediaLink extends DokuPath
          * otherwise we get an error because the type has already be set
          */
         if (key_exists(TagAttributes::TYPE_KEY, $attributes)) {
-            $comboType = [self::INTERNAL_MEDIA];
+            $dokuWikiTypeValues = [self::INTERNAL_MEDIA];
             $type = $attributes[TagAttributes::TYPE_KEY];
-            if (in_array($type, $comboType)) {
+            if (in_array($type, $dokuWikiTypeValues)) {
                 unset($attributes[TagAttributes::TYPE_KEY]);
             }
         }

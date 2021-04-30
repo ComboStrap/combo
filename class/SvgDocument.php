@@ -98,6 +98,14 @@ class SvgDocument extends XmlDocument
     const TILE_TYPE = "tile";
 
     /**
+     * There is only two type of svg icon / tile
+     *   * fill color is on the surface (known also as Solid)
+     *   * stroke, the color is on the path (known as Outline
+     */
+    const COLOR_TYPE_FILL_SOLID = "fill";
+    const COLOR_TYPE_STROKE_OUTLINE = "stroke";
+
+    /**
      * @var string - a name identifier that is added in the SVG
      */
     private $name;
@@ -153,13 +161,15 @@ class SvgDocument extends XmlDocument
          *   ie the max-width style
          * They are treated in {@link PluginUtility::processStyle()}
          */
-        $type = $tagAttributes->getValueAndRemove(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
-        switch ($type) {
+        $svgType = $tagAttributes->getValueAndRemove(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
+        switch ($svgType) {
             case self::ICON_TYPE:
             case self::TILE_TYPE:
                 /**
-                 * Styling
-                 * Set the current color if not set
+                 * Determine if this is a:
+                 *   * fill
+                 *   * or stroke
+                 * svg
                  *
                  * The color can be set:
                  *   * on fill (surface)
@@ -172,23 +182,49 @@ class SvgDocument extends XmlDocument
                  * but if this not the case (such as for Material design), we set them
                  */
                 $documentElement = $this->getXmlDom()->documentElement;
-                if (!$documentElement->hasAttribute("fill")) {
-                    /**
-                     * Note: if fill is not set to current color, the default is black
-                     */
-                    $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
-                } else {
 
-                    if ($tagAttributes->hasComponentAttribute("color")) {
-                        /**
-                         * If the color is set, we overwrite fill if not set to none
-                         */
-                        $fillValue = $documentElement->getAttribute("fill");
-                        if ($fillValue != "none") {
-                            $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
-                        }
-                    }
+
+                /**
+                 * Note: if fill is not set, the default is black
+                 */
+                if (!$documentElement->hasAttribute("fill")) {
+
+                    $tagAttributes->addHtmlAttributeValue("fill", "currentColor");
+
                 }
+
+                /**
+                 * Color is set
+                 * We don't set it as a styling attribute
+                 * because it's not taken into account if the
+                 * svg is used as a background image
+                 * fill or stroke should have at minimum "currentColor"
+                 */
+                if ($tagAttributes->hasComponentAttribute(ColorUtility::COLOR)) {
+                    $color = $tagAttributes->getValueAndRemove(ColorUtility::COLOR);
+                    $colorValue = ColorUtility::getColorValue($color);
+
+                    /**
+                     * if the stroke element is not present this is a fill icon
+                     */
+                    $svgColorType = self::COLOR_TYPE_FILL_SOLID;
+                    if (!$documentElement->hasAttribute("stroke")) {
+                        $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
+
+                    }
+
+                    switch ($svgColorType){
+                        case self::COLOR_TYPE_FILL_SOLID:
+                            $tagAttributes->addHtmlAttributeValue("fill", $colorValue);
+                            break;
+                        case self::COLOR_TYPE_STROKE_OUTLINE:
+                            $tagAttributes->addHtmlAttributeValue("fill", "none");
+                            $tagAttributes->addHtmlAttributeValue("stroke", $colorValue);
+                            break;
+                    }
+
+                }
+
                 /**
                  * Using a icon in the navbrand component of bootstrap
                  * require the set of width and height otherwise
@@ -196,7 +232,7 @@ class SvgDocument extends XmlDocument
                  * and the bar component are below the brand text
                  *
                  */
-                if ($type == self::ICON_TYPE) {
+                if ($svgType == self::ICON_TYPE) {
                     $defaultWidth = "24";
                 } else {
                     // tile

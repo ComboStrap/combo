@@ -13,6 +13,9 @@
 namespace ComboStrap;
 
 
+use Doku_Handler;
+use dokuwiki\Parsing\Parser;
+
 class CallStack
 {
 
@@ -98,6 +101,23 @@ class CallStack
     }
 
 
+    /**
+     * @param $dokuTest
+     * @return Doku_Handler
+     */
+    public static function &createHandler($dokuTest)
+    {
+        $modes = p_get_parsermodes();
+        $handler = new Doku_Handler();
+        $parser = new Parser($handler);
+
+        //add modes to parser
+        foreach ($modes as $mode) {
+            $parser->addMode($mode['mode'], $mode['obj']);
+        }
+        $parser->parse($dokuTest);
+        return $handler;
+    }
 
 
 }

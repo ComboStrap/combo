@@ -510,20 +510,20 @@ class PluginUtility
         /**
          * Text and border Color
          * For background color, see {@link TagAttributes::processBackground()}
-        */
-        $colorAttributes = ["color", "border-color"];
+         */
+        $colorAttributes = ["color", ColorUtility::BORDER_COLOR];
         foreach ($colorAttributes as $colorAttribute) {
             if ($attributes->hasComponentAttribute($colorAttribute)) {
                 $colorValue = $attributes->getValueAndRemove($colorAttribute);
-                switch($colorAttribute){
+                switch ($colorAttribute) {
                     case "color":
                         $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
                         break;
-                    case "border-color":
-                            self::checkDefaultBorderColorAttributes($attributes);
+                    case ColorUtility::BORDER_COLOR:
+                        $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
+                        self::checkDefaultBorderColorAttributes($attributes);
                         break;
                 }
-
             }
         }
 

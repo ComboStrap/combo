@@ -35,11 +35,12 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
     function metaCsp($event)
     {
 
-        // $directives
+        // meta directives
         $directives = [
             'block-all-mixed-content', // no http, https
-            "frame-ancestors 'none'" // the page cannot be used in a iframe (clickjacking)
         ];
+
+
 
         // Search if the CSP property is already present
         $cspKey = null;
@@ -64,6 +65,14 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
             ];
         }
 
+        // http header
+        $httpDirectives = [
+            "Content-Security-Policy: frame-ancestors 'none'", // the page cannot be used in a iframe (clickjacking),
+            "X-Frame-Options: deny" // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
+        ];
+        foreach($httpDirectives as $httpDirective){
+            header($httpDirective);
+        }
 
     }
 

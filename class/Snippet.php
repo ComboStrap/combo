@@ -72,6 +72,9 @@ class Snippet
     /**
      * @param $bool - if the snippet is critical, it would not be deferred or preloaded
      * @return Snippet for chaining
+     * All css that are for animation or background for instance
+     * should not be set as critical as they are not needed to paint
+     * exactly the page
      */
     public function setCritical($bool)
     {

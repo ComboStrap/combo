@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
+use ComboStrap\ColorUtility;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
@@ -44,10 +45,9 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     {
 
         $attributes = PluginUtility::getTagAttributes($match);
-        foreach ($attributes as $key => $attribute) {
-            $newKey = strtolower("background-$key");
-            $attributes[$newKey] = $attribute;
-            unset($attributes[$key]);
+        if (isset($attributes[ColorUtility::COLOR])){
+            $attributes[Background::BACKGROUND_COLOR]=$attributes[ColorUtility::COLOR];
+            unset($attributes[ColorUtility::COLOR]);
         }
         return $attributes;
 

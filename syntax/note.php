@@ -2,7 +2,10 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Background;
+use ComboStrap\ColorUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -143,9 +146,9 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $classValue = "alert";
-                    $type = $attributes["type"];
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $attributes->addClassName("alert");
+                    $type = $attributes->getValueAndRemove(TagAttributes::TYPE_KEY);
                     // Switch for the color
                     switch ($type) {
                         case "important":
@@ -157,28 +160,23 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                     }
 
                     if ($type != "tip") {
-                        $classValue .= " alert-" . $type;
+                        $attributes->addClassName("alert-" . $type);
                     } else {
                         // There is no alert-tip color
                         // base color was background color and we have modified the luminance
-                        if (!array_key_exists("color", $attributes)) {
-                            $attributes["color"] = "#6c6400"; // lum - 51
+                        if (!$attributes->hasComponentAttribute(ColorUtility::COLOR)) {
+                            $attributes->addComponentAttributeValue(ColorUtility::COLOR, "#6c6400"); // lum - 51
                         }
-                        if (!array_key_exists("border-color", $attributes)) {
-                            $attributes["border-color"] = "#FFF78c"; // lum - 186
+                        if (!$attributes->hasComponentAttribute("border-color")) {
+                            $attributes->addComponentAttributeValue("border-color", "#FFF78c"); // lum - 186
                         }
-                        if (!array_key_exists("background-color", $attributes)) {
-                            $attributes["background-color"] = "#fff79f"; // lum - 195
+                        if (!$attributes->hasComponentAttribute(Background::BACKGROUND_COLOR)) {
+                            $attributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "#fff79f"); // lum - 195
                         }
                     }
 
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " {$classValue}";
-                    } else {
-                        $attributes["class"] = "{$classValue}";
-                    }
-
-                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . ' role="note">';
+                    $attributes->addHtmlAttributeValue("role","note");
+                    $renderer->doc .= $attributes->toHtmlEnterTag('div');
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

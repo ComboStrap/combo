@@ -235,6 +235,7 @@ class PluginUtility
      *
      * @param $attributes - combo attributes
      * @return string
+     * @deprecated to allowed background and other metadata, use {@link TagAttributes::toHtmlEnterTag()}
      */
     public static function array2HTMLAttributesAsString($attributes)
     {
@@ -466,24 +467,24 @@ class PluginUtility
                     switch ($skinValue) {
                         case "contained":
                             $attributes->addStyleDeclaration(ColorUtility::COLOR, $color[ColorUtility::COLOR]);
-                            $attributes->addStyleDeclaration(ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
+                            $attributes->addStyleDeclaration(Background::BACKGROUND_COLOR, $color[Background::BACKGROUND_COLOR]);
                             $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
                             Shadow::addMediumElevation($attributes);
                             break;
                         case "filled":
                         case "solid":
                             $attributes->addStyleDeclaration(ColorUtility::COLOR, $color[ColorUtility::COLOR]);
-                            $attributes->addStyleDeclaration(ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
+                            $attributes->addStyleDeclaration(Background::BACKGROUND_COLOR, $color[Background::BACKGROUND_COLOR]);
                             $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
                             break;
                         case "outline":
                             $primaryColor = $color[ColorUtility::COLOR];
                             if ($primaryColor === "#fff") {
-                                $primaryColor = $color[ColorUtility::BACKGROUND_COLOR];
+                                $primaryColor = $color[Background::BACKGROUND_COLOR];
                             }
                             $attributes->addStyleDeclaration(ColorUtility::COLOR, $primaryColor);
-                            $attributes->addStyleDeclaration(ColorUtility::BACKGROUND_COLOR, "transparent");
-                            $borderColor = $color[ColorUtility::BACKGROUND_COLOR];
+                            $attributes->addStyleDeclaration(Background::BACKGROUND_COLOR, "transparent");
+                            $borderColor = $color[Background::BACKGROUND_COLOR];
                             if ($attributes->hasStyleDeclaration(ColorUtility::BORDER_COLOR)) {
                                 // Color in the `border` attribute
                                 // takes precedence in the `border-color` if located afterwards
@@ -496,10 +497,10 @@ class PluginUtility
                         case "text":
                             $primaryColor = $color[ColorUtility::COLOR];
                             if ($primaryColor === "#fff") {
-                                $primaryColor = $color[ColorUtility::BACKGROUND_COLOR];
+                                $primaryColor = $color[Background::BACKGROUND_COLOR];
                             }
                             $attributes->addStyleDeclaration(ColorUtility::COLOR, $primaryColor);
-                            $attributes->addStyleDeclaration(ColorUtility::BACKGROUND_COLOR, "transparent");
+                            $attributes->addStyleDeclaration(Background::BACKGROUND_COLOR, "transparent");
                             $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, "transparent");
                             break;
                     }

@@ -564,7 +564,7 @@ class TagAttributes
         if (!empty($attributeString)) {
             $enterTag .= " " . $attributeString;
         }
-        $enterTag .= ">";
+        $enterTag .= ">".DOKU_LF;
 
         if (!empty($this->htmlAfterEnterTag)) {
             $enterTag .= $this->htmlAfterEnterTag;

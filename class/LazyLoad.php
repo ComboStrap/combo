@@ -96,8 +96,8 @@ class LazyLoad
     {
         // https://github.com/ApoorvSaxena/lozad.js#large-image-improvment
         $placeholderColor = LazyLoad::getPlaceholderColor();
-        if ($attributes->hasComponentAttribute(ColorUtility::BACKGROUND_COLOR)) {
-            $placeholderColor = $attributes->getValueAndRemove(ColorUtility::BACKGROUND_COLOR);
+        if ($attributes->hasComponentAttribute(Background::BACKGROUND_COLOR)) {
+            $placeholderColor = $attributes->getValueAndRemove(Background::BACKGROUND_COLOR);
         }
         $attributes->addHtmlAttributeValue("data-placeholder-background", "$placeholderColor");
 

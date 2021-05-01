@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -133,11 +134,8 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $renderer->doc .= '<div';
-                    if (sizeof($attributes) > 0) {
-                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-                    }
-                    $renderer->doc .= '>';
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

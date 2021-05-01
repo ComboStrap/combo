@@ -13,9 +13,9 @@ class Background
      * Background Logical attribute / Public
      */
     const BACKGROUND_COLOR = 'background-color';
-    const BACKGROUND_OPACITY = "background-opacity";
-    const BACKGROUND_FILL = "background-fill";
-    const BACKGROUND_POSITION = "background-position";
+    const BACKGROUND_OPACITY = "opacity";
+    const BACKGROUND_FILL = "fill";
+
 
     /**
      * CSS attribute / not public
@@ -23,6 +23,7 @@ class Background
     const BACKGROUND_IMAGE = 'background-image';
     const BACKGROUND_SIZE = "background-size";
     const BACKGROUND_REPEAT = "background-repeat";
+    const BACKGROUND_POSITION = "background-position";
 
 
     /**
@@ -44,6 +45,7 @@ class Background
     const PATTERN_NAMES = ['checks', 'grid', 'dots', 'cross-dots', 'diagonal-lines', 'horizontal-lines', 'vertical-lines', 'diagonal-stripes', 'horizontal-stripes', 'vertical-stripes', 'triangles', 'zigzag'];
     const PATTERN_CSS_CLASS_PREFIX = "pattern";
     const PATTERN_COLOR_ATTRIBUTE = "pattern-color";
+
 
     public static function processBackgroundAttributes(TagAttributes &$tagAttributes)
     {
@@ -80,9 +82,9 @@ class Background
                     } else {
                         $backgroundTagAttribute = TagAttributes::createFromCallStackArray($background);
                         $backgroundTagAttribute->addClassName(self::CANONICAL);
-                        $backgroundHTML = "<div class=\"backgrounds\">" .
+                        $backgroundHTML = "<div class=\"backgrounds\">" . DOKU_LF .
                             $backgroundTagAttribute->toHtmlEnterTag("div") .
-                            "</div>" .
+                            "</div>" . DOKU_LF .
                             "</div>";
                         $tagAttributes->addHtmlAfterEnterTag($backgroundHTML);
                     }
@@ -197,7 +199,7 @@ class Background
         if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_COLOR)) {
 
             $colorValue = $tagAttributes->getValueAndRemove(self::BACKGROUND_COLOR);
-
+            $colorValue = ColorUtility::getColorValue($colorValue);
             $gradientPrefix = 'gradient-';
             if (strpos($colorValue, $gradientPrefix) === 0) {
                 /**
@@ -215,7 +217,6 @@ class Background
                 $tagAttributes->addStyleDeclaration(self::BACKGROUND_COLOR, $colorValue);
             }
         }
-
 
 
     }
@@ -309,20 +310,20 @@ class Background
                 $tagAttributes->addClassName(self::PATTERN_CSS_CLASS_PREFIX . "-" . $pattern . "-" . $size);
             }
 
-            if (!$tagAttributes->hasComponentAttribute(self::BACKGROUND_COLOR)){
+            if (!$tagAttributes->hasComponentAttribute(self::BACKGROUND_COLOR)) {
                 LogUtility::msg("The background color was not set for the background with the (" . $pattern . "). It was set to the default color.", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                $tagAttributes->addComponentAttributeValue(self::BACKGROUND_COLOR,"steelblue");
+                $tagAttributes->addComponentAttributeValue(self::BACKGROUND_COLOR, "steelblue");
             }
             /**
              * Color
              */
-            if ($tagAttributes->hasComponentAttribute(self::PATTERN_COLOR_ATTRIBUTE)){
+            if ($tagAttributes->hasComponentAttribute(self::PATTERN_COLOR_ATTRIBUTE)) {
                 $patternColor = $tagAttributes->getValueAndRemove(self::PATTERN_COLOR_ATTRIBUTE);
             } else {
                 LogUtility::msg("The pattern color was not set for the background with the (" . $pattern . "). It was set to the default color.", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                 $patternColor = "#FDE482";
             }
-            $tagAttributes->addStyleDeclaration(ColorUtility::COLOR,$patternColor);
+            $tagAttributes->addStyleDeclaration(ColorUtility::COLOR, $patternColor);
 
         }
     }

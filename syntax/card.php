@@ -8,6 +8,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -262,9 +263,14 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER:
 
                     /**
+                     * Tag Attributes
+                     */
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+
+                    /**
                      * Section (Edit button)
                      */
-                    $position = $data[PluginUtility::POSITION];
+                    $position = $tagAttributes->getValueAndRemove(PluginUtility::POSITION);
                     $this->sectionCounter++;
                     $name = "section" . self::TAG . $this->sectionCounter;
                     PluginUtility::startSection($renderer, $position, $name);
@@ -275,7 +281,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * and we close it here
                      */
                     $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-                    $context = $data[PluginUtility::CONTEXT];
+                    $context = $tagAttributes->getValueAndRemove(PluginUtility::CONTEXT);
                     if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_cardcolumns::TAG) {
                         $renderer->doc .= '<div class="col-sm-6 col-lg-4 mb-4">';
                     }
@@ -283,7 +289,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     /**
                      * Card
                      */
-                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>' . DOKU_LF;
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
 
                     /**
                      * Illustrations
@@ -297,7 +303,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT:
-
 
                     /**
                      * End card-body
@@ -314,10 +319,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                             if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
                                 $renderer->doc .= '</div>';
                             }
-                            $renderer->doc .= '</div>' . DOKU_LF ;
+                            $renderer->doc .= '</div>' . DOKU_LF;
                             break;
                         default:
-                            $renderer->doc .= '</div>' . DOKU_LF ;
+                            $renderer->doc .= '</div>' . DOKU_LF;
                     }
                     /**
                      * End section

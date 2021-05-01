@@ -355,11 +355,10 @@ abstract class InternalMediaLink extends DokuPath
     public function toCallStackArray()
     {
         /**
-         * The only attributes that are not in the {@link InternalMediaLink::$tagAttributes}
-         * component attributes are type and src
+         * Trying to stay inline with the dokuwiki key
+         * We use the 'src' attributes as id
          */
         $array = array(
-            'type' => null, // internal, external media, not used
             'src' => $this->getId()
         );
         // Add the extra attribute

@@ -173,24 +173,19 @@ class Icon
 
         if ($mediaDokuPath->exists()) {
 
+
             /**
-             * Dimension
              * After optimization, the width and height of the svg are gone
-             * but we set them on the style attribute
+             * but the icon type set them again
+             *
+             * The icon type is used to set:
+             *   * the default dimension
+             *   * color styling
+             *   * disable the responsive properties
+             *
              */
-            if (!$tagAttributes->hasComponentAttribute("width")) {
-                $tagAttributes->addComponentAttributeValue("width", "24px");
-            }
-            if (!$tagAttributes->hasComponentAttribute("height")) {
-                $tagAttributes->addComponentAttributeValue("height", "24px");
-            }
-            /**
-             * The icon type is used to set the color styling
-             * and the disable the responsive properties
-             */
-            if (!$tagAttributes->hasComponentAttribute("type")) {
-                $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
-            }
+            $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
+
 
             $svgImageLink = SvgImageLink::createMediaPathFromId(
                 $mediaDokuPath->getId(),

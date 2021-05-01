@@ -208,9 +208,8 @@ class SvgDocument extends XmlDocument
                      * if the stroke element is not present this is a fill icon
                      */
                     $svgColorType = self::COLOR_TYPE_FILL_SOLID;
-                    if (!$documentElement->hasAttribute("stroke")) {
+                    if ($documentElement->hasAttribute("stroke")) {
                         $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
-
                     }
 
                     switch ($svgColorType){

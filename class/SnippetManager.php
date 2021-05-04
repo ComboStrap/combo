@@ -276,8 +276,15 @@ class SnippetManager
             $this->snippetsByBarScope[$bar] = $snippets;
         } else {
             // Bad data
-            $data = var_export($this->snippetsByBarScope[$bar], true);
-            LogUtility::msg("Internal error: Snippets for the bar ($bar) have been added while the bar was cached. The snippets added are ($data). This snippet should be added at the request level", LogUtility::LVL_MSG_ERROR);
+            if (PluginUtility::isDebug()) {
+                /**
+                 * For what ever reason, this happens
+                 * but it works
+                 * We still don't know yet why
+                 */
+                $data = var_export($this->snippetsByBarScope[$bar], true);
+                LogUtility::msg("Internal error: Snippets for the bar ($bar) have been added while the bar was cached. The snippets added are ($data). This snippet should be added at the request level", LogUtility::LVL_MSG_ERROR);
+            }
         }
     }
 

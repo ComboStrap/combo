@@ -1279,6 +1279,16 @@ class PluginUtility
         );
     }
 
+    /**
+     * General Debug
+     */
+    public static function isDebug()
+    {
+        global $conf;
+        return $conf["allowdebug"] === 1;
+
+    }
+
 
 }
 

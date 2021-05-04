@@ -180,11 +180,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $display = $attributes->getValue("display");
-                    if ($display!="none") {
-                        $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    }
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :

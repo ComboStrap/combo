@@ -1109,13 +1109,26 @@ class PluginUtility
     public
     static function renderUnmatched($data)
     {
-
-        $payload = $data[self::PAYLOAD];
-        $context = $data[self::CONTEXT];
-        if (!in_array($context, self::PRESERVE_LEFT_WHITE_SPACE_COMPONENTS)) {
-            $payload = ltrim($payload);
+        /**
+         * Attributes
+         */
+        if (isset($data[PluginUtility::ATTRIBUTES])) {
+            $attributes = $data[PluginUtility::ATTRIBUTES];
+        } else {
+            $attributes = [];
         }
-        return PluginUtility::htmlEncode($payload);
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+        $display = $tagAttributes->getValue(TagAttributes::DISPLAY);
+        if ($display != "none") {
+            $payload = $data[self::PAYLOAD];
+            $context = $data[self::CONTEXT];
+            if (!in_array($context, self::PRESERVE_LEFT_WHITE_SPACE_COMPONENTS)) {
+                $payload = ltrim($payload);
+            }
+            return PluginUtility::htmlEncode($payload);
+        } else {
+            return "";
+        }
     }
 
     /**

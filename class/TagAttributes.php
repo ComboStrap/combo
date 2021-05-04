@@ -81,6 +81,7 @@ class TagAttributes
     const TRANSFORM = "transform";
 
     const CANONICAL = "tag";
+    const DISPLAY = "display";
 
 
     /**

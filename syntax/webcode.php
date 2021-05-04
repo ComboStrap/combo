@@ -13,14 +13,13 @@
 /**
  * Plugin Webcode: Show webcode (Css, HTML) in a iframe
  *
- * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * @author     Nicolas GERARD
  */
 
 // must be run within Dokuwiki
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -50,6 +49,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
      */
     const CODES_ATTRIBUTE = "codes";
     const USE_CONSOLE_ATTRIBUTE = "useConsole";
+    const RENDERINGMODE_ATTRIBUTE = 'renderingmode';
+    const RENDERING_ONLY_RESULT = "onlyresult";
 
     /**
      * @var array that holds the iframe attributes
@@ -174,7 +175,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                 $attributes['frameborder'] = 1;
                 $attributes['width'] = '100%';
 
-                $renderingModeKey = 'renderingmode';
+                $renderingModeKey = self::RENDERINGMODE_ATTRIBUTE;
                 $attributes[$renderingModeKey] = 'story';
 
                 // config Parameters will get their value in lowercase
@@ -224,6 +225,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                 $useConsole = false;
                 $exitTag = new Tag(self::TAG, array(), $state, $handler);
                 $openingTag = $exitTag->getOpeningTag();
+                $renderingMode = strtolower($openingTag->getAttribute(self::RENDERINGMODE_ATTRIBUTE));
                 if ($openingTag->hasDescendants()) {
                     $tags = $openingTag->getDescendants();
                     /**
@@ -235,6 +237,14 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     foreach ($tags as $tag) {
                         if (in_array($tag->getName(), self::CODE_TAGS)) {
 
+                            /**
+                             * Only rendering mode
+                             * on all node (unmatched also)
+                             */
+                            if($renderingMode==self::RENDERING_ONLY_RESULT){
+                                $tag->addAttribute(TagAttributes::DISPLAY,"none");
+                            }
+
                             if ($tag->getState() == DOKU_LEXER_ENTER) {
                                 // Get the code (The content between the code nodes)
                                 // We ltrim because the match gives us the \n at the beginning and at the end
@@ -244,10 +254,11 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                                 if ($actualCodeType == 'xml') {
                                     $actualCodeType = 'html';
                                 }
-                                // The code for a language may be scattered in mutliple block
+                                // The code for a language may be scattered in multiple block
                                 if (!isset($codes[$actualCodeType])) {
                                     $codes[$actualCodeType] = "";
                                 }
+
                                 continue;
                             }
 

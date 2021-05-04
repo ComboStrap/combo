@@ -315,6 +315,8 @@ class RasterImageLink extends InternalMediaLink
 
                     if (!empty($srcSet)) {
                         $this->tagAttributes->addHtmlAttributeValue("srcset", $srcSet);
+                    } else {
+                        $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
                     }
 
                 }
@@ -335,9 +337,12 @@ class RasterImageLink extends InternalMediaLink
 
 
             /**
-             * Title
+             * Title (ie alt)
              */
-            $this->tagAttributes->addHtmlAttributeValueIfNotEmpty("alt", $this->getTitle());
+            if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
+                $title = $this->tagAttributes->getValueAndRemove(TagAttributes::TITLE_KEY);
+                $this->tagAttributes->addHtmlAttributeValueIfNotEmpty("alt", $title);
+            }
 
             /**
              * Create the img element

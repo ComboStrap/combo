@@ -213,6 +213,12 @@ class SvgImageLink extends InternalMediaLink
                             break;
                     }
 
+                    if ($newName==TagAttributes::CACHE_KEY && $value==TagAttributes::CACHE_DEFAULT_VALUE){
+                        // This is the default
+                        // No need to add it
+                        continue;
+                    }
+
                     if (!empty($value)) {
                         $att[$newName] = trim($value);
                     }
@@ -223,8 +229,8 @@ class SvgImageLink extends InternalMediaLink
             /**
              * Cache bursting
              */
-            if (!$this->tagAttributes->hasComponentAttribute(TagAttributes::BUSTER_KEY) && !empty($this->getRevision())) {
-                $att[TagAttributes::BUSTER_KEY] = $this->getRevision();
+            if (!$this->tagAttributes->hasComponentAttribute(TagAttributes::BUSTER_KEY)) {
+                $att[TagAttributes::BUSTER_KEY] = $this->getModifiedTime();
             }
 
             $direct = true;

@@ -33,7 +33,8 @@ class TagAttributes
      * @var string the alt attribute value (known as the title for dokuwiki)
      */
     const TITLE_KEY = 'title';
-    const CACHE_KEY = 'cache';
+
+
     const TYPE_KEY = "type";
     const HEIGHT_KEY = 'height';
     /**
@@ -82,6 +83,15 @@ class TagAttributes
 
     const CANONICAL = "tag";
     const DISPLAY = "display";
+
+    /**
+     * Cache
+     * Two values:
+     *   * cache
+     *   * nocache
+     */
+    const CACHE_KEY = 'cache';
+    const CACHE_DEFAULT_VALUE = "cache";
 
 
     /**

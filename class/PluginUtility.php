@@ -96,6 +96,7 @@ class PluginUtility
 
 
     const EDIT_SECTION_TARGET = 'section';
+    const DYNAMIC_WIDTH_CLASS_PREFIX = "dynamic-width-";
 
 
     /**
@@ -555,7 +556,7 @@ class PluginUtility
                      * We inject then dynamically a rule
                      * max-width applies only for screen bigger than the width
                      */
-                    $onTheFlyClass = "dynamic-width-$widthValue";
+                    $onTheFlyClass = self::DYNAMIC_WIDTH_CLASS_PREFIX . $widthValue;
                     // The order of the declaration is important, this one must come first
                     $mostImportantStyleDeclaration = ".$onTheFlyClass { max-width:100% }";
                     $styleDeclaration = "$mostImportantStyleDeclaration @media (min-width: ${widthSinceBreakpoint}px) { .$onTheFlyClass { max-width: $qualifiedWidthValue } }";
@@ -819,8 +820,9 @@ class PluginUtility
         // The class shortcut
         $align = TagAttributes::ALIGN_KEY;
         if ($attributes->hasComponentAttribute($align)) {
+
             $alignValue = $attributes->getValueAndRemove($align);
-            $attributes->addClassName("d-block");
+
             switch ($alignValue) {
                 case "center":
                     $attributes->addClassName(PluginUtility::CENTER_CLASS);
@@ -835,7 +837,10 @@ class PluginUtility
              * For inline element,
              * center should be a block
              * (svg is not a block by default for instance)
-             * ! this should not be the case for flex block such as a row !
+             * !
+             * this should not be the case for flex block such as a row
+             * therefore the condition
+             * !
              */
             if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
                 $attributes->addClassName("d-block");

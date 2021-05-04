@@ -260,7 +260,7 @@ class TagAttributes
             $this->componentAttributes[$attLower] = implode(" ", $newValues);
         } else {
             if (!empty($actual)){
-                LogUtility::msg("The attribute ($attLower) has already a value ($actual). Adding another value ($attributeValue) is not yet implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                LogUtility::msg("The attribute ($attLower) has already a value ($actual). Adding another value ($attributeValue) is not yet implemented. Use the set operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
             $this->componentAttributes[$attLower] = $attributeValue;
         }
@@ -268,6 +268,10 @@ class TagAttributes
 
     }
 
+    public function setComponentAttributeValue($attributeName, $attributeValue){
+        $attLower = strtolower($attributeName);
+        $this->componentAttributes[$attLower] = $attributeValue;
+    }
 
     public function addComponentAttributeValueIfNotEmpty($attributeName, $attributeValue)
     {

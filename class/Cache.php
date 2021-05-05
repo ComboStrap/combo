@@ -83,8 +83,11 @@ class Cache
          * to {@link Cache::setMaxAgeInSec()}
          */
         switch ($cacheParameter) {
-            case "nocache":
+            case "cache":
                 $cacheParameter = -1;
+                break;
+            case "nocache":
+                $cacheParameter = 0;
                 break;
             case "recache":
                 global $conf;

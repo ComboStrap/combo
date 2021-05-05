@@ -40,6 +40,7 @@ class Snippet
     private $snippetId;
     private $scope;
     private $type;
+
     /**
      * @var bool
      */
@@ -63,7 +64,7 @@ class Snippet
         $this->type = $snippetType;
         if ($this->type == self::TYPE_CSS) {
             // All CSS should be loaded first
-            // The CSS animation can set this to false
+            // The CSS animation / background can set this to false
             $this->critical = true;
         }
     }

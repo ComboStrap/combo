@@ -6,6 +6,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -172,7 +173,7 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
@@ -207,8 +208,8 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>' . DOKU_LF;
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

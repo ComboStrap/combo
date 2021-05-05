@@ -53,7 +53,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
         /**
          * Conf
          */
-        PluginUtility::setConf(action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET,true);
+        PluginUtility::setConf(action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET, true);
 
         /**
          * Main content happens before the headers
@@ -65,7 +65,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
          * Html
          */
         $htmlBeforeHeads = '<!DOCTYPE html>' . DOKU_LF;
-        $htmlBeforeHeads .= '<html">' . DOKU_LF;
+        $htmlBeforeHeads .= '<html>' . DOKU_LF;
         $htmlBeforeHeads .= '<head>' . DOKU_LF;
         $htmlBeforeHeads .= "  <title>$title</title>" . DOKU_LF;
         // we echo because the tpl function just flush
@@ -76,7 +76,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
             /**
              * The strap header function
              */
-            require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
+            PluginUtility::loadStrapUtilityTemplate();
             TplUtility::registerHeaderHandler();
         }
         /**
@@ -91,6 +91,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
          */
         tpl_metaheaders();
 
+
         $htmlAfterHeads = '</head>' . DOKU_LF;
         $htmlAfterHeads .= '<body>' . DOKU_LF;
         $htmlAfterHeads .= $mainContent . DOKU_LF;
@@ -103,43 +104,43 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
     public function _delete_not_needed_headers(&$event)
     {
-            $data = &$event->data;
+        $data = &$event->data;
 
-            foreach($data as $tag => &$heads){
-                switch ($tag){
-                    case "link":
-                        $deletedRel = ["manifest","search","start","alternate","contents"];
-                        foreach ($heads as $id => $headAttributes){
-                            if(isset($headAttributes['rel'])){
-                                $rel = $headAttributes['rel'];
-                                if(in_array($rel,$deletedRel)){
-                                    unset($heads[$id]);
-                                }
+        foreach ($data as $tag => &$heads) {
+            switch ($tag) {
+                case "link":
+                    $deletedRel = ["manifest", "search", "start", "alternate", "contents"];
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['rel'])) {
+                            $rel = $headAttributes['rel'];
+                            if (in_array($rel, $deletedRel)) {
+                                unset($heads[$id]);
                             }
                         }
-                        break;
-                    case "meta":
-                        $deletedMeta = ["robots"];
-                        foreach ($heads as $id => $headAttributes){
-                            if(isset($headAttributes['name'])){
-                                $rel = $headAttributes['name'];
-                                if(in_array($rel,$deletedMeta)){
-                                    unset($heads[$id]);
-                                }
+                    }
+                    break;
+                case "meta":
+                    $deletedMeta = ["robots"];
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['name'])) {
+                            $rel = $headAttributes['name'];
+                            if (in_array($rel, $deletedMeta)) {
+                                unset($heads[$id]);
                             }
                         }
-                        break;
-                    case "script":
-                        foreach ($heads as $id => $headAttributes){
-                            if(isset($headAttributes['src'])){
-                                $src = $headAttributes['src'];
-                                if(strpos($src,"lib/exe/js.php")!==false){
-                                    unset($heads[$id]);
-                                }
+                    }
+                    break;
+                case "script":
+                    foreach ($heads as $id => $headAttributes) {
+                        if (isset($headAttributes['src'])) {
+                            $src = $headAttributes['src'];
+                            if (strpos($src, "lib/exe/js.php") !== false) {
+                                unset($heads[$id]);
                             }
                         }
-                }
+                    }
             }
+        }
     }
 
 

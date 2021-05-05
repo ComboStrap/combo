@@ -39,6 +39,8 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
         TagAttributes::TYPE_KEY => syntax_plugin_combo_tabs::ENCLOSED_TABS_TYPE
     );
 
+    const CONF_ENABLE_SECTION_EDITING = "panelEnableSectionEditing";
+
     /**
      * @var int a counter to give an id to the accordion panel
      */
@@ -343,10 +345,12 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                     /**
                      * Section (Edit button)
                      */
-                    $position = $data[PluginUtility::POSITION];
-                    $this->sectionCounter++;
-                    $name = "section" . self::TAG . $this->sectionCounter;
-                    PluginUtility::startSection($renderer, $position, $name);
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                        $position = $data[PluginUtility::POSITION];
+                        $this->sectionCounter++;
+                        $name = "section" . self::TAG . $this->sectionCounter;
+                        PluginUtility::startSection($renderer, $position, $name);
+                    }
 
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
@@ -393,10 +397,13 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
                             break;
 
                     }
+
                     /**
                      * End section
                      */
-                    $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                        $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                    }
 
                     /**
                      * End panel

@@ -56,7 +56,9 @@ class Position
                 $jsSnippet = <<<EOF
 var stickyElements = Sticksy.initializeAll('.$stickyClass',{topSpacing: $topSpacing})
 EOF;
-                $snippetManager->attachJavascriptSnippetForBar(self::STICKY, $jsSnippet);
+                $snippetManager
+                    ->attachJavascriptSnippetForBar(self::STICKY)
+                    ->setContent($jsSnippet);
             }
 
         }

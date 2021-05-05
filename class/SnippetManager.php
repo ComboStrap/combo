@@ -30,6 +30,18 @@ class SnippetManager
 
     const COMBO_CLASS_PREFIX = "combo-";
 
+    /**
+     * If a snippet is critical, it should not be deferred
+     *
+     * By default:
+     *   * all css are critical (except animation or background stylesheet)
+     *   * all javascript are not critical
+     *
+     * This attribute is passed in the dokuwiki array
+     * The value is stored in the {@link Snippet::getCritical()}
+     */
+    const CRITICAL_ATTRIBUTE = "critical";
+
 
     /**
      *
@@ -171,22 +183,25 @@ class SnippetManager
             switch ($snippetType) {
                 case Snippet::TYPE_JS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
+
                         /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["script"][] = array(
                             "class" => self::getClassFromSnippetId($snippetId),
-                            "_data" => $snippet->getContent(),
-                            "critical" => $snippet->getCritical()
+                            "_data" => $snippet->getContent()
                         );
                     }
                     break;
                 case Snippet::TYPE_CSS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
-                        /** @var Snippet $snippet */
-                        $dokuWikiHeadsFormatContent["style"][] = array(
+                        $snippetArray = array(
                             "class" => self::getClassFromSnippetId($snippetId),
-                            "_data" => $snippet->getContent(),
-                            "critical" => $snippet->getCritical()
+                            "_data" => $snippet->getContent()
                         );
+                        if (Site::isStrapTemplate()) {
+                            $snippetArray[self::CRITICAL_ATTRIBUTE] = $snippet->getCritical();
+                        }
+                        /** @var Snippet $snippet */
+                        $dokuWikiHeadsFormatContent["style"][] = $snippetArray;
                     }
                     break;
                 case Snippet::TAG_TYPE:
@@ -200,7 +215,12 @@ class SnippetManager
                                 } else {
                                     $head["class"] = $classFromSnippetId;
                                 }
-                                $head["critical"] = $tagsSnippet->getCritical();
+                                /**
+                                 * Critical is only treated by strap
+                                 */
+                                if (Site::isStrapTemplate()) {
+                                    $head[self::CRITICAL_ATTRIBUTE] = $tagsSnippet->getCritical();
+                                }
                                 $dokuWikiHeadsSrc[$snippetType][] = $head;
                             }
                         }
@@ -331,7 +351,7 @@ class SnippetManager
      * @param string $script - the css snippet to add, otherwise it takes the file
      * @return Snippet a snippet scoped at the bar level
      */
-    public function &attachCssSnippetForBar($snippetId, $script=null)
+    public function &attachCssSnippetForBar($snippetId, $script = null)
     {
         $snippet = $this->attachSnippetFromBar($snippetId, Snippet::TYPE_CSS);
         if ($script != null) {

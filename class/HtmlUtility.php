@@ -16,6 +16,7 @@ namespace ComboStrap;
 use DOMDocument;
 use DOMNode;
 use Exception;
+use LibXMLError;
 use SimpleXMLElement;
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -117,7 +118,38 @@ class HtmlUtility
             if (strpos($text, "&amp;") === false) {
                 $text = str_replace("&", "&amp;", $text);
             }
+
+            /**
+             * Because the load does handle HTML5tag as error
+             * (ie section for instance)
+             * We take over the errors and handle them after the below load
+             */
+            /** @noinspection PhpComposerExtensionStubsInspection */
+            libxml_use_internal_errors(TRUE);
+
+            /**
+             * Loading
+             */
             $document->loadHTML($text);
+
+            /**
+             * Error
+             */
+            /** @noinspection PhpComposerExtensionStubsInspection */
+            $errors = libxml_get_errors();
+
+            foreach ($errors as $error) {
+
+                /* @var $error LibXMLError
+                 * @noinspection PhpComposerExtensionStubsInspection
+                 *
+                 * Section is an html5 tag (and is invalid for libxml)
+                 */
+                if ($error->message != "Tag section invalid\n") {
+                    throw new \RuntimeException("Error while loading HTML: " . $error->message);
+                }
+
+            }
         } catch (Exception $exception) {
             if (strpos($exception->getMessage(), "htmlParseEntityRef: expecting ';' in Entity") !== false) {
                 throw new \RuntimeException("You forgot to call htmlentities in src, url ? Somewhere. Error: " . $exception->getMessage());

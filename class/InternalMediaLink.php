@@ -38,6 +38,29 @@ abstract class InternalMediaLink extends DokuPath
     const CANONICAL = "image";
 
     /**
+     * This attributes apply
+     * to a image tag (img, svg, ...)
+     * not in a URL
+     */
+    const TAG_ATTRIBUTES_ONLY = [
+        TagAttributes::ALIGN_KEY,
+        TagAttributes::LINKING_KEY,
+        TagAttributes::TITLE_KEY,
+        Animation::ON_HOVER_ATTRIBUTE,
+        Animation::ON_VIEW_ATTRIBUTE
+    ];
+
+    /**
+     * This attribute applies
+     * to a image url (img, svg, ...)
+     */
+    const URL_ATTRIBUTES = [
+        TagAttributes::WIDTH_KEY,
+        TagAttributes::HEIGHT_KEY,
+        TagAttributes::CACHE_KEY,
+    ];
+
+    /**
      * This URL encoding is mandatory for the {@link ml} function
      * when there is a width and use them not otherwise
      */

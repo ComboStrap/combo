@@ -181,9 +181,9 @@ class SvgImageLink extends InternalMediaLink
 
             /**
              * We remove align and linking because,
-             * they should apply only to img
+             * they should apply only to the img tag
              */
-            $notUrlAttributes = [TagAttributes::ALIGN_KEY, TagAttributes::LINKING_KEY];
+
 
             /**
              *
@@ -194,7 +194,7 @@ class SvgImageLink extends InternalMediaLink
             $componentAttributes = $this->tagAttributes->getComponentAttributes();
             foreach ($componentAttributes as $name => $value) {
 
-                if (!in_array($name, $notUrlAttributes)) {
+                if (!in_array($name, InternalMediaLink::TAG_ATTRIBUTES_ONLY)) {
                     $newName = $name;
                     switch ($name) {
                         case TagAttributes::WIDTH_KEY:

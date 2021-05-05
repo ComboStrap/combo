@@ -33,6 +33,12 @@ class Animation
     const HOVER_ANIMATIONS = ["shrink", "pulse", "pulse-grow", "pulse-shrink", "push", "pop", "bounce-in", "bounce-out", "rotate", "grow-rotate", "sink", "bob", "hang", "skew", "skew-forward", "skew-backward", "wobble-horizontal", "wobble-vertical", "wobble-to-bottom-right", "wobble-to-top-right", "wobble-top", "wobble-bottom", "wobble-skew", "buzz", "buzz-out", "forward", "backward", "fade", "back-pulse", "sweep-to-right", "sweep-to-left", "sweep-to-bottom", "sweep-to-top", "bounce-to-right", "bounce-to-left", "bounce-to-bottom", "bounce-to-top", "radial-out", "radial-in", "rectangle-in", "rectangle-out", "shutter-in-horizontal", "shutter-out-horizontal", "shutter-in-vertical", "shutter-out-vertical", "icon-back", "hollow", "trim", "ripple-out", "ripple-in", "outline-out", "outline-in", "round-corners", "underline-from-left", "underline-from-center", "underline-from-right", "reveal", "underline-reveal", "overline-reveal", "overline-from-left", "overline-from-center", "overline-from-right", "grow-shadow", "float-shadow", "glow", "shadow-radial", "box-shadow-outset", "box-shadow-inset", "bubble-top", "bubble-right", "bubble-bottom", "bubble-left", "bubble-float-top", "bubble-float-right", "bubble-float-bottom", "bubble-float-left", "curl-top-left", "curl-top-right", "curl-bottom-right", "curl-bottom-left"];
 
     /**
+     * Smooth animation
+     * on hover animation
+     */
+    const COMBO_HOVER_EASING_CLASS = "combo-hover-easing";
+
+    /**
      * Process hover animation
      * @param TagAttributes $attributes
      */
@@ -106,7 +112,7 @@ class Animation
                     ->setCritical(false);
 
                 // Smooth Transition in and out of hover
-                $attributes->addClassName("combo-hover-easing");
+                $attributes->addClassName(self::COMBO_HOVER_EASING_CLASS);
 
                 $attributes->addHtmlAttributeValue("data-hover-class", trim($comboDataHoverClasses));
 

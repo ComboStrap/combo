@@ -229,8 +229,8 @@ class SvgImageLink extends InternalMediaLink
             /**
              * Cache bursting
              */
-            if (!$this->tagAttributes->hasComponentAttribute(TagAttributes::BUSTER_KEY)) {
-                $att[TagAttributes::BUSTER_KEY] = $this->getModifiedTime();
+            if (!$this->tagAttributes->hasComponentAttribute(Cache::CACHE_BUSTER_KEY)) {
+                $att[Cache::CACHE_BUSTER_KEY] = $this->getModifiedTime();
             }
 
             $direct = true;

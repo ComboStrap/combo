@@ -505,13 +505,21 @@ class PluginUtility
                      * cannot be inline
                      * We inject then dynamically a rule
                      * max-width applies only for screen bigger than the width
+                     *
+                     * This should apply only on HTTP HTML request (ie injected SVG in HTML) not in Svg request
                      */
-                    $onTheFlyClass = self::DYNAMIC_WIDTH_CLASS_PREFIX . $widthValue;
-                    // The order of the declaration is important, this one must come first
-                    $mostImportantStyleDeclaration = ".$onTheFlyClass { max-width:100% }";
-                    $styleDeclaration = "$mostImportantStyleDeclaration @media (min-width: ${widthSinceBreakpoint}px) { .$onTheFlyClass { max-width: $qualifiedWidthValue } }";
-                    $attributes->addClassName($onTheFlyClass);
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar($onTheFlyClass, $styleDeclaration);
+                    $requestedMime = $attributes->getMime();
+                    if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
+
+                        $onTheFlyClass = self::DYNAMIC_WIDTH_CLASS_PREFIX . $widthValue;
+                        // The order of the declaration is important, this one must come first
+                        $mostImportantStyleDeclaration = ".$onTheFlyClass { max-width:100% }";
+                        $styleDeclaration = "$mostImportantStyleDeclaration @media (min-width: ${widthSinceBreakpoint}px) { .$onTheFlyClass { max-width: $qualifiedWidthValue } }";
+                        $attributes->addClassName($onTheFlyClass);
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($onTheFlyClass, $styleDeclaration);
+
+                    }
+
                 }
             } else {
                 $attributes->addStyleDeclaration('max-width', TagAttributes::toPixelLengthIfNoSpecified($widthValue));
@@ -1264,9 +1272,11 @@ class PluginUtility
             /** @noinspection PhpIncludeInspection */
             require_once($templateUtilitFile);
         } else {
-            LogUtility::msg("The strap template utility could not be loaded", LogUtility::LVL_MSG_WARNING,self::CANONICAL);
+            LogUtility::msg("Internal Error: The strap template utility could not be loaded", LogUtility::LVL_MSG_WARNING, "support");
         }
     }
+
+
 
 
 }

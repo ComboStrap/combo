@@ -4,6 +4,8 @@
 require_once(__DIR__ . '/../class/Cache.php');
 
 use ComboStrap\Auth;
+use ComboStrap\Cache;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Resources;
 use ComboStrap\SvgImageLink;
@@ -54,13 +56,17 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         $tagAttributes = TagAttributes::createEmpty();
         $width = $event->data['width'];
         if ($width != 0) {
-            $tagAttributes->addComponentAttributeValue("width", $width);
+            $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, $width);
         }
         $height = $event->data['height'];
         if ($height != 0) {
-            $tagAttributes->addComponentAttributeValue("height", $height);
+            $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, $height);
         }
-        $tagAttributes->addComponentAttributeValue("cache", $event->data['cache']);
+        $tagAttributes->addComponentAttributeValue(\ComboStrap\Cache::CACHE_KEY, $event->data['cache']);
+
+        $mime = "image/svg+xml";
+        $event->data["mime"] = $mime;
+        $tagAttributes->setMime($mime);
 
         /**
          * Add the extra attributes
@@ -72,23 +78,27 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
                 case "w":
                 case "h":
                 case "cache":
-                case TagAttributes::BUSTER_KEY:
-                case "rev":
-                    $rev = $value;
-                    break;
+                case Cache::CACHE_BUSTER_KEY:
                 case "tok": // A checker
                     // Nothing to do, we take them
                     break;
+                case "rev":
+                    $rev = $value;
+                    break;
                 default:
                     if (!empty($value)) {
-                        $tagAttributes->addComponentAttributeValue($name, $value);
+                        if (!in_array($name, InternalMediaLink::TAG_ATTRIBUTES_ONLY)) {
+                            $tagAttributes->addComponentAttributeValue($name, $value);
+                        } else {
+                            LogUtility::msg("The attribute ($name) is not a valid fetch image URL attribute and was not added", LogUtility::LVL_MSG_WARNING, SvgImageLink::CANONICAL);
+                        }
                     } else {
                         LogUtility::msg("Internal Error: the value of the query name ($name) is empty", LogUtility::LVL_MSG_WARNING, SvgImageLink::CANONICAL);
                     }
             }
         }
 
-        $event->data["mime"] = "image/svg+xml";
+
         $id = $event->data["media"];
         $svgImageLink = SvgImageLink::createMediaLinkFromId($id, $rev, $tagAttributes);
         $event->data['file'] = $svgImageLink->getSvgFile();

@@ -19,6 +19,14 @@ class Cache
      */
     const CACHE_KEY = 'cache';
     const CACHE_DEFAULT_VALUE = "cache";
+    /**
+     * buster got the same value
+     * that the `rev` attribute (ie mtime)
+     * We don't use rev as cache buster because Dokuwiki still thinks
+     * that this is an old file and search in the attic
+     * as seen in the function {@link mediaFN()}
+     */
+    const CACHE_BUSTER_KEY = "buster";
 
     /**
      * @var File
@@ -39,6 +47,31 @@ class Cache
 
         $this->path = $path;
 
+        /**
+         * Cache Key Construction
+         */
+        $cacheKey = $this->path->getPath();
+        foreach ($tagAttributes->getComponentAttributes() as $name => $value) {
+
+            /**
+             * The cache attribute are not part of the key
+             * obviously
+             */
+            if (in_array($name,[
+                Cache::CACHE_KEY,
+                Cache::CACHE_BUSTER_KEY,
+            ])){
+                continue;
+            }
+
+            /**
+             * Normalize name (from w to width)
+             */
+            $name =  TagAttributes::AttributeNameFromDokuwikiToCombo($name);
+
+            $cacheKey .= "&" . $name . "=" . $value;
+
+        }
 
         /**
          * Cache Attribute
@@ -60,13 +93,7 @@ class Cache
         }
         $this->setMaxAgeInSec($cacheParameter);
 
-        /**
-         * Cache Key Construction
-         */
-        $cacheKey = $this->path->getPath();
-        foreach ($tagAttributes->getComponentAttributes() as $name => $value) {
-            $cacheKey .= "&" . $name . "=" . $value;
-        }
+
 
         $this->fileCache = new \dokuwiki\Cache\Cache($cacheKey, $this->path->getExtension());
 

@@ -79,7 +79,7 @@ class Icon
          * If the name have an extension, it's a file from the media directory
          * Otherwise, it's an icon from a library
          */
-        $mediaDokuPath = DokuPath::createMediaLinkFromId($iconNameAttribute);
+        $mediaDokuPath = DokuPath::createMediaPathFromId($iconNameAttribute);
         if (!empty($mediaDokuPath->getExtension())) {
 
             // loop through candidates until a match was found:

@@ -51,15 +51,6 @@ class TagAttributes
     const ID_KEY = "id";
 
     /**
-     * buster got the same value
-     * that the `rev` attribute (ie mtime)
-     * We don't use rev as cache buster because Dokuwiki still thinks
-     * that this is an old file and search in the attic
-     * as seen in the function {@link mediaFN()}
-     */
-    const BUSTER_KEY = "buster";
-
-    /**
      * The element that have an width and height
      */
     const NATURAL_SIZING_ELEMENT = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
@@ -74,7 +65,7 @@ class TagAttributes
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
         TagAttributes::LINKING_KEY, // internal to image
-        Cache::CACHE_KEY // internal also
+        Cache::CACHE_KEY, // internal also
     ];
 
     /**
@@ -86,6 +77,7 @@ class TagAttributes
 
     const CANONICAL = "tag";
     const DISPLAY = "display";
+
 
 
     /**
@@ -129,6 +121,13 @@ class TagAttributes
      * @var string
      */
     private $htmlAfterEnterTag;
+
+    /**
+     * Use to make the difference between
+     * an HTTP call for a media (ie SVG) vs an HTTP call for a page (HTML)
+     */
+    const TEXT_HTML_MIME = "text/html";
+    private $mime = TagAttributes::TEXT_HTML_MIME;
 
     /**
      * ComponentAttributes constructor.
@@ -211,6 +210,23 @@ class TagAttributes
             return $value;
         }
 
+    }
+
+    /**
+     * Function used to normalize the attribute name to the combostrap attribute name
+     * @param $name
+     * @return mixed|string
+     */
+    public static function AttributeNameFromDokuwikiToCombo($name)
+    {
+        switch ($name){
+            case "w":
+                return TagAttributes::WIDTH_KEY;
+            case "h":
+                return TagAttributes::HEIGHT_KEY;
+            default:
+                return $name;
+        }
     }
 
     public function addClassName($className)
@@ -625,7 +641,27 @@ class TagAttributes
         $this->htmlAfterEnterTag .= $html;
     }
 
+    /**
+     * The mime of the HTTP request
+     * This is not the good place but yeah,
+     * this class has become the context class
+     *
+     * Mime make the difference for a svg to know if it's required as external resource (ie SVG)
+     * or as included in HTML page
+     * @param $mime
+     */
+    public function setMime($mime)
+    {
+        $this->mime = $mime;
+    }
 
+    /**
+     * @return string - the mime of the request
+     */
+    public function getMime()
+    {
+        return $this->mime;
+    }
 
 
 }

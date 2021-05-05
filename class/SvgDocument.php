@@ -217,7 +217,7 @@ class SvgDocument extends XmlDocument
                         $svgColorType = self::COLOR_TYPE_STROKE_OUTLINE;
                     }
 
-                    switch ($svgColorType){
+                    switch ($svgColorType) {
                         case self::COLOR_TYPE_FILL_SOLID:
                             $tagAttributes->addHtmlAttributeValue("fill", $colorValue);
                             break;
@@ -242,11 +242,15 @@ class SvgDocument extends XmlDocument
                     // tile
                     $defaultWidth = "192";
                 }
+                /**
+                 * The default unit on attribute is pixel, no need to add it
+                 * as in CSS
+                 */
                 $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY, $defaultWidth);
-                $qualifiedWidth = TagAttributes::toPixelLengthIfNoSpecified($width);
-                $tagAttributes->addHtmlAttributeValue("width", $qualifiedWidth);
-                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY, $qualifiedWidth);
-                $qualifiedHeight = TagAttributes::toPixelLengthIfNoSpecified($height);
+                $pixelWidth = Unit::toPixel($width);
+                $tagAttributes->addHtmlAttributeValue("width", $pixelWidth);
+                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY, $pixelWidth);
+                $qualifiedHeight = Unit::toPixel($height);
                 $tagAttributes->addHtmlAttributeValue("height", $qualifiedHeight);
                 break;
             default:

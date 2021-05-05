@@ -198,54 +198,6 @@ class ColorUtility
     );
 
 
-    static $colors = array(
-        "info" => array(
-            self::COLOR => "#0c5460",
-            Background::BACKGROUND_COLOR => "#d1ecf1",
-            self::BORDER_COLOR => "#bee5eb"
-        ),
-        "tip" => array(
-            self::COLOR => "#6c6400",
-            Background::BACKGROUND_COLOR => "#fff79f",
-            self::BORDER_COLOR => "#FFF78c"
-        ),
-        "warning" => array(
-            self::COLOR => "#856404",
-            Background::BACKGROUND_COLOR => "#fff3cd",
-            self::BORDER_COLOR => "#ffeeba"
-        ),
-        "primary" => array(
-            self::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#007bff",
-            self::BORDER_COLOR => "#007bff"
-        ),
-        "secondary" => array(
-            self::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#6c757d",
-            self::BORDER_COLOR => "#6c757d"
-        ),
-        "success" => array(
-            self::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#28a745",
-            self::BORDER_COLOR => "#28a745"
-        ),
-        "danger" => array(
-            self::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#dc3545",
-            self::BORDER_COLOR => "#dc3545"
-        ),
-        "dark" => array(
-            self::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#343a40",
-            self::BORDER_COLOR => "#343a40"
-        ),
-        "light" => array(
-            self::COLOR => "#fff",
-            Background::BACKGROUND_COLOR => "#f8f9fa",
-            self::BORDER_COLOR => "#f8f9fa"
-        )
-    );
-
     /**
      * Return a combostrap value to a web color value
      * @param string $color a color value

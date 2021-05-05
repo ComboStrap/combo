@@ -148,7 +148,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $attributes->addClassName("alert");
-                    $type = $attributes->getValueAndRemove(TagAttributes::TYPE_KEY);
+                    $type = $attributes->getValue(TagAttributes::TYPE_KEY);
                     // Switch for the color
                     switch ($type) {
                         case "important":

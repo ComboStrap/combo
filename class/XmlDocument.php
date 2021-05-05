@@ -78,7 +78,7 @@ class XmlDocument
                  * or you will get a recursion
                  * because the URL has an SVG icon that calls this file
                  */
-                $msg = "The file ($this) seems to not be an XML file. It could not be loaded. The error returned is $e";
+                $msg = "The text ($text) seems to not be an XML. It could not be loaded. The error returned is $e";
                 LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, "support");
                 if (defined('DOKU_UNITTEST')) {
                     throw new \RuntimeException($msg);

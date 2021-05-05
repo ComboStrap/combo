@@ -65,13 +65,16 @@ class TagAttributes
     const NATURAL_SIZING_ELEMENT = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
 
     /**
-     * The logical attributes that are not becoming HTML attributes
+     * The logical attributes that:
+     *   * are not becoming HTML attributes
+     *   * are never deleted
+     * (ie internal reserved words)
      */
-    const HTML_EXCLUDED_ATTRIBUTES = [
-        self::SCRIPT_KEY,
-        TagAttributes::TYPE_KEY,
-        TagAttributes::LINKING_KEY,
-        TagAttributes::CACHE_KEY
+    const RESERVED_ATTRIBUTES = [
+        self::SCRIPT_KEY, // no script attribute for security reason
+        TagAttributes::TYPE_KEY, // type is the component class
+        TagAttributes::LINKING_KEY, // internal to image
+        TagAttributes::CACHE_KEY // internal also
     ];
 
     /**
@@ -346,6 +349,11 @@ class TagAttributes
             Background::processBackgroundAttributes($this);
 
             /**
+             * Skin Attribute
+             */
+            Skin::processSkinAttribute($this);
+
+            /**
              * Transform
              */
             if ($this->hasComponentAttribute(self::TRANSFORM)) {
@@ -363,7 +371,7 @@ class TagAttributes
              * copy the unknown component attributes
              */
             foreach ($this->componentAttributes as $key => $value) {
-                if (!in_array($key, self::HTML_EXCLUDED_ATTRIBUTES)) {
+                if (!in_array($key, self::RESERVED_ATTRIBUTES)) {
                     $tempHtmlArray[$key] = $value;
                 }
             }
@@ -478,7 +486,16 @@ class TagAttributes
         $value = $default;
         if ($this->hasComponentAttribute($attributeName)) {
             $value = $this->getValue($attributeName);
-            unset($this->componentAttributes[$attributeName]);
+
+            if (!in_array($attributeName,self::RESERVED_ATTRIBUTES)) {
+                /**
+                 * Don't remove for instance the `type`
+                 * because it may be used elsewhere
+                 */
+                unset($this->componentAttributes[$attributeName]);
+            } else {
+                LogUtility::msg("Internal: The attribute $attributeName is a reserved word and cannot be removed. Use the get function instead",LogUtility::LVL_MSG_WARNING,"support");
+            }
         }
         return $value;
     }

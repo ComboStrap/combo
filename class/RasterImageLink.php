@@ -113,7 +113,7 @@ class RasterImageLink extends InternalMediaLink
             }
 
             if ($this->getCache()) {
-                $att[TagAttributes::CACHE_KEY] = $this->getCache();
+                $att[Cache::CACHE_KEY] = $this->getCache();
             }
             $direct = true;
 

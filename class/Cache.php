@@ -11,6 +11,16 @@ namespace ComboStrap;
 class Cache
 {
     /**
+     * Cache
+     * values:
+     *   * cache
+     *   * nocache
+     *   * recache
+     */
+    const CACHE_KEY = 'cache';
+    const CACHE_DEFAULT_VALUE = "cache";
+
+    /**
      * @var File
      */
     private $path;
@@ -33,7 +43,7 @@ class Cache
         /**
          * Cache Attribute
          */
-        $cacheParameter = $tagAttributes->getValueAndRemove('cache', -1);
+        $cacheParameter = $tagAttributes->getValue(self::CACHE_KEY, self::CACHE_DEFAULT_VALUE);
         /**
          * Cache transformation
          * From Image cache value (https://www.dokuwiki.org/images#caching)

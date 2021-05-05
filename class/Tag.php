@@ -35,6 +35,13 @@ class Tag
     const CANONICAL = "support";
 
     /**
+     * Invisible Content tag (ie p (p_open/p_close))
+     * They are not seen in the content
+     * and are automatically generated
+     */
+    const INVISIBLE_CONTENT_TAG = ["p"];
+
+    /**
      * The {@link Doku_Handler::$calls}
      * @var
      */
@@ -917,6 +924,10 @@ class Tag
 
     }
 
+    /**
+     * Children are tag
+     * @return array|null
+     */
     public function getChildren()
     {
         if ($this->getState() !== DOKU_LEXER_ENTER) {
@@ -941,7 +952,7 @@ class Tag
             if ($level < 0) {
                 break;
             } else {
-                if (!in_array($state, [DOKU_LEXER_EXIT, DOKU_LEXER_UNMATCHED])) {
+                if ($state == DOKU_LEXER_ENTER && !in_array($call->getTagName(),Tag::INVISIBLE_CONTENT_TAG)) {
                     $children[] = self::createFromCall($this->handler, $position);
                 }
             }

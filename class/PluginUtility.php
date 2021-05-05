@@ -1257,6 +1257,17 @@ class PluginUtility
 
     }
 
+    public static function loadStrapUtilityTemplate()
+    {
+        $templateUtilitFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
+        if (file_exists($templateUtilitFile)) {
+            /** @noinspection PhpIncludeInspection */
+            require_once($templateUtilitFile);
+        } else {
+            LogUtility::msg("The strap template utility could not be loaded", LogUtility::LVL_MSG_WARNING,self::CANONICAL);
+        }
+    }
+
 
 }
 

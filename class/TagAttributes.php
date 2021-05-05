@@ -74,7 +74,7 @@ class TagAttributes
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
         TagAttributes::LINKING_KEY, // internal to image
-        TagAttributes::CACHE_KEY // internal also
+        Cache::CACHE_KEY // internal also
     ];
 
     /**
@@ -86,15 +86,6 @@ class TagAttributes
 
     const CANONICAL = "tag";
     const DISPLAY = "display";
-
-    /**
-     * Cache
-     * Two values:
-     *   * cache
-     *   * nocache
-     */
-    const CACHE_KEY = 'cache';
-    const CACHE_DEFAULT_VALUE = "cache";
 
 
     /**

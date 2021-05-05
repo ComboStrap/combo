@@ -92,7 +92,7 @@ class SvgImageLink extends InternalMediaLink
          * Remove the cache attribute
          * (no cache for the img tag)
          */
-        $this->tagAttributes->removeComponentAttributeIfPresent(TagAttributes::CACHE_KEY);
+        $this->tagAttributes->removeComponentAttributeIfPresent(Cache::CACHE_KEY);
 
         /**
          * Remove linking (not yet implemented)
@@ -213,7 +213,7 @@ class SvgImageLink extends InternalMediaLink
                             break;
                     }
 
-                    if ($newName==TagAttributes::CACHE_KEY && $value==TagAttributes::CACHE_DEFAULT_VALUE){
+                    if ($newName== Cache::CACHE_KEY && $value== Cache::CACHE_DEFAULT_VALUE){
                         // This is the default
                         // No need to add it
                         continue;

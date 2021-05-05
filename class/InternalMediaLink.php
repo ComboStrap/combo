@@ -68,7 +68,6 @@ abstract class InternalMediaLink extends DokuPath
     private $lazyLoad = null;
 
 
-    private $description = null;
 
     /**
      * @var TagAttributes
@@ -147,7 +146,7 @@ abstract class InternalMediaLink extends DokuPath
         $tagAttributes->addComponentAttributeValue(TagAttributes::CACHE_KEY, $cache);
         $tagAttributes->addComponentAttributeValue(TagAttributes::LINKING_KEY, $linking);
 
-        return self::createMediaPathFromId($id, $tagAttributes);
+        return self::createMediaLinkFromId($id, $tagAttributes);
 
     }
 
@@ -183,7 +182,7 @@ abstract class InternalMediaLink extends DokuPath
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
-        return self::createMediaPathFromId($src, $rev, $tagAttributes);
+        return self::createMediaLinkFromId($src, $rev, $tagAttributes);
 
     }
 
@@ -292,7 +291,7 @@ abstract class InternalMediaLink extends DokuPath
      * @param string $rev
      * @return RasterImageLink|InternalMediaLink
      */
-    public static function createMediaPathFromId($id, $rev = null, $tagAttributes = null)
+    public static function createMediaLinkFromId($id, $rev = null, $tagAttributes = null)
     {
         if (is_object($rev)) {
             LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");
@@ -300,7 +299,7 @@ abstract class InternalMediaLink extends DokuPath
         if (!($tagAttributes instanceof TagAttributes) && $tagAttributes != null) {
             LogUtility::msg("TagAttributes is not an instance of Tag Attributes", LogUtility::LVL_MSG_ERROR, "support");
         }
-        $dokuPath = DokuPath::createMediaPathFromId($id, $rev);
+        $dokuPath = DokuPath::createMediaLinkFromId($id, $rev);
         if ($dokuPath->getExtension() == "svg") {
             /**
              * The mime type is set when uploading, not when
@@ -372,7 +371,10 @@ abstract class InternalMediaLink extends DokuPath
      */
     public function getMarkupSyntax()
     {
-        $descriptionPart = $this->description != null ? "|$this->description" : "";
+        $descriptionPart = "";
+        if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
+             $descriptionPart = "|".$this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
+        }
         return '{{' . $this->id . $descriptionPart . '}}';
     }
 
@@ -456,7 +458,7 @@ abstract class InternalMediaLink extends DokuPath
         /**
          * Do we add a link to the image ?
          */
-        $linking = $this->tagAttributes->getValueAndRemove(TagAttributes::LINKING_KEY);
+        $linking = $this->tagAttributes->getValue(TagAttributes::LINKING_KEY);
         switch ($linking) {
             case self::CONF_LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(

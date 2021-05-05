@@ -1000,7 +1000,7 @@ class Page extends DokuPath
             if (empty($firstImage)) {
                 return null;
             } else {
-                return InternalMediaLink::createMediaPathFromId($firstImage);
+                return InternalMediaLink::createMediaLinkFromId($firstImage);
             }
         }
         return null;
@@ -1027,10 +1027,10 @@ class Page extends DokuPath
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = InternalMediaLink::createMediaPathFromId(cleanID($imageIdFromMeta));
+                    $images[] = InternalMediaLink::createMediaLinkFromId(cleanID($imageIdFromMeta));
                 }
             } else {
-                $images = array(InternalMediaLink::createMediaPathFromId(cleanID($imageMeta)));
+                $images = array(InternalMediaLink::createMediaLinkFromId(cleanID($imageMeta)));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {

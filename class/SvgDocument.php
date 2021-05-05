@@ -135,6 +135,11 @@ class SvgDocument extends XmlDocument
         return $svg;
     }
 
+    public static function createFromMarkup($markup)
+    {
+        return new SvgDocument($markup);
+    }
+
     /**
      * @param TagAttributes $tagAttributes
      * @return string
@@ -161,7 +166,7 @@ class SvgDocument extends XmlDocument
          *   ie the max-width style
          * They are treated in {@link PluginUtility::processStyle()}
          */
-        $svgType = $tagAttributes->getValueAndRemove(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
+        $svgType = $tagAttributes->getValue(TagAttributes::TYPE_KEY, self::ILLUSTRATION_TYPE);
         switch ($svgType) {
             case self::ICON_TYPE:
             case self::TILE_TYPE:
@@ -320,10 +325,12 @@ class SvgDocument extends XmlDocument
 
     /**
      * @param $boolean
+     * @return SvgDocument
      */
     public function setShouldBeOptimized($boolean)
     {
         $this->shouldBeOptimized = $boolean;
+        return $this;
     }
 
 

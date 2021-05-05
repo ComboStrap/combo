@@ -79,7 +79,7 @@ class Icon
          * If the name have an extension, it's a file from the media directory
          * Otherwise, it's an icon from a library
          */
-        $mediaDokuPath = DokuPath::createMediaPathFromId($iconNameAttribute);
+        $mediaDokuPath = DokuPath::createMediaLinkFromId($iconNameAttribute);
         if (!empty($mediaDokuPath->getExtension())) {
 
             // loop through candidates until a match was found:
@@ -99,7 +99,7 @@ class Icon
             // It may be a icon already downloaded
             $iconNameSpace = ConfUtility::getConf(self::CONF_ICONS_MEDIA_NAMESPACE);
             $mediaId = $iconNameSpace . ":" . $iconNameAttribute . ".svg";
-            $mediaDokuPath = DokuPath::createMediaPathFromId($mediaId);
+            $mediaDokuPath = DokuPath::createMediaLinkFromId($mediaId);
 
             // Bug: null file created when the stream could not get any byte
             // We delete them
@@ -187,7 +187,7 @@ class Icon
             $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
 
 
-            $svgImageLink = SvgImageLink::createMediaPathFromId(
+            $svgImageLink = SvgImageLink::createMediaLinkFromId(
                 $mediaDokuPath->getId(),
                 null,
                 $tagAttributes

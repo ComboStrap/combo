@@ -82,7 +82,7 @@ class DokuPath extends File
         return new DokuPath($id, DokuPath::PAGE_TYPE);
     }
 
-    public static function createMediaPathFromId($id, $rev= '')
+    public static function createMediaLinkFromId($id, $rev= '')
     {
         return new DokuPath($id, DokuPath::MEDIA_TYPE, $rev);
     }

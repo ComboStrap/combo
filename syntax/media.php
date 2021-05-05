@@ -23,9 +23,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     /**
      * Used in the move plugin
-     * The two last word of the class
+     * !!! The two last word of the plugin class !!!
      */
-    const COMPONENT = 'combo_img';
+    const COMPONENT = 'combo_'.self::TAG;
 
     /**
      * The attribute that defines if the image is the first image in

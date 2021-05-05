@@ -322,7 +322,7 @@ abstract class InternalMediaLink extends DokuPath
         if (!($tagAttributes instanceof TagAttributes) && $tagAttributes != null) {
             LogUtility::msg("TagAttributes is not an instance of Tag Attributes", LogUtility::LVL_MSG_ERROR, "support");
         }
-        $dokuPath = DokuPath::createMediaLinkFromId($id, $rev);
+        $dokuPath = DokuPath::createMediaPathFromId($id, $rev);
         if ($dokuPath->getExtension() == "svg") {
             /**
              * The mime type is set when uploading, not when

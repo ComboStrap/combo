@@ -247,7 +247,7 @@ EOD;
         /**
          * Add HTML
          */
-        $language = strtolower($attributes->getValueAndRemove(TagAttributes::TYPE_KEY));
+        $language = strtolower($attributes->getValue(TagAttributes::TYPE_KEY));
         if ($language == "dw") {
             $language = "html";
         }

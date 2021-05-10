@@ -8,12 +8,11 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use Exception;
-use SimpleXMLElement;
 
 /**
  * Class XmlUtility
  * @package ComboStrap
- * SimpleXML Utility
+ * XML Utility
  *
  *
  */
@@ -23,7 +22,19 @@ class XmlUtility
     const CLOSED = "closed";
     const NORMAL = "normal";
 
-    const SIMPLE_XML_EXTENSION = "simplexml";
+    /**
+     * https://www.php.net/manual/en/dom.installation.php
+     *
+     * Check it with
+     * ```
+     * php -m
+     * ```
+     * Install with
+     * ```
+     * sudo apt-get install php-xml
+     * ```
+     */
+    const DOM_EXTENSION = "dom";
 
 
     /**
@@ -83,7 +94,7 @@ class XmlUtility
     {
 
 
-        if (extension_loaded(self::SIMPLE_XML_EXTENSION)) {
+        if (extension_loaded(self::DOM_EXTENSION)) {
 
             $valid = true;
 
@@ -93,8 +104,7 @@ class XmlUtility
              */
             $oldLevel = error_reporting(E_ERROR);
             try {
-                /** @noinspection PhpComposerExtensionStubsInspection */
-                new SimpleXMLElement($text);
+                XmlUtility::load($text);
             } catch (\Exception $e) {
                 $valid = false;
             }
@@ -360,7 +370,6 @@ class XmlUtility
             $document->load($markup);
         } catch (Exception $exception) {
             throw new \RuntimeException($exception);
-
         }
         return $document;
     }

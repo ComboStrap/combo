@@ -46,6 +46,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      * Key of the attributes that says if the card has an image illustration
      */
     const HAS_IMAGE_ILLUSTRATION_KEY = "hasImageIllustration";
+    const CONF_ENABLE_SECTION_EDITING = "enableCardSectionEditing";
 
 
     /**
@@ -270,10 +271,12 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     /**
                      * Section (Edit button)
                      */
-                    $position = $tagAttributes->getValueAndRemove(PluginUtility::POSITION);
-                    $this->sectionCounter++;
-                    $name = "section" . self::TAG . $this->sectionCounter;
-                    PluginUtility::startSection($renderer, $position, $name);
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                        $position = $tagAttributes->getValueAndRemove(PluginUtility::POSITION);
+                        $this->sectionCounter++;
+                        $name = "section" . self::TAG . $this->sectionCounter;
+                        PluginUtility::startSection($renderer, $position, $name);
+                    }
 
                     /**
                      * Bootstrap five does not include masonry
@@ -327,7 +330,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     /**
                      * End section
                      */
-                    $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                        $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
+                    }
+
                     /**
                      * End card
                      */

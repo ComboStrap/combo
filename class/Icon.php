@@ -12,7 +12,6 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/PluginUtility.php');
 require_once(__DIR__ . '/ConfUtility.php');
 require_once(__DIR__ . '/SvgImageLink.php');
 
@@ -99,7 +98,7 @@ class Icon
             // It may be a icon already downloaded
             $iconNameSpace = ConfUtility::getConf(self::CONF_ICONS_MEDIA_NAMESPACE);
             $mediaId = $iconNameSpace . ":" . $iconNameAttribute . ".svg";
-            $mediaDokuPath = DokuPath::createMediaLinkFromId($mediaId);
+            $mediaDokuPath = DokuPath::createMediaPathFromId($mediaId);
 
             // Bug: null file created when the stream could not get any byte
             // We delete them

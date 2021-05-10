@@ -1,13 +1,11 @@
 <?php
 
 namespace ComboStrap;
-use helper_plugin_sqlite;
 
 /**
  * The manager that handles the redirection metadata
  *
  */
-require_once(__DIR__ . '/../class/PluginUtility.php');
 
 class PageRules
 {

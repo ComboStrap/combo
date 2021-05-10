@@ -13,7 +13,6 @@ use RuntimeException;
 /**
  * Page
  */
-require_once(__DIR__ . '/PluginUtility.php');
 require_once(__DIR__ . '/DokuPath.php');
 
 class Page extends DokuPath

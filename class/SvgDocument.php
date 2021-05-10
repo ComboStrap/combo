@@ -12,7 +12,7 @@
 
 namespace ComboStrap;
 
-use dokuwiki\Cache\Cache;
+
 use DOMAttr;
 use DOMElement;
 

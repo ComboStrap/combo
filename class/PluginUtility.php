@@ -6,24 +6,34 @@ namespace ComboStrap;
 
 use syntax_plugin_combo_preformatted;
 
-require_once(__DIR__ . '/LogUtility.php');
-require_once(__DIR__ . '/FsWikiUtility.php');
-require_once(__DIR__ . '/Icon.php');
-require_once(__DIR__ . '/StringUtility.php');
-require_once(__DIR__ . '/ColorUtility.php');
-require_once(__DIR__ . '/RenderUtility.php');
-require_once(__DIR__ . '/SnippetManager.php');
-require_once(__DIR__ . '/Resources.php');
+/**
+ * Plugin Utility is added in all Dokuwiki extension
+ * and
+ * all classes are added in plugin utility
+ */
 require_once(__DIR__ . '/Animation.php');
-require_once(__DIR__ . '/Position.php');
-require_once(__DIR__ . '/Bootstrap.php');
-require_once(__DIR__ . '/Shadow.php');
-require_once(__DIR__ . '/TagAttributes.php');
-require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/Background.php');
+require_once(__DIR__ . '/Bootstrap.php');
+require_once(__DIR__ . '/Cache.php');
+require_once(__DIR__ . '/CallStack.php');
+require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/Float.php');
+require_once(__DIR__ . '/FsWikiUtility.php');
+require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/HtmlUtility.php');
+require_once(__DIR__ . '/Icon.php');
+require_once(__DIR__ . '/LogUtility.php');
+require_once(__DIR__ . '/Page.php');
+require_once(__DIR__ . '/Position.php');
+require_once(__DIR__ . '/RenderUtility.php');
+require_once(__DIR__ . '/Resources.php');
 require_once(__DIR__ . '/Skin.php');
-
+require_once(__DIR__ . '/Shadow.php');
+require_once(__DIR__ . '/SnippetManager.php');
+require_once(__DIR__ . '/Sqlite.php');
+require_once(__DIR__ . '/StringUtility.php');
+require_once(__DIR__ . '/TagAttributes.php');
+require_once(__DIR__ . '/XmlUtility.php');
 
 /**
  * Class url static
@@ -210,24 +220,6 @@ class PluginUtility
     }
 
 
-    /**
-     * Process the internal attributes and makes them
-     * HTML compatible
-     * @param $attributes
-     */
-    public static function array2HTMLAttributesAsArray(&$attributes)
-    {
-        /**
-         * Temporary code to Migration to array to the new one
-         * The attribute with the new format first
-         * and the older one at the end
-         */
-        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-        $tagAttributes->process();
-        $attributes = $tagAttributes->toCallStackArray();
-
-
-    }
 
     /**
      * Take an array  where the key is the attribute name

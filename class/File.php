@@ -13,14 +13,12 @@
 namespace ComboStrap;
 
 
-use dokuwiki\Cache\Cache;
-
 class File
 {
 
     private $path;
     /**
-     * @var Cache
+     * @var \dokuwiki\Cache\Cache
      */
     private $fileCache;
 

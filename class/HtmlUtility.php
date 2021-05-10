@@ -1,4 +1,7 @@
 <?php
+
+namespace ComboStrap;
+
 /**
  * Copyright (c) 2020. ComboStrap, Inc. and its affiliates. All Rights Reserved.
  *
@@ -10,21 +13,14 @@
  *
  */
 
-namespace ComboStrap;
-
-
 use DOMDocument;
-use DOMNode;
 use Exception;
 use LibXMLError;
-use SimpleXMLElement;
 
-require_once(__DIR__ . '/../class/PluginUtility.php');
 require_once(__DIR__ . '/../class/XmlUtility.php');
 
 /**
  * Class HtmlUtility
- * @package ComboStrap
  * On HTML as string, if you want to work on HTML as XML, see the {@link XmlUtility} class
  */
 class HtmlUtility
@@ -37,11 +33,12 @@ class HtmlUtility
     const KNOWN_LOADING_ERRORS =
         [
             "Tag section invalid\n", // section is HTML5 tag
+            "Tag footer invalid\n", // footer is HTML5 tag
             "Tag bdi invalid\n",
             "Tag path invalid\n", // svg
             "Tag svg invalid\n", // svg
-            "Unexpected end tag : a\n" // when the document is only a anchor
-
+            "Unexpected end tag : a\n", // when the document is only a anchor
+            "Unexpected end tag : p\n"
         ];
 
 
@@ -126,12 +123,7 @@ class HtmlUtility
     {
         $document = new DOMDocument('1.0', 'UTF-8');
         try {
-            // & is in raw url and when in a value gives an error
-            // https://www.php.net/manual/en/function.htmlspecialchars.php
-            // because we use it only in src attribute, we make the switch here
-            if (strpos($text, "&amp;") === false) {
-                $text = str_replace("&", "&amp;", $text);
-            }
+
 
             /**
              * Because the load does handle HTML5tag as error
@@ -142,7 +134,7 @@ class HtmlUtility
              *
              * @noinspection PhpComposerExtensionStubsInspection
              */
-            libxml_use_internal_errors(TRUE);
+            libxml_use_internal_errors(true);
 
             /**
              * Loading
@@ -165,7 +157,7 @@ class HtmlUtility
                  * Section is an html5 tag (and is invalid for libxml)
                  */
                 if (!in_array($error->message, HtmlUtility::KNOWN_LOADING_ERRORS)) {
-                    throw new \RuntimeException("Error while loading HTML: " . $error->message);
+                    throw new \RuntimeException("Error while loading HTML: " . $error->message.". Loaded text: ".$text);
                 }
 
             }

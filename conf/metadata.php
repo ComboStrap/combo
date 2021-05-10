@@ -65,6 +65,8 @@ $meta[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = arra
  */
 require_once(__DIR__ . '/../syntax/icon.php');
 $meta[Icon::CONF_ICONS_MEDIA_NAMESPACE] = array('string');
+$meta[Icon::CONF_DEFAULT_ICON_LIBRARY] = array('multichoice', '_choices' => array_keys(Icon::LIBRARY_ACRONYM));
+
 
 /**
  * Css optimization
@@ -219,6 +221,7 @@ $meta[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = array('string');
 $meta[SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = array('string');
 $meta[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = array('string');
 $meta[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = array('string');
+$meta[SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = array('string');
 $meta[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = array('string');
 
 /**

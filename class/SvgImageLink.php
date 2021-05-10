@@ -30,12 +30,13 @@ class SvgImageLink extends InternalMediaLink
      * The maximum size to be embedded
      * Above this size limit they are fetched
      */
-    const CONF_MAX_KB_SIZE_FOR_INLINE_SVG = "svgMaxInlineSize";
+    const CONF_MAX_KB_SIZE_FOR_INLINE_SVG = "svgMaxInlineSizeKb";
 
     /**
      * Lazy Load
      */
     const CONF_LAZY_LOAD_ENABLE = "svgLazyLoadEnable";
+
     /**
      * Svg Injection
      */

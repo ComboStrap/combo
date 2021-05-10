@@ -30,6 +30,20 @@ require_once(__DIR__ . '/../class/XmlUtility.php');
 class HtmlUtility
 {
 
+    /**
+     * The error that the HTML loading
+     * may returns
+     */
+    const KNOWN_LOADING_ERRORS =
+        [
+            "Tag section invalid\n", // section is HTML5 tag
+            "Tag bdi invalid\n",
+            "Tag path invalid\n", // svg
+            "Tag svg invalid\n", // svg
+            "Unexpected end tag : a\n" // when the document is only a anchor
+
+        ];
+
 
     /**
      * Return a formatted HTML that does take into account the {@link DOKU_LF}
@@ -123,12 +137,17 @@ class HtmlUtility
              * Because the load does handle HTML5tag as error
              * (ie section for instance)
              * We take over the errors and handle them after the below load
+             *
+             * https://www.php.net/manual/en/function.libxml-use-internal-errors.php
+             *
+             * @noinspection PhpComposerExtensionStubsInspection
              */
-            /** @noinspection PhpComposerExtensionStubsInspection */
             libxml_use_internal_errors(TRUE);
 
             /**
              * Loading
+             * Unlike loading XML, HTML does not have to be well-formed to load.
+             * While malformed HTML should load successfully, this function may generate E_WARNING errors
              */
             $document->loadHTML($text);
 
@@ -145,11 +164,15 @@ class HtmlUtility
                  *
                  * Section is an html5 tag (and is invalid for libxml)
                  */
-                if ($error->message != "Tag section invalid\n") {
+                if (!in_array($error->message, HtmlUtility::KNOWN_LOADING_ERRORS)) {
                     throw new \RuntimeException("Error while loading HTML: " . $error->message);
                 }
 
             }
+
+            /** @noinspection PhpComposerExtensionStubsInspection */
+            libxml_clear_errors();
+
         } catch (Exception $exception) {
             if (strpos($exception->getMessage(), "htmlParseEntityRef: expecting ';' in Entity") !== false) {
                 throw new \RuntimeException("You forgot to call htmlentities in src, url ? Somewhere. Error: " . $exception->getMessage());

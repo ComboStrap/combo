@@ -56,7 +56,11 @@ $lang[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = Plug
 $lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getUrl("best:end:page:name", action_plugin_combo_urlmanager::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getUrl("id:redirect", "ID redirect") . ' (0 to disable)';
 
 
+/**
+ * Icon
+ */
 $lang[Icon::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getUrl("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
+$lang[Icon::CONF_DEFAULT_ICON_LIBRARY] = PluginUtility::getUrl("icon#configuration", "UI Icon Component") . ' - The default icon library from where the icon is downloaded if not specified';
 
 /**
  * Css Optimization
@@ -167,6 +171,7 @@ $lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "Th
  */
 $lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Load a svg only when they become visible");
 $lang[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "The maximum size in Kb of the SVG to be included as markup in the web page");
+$lang[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Injection - Replace the image as svg in the HTML when downloaded to be add styling capabilities");
 $lang[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "The name of the group of users that can upload SVG");
 $lang[SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - Reduce the size of the SVG by deleting non important meta");
 $lang[SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The namespace prefix to keep");

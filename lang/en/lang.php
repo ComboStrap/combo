@@ -1,4 +1,4 @@
-<?php
+icon<?php
 /**
  * English language file
  *

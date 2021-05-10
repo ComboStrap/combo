@@ -952,7 +952,7 @@ class Tag
             if ($level < 0) {
                 break;
             } else {
-                if ($state == DOKU_LEXER_ENTER && !in_array($call->getTagName(),Tag::INVISIBLE_CONTENT_TAG)) {
+                if ($state == DOKU_LEXER_ENTER && !in_array($call->getTagName(), Tag::INVISIBLE_CONTENT_TAG)) {
                     $children[] = self::createFromCall($this->handler, $position);
                 }
             }
@@ -962,10 +962,16 @@ class Tag
 
     public function setAttributeIfNotPresent($key, $value)
     {
-        if (!isset($this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key])){
+        if (!isset($this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key])) {
             $this->setAttribute($key, $value);
         }
 
+    }
+
+    public function getNextTag()
+    {
+        $position = $this->position + 1;
+        return self::createFromCall($this->handler, $position);
     }
 
 

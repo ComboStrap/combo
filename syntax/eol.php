@@ -23,12 +23,19 @@ if (!defined('DOKU_INC')) die();
  *
  * Basically, you get an new paragraph with a blank line or \\ : https://www.dokuwiki.org/faq:newlines
  *
- * Note: p_open call may appears when the {@link \ComboStrap\Syntax::getPType()} is set to `normal`
+ * !!!!!
+ * Note: p_open call may appears also when the {@link \ComboStrap\Syntax::getPType()} is set to `normal`
+ * !!!!!
  */
 class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = 'eol';
+
+    /**
+     * Disabled
+     */
+    const ENABLED = false;
 
 
     /**
@@ -88,21 +95,24 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        /**
-         * Note same component than for the {@link syntax_plugin_combo_title}
-         */
-        $modes = [
-            PluginUtility::getModeForComponent(syntax_plugin_combo_blockquote::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_note::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_jumbotron::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_panel::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_panel::OLD_TAB_PANEL_TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_slide::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_column::TAG),
-        ];
-        if (in_array($mode, $modes)) {
-            $this->Lexer->addSpecialPattern('(?:^[ \t]*)?\n', $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
+        if (syntax_plugin_combo_eol::ENABLED) {
+            /**
+             * Note same component than for the {@link syntax_plugin_combo_title}
+             */
+            $modes = [
+                PluginUtility::getModeForComponent(syntax_plugin_combo_blockquote::TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_note::TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_jumbotron::TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_panel::TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_panel::OLD_TAB_PANEL_TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_slide::TAG),
+                PluginUtility::getModeForComponent(syntax_plugin_combo_column::TAG),
+            ];
+            if (in_array($mode, $modes)) {
+                $this->Lexer->addSpecialPattern('(?:^[ \t]*)?\n', $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            }
         }
 
     }

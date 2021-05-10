@@ -220,7 +220,6 @@ class PluginUtility
     }
 
 
-
     /**
      * Take an array  where the key is the attribute name
      * and return a HTML tag string
@@ -1267,8 +1266,6 @@ class PluginUtility
             LogUtility::msg("Internal Error: The strap template utility could not be loaded", LogUtility::LVL_MSG_WARNING, "support");
         }
     }
-
-
 
 
 }

@@ -290,15 +290,20 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
 
                     /**
+                     * Illustrations
+                     * (Must come before the next {@link TagAttributes::toHtmlEnterTag()} of the enter tag
+                     * to remove the hasImageAttribute attribute
+                     */
+                    $hasImageIllustration = $tagAttributes->getValueAndRemove(self::HAS_IMAGE_ILLUSTRATION_KEY,false);
+
+                    /**
                      * Card
                      */
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
 
                     /**
-                     * Illustrations
+                     * If illustration
                      */
-                    $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
-                    unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
                     if (!$hasImageIllustration) {
                         $renderer->doc .= self::CARD_BODY;
                     }

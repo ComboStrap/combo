@@ -490,6 +490,7 @@ class TagAttributes
      */
     public function getValueAndRemove($attributeName, $default = null)
     {
+        $attributeName = strtolower($attributeName);
         $value = $default;
         if ($this->hasComponentAttribute($attributeName)) {
             $value = $this->getValue($attributeName);

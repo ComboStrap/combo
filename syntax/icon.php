@@ -92,8 +92,10 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+
         $pattern = PluginUtility::getEmptyTagPattern(self::TAG);
         $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
 
     }
 
@@ -121,12 +123,12 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
                 // Get the parameters
                 $attributes = TagAttributes::createFromTagMatch($match);
-                $tag = new Tag(self::TAG,$attributes,$state,$handler);
-                if($tag->isDescendantOf(syntax_plugin_combo_list::TAG)){
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
+                if ($tag->isDescendantOf(syntax_plugin_combo_list::TAG)) {
                     $attributes->addClassName("mr-2");
                 }
                 return array(
-                    PluginUtility::STATE=> $state,
+                    PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes->toCallStackArray());
 
 
@@ -166,9 +168,6 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
         }
         return true;
     }
-
-
-
 
 
 }

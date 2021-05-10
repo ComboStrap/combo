@@ -34,11 +34,13 @@ class HtmlUtility
         [
             "Tag section invalid\n", // section is HTML5 tag
             "Tag footer invalid\n", // footer is HTML5 tag
+            "error parsing attribute name\n", // name is an HTML5 attribute
             "Tag bdi invalid\n",
             "Tag path invalid\n", // svg
             "Tag svg invalid\n", // svg
             "Unexpected end tag : a\n", // when the document is only a anchor
-            "Unexpected end tag : p\n"
+            "Unexpected end tag : p\n", // when the document is only a p
+            "Unexpected end tag : button\n" // // when the document is only a button
         ];
 
 

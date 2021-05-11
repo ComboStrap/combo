@@ -271,6 +271,7 @@ class XmlUtility
                 $error .= "The node (" . $rightNode->getNodePath() . ") have different values (" . $leftNodeValue . "," . $rightNodeValue . ")\n";
             }
         }
+
         /**
          * Sub
          */

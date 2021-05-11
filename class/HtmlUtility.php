@@ -159,20 +159,33 @@ class HtmlUtility
                  * Section is an html5 tag (and is invalid for libxml)
                  */
                 if (!in_array($error->message, HtmlUtility::KNOWN_LOADING_ERRORS)) {
-                    throw new \RuntimeException("Error while loading HTML: " . $error->message.". Loaded text: ".$text);
+                    if (strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false) {
+                        $message = "You forgot to call htmlentities in src, url ? Somewhere. Error: " . $error->message;
+                    } else {
+                        $message = "Error while loading HTML: " . $error->message.". Loaded text: ".$text;
+                    }
+
+                    /**
+                     * We clean the errors, otherwise
+                     * in a test series, they failed the next test
+                     *
+                     * @noinspection PhpComposerExtensionStubsInspection
+                     */
+                    libxml_clear_errors();
+                    throw new \RuntimeException($message);
+
                 }
 
             }
 
-            /** @noinspection PhpComposerExtensionStubsInspection */
+            /**
+             * We clean the known errors (otherwise they are added in a queue)
+             * @noinspection PhpComposerExtensionStubsInspection
+             */
             libxml_clear_errors();
 
         } catch (Exception $exception) {
-            if (strpos($exception->getMessage(), "htmlParseEntityRef: expecting ';' in Entity") !== false) {
-                throw new \RuntimeException("You forgot to call htmlentities in src, url ? Somewhere. Error: " . $exception->getMessage());
-            } else {
-                throw new \RuntimeException($exception);
-            }
+
         }
         return $document;
     }

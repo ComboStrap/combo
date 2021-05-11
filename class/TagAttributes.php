@@ -192,11 +192,11 @@ class TagAttributes
     }
 
     /**
-     *
+     * For CSS a unit is mandatory (not for HTML or SVG attributes)
      * @param $value
      * @return string return a CSS property with pixel as unit if the unit is not specified
      */
-    public static function toPixelLengthIfNoSpecified($value)
+    public static function toQualifiedCssValue($value)
     {
         /**
          * A length value may be also `fit-content`
@@ -323,7 +323,7 @@ class TagAttributes
             /**
              * Process animation (onHover, onView)
              */
-            Animation::processOnHover($this);
+            Hover::processOnHover($this);
             Animation::processOnView($this);
 
 

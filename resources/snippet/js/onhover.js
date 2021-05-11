@@ -1,8 +1,9 @@
 window.addEventListener("load", function () {
 
-    let inOutOnHover = function (el) {
-        const $element = jQuery(el.target);
-        $element.toggleClass($element.attr("data-hover-class"));
+    let inOutOnHover = function (event) {
+        const $element = jQuery(event.currentTarget);
+        let dataHoverClass = $element.attr("data-hover-class");
+        $element.toggleClass(dataHoverClass);
     };
 
     /**

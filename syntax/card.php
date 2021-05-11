@@ -91,10 +91,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             return false;
         }
 
-        if ($mode == "eol") {
-            return false;
-        }
-
         /**
          * If preformatted is disable, we does not accept it
          */
@@ -116,7 +112,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'stack';
     }
 
     /**

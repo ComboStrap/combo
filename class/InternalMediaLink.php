@@ -46,7 +46,7 @@ abstract class InternalMediaLink extends DokuPath
         TagAttributes::ALIGN_KEY,
         TagAttributes::LINKING_KEY,
         TagAttributes::TITLE_KEY,
-        Animation::ON_HOVER_ATTRIBUTE,
+        Hover::ON_HOVER_ATTRIBUTE,
         Animation::ON_VIEW_ATTRIBUTE
     ];
 

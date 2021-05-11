@@ -208,7 +208,7 @@ class RasterImageLink extends InternalMediaLink
              */
             if (!empty($widthValue)) {
 
-                $this->tagAttributes->addHtmlAttributeValue("width", TagAttributes::toPixelLengthIfNoSpecified($this->getImgTagWidthValue()));
+                $this->tagAttributes->addHtmlAttributeValue("width", TagAttributes::toQualifiedCssValue($this->getImgTagWidthValue()));
 
                 // Xs
                 if ($widthValue >= $xsmWidth) {

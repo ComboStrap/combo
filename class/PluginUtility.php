@@ -20,6 +20,7 @@ require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/Float.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/Hover.php');
 require_once(__DIR__ . '/HtmlUtility.php');
 require_once(__DIR__ . '/Icon.php');
 require_once(__DIR__ . '/LogUtility.php');
@@ -480,10 +481,21 @@ class PluginUtility
 
             if (in_array($attributes->getLogicalTag(), TagAttributes::NATURAL_SIZING_ELEMENT)) {
                 /**
-                 * For an image, if the max-width is bigger than the screen, the image is out of the screen
+                 * For an image, if the max-width is bigger than the container,
+                 * the image is out of the screen
+                 * We tackle this problem on media width
+                 *
+                 * The best should be Javascript because of the responsive
+                 * nature of CSS, it's difficult to calculate accurately the width of the container
+                 * For instance, for the lg breakpoint 992, if you have one sidebar of 100,
+                 * the main content is 892 but if you have two sidebar, the main content is 792
+                 * and if you have a margin left of 30 (because of section outline), the main content
+                 * will be 762.
+                 *
+                 * To overcome this problem for now, the user should simply not set a width or minimize it
                  */
                 if (is_numeric($widthValue)) {
-                    $qualifiedWidthValue = TagAttributes::toPixelLengthIfNoSpecified($widthValue);
+                    $qualifiedWidthValue = TagAttributes::toQualifiedCssValue($widthValue);
                     $widthSinceBreakpoint = RasterImageLink::BREAKPOINTS["lg"];
                     foreach (RasterImageLink::BREAKPOINTS as $breakpoint) {
                         if ($widthValue < $breakpoint) {
@@ -492,9 +504,15 @@ class PluginUtility
                         }
                     }
                     /**
-                     * Media CSS declaration
-                     * cannot be inline
-                     * We inject then dynamically a rule
+                     *
+                     * Responsive Maximum-width
+                     *
+                     * Setting a maximum width with a length that is not a percentage
+                     * will not be responsive
+                     *
+                     * With set it then conditionally via media CSS declaration
+                     * Because they cannot be inlined (ie in the style attribute)
+                     * We inject then dynamically a CSS rule
                      * max-width applies only for screen bigger than the width
                      *
                      * This should apply only on HTTP HTML request (ie injected SVG in HTML) not in Svg request
@@ -502,18 +520,19 @@ class PluginUtility
                     $requestedMime = $attributes->getMime();
                     if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
 
-                        $onTheFlyClass = self::DYNAMIC_WIDTH_CLASS_PREFIX . $widthValue;
+                        $dynamicWidthClass = PluginUtility::DYNAMIC_WIDTH_CLASS_PREFIX . $widthValue;
                         // The order of the declaration is important, this one must come first
-                        $mostImportantStyleDeclaration = ".$onTheFlyClass { max-width:100% }";
-                        $styleDeclaration = "$mostImportantStyleDeclaration @media (min-width: ${widthSinceBreakpoint}px) { .$onTheFlyClass { max-width: $qualifiedWidthValue } }";
-                        $attributes->addClassName($onTheFlyClass);
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($onTheFlyClass, $styleDeclaration);
+                        // it makes the image responsive to its parent container
+                        $mostImportantStyleDeclaration = ".$dynamicWidthClass { max-width:100% }";
+                        $styleDeclaration = "$mostImportantStyleDeclaration @media (min-width: ${widthSinceBreakpoint}px) { .$dynamicWidthClass { max-width: $qualifiedWidthValue } }";
+                        $attributes->addClassName($dynamicWidthClass);
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($dynamicWidthClass, $styleDeclaration);
 
                     }
 
                 }
             } else {
-                $attributes->addStyleDeclaration('max-width', TagAttributes::toPixelLengthIfNoSpecified($widthValue));
+                $attributes->addStyleDeclaration('max-width', TagAttributes::toQualifiedCssValue($widthValue));
             }
 
         }

@@ -2,22 +2,12 @@
 
 namespace ComboStrap;
 
-/**
- * Copyright (c) 2020. ComboStrap, Inc. and its affiliates. All Rights Reserved.
- *
- * This source code is licensed under the GPL license found in the
- * COPYING  file in the root directory of this source tree.
- *
- * @license  GPL 3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
- * @author   ComboStrap <support@combostrap.com>
- *
- */
 
 use DOMDocument;
 use Exception;
 use LibXMLError;
 
-require_once(__DIR__ . '/../class/XmlUtility.php');
+require_once(__DIR__ . '/XmlUtility.php');
 
 /**
  * Class HtmlUtility
@@ -66,6 +56,7 @@ class HtmlUtility
         if (empty($text)) {
             throw new \RuntimeException("The text should not be empty");
         }
+        /** @noinspection PhpComposerExtensionStubsInspection */
         $doc = new DOMDocument();
         /**
          * The @ is to suppress the error because of HTML5 tag such as footer

@@ -14,17 +14,20 @@ if (!defined('DOKU_INC')) die();
 /**
  *
  * A EOL syntax to take over the {@link \dokuwiki\Parsing\ParserMode\Eol}
- * and not be at the mercy of the {@link \dokuwiki\Parsing\Handler\Block::process()}
- * processing
+ *
+ * The process is `eol` call are created in the instruction stack
+ * and they are at the end transformed as paragraph via {@link \dokuwiki\Parsing\Handler\Block::process()}
  *
  * @deprecated
- * This is not yet in production because the {@Link \dokuwiki\Parsing\ParserMode\Eol::getSort()}
- * is bigger than the dokuwiki one.
+ * This is not in production because it's not {@link syntax_plugin_combo_eol::ENABLED_DEFAULT_VALUE}
+ * We just process the `eol` at the end {@link DOKU_LEXER_EXIT} state of the component
  *
  * Basically, you get an new paragraph with a blank line or \\ : https://www.dokuwiki.org/faq:newlines
  *
  * !!!!!
- * Note: p_open call may appears also when the {@link \ComboStrap\Syntax::getPType()} is set to `normal`
+ * Note: p_open call may appears also when the {@link \ComboStrap\Syntax::getPType()} is set to `normal` or `stack`
+ *
+ * Check the {@link \dokuwiki\Parsing\Handler\Block} handler
  * !!!!!
  */
 class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
@@ -35,7 +38,8 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
     /**
      * Disabled
      */
-    const ENABLED = false;
+    const ENABLED_DEFAULT_VALUE = 0;
+    const CONF_ENABLE = "eolEnable";
 
 
     /**
@@ -85,10 +89,10 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
     {
         /**
          *
-         * Not used because it's bigger than 370
-         * Less than {@link \dokuwiki\Parsing\ParserMode\Eol::getSort()}
+         * Should be less than 370
+         * Ie Less than {@link \dokuwiki\Parsing\ParserMode\Eol::getSort()}
          */
-        return 371;
+        return 369;
     }
 
 
@@ -96,19 +100,20 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
     {
 
 
-        if (syntax_plugin_combo_eol::ENABLED) {
+        if ($this->getConf(syntax_plugin_combo_eol::CONF_ENABLE,syntax_plugin_combo_eol::ENABLED_DEFAULT_VALUE)) {
             /**
              * Note same component than for the {@link syntax_plugin_combo_title}
              */
             $modes = [
-                PluginUtility::getModeForComponent(syntax_plugin_combo_blockquote::TAG),
+
                 PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
-                PluginUtility::getModeForComponent(syntax_plugin_combo_note::TAG),
-                PluginUtility::getModeForComponent(syntax_plugin_combo_jumbotron::TAG),
-                PluginUtility::getModeForComponent(syntax_plugin_combo_panel::TAG),
-                PluginUtility::getModeForComponent(syntax_plugin_combo_panel::OLD_TAB_PANEL_TAG),
-                PluginUtility::getModeForComponent(syntax_plugin_combo_slide::TAG),
-                PluginUtility::getModeForComponent(syntax_plugin_combo_column::TAG),
+//                PluginUtility::getModeForComponent(syntax_plugin_combo_blockquote::TAG),
+//                PluginUtility::getModeForComponent(syntax_plugin_combo_note::TAG),
+//                PluginUtility::getModeForComponent(syntax_plugin_combo_jumbotron::TAG),
+//                PluginUtility::getModeForComponent(syntax_plugin_combo_panel::TAG),
+//                PluginUtility::getModeForComponent(syntax_plugin_combo_panel::OLD_TAB_PANEL_TAG),
+//                PluginUtility::getModeForComponent(syntax_plugin_combo_slide::TAG),
+//                PluginUtility::getModeForComponent(syntax_plugin_combo_column::TAG),
             ];
             if (in_array($mode, $modes)) {
                 $this->Lexer->addSpecialPattern('(?:^[ \t]*)?\n', $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
@@ -136,6 +141,7 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
          * We just take them
          */
         switch ($state) {
+
             case DOKU_LEXER_SPECIAL :
 
                 return array(

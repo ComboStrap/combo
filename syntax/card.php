@@ -232,7 +232,9 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 // +1 to go at the line ?
                 $endPosition = $pos + strlen($match) + 1;
 
+                // Transform eol to paragraph
                 $openingTag->processEolToEndStack("card-text");
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::CONTEXT => $context,

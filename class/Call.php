@@ -12,6 +12,8 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 /**
  * Class Call
  * @package ComboStrap
@@ -26,6 +28,8 @@ namespace ComboStrap;
 class Call
 {
 
+    const INLINE_DISPLAY = "inline";
+    const BlOCK_DISPLAY = "block";
     private $call;
 
     /**
@@ -216,8 +220,8 @@ class Call
         $this->call[1] = array(
             0 => $component,
             1 => array(
-                PluginUtility::ATTRIBUTES=>$attributes,
-                PluginUtility::STATE=>$state,
+                PluginUtility::ATTRIBUTES => $attributes,
+                PluginUtility::STATE => $state,
             ),
             2 => $state,
             3 => $match
@@ -225,6 +229,50 @@ class Call
 
     }
 
+    public function getDisplay()
+    {
+        if ($this->getState()==DOKU_LEXER_UNMATCHED){
+            /**
+             * Unmatched are content (ie text node in XML/HTML) and have
+             * no display
+             */
+            return Call::INLINE_DISPLAY;
+        } else {
+            $mode = $this->call[0];
+            if ($mode == "plugin") {
+                global $DOKU_PLUGINS;
+                $component = $this->getComponentName();
+                /**
+                 * @var SyntaxPlugin $syntaxPlugin
+                 */
+                $syntaxPlugin = $DOKU_PLUGINS['syntax'][$component];
+                switch ($syntaxPlugin->getPType()){
+                    case "normal":
+                        return Call::INLINE_DISPLAY;
+                    case "block":
+                        return Call::BlOCK_DISPLAY;
+                };
+            } else {
+                LogUtility::msg("The display of the call with the mode " . $mode . " is unknown");
+                return null;
+            }
+        }
+
+    }
+
+    /**
+     * @return string
+     */
+    private function getComponentName()
+    {
+        $mode = $this->call[0];
+        if ($mode == "plugin") {
+            $pluginDokuData = $this->call[1];
+            return $pluginDokuData[0];
+        } else {
+            return $mode;
+        }
+    }
 
 
 }

@@ -63,6 +63,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
     }
 
     /**
+     *
      * How Dokuwiki will add P element
      *
      *  * 'normal' - The plugin can be used inside paragraphs (inline)
@@ -70,10 +71,12 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
      *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
+     *
+     * This is the equivalent of inline or block for css
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**

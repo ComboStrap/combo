@@ -974,5 +974,88 @@ class Tag
         return self::createFromCall($this->handler, $position);
     }
 
+    /**
+     * Process the EOL call to the end of stack
+     * replacing them with paragraph call
+     * @param $class
+     */
+    public function processEolToEndStack($class)
+    {
+
+        /**
+         * The attributes passed to the paragraph
+         */
+        $attributes = array("class" => $class);
+
+        /**
+         * The running variables
+         */
+        $actualPosition = $this->position; // the actual position
+        $previousCall = $this->tagCall; // the previous call
+        $paragraphOpen = false; // A pointer to see if the paragraph is open
+        while ($this->toNextPositionNonEmpty($actualPosition)) {
+
+            $actualCall = new Call($this->handler->calls[$actualPosition]);
+            if ($actualCall->getTagName() === "eol") {
+
+                /**
+                 * Next Call
+                 */
+                $nextPosition = $actualPosition;
+                $resultNextPosition = $this->toNextPositionNonEmpty($nextPosition);
+                if ($resultNextPosition === false) {
+                    $nextState = null;
+                } else {
+                    $nextCall = new Call($this->handler->calls[$nextPosition]);
+                    if ($nextCall->getTagName() === "eol") {
+                        $nextState = "eol";
+                    } else {
+                        $nextState = $nextCall->getState();
+                    }
+                }
+
+
+                $previousState = $previousCall->getState();
+
+
+                switch ($paragraphOpen) {
+                    case false:
+                        switch ($previousState) {
+                            case DOKU_LEXER_ENTER:
+                                switch ($nextState) {
+                                    case DOKU_LEXER_SPECIAL:
+                                        // enter + eol + special => delete
+                                        $actualTag = Tag::createFromCall($this->handler, $actualPosition);
+                                        $actualTag->deleteCall();
+                                        break;
+
+                                }
+                                break;
+                            case DOKU_LEXER_SPECIAL:
+                                switch ($nextState) {
+                                    case "eol":
+                                        // special + eol + eol => empty p (special)
+                                        $actualCall->updateToPluginComponent(
+                                            "combo_eol",
+                                            DOKU_LEXER_SPECIAL,
+                                            $attributes
+                                        );
+                                        break;
+                                    case DOKU_LEXER_UNMATCHED:
+                                        // special + eol + unmatched => open p
+                                        $actualCall->updateToPluginComponent(
+                                            "combo_eol",
+                                            DOKU_LEXER_ENTER,
+                                            $attributes
+                                        );
+                                        break;
+                                }
+                                break;
+                        }
+
+                }
+            }
+        }
+    }
 
 }

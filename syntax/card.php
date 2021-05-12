@@ -104,10 +104,16 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     *  * 'normal' - No paragraph The plugin can be used inside paragraphs
-     *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     *  * 'normal' - The plugin output will be inside a paragraph (or another block element), no paragraphs will be inside
+     *               No paragraph - the plugin can be used inside paragraphs (inline)
+     *  * 'block'  - Open paragraphs need to be closed before plugin output -
+     *               the plugin output will not start with a paragraph -
+     *               block should not be inside paragraphs
+     *               block will add a `eol` call at the beginning
+     *  * 'stack'  - Open paragraphs will be closed before plugin output, the plugin output wraps other paragraphs
+     *               Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
      *
+     * @see https://www.dokuwiki.org/devel:syntax_plugins
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
     function getPType()
@@ -225,6 +231,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 // +1 to go at the line ?
                 $endPosition = $pos + strlen($match) + 1;
+
+                $openingTag->processEolToEndStack("card-text");
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::CONTEXT => $context,

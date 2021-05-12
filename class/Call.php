@@ -69,7 +69,6 @@ class Call
              * To make it unique
              */
             $state = $this->getState();
-            $tagName = null;
             switch ($state) {
                 case DOKU_LEXER_MATCHED:
                     $tagName = PluginUtility::getTag($this->getContent());
@@ -205,4 +204,27 @@ class Call
         }
 
     }
+
+    public function updateToPluginComponent($component, $state, $attributes = array())
+    {
+        if ($this->call[0] == "plugin") {
+            $match = $this->call[1][3];
+        } else {
+            $this->call[0] = "plugin";
+            $match = "";
+        }
+        $this->call[1] = array(
+            0 => $component,
+            1 => array(
+                PluginUtility::ATTRIBUTES=>$attributes,
+                PluginUtility::STATE=>$state,
+            ),
+            2 => $state,
+            3 => $match
+        );
+
+    }
+
+
+
 }

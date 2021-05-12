@@ -231,7 +231,7 @@ class Call
 
     public function getDisplay()
     {
-        if ($this->getState()==DOKU_LEXER_UNMATCHED){
+        if ($this->getState() == DOKU_LEXER_UNMATCHED) {
             /**
              * Unmatched are content (ie text node in XML/HTML) and have
              * no display
@@ -246,15 +246,28 @@ class Call
                  * @var SyntaxPlugin $syntaxPlugin
                  */
                 $syntaxPlugin = $DOKU_PLUGINS['syntax'][$component];
-                switch ($syntaxPlugin->getPType()){
+                switch ($syntaxPlugin->getPType()) {
                     case "normal":
                         return Call::INLINE_DISPLAY;
                     case "block":
                         return Call::BlOCK_DISPLAY;
                 };
             } else {
-                LogUtility::msg("The display of the call with the mode " . $mode . " is unknown");
-                return null;
+                switch ($mode) {
+                    case "eol":
+                        /**
+                         * Control character
+                         */
+                        return $mode;
+                    case "strong_close":
+                    case "strong_open":
+                        return Call::INLINE_DISPLAY;
+                    default:
+                        LogUtility::msg("The display of the call with the mode " . $mode . " is unknown");
+                        return null;
+                }
+
+
             }
         }
 

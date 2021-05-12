@@ -8,6 +8,8 @@ require_once(__DIR__ . "/../class/HtmlUtility.php");
 
 use ComboStrap\Analytics;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -100,7 +102,7 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
     {
 
 
-        if ($this->getConf(syntax_plugin_combo_eol::CONF_ENABLE,syntax_plugin_combo_eol::ENABLED_DEFAULT_VALUE)) {
+        if ($this->getConf(syntax_plugin_combo_eol::CONF_ENABLE, syntax_plugin_combo_eol::ENABLED_DEFAULT_VALUE)) {
             /**
              * Note same component than for the {@link syntax_plugin_combo_title}
              */
@@ -171,6 +173,21 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 /** @var Doku_Renderer_xhtml $renderer */
+                $state = $data[PluginUtility::STATE];
+                switch ($state) {
+                    case DOKU_LEXER_ENTER:
+                        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                        $renderer->doc .= $tagAttributes->toHtmlEnterTag("p");
+                        break;
+                    case DOKU_LEXER_SPECIAL:
+                        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                        $renderer->doc .= $tagAttributes->toHtmlEnterTag("p");
+                        $renderer->doc .= "</p>";
+                        break;
+                    case DOKU_LEXER_EXIT:
+                        $renderer->doc .= "</p>";
+                        break;
+                }
                 return true;
 
             case 'metadata':

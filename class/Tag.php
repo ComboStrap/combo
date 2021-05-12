@@ -1013,150 +1013,88 @@ class Tag
                 $nextPosition = $actualPosition;
                 $resultNextPosition = $this->toNextPositionNonEmpty($nextPosition);
                 if ($resultNextPosition === false) {
-                    $nextState = null;
+                    $nextDisplay = "last";
+                    $nextCall = null;
                 } else {
                     $nextCall = new Call($this->handler->calls[$nextPosition]);
-                    if ($nextCall->getTagName() === "eol") {
-                        $nextState = "eol";
-                    } else {
-                        $nextState = $nextCall->getDisplay();
-                    }
+                    $nextDisplay = $nextCall->getDisplay();
                 }
-
-                /**
-                 * Previous call state
-                 */
-                $previousState = $previousCall->getDisplay();
 
 
                 /**
                  * Processing
                  */
-                $action = null;
-                switch ($paragraphIsOpen) {
-                    case false:
-                        switch ($previousState) {
-                            case DOKU_LEXER_ENTER:
-                                switch ($nextState) {
-                                    case DOKU_LEXER_SPECIAL:
-                                        // enter + eol + special => delete
-                                        $action = "delete";
-                                        break;
-                                    default:
-                                        LogUtility::msg("The eol for a closed paragraph and the combination enter / " . $nextState . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                        break;
-                                }
-                                break;
-                            case DOKU_LEXER_SPECIAL:
-                                switch ($nextState) {
-                                    case "eol":
-                                        // special + eol + eol => empty p (special)
-                                        $action = DOKU_LEXER_SPECIAL;
-                                        break;
-                                    case DOKU_LEXER_UNMATCHED:
-                                        // special + eol + unmatched => open p
-                                        $action = DOKU_LEXER_ENTER;
-                                        break;
-                                    default:
-                                        LogUtility::msg("The eol for a closed paragraph and for the combination special / " . $nextState . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                        break;
-                                }
-                                break;
-                            case DOKU_LEXER_EXIT:
-                                switch ($nextState) {
-                                    case DOKU_LEXER_UNMATCHED:
-                                        // exit + eol + unmatched => open p
-                                        $action = DOKU_LEXER_ENTER;
-                                        break;
-                                    default:
-                                        LogUtility::msg("The eol for a closed paragraph and for the combination exit / " . $nextState . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                        break;
-                                }
-                                break;
-                            default:
-                                LogUtility::msg("The previous state (" . $previousState . ") for eol for a closed paragraph was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                break;
-                        }
-                        break;
-                    case true:
-                        /**
-                         * Paragraph is open
-                         */
-                        switch ($previousState) {
-                            case DOKU_LEXER_EXIT:
-                                switch ($nextState) {
-                                    case "eol":
-                                        //exit + eol + eol = close p (exit)
-                                        $action = DOKU_LEXER_EXIT;
-                                        break;
-                                    default:
-                                        LogUtility::msg("The eol for a open paragraph and for the combination exit / " . $nextState . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                        break;
-                                }
-                                break;
-                            case DOKU_LEXER_UNMATCHED:
-                                switch ($nextState) {
-                                    case null:
-                                        // unmatched + eol + nothing (last) => close p (exit)
-                                        $action = DOKU_LEXER_EXIT;
-                                        break;
-                                    default:
-                                        LogUtility::msg("The eol for a open paragraph and for the combination unmatched / " . $nextState . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                        break;
-                                }
-                                break;
-                            case DOKU_LEXER_SPECIAL:
-                                LogUtility::msg("The eol for a open paragraph and for the combination unmatched / " . $nextState . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                break;
-                            default:
-                                LogUtility::msg("The previous state (" . $previousState . ") for eol for a open paragraph was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                break;
-                        }
-                        break;
-                }
+                if (!$paragraphIsOpen) {
 
-                /**
-                 * Update the pointer on open / close
-                 */
-                switch ($action) {
-                    case DOKU_LEXER_ENTER:
-                        /**
-                         * An enter p
-                         */
-                        $paragraphIsOpen = true;
-                        $actualCall->updateToPluginComponent(
-                            "combo_eol",
-                            DOKU_LEXER_ENTER,
-                            $attributes
-                        );
-                        break;
-                    case DOKU_LEXER_SPECIAL:
-                        /**
-                         * An empty p
-                         */
-                        $actualCall->updateToPluginComponent(
-                            "combo_eol",
-                            DOKU_LEXER_SPECIAL,
-                            $attributes
-                        );
-                        break;
-                    case DOKU_LEXER_EXIT:
-                        /**
-                         * An exit p (ie /p)
-                         */
-                        $paragraphIsOpen = false;
-                        $actualCall->updateToPluginComponent(
-                            "combo_eol",
-                            DOKU_LEXER_EXIT
-                        );
-                        break;
-                    case "delete":
-                        $tag = Tag::createFromCall($this->handler, $actualPosition);
-                        $tag->deleteCall();
-                        break;
-                    default:
-                        LogUtility::msg("The action (".$action.") is unknown for the eol to p", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        break;
+                    switch ($nextDisplay) {
+                        case Call::BlOCK_DISPLAY:
+                            $tag = Tag::createFromCall($this->handler, $actualPosition);
+                            $tag->deleteCall();
+                            break;
+                        case Call::INLINE_DISPLAY:
+                            $paragraphIsOpen = true;
+                            $actualCall->updateToPluginComponent(
+                                "combo_eol",
+                                DOKU_LEXER_ENTER,
+                                $attributes
+                            );
+                            break;
+                        case "eol":
+                            $actualCall->updateToPluginComponent(
+                                "combo_eol",
+                                DOKU_LEXER_ENTER,
+                                $attributes
+                            );
+                            /**
+                             * @noinspection PhpUndefinedVariableInspection
+                             * The eol value means that the nextcall is defined
+                             */
+                            $nextCall->updateToPluginComponent(
+                                "combo_eol",
+                                DOKU_LEXER_EXIT
+                            );
+                            $actualPosition = $nextPosition;
+                            break;
+                        default:
+                            LogUtility::msg("The eol action for the combination enter / " . $nextDisplay . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            break;
+                    }
+                } else {
+                    /**
+                     * Paragraph is open
+                     */
+                    switch ($nextDisplay) {
+                        case "eol":
+                            $actualCall->updateToPluginComponent(
+                                "combo_eol",
+                                DOKU_LEXER_EXIT
+                            );
+                            /**
+                             * @noinspection PhpUndefinedVariableInspection
+                             * The eol value means that the nextcall is defined
+                             */
+                            $nextCall->updateToPluginComponent(
+                                "combo_eol",
+                                DOKU_LEXER_ENTER,
+                                $attributes
+                            );
+                            $actualPosition = $nextPosition;
+                            break;
+                        case Call::INLINE_DISPLAY:
+                            $tag = Tag::createFromCall($this->handler, $actualPosition);
+                            $tag->deleteCall();
+                            break;
+                        case Call::BlOCK_DISPLAY:
+                        case "last";
+                            $actualCall->updateToPluginComponent(
+                                "combo_eol",
+                                DOKU_LEXER_EXIT
+                            );
+                            break;
+                        default:
+                            LogUtility::msg("The display for a open paragraph (" . $nextDisplay . ") is not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            break;
+                    }
                 }
 
             }

@@ -296,7 +296,7 @@ class Call
     {
         $mode = $this->call[0];
         if ($mode != "eol") {
-            LogUtility::msg("You can't update a " . $mode . " to a space. It should be a eol");
+            LogUtility::msg("You can't update a " . $mode . " to a space. It should be a eol",LogUtility::LVL_MSG_WARNING,"support");
         } else {
             $this->call[0] = "cdata";
             $this->call[1] = array(
@@ -304,6 +304,27 @@ class Call
             );
         }
 
+    }
+
+    public function addAttribute($key, $value)
+    {
+        $mode = $this->call[0];
+        if ($mode=="plugin") {
+            $this->call[1][1][PluginUtility::ATTRIBUTES][$key] = $value;
+        } else {
+            LogUtility::msg("You can't add an attribute to the non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING,"support");
+        }
+    }
+
+    public function getContext()
+    {
+        $mode = $this->call[0];
+        if ($mode=="plugin") {
+            return $this->call[1][1][PluginUtility::CONTEXT];
+        } else {
+            LogUtility::msg("You can't ask for a context from a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING,"support");
+            return null;
+        }
     }
 
 

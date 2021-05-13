@@ -486,7 +486,7 @@ class TagAttributes
      * Get the value and remove it from the attributes
      * @param $attributeName
      * @param $default
-     * @return string|null
+     * @return string|array|null
      */
     public function getValueAndRemove($attributeName, $default = null)
     {

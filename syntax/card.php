@@ -5,6 +5,8 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\CallStack;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\Tag;
@@ -45,7 +47,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     /**
      * Key of the attributes that says if the card has an image illustration
      */
-    const HAS_IMAGE_ILLUSTRATION_KEY = "hasImageIllustration";
+    const IMAGE_ILLUSTRATION_KEY = "imageIllustration";
     const CONF_ENABLE_SECTION_EDITING = "enableCardSectionEditing";
 
 
@@ -195,13 +197,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 /** A card without context */
                 PluginUtility::addClass2Attributes("card", $attributes);
 
-                /**
-                 * Image illustration is checked on exit
-                 * but we add the attributes now to avoid null exception
-                 * on render
-                 */
-                $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
-
 
                 if (!in_array("id", $attributes)) {
                     $attributes["id"] = $context . $id;
@@ -221,19 +216,31 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
-                $firstDescendant = $openingTag->getFirstMeaningFullDescendant();
-                if ($firstDescendant->getName() == syntax_plugin_combo_media::TAG) {
-                    $openingTag->addAttribute(self::HAS_IMAGE_ILLUSTRATION_KEY, true);
+                $callStack = CallStack::createFromHandler($handler);
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $firstOpeningChild = $callStack->moveToFirstChildTag();
+                if ($firstOpeningChild !== false) {
+                    if ($firstOpeningChild->getTagName() == syntax_plugin_combo_media::TAG) {
+                        $imageAttributes = $firstOpeningChild->getAttributes();
+                        $openingCall->addAttribute(syntax_plugin_combo_card::IMAGE_ILLUSTRATION_KEY, $imageAttributes);
+                        $callStack->deleteActualCallAndNext();
+                    }
                 }
-                $context = $openingTag->getContext();
+                $context = $openingCall->getContext();
 
-                // +1 to go at the line ?
+                /**
+                 * Section editing
+                 * +1 to go at the line ?
+                 */
                 $endPosition = $pos + strlen($match) + 1;
 
                 // Transform eol to paragraph
-                $openingTag->processEolToEndStack("card-text");
+                $callStack->moveToEnd();
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $callStack->processEolToEndStack("card-text");
+
+                // close
+                $callStack->closeAndResetPointer();
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -298,9 +305,9 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     /**
                      * Illustrations
                      * (Must come before the next {@link TagAttributes::toHtmlEnterTag()} of the enter tag
-                     * to remove the hasImageAttribute attribute
+                     * to remove the image illustration attribute
                      */
-                    $hasImageIllustration = $tagAttributes->getValueAndRemove(self::HAS_IMAGE_ILLUSTRATION_KEY,false);
+                    $imageIllustration = $tagAttributes->getValueAndRemove(self::IMAGE_ILLUSTRATION_KEY, array());
 
                     /**
                      * Card
@@ -308,10 +315,12 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
 
                     /**
-                     * If illustration
+                     * Image
                      */
-                    if (!$hasImageIllustration) {
-                        $renderer->doc .= self::CARD_BODY;
+                    if (sizeof($imageIllustration) > 0) {
+                        $image = InternalMediaLink::createFromCallStackArray($imageIllustration);
+                        $image->getTagAttributes()->addClassName("card-img-top");
+                        $renderer->doc .= $image->renderMediaTag();
                     }
 
                     break;

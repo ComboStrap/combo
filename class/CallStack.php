@@ -14,29 +14,77 @@ namespace ComboStrap;
 
 
 use Doku_Handler;
+use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\Parsing\Parser;
 
+/**
+ * Class CallStack
+ * @package ComboStrap
+ *
+ * This is a class that manipulate the call stack.
+ *
+ * A call stack is composed of call (ie array)
+ * A tag is a call that has a state {@link DOKU_LEXER_ENTER} or {@link DOKU_LEXER_SPECIAL}
+ * An opening call is a call with the {@link DOKU_LEXER_ENTER}
+ * An closing call is a call with the {@link DOKU_LEXER_EXIT}
+ *
+ * You can move on the stack with the function:
+ *   * {@link CallStack::next()}
+ *   * {@link CallStack::prev()}
+ *   * `MoveTo`. example: {@link CallStack::moveToPreviousCorrespondingOpeningCall()}
+ *
+ *
+ */
 class CallStack
 {
 
     private $handler;
 
-    private $pointer = -1;
     /**
      * The max key of the calls
      * @var int|null
      */
     private $maxIndex;
+    /**
+     * @var array the call stack
+     */
+    private $callStack;
 
     /**
-     * CallStack constructor.
-     * The call stack is split in the handler in the calls variable and callWriter->calls variable
+     * A pointer to keep the information
+     * if we have gone to far in the stack
+     * (because you lost the fact that you are outside
+     * the boundary, ie you can do a `prev` after that a `next` return false
+     * @var bool
+     */
+    private $endReached = false;
+
+    /**
+     * A callstack is a pointer implementation to manipulate
+     * the {@link Doku_Handler::$calls call stack of the handler}
+     *
+     * When you create a callstack object, the pointer
+     * is located at the end.
+     *
+     * If you want to reset the pointer, you need
+     * to call the {@link CallStack::closeAndResetPointer()} function
+     *
      * @param \Doku_Handler
      */
     public function __construct(&$handler)
     {
         $this->handler = $handler;
         $this->maxIndex = ArrayUtility::array_key_last($handler->calls);
+        $this->callStack = &$handler->calls;
+        end($this->callStack);
+    }
+
+    /**
+     * Reset the pointer
+     */
+    public function closeAndResetPointer()
+    {
+        reset($this->callStack);
     }
 
     /**
@@ -95,6 +143,12 @@ class CallStack
 
     }
 
+    /**
+     * A callstack pointer based implementation
+     * that starts at the end
+     * @param Doku_Handler $handler
+     * @return CallStack
+     */
     public static function createFromHandler(\Doku_Handler &$handler)
     {
         return new CallStack($handler);
@@ -117,6 +171,278 @@ class CallStack
         }
         $parser->parse($dokuTest);
         return $handler;
+    }
+
+    /**
+     * Process the EOL call to the end of stack
+     * replacing them with paragraph call
+     *
+     * A sort of {@link Block::process()} but only from a tag
+     * to the end of the current stack
+     *
+     * This function is used basically in the {@link DOKU_LEXER_EXIT}
+     * state of {@link SyntaxPlugin::handle()} to create paragraph
+     * with the class given as parameter
+     *
+     * @param $class - the class of the paragraph
+     */
+    public function processEolToEndStack($class = "")
+    {
+
+        /**
+         * The attributes passed to the paragraph
+         */
+        $attributes = array("class" => $class);
+
+        /**
+         * The syntax plugin that implements the paragraph
+         * ie {@link \syntax_plugin_combo_eol}
+         * We will transform the eol with a call to this syntax plugin
+         * to create the paragraph
+         */
+        $paragraphComponent = "combo_eol";
+
+        /**
+         * The running variables
+         */
+        $paragraphIsOpen = false; // A pointer to see if the paragraph is open
+        while ($this->next()) {
+
+            $actualCall = $this->getActualCall();
+            if ($actualCall->getTagName() === "eol") {
+
+                /**
+                 * Next Call
+                 */
+                $nextCall = $this->next();
+                $this->prev();
+                if ($nextCall === false) {
+                    $nextDisplay = "last";
+                    $nextCall = null;
+                } else {
+                    $nextDisplay = $nextCall->getDisplay();
+                }
+
+
+                /**
+                 * Processing
+                 */
+                if (!$paragraphIsOpen) {
+
+                    switch ($nextDisplay) {
+                        case Call::BlOCK_DISPLAY:
+                            $this->deleteActualCallAndNext();
+                            break;
+                        case Call::INLINE_DISPLAY:
+                            $paragraphIsOpen = true;
+                            $actualCall->updateToPluginComponent(
+                                $paragraphComponent,
+                                DOKU_LEXER_ENTER,
+                                $attributes
+                            );
+                            break;
+                        case "eol":
+                            /**
+                             * Empty line
+                             */
+                            $actualCall->updateToPluginComponent(
+                                $paragraphComponent,
+                                DOKU_LEXER_ENTER,
+                                $attributes
+                            );
+                            $nextCall->updateToPluginComponent(
+                                $paragraphComponent,
+                                DOKU_LEXER_EXIT
+                            );
+                            $this->next();
+                            break;
+                        default:
+                            LogUtility::msg("The eol action for the combination enter / " . $nextDisplay . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            break;
+                    }
+                } else {
+                    /**
+                     * Paragraph is open
+                     */
+                    switch ($nextDisplay) {
+                        case "eol":
+                            /**
+                             * Empty line
+                             */
+                            $actualCall->updateToPluginComponent(
+                                $paragraphComponent,
+                                DOKU_LEXER_EXIT
+                            );
+                            $nextCall->updateToPluginComponent(
+                                $paragraphComponent,
+                                DOKU_LEXER_ENTER,
+                                $attributes
+                            );
+                            $this->next();
+                            break;
+                        case Call::INLINE_DISPLAY:
+                            // A space
+                            $actualCall->updateEolToSpace();
+                            break;
+                        case Call::BlOCK_DISPLAY:
+                        case "last";
+                            $actualCall->updateToPluginComponent(
+                                $paragraphComponent,
+                                DOKU_LEXER_EXIT
+                            );
+                            break;
+                        default:
+                            LogUtility::msg("The display for a open paragraph (" . $nextDisplay . ") is not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            break;
+                    }
+                }
+
+            }
+
+
+        }
+    }
+
+    /**
+     * Delete the call where the pointer is
+     * And go to the next position
+     */
+    public function deleteActualCallAndNext()
+    {
+        $key = key($this->callStack);
+        // unset is
+        unset($this->callStack[$key]);
+        // if there is a eol, we delete it
+        // otherwise we may end up with two eol
+        // and this is an empty paragraph
+        if ($this->getActualCall()->getTagName()=='eol'){
+            $key = key($this->callStack);
+            unset($this->callStack[$key]);
+        }
+    }
+
+    /**
+     * @return Call - get a reference to the actual call
+     * This function returns a {@link Call call} object
+     * by reference, meaning that every update will also modify the element
+     * in the stack
+     */
+    private function getActualCall()
+    {
+        $actualCallKey = key($this->callStack);
+        $actualCallArray = &$this->callStack[$actualCallKey];
+        return new Call($actualCallArray);
+    }
+
+    /**
+     * put the pointer one position further
+     * false if at the end
+     * @return false|Call
+     */
+    private function next()
+    {
+        $next = next($this->callStack);
+        if ($next === false) {
+            $this->endReached = true;
+            return $next;
+        } else {
+            return $this->getActualCall();
+        }
+    }
+
+    /**
+     *
+     * From an exit call, move the corresponding Opening call
+     *
+     * This is used mostly in {@link SyntaxPlugin::handle()} from a {@link DOKU_LEXER_EXIT}
+     * to retrieve the {@link DOKU_LEXER_ENTER} call
+     *
+     * @return bool|Call
+     */
+    public function moveToPreviousCorrespondingOpeningCall()
+    {
+
+        $actualCall = $this->getActualCall();
+        $actualState = $actualCall->getState();
+        if ($actualState != DOKU_LEXER_EXIT) {
+            /**
+             * Check if we are at the end of the stack
+             * In this case, we start at next
+             */
+            $next = $this->next();
+            if ($next !== false) {
+                LogUtility::msg("You are not at the end of stack and you are not on a opening tag, you can't ask for the opening tag." . $actualState, LogUtility::LVL_MSG_ERROR, "support");
+                return false;
+            }
+        }
+        $level = 0;
+        while ($this->prev()) {
+
+            $actualCall = $this->getActualCall();
+            $state = $actualCall->getState();
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                    $level++;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $level--;
+                    break;
+            }
+            if ($level > 0) {
+                break;
+            }
+
+        }
+        if ($level > 0) {
+            return $actualCall;
+        } else {
+            return false;
+        }
+    }
+
+    private function prev()
+    {
+        if ($this->endReached) {
+            $this->endReached = false;
+            return end($this->callStack);
+        } else {
+            return prev($this->callStack);
+        }
+    }
+
+    /**
+     * Return the first enter or special child call (ie a tag)
+     * @return Call|false
+     */
+    public function moveToFirstChildTag()
+    {
+        $found = false;
+        while ($this->next()) {
+
+            $actualCall = $this->getActualCall();
+            $state = $actualCall->getState();
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                case DOKU_LEXER_SPECIAL:
+                    $found = true;
+                    break 2;
+                case DOKU_LEXER_EXIT:
+                    break 2;
+            }
+
+        }
+        if ($found) {
+            return $this->getActualCall();
+        } else {
+            return false;
+        }
+
+
+    }
+
+    public function moveToEnd()
+    {
+        end($this->callStack);
     }
 
 

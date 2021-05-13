@@ -25,7 +25,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * Used in the move plugin
      * !!! The two last word of the plugin class !!!
      */
-    const COMPONENT = 'combo_'.self::TAG;
+    const COMPONENT = 'combo_' . self::TAG;
 
     /**
      * The attribute that defines if the image is the first image in
@@ -67,7 +67,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        $enable = $this->getConf(InternalMediaLink::CONF_IMAGE_ENABLE,1);
+        $enable = $this->getConf(InternalMediaLink::CONF_IMAGE_ENABLE, 1);
         if (!$enable) {
 
             // Inside a card, we need to take over and enable it
@@ -138,20 +138,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $media = InternalMediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                 if ($media->isImage()) {
 
-                    if ($context === syntax_plugin_combo_card::TAG && $isFirstImage) {
-
-                        /**
-                         * First image of a card
-                         */
-                        $media->getTagAttributes()->addClassName("card-img-top");
-                        $renderer->doc .= $media->renderMediaTag();
-                        $renderer->doc .= syntax_plugin_combo_card::CARD_BODY;
-
-                    } else {
-
-                        $renderer->doc .= $media->renderMediaTagWithLink();
-
-                    }
+                    $renderer->doc .= $media->renderMediaTagWithLink();
 
                 } else {
 

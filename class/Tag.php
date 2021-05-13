@@ -99,7 +99,7 @@ class Tag
      * @param $attributes
      * @param $state
      * @param Doku_Handler $handler - A reference to the dokuwiki handler
-     * @param null $position - The position in the call stack of null if it's the HEAD tag (The tag that is created from the data of the {@link SyntaxPlugin::render()}
+     * @param null $position - The key (position) in the call stack of null if it's the HEAD tag (The tag that is created from the data of the {@link SyntaxPlugin::render()}
      */
     public function __construct($name, $attributes, $state, &$handler, $position = null)
     {
@@ -463,6 +463,8 @@ class Tag
 
     /**
      * @return bool|Tag
+     * @deprecated use {@link CallStack::moveToPreviousCorrespondingOpeningCall()} instead
+     * @date 2021-05-13 deprecation date
      */
     public function getOpeningTag()
     {
@@ -506,16 +508,18 @@ class Tag
     /**
      *
      * @return Tag the first descendant that is not whitespace
+     * @deprecated use {@link CallStack::moveToFirstChildTag()}
+     * @date 2021-05-13
      */
     public function getFirstMeaningFullDescendant()
     {
-        $descendants = $this->getDescendants();
-        $firstDescendant = $descendants[0];
-        if ($firstDescendant->getState() == DOKU_LEXER_UNMATCHED && trim($firstDescendant->getContentRecursively()) == "") {
-            return $descendants[1];
-        } else {
-            return $firstDescendant;
-        }
+            $descendants = $this->getDescendants();
+            $firstDescendant = $descendants[0];
+            if ($firstDescendant->getState() == DOKU_LEXER_UNMATCHED && trim($firstDescendant->getContentRecursively()) == "") {
+                return $descendants[1];
+            } else {
+                return $firstDescendant;
+            }
     }
 
     /**
@@ -603,6 +607,9 @@ class Tag
         return null;
     }
 
+    /**
+     * @deprecated use {@link CallStack::deleteCall} instead
+     */
     public function deleteCall()
     {
         /**
@@ -970,135 +977,11 @@ class Tag
 
     public function getNextTag()
     {
-        $position = $this->position + 1;
+        $position = $this->position;
+        $this->toNextPositionNonEmpty($position);
         return self::createFromCall($this->handler, $position);
     }
 
-    /**
-     * Process the EOL call to the end of stack
-     * replacing them with paragraph call
-     *
-     * A sort of {@link Block::process()} but only from a tag
-     * to the end of the current stack
-     *
-     * This function is used basically in the {@link DOKU_LEXER_EXIT}
-     * state of {@link SyntaxPlugin::handle()} to create paragraph
-     * with the class given as parameter
-     *
-     * @param $class - the class of the paragraph
-     */
-    public function processEolToEndStack($class)
-    {
 
-        /**
-         * The attributes passed to the paragraph
-         */
-        $attributes = array("class" => $class);
-
-        /**
-         * The syntax plugin that implements the paragraph
-         * ie {@link \syntax_plugin_combo_eol}
-         * We will transform the eol with a call to this syntax plugin
-         * to create the paragraph
-         */
-        $paragraphComponent = "combo_eol";
-
-        /**
-         * The running variables
-         */
-        $actualPosition = $this->position; // the actual position
-        $paragraphIsOpen = false; // A pointer to see if the paragraph is open
-        while ($this->toNextPositionNonEmpty($actualPosition)) {
-
-            $actualCall = new Call($this->handler->calls[$actualPosition]);
-            if ($actualCall->getTagName() === "eol") {
-
-                /**
-                 * Next Call
-                 */
-                $nextPosition = $actualPosition;
-                $resultNextPosition = $this->toNextPositionNonEmpty($nextPosition);
-                if ($resultNextPosition === false) {
-                    $nextDisplay = "last";
-                    $nextCall = null;
-                } else {
-                    $nextCall = new Call($this->handler->calls[$nextPosition]);
-                    $nextDisplay = $nextCall->getDisplay();
-                }
-
-
-                /**
-                 * Processing
-                 */
-                if (!$paragraphIsOpen) {
-
-                    switch ($nextDisplay) {
-                        case Call::BlOCK_DISPLAY:
-                            $tag = Tag::createFromCall($this->handler, $actualPosition);
-                            $tag->deleteCall();
-                            break;
-                        case Call::INLINE_DISPLAY:
-                            $paragraphIsOpen = true;
-                            $actualCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_ENTER,
-                                $attributes
-                            );
-                            break;
-                        case "eol":
-                            $actualCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_ENTER,
-                                $attributes
-                            );
-                            $nextCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_EXIT
-                            );
-                            $actualPosition = $nextPosition;
-                            break;
-                        default:
-                            LogUtility::msg("The eol action for the combination enter / " . $nextDisplay . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            break;
-                    }
-                } else {
-                    /**
-                     * Paragraph is open
-                     */
-                    switch ($nextDisplay) {
-                        case "eol":
-                            $actualCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_EXIT
-                            );
-                            $nextCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_ENTER,
-                                $attributes
-                            );
-                            $actualPosition = $nextPosition;
-                            break;
-                        case Call::INLINE_DISPLAY:
-                            // A space
-                            $actualCall->updateEolToSpace();
-                            break;
-                        case Call::BlOCK_DISPLAY:
-                        case "last";
-                            $actualCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_EXIT
-                            );
-                            break;
-                        default:
-                            LogUtility::msg("The display for a open paragraph (" . $nextDisplay . ") is not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            break;
-                    }
-                }
-
-            }
-
-
-        }
-    }
 
 }

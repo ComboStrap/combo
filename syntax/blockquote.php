@@ -7,6 +7,7 @@
 
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 use ComboStrap\TitleUtility;
 use ComboStrap\PluginUtility;
 
@@ -40,7 +41,6 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
     const CONF_TWEET_WIDGETS_BORDER = "twitter:widgets:border-color";
 
     const BLOCKQUOTE_OPEN_TAG = "<blockquote class=\"blockquote mb-0\">" . DOKU_LF;
-    const CARD_BODY_BLOCKQUOTE_OPEN_TAG = syntax_plugin_combo_card::CARD_BODY . self::BLOCKQUOTE_OPEN_TAG;
 
 
     /**
@@ -203,9 +203,25 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
                 // Important to get an exit in the render phase
                 $node = new Tag(self::TAG, array(), $state, $handler);
+                $openingTag = $node->getOpeningTag();
+                $type = $openingTag->getType();
+                if ($type=="card") {
+                    /**
+                     * Transform the eol in combo_eol
+                     */
+
+                    /**
+                     * Go to the first paragraph
+                     * (ie not {@link syntax_plugin_combo_header}
+                     */
+                    $nextTag = $openingTag->getNextTag();
+                    while ($nextTag->getName() != syntax_plugin_combo_eol::TAG) {
+                        $nextTag = $nextTag->getNextTag();
+                    }
+                }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $node->getOpeningTag()->getType()
+                    PluginUtility::CONTEXT => $type
                 );
 
         }
@@ -238,7 +254,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      * Add the CSS
                      */
                     $snippetManager = PluginUtility::getSnippetManager();
-                    $snippetManager->upsertCssSnippetForBar(self::TAG);
+                    $snippetManager->attachCssSnippetForBar(self::TAG);
 
                     /**
                      * Create the HTML
@@ -248,15 +264,16 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     switch ($type) {
                         case "typo":
 
-                            $class = "blockquote";
-                            PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
+                            $tagAttributes = TagAttributes::createEmpty();
+                            $tagAttributes->addClassName("blockquote");
+
                             $context = $data[PluginUtility::CONTEXT];
                             if ($context == syntax_plugin_combo_card::TAG) {
-                                PluginUtility::addClass2Attributes("mb-0", $blockquoteAttributes);
+                                $tagAttributes->addClassName("mb-0");
                             }
-                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributesAsString($blockquoteAttributes);
-                            $renderer->doc .= "<blockquote {$inlineBlockQuoteAttributes}>" . DOKU_LF;
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("blockquote") . DOKU_LF;
                             break;
+
                         case self::TWEET:
 
                             PluginUtility::getSnippetManager()->upsertTagsForBar(self::TWEET,
@@ -286,19 +303,17 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             $renderer->doc .= "<blockquote $inlineBlockQuoteAttributes>" . DOKU_LF;
                             $renderer->doc .= "<p>" . DOKU_LF;
                             break;
+                        case "card":
                         default:
-                            $class = "card";
-                            PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
-                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributesAsString($blockquoteAttributes);
-                            $renderer->doc .= "<div {$inlineBlockQuoteAttributes}>" . DOKU_LF;
+                            $tagAttributes = TagAttributes::createEmpty();
+                            $tagAttributes->addClassName("card");
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
                             /**
-                             * Add the card body directly,
-                             * the {@link syntax_plugin_combo_header} will delete it if present
-                             * We use this methodology because a blockquote may have as direct
-                             * child another combo/dokuwiki syntax that is not aware
-                             * of where it lives and will then not open the body of the card
+                             * The card body and blockquote body
+                             * of the example (https://getbootstrap.com/docs/4.0/components/card/#header-and-footer)
+                             * are added via call at
+                             * the {@link DOKU_LEXER_EXIT} state of {@link syntax_plugin_combo_blockquote::handle()}
                              */
-                            $renderer->doc .= self::CARD_BODY_BLOCKQUOTE_OPEN_TAG;
                             break;
                     }
                     break;

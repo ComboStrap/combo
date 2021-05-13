@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -400,12 +401,12 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                          * Start the navigation tabs element
                          * We add calls in the stack to create the tabs navigational element
                          */
-                        $navigationalCallElements[] = CallStack::createCall(
+                        $navigationalCallElements[] = Call::createCall(
                             self::TAG,
                             DOKU_LEXER_ENTER,
                             $openingTag->getAttributes(),
                             self::NAVIGATIONAL_ELEMENT_CONTEXT
-                        );
+                        )->toCallArray();
                         $labelStacksToDelete = array();
                         foreach ($descendants as $descendant) {
 
@@ -468,12 +469,12 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                             }
 
                         }
-                        $navigationalCallElements[] = CallStack::createCall(
+                        $navigationalCallElements[] = Call::createCall(
                             self::TAG,
                             DOKU_LEXER_EXIT,
                             $openingTag->getAttributes(),
                             self::NAVIGATIONAL_ELEMENT_CONTEXT
-                        );
+                        )->toCallArray();
 
 
                         /**

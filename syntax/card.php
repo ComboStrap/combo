@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
@@ -238,6 +239,29 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 $callStack->moveToEnd();
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 $callStack->processEolToEndStack("card-text");
+
+                // Insert the card body enter
+                $callStack->moveToEnd();
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $firstChild = $callStack->moveToFirstChildTag();
+                if ($firstChild->getTagName()==syntax_plugin_combo_header::TAG){
+                    $callStack->moveToNextSiblingTag();
+                }
+                $callStack->insertBefore(
+                    Call::createCall(
+                        syntax_plugin_combo_cardbody::TAG,
+                        DOKU_LEXER_ENTER
+                    )
+                );
+
+                // Insert the card body exit
+                $callStack->moveToEnd();
+                $callStack->insertAfter(
+                    Call::createCall(
+                        syntax_plugin_combo_cardbody::TAG,
+                        DOKU_LEXER_EXIT
+                    )
+                );
 
                 // close
                 $callStack->closeAndResetPointer();

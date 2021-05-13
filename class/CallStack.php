@@ -38,6 +38,8 @@ use dokuwiki\Parsing\Parser;
 class CallStack
 {
 
+    const TAG_STATE = [DOKU_LEXER_SPECIAL, DOKU_LEXER_ENTER];
+
     private $handler;
 
     /**
@@ -57,7 +59,7 @@ class CallStack
      * the boundary, ie you can do a `prev` after that a `next` return false
      * @var bool
      */
-    private $endReached = false;
+    private $endWasReached = false;
 
     /**
      * A callstack is a pointer implementation to manipulate
@@ -109,37 +111,6 @@ class CallStack
     {
 
         array_splice($calls, $position, 0, $callStackToInsert);
-
-    }
-
-    /**
-     * Insert a tag above
-     * @param $tagName
-     * @param $state
-     * @param $attribute
-     * @param $context
-     * @param string $content
-     * @return array - a call
-     */
-    public static function createCall($tagName, $state, $attribute, $context, $content = '')
-    {
-        $data = array(
-            PluginUtility::ATTRIBUTES => $attribute,
-            PluginUtility::CONTEXT => $context,
-            PluginUtility::STATE => $state
-        );
-        $positionInText = 0;
-
-        return [
-            "plugin",
-            array(
-                PluginUtility::getComponentName($tagName),
-                $data,
-                $state,
-                $content
-            ),
-            $positionInText
-        ];
 
     }
 
@@ -315,7 +286,7 @@ class CallStack
         // if there is a eol, we delete it
         // otherwise we may end up with two eol
         // and this is an empty paragraph
-        if ($this->getActualCall()->getTagName()=='eol'){
+        if ($this->getActualCall()->getTagName() == 'eol') {
             $key = key($this->callStack);
             unset($this->callStack[$key]);
         }
@@ -327,7 +298,7 @@ class CallStack
      * by reference, meaning that every update will also modify the element
      * in the stack
      */
-    private function getActualCall()
+    public function getActualCall()
     {
         $actualCallKey = key($this->callStack);
         $actualCallArray = &$this->callStack[$actualCallKey];
@@ -339,11 +310,11 @@ class CallStack
      * false if at the end
      * @return false|Call
      */
-    private function next()
+    public function next()
     {
         $next = next($this->callStack);
         if ($next === false) {
-            $this->endReached = true;
+            $this->endWasReached = true;
             return $next;
         } else {
             return $this->getActualCall();
@@ -402,8 +373,8 @@ class CallStack
 
     private function prev()
     {
-        if ($this->endReached) {
-            $this->endReached = false;
+        if ($this->endWasReached) {
+            $this->endWasReached = false;
             return end($this->callStack);
         } else {
             return prev($this->callStack);
@@ -445,5 +416,82 @@ class CallStack
         end($this->callStack);
     }
 
+    /**
+     * On the same level
+     */
+    public function moveToNextSiblingTag()
+    {
+        $actualCall = $this->getActualCall();
+        $actualState = $actualCall->getState();
+        if (!in_array($actualState, CallStack::TAG_STATE)) {
+            LogUtility::msg("A next sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
+            return false;
+        }
+        $level = 0;
+        while ($this->next()) {
 
+            $actualCall = $this->getActualCall();
+            $state = $actualCall->getState();
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                case DOKU_LEXER_SPECIAL:
+                    $level++;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $level--;
+                    break;
+            }
+
+            if ($level == 0) {
+                break;
+            }
+        }
+        if ($level == 0 && !$this->endWasReached) {
+            return $this->getActualCall();
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param Call $call
+     */
+    public function insertBefore($call)
+    {
+        $actualKey = key($this->callStack);
+        $offset = array_search($actualKey, array_keys($this->callStack), true);
+        array_splice($this->callStack, $offset, 0, [$call->toCallArray()]);
+        // array splice reset the pointer
+        // we move it to the actual element (ie +1)
+        $this->moveToKey($actualKey + 1);
+    }
+
+    /**
+     * Move pointer
+     * @param $targetKey
+     */
+    private function moveToKey($targetKey)
+    {
+        reset($this->callStack);
+        for ($i = 0; $i < $targetKey; $i++) {
+            next($this->callStack);
+        }
+        $actualKey = key($this->callStack);
+        if ($actualKey !=$targetKey){
+            LogUtility::msg("The target key ($targetKey) is not equal to the actual key ($actualKey). The moveToKey was not successful");
+        }
+    }
+
+    /**
+     * @param Call $call
+     */
+    public function insertAfter($call)
+    {
+        $actualKey = key($this->callStack);
+        $offset = array_search($actualKey, array_keys($this->callStack), true);
+        array_splice($this->callStack, $offset+1, 0, [$call->toCallArray()]);
+        // array splice reset the pointer
+        // we move it to the actual element
+        $this->moveToKey($actualKey);
+    }
 }

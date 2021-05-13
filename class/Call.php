@@ -42,6 +42,37 @@ class Call
     }
 
     /**
+     * Insert a tag above
+     * @param $tagName
+     * @param $state
+     * @param $attribute
+     * @param $context
+     * @param string $content
+     * @return Call - a call
+     */
+    public static function createCall($tagName, $state, $attribute = array(), $context = null, $content = '')
+    {
+        $data = array(
+            PluginUtility::ATTRIBUTES => $attribute,
+            PluginUtility::CONTEXT => $context,
+            PluginUtility::STATE => $state
+        );
+        $positionInText = null;
+
+        $call = [
+            "plugin",
+            array(
+                PluginUtility::getComponentName($tagName),
+                $data,
+                $state,
+                $content
+            ),
+            $positionInText
+        ];
+        return new Call($call);
+    }
+
+    /**
      * Return the tag name from a call array
      * (much more what's called the component name)
      * @return mixed|string
@@ -326,6 +357,17 @@ class Call
             return null;
         }
     }
+
+    /**
+     *
+     * @return array
+     */
+    public function toCallArray()
+    {
+        return $this->call;
+    }
+
+
 
 
 }

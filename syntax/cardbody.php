@@ -1,14 +1,10 @@
 <?php
 
 
-require_once(__DIR__ . "/../class/Analytics.php");
 require_once(__DIR__ . "/../class/PluginUtility.php");
-require_once(__DIR__ . "/../class/LinkUtility.php");
-require_once(__DIR__ . "/../class/HtmlUtility.php");
 
-use ComboStrap\Analytics;
+
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
@@ -16,11 +12,12 @@ if (!defined('DOKU_INC')) die();
 /**
  *
  * A syntax plugin to add the card body element
+ *
  */
 class syntax_plugin_combo_cardbody extends DokuWiki_Syntax_Plugin
 {
 
-
+    CONST TAG = "cardbody";
 
     /**
      * Syntax Type.

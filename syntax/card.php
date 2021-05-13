@@ -111,7 +111,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      *               block should not be inside paragraphs
      *               block will add a `eol` call at the beginning
      *  * 'stack'  - Open paragraphs will be closed before plugin output, the plugin output wraps other paragraphs
-     *               Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     *               Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs (ie paragraph will be added)
      *
      * @see https://www.dokuwiki.org/devel:syntax_plugins
      * @see DokuWiki_Syntax_Plugin::getPType()

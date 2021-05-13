@@ -995,12 +995,18 @@ class Tag
          */
         $attributes = array("class" => $class);
 
+        /**
+         * The syntax plugin that implements the paragraph
+         * ie {@link \syntax_plugin_combo_eol}
+         * We will transform the eol with a call to this syntax plugin
+         * to create the paragraph
+         */
+        $paragraphComponent = "combo_eol";
 
         /**
          * The running variables
          */
         $actualPosition = $this->position; // the actual position
-        $previousCall = $this->tagCall; // the previous call
         $paragraphIsOpen = false; // A pointer to see if the paragraph is open
         while ($this->toNextPositionNonEmpty($actualPosition)) {
 
@@ -1034,23 +1040,19 @@ class Tag
                         case Call::INLINE_DISPLAY:
                             $paragraphIsOpen = true;
                             $actualCall->updateToPluginComponent(
-                                "combo_eol",
+                                $paragraphComponent,
                                 DOKU_LEXER_ENTER,
                                 $attributes
                             );
                             break;
                         case "eol":
                             $actualCall->updateToPluginComponent(
-                                "combo_eol",
+                                $paragraphComponent,
                                 DOKU_LEXER_ENTER,
                                 $attributes
                             );
-                            /**
-                             * @noinspection PhpUndefinedVariableInspection
-                             * The eol value means that the nextcall is defined
-                             */
                             $nextCall->updateToPluginComponent(
-                                "combo_eol",
+                                $paragraphComponent,
                                 DOKU_LEXER_EXIT
                             );
                             $actualPosition = $nextPosition;
@@ -1066,28 +1068,24 @@ class Tag
                     switch ($nextDisplay) {
                         case "eol":
                             $actualCall->updateToPluginComponent(
-                                "combo_eol",
+                                $paragraphComponent,
                                 DOKU_LEXER_EXIT
                             );
-                            /**
-                             * @noinspection PhpUndefinedVariableInspection
-                             * The eol value means that the nextcall is defined
-                             */
                             $nextCall->updateToPluginComponent(
-                                "combo_eol",
+                                $paragraphComponent,
                                 DOKU_LEXER_ENTER,
                                 $attributes
                             );
                             $actualPosition = $nextPosition;
                             break;
                         case Call::INLINE_DISPLAY:
-                            $tag = Tag::createFromCall($this->handler, $actualPosition);
-                            $tag->deleteCall();
+                            // A space
+                            $actualCall->updateEolToSpace();
                             break;
                         case Call::BlOCK_DISPLAY:
                         case "last";
                             $actualCall->updateToPluginComponent(
-                                "combo_eol",
+                                $paragraphComponent,
                                 DOKU_LEXER_EXIT
                             );
                             break;
@@ -1099,10 +1097,6 @@ class Tag
 
             }
 
-            /**
-             * End (actual = previous)
-             */
-            $previousCall = $actualCall;
 
         }
     }

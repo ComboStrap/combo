@@ -1,11 +1,7 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
-// must be run within Dokuwiki
 use ComboStrap\HeaderUtility;
-use ComboStrap\TitleUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
@@ -37,7 +33,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     function getAllowedTypes()

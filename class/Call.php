@@ -246,11 +246,16 @@ class Call
                  * @var SyntaxPlugin $syntaxPlugin
                  */
                 $syntaxPlugin = $DOKU_PLUGINS['syntax'][$component];
-                switch ($syntaxPlugin->getPType()) {
+                $pType = $syntaxPlugin->getPType();
+                switch ($pType) {
                     case "normal":
                         return Call::INLINE_DISPLAY;
                     case "block":
+                    case "stack":
                         return Call::BlOCK_DISPLAY;
+                    default:
+                        LogUtility::msg("The ptype (" . $pType . ") is unknown.");
+                        return null;
                 };
             } else {
                 switch ($mode) {
@@ -285,6 +290,20 @@ class Call
         } else {
             return $mode;
         }
+    }
+
+    public function updateEolToSpace()
+    {
+        $mode = $this->call[0];
+        if ($mode != "eol") {
+            LogUtility::msg("You can't update a " . $mode . " to a space. It should be a eol");
+        } else {
+            $this->call[0] = "cdata";
+            $this->call[1] = array(
+                0 => " "
+            );
+        }
+
     }
 
 

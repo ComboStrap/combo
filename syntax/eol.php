@@ -20,16 +20,14 @@ if (!defined('DOKU_INC')) die();
  * The process is `eol` call are created in the instruction stack
  * and they are at the end transformed as paragraph via {@link \dokuwiki\Parsing\Handler\Block::process()}
  *
- * @deprecated
- * This is not in production because it's not {@link syntax_plugin_combo_eol::ENABLED_DEFAULT_VALUE}
- * We just process the `eol` at the end {@link DOKU_LEXER_EXIT} state of the component
+ *
  *
  * Basically, you get an new paragraph with a blank line or \\ : https://www.dokuwiki.org/faq:newlines
  *
  * !!!!!
- * Note: p_open call may appears also when the {@link \ComboStrap\Syntax::getPType()} is set to `normal` or `stack`
+ * Note: p_open call may appears when the {@link \ComboStrap\Syntax::getPType()} is set to `block` or `stack`
+ * and the next call is not a block or a stack
  *
- * Check the {@link \dokuwiki\Parsing\Handler\Block} handler
  * !!!!!
  */
 class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
@@ -37,11 +35,6 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
 
     const TAG = 'eol';
 
-    /**
-     * Disabled
-     */
-    const ENABLED_DEFAULT_VALUE = 0;
-    const CONF_ENABLE = "eolEnable";
 
 
     /**
@@ -52,7 +45,7 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'substition';
+        return 'paragraphs';
     }
 
     /**
@@ -66,7 +59,12 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        /**
+         * !important!
+         * The {@link \dokuwiki\Parsing\Handler\Block::process()}
+         * will then not create an extra paragraph after it encounters a block
+         */
+        return 'block';
     }
 
     /**
@@ -78,6 +76,9 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
+        /**
+         * Not needed as we don't have any {@link syntax_plugin_combo_eol::connectTo()}
+         */
         return array();
     }
 
@@ -90,8 +91,9 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
     function getSort()
     {
         /**
+         * Not really needed as we don't have any {@link syntax_plugin_combo_eol::connectTo()}
          *
-         * Should be less than 370
+         * Note: if we start to use it should be less than 370
          * Ie Less than {@link \dokuwiki\Parsing\ParserMode\Eol::getSort()}
          */
         return 369;
@@ -101,26 +103,11 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-
-        if ($this->getConf(syntax_plugin_combo_eol::CONF_ENABLE, syntax_plugin_combo_eol::ENABLED_DEFAULT_VALUE)) {
-            /**
-             * Note same component than for the {@link syntax_plugin_combo_title}
-             */
-            $modes = [
-
-                PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
-//                PluginUtility::getModeForComponent(syntax_plugin_combo_blockquote::TAG),
-//                PluginUtility::getModeForComponent(syntax_plugin_combo_note::TAG),
-//                PluginUtility::getModeForComponent(syntax_plugin_combo_jumbotron::TAG),
-//                PluginUtility::getModeForComponent(syntax_plugin_combo_panel::TAG),
-//                PluginUtility::getModeForComponent(syntax_plugin_combo_panel::OLD_TAB_PANEL_TAG),
-//                PluginUtility::getModeForComponent(syntax_plugin_combo_slide::TAG),
-//                PluginUtility::getModeForComponent(syntax_plugin_combo_column::TAG),
-            ];
-            if (in_array($mode, $modes)) {
-                $this->Lexer->addSpecialPattern('(?:^[ \t]*)?\n', $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-            }
-        }
+        /**
+         * No need to connect
+         * This syntax plugin is added dynamically with the {@link Tag::processEolToEndStack()}
+         * function
+         */
 
     }
 
@@ -140,17 +127,9 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
     {
 
         /**
-         * We just take them
+         * No need to handle,
+         * there is no {@link syntax_plugin_combo_eol::connectTo() connection}
          */
-        switch ($state) {
-
-            case DOKU_LEXER_SPECIAL :
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match
-                );
-        }
         return true;
 
 

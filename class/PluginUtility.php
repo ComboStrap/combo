@@ -109,8 +109,6 @@ class PluginUtility
 
 
     const EDIT_SECTION_TARGET = 'section';
-    const DYNAMIC_WIDTH_CLASS_PREFIX = "dynamic-width-";
-
 
     /**
      * The URL base of the documentation
@@ -478,62 +476,35 @@ class PluginUtility
             $widthValue = trim($attributes->getValueAndRemove($widthName));
             if ($widthValue == "fit") {
                 $widthValue = "fit-content";
+            } else {
+                /** Numeric value */
+                $qualifiedWidthValue = TagAttributes::toQualifiedCssValue($widthValue);
             }
 
+
+            /**
+             * For an image
+             */
             if (in_array($attributes->getLogicalTag(), TagAttributes::NATURAL_SIZING_ELEMENT)) {
+
                 /**
-                 * For an image, if the max-width is bigger than the container,
-                 * the image is out of the screen
-                 * We tackle this problem on media width
-                 *
-                 * The best should be Javascript because of the responsive
-                 * nature of CSS, it's difficult to calculate accurately the width of the container
-                 * For instance, for the lg breakpoint 992, if you have one sidebar of 100,
-                 * the main content is 892 but if you have two sidebar, the main content is 792
-                 * and if you have a margin left of 30 (because of section outline), the main content
-                 * will be 762.
-                 *
-                 * To overcome this problem for now, the user should simply not set a width or minimize it
+                 * If the image is not ask as static resource (ie HTTP request)
+                 * but added in HTML
+                 * (ie {@link \action_plugin_combo_svg})
                  */
-                if (is_numeric($widthValue)) {
-                    $qualifiedWidthValue = TagAttributes::toQualifiedCssValue($widthValue);
-                    $widthSinceBreakpoint = RasterImageLink::BREAKPOINTS["lg"];
-                    foreach (RasterImageLink::BREAKPOINTS as $breakpoint) {
-                        if ($widthValue < $breakpoint) {
-                            $widthSinceBreakpoint = $breakpoint;
-                            break;
-                        }
-                    }
-                    /**
-                     *
-                     * Responsive Maximum-width
-                     *
-                     * Setting a maximum width with a length that is not a percentage
-                     * will not be responsive
-                     *
-                     * With set it then conditionally via media CSS declaration
-                     * Because they cannot be inlined (ie in the style attribute)
-                     * We inject then dynamically a CSS rule
-                     * max-width applies only for screen bigger than the width
-                     *
-                     * This should apply only on HTTP HTML request (ie injected SVG in HTML) not in Svg request
-                     */
-                    $requestedMime = $attributes->getMime();
-                    if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
-
-                        $dynamicWidthClass = PluginUtility::DYNAMIC_WIDTH_CLASS_PREFIX . $widthValue;
-                        // The order of the declaration is important, this one must come first
-                        // it makes the image responsive to its parent container
-                        $mostImportantStyleDeclaration = ".$dynamicWidthClass { max-width:100% }";
-                        $styleDeclaration = "$mostImportantStyleDeclaration @media (min-width: ${widthSinceBreakpoint}px) { .$dynamicWidthClass { max-width: $qualifiedWidthValue } }";
-                        $attributes->addClassName($dynamicWidthClass);
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($dynamicWidthClass, $styleDeclaration);
-
-                    }
-
+                $requestedMime = $attributes->getMime();
+                if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
+                    $attributes->addStyleDeclaration('max-width', TagAttributes::toQualifiedCssValue($widthValue));
+                    $attributes->addStyleDeclaration('width', "100%");
                 }
+
             } else {
+
+                /**
+                 * For a block
+                 */
                 $attributes->addStyleDeclaration('max-width', TagAttributes::toQualifiedCssValue($widthValue));
+
             }
 
         }
@@ -1211,11 +1182,11 @@ class PluginUtility
     {
 
 
-        if (empty($position)){
-            LogUtility::msg("The position for a start section should not be empty",LogUtility::LVL_MSG_ERROR,"support");
+        if (empty($position)) {
+            LogUtility::msg("The position for a start section should not be empty", LogUtility::LVL_MSG_ERROR, "support");
         }
-        if (empty($name)){
-            LogUtility::msg("The name for a start section should not be empty",LogUtility::LVL_MSG_ERROR,"support");
+        if (empty($name)) {
+            LogUtility::msg("The name for a start section should not be empty", LogUtility::LVL_MSG_ERROR, "support");
         }
 
         /**

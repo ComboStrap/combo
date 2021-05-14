@@ -204,7 +204,7 @@ class TagAttributes
          * we add the pixel
          * Same as {@link is_numeric()} ?
          */
-        if (preg_match("/^[0-9]*$/", $value)) {
+        if (is_numeric($value)) {
             return $value . "px";
         } else {
             return $value;

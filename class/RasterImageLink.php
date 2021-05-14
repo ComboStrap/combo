@@ -164,12 +164,18 @@ class RasterImageLink extends InternalMediaLink
              */
             $imgTagHeightValue = $this->getImgTagHeightValue();
             if (!empty($imgTagHeightValue)) {
-                $this->tagAttributes->addHtmlAttributeValue("height", $imgTagHeightValue . 'px');
+
+                // The unit is not mandatory in HTML
+                // but to be clear we add it.
+                $htmlLengthUnit = "px";
+
+                $internalHeight = $this->getMediaHeight();
+                $this->tagAttributes->addHtmlAttributeValue("height", $internalHeight. $htmlLengthUnit);
                 /**
                  * By default, the browser with a height auto due to the img-fluid class
                  * takes the value of the width. To constraint it, we use max-height
                  */
-                $this->tagAttributes->addStyleDeclaration("max-height", $imgTagHeightValue . "px");
+                $this->tagAttributes->addStyleDeclaration("max-height", $imgTagHeightValue . $htmlLengthUnit);
             }
             $widthValue = $this->getImgTagWidthValue();
 
@@ -208,7 +214,7 @@ class RasterImageLink extends InternalMediaLink
              */
             if (!empty($widthValue)) {
 
-                $this->tagAttributes->addHtmlAttributeValue("width", TagAttributes::toQualifiedCssValue($this->getImgTagWidthValue()));
+                $this->tagAttributes->addHtmlAttributeValue("width", $this->getMediaWidth());
 
                 // Xs
                 if ($widthValue >= $xsmWidth) {

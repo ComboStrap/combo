@@ -12,6 +12,9 @@ require_once(__DIR__ . '/XmlUtility.php');
 /**
  * Class HtmlUtility
  * On HTML as string, if you want to work on HTML as XML, see the {@link XmlUtility} class
+ * @package ComboStrap
+ *
+ *
  */
 class HtmlUtility
 {
@@ -42,7 +45,7 @@ class HtmlUtility
     public static function normalize($text)
     {
         $text = str_replace(DOKU_LF, "", $text);
-        return self::format($text);
+        return HtmlUtility::format($text);
     }
 
     /**
@@ -84,7 +87,7 @@ class HtmlUtility
      * DOMDocument supports formatted XML while SimpleXMLElement does not.
      * @noinspection PhpComposerExtensionStubsInspection
      */
-    public static function diffMarkup($left, $right)
+    public static function diffMarkup($left, $right, $xhtml = true)
     {
         if (empty($right)) {
             throw new \RuntimeException("The left text should not be empty");
@@ -93,8 +96,8 @@ class HtmlUtility
             throw new \RuntimeException("The left text should not be empty");
         }
 
-        $leftDocument = self::load($left);
-        $rightDocument = self::load($right);
+        $leftDocument = HtmlUtility::load($left, $xhtml);
+        $rightDocument = HtmlUtility::load($right, $xhtml);
 
         $error = "";
         XmlUtility::diffNode($leftDocument, $rightDocument, $error);
@@ -112,7 +115,12 @@ class HtmlUtility
         return count(preg_split("/<\/p>|<\/h[1-9]{1}>|<br|<\/tr>|<\/li>|<hr>|<\/pre>/", $text)) - 1;
     }
 
-    private static function &load($text)
+    /**
+     * @param $text
+     * @param bool $xhtml - does HTML must be a valid XML
+     * @return DOMDocument
+     */
+    private static function &load($text, $xhtml = true)
     {
         $document = new DOMDocument('1.0', 'UTF-8');
         try {
@@ -153,7 +161,7 @@ class HtmlUtility
                     if (strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false) {
                         $message = "You forgot to call htmlentities in src, url ? Somewhere. Error: " . $error->message;
                     } else {
-                        $message = "Error while loading HTML: " . $error->message.". Loaded text: ".$text;
+                        $message = "Error while loading HTML: " . $error->message . ". Loaded text: " . $text;
                     }
 
                     /**

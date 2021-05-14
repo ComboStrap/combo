@@ -12,7 +12,7 @@ use Exception;
 /**
  * Class XmlUtility
  * @package ComboStrap
- * XML Utility
+ * Static function around the {@link DOMDocument}
  *
  *
  */
@@ -22,67 +22,19 @@ class XmlUtility
     const CLOSED = "closed";
     const NORMAL = "normal";
 
-    /**
-     * https://www.php.net/manual/en/dom.installation.php
-     *
-     * Check it with
-     * ```
-     * php -m
-     * ```
-     * Install with
-     * ```
-     * sudo apt-get install php-xml
-     * ```
-     */
-    const DOM_EXTENSION = "dom";
-
-
-    /**
-     * @param $attName
-     * @param $newAttValue
-     * @param DOMElement $xml
-     */
-    public static function setAttribute($attName, $newAttValue, $xml)
-    {
-        $attValue = (string)$xml[$attName];
-        if ($attValue != "") {
-            $xml[$attName] = $newAttValue;
-        } else {
-            $xml->setAttribute($attName, $newAttValue);
-        }
-    }
-
-    /**
-     * Delete the class value from the class attributes
-     * @param $classValue
-     * @param SimpleXMLElement $xml
-     */
-    public static function deleteClass($classValue, SimpleXMLElement $xml)
-    {
-        $class = (string)$xml["class"];
-        if ($class != "") {
-            $classValues = explode(" ", $class);
-            if (($key = array_search($classValue, $classValues)) !== false) {
-                unset($classValues[$key]);
-            }
-            $xml["class"] = implode(" ", $classValues);
-        }
-    }
-
 
     /**
      * Get a Simple XMl Element and returns it without the XML header (ie as HTML node)
-     * @param SimpleXMLElement $linkDom
+     * @param DOMDocument $linkDom
      * @return false|string
      */
-    public static function asHtml(SimpleXMLElement $linkDom)
+    public static function asHtml($linkDom)
     {
 
-        $domXml = dom_import_simplexml($linkDom);
         /**
          * ownerDocument returned the DOMElement
          */
-        return $domXml->ownerDocument->saveXML($domXml->ownerDocument->documentElement);
+        return $linkDom->ownerDocument->saveXML($linkDom->ownerDocument->documentElement);
     }
 
     /**
@@ -93,31 +45,15 @@ class XmlUtility
     public static function isXml($text)
     {
 
-
-        if (extension_loaded(self::DOM_EXTENSION)) {
-
-            $valid = true;
-
-            /**
-             * Temporary No error reporting
-             * We see warning in the log
-             */
-            $oldLevel = error_reporting(E_ERROR);
-            try {
-                XmlUtility::load($text);
-            } catch (\Exception $e) {
-                $valid = false;
-            }
-            /**
-             * Error reporting back
-             */
-            error_reporting($oldLevel);
-            return $valid;
-
-        } else {
-            LogUtility::msg("The SimpleXml base php library was not detected on your custom installation. Check the following " . PluginUtility::getUrl($canonical, "page") . " on how to solve this problem.", LogUtility::LVL_MSG_ERROR, $canonical);
-            return false;
+        $valid = true;
+        try {
+            new XmlDocument($text);
+        } catch (\Exception $e) {
+            $valid = false;
         }
+        return $valid;
+
+
     }
 
     /**
@@ -183,10 +119,6 @@ class XmlUtility
         return $text;
     }
 
-    public static function setClass($stylingClass, $path)
-    {
-
-    }
 
     /**
      * @noinspection PhpComposerExtensionStubsInspection
@@ -342,37 +274,17 @@ class XmlUtility
     public static function diffMarkup($left, $right)
     {
         if (empty($right)) {
-            throw new \RuntimeException("The left text should not be empty");
+            throw new \RuntimeException("The right text should not be empty");
         }
+        $leftDocument = new XmlDocument($left);
+
         if (empty($left)) {
             throw new \RuntimeException("The left text should not be empty");
         }
+        $rightDocument = new XmlDocument($right);
 
-        $leftDocument = self::load($left);
-        $rightDocument = self::load($right);
+        return $leftDocument->diff($rightDocument);
 
-        $error = "";
-        XmlUtility::diffNode($leftDocument, $rightDocument, $error);
-
-        return $error;
-
-    }
-
-    /**
-     * Laad an XML, Svg
-     * @param string $markup
-     * @return DOMDocument
-     * If you want to load an HTML, use {@link HtmlUtility::load()}
-     */
-    private static function load($markup)
-    {
-        $document = new DOMDocument('1.0', 'UTF-8');
-        try {
-            $document->load($markup);
-        } catch (Exception $exception) {
-            throw new \RuntimeException($exception);
-        }
-        return $document;
     }
 
 

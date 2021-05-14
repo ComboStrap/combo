@@ -352,7 +352,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT:
 
                     /**
-                     * End card-body
+                     * End Massonry
                      */
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
@@ -366,10 +366,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                             if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
                                 $renderer->doc .= '</div>';
                             }
-                            $renderer->doc .= '</div>' . DOKU_LF;
                             break;
-                        default:
-                            $renderer->doc .= '</div>' . DOKU_LF;
                     }
                     /**
                      * End section

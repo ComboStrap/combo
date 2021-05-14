@@ -64,11 +64,27 @@ class XmlDocument
                     ;
                 }
 
+                /**
+                 * No warning reporting
+                 * Load XML issue E_STRICT warning seen in the log
+                 */
+                if (!defined('DOKU_UNITTEST')) {
+                    $oldLevel = error_reporting(E_ERROR);
+                }
+
                 $this->xmlDom = new DOMDocument();
                 $result = $this->xmlDom->loadXML($text, $options);
                 if ($result === false) {
-                    LogUtility::msg("Internal Error: Unable to load the DOM from the file ($this)", LogUtility::LVL_MSG_ERROR, "support");
+                    LogUtility::msg("Internal Error: Unable to create a DOM document from the text ($text)", LogUtility::LVL_MSG_ERROR, "support");
                 }
+
+                /**
+                 * Error reporting back
+                 */
+                if (!defined('DOKU_UNITTEST')) {
+                    error_reporting($oldLevel);
+                }
+
                 // namespace error : Namespace prefix dc on format is not defined
                 // missing the ns declaration in the file. example:
                 // xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -138,13 +154,40 @@ class XmlDocument
     }
 
     /**
+     * https://www.php.net/manual/en/dom.installation.php
+     *
+     * Check it with
+     * ```
+     * php -m
+     * ```
+     * Install with
+     * ```
+     * sudo apt-get install php-xml
+     * ```
      * @return bool
      */
     public
     function isXmlExtensionLoaded()
     {
+        // A suffix used in the bad message
+        $suffixBadMessage = "php extension is not installed. To install it, you need to install xml. Example: `sudo apt-get install php-xml`, `yum install php-xml`";
+
         // https://www.php.net/manual/en/dom.requirements.php
-        return extension_loaded("libxml");
+        $loaded = extension_loaded("libxml");
+        if($loaded===false){
+            LogUtility::msg("The libxml {$suffixBadMessage}");
+        } else {
+            $loaded = extension_loaded("xml");
+            if ($loaded===false) {
+                LogUtility::msg("The xml {$suffixBadMessage}");
+            } else {
+                $loaded = extension_loaded("dom");
+                if ($loaded===false){
+                    LogUtility::msg("The dom {$suffixBadMessage}");
+                }
+            }
+        }
+        return $loaded;
     }
 
     /**
@@ -314,6 +357,13 @@ class XmlDocument
             }
         }
 
+    }
+
+    public function diff(XmlDocument $rightDocument)
+    {
+        $error = "";
+        XmlUtility::diffNode($this->getXmlDom(), $rightDocument->getXmlDom(), $error);
+        return $error;
     }
 
 

@@ -33,12 +33,19 @@ class Call
     private $call;
 
     /**
+     * The key identifier in the {@link CallStack}
+     * @var mixed|string
+     */
+    private $key;
+
+    /**
      * Call constructor.
      * @param $call - the instruction array (ie called a call)
      */
-    public function __construct(&$call)
+    public function __construct(&$call, $key = "")
     {
         $this->call = &$call;
+        $this->key = $key;
     }
 
     /**
@@ -297,6 +304,8 @@ class Call
                         return $mode;
                     case "strong_close":
                     case "strong_open":
+                    case "monospace_open":
+                    case "monospace_close":
                         return Call::INLINE_DISPLAY;
                     default:
                         LogUtility::msg("The display of the call with the mode " . $mode . " is unknown");
@@ -367,7 +376,15 @@ class Call
         return $this->call;
     }
 
-
+    public function __toString()
+    {
+        $name = $this->key;
+        if (!empty($name)){
+            $name .= " - ";
+        }
+        $name .= $this->getTagName();
+        return $name;
+    }
 
 
 }

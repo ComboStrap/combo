@@ -40,6 +40,8 @@ class CallStack
 
     const TAG_STATE = [DOKU_LEXER_SPECIAL, DOKU_LEXER_ENTER];
 
+    const CANONICAL = "support";
+
     private $handler;
 
     /**
@@ -228,7 +230,7 @@ class CallStack
                             $this->next();
                             break;
                         default:
-                            LogUtility::msg("The eol action for the combination enter / " . $nextDisplay . " was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            LogUtility::msg("The eol action for the combination enter / (" . $nextDisplay . ") of the call ( $nextCall ) was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                             break;
                     }
                 } else {
@@ -302,7 +304,7 @@ class CallStack
     {
         $actualCallKey = key($this->callStack);
         $actualCallArray = &$this->callStack[$actualCallKey];
-        return new Call($actualCallArray);
+        return new Call($actualCallArray, $actualCallKey);
     }
 
     /**
@@ -493,5 +495,10 @@ class CallStack
         // array splice reset the pointer
         // we move it to the actual element
         $this->moveToKey($actualKey);
+    }
+
+    private function getActualKey()
+    {
+        return key($this->callStack);
     }
 }

@@ -244,8 +244,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 $callStack->moveToEnd();
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 $firstChild = $callStack->moveToFirstChildTag();
-                if ($firstChild->getTagName()==syntax_plugin_combo_header::TAG){
-                    $callStack->moveToNextSiblingTag();
+                if ($firstChild !== false) {
+                    if ($firstChild->getTagName() == syntax_plugin_combo_header::TAG) {
+                        $callStack->moveToNextSiblingTag();
+                    }
                 }
                 $callStack->insertBefore(
                     Call::createCall(

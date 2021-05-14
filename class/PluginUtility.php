@@ -1209,6 +1209,15 @@ class PluginUtility
     public
     static function startSection($renderer, $position, $name)
     {
+
+
+        if (empty($position)){
+            LogUtility::msg("The position for a start section should not be empty",LogUtility::LVL_MSG_ERROR,"support");
+        }
+        if (empty($name)){
+            LogUtility::msg("The name for a start section should not be empty",LogUtility::LVL_MSG_ERROR,"support");
+        }
+
         /**
          * New Dokuwiki Version
          * for DokuWiki Greebo and more recent versions

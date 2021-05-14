@@ -80,7 +80,7 @@ class CallStack
         $this->handler = $handler;
         $this->maxIndex = ArrayUtility::array_key_last($handler->calls);
         $this->callStack = &$handler->calls;
-        end($this->callStack);
+        $this->moveToEnd();
     }
 
     /**
@@ -204,6 +204,7 @@ class CallStack
 
                     switch ($nextDisplay) {
                         case Call::BlOCK_DISPLAY:
+                        case "last":
                             $this->deleteActualCallAndNext();
                             break;
                         case Call::INLINE_DISPLAY:
@@ -263,6 +264,7 @@ class CallStack
                                 $paragraphComponent,
                                 DOKU_LEXER_EXIT
                             );
+                            $paragraphIsOpen = false;
                             break;
                         default:
                             LogUtility::msg("The display for a open paragraph (" . $nextDisplay . ") is not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -285,12 +287,19 @@ class CallStack
         $key = key($this->callStack);
         // unset is
         unset($this->callStack[$key]);
-        // if there is a eol, we delete it
-        // otherwise we may end up with two eol
-        // and this is an empty paragraph
-        if ($this->getActualCall()->getTagName() == 'eol') {
-            $key = key($this->callStack);
-            unset($this->callStack[$key]);
+
+        // At the end
+        $key = key($this->callStack);
+        if ($key==null){
+            $this->endWasReached=true;
+        } else {
+            // if there is a eol, we delete it
+            // otherwise we may end up with two eol
+            // and this is an empty paragraph
+            if ($this->getActualCall()->getTagName() == 'eol') {
+                $key = key($this->callStack);
+                unset($this->callStack[$key]);
+            }
         }
     }
 
@@ -302,9 +311,14 @@ class CallStack
      */
     public function getActualCall()
     {
-        $actualCallKey = key($this->callStack);
-        $actualCallArray = &$this->callStack[$actualCallKey];
-        return new Call($actualCallArray, $actualCallKey);
+        if (!$this->endWasReached) {
+            $actualCallKey = key($this->callStack);
+            $actualCallArray = &$this->callStack[$actualCallKey];
+            return new Call($actualCallArray, $actualCallKey);
+        } else {
+            LogUtility::msg("The actual call cannot be ask because the end of the stack was reached", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return null;
+        }
     }
 
     /**
@@ -335,15 +349,13 @@ class CallStack
     public function moveToPreviousCorrespondingOpeningCall()
     {
 
-        $actualCall = $this->getActualCall();
-        $actualState = $actualCall->getState();
-        if ($actualState != DOKU_LEXER_EXIT) {
-            /**
-             * Check if we are at the end of the stack
-             * In this case, we start at next
-             */
-            $next = $this->next();
-            if ($next !== false) {
+        if (!$this->endWasReached) {
+            $actualCall = $this->getActualCall();
+            $actualState = $actualCall->getState();
+            if ($actualState != DOKU_LEXER_EXIT) {
+                /**
+                 * Check if we are at the end of the stack
+                 */
                 LogUtility::msg("You are not at the end of stack and you are not on a opening tag, you can't ask for the opening tag." . $actualState, LogUtility::LVL_MSG_ERROR, "support");
                 return false;
             }
@@ -377,10 +389,11 @@ class CallStack
     {
         if ($this->endWasReached) {
             $this->endWasReached = false;
-            return end($this->callStack);
+            end($this->callStack);
         } else {
-            return prev($this->callStack);
+            prev($this->callStack);
         }
+        return $this->getActualCall();
     }
 
     /**
@@ -413,9 +426,13 @@ class CallStack
 
     }
 
+    /**
+     * The end is the one after the last element
+     */
     public function moveToEnd()
     {
         end($this->callStack);
+        $this->next();
     }
 
     /**
@@ -460,12 +477,20 @@ class CallStack
      */
     public function insertBefore($call)
     {
-        $actualKey = key($this->callStack);
-        $offset = array_search($actualKey, array_keys($this->callStack), true);
-        array_splice($this->callStack, $offset, 0, [$call->toCallArray()]);
-        // array splice reset the pointer
-        // we move it to the actual element (ie +1)
-        $this->moveToKey($actualKey + 1);
+        if ($this->endWasReached) {
+
+            $this->callStack[] = $call->toCallArray();
+
+        } else {
+
+            $actualKey = key($this->callStack);
+            $offset = array_search($actualKey, array_keys($this->callStack), true);
+            array_splice($this->callStack, $offset, 0, [$call->toCallArray()]);
+            // array splice reset the pointer
+            // we move it to the actual element (ie +1)
+            $this->moveToKey($actualKey + 1);
+
+        }
     }
 
     /**
@@ -479,7 +504,7 @@ class CallStack
             next($this->callStack);
         }
         $actualKey = key($this->callStack);
-        if ($actualKey !=$targetKey){
+        if ($actualKey != $targetKey) {
             LogUtility::msg("The target key ($targetKey) is not equal to the actual key ($actualKey). The moveToKey was not successful");
         }
     }
@@ -491,13 +516,13 @@ class CallStack
     {
         $actualKey = key($this->callStack);
         $offset = array_search($actualKey, array_keys($this->callStack), true);
-        array_splice($this->callStack, $offset+1, 0, [$call->toCallArray()]);
+        array_splice($this->callStack, $offset + 1, 0, [$call->toCallArray()]);
         // array splice reset the pointer
         // we move it to the actual element
         $this->moveToKey($actualKey);
     }
 
-    private function getActualKey()
+    public function getActualKey()
     {
         return key($this->callStack);
     }

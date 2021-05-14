@@ -258,7 +258,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 // Insert the card body exit
                 $callStack->moveToEnd();
-                $callStack->insertAfter(
+                $callStack->insertBefore(
                     Call::createCall(
                         syntax_plugin_combo_cardbody::TAG,
                         DOKU_LEXER_EXIT
@@ -311,7 +311,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * Section (Edit button)
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
-                        $position = $tagAttributes->getValueAndRemove(PluginUtility::POSITION);
+                        $position = $data[PluginUtility::POSITION];
                         $this->sectionCounter++;
                         $name = "section" . self::TAG . $this->sectionCounter;
                         PluginUtility::startSection($renderer, $position, $name);

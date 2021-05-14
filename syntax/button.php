@@ -48,7 +48,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**

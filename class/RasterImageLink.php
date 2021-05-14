@@ -92,13 +92,6 @@ class RasterImageLink extends InternalMediaLink
              */
             $att = array();
 
-            /**
-             * local width
-             */
-            if ($localWidth==null && $this->getRequestedWidth()!=null){
-                $localWidth = $this->getRequestedWidth();
-            }
-
             // Width is driving the computation
             if ($localWidth != null && $localWidth != $this->getMediaWidth()) {
 
@@ -162,15 +155,16 @@ class RasterImageLink extends InternalMediaLink
              * To allow responsive height, the height style property is set at auto
              * (ie img-fluid in bootstrap)
              */
+            // The unit is not mandatory in HTML
+            // but to be clear we add it.
+            $htmlLengthUnit = "px";
+
             $imgTagHeightValue = $this->getImgTagHeightValue();
             if (!empty($imgTagHeightValue)) {
 
-                // The unit is not mandatory in HTML
-                // but to be clear we add it.
-                $htmlLengthUnit = "px";
 
                 $internalHeight = $this->getMediaHeight();
-                $this->tagAttributes->addHtmlAttributeValue("height", $internalHeight. $htmlLengthUnit);
+                $this->tagAttributes->addHtmlAttributeValue("height", $internalHeight . $htmlLengthUnit);
                 /**
                  * By default, the browser with a height auto due to the img-fluid class
                  * takes the value of the width. To constraint it, we use max-height
@@ -193,19 +187,6 @@ class RasterImageLink extends InternalMediaLink
             // The image margin applied
             $imageMargin = PluginUtility::getConfValue(self::CONF_RESPONSIVE_IMAGE_MARGIN, "20px");
 
-            // Xsmall
-            $extraSmallBreakPointWidth = self::BREAKPOINTS["xs"];
-            $xsmWidth = $extraSmallBreakPointWidth - $imageMargin;
-            // Small
-            $smallBreakPointWidth = self::BREAKPOINTS["sm"];
-            $smWidth = $smallBreakPointWidth - $imageMargin;
-            // Medium
-            $mediumBreakpointWith = self::BREAKPOINTS["md"];
-            $mediumWith = $mediumBreakpointWith - $imageMargin;
-            // Large
-            $largeBreakpointWidth = self::BREAKPOINTS["lg"];
-            $largeWidth = $largeBreakpointWidth - $imageMargin;
-
 
             /**
              * Srcset and sizes for responsive image
@@ -214,67 +195,43 @@ class RasterImageLink extends InternalMediaLink
              */
             if (!empty($widthValue)) {
 
-                $this->tagAttributes->addHtmlAttributeValue("width", $this->getMediaWidth());
+                $mediaWith = $this->getMediaWidth();
+                $this->tagAttributes->addHtmlAttributeValue("width", $mediaWith . $htmlLengthUnit);
 
-                // Xs
-                if ($widthValue >= $xsmWidth) {
-                    $xsmUrl = $this->getUrl(true, $xsmWidth);
-                    $srcSet = "$xsmUrl {$xsmWidth}w";
-                    $sizes = $this->getSizes($extraSmallBreakPointWidth, $xsmWidth);
+                $srcSet = "";
+                $sizes = "";
 
-                    // Small
-                    if ($widthValue >= $smWidth) {
+                /**
+                 * Add smaller sizes
+                 */
+                foreach (self::BREAKPOINTS as $breakpointWidth) {
 
-                        $smUrl = $this->getUrl(true, $smWidth);
-                        $srcSet .= ", $smUrl {$smWidth}w";
-                        $sizes .= ", " . $this->getSizes($smallBreakPointWidth, $smWidth);
+                    if ($mediaWith > $breakpointWidth) {
 
-                        // Medium
-                        if ($widthValue >= $mediumWith) {
-                            $srcMediumUrl = $this->getUrl(true, $mediumWith);
-                            $srcSet .= ", $srcMediumUrl {$mediumWith}w";
-                            $sizes .= ", " . $this->getSizes($mediumBreakpointWith, $mediumWith);
-
-                            // Large
-                            if ($widthValue >= $largeWidth) {
-                                $srcLargeUrl = $this->getUrl(true, $largeWidth);
-                                $srcSet .= ", $srcLargeUrl {$largeWidth}w";
-                                $sizes .= ", " . $this->getSizes($largeBreakpointWidth, $largeWidth);
-                            }
-
+                        if (!empty($srcSet)){
+                            $srcSet .= ", ";
+                            $sizes .= ", ";
                         }
-                    }
-                }
+                        $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
+                        $xsmUrl = $this->getUrl(true, $breakpointWidthMinusMargin);
+                        $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
+                        $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
-                // Add the last one
-                // two times not empty to beat the linter
-                // otherwise it thinks that $sizes may be not initialized
-                if (!empty($srcSet) && !empty($sizes)) {
-                    $srcSet .= ", ";
-                    $sizes .= ", ";
-                } else {
-                    $srcSet = "";
-                    $sizes = "";
+                    }
+
                 }
 
                 /**
-                 * If the image is really small,
-                 * there is no set
+                 * Add the natural size
+                 * If the image is really small, srcet and sizes are empty
                  */
                 if (!empty($srcSet)) {
-                    $srcUrl = $this->getUrl(true);
-                    $srcSet .= "$srcUrl {$widthValue}w";
+                    $srcSet .= ", ";
+                    $sizes .= ", ";
+                    $srcUrl = $this->getUrl();
+                    $srcSet .= "$srcUrl {$mediaWith}w";
+                    $sizes .= "{$mediaWith}px";
                 }
-
-                /**
-                 * Sizes is added in all cases (lazy loading or not)
-                 * if there is more than one
-                 */
-                if (!empty($sizes)) {
-                    $sizes .= "{$widthValue}px";
-                    $this->tagAttributes->addHtmlAttributeValue("sizes", $sizes);
-                }
-
 
                 /**
                  * Lazy load
@@ -303,6 +260,7 @@ class RasterImageLink extends InternalMediaLink
                          */
                         $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
                         $this->tagAttributes->addHtmlAttributeValue("srcset", LazyLoad::TRANSPARENT_GIF);
+                        $this->tagAttributes->addHtmlAttributeValue("sizes", $sizes);
                         $this->tagAttributes->addHtmlAttributeValue("data-srcset", $srcSet);
 
                     } else {
@@ -321,6 +279,7 @@ class RasterImageLink extends InternalMediaLink
 
                     if (!empty($srcSet)) {
                         $this->tagAttributes->addHtmlAttributeValue("srcset", $srcSet);
+                        $this->tagAttributes->addHtmlAttributeValue("sizes", $sizes);
                     } else {
                         $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
                     }

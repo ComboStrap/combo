@@ -386,5 +386,29 @@ class Call
         return $name;
     }
 
+    public function getType()
+    {
+        if ($this->getState() == DOKU_LEXER_UNMATCHED) {
+            LogUtility::msg("The unmatched tag (" . $this->name . ") does not have any attributes. Get its parent if you want the type", LogUtility::LVL_MSG_ERROR);
+            return null;
+        } else {
+            return $this->getAttribute("type");
+        }
+    }
+
+    /**
+     * @param $key
+     * @return mixed|null
+     */
+    public function getAttribute($key)
+    {
+        $attributes = $this->getAttributes();
+        if (isset($attributes[$key])) {
+            return $attributes[$key];
+        } else {
+            return null;
+        }
+    }
+
 
 }

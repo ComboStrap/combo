@@ -273,8 +273,16 @@ class CallStack
                 }
 
             }
+        }
 
-
+        // if the paragraph is open close it
+        if ($paragraphIsOpen) {
+            $this->insertBefore(
+                Call::createCall(
+                    $paragraphComponent,
+                    DOKU_LEXER_EXIT
+                )
+            );
         }
     }
 

@@ -50,9 +50,6 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
         switch ($context) {
             default:
                 $html = "</h$level>" . DOKU_LF;
-                if ($context == syntax_plugin_combo_blockquote::TAG) {
-                    $html .= syntax_plugin_combo_blockquote::BLOCKQUOTE_OPEN_TAG;
-                }
         }
         return $html;
     }
@@ -261,17 +258,13 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
     static function renderOpeningTag($context, $attributes, &$renderer)
     {
 
-        /**
-         * TODO: This switch should be handled in the instruction (ie handle function)
-         */
+
         switch ($context) {
 
             case syntax_plugin_combo_blockquote::TAG:
-                StringUtility::rtrim($renderer->doc, syntax_plugin_combo_blockquote::BLOCKQUOTE_OPEN_TAG);
-                PluginUtility::addClass2Attributes("card-title", $attributes);
-                break;
             case syntax_plugin_combo_card::TAG:
                 PluginUtility::addClass2Attributes("card-title", $attributes);
+                break;
 
         }
 

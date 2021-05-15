@@ -241,13 +241,24 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     if ($firstChild->getTagName() == syntax_plugin_combo_header::TAG) {
                         $callStack->moveToNextSiblingTag();
                     }
+                    $callStack->insertBefore(
+                        Call::createCall(
+                            syntax_plugin_combo_cardbody::TAG,
+                            DOKU_LEXER_ENTER
+                        )
+                    );
+                } else {
+                    // no child
+                    $callStack->moveToEnd();
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
+                    $callStack->insertAfter(
+                        Call::createCall(
+                            syntax_plugin_combo_cardbody::TAG,
+                            DOKU_LEXER_ENTER
+                        )
+                    );
                 }
-                $callStack->insertBefore(
-                    Call::createCall(
-                        syntax_plugin_combo_cardbody::TAG,
-                        DOKU_LEXER_ENTER
-                    )
-                );
+
 
                 // Insert the card body exit
                 $callStack->moveToEnd();

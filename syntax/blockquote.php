@@ -5,6 +5,8 @@
  *
  */
 
+use ComboStrap\Call;
+use ComboStrap\CallStack;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
@@ -39,8 +41,6 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
     const TWEET_SUPPORTED_LANG = array("en", "ar", "bn", "cs", "da", "de", "el", "es", "fa", "fi", "fil", "fr", "he", "hi", "hu", "id", "it", "ja", "ko", "msa", "nl", "no", "pl", "pt", "ro", "ru", "sv", "th", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw");
     const CONF_TWEET_WIDGETS_THEME = "twitter:widgets:theme";
     const CONF_TWEET_WIDGETS_BORDER = "twitter:widgets:border-color";
-
-    const BLOCKQUOTE_OPEN_TAG = "<blockquote class=\"blockquote mb-0\">" . DOKU_LF;
 
 
     /**
@@ -90,15 +90,6 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
          * and replace it with {@link syntax_plugin_combo_title}
          */
         if ($mode == "header") {
-            return false;
-        }
-
-        /**
-         * Empty line will create an empty that will
-         * go and takes also the cite element (???)
-         * Not fighting this
-         */
-        if ($mode == "eol") {
             return false;
         }
 
@@ -202,22 +193,72 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
                 // Important to get an exit in the render phase
-                $node = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $node->getOpeningTag();
+                $callStack = CallStack::createFromHandler($handler);
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+
+                // Create the paragraph
+                $callStack->processEolToEndStack("mb-0");
+
+                // Go back
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $type = $openingTag->getType();
-                if ($type=="card") {
+                if ($type == "card") {
                     /**
-                     * Transform the eol in combo_eol
+                     * A blockquote typo is wrapped around a card
+                     * We add then:
+                     *   * at the body location: a card body start and a blockquote typo start
+                     *   * at the end location: a card end body and a blockquote end typo
                      */
+                    $callEnterTypeCall = Call::createCall(
+                        self::TAG,
+                        DOKU_LEXER_ENTER,
+                        array("type" => "typo")
+                    );
+                    $cardBodyEnterCall = Call::createCall(
+                        syntax_plugin_combo_cardbody::TAG,
+                        DOKU_LEXER_ENTER
+                    );
+                    $firstChild = $callStack->moveToFirstChildTag();
+
+                    if ($firstChild !== false) {
+                        if ($firstChild->getTagName() == syntax_plugin_combo_header::TAG) {
+                            $callStack->moveToNextSiblingTag();
+                        }
+                        // Head: Insert card body
+                        $callStack->insertBefore($cardBodyEnterCall);
+                        // Head: Insert Blockquote typo
+                        $callStack->insertBefore($callEnterTypeCall);
+
+                    } else {
+                        // No child
+                        // Move back
+                        $callStack->moveToEnd();;
+                        $callStack->moveToPreviousCorrespondingOpeningCall();
+                        // Head: Insert Blockquote typo
+                        $callStack->insertAfter($callEnterTypeCall);
+                        // Head: Insert card body
+                        $callStack->insertAfter($cardBodyEnterCall);
+                    }
+
 
                     /**
-                     * Go to the first paragraph
-                     * (ie not {@link syntax_plugin_combo_header}
+                     * End
                      */
-                    $nextTag = $openingTag->getNextTag();
-                    while ($nextTag->getName() != syntax_plugin_combo_eol::TAG) {
-                        $nextTag = $nextTag->getNextTag();
-                    }
+                    // Insert the card body exit
+                    $callStack->moveToEnd();
+                    $callStack->insertBefore(
+                        Call::createCall(
+                            self::TAG,
+                            DOKU_LEXER_EXIT,
+                            array("type" => "typo")
+                        )
+                    );
+                    $callStack->insertBefore(
+                        Call::createCall(
+                            syntax_plugin_combo_cardbody::TAG,
+                            DOKU_LEXER_EXIT
+                        )
+                    );
                 }
                 return array(
                     PluginUtility::STATE => $state,
@@ -266,11 +307,6 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                             $tagAttributes = TagAttributes::createEmpty();
                             $tagAttributes->addClassName("blockquote");
-
-                            $context = $data[PluginUtility::CONTEXT];
-                            if ($context == syntax_plugin_combo_card::TAG) {
-                                $tagAttributes->addClassName("mb-0");
-                            }
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("blockquote") . DOKU_LF;
                             break;
 

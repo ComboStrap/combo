@@ -212,11 +212,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
 
-                // Transform eol to paragraph
-                $callStack->insertEolIfNextCallIsNotEolOrBlock(); // a paragraph is mandatory
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                $callStack->processEolToEndStack("card-text");
-
                 // Processing
                 $callStack->moveToEnd();
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
@@ -231,6 +226,13 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         $callStack->deleteActualCallAndNext();
                     }
                 }
+
+                // Transform eol to paragraph
+                // after the image illustration (otherwise, the image may be wrapped in a paragraph)
+                $callStack->moveToEnd();
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $callStack->insertEolIfNextCallIsNotEolOrBlock(); // a paragraph is mandatory
+                $callStack->processEolToEndStack("card-text");
 
                 // Insert the card body enter
                 $callStack->moveToEnd();

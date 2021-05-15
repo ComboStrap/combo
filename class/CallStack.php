@@ -58,8 +58,9 @@ class CallStack
      * A pointer to keep the information
      * if we have gone to far in the stack
      * (because you lost the fact that you are outside
-     * the boundary, ie you can do a `prev` after that a `next` return false
+     * the boundary, ie you can do a {@link \prev}` after that a {@link \next} return false
      * @var bool
+     * If true, we are at the offset: end of th array + 1
      */
     private $endWasReached = false;
 
@@ -542,17 +543,25 @@ class CallStack
      */
     public function insertEolIfNextCallIsNotEolOrBlock()
     {
-        $nextCall = $this->next();
-        if ($nextCall != false && $nextCall->getTagName() != "eol" && $nextCall->getDisplay() != "block") {
-            $this->insertBefore(
-                Call::createNativeCall("eol")
-            );
-            // move on the eol
-            $this->prev();
+        if (!$this->isPointerAtEnd()) {
+            $nextCall = $this->next();
+            if ($nextCall != false) {
+                if ($nextCall->getTagName() != "eol" && $nextCall->getDisplay() != "block") {
+                    $this->insertBefore(
+                        Call::createNativeCall("eol")
+                    );
+                    // move on the eol
+                    $this->prev();
+                }
+                // move back
+                $this->prev();
+            }
         }
-        // move back
-        $this->prev();
     }
 
+    private function isPointerAtEnd()
+    {
+        return $this->endWasReached;
+    }
 
 }

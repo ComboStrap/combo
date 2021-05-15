@@ -37,13 +37,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
     const TAG = 'card';
 
-    /**
-     * The card body html
-     * It's created as a constant because
-     * the below card property such as {@link syntax_plugin_combo_media}
-     * may remove it if they are used
-     */
-    const CARD_BODY = '<div class="card-body">' . DOKU_LF;
 
     /**
      * Key of the attributes that says if the card has an image illustration

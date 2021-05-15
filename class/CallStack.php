@@ -461,7 +461,7 @@ class CallStack
                     break;
             }
 
-            if ($level == 0) {
+            if ($level == 0 && in_array($state, self::TAG_STATE)) {
                 break;
             }
         }

@@ -27,6 +27,23 @@ class XmlDocument
 {
     const HTML_TYPE = "html";
     const XML_TYPE = "xml";
+    /**
+     * The error that the HTML loading
+     * may returns
+     */
+    const KNOWN_LOADING_ERRORS = [
+        "Tag section invalid\n", // section is HTML5 tag
+        "Tag footer invalid\n", // footer is HTML5 tag
+        "error parsing attribute name\n", // name is an HTML5 attribute
+        "Unexpected end tag : blockquote\n", // name is an HTML5 attribute
+        "Tag bdi invalid\n",
+        "Tag path invalid\n", // svg
+        "Tag svg invalid\n", // svg
+        "Unexpected end tag : a\n", // when the document is only a anchor
+        "Unexpected end tag : p\n", // when the document is only a p
+        "Unexpected end tag : button\n" // // when the document is only a button
+
+    ];
 
     /**
      * @var DOMDocument
@@ -46,23 +63,25 @@ class XmlDocument
             try {
                 // https://www.php.net/manual/en/libxml.constants.php
                 $options = LIBXML_NOCDATA
-                    | LIBXML_NOBLANKS
-                    | LIBXML_NSCLEAN // Remove redundant namespace declarations
+                    | LIBXML_NOBLANKS // same as preserveWhiteSpace=true
                     | LIBXML_NOXMLDECL // Drop the XML declaration when saving a document
                     | LIBXML_NONET // No network during load
+                    | LIBXML_NSCLEAN // Remove redundant namespace declarations - for whatever reason, the formatting does not work if this is set
                 ;
 
                 // HTML
                 if ($type == self::HTML_TYPE) {
+
                     // Options that cause the processus to hang if this is not for a html file
                     // Empty tag option may also be used only on save
                     //   at https://www.php.net/manual/en/domdocument.save.php
                     //   and https://www.php.net/manual/en/domdocument.savexml.php
                     $options = $options
                         | LIBXML_NOEMPTYTAG
-                        | LIBXML_HTML_NOIMPLIED
                         | LIBXML_HTML_NODEFDTD // No doctype
-                    ;
+                        | LIBXML_HTML_NOIMPLIED;
+
+
                 }
 
                 /**
@@ -74,6 +93,13 @@ class XmlDocument
                 }
 
                 $this->xmlDom = new DOMDocument('1.0', 'UTF-8');
+
+                // Mandatory for a a good formatting before loading
+                // https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
+                $this->xmlDom->preserveWhiteSpace = false;
+
+
+                $text = $this->processTextBeforeLoading($text);
 
                 if ($type == self::XML_TYPE) {
                     $result = $this->xmlDom->loadXML($text, $options);
@@ -115,7 +141,7 @@ class XmlDocument
                          *
                          * Section is an html5 tag (and is invalid for libxml)
                          */
-                        if (!in_array($error->message, HtmlUtility::KNOWN_LOADING_ERRORS)) {
+                        if (!in_array($error->message, self::KNOWN_LOADING_ERRORS)) {
                             if (strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false) {
                                 $message = "You forgot to call htmlentities in src, url ? Somewhere. Error: " . $error->message;
                             } else {
@@ -205,16 +231,17 @@ class XmlDocument
         }
     }
 
-    public
-    function getXmlText()
+    public function getXmlText()
     {
 
-        $xmlText = $this->getXmlDom()->saveHTML($this->getXmlDom()->ownerDocument);
+        $xmlText = $this->getXmlDom()->saveXML(
+            $this->getXmlDom()->documentElement,
+            LIBXML_NOXMLDECL // no xml declaration
+        );
         // Delete doctype (for svg optimization)
         // php has only doctype manipulation for HTML
         $xmlText = preg_replace('/^<!DOCTYPE.+?>/', '', $xmlText);
         return trim($xmlText);
-
 
     }
 
@@ -429,6 +456,67 @@ class XmlDocument
         $error = "";
         XmlUtility::diffNode($this->getXmlDom(), $rightDocument->getXmlDom(), $error);
         return $error;
+    }
+
+    /**
+     * @return string a XML formatted
+     */
+    public function getXmlTextFormatted()
+    {
+        // !!!! The parameter preserveWhiteSpace should have been set to false before loading
+        // https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
+        // $this->xmlDom->preserveWhiteSpace = false;
+
+        $this->xmlDom->formatOutput = true;
+        return $this->getXmlText();
+
+    }
+
+    /**
+     * @return string that can be diff
+     *   * EOL diff are not seen
+     *   * space are
+     *
+     * See also {@link XmlDocument::processTextBeforeLoading()}
+     * that is needed before loading
+     */
+    public function getXmlTextNormalized()
+    {
+
+        /**
+         * If the text was a list
+         * of sibling text without parent
+         * We may get a body
+         * @deprecated letting the code until
+         * TODO: delete this code when the test pass
+         */
+//        $body = $doc->getElementsByTagName("body");
+//        if ($body->length != 0) {
+//            $DOMNodeList = $body->item(0)->childNodes;
+//            $output = "";
+//            foreach ($DOMNodeList as $value) {
+//                $output .= $doc->saveXML($value) . DOKU_LF;
+//            }
+//        }
+
+        $this->xmlDom->documentElement->normalize();
+        return $this->getXmlTextFormatted();
+    }
+
+    /**
+     * Not really conventional but
+     * to be able to {@link getXmlTextNormalized}
+     * the EOL should be deleted
+     * We do it before loading and not with a XML documentation
+     */
+    private function processTextBeforeLoading($text)
+    {
+        $text = str_replace(DOKU_LF, "", $text);
+        $text = preg_replace("/\r\n\s*\r\n/", "\r\n", $text);
+        $text = preg_replace("/\n\s*\n/", "\n", $text);
+        $text = preg_replace("/\n\n/", "\n", $text);
+        return $text;
+
     }
 
 

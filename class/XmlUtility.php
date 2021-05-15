@@ -87,14 +87,8 @@ class XmlUtility
         if (empty($text)) {
             throw new \RuntimeException("The text should not be empty");
         }
-        $doc = new DOMDocument();
-        $text = XmlUtility::preprocessText($text);
-        $doc->loadXML($text);
-        $doc->normalize();
-        $doc->preserveWhiteSpace = false;
-        $doc->formatOutput = true;
-        // Type doc can also be reach with $domNode->ownerDocument
-        return $doc->saveXML($doc->documentElement) . DOKU_LF;
+        $xmlDoc = new XmlDocument($text, XmlDocument::XML_TYPE);
+        return $xmlDoc->getXmlTextNormalized();
     }
 
     /**
@@ -114,10 +108,7 @@ class XmlUtility
 
     public static function preprocessText($text)
     {
-        $text = preg_replace("/\r\n\s*\r\n/", "\r\n", $text);
-        $text = preg_replace("/\n\s*\n/", "\n", $text);
-        $text = preg_replace("/\n\n/", "\n", $text);
-        return $text;
+
     }
 
 

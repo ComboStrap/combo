@@ -35,6 +35,7 @@ require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Sqlite.php');
 require_once(__DIR__ . '/StringUtility.php');
 require_once(__DIR__ . '/TagAttributes.php');
+require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/XmlUtility.php');
 
 /**

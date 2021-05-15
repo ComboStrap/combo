@@ -31,7 +31,7 @@ class XmlDocument
      * The error that the HTML loading
      * may returns
      */
-    const KNOWN_LOADING_ERRORS = [
+    const KNOWN_HTML_LOADING_ERRORS = [
         "Tag section invalid\n", // section is HTML5 tag
         "Tag footer invalid\n", // footer is HTML5 tag
         "error parsing attribute name\n", // name is an HTML5 attribute
@@ -60,137 +60,135 @@ class XmlDocument
 
 
         if ($this->isXmlExtensionLoaded()) {
-            try {
-                // https://www.php.net/manual/en/libxml.constants.php
-                $options = LIBXML_NOCDATA
-                    | LIBXML_NOBLANKS // same as preserveWhiteSpace=true
-                    | LIBXML_NOXMLDECL // Drop the XML declaration when saving a document
-                    | LIBXML_NONET // No network during load
-                    | LIBXML_NSCLEAN // Remove redundant namespace declarations - for whatever reason, the formatting does not work if this is set
-                ;
 
-                // HTML
-                if ($type == self::HTML_TYPE) {
+            // https://www.php.net/manual/en/libxml.constants.php
+            $options = LIBXML_NOCDATA
+                | LIBXML_NOBLANKS // same as preserveWhiteSpace=true
+                | LIBXML_NOXMLDECL // Drop the XML declaration when saving a document
+                | LIBXML_NONET // No network during load
+                | LIBXML_NSCLEAN // Remove redundant namespace declarations - for whatever reason, the formatting does not work if this is set
+            ;
 
-                    // Options that cause the processus to hang if this is not for a html file
-                    // Empty tag option may also be used only on save
-                    //   at https://www.php.net/manual/en/domdocument.save.php
-                    //   and https://www.php.net/manual/en/domdocument.savexml.php
-                    $options = $options
-                        | LIBXML_NOEMPTYTAG
-                        | LIBXML_HTML_NODEFDTD // No doctype
-                        | LIBXML_HTML_NOIMPLIED;
+            // HTML
+            if ($type == self::HTML_TYPE) {
+
+                // Options that cause the processus to hang if this is not for a html file
+                // Empty tag option may also be used only on save
+                //   at https://www.php.net/manual/en/domdocument.save.php
+                //   and https://www.php.net/manual/en/domdocument.savexml.php
+                $options = $options
+                    | LIBXML_NOEMPTYTAG
+                    | LIBXML_HTML_NODEFDTD // No doctype
+                    | LIBXML_HTML_NOIMPLIED;
 
 
-                }
+            }
+
+            /**
+             * No warning reporting
+             * Load XML issue E_STRICT warning seen in the log
+             */
+            if (!defined('DOKU_UNITTEST')) {
+                $oldLevel = error_reporting(E_ERROR);
+            }
+
+            $this->xmlDom = new DOMDocument('1.0', 'UTF-8');
+
+            // Mandatory for a a good formatting before loading
+            // https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
+            $this->xmlDom->preserveWhiteSpace = false;
+
+
+            $text = $this->processTextBeforeLoading($text);
+
+            /**
+             * Because the load does handle HTML5tag as error
+             * (ie section for instance)
+             * We take over the errors and handle them after the below load
+             *
+             * https://www.php.net/manual/en/function.libxml-use-internal-errors.php
+             *
+             * @noinspection PhpComposerExtensionStubsInspection
+             */
+            libxml_use_internal_errors(true);
+
+            if ($type == self::XML_TYPE) {
+
+                $result = $this->xmlDom->loadXML($text, $options);
+
+            } else {
 
                 /**
-                 * No warning reporting
-                 * Load XML issue E_STRICT warning seen in the log
+                 * Unlike loading XML, HTML does not have to be well-formed to load.
+                 * While malformed HTML should load successfully, this function may generate E_WARNING errors
+                 * @deprecated as we try to be XHTML compliantXML
                  */
-                if (!defined('DOKU_UNITTEST')) {
-                    $oldLevel = error_reporting(E_ERROR);
-                }
+                $result = $this->xmlDom->loadHTML($text, $options);
 
-                $this->xmlDom = new DOMDocument('1.0', 'UTF-8');
+            }
+            if ($result === false) {
 
-                // Mandatory for a a good formatting before loading
-                // https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
-                $this->xmlDom->preserveWhiteSpace = false;
+                /**
+                 * Error
+                 */
+                /** @noinspection PhpComposerExtensionStubsInspection */
+                $errors = libxml_get_errors();
 
+                foreach ($errors as $error) {
 
-                $text = $this->processTextBeforeLoading($text);
-
-                if ($type == self::XML_TYPE) {
-                    $result = $this->xmlDom->loadXML($text, $options);
-                    if ($result === false) {
-                        LogUtility::msg("Internal Error: Unable to create a DOM document from the text ($text)", LogUtility::LVL_MSG_ERROR, "support");
-                    }
-                } else {
-                    /**
-                     * Unlike loading XML, HTML does not have to be well-formed to load.
-                     * While malformed HTML should load successfully, this function may generate E_WARNING errors
-                     */
-
-                    /**
-                     * Because the load does handle HTML5tag as error
-                     * (ie section for instance)
-                     * We take over the errors and handle them after the below load
-                     *
-                     * https://www.php.net/manual/en/function.libxml-use-internal-errors.php
-                     *
+                    /* @var LibXMLError
                      * @noinspection PhpComposerExtensionStubsInspection
+                     *
+                     * Section is an html5 tag (and is invalid for libxml)
                      */
-                    libxml_use_internal_errors(true);
-
-                    $result = $this->xmlDom->loadHTML($text, $options);
-                    if ($result === false) {
-                        LogUtility::msg("Internal Error: Unable to create a HTML document from the text ($text)", LogUtility::LVL_MSG_ERROR, "support");
-                    }
-
-                    /**
-                     * Error
-                     */
-                    /** @noinspection PhpComposerExtensionStubsInspection */
-                    $errors = libxml_get_errors();
-
-                    foreach ($errors as $error) {
-
-                        /* @var LibXMLError
-                         * @noinspection PhpComposerExtensionStubsInspection
-                         *
-                         * Section is an html5 tag (and is invalid for libxml)
+                    if (!in_array($error->message, self::KNOWN_HTML_LOADING_ERRORS)) {
+                        /**
+                         * This error is an XML and HTML error
                          */
-                        if (!in_array($error->message, self::KNOWN_LOADING_ERRORS)) {
-                            if (strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false) {
-                                $message = "You forgot to call htmlentities in src, url ? Somewhere. Error: " . $error->message;
-                            } else {
-                                $message = "Error while loading HTML: " . $error->message . ". Loaded text: " . $text;
-                            }
-
-                            /**
-                             * We clean the errors, otherwise
-                             * in a test series, they failed the next test
-                             *
-                             * @noinspection PhpComposerExtensionStubsInspection
-                             */
-                            libxml_clear_errors();
-                            throw new \RuntimeException($message);
-
+                        if (
+                            strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false
+                            ||
+                            $error->message == "EntityRef: expecting ';'\n"
+                        ) {
+                            $message = "There is big probability that there is an ampersand alone `&`. ie You forgot to call html/Xml entities in a `src` or `url` attribute.";
+                        } else {
+                            $message = "Error while loading HTML";
                         }
+                        $message .= "Error: " . $error->message . ", Loaded text: " . $text;
+
+                        /**
+                         * We clean the errors, otherwise
+                         * in a test series, they failed the next test
+                         *
+                         * @noinspection PhpComposerExtensionStubsInspection
+                         */
+                        libxml_clear_errors();
+
+                        // In test, this will send a exception
+                        LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, "support");
 
                     }
 
-                    /**
-                     * We clean the known errors (otherwise they are added in a queue)
-                     * @noinspection PhpComposerExtensionStubsInspection
-                     */
-                    libxml_clear_errors();
-
-                }
-
-                /**
-                 * Error reporting back
-                 */
-                if (!defined('DOKU_UNITTEST')) {
-                    error_reporting($oldLevel);
-                }
-
-                // namespace error : Namespace prefix dc on format is not defined
-                // missing the ns declaration in the file. example:
-                // xmlns:dc="http://purl.org/dc/elements/1.1/"
-            } catch (Exception $e) {
-                /**
-                 * Don't use {@link \ComboStrap\LogUtility::msg()}
-                 * or you will get a recursion
-                 * because the URL has an SVG icon that calls this file
-                 */
-                $msg = "The text ($text) seems to not be an XML text. It could not be loaded. Don't pass a file but a text. The error returned is $e";
-                LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, "support");
-                if (defined('DOKU_UNITTEST')) {
-                    throw new \RuntimeException($msg);
                 }
             }
+
+            /**
+             * We clean the known errors (otherwise they are added in a queue)
+             * @noinspection PhpComposerExtensionStubsInspection
+             */
+            libxml_clear_errors();
+
+            /**
+             * Error reporting back
+             */
+            if (!defined('DOKU_UNITTEST')) {
+                error_reporting($oldLevel);
+            }
+
+            // namespace error : Namespace prefix dc on format is not defined
+            // missing the ns declaration in the file. example:
+            // xmlns:dc="http://purl.org/dc/elements/1.1/"
+
 
         } else {
 

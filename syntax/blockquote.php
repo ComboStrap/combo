@@ -342,7 +342,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             break;
                         case "card":
                         default:
-                            $tagAttributes = TagAttributes::createEmpty();
+                            $tagAttributes = TagAttributes::createFromCallStackArray($blockquoteAttributes);
                             $tagAttributes->addClassName("card");
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
                             /**

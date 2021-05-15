@@ -74,6 +74,7 @@ class XmlDocument
                 }
 
                 $this->xmlDom = new DOMDocument('1.0', 'UTF-8');
+
                 if ($type == self::XML_TYPE) {
                     $result = $this->xmlDom->loadXML($text, $options);
                     if ($result === false) {

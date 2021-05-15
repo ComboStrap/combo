@@ -116,6 +116,7 @@ class XmlUtility
     {
         $text = preg_replace("/\r\n\s*\r\n/", "\r\n", $text);
         $text = preg_replace("/\n\s*\n/", "\n", $text);
+        $text = preg_replace("/\n\n/", "\n", $text);
         return $text;
     }
 

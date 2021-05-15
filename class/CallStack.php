@@ -496,8 +496,8 @@ class CallStack
             $offset = array_search($actualKey, array_keys($this->callStack), true);
             array_splice($this->callStack, $offset, 0, [$call->toCallArray()]);
             // array splice reset the pointer
-            // we move it to the actual element (ie +1)
-            $this->moveToKey($actualKey + 1);
+            // we move it to the actual element (ie the key is offset +1)
+            $this->moveToKey($offset + 1);
 
         }
     }
@@ -543,7 +543,7 @@ class CallStack
     public function insertEolIfNextCallIsNotEolOrBlock()
     {
         $nextCall = $this->next();
-        if ($nextCall->getTagName() != "eol" && $nextCall->getDisplay() != "block") {
+        if ($nextCall != false && $nextCall->getTagName() != "eol" && $nextCall->getDisplay() != "block") {
             $this->insertBefore(
                 Call::createNativeCall("eol")
             );

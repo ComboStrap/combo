@@ -28,23 +28,24 @@ class HtmlUtility
             "Tag section invalid\n", // section is HTML5 tag
             "Tag footer invalid\n", // footer is HTML5 tag
             "error parsing attribute name\n", // name is an HTML5 attribute
+            "Unexpected end tag : blockquote\n", // name is an HTML5 attribute
             "Tag bdi invalid\n",
             "Tag path invalid\n", // svg
             "Tag svg invalid\n", // svg
             "Unexpected end tag : a\n", // when the document is only a anchor
             "Unexpected end tag : p\n", // when the document is only a p
             "Unexpected end tag : button\n" // // when the document is only a button
+
         ];
 
 
     /**
-     * Return a formatted HTML that does take into account the {@link DOKU_LF}
+     * Format
      * @param $text
      * @return mixed
      */
     public static function normalize($text)
     {
-        $text = str_replace(DOKU_LF, "", $text);
         return HtmlUtility::format($text);
     }
 
@@ -56,23 +57,33 @@ class HtmlUtility
      */
     public static function format($text)
     {
-        if (empty($text)) {
-            throw new \RuntimeException("The text should not be empty");
-        }
-        /** @noinspection PhpComposerExtensionStubsInspection */
-        $doc = new DOMDocument();
-        /**
-         * The @ is to suppress the error because of HTML5 tag such as footer
-         * https://stackoverflow.com/questions/6090667/php-domdocument-errors-warnings-on-html5-tags
-         */
-        @$doc->loadHTML($text);
-        $doc->normalize();
+
+        $xmlDocument = new XmlDocument($text, XmlDocument::HTML_TYPE);
+        $doc = $xmlDocument->getXmlDom();
+
+        // Preserve white space = false is important for output format
+        $doc->preserveWhiteSpace = false;
         $doc->formatOutput = true;
-        $DOMNodeList = $doc->getElementsByTagName("body")->item(0)->childNodes;
-        $output = "";
-        foreach ($DOMNodeList as $value) {
-            $output .= $doc->saveXML($value) . DOKU_LF;
+
+        $doc->normalize();
+
+        /**
+         * If the text was a list
+         * of sibling text without parent
+         * We may get a body
+         */
+        $body = $doc->getElementsByTagName("body");
+        if ($body->length != 0) {
+            $DOMNodeList = $body->item(0)->childNodes;
+            $output = "";
+            foreach ($DOMNodeList as $value) {
+                $output .= $doc->saveXML($value) . DOKU_LF;
+            }
+        } else {
+            $output = $doc->saveHTML($doc->ownerDocument);
         }
+
+
         // Type doc can also be reach with $domNode->ownerDocument
         return $output;
 
@@ -122,70 +133,7 @@ class HtmlUtility
      */
     private static function &load($text, $xhtml = true)
     {
-        $document = new DOMDocument('1.0', 'UTF-8');
-        try {
-
-
-            /**
-             * Because the load does handle HTML5tag as error
-             * (ie section for instance)
-             * We take over the errors and handle them after the below load
-             *
-             * https://www.php.net/manual/en/function.libxml-use-internal-errors.php
-             *
-             * @noinspection PhpComposerExtensionStubsInspection
-             */
-            libxml_use_internal_errors(true);
-
-            /**
-             * Loading
-             * Unlike loading XML, HTML does not have to be well-formed to load.
-             * While malformed HTML should load successfully, this function may generate E_WARNING errors
-             */
-            $document->loadHTML($text);
-
-            /**
-             * Error
-             */
-            /** @noinspection PhpComposerExtensionStubsInspection */
-            $errors = libxml_get_errors();
-
-            foreach ($errors as $error) {
-
-                /* @var $error LibXMLError
-                 * @noinspection PhpComposerExtensionStubsInspection
-                 *
-                 * Section is an html5 tag (and is invalid for libxml)
-                 */
-                if (!in_array($error->message, HtmlUtility::KNOWN_LOADING_ERRORS)) {
-                    if (strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false) {
-                        $message = "You forgot to call htmlentities in src, url ? Somewhere. Error: " . $error->message;
-                    } else {
-                        $message = "Error while loading HTML: " . $error->message . ". Loaded text: " . $text;
-                    }
-
-                    /**
-                     * We clean the errors, otherwise
-                     * in a test series, they failed the next test
-                     *
-                     * @noinspection PhpComposerExtensionStubsInspection
-                     */
-                    libxml_clear_errors();
-                    throw new \RuntimeException($message);
-
-                }
-
-            }
-
-            /**
-             * We clean the known errors (otherwise they are added in a queue)
-             * @noinspection PhpComposerExtensionStubsInspection
-             */
-            libxml_clear_errors();
-
-        } catch (Exception $exception) {
-
-        }
-        return $document;
+        $xmlDocument = new XmlDocument($text, XmlDocument::HTML_TYPE);
+        return $xmlDocument->getXmlDom();
     }
 }

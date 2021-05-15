@@ -34,7 +34,7 @@ class syntax_plugin_combo_eol extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = 'eol';
-
+    const COMPONENT = "combo_eol";
 
 
     /**

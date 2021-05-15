@@ -18,6 +18,7 @@ use DOMElement;
 use DOMNodeList;
 use DOMXPath;
 use Exception;
+use LibXMLError;
 
 
 require_once(__DIR__ . '/File.php');
@@ -72,10 +73,73 @@ class XmlDocument
                     $oldLevel = error_reporting(E_ERROR);
                 }
 
-                $this->xmlDom = new DOMDocument();
-                $result = $this->xmlDom->loadXML($text, $options);
-                if ($result === false) {
-                    LogUtility::msg("Internal Error: Unable to create a DOM document from the text ($text)", LogUtility::LVL_MSG_ERROR, "support");
+                $this->xmlDom = new DOMDocument('1.0', 'UTF-8');
+                if ($type == self::XML_TYPE) {
+                    $result = $this->xmlDom->loadXML($text, $options);
+                    if ($result === false) {
+                        LogUtility::msg("Internal Error: Unable to create a DOM document from the text ($text)", LogUtility::LVL_MSG_ERROR, "support");
+                    }
+                } else {
+                    /**
+                     * Unlike loading XML, HTML does not have to be well-formed to load.
+                     * While malformed HTML should load successfully, this function may generate E_WARNING errors
+                     */
+
+                    /**
+                     * Because the load does handle HTML5tag as error
+                     * (ie section for instance)
+                     * We take over the errors and handle them after the below load
+                     *
+                     * https://www.php.net/manual/en/function.libxml-use-internal-errors.php
+                     *
+                     * @noinspection PhpComposerExtensionStubsInspection
+                     */
+                    libxml_use_internal_errors(true);
+
+                    $result = $this->xmlDom->loadHTML($text, $options);
+                    if ($result === false) {
+                        LogUtility::msg("Internal Error: Unable to create a HTML document from the text ($text)", LogUtility::LVL_MSG_ERROR, "support");
+                    }
+
+                    /**
+                     * Error
+                     */
+                    /** @noinspection PhpComposerExtensionStubsInspection */
+                    $errors = libxml_get_errors();
+
+                    foreach ($errors as $error) {
+
+                        /* @var LibXMLError
+                         * @noinspection PhpComposerExtensionStubsInspection
+                         *
+                         * Section is an html5 tag (and is invalid for libxml)
+                         */
+                        if (!in_array($error->message, HtmlUtility::KNOWN_LOADING_ERRORS)) {
+                            if (strpos($error->message, "htmlParseEntityRef: expecting ';' in Entity") !== false) {
+                                $message = "You forgot to call htmlentities in src, url ? Somewhere. Error: " . $error->message;
+                            } else {
+                                $message = "Error while loading HTML: " . $error->message . ". Loaded text: " . $text;
+                            }
+
+                            /**
+                             * We clean the errors, otherwise
+                             * in a test series, they failed the next test
+                             *
+                             * @noinspection PhpComposerExtensionStubsInspection
+                             */
+                            libxml_clear_errors();
+                            throw new \RuntimeException($message);
+
+                        }
+
+                    }
+
+                    /**
+                     * We clean the known errors (otherwise they are added in a queue)
+                     * @noinspection PhpComposerExtensionStubsInspection
+                     */
+                    libxml_clear_errors();
+
                 }
 
                 /**
@@ -174,15 +238,15 @@ class XmlDocument
 
         // https://www.php.net/manual/en/dom.requirements.php
         $loaded = extension_loaded("libxml");
-        if($loaded===false){
+        if ($loaded === false) {
             LogUtility::msg("The libxml {$suffixBadMessage}");
         } else {
             $loaded = extension_loaded("xml");
-            if ($loaded===false) {
+            if ($loaded === false) {
                 LogUtility::msg("The xml {$suffixBadMessage}");
             } else {
                 $loaded = extension_loaded("dom");
-                if ($loaded===false){
+                if ($loaded === false) {
                     LogUtility::msg("The dom {$suffixBadMessage}");
                 }
             }

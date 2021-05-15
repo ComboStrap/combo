@@ -57,7 +57,7 @@ class Call
      * @param string $content
      * @return Call - a call
      */
-    public static function createCall($tagName, $state, $attribute = array(), $context = null, $content = '')
+    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '')
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
@@ -74,6 +74,22 @@ class Call
                 $state,
                 $content
             ),
+            $positionInText
+        ];
+        return new Call($call);
+    }
+
+    /**
+     * Insert a dokuwiki call
+     * @param $callName
+     * @return Call
+     */
+    public static function createNativeCall($callName)
+    {
+        $positionInText = null;
+        $call = [
+            $callName,
+            array(),
             $positionInText
         ];
         return new Call($call);

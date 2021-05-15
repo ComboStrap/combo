@@ -401,7 +401,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                          * Start the navigation tabs element
                          * We add calls in the stack to create the tabs navigational element
                          */
-                        $navigationalCallElements[] = Call::createCall(
+                        $navigationalCallElements[] = Call::createComboCall(
                             self::TAG,
                             DOKU_LEXER_ENTER,
                             $openingTag->getAttributes(),
@@ -469,7 +469,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                             }
 
                         }
-                        $navigationalCallElements[] = Call::createCall(
+                        $navigationalCallElements[] = Call::createComboCall(
                             self::TAG,
                             DOKU_LEXER_EXIT,
                             $openingTag->getAttributes(),

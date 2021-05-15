@@ -192,11 +192,12 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
-                // Important to get an exit in the render phase
+
                 $callStack = CallStack::createFromHandler($handler);
                 $callStack->moveToPreviousCorrespondingOpeningCall();
 
                 // Create the paragraph
+                $callStack->insertEolIfNextCallIsNotEolOrBlock(); // eol is mandatory to have a paragraph if there is only content
                 $callStack->processEolToEndStack("mb-0");
 
                 // Go back
@@ -209,12 +210,12 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      *   * at the body location: a card body start and a blockquote typo start
                      *   * at the end location: a card end body and a blockquote end typo
                      */
-                    $callEnterTypeCall = Call::createCall(
+                    $callEnterTypeCall = Call::createComboCall(
                         self::TAG,
                         DOKU_LEXER_ENTER,
                         array("type" => "typo")
                     );
-                    $cardBodyEnterCall = Call::createCall(
+                    $cardBodyEnterCall = Call::createComboCall(
                         syntax_plugin_combo_cardbody::TAG,
                         DOKU_LEXER_ENTER
                     );
@@ -247,14 +248,14 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     // Insert the card body exit
                     $callStack->moveToEnd();
                     $callStack->insertBefore(
-                        Call::createCall(
+                        Call::createComboCall(
                             self::TAG,
                             DOKU_LEXER_EXIT,
                             array("type" => "typo")
                         )
                     );
                     $callStack->insertBefore(
-                        Call::createCall(
+                        Call::createComboCall(
                             syntax_plugin_combo_cardbody::TAG,
                             DOKU_LEXER_EXIT
                         )
@@ -366,8 +367,6 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     switch ($context) {
                         case "card":
 
-                            $renderer->doc .= "</blockquote>" . DOKU_LF;
-                            $renderer->doc .= "</div>" . DOKU_LF;
                             $renderer->doc .= "</div>" . DOKU_LF;
                             break;
                         case self::TWEET:

@@ -211,7 +211,18 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
+
+                // Transform eol to paragraph
+                $callStack->insertEolIfNextCallIsNotEolOrBlock(); // a paragraph is mandatory
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $callStack->processEolToEndStack("card-text");
+
+                // Processing
+                $callStack->moveToEnd();
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                // Gather the context for the data returned
+                $context = $openingCall->getContext();
+                // First child image ?
                 $firstOpeningChild = $callStack->moveToFirstChildTag();
                 if ($firstOpeningChild !== false) {
                     if ($firstOpeningChild->getTagName() == syntax_plugin_combo_media::TAG) {
@@ -220,18 +231,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         $callStack->deleteActualCallAndNext();
                     }
                 }
-                $context = $openingCall->getContext();
-
-                /**
-                 * Section editing
-                 * +1 to go at the line ?
-                 */
-                $endPosition = $pos + strlen($match) + 1;
-
-                // Transform eol to paragraph
-                $callStack->moveToEnd();
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                $callStack->processEolToEndStack("card-text");
 
                 // Insert the card body enter
                 $callStack->moveToEnd();
@@ -242,7 +241,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         $callStack->moveToNextSiblingTag();
                     }
                     $callStack->insertBefore(
-                        Call::createCall(
+                        Call::createComboCall(
                             syntax_plugin_combo_cardbody::TAG,
                             DOKU_LEXER_ENTER
                         )
@@ -252,7 +251,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $callStack->moveToEnd();
                     $callStack->moveToPreviousCorrespondingOpeningCall();
                     $callStack->insertAfter(
-                        Call::createCall(
+                        Call::createComboCall(
                             syntax_plugin_combo_cardbody::TAG,
                             DOKU_LEXER_ENTER
                         )
@@ -263,7 +262,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 // Insert the card body exit
                 $callStack->moveToEnd();
                 $callStack->insertBefore(
-                    Call::createCall(
+                    Call::createComboCall(
                         syntax_plugin_combo_cardbody::TAG,
                         DOKU_LEXER_EXIT
                     )
@@ -271,6 +270,12 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 // close
                 $callStack->closeAndResetPointer();
+
+                /**
+                 * Section editing
+                 * +1 to go at the line ?
+                 */
+                $endPosition = $pos + strlen($match) + 1;
 
                 return array(
                     PluginUtility::STATE => $state,

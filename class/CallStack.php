@@ -162,6 +162,7 @@ class CallStack
     public function processEolToEndStack($class = "")
     {
 
+
         /**
          * The attributes passed to the paragraph
          */
@@ -173,7 +174,7 @@ class CallStack
          * We will transform the eol with a call to this syntax plugin
          * to create the paragraph
          */
-        $paragraphComponent = "combo_eol";
+        $paragraphComponent = \syntax_plugin_combo_eol::COMPONENT;
 
         /**
          * The running variables
@@ -278,8 +279,8 @@ class CallStack
         // if the paragraph is open close it
         if ($paragraphIsOpen) {
             $this->insertBefore(
-                Call::createCall(
-                    $paragraphComponent,
+                Call::createComboCall(
+                    \syntax_plugin_combo_eol::TAG,
                     DOKU_LEXER_EXIT
                 )
             );
@@ -298,8 +299,8 @@ class CallStack
 
         // At the end
         $key = key($this->callStack);
-        if ($key==null){
-            $this->endWasReached=true;
+        if ($key == null) {
+            $this->endWasReached = true;
         } else {
             // if there is a eol, we delete it
             // otherwise we may end up with two eol
@@ -534,4 +535,24 @@ class CallStack
     {
         return key($this->callStack);
     }
+
+    /**
+     * Insert an EOL call if the next call is not an EOL
+     * This is to enforce an new paragraph
+     */
+    public function insertEolIfNextCallIsNotEolOrBlock()
+    {
+        $nextCall = $this->next();
+        if ($nextCall->getTagName() != "eol" && $nextCall->getDisplay() != "block") {
+            $this->insertBefore(
+                Call::createNativeCall("eol")
+            );
+            // move on the eol
+            $this->prev();
+        }
+        // move back
+        $this->prev();
+    }
+
+
 }

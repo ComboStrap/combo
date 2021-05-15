@@ -313,7 +313,7 @@ class RasterImageLink extends InternalMediaLink
              * Create the img element
              */
             $htmlAttributes = $this->tagAttributes->toHTMLAttributeString();
-            $imgHTML = "<img $htmlAttributes>";
+            $imgHTML = '<img '.$htmlAttributes.'/>';
 
         } else {
 
@@ -519,7 +519,7 @@ class RasterImageLink extends InternalMediaLink
     private
     function getWithDpiCorrection()
     {
-        return true;
+        return PluginUtility::getConfValue(self::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION,0);
     }
 
 

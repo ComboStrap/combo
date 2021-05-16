@@ -328,16 +328,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         PluginUtility::startSection($renderer, $position, $name);
                     }
 
-                    /**
-                     * Bootstrap five does not include masonry
-                     * directly, we need to add a column
-                     * and we close it here
-                     */
-                    $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-                    $context = $tagAttributes->getValueAndRemove(PluginUtility::CONTEXT);
-                    if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_cardcolumns::TAG) {
-                        $renderer->doc .= '<div class="col-sm-6 col-lg-4 mb-4">';
-                    }
+                    $context = $data[PluginUtility::CONTEXT];
+                    syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns($renderer,$context);
 
                     /**
                      * Illustrations
@@ -365,23 +357,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT:
 
                     /**
-                     * End Massonry
-                     */
-                    $context = $data[PluginUtility::CONTEXT];
-                    switch ($context) {
-                        case syntax_plugin_combo_cardcolumns::TAG:
-                            /**
-                             * Bootstrap five does not include masonry
-                             * directly, we need to add a column
-                             * and we close it here
-                             */
-                            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-                            if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
-                                $renderer->doc .= '</div>';
-                            }
-                            break;
-                    }
-                    /**
                      * End section
                      */
                     if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
@@ -392,6 +367,26 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * End card
                      */
                     $renderer->doc .= "</div>" . DOKU_LF;
+
+                    /**
+                     * End Massonry column
+                     * {@link syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns()}
+                     */
+                    $context = $data[PluginUtility::CONTEXT];
+                    if ($context == syntax_plugin_combo_cardcolumns::TAG){
+                            /**
+                             * Bootstrap five does not include masonry
+                             * directly, we need to add a column
+                             * and we close it here
+                             */
+                            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+                            if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
+                                $renderer->doc .= '</div>';
+                            }
+
+                    }
+
+
 
                     break;
 

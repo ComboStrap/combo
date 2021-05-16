@@ -5,6 +5,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\StringUtility;
@@ -194,15 +195,22 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
-                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $type = $openingTag->getType();
+                $context = $openingTag->getContext();
+                $attributes = $openingTag->getAttributes();
 
                 // Create the paragraph
                 $callStack->insertEolIfNextCallIsNotEolOrBlock(); // eol is mandatory to have a paragraph if there is only content
-                $callStack->processEolToEndStack("mb-0");
+                $paragraphClass = null;
+                if ($type == "typo") {
+                    // As seen here https://getbootstrap.com/docs/4.0/content/typography/#blockquotes
+                    $paragraphClass = "mb-0";
+                }
+                $callStack->processEolToEndStack($paragraphClass);
 
                 // Go back
-                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $type = $openingTag->getType();
+                $callStack->moveToPreviousCorrespondingOpeningCall();
                 if ($type == "card") {
                     /**
                      * A blockquote typo is wrapped around a card
@@ -213,7 +221,10 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     $callEnterTypeCall = Call::createComboCall(
                         self::TAG,
                         DOKU_LEXER_ENTER,
-                        array("type" => "typo")
+                        array(
+                            "type" => "typo"
+                        ),
+                        $context
                     );
                     $cardBodyEnterCall = Call::createComboCall(
                         syntax_plugin_combo_cardbody::TAG,
@@ -251,7 +262,8 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                         Call::createComboCall(
                             self::TAG,
                             DOKU_LEXER_EXIT,
-                            array("type" => "typo")
+                            array("type" => "typo"),
+                            $context
                         )
                     );
                     $callStack->insertBefore(
@@ -261,9 +273,11 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                         )
                     );
                 }
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $type
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
         }
@@ -308,6 +322,13 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                             $tagAttributes = TagAttributes::createEmpty();
                             $tagAttributes->addClassName("blockquote");
+                            $cardTags = [syntax_plugin_combo_card::TAG, syntax_plugin_combo_cardcolumns::TAG];
+                            if (in_array($data[PluginUtility::CONTEXT], $cardTags)) {
+                                // As seen here: https://getbootstrap.com/docs/5.0/components/card/#header-and-footer
+                                // A blockquote in a card
+                                // This context is added dynamically when the blockquote is a card type
+                                $tagAttributes->addClassName("mb-0");
+                            }
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("blockquote") . DOKU_LF;
                             break;
 
@@ -342,6 +363,16 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             break;
                         case "card":
                         default:
+
+                            /**
+                             * Wrap with column
+                             */
+                            $context = $data[PluginUtility::CONTEXT];
+                            syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns($renderer, $context);
+
+                            /**
+                             * Starting the card
+                             */
                             $tagAttributes = TagAttributes::createFromCallStackArray($blockquoteAttributes);
                             $tagAttributes->addClassName("card");
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
@@ -363,20 +394,35 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     // Because we can have several unmatched on a line we don't know if
                     // there is a eol
                     StringUtility::addEolCharacterIfNotPresent($renderer->doc);
-                    $context = $data[PluginUtility::CONTEXT];
-                    switch ($context) {
+                    $tagAttributes =  TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
+                    switch ($type) {
                         case "card":
-
                             $renderer->doc .= "</div>" . DOKU_LF;
                             break;
                         case self::TWEET:
+                        case "typo":
                         default:
-
                             $renderer->doc .= "</blockquote>" . DOKU_LF;
                             break;
+                    }
 
+                    /**
+                     * Closing the column if in bootstrap 5
+                     * See {@link syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns()}
+                     */
+                    $context = $data[PluginUtility::CONTEXT];
+                    $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+                    if (
+                        $context==syntax_plugin_combo_cardcolumns::TAG
+                        && $type == syntax_plugin_combo_card::TAG
+                        && $bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion
+                    ){
+                            $renderer->doc .= "</div>" . DOKU_LF;
                     }
                     break;
+
+
 
 
             }

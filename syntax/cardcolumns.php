@@ -37,6 +37,24 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
     const SYNTAX_TAG_COLUMNS = "card-columns";
     const SYNTAX_TAG_TEASER = 'teaser-columns';
 
+    /**
+     * @param $renderer
+     * @param $context Doku_Renderer
+     *
+     * Bootstrap five does not include masonry
+     * directly, we need to add a column
+     * and we close it here
+     * https://getbootstrap.com/docs/5.0/examples/masonry/
+     */
+    public static function addColIfBootstrap5AndCardColumns(&$renderer, $context)
+    {
+
+        $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+        if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_cardcolumns::TAG) {
+            $renderer->doc .= '<div class="col-sm-6 col-lg-4 mb-4">';
+        }
+    }
+
 
     /**
      * Syntax Type.

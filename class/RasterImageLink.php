@@ -159,22 +159,33 @@ class RasterImageLink extends InternalMediaLink
             // but to be clear we add it.
             $htmlLengthUnit = "px";
 
-            $imgTagHeightValue = $this->getImgTagHeightValue();
-            if (!empty($imgTagHeightValue)) {
-
-
-                $internalHeight = $this->getMediaHeight();
+            /**
+             * Height
+             * The internal height set the intrinsic height of the image
+             *
+             * The style is set in {@link Dimension::processWidthAndHeight()}
+             */
+            $internalHeight = $this->getMediaHeight();
+            if(!empty($internalHeight)) {
                 $this->tagAttributes->addHtmlAttributeValue("height", $internalHeight . $htmlLengthUnit);
-                /**
-                 * By default, the browser with a height auto due to the img-fluid class
-                 * takes the value of the width. To constraint it, we use max-height
-                 */
-                $this->tagAttributes->addStyleDeclaration("max-height", $imgTagHeightValue . $htmlLengthUnit);
             }
-            $widthValue = $this->getImgTagWidthValue();
 
 
-            $srcValue = $this->getUrl(true, $widthValue);
+
+            /**
+             * Width
+             *
+             * We create a series of URL
+             * for different width and let the browser
+             * download the best one for:
+             *   * the actual container width
+             *   * the actual of screen resolution
+             *   * and the connection speed.
+             *
+             * The max-width value is set
+             */
+            $widthValue = $this->getMediaWidth();
+            $srcValue = $this->getUrl();
 
             /**
              * Responsive image src set building
@@ -195,6 +206,9 @@ class RasterImageLink extends InternalMediaLink
              */
             if (!empty($widthValue)) {
 
+                /**
+                 * The internal intrinsic value of the image
+                 */
                 $mediaWith = $this->getMediaWidth();
                 $this->tagAttributes->addHtmlAttributeValue("width", $mediaWith . $htmlLengthUnit);
 

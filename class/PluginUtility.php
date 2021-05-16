@@ -18,6 +18,7 @@ require_once(__DIR__ . '/Cache.php');
 require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/ColorUtility.php');
+require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/Float.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/File.php');
@@ -471,68 +472,6 @@ class PluginUtility
             }
         }
 
-        $widthName = TagAttributes::WIDTH_KEY;
-        if ($attributes->hasComponentAttribute($widthName)) {
-
-            $widthValue = trim($attributes->getValueAndRemove($widthName));
-            if ($widthValue == "fit") {
-                $widthValue = "fit-content";
-            } else {
-                /** Numeric value */
-                $qualifiedWidthValue = TagAttributes::toQualifiedCssValue($widthValue);
-            }
-
-
-            /**
-             * For an image
-             */
-            if (in_array($attributes->getLogicalTag(), TagAttributes::NATURAL_SIZING_ELEMENT)) {
-
-                /**
-                 * If the image is not ask as static resource (ie HTTP request)
-                 * but added in HTML
-                 * (ie {@link \action_plugin_combo_svg})
-                 */
-                $requestedMime = $attributes->getMime();
-                if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
-                    $attributes->addStyleDeclaration('max-width', TagAttributes::toQualifiedCssValue($widthValue));
-                    $attributes->addStyleDeclaration('width', "100%");
-                }
-
-            } else {
-
-                /**
-                 * For a block
-                 */
-                $attributes->addStyleDeclaration('max-width', TagAttributes::toQualifiedCssValue($widthValue));
-
-            }
-
-        }
-
-        $heightName = TagAttributes::HEIGHT_KEY;
-        if ($attributes->hasComponentAttribute($heightName)) {
-            $heightValue = trim($attributes->getValueAndRemove($heightName));
-
-
-            if (in_array($attributes->getLogicalTag(), TagAttributes::NATURAL_SIZING_ELEMENT)) {
-                // A element with a natural height is responsive, we set only the max-height
-                // the height would make it non-responsive
-                $attributes->addStyleDeclaration("max-height", $heightValue);
-            } else {
-                // Without the height value, a block display will collapse
-                // min-height and not height to not constraint the box
-                $attributes->addStyleDeclaration("min-height", $heightValue);
-            }
-            /**
-             * Overflow auto means that positioning element on the edge with the
-             * will clip them with the {@link Position::processPosition()} position attribute
-             *
-             * if (!array_key_exists("overflow", $attributes)) {
-             *        $styleProperties["overflow"] = "auto";
-             * }
-             */
-        }
 
         $textAlign = "text-align";
         if ($attributes->hasComponentAttribute($textAlign)) {

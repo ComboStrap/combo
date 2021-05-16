@@ -93,6 +93,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
      * Inspiration comes from <a href="https://github.com/splitbrain/dokuwiki-plugin-notfound/blob/master/action.php">Not Found Plugin</a>
      * @param $event Doku_Event
      * @param $param
+     * @return false|void
      * @throws Exception
      */
     function _handle404(&$event, $param)

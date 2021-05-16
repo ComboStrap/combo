@@ -51,11 +51,6 @@ class TagAttributes
     const ID_KEY = "id";
 
     /**
-     * The element that have an width and height
-     */
-    const NATURAL_SIZING_ELEMENT = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
-
-    /**
      * The logical attributes that:
      *   * are not becoming HTML attributes
      *   * are never deleted
@@ -321,6 +316,11 @@ class TagAttributes
 
 
             /**
+             * Width and height
+             */
+            Dimension::processWidthAndHeight($this);
+
+            /**
              * Process animation (onHover, onView)
              */
             Hover::processOnHover($this);
@@ -378,9 +378,22 @@ class TagAttributes
              * copy the unknown component attributes
              */
             foreach ($this->componentAttributes as $key => $value) {
+
+                // Null Value, not needed
+                if ($value==null){
+                    continue;
+                }
+
+                // No overwrite
+                if (isset($tempHtmlArray[$key])){
+                    continue;
+                }
+
+                // Reserved attribute
                 if (!in_array($key, self::RESERVED_ATTRIBUTES)) {
                     $tempHtmlArray[$key] = $value;
                 }
+
             }
             // Copy the style
             $tempHtmlArray["style"] = $this->getStyle();

@@ -159,7 +159,7 @@ class SvgImageLink extends InternalMediaLink
         /**
          * Return the image
          */
-        return '<img ' . $this->tagAttributes->toHTMLAttributeString() . '>';
+        return '<img ' . $this->tagAttributes->toHTMLAttributeString() . '/>';
 
     }
 

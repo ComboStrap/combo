@@ -202,6 +202,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                             break;
                         default:
                             $renderer->doc .= '<div class="card-columns">' . DOKU_LF;
+                            break;
                     }
                     break;
 

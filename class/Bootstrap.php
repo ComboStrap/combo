@@ -15,7 +15,7 @@ namespace ComboStrap;
 class Bootstrap
 {
 
-    const BootStrapDefaultMajorVersion = "4";
+    const BootStrapDefaultMajorVersion = "5";
     const BootStrapFiveMajorVersion = "5";
 
     public static function getDataNamespace()
@@ -31,7 +31,7 @@ class Bootstrap
     {
         if (Site::isStrapTemplate()) {
             require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
-            $bootstrapVersion = tpl_getConf(TplUtility::CONF_BOOTSTRAP_VERSION, self::BootStrapDefaultMajorVersion);
+            $bootstrapVersion = TplUtility::getBootStrapVersion();
             return $bootstrapVersion[0];
         } else {
             return self::BootStrapDefaultMajorVersion;

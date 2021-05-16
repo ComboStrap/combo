@@ -197,6 +197,16 @@ class SvgImageLink extends InternalMediaLink
 
                 if (!in_array($name, InternalMediaLink::TAG_ATTRIBUTES_ONLY)) {
                     $newName = $name;
+
+                    /**
+                     * Width and Height
+                     * permits to create SVG of the asked size
+                     *
+                     * This is a little bit redundant with the
+                     * {@link Dimension::processWidthAndHeight()}
+                     * `max-width and width` styling property
+                     * but you may use them outside of HTML.
+                     */
                     switch ($name) {
                         case TagAttributes::WIDTH_KEY:
                             $newName = "w";

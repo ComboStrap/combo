@@ -104,6 +104,7 @@ class SvgDocument extends XmlDocument
      */
     const COLOR_TYPE_FILL_SOLID = "fill";
     const COLOR_TYPE_STROKE_OUTLINE = "stroke";
+    const DEFAULT_ICON_WIDTH = "24";
 
     /**
      * @var string - a name identifier that is added in the SVG
@@ -237,7 +238,7 @@ class SvgDocument extends XmlDocument
                  *
                  */
                 if ($svgType == self::ICON_TYPE) {
-                    $defaultWidth = "24";
+                    $defaultWidth = self::DEFAULT_ICON_WIDTH;
                 } else {
                     // tile
                     $defaultWidth = "192";

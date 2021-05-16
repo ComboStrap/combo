@@ -42,7 +42,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**

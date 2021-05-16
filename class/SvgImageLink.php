@@ -174,6 +174,8 @@ class SvgImageLink extends InternalMediaLink
     /**
      * @param string $ampersand $absolute - the & separator (should be encoded for HTML but not for CSS)
      * @return string|null
+     *
+     * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
     public function getUrl($ampersand = InternalMediaLink::URL_ENCODED_AND)
     {

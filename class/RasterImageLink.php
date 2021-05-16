@@ -78,11 +78,11 @@ class RasterImageLink extends InternalMediaLink
 
 
     /**
-     * @param bool $absolute - use for semantic data
+     * @param string $ampersand
      * @param null $localWidth - the asked width - use for responsive image
      * @return string|null
      */
-    public function getUrl($absolute = true, $localWidth = null)
+    public function getUrl($ampersand = InternalMediaLink::URL_ENCODED_AND, $localWidth = null)
     {
 
         if ($this->exists()) {
@@ -110,7 +110,7 @@ class RasterImageLink extends InternalMediaLink
             }
             $direct = true;
 
-            return ml($this->getId(), $att, $direct, InternalMediaLink::URL_ENCODED_AND, $absolute);
+            return ml($this->getId(), $att, $direct, $ampersand, true);
 
         } else {
 

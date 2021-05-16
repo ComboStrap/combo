@@ -84,6 +84,22 @@ class CallStack
         $this->moveToEnd();
     }
 
+    public static function createFromMarkup($marki)
+    {
+
+        $modes = p_get_parsermodes();
+        $handler = new Doku_Handler();
+        $parser = new Parser($handler);
+
+        //add modes to parser
+        foreach ($modes as $mode) {
+            $parser->addMode($mode['mode'], $mode['obj']);
+        }
+        $parser->parse($marki);
+        return self::createFromHandler($handler);
+
+    }
+
     /**
      * Reset the pointer
      */
@@ -129,23 +145,6 @@ class CallStack
     }
 
 
-    /**
-     * @param $dokuTest
-     * @return Doku_Handler
-     */
-    public static function &createHandler($dokuTest)
-    {
-        $modes = p_get_parsermodes();
-        $handler = new Doku_Handler();
-        $parser = new Parser($handler);
-
-        //add modes to parser
-        foreach ($modes as $mode) {
-            $parser->addMode($mode['mode'], $mode['obj']);
-        }
-        $parser->parse($dokuTest);
-        return $handler;
-    }
 
     /**
      * Process the EOL call to the end of stack
@@ -562,6 +561,11 @@ class CallStack
     private function isPointerAtEnd()
     {
         return $this->endWasReached;
+    }
+
+    public function &getHandler()
+    {
+        return $this->handler;
     }
 
 }

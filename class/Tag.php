@@ -28,6 +28,8 @@ use RuntimeException;
  * to match what's called a {@link Doku_Handler::$calls call}
  *
  * It's just a wrapper that adds tree functionality above the {@link CallStack}
+ *
+ * @deprecated Move to the {@link CallStack::createFromHandler()}
  */
 class Tag
 {

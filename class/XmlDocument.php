@@ -63,7 +63,7 @@ class XmlDocument
 
             // https://www.php.net/manual/en/libxml.constants.php
             $options = LIBXML_NOCDATA
-                | LIBXML_NOBLANKS // same as preserveWhiteSpace=true
+                // | LIBXML_NOBLANKS // same as preserveWhiteSpace=true, not set to be able to format the output
                 | LIBXML_NOXMLDECL // Drop the XML declaration when saving a document
                 | LIBXML_NONET // No network during load
                 | LIBXML_NSCLEAN // Remove redundant namespace declarations - for whatever reason, the formatting does not work if this is set
@@ -77,7 +77,7 @@ class XmlDocument
                 //   at https://www.php.net/manual/en/domdocument.save.php
                 //   and https://www.php.net/manual/en/domdocument.savexml.php
                 $options = $options
-                    | LIBXML_NOEMPTYTAG
+                    // | LIBXML_NOEMPTYTAG // Expand empty tags (e.g. <br/> to <br></br>)
                     | LIBXML_HTML_NODEFDTD // No doctype
                     | LIBXML_HTML_NOIMPLIED;
 
@@ -94,9 +94,7 @@ class XmlDocument
 
             $this->xmlDom = new DOMDocument('1.0', 'UTF-8');
 
-            // Mandatory for a a good formatting before loading
-            // https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
-            $this->xmlDom->preserveWhiteSpace = false;
+            $this->mandatoryFormatConfigBeforeLoading();
 
 
             $text = $this->processTextBeforeLoading($text);
@@ -458,12 +456,16 @@ class XmlDocument
 
     /**
      * @return string a XML formatted
+     *
+     * !!!! The parameter preserveWhiteSpace should have been set to false before loading
+     * https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
+     * $this->xmlDom->preserveWhiteSpace = false;
+     *
+     * We do it with the function {@link XmlDocument::mandatoryFormatConfigBeforeLoading()}
+     *
      */
     public function getXmlTextFormatted()
     {
-        // !!!! The parameter preserveWhiteSpace should have been set to false before loading
-        // https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
-        // $this->xmlDom->preserveWhiteSpace = false;
 
         $this->xmlDom->formatOutput = true;
         return $this->getXmlText();
@@ -515,6 +517,22 @@ class XmlDocument
         $text = preg_replace("/\n\n/", "\n", $text);
         return $text;
 
+    }
+
+
+    /**
+     * This function is called just before loading
+     * in order to be able to {@link XmlDocument::getXmlTextFormatted() format the output }
+     * https://www.php.net/manual/en/class.domdocument.php#domdocument.props.formatoutput
+     * Mandatory for a a good formatting before loading
+     *
+     */
+    private function mandatoryFormatConfigBeforeLoading()
+    {
+        // not that
+        // the loading option: LIBXML_NOBLANKS
+        // is equivalent to $this->xmlDom->preserveWhiteSpace = true;
+        $this->xmlDom->preserveWhiteSpace = false;
     }
 
 

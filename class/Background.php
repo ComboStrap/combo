@@ -158,7 +158,7 @@ class Background
                     }
 
                     $media = InternalMediaLink::createFromCallStackArray($backgroundImageValue);
-                    $url = $media->getUrl("&");
+                    $url = $media->getUrl("&",$media->getRequestedWidth());
                     if ($url !== false) {
 
                         $backgroundImageStyleValue = "url(" . $url . ")";

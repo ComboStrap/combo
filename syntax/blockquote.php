@@ -198,6 +198,9 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $type = $openingTag->getType();
                 $context = $openingTag->getContext();
+                if ($context==null){
+                    $context = $type;
+                }
                 $attributes = $openingTag->getAttributes();
 
                 // Create the paragraph

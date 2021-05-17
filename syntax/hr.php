@@ -71,9 +71,9 @@ class syntax_plugin_combo_hr extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
 
                 $attributes = PluginUtility::getTagAttributes($match);
-                $html = "<hr>";
+                $html = "<hr/>";
                 if (sizeof($attributes)>0){
-                    $html = "<hr ".PluginUtility::array2HTMLAttributesAsString($attributes).">";
+                    $html = "<hr ".PluginUtility::array2HTMLAttributesAsString($attributes)."/>";
                 }
                 return array(
                     PluginUtility::STATE => $state,

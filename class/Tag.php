@@ -177,6 +177,11 @@ class Tag
     public static function createFromCall(&$handler, $position)
     {
 
+        if (!isset($handler->calls[$position])){
+            LogUtility::msg("The index ($position) does not exist in the call stack, cannot create a call", LogUtility::LVL_MSG_ERROR);
+            return null;
+        }
+
         $callArray = &$handler->calls[$position];
         $call = new Call($callArray);
 
@@ -386,6 +391,10 @@ class Tag
     public function getPreviousSibling()
     {
 
+        if ($this->position==1){
+            return null;
+        }
+
         $counter = $this->position - 1;
         $treeLevel = 0;
         while ($counter > 0) {
@@ -440,7 +449,6 @@ class Tag
             } else {
                 $counter = $counter - 1;
                 unset($callArray);
-                continue;
             }
 
         }
@@ -450,7 +458,7 @@ class Tag
          * that there is no sibling
          */
         if ($treeLevel == 0) {
-            return self::createFromCall($this->handler, $counter);
+            return Tag::createFromCall($this->handler, $counter);
         }
         return null;
 

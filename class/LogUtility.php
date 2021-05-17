@@ -63,7 +63,7 @@ class LogUtility
      * @param int $level - the level see LVL constant
      * @param string $canonical - the canonical
      */
-    public static function msg($message, $level = self::LVL_MSG_ERROR, $canonical = null)
+    public static function msg($message, $level = self::LVL_MSG_ERROR, $canonical = "support")
     {
 
         /**

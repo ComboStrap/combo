@@ -774,7 +774,7 @@ class PluginUtility
                     }
                     $propertyAndSide = str_replace("r", "e", $propertyAndSide);
                     $propertyAndSide = str_replace("l", "s", $propertyAndSide);
-                    if (empty($sizeAndBreakPoint)) {
+                    if ($sizeAndBreakPoint === "") {
                         $spacingClass = $propertyAndSide;
                     } else {
                         $spacingClass = $propertyAndSide . $minusCharacter . $sizeAndBreakPoint;

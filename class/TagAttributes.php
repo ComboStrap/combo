@@ -677,5 +677,10 @@ class TagAttributes
         return $this->mime;
     }
 
+    public function getType()
+    {
+        return $this->getValue(self::TYPE_KEY);
+    }
+
 
 }

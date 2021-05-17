@@ -193,7 +193,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                 foreach (self::getSyntaxTags() as $tag) {
                     $match = str_replace($tag, "", $match);
                 }
-                $parameters = PluginUtility::parse2HTMLAttributes($match);
+                $parameters = PluginUtility::parseAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $parameters

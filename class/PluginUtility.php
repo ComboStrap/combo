@@ -242,25 +242,34 @@ class PluginUtility
 
     /**
      *
+     * Parse the attributes part of a match
      * Example:
      *   line-numbers="value"
      *   line-numbers='value'
      * @param $string
      * @return array
      *
-     * Parse a string to HTML attribute
+     * To parse a match, use {@link PluginUtility::getTagAttributes()}
+     *
+     *
      */
-    public static function parse2HTMLAttributes($string)
+    public static function parseAttributes($string)
     {
 
         $parameters = array();
 
         // /i not case sensitive
-        $attributePattern = "\\s*([-\w]+)\\s*=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*";
+        $attributePattern = "\\s*([-\w]+)\\s*(?:=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*)?";
         $result = preg_match_all('/' . $attributePattern . '/i', $string, $matches);
         if ($result != 0) {
             foreach ($matches[1] as $key => $parameterKey) {
-                $parameters[hsc(strtolower($parameterKey))] = hsc($matches[2][$key]);
+                $value = $matches[2][$key];
+                if ($value == "") {
+                    $value = true;
+                } else {
+                    $value = hsc($value);
+                }
+                $parameters[hsc(strtolower($parameterKey))] = $value;
             }
         }
         return $parameters;
@@ -329,7 +338,7 @@ class PluginUtility
         }
 
         // Parse the remaining attributes
-        $parsedAttributes = self::parse2HTMLAttributes($match);
+        $parsedAttributes = self::parseAttributes($match);
 
         // Merge
         $attributes = array_merge($attributes, $parsedAttributes);;

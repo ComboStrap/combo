@@ -5,6 +5,7 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -108,9 +109,10 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $defaultConfValue = PluginUtility::parse2HTMLAttributes($this->getConf(self::CONF_DEFAULT_ATTRIBUTES_KEY));
+                $defaultConfValue = PluginUtility::parseAttributes($this->getConf(self::CONF_DEFAULT_ATTRIBUTES_KEY));
                 $originalAttributes = PluginUtility::getTagAttributes($match);
                 $originalAttributes = PluginUtility::mergeAttributes($originalAttributes, $defaultConfValue);
+                $tagAttributes = TagAttributes::createFromCallStackArray($originalAttributes);
 
                 /**
                  * Context Rendering attributes
@@ -119,45 +121,41 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                 $tag = new Tag(self::TAG, $originalAttributes, $state, $handler);
 
                 if ($tag->isDescendantOf(syntax_plugin_combo_list::TAG)) {
-                    PluginUtility::addStyleProperty("margin-left", "auto", $attributesToRender);
+                    $tagAttributes->addStyleDeclaration("margin-left", "auto");
                 }
 
 
                 /**
                  * Type attributes
                  */
-                $classValue = "badge";
-                $type = $attributesToRender[self::ATTRIBUTE_TYPE];
+                $tagAttributes->addClassName("badge");
+                $type = $tagAttributes->getType();
                 if (empty($type)) {
                     $type = "info";
                 }
                 if ($type != "tip") {
-                    $classValue .= " alert-" . $type;
+                    $tagAttributes->addClassName("alert-" . $type);
                 } else {
                     if (!array_key_exists("background-color", $attributesToRender)) {
                         $attributesToRender["background-color"] = "#fff79f"; // lum - 195
+                        $tagAttributes->addClassName("text-dark");
                     }
                 }
 
-                PluginUtility::addClass2Attributes($classValue, $attributesToRender);
-
-                $rounded = $attributesToRender[self::ATTRIBUTE_ROUNDED];
+                $rounded = $tagAttributes->getValueAndRemove(self::ATTRIBUTE_ROUNDED);
                 if (!empty($rounded)) {
                     $badgePillClass = "badge-pill";
                     if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFiveMajorVersion) {
                         // https://getbootstrap.com/docs/5.0/migration/#badges-1
                         $badgePillClass = "rounded-pill";
                     }
-                    $attributesToRender["class"] .= " $badgePillClass";
-                    unset($attributesToRender[self::ATTRIBUTE_ROUNDED]);
+                    $tagAttributes->addClassName($badgePillClass);
                 }
-
-                $html = '<span ' . PluginUtility::array2HTMLAttributesAsString($attributesToRender) . '>';
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $originalAttributes,
-                    PluginUtility::PAYLOAD => $html);
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                );
 
             case DOKU_LEXER_UNMATCHED :
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
@@ -166,8 +164,7 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
 
                 // Important otherwise we don't get an exit in the render
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => '</span>'
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -193,17 +190,23 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
-                case DOKU_LEXER_EXIT :
+
                 case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
 
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("span") . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
+
+                case DOKU_LEXER_EXIT :
+                    $renderer->doc .= "</span>";
+                        break;
 
             }
             return true;

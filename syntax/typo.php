@@ -6,25 +6,7 @@ use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
 
-/**
- * Class syntax_plugin_combo_typo
- *
- * TODO: https://github.com/typekit/webfontloader
- * https://www.dokuwiki.org/plugin:typography
- * https://stackoverflow.design/email/base/typography/
- * http://kyleamathews.github.io/typography.js/
- * https://docs.gitbook.com/features/advanced-branding (Roboto, Roboto Slab, Open Sans, Source Sans Pro, Lato, Ubuntu, Raleway, Merriweather)
- * http://themenectar.com/docs/salient/theme-options/typography/ (Doc)
- * https://www.modularscale.com/ - see the size of font
- *
- * See the fonts on your computer
- * https://wordmark.it/
- *
- * What's a type ? Type terminology
- * https://www.supremo.co.uk/typeterms/
- *
- * https://theprotoolbox.com/browse/font-tools/
- */
+
 class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
 {
 

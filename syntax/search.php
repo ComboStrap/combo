@@ -53,7 +53,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     'autocomplete' => true
                 );
                 $match = substr($match, strlen($this->getPluginComponent()) + 1, -1);
-                $parameters = array_merge($init, PluginUtility::parse2HTMLAttributes($match));
+                $parameters = array_merge($init, PluginUtility::parseAttributes($match));
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $parameters

@@ -411,18 +411,14 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     }
 
                     /**
-                     * Closing the column if in bootstrap 5
-                     * See {@link syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns()}
+                     * Closing the masonry column
+                     * (Only if this is a card blockquote)
                      */
-                    $context = $data[PluginUtility::CONTEXT];
-                    $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-                    if (
-                        $context==syntax_plugin_combo_cardcolumns::TAG
-                        && $type == syntax_plugin_combo_card::TAG
-                        && $bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion
-                    ){
-                            $renderer->doc .= "</div>" . DOKU_LF;
+                    if ($type == syntax_plugin_combo_card::TAG){
+                        $context = $data[PluginUtility::CONTEXT];
+                        syntax_plugin_combo_cardcolumns::endColIfBootstrap5AnCardColumns($renderer,$context);
                     }
+
                     break;
 
 

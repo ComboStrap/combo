@@ -42,19 +42,49 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
      * @param $context Doku_Renderer
      *
      * Bootstrap five does not include masonry
-     * directly, we need to add a column
-     * and we close it here
+     * directly, we need to add a column around the children {@link syntax_plugin_combo_card} and
+     * {@link syntax_plugin_combo_blockquote}
      * https://getbootstrap.com/docs/5.0/examples/masonry/
+     *
+     * The column is open with the function {@link syntax_plugin_combo_cardcolumns::endColIfBootstrap5AndCardColumns()}
+     *
+     * TODO: do it programmatically by adding call with {@link \ComboStrap\CallStack}
      */
     public static function addColIfBootstrap5AndCardColumns(&$renderer, $context)
     {
-
         $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
         if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_cardcolumns::TAG) {
             $renderer->doc .= '<div class="col-sm-6 col-lg-4 mb-4">';
         }
     }
 
+    /**
+     * In Bootstrap5, to support card-columns, we need masonry javascript and
+     * a column
+     * We close it as seen here:
+     * https://getbootstrap.com/docs/5.0/examples/masonry/
+     *
+     * The column is open with the function {@link syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns()}
+     * @param Doku_Renderer $renderer
+     * @param $context
+     */
+    public static function endColIfBootstrap5AnCardColumns(Doku_Renderer $renderer, $context)
+    {
+
+        if ($context == syntax_plugin_combo_cardcolumns::TAG) {
+            /**
+             * Bootstrap five does not include masonry
+             * directly, we need to add a column
+             * and we close it here
+             */
+            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+            if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
+                $renderer->doc .= '</div>';
+            }
+
+        }
+
+    }
 
     /**
      * Syntax Type.
@@ -72,12 +102,14 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
      * Allow which kind of plugin inside
      * All
      */
-    public function getAllowedTypes()
+    public
+    function getAllowedTypes()
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
+    public
+    function accepts($mode)
     {
         if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
             return PluginUtility::disablePreformatted($mode);
@@ -126,7 +158,8 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
 
     }
 
-    public function postConnect()
+    public
+    function postConnect()
     {
         foreach (self::getSyntaxTags() as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
@@ -239,7 +272,8 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
     }
 
 
-    public static function getSyntaxTags()
+    public
+    static function getSyntaxTags()
     {
 
         return array(self::SYNTAX_TAG_COLUMNS, self::SYNTAX_TAG_TEASER);

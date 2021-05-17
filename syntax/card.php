@@ -369,22 +369,11 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= "</div>" . DOKU_LF;
 
                     /**
-                     * End Massonry column
+                     * End Massonry column if any
                      * {@link syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns()}
                      */
                     $context = $data[PluginUtility::CONTEXT];
-                    if ($context == syntax_plugin_combo_cardcolumns::TAG){
-                            /**
-                             * Bootstrap five does not include masonry
-                             * directly, we need to add a column
-                             * and we close it here
-                             */
-                            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-                            if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
-                                $renderer->doc .= '</div>';
-                            }
-
-                    }
+                    syntax_plugin_combo_cardcolumns::endColIfBootstrap5AnCardColumns($renderer, $context);
 
 
 

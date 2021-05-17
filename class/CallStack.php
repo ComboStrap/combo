@@ -162,129 +162,8 @@ class CallStack
     public function processEolToEndStack($class = "")
     {
 
+        \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack($this,$class);
 
-        /**
-         * The attributes passed to the paragraph
-         */
-        $attributes = array("class" => $class);
-
-        /**
-         * The syntax plugin that implements the paragraph
-         * ie {@link \syntax_plugin_combo_eol}
-         * We will transform the eol with a call to this syntax plugin
-         * to create the paragraph
-         */
-        $paragraphComponent = \syntax_plugin_combo_eol::COMPONENT;
-
-        /**
-         * The running variables
-         */
-        $paragraphIsOpen = false; // A pointer to see if the paragraph is open
-        while ($this->next()) {
-
-            $actualCall = $this->getActualCall();
-            if ($actualCall->getTagName() === "eol") {
-
-                /**
-                 * Next Call
-                 */
-                $nextCall = $this->next();
-                $this->prev();
-                if ($nextCall === false) {
-                    $nextDisplay = "last";
-                    $nextCall = null;
-                } else {
-                    $nextDisplay = $nextCall->getDisplay();
-                }
-
-
-                /**
-                 * Processing
-                 */
-                if (!$paragraphIsOpen) {
-
-                    switch ($nextDisplay) {
-                        case Call::BlOCK_DISPLAY:
-                        case "last":
-                            $this->deleteActualCallAndNext();
-                            break;
-                        case Call::INLINE_DISPLAY:
-                            $paragraphIsOpen = true;
-                            $actualCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_ENTER,
-                                $attributes
-                            );
-                            break;
-                        case "eol":
-                            /**
-                             * Empty line
-                             */
-                            $actualCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_ENTER,
-                                $attributes
-                            );
-                            $nextCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_EXIT
-                            );
-                            $this->next();
-                            break;
-                        default:
-                            LogUtility::msg("The eol action for the combination enter / (" . $nextDisplay . ") of the call ( $nextCall ) was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            break;
-                    }
-                } else {
-                    /**
-                     * Paragraph is open
-                     */
-                    switch ($nextDisplay) {
-                        case "eol":
-                            /**
-                             * Empty line
-                             */
-                            $actualCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_EXIT
-                            );
-                            $nextCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_ENTER,
-                                $attributes
-                            );
-                            $this->next();
-                            break;
-                        case Call::INLINE_DISPLAY:
-                            // A space
-                            $actualCall->updateEolToSpace();
-                            break;
-                        case Call::BlOCK_DISPLAY:
-                        case "last";
-                            $actualCall->updateToPluginComponent(
-                                $paragraphComponent,
-                                DOKU_LEXER_EXIT
-                            );
-                            $paragraphIsOpen = false;
-                            break;
-                        default:
-                            LogUtility::msg("The display for a open paragraph (" . $nextDisplay . ") is not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            break;
-                    }
-                }
-
-            }
-        }
-
-        // if the paragraph is open close it
-        if ($paragraphIsOpen) {
-            $this->insertBefore(
-                Call::createComboCall(
-                    \syntax_plugin_combo_eol::TAG,
-                    DOKU_LEXER_EXIT
-                )
-            );
-        }
     }
 
     /**
@@ -394,7 +273,7 @@ class CallStack
         }
     }
 
-    private function prev()
+    public function prev()
     {
         if ($this->endWasReached) {
             $this->endWasReached = false;

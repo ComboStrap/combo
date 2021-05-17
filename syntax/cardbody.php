@@ -59,7 +59,7 @@ class syntax_plugin_combo_cardbody extends DokuWiki_Syntax_Plugin
     function getAllowedTypes()
     {
         /**
-         * Not needed as we don't have any {@link syntax_plugin_combo_eol::connectTo()}
+         * Not needed as we don't have any {@link syntax_plugin_combo_para::connectTo()}
          */
         return array();
     }
@@ -73,7 +73,7 @@ class syntax_plugin_combo_cardbody extends DokuWiki_Syntax_Plugin
     function getSort()
     {
         /**
-         * Not really needed as we don't have any {@link syntax_plugin_combo_eol::connectTo()}
+         * Not really needed as we don't have any {@link syntax_plugin_combo_para::connectTo()}
          *
          */
         return 369;
@@ -109,7 +109,7 @@ class syntax_plugin_combo_cardbody extends DokuWiki_Syntax_Plugin
 
         /**
          * No need to handle,
-         * there is no {@link syntax_plugin_combo_eol::connectTo() connection}
+         * there is no {@link syntax_plugin_combo_para::connectTo() connection}
          */
         return true;
 

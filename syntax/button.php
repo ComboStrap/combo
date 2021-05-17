@@ -240,7 +240,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                  * CSS if dokuwiki class name for link
                  */
                 if ($this->getConf(LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME, false)) {
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
                 }
 
                 /**
@@ -252,14 +252,6 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 switch ($state) {
 
                     case DOKU_LEXER_ENTER :
-
-                        /**
-                         * Closing the text tag of a card
-                         */
-                        $parent = $data[PluginUtility::PARENT];
-                        if ($parent == syntax_plugin_combo_card::TAG) {
-                            $renderer->doc .= "</p>";
-                        }
 
                         /**
                          * If this not a link button

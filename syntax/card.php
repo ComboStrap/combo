@@ -193,7 +193,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
 
                 if (!in_array("id", $attributes)) {
-                    $attributes["id"] = $context . $id;
+                    $attributes["id"] = self::TAG . $id;
                 }
 
                 return array(
@@ -316,7 +316,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     /**
                      * Tag Attributes
                      */
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
 
                     /**
                      * Section (Edit button)

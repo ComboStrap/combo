@@ -122,7 +122,7 @@ class RasterImageLink extends InternalMediaLink
     public function getAbsoluteUrl()
     {
 
-        return $this->getUrl(true);
+        return $this->getUrl();
 
     }
 
@@ -227,7 +227,7 @@ class RasterImageLink extends InternalMediaLink
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $this->getUrl(true, $breakpointWidthMinusMargin);
+                        $xsmUrl = $this->getUrl(InternalMediaLink::URL_ENCODED_AND, $breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 

@@ -280,9 +280,18 @@ EOD;
          * Pre element the bar
          */
         $preAttributes = TagAttributes::createEmpty();
-        $addedClass = 'combo_' . $plugin->getPluginComponent();
-        $preAttributes->addClassName($addedClass);
-        $attributes->addClassName($addedClass);
+
+        /**
+         * Add the styling class
+         * https://combostrap.com/styling/userstyle
+         */
+        $pluginComponent = $plugin->getPluginComponent();
+        $preAttributes->addClassName($pluginComponent .'-combo-pre');
+        $type = $attributes->getType();
+        if (!empty($type)){
+            $preAttributes->addClassName($pluginComponent .'-'.$type.'-combo-pre');
+        }
+
         // Command line
         if ($attributes->hasComponentAttribute("prompt")) {
             $preAttributes->addClassName("command-line");

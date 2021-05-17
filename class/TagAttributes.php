@@ -74,7 +74,6 @@ class TagAttributes
     const DISPLAY = "display";
 
 
-
     /**
      * @var array attribute that were set on a component
      */
@@ -214,7 +213,7 @@ class TagAttributes
      */
     public static function AttributeNameFromDokuwikiToCombo($name)
     {
-        switch ($name){
+        switch ($name) {
             case "w":
                 return TagAttributes::WIDTH_KEY;
             case "h":
@@ -274,7 +273,7 @@ class TagAttributes
             $newValues = PluginUtility::mergeAttributes($newValues, $actualValues);
             $this->componentAttributes[$attLower] = implode(" ", $newValues);
         } else {
-            if (!empty($actual)){
+            if (!empty($actual)) {
                 LogUtility::msg("The attribute ($attLower) has already a value ($actual). Adding another value ($attributeValue) is not yet implemented. Use the set operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
             $this->componentAttributes[$attLower] = $attributeValue;
@@ -283,7 +282,8 @@ class TagAttributes
 
     }
 
-    public function setComponentAttributeValue($attributeName, $attributeValue){
+    public function setComponentAttributeValue($attributeName, $attributeValue)
+    {
         $attLower = strtolower($attributeName);
         $this->componentAttributes[$attLower] = $attributeValue;
     }
@@ -368,6 +368,15 @@ class TagAttributes
                 $this->addStyleDeclaration("transform", $transformValue);
             }
 
+            /**
+             * Add the type class used for CSS styling
+             */
+            if (!empty($this->tag)) {
+                $this->addClassName($this->tag . "-combo");
+                if (!empty($this->getType())) {
+                    $this->addClassName($this->tag . "-" . $this->getType() . "-combo");
+                }
+            }
 
             /**
              * Create a non-sorted temporary html attributes array
@@ -380,12 +389,12 @@ class TagAttributes
             foreach ($this->componentAttributes as $key => $value) {
 
                 // Null Value, not needed
-                if ($value==null){
+                if ($value == null) {
                     continue;
                 }
 
                 // No overwrite
-                if (isset($tempHtmlArray[$key])){
+                if (isset($tempHtmlArray[$key])) {
                     continue;
                 }
 
@@ -508,14 +517,14 @@ class TagAttributes
         if ($this->hasComponentAttribute($attributeName)) {
             $value = $this->getValue($attributeName);
 
-            if (!in_array($attributeName,self::RESERVED_ATTRIBUTES)) {
+            if (!in_array($attributeName, self::RESERVED_ATTRIBUTES)) {
                 /**
                  * Don't remove for instance the `type`
                  * because it may be used elsewhere
                  */
                 unset($this->componentAttributes[$attributeName]);
             } else {
-                LogUtility::msg("Internal: The attribute $attributeName is a reserved word and cannot be removed. Use the get function instead",LogUtility::LVL_MSG_WARNING,"support");
+                LogUtility::msg("Internal: The attribute $attributeName is a reserved word and cannot be removed. Use the get function instead", LogUtility::LVL_MSG_WARNING, "support");
             }
         }
         return $value;
@@ -620,7 +629,7 @@ class TagAttributes
         $enterTag .= ">";
 
         if (!empty($this->htmlAfterEnterTag)) {
-            $enterTag .= DOKU_LF. $this->htmlAfterEnterTag;
+            $enterTag .= DOKU_LF . $this->htmlAfterEnterTag;
         }
         return $enterTag;
 

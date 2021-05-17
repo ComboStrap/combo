@@ -4,10 +4,9 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
 
 // must be run within Dokuwiki
-use ComboStrap\Prism;
-use ComboStrap\StringUtility;
-use ComboStrap\Tag;
 use ComboStrap\PluginUtility;
+use ComboStrap\Prism;
+use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../class/StringUtility.php');
@@ -169,7 +168,7 @@ class syntax_plugin_combo_file extends DokuWiki_Syntax_Plugin
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::TAG);
                     Prism::htmlEnter($renderer, $attributes, $this);
                     break;
 

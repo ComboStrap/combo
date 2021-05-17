@@ -18,6 +18,8 @@ class Bootstrap
     const BootStrapDefaultMajorVersion = "5";
     const BootStrapFiveMajorVersion = "5";
 
+    const CONF_BOOTSTRAP_MAJOR_VERSION = "bootstrapMajorVersion";
+
     public static function getDataNamespace()
     {
         $dataToggleNamespace = "";
@@ -33,8 +35,11 @@ class Bootstrap
             require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
             $bootstrapVersion = TplUtility::getBootStrapVersion();
             return $bootstrapVersion[0];
+
         } else {
-            return self::BootStrapDefaultMajorVersion;
+
+            return PluginUtility::getConfValue(self::CONF_BOOTSTRAP_MAJOR_VERSION, self::BootStrapDefaultMajorVersion);
+
         }
 
     }

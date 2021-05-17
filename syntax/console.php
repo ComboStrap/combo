@@ -1,12 +1,8 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
 
-// must be run within Dokuwiki
-use ComboStrap\Prism;
-use ComboStrap\StringUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Prism;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
@@ -164,7 +160,7 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::TAG);
                     Prism::htmlEnter($renderer, $attributes, $this);
                     break;
 

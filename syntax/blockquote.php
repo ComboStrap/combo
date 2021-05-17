@@ -319,11 +319,11 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      * Create the HTML
                      */
                     $blockquoteAttributes = $data[PluginUtility::ATTRIBUTES];
-                    $type = $blockquoteAttributes["type"];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($blockquoteAttributes,self::TAG);
+                    $type = $tagAttributes->getType();
                     switch ($type) {
                         case "typo":
 
-                            $tagAttributes = TagAttributes::createEmpty();
                             $tagAttributes->addClassName("blockquote");
                             $cardTags = [syntax_plugin_combo_card::TAG, syntax_plugin_combo_cardcolumns::TAG];
                             if (in_array($data[PluginUtility::CONTEXT], $cardTags)) {
@@ -349,19 +349,17 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                                         ))));
 
 
-                            $class = "twitter-tweet";
-                            PluginUtility::addClass2Attributes($class, $blockquoteAttributes);
+                            $tagAttributes->addClassName("twitter-tweet");
 
                             $tweetAttributesNames = ["cards", "dnt", "conversation", "align", "width", "theme", "lang"];
                             foreach ($tweetAttributesNames as $tweetAttributesName) {
-                                if (isset($blockquoteAttributes[$tweetAttributesName])) {
-                                    $blockquoteAttributes["data-" . $tweetAttributesName] = $blockquoteAttributes[$tweetAttributesName];
-                                    unset($blockquoteAttributes[$tweetAttributesName]);
+                                if ($tagAttributes->hasComponentAttribute($tweetAttributesName)) {
+                                    $value = $tagAttributes->getValueAndRemove($tweetAttributesName);
+                                    $tagAttributes->addHtmlAttributeValue("data-" . $tweetAttributesName,$value);
                                 }
                             }
 
-                            $inlineBlockQuoteAttributes = PluginUtility::array2HTMLAttributesAsString($blockquoteAttributes);
-                            $renderer->doc .= "<blockquote $inlineBlockQuoteAttributes>" . DOKU_LF;
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("blockquote");
                             $renderer->doc .= "<p>" . DOKU_LF;
                             break;
                         case "card":
@@ -376,7 +374,6 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             /**
                              * Starting the card
                              */
-                            $tagAttributes = TagAttributes::createFromCallStackArray($blockquoteAttributes);
                             $tagAttributes->addClassName("card");
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
                             /**

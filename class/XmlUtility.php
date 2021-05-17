@@ -187,6 +187,14 @@ class XmlUtility
                     $error .= "The attribute (" . $rightAttName . ") of the node (" . $rightAtt->getNodePath() . ") does not exist on the left side\n";
                 }
             }
+        } else {
+            if ($rightNode->hasAttributes()){
+                for ($i = 0; $i < $rightNode->attributes->length; $i++) {
+                    /** @var \DOMAttr $rightAtt */
+                    $rightAtt = $rightNode->attributes->item($i);
+                    $error .= "The attribute (" . $rightAtt->getNodePath() . ") does not exist on the left side\n";
+                }
+            }
         }
         if ($leftNode->nodeName == "#text") {
             $leftNodeValue = trim($leftNode->nodeValue);

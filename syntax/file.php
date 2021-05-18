@@ -168,21 +168,21 @@ class syntax_plugin_combo_file extends DokuWiki_Syntax_Plugin
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::TAG);
-                    Prism::htmlEnter($renderer, $attributes, $this);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+                    Prism::htmlEnter($renderer, $this, $attributes);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $display = $attributes->getValue("display");
-                    if ($display!="none") {
+                    if ($display != "none") {
                         $renderer->doc .= PluginUtility::renderUnmatched($data);
                     }
                     break;
 
                 case DOKU_LEXER_EXIT :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    Prism::htmlExit($renderer,$attributes);
+                    Prism::htmlExit($renderer, $attributes);
                     break;
 
             }

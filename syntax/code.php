@@ -176,7 +176,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CODE_TAG);
-                    Prism::htmlEnter($renderer, $attributes, $this);
+                    Prism::htmlEnter($renderer, $this, $attributes);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

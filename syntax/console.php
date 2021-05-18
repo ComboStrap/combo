@@ -105,7 +105,7 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match,true, syntax_plugin_combo_code::FILE_PATH_KEY);
+                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match, true, syntax_plugin_combo_code::FILE_PATH_KEY);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes
@@ -130,7 +130,7 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
                 $tagAttributes = $tag->getOpeningTag()->getAttributes();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES=>$tagAttributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes
                 );
 
 
@@ -160,21 +160,21 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::TAG);
-                    Prism::htmlEnter($renderer, $attributes, $this);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+                    Prism::htmlEnter($renderer, $this, $attributes);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $display = $attributes->getValue("display");
-                    if ($display!="none") {
+                    if ($display != "none") {
                         $renderer->doc .= PluginUtility::renderUnmatched($data);
                     }
                     break;
 
                 case DOKU_LEXER_EXIT :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    Prism::htmlExit($renderer,$attributes);
+                    Prism::htmlExit($renderer, $attributes);
                     break;
 
             }

@@ -57,7 +57,17 @@ class Call
         "strong_close",
         "strong_open",
         "monospace_open",
-        "monospace_close"
+        "monospace_close",
+        /**
+         * The inline of combo
+         * TODO: Should be deleted when {@link PluginUtility::renderUnmatched()} is not using the array anymore
+         * but is using {@link Call::getDisplay()} instead or any other rewrite
+         */
+        \syntax_plugin_combo_link::TAG,
+        \syntax_plugin_combo_icon::TAG,
+        \syntax_plugin_combo_inote::TAG,
+        \syntax_plugin_combo_button::TAG,
+        \syntax_plugin_combo_tooltip::TAG,
     );
     private $call;
 
@@ -157,7 +167,7 @@ class Call
              */
             $state = $this->getState();
             switch ($state) {
-                case DOKU_LEXER_MATCHED:
+                case DOKU_LEXER_SPECIAL:
                     $tagName = PluginUtility::getTag($this->getContent());
                     break;
                 default:
@@ -453,6 +463,17 @@ class Call
         if (isset($attributes[$key])) {
             return $attributes[$key];
         } else {
+            return null;
+        }
+    }
+
+    public function getPayload()
+    {
+        $mode = $this->call[0];
+        if ($mode == "plugin") {
+            return $this->call[1][1][PluginUtility::PAYLOAD];
+        } else {
+            LogUtility::msg("You can't ask for a payload from a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING, "support");
             return null;
         }
     }

@@ -2,6 +2,7 @@
 
 
 use ComboStrap\PluginUtility;
+use ComboStrap\Prism;
 
 
 /**
@@ -128,7 +129,33 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        // return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+        switch ($state) {
+            case DOKU_LEXER_ENTER:
+            case DOKU_LEXER_MATCHED:
+                return array(
+                    PluginUtility::STATE => $state
+                );
+            case DOKU_LEXER_UNMATCHED:
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $match
+                );
+            case DOKU_LEXER_EXIT:
+                $callStack = \ComboStrap\CallStack::createFromHandler($handler);
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $text = "";
+                while ($callStack->next()) {
+                    $actualCall = $callStack->getActualCall();
+                    if ($actualCall->getState() == DOKU_LEXER_UNMATCHED) {
+                        $text .= $actualCall->getPayload() . "\n";
+                        $callStack->deleteActualCallAndPrevious();
+                    }
+                }
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $text
+                );
+        }
         return array();
 
     }
@@ -146,7 +173,16 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
         if ($format == "xhtml") {
-            $renderer->doc .= PluginUtility::renderUnmatched($data);
+            $state = $data[PluginUtility::STATE];
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                    Prism::htmlEnter($renderer, $this);
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $renderer->doc .= PluginUtility::htmlEncode($data[PluginUtility::PAYLOAD]);
+                    Prism::htmlExit($renderer);
+                    break;
+            }
         }
         return false;
     }

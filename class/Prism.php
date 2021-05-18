@@ -224,8 +224,12 @@ EOD;
      * @param TagAttributes $attributes
      * @param \DokuWiki_Syntax_Plugin $plugin
      */
-    public static function htmlEnter(\Doku_Renderer_xhtml $renderer, $attributes, \DokuWiki_Syntax_Plugin $plugin)
+    public static function htmlEnter(\Doku_Renderer_xhtml $renderer, \DokuWiki_Syntax_Plugin $plugin, $attributes = null)
     {
+
+        if ($attributes == null) {
+            $attributes = TagAttributes::createEmpty();
+        }
 
         /**
          * Display none, no rendering
@@ -247,7 +251,13 @@ EOD;
         /**
          * Add HTML
          */
-        $language = strtolower($attributes->getValue(TagAttributes::TYPE_KEY));
+        $language = $attributes->getValue(TagAttributes::TYPE_KEY);
+        if ($language == null) {
+            $language = "txt";
+        } else {
+            $language = strtolower($language);
+        }
+
         if ($language == "dw") {
             $language = "html";
         }
@@ -286,10 +296,10 @@ EOD;
          * https://combostrap.com/styling/userstyle
          */
         $pluginComponent = $plugin->getPluginComponent();
-        $preAttributes->addClassName($pluginComponent .'-combo-pre');
+        $preAttributes->addClassName($pluginComponent . '-combo-pre');
         $type = $attributes->getType();
-        if (!empty($type)){
-            $preAttributes->addClassName($pluginComponent .'-'.$type.'-combo-pre');
+        if (!empty($type)) {
+            $preAttributes->addClassName($pluginComponent . '-' . $type . '-combo-pre');
         }
 
         // Command line
@@ -352,15 +362,18 @@ EOD;
      * @param Doku_Renderer_xhtml $renderer
      * @param TagAttributes $attributes
      */
-    public static function htmlExit(\Doku_Renderer_xhtml $renderer, $attributes)
+    public static function htmlExit(\Doku_Renderer_xhtml $renderer, $attributes = null)
     {
-        /**
-         * Display none, no rendering
-         */
-        $display = $attributes->getValueAndRemove("display");
-        if ($display != null) {
-            if ($display == "none") {
-                return;
+
+        if ($attributes != null) {
+            /**
+             * Display none, no rendering
+             */
+            $display = $attributes->getValueAndRemove("display");
+            if ($display != null) {
+                if ($display == "none") {
+                    return;
+                }
             }
         }
         $renderer->doc .= '</code>' . DOKU_LF . '</pre>' . DOKU_LF;

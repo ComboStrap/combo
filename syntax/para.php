@@ -272,7 +272,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
                     switch ($nextDisplay) {
                         case Call::BlOCK_DISPLAY:
                         case "last":
-                            $callstack->deleteActualCallAndNext();
+                            $callstack->deleteActualCallAndPrevious();
                             break;
                         case Call::INLINE_DISPLAY:
                             $paragraphIsOpen = true;

@@ -145,7 +145,6 @@ class CallStack
     }
 
 
-
     /**
      * Process the EOL call to the end of stack
      * replacing them with paragraph call
@@ -162,33 +161,39 @@ class CallStack
     public function processEolToEndStack($class = "")
     {
 
-        \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack($this,$class);
+        \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack($this, $class);
 
     }
 
     /**
      * Delete the call where the pointer is
-     * And go to the next position
+     * And go to the previous position
+     *
+     * This function can be used in a next loop
      */
-    public function deleteActualCallAndNext()
+    public function deleteActualCallAndPrevious()
     {
-        $key = key($this->callStack);
-        // unset is
-        unset($this->callStack[$key]);
 
-        // At the end
-        $key = key($this->callStack);
-        if ($key == null) {
-            $this->endWasReached = true;
-        } else {
-            // if there is a eol, we delete it
-            // otherwise we may end up with two eol
-            // and this is an empty paragraph
+        $offset = $this->getActualOffset();
+        array_splice($this->callStack, $offset, 1, []);
+
+        /**
+         * Move to the next element (array splice reset the pointer)
+         * if there is a eol as, we delete it
+         * otherwise we may end up with two eol
+         *  and this is an empty paragraph
+         */
+        $this->moveToOffset($offset);
+        if (!$this->isPointerAtEnd()) {
             if ($this->getActualCall()->getTagName() == 'eol') {
-                $key = key($this->callStack);
-                unset($this->callStack[$key]);
+                array_splice($this->callStack, $offset, 1, []);
             }
         }
+        /**
+         * Move to the previous element
+         */
+        $this->moveToOffset($offset - 1);
+
     }
 
     /**
@@ -371,23 +376,37 @@ class CallStack
 
         } else {
 
-            $actualKey = key($this->callStack);
-            $offset = array_search($actualKey, array_keys($this->callStack), true);
+            $offset = $this->getActualOffset();
             array_splice($this->callStack, $offset, 0, [$call->toCallArray()]);
             // array splice reset the pointer
             // we move it to the actual element (ie the key is offset +1)
-            $this->moveToKey($offset + 1);
+            $this->moveToOffset($offset + 1);
 
         }
     }
 
     /**
-     * Move pointer
+     * Move pointer by offset
+     * @param $offset
+     */
+    private function moveToOffset($offset)
+    {
+        $this->resetPointer();
+        for ($i = 0; $i < $offset; $i++) {
+            $result = $this->next();
+            if ($result === false){
+                break;
+            }
+        }
+    }
+
+    /**
+     * Move pointer by key
      * @param $targetKey
      */
     private function moveToKey($targetKey)
     {
-        reset($this->callStack);
+        $this->resetPointer();
         for ($i = 0; $i < $targetKey; $i++) {
             next($this->callStack);
         }
@@ -445,6 +464,25 @@ class CallStack
     public function &getHandler()
     {
         return $this->handler;
+    }
+
+    /**
+     * Return The offset (not the key):
+     *   * starting at 0 for the first element
+     *   * 1 for the second ...
+     *
+     * @return false|int|string
+     */
+    private function getActualOffset()
+    {
+        $actualKey = key($this->callStack);
+        return array_search($actualKey, array_keys($this->callStack), true);
+    }
+
+    private function resetPointer()
+    {
+        reset($this->callStack);
+        $this->endWasReached=false;
     }
 
 }

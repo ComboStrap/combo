@@ -217,7 +217,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     if ($firstOpeningChild->getTagName() == syntax_plugin_combo_media::TAG) {
                         $imageAttributes = $firstOpeningChild->getAttributes();
                         $openingCall->addAttribute(syntax_plugin_combo_card::IMAGE_ILLUSTRATION_KEY, $imageAttributes);
-                        $callStack->deleteActualCallAndNext();
+                        $callStack->deleteActualCallAndPrevious();
                     }
                 }
 

@@ -87,14 +87,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             return false;
         }
 
-        /**
-         * If preformatted is disable, we does not accept it
-         */
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**
@@ -329,7 +323,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
 
                     $context = $data[PluginUtility::CONTEXT];
-                    syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns($renderer,$context);
+                    syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns($renderer, $context);
 
                     /**
                      * Illustrations
@@ -374,7 +368,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      */
                     $context = $data[PluginUtility::CONTEXT];
                     syntax_plugin_combo_cardcolumns::endColIfBootstrap5AnCardColumns($renderer, $context);
-
 
 
                     break;

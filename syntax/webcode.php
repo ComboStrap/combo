@@ -86,11 +86,9 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**
@@ -210,7 +208,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT:
@@ -241,8 +239,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                              * Only rendering mode
                              * on all node (unmatched also)
                              */
-                            if($renderingMode==self::RENDERING_ONLY_RESULT){
-                                $tag->addAttribute(TagAttributes::DISPLAY,"none");
+                            if ($renderingMode == self::RENDERING_ONLY_RESULT) {
+                                $tag->addAttribute(TagAttributes::DISPLAY, "none");
                             }
 
                             if ($tag->getState() == DOKU_LEXER_ENTER) {
@@ -480,7 +478,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // Credits bar
                         $bar = '<div class="webcode-bar">';
-                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by Webcode",false) . '</div>';
+                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by Webcode", false) . '</div>';
                         $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $this->attributes) . '</div>';
                         $bar .= '</div>';
                         $renderer->doc .= '<div class="webcode">' . $iFrameHtml . $bar . '</div>';

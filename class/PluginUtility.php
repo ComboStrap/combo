@@ -69,40 +69,6 @@ class PluginUtility
      */
     const COMBOSTRAP_NAMESPACE_NAME = "combostrap";
 
-    /**
-     * List of inline components
-     * Used to manage white space before an unmatched string.
-     * The syntax tree of Dokuwiki (ie {@link \Doku_Handler::$calls})
-     * has only data and no class, for now, we create this
-     * lists manually because this is a hassle to retrieve this information from {@link \DokuWiki_Syntax_Plugin::getType()}
-     */
-    const PRESERVE_LEFT_WHITE_SPACE_COMPONENTS = array(
-        /**
-         * The inline of combo
-         */
-        \syntax_plugin_combo_link::TAG,
-        \syntax_plugin_combo_icon::TAG,
-        \syntax_plugin_combo_inote::TAG,
-        \syntax_plugin_combo_button::TAG,
-        \syntax_plugin_combo_tooltip::TAG,
-        /**
-         * Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
-         * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class
-         */
-        "strong",
-        "emphasis",
-        "underline",
-        "monospace",
-        "subscript",
-        "superscript",
-        "deleted",
-        "footnote",
-        /**
-         * Others
-         */
-        "acronym"
-    );
-
     const PARENT = "parent";
     const POSITION = "position";
 
@@ -951,25 +917,6 @@ class PluginUtility
     }
 
 
-    /**
-     * Utility function to disable preformatted
-     * @param $mode
-     * @return bool
-     */
-    public
-    static function disablePreformatted($mode)
-    {
-        if (
-            $mode == 'preformatted'
-            ||
-            $mode == PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
-        ) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     public
     static function getComponentName($tag)
     {
@@ -1024,7 +971,7 @@ class PluginUtility
         if ($display != "none") {
             $payload = $data[self::PAYLOAD];
             $context = $data[self::CONTEXT];
-            if (!in_array($context, self::PRESERVE_LEFT_WHITE_SPACE_COMPONENTS)) {
+            if (!in_array($context, Call::INLINE_DOKUWIKI_COMPONENTS)) {
                 $payload = ltrim($payload);
             }
             return PluginUtility::htmlEncode($payload);

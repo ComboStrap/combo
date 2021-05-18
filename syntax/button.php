@@ -65,11 +65,9 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**

@@ -34,7 +34,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
      */
     const CONTEXT_PREVIEW_ALONE = "preview_alone";
     const CONTEXT_PREVIEW_ALONE_ATTRIBUTES = array(
-        self::SELECTED=>"true",
+        self::SELECTED => "true",
         TagAttributes::ID_KEY => "alone",
         TagAttributes::TYPE_KEY => syntax_plugin_combo_tabs::ENCLOSED_TABS_TYPE
     );
@@ -87,14 +87,8 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
         if ($mode == "header") {
             return false;
         }
-        /**
-         * If preformatted is disable, we does not accept it
-         */
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**

@@ -66,15 +66,12 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
         /**
          * p element are making the layout horrible
          */
-        if ($mode == "eol"){
+        if ($mode == "eol") {
             return false;
         }
 
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**

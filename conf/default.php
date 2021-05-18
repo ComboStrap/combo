@@ -138,7 +138,7 @@ $conf['pageProtectionMode'] = "";
  * Preformatted mode disable
  * See {@link syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE}
  */
-$conf['preformattedEnable'] = 0;
+$conf['preformattedEnable'] = 1;
 
 /**
  * {@link renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES}

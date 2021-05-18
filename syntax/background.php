@@ -95,14 +95,6 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
         return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    public function accepts($mode)
-    {
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
-    }
 
     function getSort()
     {

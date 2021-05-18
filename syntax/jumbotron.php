@@ -59,17 +59,12 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
          * header mode is disable to take over
          * and replace it with {@link syntax_plugin_combo_title}
          */
-        if ($mode == "header"){
+        if ($mode == "header") {
             return false;
         }
-        /**
-         * If preformatted is disable, we does not accept it
-         */
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**
@@ -142,8 +137,8 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
                 $attributes = PluginUtility::getTagAttributes($match);
 
                 $jumbotronClass = "jumbotron";
-                if(Bootstrap::getBootStrapMajorVersion()== Bootstrap::BootStrapFiveMajorVersion){
-                    $jumbotronClass= "bg-light rounded px-4 py-2 m-2";
+                if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFiveMajorVersion) {
+                    $jumbotronClass = "bg-light rounded px-4 py-2 m-2";
                 }
 
                 PluginUtility::addClass2Attributes($jumbotronClass, $attributes);
@@ -156,7 +151,7 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
@@ -193,7 +188,7 @@ class syntax_plugin_combo_jumbotron extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT :
                 case DOKU_LEXER_ENTER:
                     /** @var Doku_Renderer_xhtml $renderer */
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD].DOKU_LF;
+                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

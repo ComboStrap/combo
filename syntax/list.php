@@ -63,14 +63,9 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        /**
-         * If preformatted is disable, we does not accept it
-         */
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
 
@@ -132,7 +127,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 

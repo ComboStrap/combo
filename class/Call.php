@@ -30,6 +30,35 @@ class Call
 
     const INLINE_DISPLAY = "inline";
     const BlOCK_DISPLAY = "block";
+    /**
+     * List of inline components
+     * Used to manage white space before an unmatched string.
+     * The syntax tree of Dokuwiki (ie {@link \Doku_Handler::$calls})
+     * has only data and no class, for now, we create this
+     * lists manually because this is a hassle to retrieve this information from {@link \DokuWiki_Syntax_Plugin::getType()}
+     */
+    const INLINE_DOKUWIKI_COMPONENTS = array(
+        /**
+         * Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
+         * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class
+         */
+        "strong",
+        "emphasis",
+        "underline",
+        "monospace",
+        "subscript",
+        "superscript",
+        "deleted",
+        "footnote",
+        /**
+         * Others
+         */
+        "acronym",
+        "strong_close",
+        "strong_open",
+        "monospace_open",
+        "monospace_close"
+    );
     private $call;
 
     /**
@@ -310,23 +339,25 @@ class Call
                     default:
                         LogUtility::msg("The ptype (" . $pType . ") is unknown.");
                         return null;
-                };
-            } else {
-                switch ($mode) {
-                    case "eol":
-                        /**
-                         * Control character
-                         */
-                        return $mode;
-                    case "strong_close":
-                    case "strong_open":
-                    case "monospace_open":
-                    case "monospace_close":
-                        return Call::INLINE_DISPLAY;
-                    default:
-                        LogUtility::msg("The display of the call with the mode " . $mode . " is unknown");
-                        return null;
                 }
+            } else {
+                if ($mode == "eol") {
+                    /**
+                     * Control character
+                     * We return it as it's used in the
+                     * {@link \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack()}
+                     * to create the paragraph
+                     * This is not a block, nor an inline
+                     */
+                    return $mode;
+                }
+
+                if (in_array($mode, self::INLINE_DOKUWIKI_COMPONENTS)) {
+                    return Call::INLINE_DISPLAY;
+                }
+
+                LogUtility::msg("The display of the call with the mode " . $mode . " is unknown");
+                return null;
 
 
             }
@@ -352,7 +383,7 @@ class Call
     {
         $mode = $this->call[0];
         if ($mode != "eol") {
-            LogUtility::msg("You can't update a " . $mode . " to a space. It should be a eol",LogUtility::LVL_MSG_WARNING,"support");
+            LogUtility::msg("You can't update a " . $mode . " to a space. It should be a eol", LogUtility::LVL_MSG_WARNING, "support");
         } else {
             $this->call[0] = "cdata";
             $this->call[1] = array(
@@ -365,20 +396,20 @@ class Call
     public function addAttribute($key, $value)
     {
         $mode = $this->call[0];
-        if ($mode=="plugin") {
+        if ($mode == "plugin") {
             $this->call[1][1][PluginUtility::ATTRIBUTES][$key] = $value;
         } else {
-            LogUtility::msg("You can't add an attribute to the non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING,"support");
+            LogUtility::msg("You can't add an attribute to the non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING, "support");
         }
     }
 
     public function getContext()
     {
         $mode = $this->call[0];
-        if ($mode=="plugin") {
+        if ($mode == "plugin") {
             return $this->call[1][1][PluginUtility::CONTEXT];
         } else {
-            LogUtility::msg("You can't ask for a context from a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING,"support");
+            LogUtility::msg("You can't ask for a context from a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING, "support");
             return null;
         }
     }
@@ -395,7 +426,7 @@ class Call
     public function __toString()
     {
         $name = $this->key;
-        if (!empty($name)){
+        if (!empty($name)) {
             $name .= " - ";
         }
         $name .= $this->getTagName();

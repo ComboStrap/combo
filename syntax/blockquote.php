@@ -94,15 +94,8 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
             return false;
         }
 
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
 
-        /**
-         * If preformatted is disable, we does not accept it
-         */
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
     }
 
 
@@ -198,7 +191,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $type = $openingTag->getType();
                 $context = $openingTag->getContext();
-                if ($context==null){
+                if ($context == null) {
                     $context = $type;
                 }
                 $attributes = $openingTag->getAttributes();
@@ -319,7 +312,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      * Create the HTML
                      */
                     $blockquoteAttributes = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($blockquoteAttributes,self::TAG);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($blockquoteAttributes, self::TAG);
                     $type = $tagAttributes->getType();
                     switch ($type) {
                         case "typo":
@@ -355,7 +348,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             foreach ($tweetAttributesNames as $tweetAttributesName) {
                                 if ($tagAttributes->hasComponentAttribute($tweetAttributesName)) {
                                     $value = $tagAttributes->getValueAndRemove($tweetAttributesName);
-                                    $tagAttributes->addHtmlAttributeValue("data-" . $tweetAttributesName,$value);
+                                    $tagAttributes->addHtmlAttributeValue("data-" . $tweetAttributesName, $value);
                                 }
                             }
 
@@ -394,7 +387,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                     // Because we can have several unmatched on a line we don't know if
                     // there is a eol
                     StringUtility::addEolCharacterIfNotPresent($renderer->doc);
-                    $tagAttributes =  TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
                     switch ($type) {
                         case "card":
@@ -411,14 +404,12 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                      * Closing the masonry column
                      * (Only if this is a card blockquote)
                      */
-                    if ($type == syntax_plugin_combo_card::TAG){
+                    if ($type == syntax_plugin_combo_card::TAG) {
                         $context = $data[PluginUtility::CONTEXT];
-                        syntax_plugin_combo_cardcolumns::endColIfBootstrap5AnCardColumns($renderer,$context);
+                        syntax_plugin_combo_cardcolumns::endColIfBootstrap5AnCardColumns($renderer, $context);
                     }
 
                     break;
-
-
 
 
             }

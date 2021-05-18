@@ -57,11 +57,9 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        $accept = true;
 
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            $accept = PluginUtility::disablePreformatted($mode);
-        }
+        $accept = syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
 
         // Create P element
         if ($mode == "eol") {
@@ -142,12 +140,12 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES=> $tagAttributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes
                 );
 
             case DOKU_LEXER_UNMATCHED:
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 

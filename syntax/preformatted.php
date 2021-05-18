@@ -9,16 +9,27 @@ use ComboStrap\PluginUtility;
  */
 if (!defined('DOKU_INC')) die();
 
-
+/**
+ *
+ * Preformatted shows a block of text as code via space at the beginning of the line
+ *
+ * It is the same as <a href="https://github.github.com/gfm/#indented-code-blocks">indented-code-blocks</a>
+ * but with 2 characters in place of 4
+ *
+ * This component is used to:
+ *   * showcase preformatted as {@link \ComboStrap\Prism} component
+ *   * disable preformatted mode via the function {@link syntax_plugin_combo_preformatted::disablePreformatted()}
+ * used in other HTML super set syntax component to disable this behavior
+ *
+ *
+ */
 class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG='preformatted';
+    const TAG = 'preformatted';
 
-    /**
-     * Enable or disable preformatted
-     */
-    const CONF_PREFORMATTED_ENABLE = 'preformattedEnable';
+
+    const CONF_PREFORMATTED_ENABLE = "preformattedEnable";
 
     /**
      * Syntax Type.
@@ -47,7 +58,6 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     }
 
 
-
     /**
      * @return array
      * Allow which kind of plugin inside
@@ -67,6 +77,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
         /**
          * Should be less than the preformatted mode
          * which is 20
+         * From {@link \dokuwiki\Parsing\ParserMode\Preformatted::getSort()}
          **/
         return 19;
     }
@@ -75,25 +86,30 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        if (!$this->getConf(self::CONF_PREFORMATTED_ENABLE)) {
+        if ($this->getConf(self::CONF_PREFORMATTED_ENABLE, 1)) {
 
+            /**
+             * From {@link \dokuwiki\Parsing\ParserMode\Preformatted}
+             */
             $patterns = array('\n  (?![\*\-])', '\n\t(?![\*\-])');
             foreach ($patterns as $pattern) {
                 $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
             }
+            $this->Lexer->addPattern('\n  ', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addPattern('\n\t', PluginUtility::getModeForComponent($this->getPluginComponent()));
 
         }
-
 
     }
 
 
     function postConnect()
     {
-        $patterns = array('\n  ', '\n\t');
-        foreach ($patterns as $pattern) {
-            $this->Lexer->addExitPattern($pattern, PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
+        /**
+         * From {@link \dokuwiki\Parsing\ParserMode\Preformatted}
+         */
+        $this->Lexer->addExitPattern('\n', PluginUtility::getModeForComponent($this->getPluginComponent()));
+
     }
 
     /**
@@ -112,7 +128,8 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+        // return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+        return array();
 
     }
 
@@ -128,12 +145,34 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data)
     {
-        if ($format=="xhtml") {
+        if ($format == "xhtml") {
             $renderer->doc .= PluginUtility::renderUnmatched($data);
         }
         return false;
     }
 
+    /**
+     * Utility function to disable preformatted
+     * @param $mode
+     * @return bool
+     */
+    public
+    static function disablePreformatted($mode)
+    {
+        /**
+         * Disable {@link \dokuwiki\Parsing\ParserMode\Preformatted}
+         * and this syntax
+         */
+        if (
+            $mode == 'preformatted'
+            ||
+            $mode == PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
+        ) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
 }
 

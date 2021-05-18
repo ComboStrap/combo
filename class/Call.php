@@ -160,42 +160,31 @@ class Call
 
             /**
              * This is a plugin node
-             *
-             * The name of the tag is the last part
-             * of the class
-             * To make it unique
              */
-            $state = $this->getState();
-            switch ($state) {
-                case DOKU_LEXER_SPECIAL:
-                    $tagName = PluginUtility::getTag($this->getContent());
-                    break;
-                default:
-
-                    $pluginDokuData = $this->call[1];
-                    $component = $pluginDokuData[0];
-                    if (!is_array($component)) {
-                        /**
-                         * Tag name from class
-                         */
-                        $componentNames = explode("_", $component);
-                        /**
-                         * To take care of
-                         * PHP Warning:  sizeof(): Parameter must be an array or an object that implements Countable
-                         * in lib/plugins/combo/class/Tag.php on line 314
-                         */
-                        if (is_array($componentNames)) {
-                            $tagName = $componentNames[sizeof($componentNames) - 1];
-                        } else {
-                            $tagName = $component;
-                        }
-                    } else {
-                        // To resolve: explode() expects parameter 2 to be string, array given
-                        LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . PluginUtility::getPageId(), LogUtility::LVL_MSG_ERROR);
-                        $tagName = "";
-                    }
-
+            $pluginDokuData = $this->call[1];
+            $component = $pluginDokuData[0];
+            if (!is_array($component)) {
+                /**
+                 * Tag name from class
+                 */
+                $componentNames = explode("_", $component);
+                /**
+                 * To take care of
+                 * PHP Warning:  sizeof(): Parameter must be an array or an object that implements Countable
+                 * in lib/plugins/combo/class/Tag.php on line 314
+                 */
+                if (is_array($componentNames)) {
+                    $tagName = $componentNames[sizeof($componentNames) - 1];
+                } else {
+                    $tagName = $component;
+                }
+            } else {
+                // To resolve: explode() expects parameter 2 to be string, array given
+                LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . PluginUtility::getPageId(), LogUtility::LVL_MSG_ERROR);
+                $tagName = "";
             }
+
+
         }
         return $tagName;
 
@@ -252,28 +241,21 @@ class Call
     /**
      * @return mixed the matched content from the {@link DokuWiki_Syntax_Plugin::handle}
      */
-    public function getContent()
+    public function getMatchedContent()
     {
         $caller = $this->call[0];
         switch ($caller) {
             case "plugin":
-                return $this->getMatch();
+                return $this->call[1][3];
             case "internallink":
                 return '[[' . $this->call[1][0] . '|' . $this->call[1][1] . ']]';
             case "eol":
                 return DOKU_LF;
             default:
-                return "Unknown tag content for caller ($caller)";
+                return null;
         }
     }
 
-    /**
-     * @return mixed the text matched
-     */
-    public function getMatch()
-    {
-        return $this->call[1][3];
-    }
 
     public function getAttributes()
     {

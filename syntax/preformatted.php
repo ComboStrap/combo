@@ -1,8 +1,10 @@
 <?php
 
 
+use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
+use ComboStrap\TagAttributes;
 
 
 /**
@@ -141,12 +143,12 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
                     PluginUtility::PAYLOAD => $match
                 );
             case DOKU_LEXER_EXIT:
-                $callStack = \ComboStrap\CallStack::createFromHandler($handler);
+                $callStack = CallStack::createFromHandler($handler);
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 $text = "";
                 while ($callStack->next()) {
                     $actualCall = $callStack->getActualCall();
-                    if ($actualCall->getState() == DOKU_LEXER_UNMATCHED) {
+                    if ($actualCall->getState() == DOKU_LEXER_UNMATCHED && $actualCall->getTagName() == self::TAG) {
                         $text .= $actualCall->getPayload() . "\n";
                         $callStack->deleteActualCallAndPrevious();
                     }
@@ -173,10 +175,14 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
         if ($format == "xhtml") {
+            /**
+             * @var Doku_Renderer_xhtml $renderer
+             */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                    Prism::htmlEnter($renderer, $this);
+                    $tagAttributes =  TagAttributes::createEmpty(self::TAG);
+                    Prism::htmlEnter($renderer, $this, $tagAttributes);
                     break;
                 case DOKU_LEXER_EXIT:
                     $renderer->doc .= PluginUtility::htmlEncode($data[PluginUtility::PAYLOAD]);

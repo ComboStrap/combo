@@ -73,7 +73,7 @@ class Prism
     public static function addSnippet($theme)
     {
         $BASE_PRISM_CDN = self::BASE_PRISM_CDN;
-        $SCRIPT_ID = "prism";
+
         if ($theme == self::PRISM_THEME) {
             $themeStyleSheet = "prism.min.css";
         } else {
@@ -83,7 +83,6 @@ class Prism
 
         $tags = array();
         $tags['script'][] = array("src" => "$BASE_PRISM_CDN/components/prism-core.min.js");
-        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/autoloader/prism-autoloader.min.js");
         $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js");
         // https://prismjs.com/plugins/normalize-whitespace/
         $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js");
@@ -100,7 +99,7 @@ class Prism
             "crossorigin" => "anonymous"
         );
 
-        PluginUtility::getSnippetManager()->upsertTagsForBar($SCRIPT_ID, $tags);
+        PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_NAME, $tags);
 
         $javascriptCode = <<<EOD
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -214,7 +213,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 });
 EOD;
-        PluginUtility::getSnippetManager()->upsertJavascriptForBar($SCRIPT_ID, $javascriptCode);
+        PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::SNIPPET_NAME, $javascriptCode);
 
     }
 
@@ -242,20 +241,24 @@ EOD;
         }
 
         $theme = $plugin->getConf(Prism::CONF_PRISM_THEME);
+
         /**
          * Add prism
          */
         Prism::addSnippet($theme);
-
 
         /**
          * Add HTML
          */
         $language = $attributes->getValue(TagAttributes::TYPE_KEY);
         if ($language == null) {
+            // Prism does not have any default language
+            // There is a bug has it tried to download the txt javascript
+            // but without language, there is no styling
             $language = "txt";
         } else {
             $language = strtolower($language);
+            Prism::addAutoloaderSnippet();
         }
 
         if ($language == "dw") {
@@ -281,6 +284,12 @@ EOD;
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);
         $attributes->addClassName('language-' . $language);
 
+
+
+
+        /**
+         * Line numbers
+         */
         if ($attributes->hasComponentAttribute("line-numbers")) {
             $attributes->removeComponentAttribute("line-numbers");
             $attributes->addClassName('line-numbers');
@@ -342,7 +351,8 @@ EOD;
             $preAttributes->addHtmlAttributeValue('data-src', $fileSrc);
             $preAttributes->addHtmlAttributeValue('data-download-link-label', "Download " . $fileSrc);
         } else {
-            $preAttributes->addHtmlAttributeValue('data-src', "file." . $language);
+            $fileName = "file.". $language;
+            $preAttributes->addHtmlAttributeValue('data-src', $fileName);
         }
         $htmlCode = $preAttributes->toHtmlEnterTag("pre") . DOKU_LF;
 
@@ -377,6 +387,18 @@ EOD;
             }
         }
         $renderer->doc .= '</code>' . DOKU_LF . '</pre>' . DOKU_LF;
+    }
+
+    /**
+     * The autoloader try to download all language
+     * Even the one such as txt that does not exist
+     * This function was created to add it conditionally
+     */
+    private static function addAutoloaderSnippet()
+    {
+        $tags = [];
+        $tags['script'][] = array("src" => self::BASE_PRISM_CDN."/plugins/autoloader/prism-autoloader.min.js");
+        PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_NAME."-autoloader", $tags);
     }
 
 

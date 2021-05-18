@@ -147,9 +147,13 @@ class TagAttributes
     }
 
 
-    public static function createEmpty()
+    public static function createEmpty($logicalTag = "")
     {
-        return new TagAttributes();
+        if ($logicalTag!=="") {
+            return new TagAttributes([], $logicalTag);
+        } else {
+            return new TagAttributes();
+        }
     }
 
     /**

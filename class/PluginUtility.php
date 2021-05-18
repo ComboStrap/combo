@@ -60,7 +60,6 @@ class PluginUtility
     // The context is generally the parent tag but it may be also the grandfather.
     // It permits to determine the HTML that is outputted
     const CONTEXT = 'context';
-    const CONTENT = 'content';
     const TAG = "tag";
 
     /**

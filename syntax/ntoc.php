@@ -65,7 +65,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -85,6 +85,11 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
     function getSort()
     {
         return 201;
+    }
+
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
 
@@ -143,13 +148,13 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
-                    PluginUtility::CONTENT => PluginUtility::getTagContent($match),
+                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
                     PluginUtility::TAG => PluginUtility::getTag($match)
                 );
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $callStack = \ComboStrap\CallStack::createFromHandler($handler);
 
                 /**
                  * The attributes to send to the render
@@ -159,42 +164,46 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                 /**
                  * Get the opening tag
                  */
-                $openingTag = $tag->getOpeningTag();
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
 
-                /**
-                 * Pattern for a page
-                 */
-                $pageTag = $openingTag->getDescendant(self::PAGE_ITEM);
-                $pageTemplate = null;
-                if ($pageTag != null) {
-                    $pageTemplate = $pageTag->getData()[PluginUtility::CONTENT];
+                $found = false;
+                while($callStack->next()){
+                    $actualCall = $callStack->getActualCall();
+                    if ($actualCall->getTagName()==self::TAG) {
+                        $tagName = PluginUtility::getTag($actualCall->getMatchedContent());
+                        switch ($tagName) {
+                            case self::PAGE_ITEM:
+                                /**
+                                 * Pattern for a page
+                                 */
+                                $pageTemplate = $actualCall->getPayload();
+                                $attributes[self::PAGE_TEMPLATE_KEY] = $pageTemplate;
+                                $found = true;
+                                break;
+                            case self::NAMESPACE_ITEM:
+                                /**
+                                 * Pattern for a ns
+                                 */
+                                $nsTemplate = $actualCall->getPayload();
+                                $attributes[self::NS_TEMPLATE_KEY] = $nsTemplate;
+                                $found = true;
+                                break;
+                            case self::INDEX_ITEM:
+                                /**
+                                 * Pattern for a header
+                                 */
+                                $headerTemplate = $actualCall->getPayload();
+                                $headerAttributes = $actualCall->getAttributes();
+                                $attributes[self::INDEX_TEMPLATE_KEY] = $headerTemplate;
+                                $attributes[self::INDEX_ATTRIBUTES_KEY] = $headerAttributes;
+                                $found = true;
+                                break;
+
+                        }
+                    }
                 }
-                $attributes[self::PAGE_TEMPLATE_KEY] = $pageTemplate;
 
-                /**
-                 * Pattern for a ns
-                 */
-                $nsTag = $openingTag->getDescendant(self::NAMESPACE_ITEM);
-                $nsTemplate = null;
-                if ($nsTag != null) {
-                    $nsTemplate = $nsTag->getData()[PluginUtility::CONTENT];
-                }
-                $attributes[self::NS_TEMPLATE_KEY] = $nsTemplate;
-
-                /**
-                 * Pattern for a header
-                 */
-                $headerTag = $openingTag->getDescendant(self::INDEX_ITEM);
-                $headerTemplate = null;
-                $headerAttributes = array();
-                if ($headerTag != null) {
-                    $headerTemplate = $headerTag->getData()[PluginUtility::CONTENT];
-                    $headerAttributes = $headerTag->getAttributes();
-                }
-                $attributes[self::INDEX_TEMPLATE_KEY] = $headerTemplate;
-                $attributes[self::INDEX_ATTRIBUTES_KEY] = $headerAttributes;
-
-                if ($pageTemplate == null && $nsTemplate == null && $headerTemplate == null) {
+                if (!$found) {
                     LogUtility::msg("There should be at minimum a `" . self::INDEX_ITEM . "`, `" . self::NAMESPACE_ITEM . "` or a `" . self::INDEX_ITEM . "` defined", LogUtility::LVL_MSG_ERROR, self::CANONICAL_NTOC);
                 }
 

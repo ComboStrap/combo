@@ -1,5 +1,7 @@
 <?php
 /**
+ *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * The config manager is parsing this fucking file because they want
  * to be able to use 60*60*24 ???? :(
  *

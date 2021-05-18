@@ -44,7 +44,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'formatting';
+        return 'container';
     }
 
     /**
@@ -59,7 +59,10 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        /**
+         * No paragraph between
+         */
+        return 'block';
     }
 
     /**

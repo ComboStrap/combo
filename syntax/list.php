@@ -44,7 +44,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -60,6 +60,19 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
+
+    public function accepts($mode)
+    {
+        /**
+         * If preformatted is disable, we does not accept it
+         */
+        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
+            return PluginUtility::disablePreformatted($mode);
+        } else {
+            return true;
+        }
+    }
+
 
     function getSort()
     {

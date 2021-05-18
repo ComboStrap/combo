@@ -74,10 +74,10 @@ abstract class InternalMediaLink extends DokuPath
      * Default image linking value
      */
     const CONF_DEFAULT_LINKING = "defaultImageLinking";
-    const CONF_LINKING_DIRECT_VALUE = 'direct';
-    const CONF_LINKING_NOLINK_VALUE = 'nolink';
-    const CONF_LINKING_DETAILS_VALUE = 'details';
-    const CONF_LINKING_LINKONLY_VALUE = "linkonly";
+    const LINKING_DIRECT_VALUE = 'direct';
+    const LINKING_NOLINK_VALUE = 'nolink';
+    const LINKING_DETAILS_VALUE = 'details';
+    const LINKING_LINKONLY_VALUE = "linkonly";
     const SRC_KEY = "src";
 
     /**
@@ -291,7 +291,7 @@ abstract class InternalMediaLink extends DokuPath
         }
 
         if (!$linkingAttributeFound) {
-            $attributes[TagAttributes::LINKING_KEY] = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::CONF_LINKING_DIRECT_VALUE);
+            $attributes[TagAttributes::LINKING_KEY] = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
         }
         return self::createFromCallStackArray($attributes);
     }
@@ -483,7 +483,7 @@ abstract class InternalMediaLink extends DokuPath
          */
         $linking = $this->tagAttributes->getValue(TagAttributes::LINKING_KEY);
         switch ($linking) {
-            case self::CONF_LINKING_LINKONLY_VALUE: // show only a url
+            case self::LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(
                     $this->getId(),
                     array(
@@ -498,10 +498,10 @@ abstract class InternalMediaLink extends DokuPath
                     $title = $this->getBaseName();
                 }
                 return $imageLink->toHtmlEnterTag("a") . $title . "</a>";
-            case self::CONF_LINKING_NOLINK_VALUE:
+            case self::LINKING_NOLINK_VALUE:
                 return $this->renderMediaTag();
             default:
-            case self::CONF_LINKING_DIRECT_VALUE:
+            case self::LINKING_DIRECT_VALUE:
                 //directly to the image
                 $src = ml(
                     $this->getId(),
@@ -517,7 +517,7 @@ abstract class InternalMediaLink extends DokuPath
                     $this->renderMediaTag() .
                     "</a>";
 
-            case self::CONF_LINKING_DETAILS_VALUE:
+            case self::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
                 $src = ml(
                     $this->getId(),

@@ -277,9 +277,9 @@ $conf["rasterImageLazyLoadingEnable"] = 1;
 $conf["responsiveImageMargin"] = "20px";
 
 /**
- * {@link \ComboStrap\RasterImageLink::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION}
+ * {@link \ComboStrap\RasterImageLink::CONF_RETINA_SUPPORT_ENABLED}
  */
-$conf["responsiveImageDpiCorrection"] = 1;
+$conf["retinaRasterImageEnable"] = 0;
 
 /**
  * {@link \ComboStrap\LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR

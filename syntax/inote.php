@@ -94,7 +94,7 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
                 $attributes = PluginUtility::getTagAttributes($match);
                 $defaultConfValue = $this->getConf(self::CONF_DEFAULT_ATTRIBUTES_KEY);
-                $defaultAttributes = PluginUtility::getTagAttributes($defaultConfValue);
+                $defaultAttributes = PluginUtility::parseAttributes($defaultConfValue);
                 $attributes = PluginUtility::mergeAttributes($attributes, $defaultAttributes);
                 if (!isset($attributes[TagAttributes::TYPE_KEY])) {
                     $attributes[TagAttributes::TYPE_KEY] = "info";
@@ -159,7 +159,10 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
                     if ($type != "tip") {
                         $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                         if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
-                            $tagAttributes->addClassName("bg-" . $type);
+                            /**
+                             * We are using
+                             */
+                            $tagAttributes->addClassName("alert-" . $type);
                         } else {
                             $tagAttributes->addClassName("badge-" . $type);
                         }

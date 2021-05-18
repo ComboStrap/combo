@@ -229,7 +229,7 @@ $meta[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = array('string');
  */
 $meta[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = array('onoff');
 $meta[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = array('string');
-$meta[RasterImageLink::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION] = array('onoff');
+$meta[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = array('onoff');
 
 /**
  * Lazy loading
@@ -245,10 +245,10 @@ $meta[InternalMediaLink::CONF_IMAGE_ENABLE] = array('onoff');
  * Internal media default linking
  */
 $meta[InternalMediaLink::CONF_DEFAULT_LINKING] = array('multichoice', '_choices' => array(
-    InternalMediaLink::CONF_LINKING_DIRECT_VALUE,
-    InternalMediaLink::CONF_LINKING_DETAILS_VALUE,
-    InternalMediaLink::CONF_LINKING_LINKONLY_VALUE,
-    InternalMediaLink::CONF_LINKING_NOLINK_VALUE,
+    InternalMediaLink::LINKING_DIRECT_VALUE,
+    InternalMediaLink::LINKING_DETAILS_VALUE,
+    InternalMediaLink::LINKING_LINKONLY_VALUE,
+    InternalMediaLink::LINKING_NOLINK_VALUE,
 ));
 
 /**

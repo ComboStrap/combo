@@ -3,7 +3,6 @@
 
 use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
-use ComboStrap\RasterImageLink;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 

@@ -371,12 +371,7 @@ class TagAttributes
             /**
              * Add the type class used for CSS styling
              */
-            if (!empty($this->tag)) {
-                $this->addClassName($this->tag . "-combo");
-                if (!empty($this->getType())) {
-                    $this->addClassName($this->tag . "-" . $this->getType() . "-combo");
-                }
-            }
+            StyleUtility::addStylingClass($this);
 
             /**
              * Create a non-sorted temporary html attributes array

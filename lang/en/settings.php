@@ -185,7 +185,7 @@ $lang[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getUrl(S
  * Lazy load image
  */
 $lang[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the raster image only when they become visible");
-$lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Responsive image sizing: If unchecked, the size DPI correction will not be applied");
+$lang[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Retina Support: If checked, the images downloaded will match the display capabilities (the size DPI correction will not be applied)");
 $lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Responsive image sizing: The image margin applied to screen size");
 
 /**

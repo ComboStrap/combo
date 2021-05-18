@@ -30,7 +30,7 @@ class RasterImageLink extends InternalMediaLink
     const RESPONSIVE_CLASS = "img-fluid";
 
     const CONF_RESPONSIVE_IMAGE_MARGIN = "responsiveImageMargin";
-    const CONF_RESPONSIVE_IMAGE_DPI_CORRECTION = "responsiveImageDpiCorrection";
+    const CONF_RETINA_SUPPORT_ENABLED = "retinaRasterImageEnable";
     const LAZY_CLASS = "combo-lazy-raster";
 
     const BREAKPOINTS =
@@ -533,7 +533,11 @@ class RasterImageLink extends InternalMediaLink
     private
     function getWithDpiCorrection()
     {
-        return PluginUtility::getConfValue(self::CONF_RESPONSIVE_IMAGE_DPI_CORRECTION,0);
+        /**
+         * Support for retina means no DPI correction
+         */
+        $retinaEnabled = PluginUtility::getConfValue(self::CONF_RETINA_SUPPORT_ENABLED, 0);
+        return !$retinaEnabled;
     }
 
 

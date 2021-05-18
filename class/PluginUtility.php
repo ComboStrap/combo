@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_preformatted;
 
 /**
@@ -35,6 +36,7 @@ require_once(__DIR__ . '/Shadow.php');
 require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Sqlite.php');
 require_once(__DIR__ . '/StringUtility.php');
+require_once(__DIR__ . '/StyleUtility.php');
 require_once(__DIR__ . '/TagAttributes.php');
 require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/XmlUtility.php');
@@ -243,9 +245,15 @@ class PluginUtility
     /**
      *
      * Parse the attributes part of a match
+     *
      * Example:
      *   line-numbers="value"
      *   line-numbers='value'
+     *
+     * This value may be in:
+     *   * configuration value
+     *   * as well as in the match of a {@link SyntaxPlugin}
+     *
      * @param $string
      * @return array
      *

@@ -5,10 +5,13 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
+use ComboStrap\CallStack;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
-use ComboStrap\TitleUtility;
+use ComboStrap\TagAttributes;
+
 
 require_once(__DIR__ . '/../class/HeaderUtility.php');
 
@@ -133,9 +136,23 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $context = $openingTag->getContext();
+
+                /**
+                 * An image in a label should have no link (ie no anchor)
+                 * because a anchor is used for navigation
+                 */
+                while ($callStack->next()) {
+                    $actualCall = $callStack->getActualCall();
+                    if ($actualCall->getTagName() == syntax_plugin_combo_media::TAG) {
+                        $actualCall->addAttribute(TagAttributes::LINKING_KEY, InternalMediaLink::LINKING_NOLINK_VALUE);
+                    }
+                }
+
+                $callStack->closeAndResetPointer();
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::CONTEXT => $context,

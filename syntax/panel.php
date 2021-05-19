@@ -34,7 +34,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
      */
     const CONTEXT_PREVIEW_ALONE = "preview_alone";
     const CONTEXT_PREVIEW_ALONE_ATTRIBUTES = array(
-        self::SELECTED => "true",
+        self::SELECTED => true,
         TagAttributes::ID_KEY => "alone",
         TagAttributes::TYPE_KEY => syntax_plugin_combo_tabs::ENCLOSED_TABS_TYPE
     );
@@ -48,6 +48,27 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     private $tabCounter = 0;
 
     private $sectionCounter = 0;
+
+    static function getSelectedValue(&$attributes)
+    {
+
+        if (isset($attributes[syntax_plugin_combo_panel::SELECTED])) {
+            /**
+             * Value may be false/true
+             */
+            $value = $attributes[syntax_plugin_combo_panel::SELECTED];
+            unset($attributes[syntax_plugin_combo_panel::SELECTED]);
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+
+        }
+        if (isset($attributes[TagAttributes::TYPE_KEY])) {
+            if (strtolower($attributes[TagAttributes::TYPE_KEY]) === "selected") {
+                return true;
+            }
+        }
+        return false;
+
+    }
 
     private static function getTags()
     {
@@ -359,7 +380,8 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
 
                             PluginUtility::addClass2Attributes("tab-pane fade", $attributes);
 
-                            if ($attributes[self::SELECTED]) {
+                            $selected = self::getSelectedValue($attributes);
+                            if ($selected) {
                                 PluginUtility::addClass2Attributes("show active", $attributes);
                             }
                             unset($attributes[self::SELECTED]);

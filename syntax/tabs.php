@@ -10,6 +10,7 @@ use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -87,6 +88,15 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
     public static function openTabPanelsElement(&$attributes)
     {
         PluginUtility::addClass2Attributes("tab-content", $attributes);
+
+        /**
+         * In preview with only one panel
+         */
+        global $ACT;
+        if($ACT=="preview"&& isset($attributes["selected"])){
+            unset($attributes["selected"]);
+        }
+
         $html = "<div " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">" . DOKU_LF;
         $type = self::getComponentType($attributes);
         switch ($type) {
@@ -130,12 +140,9 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
          * Check all attributes for the link (not the li)
          * and delete them
          */
-        $active = "false";
+        $active = syntax_plugin_combo_panel::getSelectedValue($attributes);
         $panel = "";
-        if (isset($attributes[syntax_plugin_combo_panel::SELECTED])) {
-            $active = $attributes[syntax_plugin_combo_panel::SELECTED];
-            unset($attributes[syntax_plugin_combo_panel::SELECTED]);
-        }
+
 
         $panelAttrName = "panel";
         if (isset($attributes[$panelAttrName])) {
@@ -161,7 +168,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
          */
         $htmlAttributes = array();
         PluginUtility::addClass2Attributes("nav-link", $htmlAttributes);
-        if ($active === "true") {
+        if ($active === true) {
             PluginUtility::addClass2Attributes("active", $htmlAttributes);
             $htmlAttributes["aria-selected"] = "true";
         }

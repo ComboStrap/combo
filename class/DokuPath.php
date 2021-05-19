@@ -10,7 +10,7 @@ class DokuPath extends File
     const PAGE_TYPE = "page";
     const UNKNOWN_TYPE = "page";
     private $id;
-    private $type;
+
     /**
      * @var string
      */
@@ -32,8 +32,14 @@ class DokuPath extends File
      */
     protected function __construct($id, $type, $rev = null)
     {
+
+        /**
+         * The id of image should starts with the root `:`
+         * otherwise the image does not exist
+         * It should then not be {@link cleanID()}
+         */
         $this->id = $id;
-        $this->type = $type;
+
 
         /**
          * ACL check does not care about the type of id
@@ -82,7 +88,7 @@ class DokuPath extends File
         return new DokuPath($id, DokuPath::PAGE_TYPE);
     }
 
-    public static function createMediaPathFromId($id, $rev= '')
+    public static function createMediaPathFromId($id, $rev = '')
     {
         return new DokuPath($id, DokuPath::MEDIA_TYPE, $rev);
     }
@@ -127,11 +133,15 @@ class DokuPath extends File
     }
 
     /**
-     * @return string - the id (fully qualified and normalized)
+     * @return string - the id (normalized)
+     *
+     * for the fully qualified, see {@link DokuPath::getAbsoluteId()}
      */
     public function getId()
     {
+
         return cleanID($this->id);
+
     }
 
     /**
@@ -145,9 +155,43 @@ class DokuPath extends File
      *
      * @return string|null
      */
-    public function getRevision(){
+    public function getRevision()
+    {
         return $this->rev;
     }
 
+
+    /**
+     * The absolute id is the id used in the index
+     * For whatever reason, it does not return ':' as root
+     * @return string
+     */
+    public function getAbsoluteId()
+    {
+
+        global $ID;
+        $id = $this->getId();
+        if ($this->finalType == self::MEDIA_TYPE) {
+            resolve_mediaid(getNS($ID), $id, $exists);
+        } else {
+            resolve_pageid(getNS($ID), $id, $exists);
+        }
+        return $id;
+
+    }
+
+    /**
+     * @return array the pages where the media is used
+     *   * backlinks for page
+     *   * page with media for media
+     */
+    public function getRelatedPages(){
+        $absoluteId = $this->getAbsoluteId();
+        if ($this->finalType==self::MEDIA_TYPE) {
+            return idx_get_indexer()->lookupKey('relation_media', $absoluteId);
+        } else {
+            return idx_get_indexer()->lookupKey('relation_references', $absoluteId);
+        }
+    }
 
 }

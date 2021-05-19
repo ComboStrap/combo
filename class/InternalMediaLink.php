@@ -86,7 +86,7 @@ abstract class InternalMediaLink extends DokuPath
     const DOKUWIKI_QUERY_MEDIA_PROPERTY = ["w", "h"];
 
 
-    private $id;
+
 
     private $lazyLoad = null;
 
@@ -112,15 +112,6 @@ abstract class InternalMediaLink extends DokuPath
     protected function __construct($id, $tagAttributes = null, $rev = null)
     {
 
-        /**
-         * The id of image should starts with the root `:`
-         * otherwise the image does not exist
-         * It should then not be {@link cleanID()}
-         */
-        $this->id = cleanID($id);
-        if ($id != $this->id) {
-            LogUtility::msg("Internal error: The media id value ($id) is not conform and should be ($this->id)", LogUtility::LVL_MSG_ERROR, "support");
-        }
 
         parent::__construct($id, DokuPath::MEDIA_TYPE, $rev);
 
@@ -185,7 +176,11 @@ abstract class InternalMediaLink extends DokuPath
     public static function createFromCallStackArray(&$attributes, $rev = null)
     {
 
-        $src = cleanID($attributes['src']);
+        /**
+         * Media id are not cleaned
+         * They are always absolute ?
+         */
+        $src = $attributes['src'];
         unset($attributes["src"]);
 
         /**
@@ -312,7 +307,7 @@ abstract class InternalMediaLink extends DokuPath
      * @param $id
      * @param TagAttributes $tagAttributes
      * @param string $rev
-     * @return RasterImageLink|InternalMediaLink
+     * @return InternalMediaLink
      */
     public static function createMediaLinkFromId($id, $rev = null, $tagAttributes = null)
     {
@@ -398,13 +393,10 @@ abstract class InternalMediaLink extends DokuPath
         if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
              $descriptionPart = "|".$this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
         }
-        return '{{' . $this->id . $descriptionPart . '}}';
+        return '{{:' . $this->getAbsoluteId() . $descriptionPart . '}}';
     }
 
-    public function getId()
-    {
-        return $this->id;
-    }
+
 
     public static function isInternalMediaSyntax($text)
     {
@@ -544,6 +536,8 @@ abstract class InternalMediaLink extends DokuPath
     public abstract function renderMediaTag();
 
     public abstract function getAbsoluteUrl();
+
+
 
 
 }

@@ -488,6 +488,7 @@ class TagAttributes
      */
     public function getValue($attributeName, $default = null)
     {
+        $attributeName = strtolower($attributeName);
         if ($this->hasComponentAttribute($attributeName)) {
             return $this->componentAttributes[$attributeName];
         } else {

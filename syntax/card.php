@@ -217,7 +217,15 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     if ($firstOpeningChild->getTagName() == syntax_plugin_combo_media::TAG) {
                         $imageAttributes = $firstOpeningChild->getAttributes();
                         $openingCall->addAttribute(syntax_plugin_combo_card::IMAGE_ILLUSTRATION_KEY, $imageAttributes);
+                        /**
+                         * We delete the image to not create
+                         * a paragraph (when the {@link syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack() process is kicking)
+                         * as an image is a inline component
+                         * We add it in the index in the render
+                         */
                         $callStack->deleteActualCallAndPrevious();
+
+
                     }
                 }
 
@@ -383,6 +391,21 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             }
 
+            return true;
+
+        } else if ($format == 'metadata') {
+
+            /** @var Doku_Renderer_metadata $renderer */
+            $state = $data[PluginUtility::STATE];
+            if ($state==DOKU_LEXER_ENTER) {
+
+                $attributes = $data[PluginUtility::ATTRIBUTES];
+                $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+                $imageIllustration = $tagAttributes->getValueAndRemove(self::IMAGE_ILLUSTRATION_KEY, array());
+                if (sizeof($imageIllustration) > 0) {
+                    syntax_plugin_combo_media::registerImageMeta($imageIllustration, $renderer);
+                }
+            }
             return true;
         }
         return false;

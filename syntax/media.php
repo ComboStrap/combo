@@ -33,6 +33,12 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     const IS_FIRST_IMAGE_KEY = "isFirstImage";
 
+    /**
+     * If the image is a card illustration it's not printed
+     * The call is kept to update the index
+     */
+    const IS_CARD_ILLUSTRATION = "isCardIllustration";
+
 
     function getType()
     {
@@ -131,8 +137,6 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 /** @var Doku_Renderer_xhtml $renderer */
-                $isFirstImage = $data[self::IS_FIRST_IMAGE_KEY];
-                $context = $data[PluginUtility::CONTEXT];
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $media = InternalMediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                 if ($media->isImage()) {
@@ -164,19 +168,28 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * Keep track of the metadata
                  * @var Doku_Renderer_metadata $renderer
                  */
-                $src = $attributes['src'];
-                $title = $attributes['title'];
-                $align = $attributes['align'];
-                $width = $attributes['width'];
-                $height = $attributes['height'];
-                $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
-                $linking = $attributes['linking'];
-                $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
+                self::registerImageMeta($attributes, $renderer);
                 break;
 
         }
         // unsupported $mode
         return false;
+    }
+
+    /**
+     * @param array $attributes
+     * @param Doku_Renderer_metadata $renderer
+     */
+    static public function registerImageMeta($attributes, $renderer)
+    {
+        $src = $attributes['src'];
+        $title = $attributes['title'];
+        $align = $attributes['align'];
+        $width = $attributes['width'];
+        $height = $attributes['height'];
+        $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
+        $linking = $attributes['linking'];
+        $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
     }
 
 

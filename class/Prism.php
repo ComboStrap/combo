@@ -358,8 +358,10 @@ EOD;
 
         /**
          * Code element
+         * Don't put a fucking EOL after it
+         * Otherwise it fucked up the output as the text below a code tag is printed
          */
-        $htmlCode .= $attributes->toHtmlEnterTag('code') . DOKU_LF;
+        $htmlCode .= $attributes->toHtmlEnterTag('code');
 
         /**
          * Return

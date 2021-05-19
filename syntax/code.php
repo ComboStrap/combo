@@ -180,10 +180,15 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    // Delete the eol at the beginning and end
-                    // otherwise we get a big block
-                    $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
-                    $renderer->doc .= PluginUtility::htmlEncode($payload);
+
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $display = $attributes->getValue("display");
+                    if ($display != "none") {
+                        // Delete the eol at the beginning and end
+                        // otherwise we get a big block
+                        $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
+                        $renderer->doc .= PluginUtility::htmlEncode($payload);
+                    }
                     break;
 
                 case DOKU_LEXER_EXIT :

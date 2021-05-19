@@ -103,6 +103,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $parentTag = "";
                 if (!empty($parent)) {
                     $parentTag = $parent->getName();
+                    if ($parentTag == syntax_plugin_combo_link::TAG) {
+                        /**
+                         * The image is in a link, we don't want another link
+                         * to the image
+                         */
+                        $attributes[TagAttributes::LINKING_KEY] = InternalMediaLink::LINKING_NOLINK_VALUE;
+                    }
                 }
                 $isFirstSibling = $tag->isFirstMeaningFullSibling();
                 return array(

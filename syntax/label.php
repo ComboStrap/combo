@@ -54,7 +54,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     function getAllowedTypes()

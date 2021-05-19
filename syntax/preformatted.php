@@ -223,7 +223,9 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * Utility function to disable preformatted
+     * Utility function to disable preformatted formatting
+     * in a HTML super set element
+     *
      * @param $mode
      * @return bool
      */

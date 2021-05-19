@@ -30,6 +30,10 @@ require_once(__DIR__ . '/../class/CallStack.php');
  *   * the new syntax to create the tabs
  *   * the old syntax to create the tabs
  * The code is using the context to manage this cases
+ *
+ * Full example can be found
+ * in the Javascript section of tabs and navs
+ * https://getbootstrap.com/docs/5.0/components/navs-tabs/#javascript-behavior
  */
 class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 {
@@ -132,14 +136,15 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
             $active = $attributes[syntax_plugin_combo_panel::SELECTED];
             unset($attributes[syntax_plugin_combo_panel::SELECTED]);
         }
+
         $panelAttrName = "panel";
         if (isset($attributes[$panelAttrName])) {
             $panel = $attributes[$panelAttrName];
+            unset($attributes[$panelAttrName]);
         } else {
             if (isset($attributes["id"])) {
                 $panel = $attributes["id"];
                 unset($attributes["id"]);
-                $attributes[$panelAttrName] = $panel;
             } else {
                 LogUtility::msg("A id attribute is missing on a panel tag", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_tabs::TAG);
             }
@@ -149,7 +154,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
          * Creating the li element
          */
         PluginUtility::addClass2Attributes("nav-item", $attributes);
-        $html = "<li " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">" . DOKU_LF;
+        $html = "<li " . PluginUtility::array2HTMLAttributesAsString($attributes) . " role=\"presentation\">" . DOKU_LF;
 
         /**
          * Creating the a element

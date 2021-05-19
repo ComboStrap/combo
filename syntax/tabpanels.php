@@ -46,6 +46,12 @@ class syntax_plugin_combo_tabpanels extends DokuWiki_Syntax_Plugin
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
+
+
     /**
      * How Dokuwiki will add P element
      *

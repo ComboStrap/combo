@@ -45,8 +45,8 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     {
 
         $attributes = PluginUtility::getTagAttributes($match);
-        if (isset($attributes[ColorUtility::COLOR])){
-            $attributes[Background::BACKGROUND_COLOR]=$attributes[ColorUtility::COLOR];
+        if (isset($attributes[ColorUtility::COLOR])) {
+            $attributes[Background::BACKGROUND_COLOR] = $attributes[ColorUtility::COLOR];
             unset($attributes[ColorUtility::COLOR]);
         }
         return $attributes;
@@ -77,9 +77,9 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     function getPType()
     {
         /**
-         * normal (and not block) is important to not create p_open calls
+         * block to not create p_open calls
          */
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -224,6 +224,17 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
             }
             return true;
+
+        } else if ($format == "metadata") {
+
+            /**
+             * @var Doku_Renderer_metadata $renderer
+             */
+            $attributes = $data[PluginUtility::ATTRIBUTES];
+            if (isset($attributes[Background::BACKGROUND_IMAGE])) {
+                $image = $attributes[Background::BACKGROUND_IMAGE];
+                syntax_plugin_combo_media::registerImageMeta($image,$renderer);
+            }
         }
 
         // unsupported $mode
@@ -247,9 +258,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
         /**
          * The data array
          */
-        $data = array(
-            PluginUtility::STATE => $state
-        );
+        $data = array();
 
         /**
          * Set the backgrounds attributes
@@ -269,7 +278,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                  * Another parent node
                  * With a image background, the node should be relative
                  */
-                if (isset($backgroundAttributes[Background::BACKGROUND_IMAGE])){
+                if (isset($backgroundAttributes[Background::BACKGROUND_IMAGE])) {
                     $parentTag->setAttributeIfNotPresent(Position::POSITION_ATTRIBUTE, "relative");
                 }
             }
@@ -287,7 +296,10 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
         /**
          * Return state to keep the call stack structure
+         * and the image data for the metadata
          */
+        $data[PluginUtility::STATE] = $state;
+        $data[PluginUtility::ATTRIBUTES] = $backgroundAttributes;
         return $data;
     }
 

@@ -33,6 +33,12 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
 
 
     const CONF_PREFORMATTED_ENABLE = "preformattedEnable";
+    /**
+     * The content is not printed when the content of a preformatted block is empty
+     */
+    const CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE = "preformattedEmptyContentNotPrintedEnable";
+
+    const HAS_EMPTY_CONTENT = "hasEmptyContent";
 
     /**
      * Syntax Type.
@@ -133,6 +139,16 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
 
         switch ($state) {
             case DOKU_LEXER_ENTER:
+                /**
+                 * used at the {@link DOKU_LEXER_EXIT} state
+                 * to add the {@link syntax_plugin_combo_preformatted::HAS_EMPTY_CONTENT}
+                 * flag
+                 */
+                $attributes = [];
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
             case DOKU_LEXER_MATCHED:
                 return array(
                     PluginUtility::STATE => $state
@@ -144,7 +160,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
                 );
             case DOKU_LEXER_EXIT:
                 $callStack = CallStack::createFromHandler($handler);
-                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $text = "";
                 while ($callStack->next()) {
                     $actualCall = $callStack->getActualCall();
@@ -152,6 +168,9 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
                         $text .= $actualCall->getPayload() . "\n";
                         $callStack->deleteActualCallAndPrevious();
                     }
+                }
+                if (trim($text) == "") {
+                    $openingCall->addAttribute(self::HAS_EMPTY_CONTENT, true);
                 }
                 return array(
                     PluginUtility::STATE => $state,
@@ -179,14 +198,24 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
              * @var Doku_Renderer_xhtml $renderer
              */
             $state = $data[PluginUtility::STATE];
+            $emptyContentShouldBeDeleted = $this->getConf(self::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE, 1);
             switch ($state) {
                 case DOKU_LEXER_ENTER:
-                    $tagAttributes =  TagAttributes::createEmpty(self::TAG);
-                    Prism::htmlEnter($renderer, $this, $tagAttributes);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+                    $hasEmptyContent = $tagAttributes->getValueAndRemove(self::HAS_EMPTY_CONTENT,0);
+                    if (!($hasEmptyContent && $emptyContentShouldBeDeleted)) {
+                        Prism::htmlEnter($renderer, $this, $tagAttributes);
+                    }
                     break;
                 case DOKU_LEXER_EXIT:
-                    $renderer->doc .= PluginUtility::htmlEncode($data[PluginUtility::PAYLOAD]);
-                    Prism::htmlExit($renderer);
+                    // Delete the eol at the beginning and end
+                    // otherwise we get a big block
+                    $text = trim($data[PluginUtility::PAYLOAD], "\n\r");
+                    if (!(trim($text) == "" && $emptyContentShouldBeDeleted)) {
+
+                        $renderer->doc .= PluginUtility::htmlEncode($text);
+                        Prism::htmlExit($renderer);
+                    }
                     break;
             }
         }

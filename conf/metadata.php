@@ -115,6 +115,7 @@ $meta[PageProtection::CONF_PAGE_PROTECTION_MODE] = array('multichoice', '_choice
  * Preformatted mode enable
  */
 $meta[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE] = array('onoff');
+$meta[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE] = array('onoff');
 
 /**
  * The mandatory rules

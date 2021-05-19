@@ -2,6 +2,7 @@
 
 
 use ComboStrap\AdsUtility;
+use ComboStrap\CallStack;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -141,7 +142,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_UNMATCHED :
 
                 // We should not ever come here but a user does not not known that
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_MATCHED :
 
@@ -154,7 +155,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $callStack = \ComboStrap\CallStack::createFromHandler($handler);
+                $callStack = CallStack::createFromHandler($handler);
 
                 /**
                  * The attributes to send to the render
@@ -167,9 +168,9 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
 
                 $found = false;
-                while($callStack->next()){
+                while ($callStack->next()) {
                     $actualCall = $callStack->getActualCall();
-                    if ($actualCall->getTagName()==self::TAG) {
+                    if ($actualCall->getTagName() == self::TAG && $actualCall->getState() == DOKU_LEXER_MATCHED) {
                         $tagName = PluginUtility::getTag($actualCall->getMatchedContent());
                         switch ($tagName) {
                             case self::PAGE_ITEM:
@@ -198,8 +199,11 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                                 $attributes[self::INDEX_ATTRIBUTES_KEY] = $headerAttributes;
                                 $found = true;
                                 break;
-
+                            default:
+                                LogUtility::msg("The tag ($tagName) is unknown",LogUtility::LVL_MSG_ERROR,self::TAG);
+                                break;
                         }
+                        $callStack->deleteActualCallAndPrevious();
                     }
                 }
 
@@ -317,7 +321,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                     foreach ($pages as $page) {
 
                         // If it's a directory
-                        if ($page['type'] == "d" ) {
+                        if ($page['type'] == "d") {
 
                             if (!empty($nsTemplate)) {
                                 $pageId = FsWikiUtility::getIndex($page['id']);
@@ -332,7 +336,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                             if (!empty($pageTemplate)) {
                                 $pageNum++;
                                 $pageId = $page['id'];
-                                if (":" . $pageId != $pageIndex && $pageId != $pageIndex ) {
+                                if (":" . $pageId != $pageIndex && $pageId != $pageIndex) {
                                     $tpl = TemplateUtility::render($pageTemplate, $pageId);
                                     $list .= '<li>' . $tpl . '</li>';
                                 }

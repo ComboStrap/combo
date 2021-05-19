@@ -176,7 +176,10 @@ class syntax_plugin_combo_file extends DokuWiki_Syntax_Plugin
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                     $display = $attributes->getValue("display");
                     if ($display != "none") {
-                        $renderer->doc .= PluginUtility::renderUnmatched($data);
+                        // Delete the eol at the beginning and end
+                        // otherwise we get a big block
+                        $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
+                        $renderer->doc .= PluginUtility::htmlEncode($payload);
                     }
                     break;
 

@@ -35,7 +35,7 @@ class HtmlUtility
     public static function diffMarkup($left, $right, $xhtml = true)
     {
         if (empty($right)) {
-            throw new \RuntimeException("The left text should not be empty");
+            throw new \RuntimeException("The right text should not be empty");
         }
         if (empty($left)) {
             throw new \RuntimeException("The left text should not be empty");

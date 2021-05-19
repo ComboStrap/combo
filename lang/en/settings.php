@@ -99,6 +99,7 @@ $lang[syntax_plugin_combo_file::CONF_FILE_ENABLE] = PluginUtility::getUrl("file"
  * Preformatted mode
  */
 $lang[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE] = PluginUtility::getUrl("preformatted", "Preformatted Component") . ' - If checked, the default preformatted mode of dokuwiki is enabled';
+$lang[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE] = PluginUtility::getUrl("preformatted", "Preformatted Component") . ' - If unchecked, a blank line with only two spaces will be printed as an empty block of code';
 
 /**
  * Mandatory rules

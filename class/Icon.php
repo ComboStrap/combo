@@ -43,6 +43,12 @@ class Icon
         self::FEATHER => "https://raw.githubusercontent.com/feathericons/feather/master/icons"
     );
 
+    const ICON_LIBRARY_WEBSITE_URLS = array(
+        self::BOOTSTRAP => "https://icons.getbootstrap.com/",
+        self::MATERIAL_DESIGN => "https://materialdesignicons.com/",
+        self::FEATHER => "https://feathericons.com/"
+    );
+
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
     const LIBRARY_ACRONYM = array(
         "bs" => self::BOOTSTRAP,
@@ -162,7 +168,9 @@ class Icon
 
                 } else {
 
-                    LogUtility::msg("The file ($downloadUrl) from the library ($library) does not exist", LogUtility::LVL_MSG_ERROR, self::NAME);
+                    // (ie no icon file found at ($downloadUrl)
+                    $urlLibrary = self::ICON_LIBRARY_WEBSITE_URLS[$library];
+                    LogUtility::msg("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon ($iconName).", LogUtility::LVL_MSG_ERROR, self::NAME);
 
                 }
 

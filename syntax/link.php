@@ -217,7 +217,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $openingAttributes = $openingTag->getAttributes();
                 $linkTag = $openingTag->getData()[self::LINK_TAG];
 
-                if ($openingTag->getPosition() == $tag->getPosition() - 1) {
+                if ($openingTag->getActualPosition() == $tag->getActualPosition() - 1) {
                     // There is no name
                     $link = new LinkUtility($openingAttributes[LinkUtility::ATTRIBUTE_REF]);
                     $linkName = $link->getName();

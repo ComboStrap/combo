@@ -77,7 +77,7 @@ class Tag
      * The position is the call stack
      * @var int
      */
-    private $position;
+    private $actualPosition;
     /**
      * @var Doku_Handler
      */
@@ -152,12 +152,12 @@ class Tag
         $this->handler = &$handler;
         $this->maxPosition = ArrayUtility::array_key_last($this->calls);
         if ($position !== null) {
-            $this->position = $position;
+            $this->actualPosition = $position;
             /**
              * A shortcut access variable to the call of the tag
              */
-            if (isset($this->calls[$this->position])) {
-                $this->tagCall = new Call($this->calls[$this->position]);
+            if (isset($this->calls[$this->actualPosition])) {
+                $this->tagCall = $this->createCallObjectFromIndex($this->actualPosition);
                 $this->attributes = $this->tagCall->getAttributes();
             }
 
@@ -167,7 +167,7 @@ class Tag
             // Get the last position
             // We use get_last and not sizeof
             // because some plugin may delete element of the stack
-            $this->position = ArrayUtility::array_key_last($this->calls) + 1;
+            $this->actualPosition = ArrayUtility::array_key_last($this->calls) + 1;
             if ($attributes == null) {
                 $this->attributes = array();
             } else {
@@ -181,6 +181,17 @@ class Tag
     public static function createDocumentStartFromHandler(Doku_Handler &$handler)
     {
         return new Tag("document_start", [], DOKU_LEXER_ENTER, $handler, 0);
+    }
+
+    private function createCallObjectFromIndex($i)
+    {
+        if (isset($this->calls[$i])) {
+            return new Call($this->calls[$i]);
+        } else {
+            LogUtility::msg("There is no call at the index ($i)", LogUtility::LVL_MSG_ERROR);
+            return null;
+        }
+
     }
 
 
@@ -286,7 +297,7 @@ class Tag
             /**
              * Start to the actual call minus one
              */
-            $callStackPosition = $this->position - 1;
+            $callStackPosition = $this->actualPosition - 1;
             $treeLevel = 0;
 
             /**
@@ -403,11 +414,12 @@ class Tag
     {
 
         for ($i = sizeof($this->calls) - 1; $i >= 0; $i--) {
-            $call = new Call($this->calls[$i]);
-            if ($call->getTagName() == "$tag") {
-                return true;
+            if (isset($this->calls[$i])) {
+                $call = $this->createCallObjectFromIndex($i);
+                if ($call->getTagName() == "$tag") {
+                    return true;
+                }
             }
-
         }
         return false;
 
@@ -420,11 +432,11 @@ class Tag
     public function getPreviousSibling()
     {
 
-        if ($this->position == 1) {
+        if ($this->actualPosition == 1) {
             return null;
         }
 
-        $counter = $this->position - 1;
+        $counter = $this->actualPosition - 1;
         $treeLevel = 0;
         while ($counter > 0) {
 
@@ -571,8 +583,8 @@ class Tag
         if ($this->state != DOKU_LEXER_ENTER) {
             throw new RuntimeException("Descendant should be called on enter tag. Get the opening tag first if you are in a exit tag");
         }
-        if (isset($this->position)) {
-            $index = $this->position + 1;
+        if (isset($this->actualPosition)) {
+            $index = $this->actualPosition + 1;
         } else {
             throw new RuntimeException("It seems that we are at the end of the stack because the position is not set");
         }
@@ -656,7 +668,7 @@ class Tag
          * because it does not exist yet
          */
         if (!$this->isCurrent()) {
-            unset($this->calls[$this->position]);
+            unset($this->calls[$this->actualPosition]);
         } else {
             LogUtility::msg("Internal error: The current call cannot be deleted", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
         }
@@ -715,7 +727,7 @@ class Tag
         $state = $this->getState();
         switch ($state) {
             case DOKU_LEXER_ENTER:
-                $index = $this->position + 1;
+                $index = $this->actualPosition + 1;
                 while ($index <= sizeof($this->calls) - 1) {
 
                     $currentCallArray = $this->calls[$index];
@@ -775,7 +787,8 @@ class Tag
      */
     public function addAttribute($key, $value)
     {
-        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key] = $value;
+        $call = $this->createCallObjectFromIndex($this->actualPosition);
+        $call->addAttribute($key, $value);
         return $this;
     }
 
@@ -785,7 +798,8 @@ class Tag
      */
     public function setContext($value)
     {
-        $this->calls[$this->position][1][1][PluginUtility::CONTEXT] = $value;
+        $call = $this->createCallObjectFromIndex($this->actualPosition);
+        $call->setContext($value);
         return $this;
     }
 
@@ -796,7 +810,8 @@ class Tag
      */
     public function setAttribute($key, $value)
     {
-        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key] = $value;
+        $call = $this->createCallObjectFromIndex($this->actualPosition);
+        $call->addAttribute($key,$value);
         return $this;
     }
 
@@ -806,7 +821,7 @@ class Tag
      */
     public function unsetAttribute($key)
     {
-        unset($this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key]);
+        unset($this->calls[$this->actualPosition][1][1][PluginUtility::ATTRIBUTES][$key]);
         return $this;
     }
 
@@ -817,11 +832,13 @@ class Tag
      */
     public function addClass($value)
     {
-        $classValue = $this->getAttribute("class");
+        $call = $this->createCallObjectFromIndex($this->actualPosition);
+        $classValue = $call->getAttribute("class");
+
         if (empty($classValue)) {
-            $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES]["class"] = $value;
+            $call->addAttribute("class", $value);
         } else {
-            $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES]["class"] = $classValue . " " . $value;
+            $call->addAttribute("class", $classValue . " " . $value);
         }
         return $this;
 
@@ -833,13 +850,14 @@ class Tag
      */
     public function setType($value)
     {
-        $this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES]["type"] = $value;
+        $call = $this->createCallObjectFromIndex($this->actualPosition);
+        $call->addAttribute(TagAttributes::TYPE_KEY, $value);
         return $this;
     }
 
-    public function getPosition()
+    public function getActualPosition()
     {
-        return $this->position;
+        return $this->actualPosition;
     }
 
     public function getContent()
@@ -869,13 +887,13 @@ class Tag
      */
     private function isCurrent()
     {
-        return $this->position == sizeof($this->calls);
+        return $this->actualPosition == sizeof($this->calls);
     }
 
     public function removeAttributes()
     {
         if (!$this->isCurrent()) {
-            $call = new Call($this->calls[$this->position]);
+            $call = $this->createCallObjectFromIndex($this->actualPosition);
             $call->removeAttributes();
         } else {
             LogUtility::msg("Internal error: This is not logic to remove the attributes of the current node because it's not yet created, not yet in the stack. Don't add them to the constructor signature.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -884,7 +902,7 @@ class Tag
 
     public function getNextOpeningTag($tagName)
     {
-        $position = $this->position;
+        $position = $this->actualPosition;
         while ($this->toNextPositionNonEmpty($position)) {
 
             $call = new Call($this->handler->calls[$position]);
@@ -939,7 +957,7 @@ class Tag
 
     public function getNextClosingTag($tagName)
     {
-        $position = $this->position;
+        $position = $this->actualPosition;
         while ($this->toNextPositionNonEmpty($position)) {
 
             $call = new Call($this->handler->calls[$position]);
@@ -960,7 +978,7 @@ class Tag
             // The tag ($this) is not an enter tag and has therefore no children."
             return null;
         }
-        $position = $this->position;
+        $position = $this->actualPosition;
         $result = $this->toNextPositionNonEmpty($position);
         if ($result === false) {
             return null;
@@ -982,7 +1000,7 @@ class Tag
         }
         $children = [];
         $level = 0;
-        $position = $this->position;
+        $position = $this->actualPosition;
         while ($this->toNextPositionNonEmpty($position)) {
 
             $call = new Call($this->handler->calls[$position]);
@@ -1008,7 +1026,7 @@ class Tag
 
     public function setAttributeIfNotPresent($key, $value)
     {
-        if (!isset($this->calls[$this->position][1][1][PluginUtility::ATTRIBUTES][$key])) {
+        if (!isset($this->calls[$this->actualPosition][1][1][PluginUtility::ATTRIBUTES][$key])) {
             $this->setAttribute($key, $value);
         }
 
@@ -1016,7 +1034,7 @@ class Tag
 
     public function getNextTag()
     {
-        $position = $this->position;
+        $position = $this->actualPosition;
         $this->toNextPositionNonEmpty($position);
         return $this->createFromCall($position);
     }

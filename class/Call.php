@@ -460,5 +460,11 @@ class Call
         }
     }
 
+    public function setContext($value)
+    {
+        $this->call[1][1][PluginUtility::CONTEXT] = $value;
+        return $this;
+    }
+
 
 }

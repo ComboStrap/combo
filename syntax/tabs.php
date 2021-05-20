@@ -455,8 +455,8 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                                  * (done at the end)
                                  */
                                 $labelStacksSize = sizeof($labelStacks);
-                                $firstPosition = $descendant->getPosition(); // the enter label is deleted
-                                $lastPosition = $labelStacks[$labelStacksSize - 1]->getPosition() + 1; // the exit label is deleted
+                                $firstPosition = $descendant->getActualPosition(); // the enter label is deleted
+                                $lastPosition = $labelStacks[$labelStacksSize - 1]->getActualPosition() + 1; // the exit label is deleted
                                 $labelStacksToDelete[] = [$firstPosition, $lastPosition];
 
 
@@ -464,11 +464,11 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                                  * Build the navigational call stack for this label
                                  * with another context just to tag them and see them in the stack
                                  */
-                                $firstLabelCall = $handler->calls[$descendant->getPosition()];
+                                $firstLabelCall = $handler->calls[$descendant->getActualPosition()];
                                 $firstLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
                                 $navigationalCallElements[] = $firstLabelCall;
                                 for ($i = 1; $i <= $labelStacksSize; $i++) {
-                                    $intermediateLabelCall = $handler->calls[$descendant->getPosition() + $i];
+                                    $intermediateLabelCall = $handler->calls[$descendant->getActualPosition() + $i];
                                     $intermediateLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
                                     $navigationalCallElements[] = $intermediateLabelCall;
                                 }
@@ -498,7 +498,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                         /**
                          * Then deleting
                          */
-                        CallStack::insertCallStackUpWards($handler->calls, $openingTag->getPosition(), $navigationalCallElements);
+                        CallStack::insertCallStackUpWards($handler->calls, $openingTag->getActualPosition(), $navigationalCallElements);
                     }
                 }
 

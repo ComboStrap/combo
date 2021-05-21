@@ -16,6 +16,8 @@ require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/Background.php');
 require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/Cache.php');
+require_once(__DIR__ . '/CacheByLogicalKey.php');
+require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
 require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/ColorUtility.php');

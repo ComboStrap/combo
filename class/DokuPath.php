@@ -8,8 +8,19 @@ class DokuPath extends File
 {
     const MEDIA_TYPE = "media";
     const PAGE_TYPE = "page";
-    const UNKNOWN_TYPE = "page";
-    private $id;
+    const UNKNOWN_TYPE = "unknown";
+    const SEPARATOR = ":";
+
+    /**
+     * @var string the path id passed to function (cleaned)
+     */
+    private $pathId;
+
+    /**
+     * @var string the absolute id with the root separator
+     * See {@link $absoluteIdWithoutSeparator} for the absolute id without root separator for the index
+     */
+    private $absoluteIdWithSeparator;
 
     /**
      * @var string
@@ -21,24 +32,67 @@ class DokuPath extends File
     private $rev;
 
     /**
+     * @var string a value with an absolute id without the root
+     * used in the index
+     */
+    private $absoluteIdWithoutSeparator;
+    /**
+     * @var bool true if the id is an absolute one
+     */
+    private $isAbsoluteId;
+
+    /**
      * DokuPath constructor.
      *
      * protected and not private
      * otherwise the cascading init will not work
      *
-     * @param string $id - the id
+     * @param string $pathId - the id
      * @param string $type - the type (media or page)
      * @param string $rev - the revision (mtime)
      */
-    protected function __construct($id, $type, $rev = null)
+    protected function __construct($pathId, $type, $rev = null)
     {
 
+        if (empty($pathId)) {
+            LogUtility::msg("A null path id was given", LogUtility::LVL_MSG_WARNING);
+        }
+
+        // https://www.dokuwiki.org/config:useslash
+        global $conf;
+        if ($conf['useslash']) {
+            $pathId = str_replace("/", ":", $pathId);
+        }
+
         /**
-         * The id of image should starts with the root `:`
-         * otherwise the image does not exist
-         * It should then not be {@link cleanID()}
+         * characters are not all authorized, all lowercase
+         * such as `_` at the end
          */
-        $this->id = $id;
+        $cleanedId = cleanID($pathId);
+
+        /**
+         * The id have no root character due to {@link cleanID()}
+         * function, we correct that (and therefore in the index also)
+         */
+        $this->isAbsoluteId = (strpos($pathId, self::SEPARATOR) === 0);
+        if ($this->isAbsoluteId) {
+            $this->pathId = self::SEPARATOR . $cleanedId;
+        } else {
+            $this->pathId = $cleanedId;
+        }
+
+        /**
+         * Absolute id cleaned for the index
+         * See the $page argument of {@link resolve_pageid}
+         */
+        global $ID;
+        $this->absoluteIdWithoutSeparator = $this->pathId;
+        if ($this->finalType == self::MEDIA_TYPE) {
+            resolve_mediaid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
+        } else {
+            resolve_pageid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
+        }
+        $this->absoluteIdWithSeparator = self::SEPARATOR . $this->absoluteIdWithoutSeparator;
 
 
         /**
@@ -50,7 +104,7 @@ class DokuPath extends File
          * If this is the case, this is a media
          */
         if ($type == self::UNKNOWN_TYPE) {
-            $lastPosition = StringUtility::lastIndexOf($this->id, ".");
+            $lastPosition = StringUtility::lastIndexOf($this->getId(), ".");
             if ($lastPosition === FALSE) {
                 $type = self::PAGE_TYPE;
             } else {
@@ -63,15 +117,15 @@ class DokuPath extends File
 
         if ($type == self::MEDIA_TYPE) {
             if (!empty($rev)) {
-                $path = mediaFN($id, $rev);
+                $path = mediaFN($this->absoluteIdWithoutSeparator, $rev);
             } else {
-                $path = mediaFN($id);
+                $path = mediaFN($this->absoluteIdWithoutSeparator);
             }
         } else {
             if (!empty($rev)) {
-                $path = wikiFN($id, $rev);
+                $path = wikiFN($this->absoluteIdWithoutSeparator, $rev);
             } else {
-                $path = wikiFN($id);
+                $path = wikiFN($this->absoluteIdWithoutSeparator);
             }
         }
         parent::__construct($path);
@@ -80,12 +134,12 @@ class DokuPath extends File
 
     /**
      *
-     * @param $id
+     * @param $pathId
      * @return DokuPath
      */
-    public static function createPageFromId($id)
+    public static function createPageFromPathId($pathId)
     {
-        return new DokuPath($id, DokuPath::PAGE_TYPE);
+        return new DokuPath($pathId, DokuPath::PAGE_TYPE);
     }
 
     public static function createMediaPathFromId($id, $rev = '')
@@ -96,6 +150,42 @@ class DokuPath extends File
     public static function createUnknownFromId($id)
     {
         return new DokuPath($id, DokuPath::UNKNOWN_TYPE);
+    }
+
+    /**
+     * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
+     * @return string - a dokuwiki Id hello:my:lord
+     */
+    public static function createFromUrl($url)
+    {
+        // Replace / by : and suppress the first : because the global $ID does not have it
+        $parsedQuery = parse_url($url, PHP_URL_QUERY);
+        $parsedQueryArray = [];
+        parse_str($parsedQuery, $parsedQueryArray);
+        $queryId = 'id';
+        if (array_key_exists($queryId, $parsedQueryArray)) {
+            // Doku form (ie doku.php?id=)
+            $id = $parsedQueryArray[$queryId];
+        } else {
+            // Slash form ie (/my/id)
+            $urlPath = parse_url($url, PHP_URL_PATH);
+            $id = substr(str_replace("/", ":", $urlPath), 1);
+        }
+        return self::createUnknownFromId($id);
+    }
+
+    public function getName()
+    {
+        /**
+         * See also {@link noNSorNS}
+         */
+        $names = $this->getNames();
+        return $names[sizeOf($names) - 1];
+    }
+
+    public function getNames()
+    {
+        return preg_split("/" . self::SEPARATOR . "/", $this->getId());
     }
 
     /**
@@ -124,23 +214,26 @@ class DokuPath extends File
          * with id of the form :path:*
          * (for directory ?)
          */
-        return StringUtility::endWiths($this->id, ":*");
+        return StringUtility::endWiths($this->getId(), ":*");
     }
 
     public function __toString()
     {
-        return $this->id;
+        return $this->getId();
     }
 
     /**
-     * @return string - the id (normalized)
+     * @return string - the id of dokuwiki is the absolute path
+     * without the root separator (ie normalized)
      *
-     * for the fully qualified, see {@link DokuPath::getAbsoluteId()}
+     * The index stores and needs this value
+     * And most of the function that are not links related
+     * use this format
      */
     public function getId()
     {
 
-        return cleanID($this->id);
+        return $this->absoluteIdWithoutSeparator;
 
     }
 
@@ -162,21 +255,18 @@ class DokuPath extends File
 
 
     /**
-     * The absolute id is the id used in the index
-     * For whatever reason, it does not return ':' as root
      * @return string
+     * @deprecated
+     *
+     * This is not really deprecated but there is a lot of chance that if you use this function
+     * not in a test, you are wrong
+     *
+     * For Dokuwiki, the absolute id does not have any root separator, use {@link DokuPath::getId()}
      */
-    public function getAbsoluteId()
+    public function getAbsoluteIdWithRoot()
     {
 
-        global $ID;
-        $id = $this->getId();
-        if ($this->finalType == self::MEDIA_TYPE) {
-            resolve_mediaid(getNS($ID), $id, $exists);
-        } else {
-            resolve_pageid(getNS($ID), $id, $exists);
-        }
-        return $id;
+        return $this->absoluteIdWithSeparator;
 
     }
 
@@ -185,13 +275,19 @@ class DokuPath extends File
      *   * backlinks for page
      *   * page with media for media
      */
-    public function getRelatedPages(){
-        $absoluteId = $this->getAbsoluteId();
-        if ($this->finalType==self::MEDIA_TYPE) {
+    public function getRelatedPages()
+    {
+        $absoluteId = $this->getId();
+        if ($this->finalType == self::MEDIA_TYPE) {
             return idx_get_indexer()->lookupKey('relation_media', $absoluteId);
         } else {
             return idx_get_indexer()->lookupKey('relation_references', $absoluteId);
         }
+    }
+
+    public function isAbsolute()
+    {
+        return $this->isAbsoluteId;
     }
 
 }

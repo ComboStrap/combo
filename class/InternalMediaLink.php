@@ -393,7 +393,7 @@ abstract class InternalMediaLink extends DokuPath
         if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
              $descriptionPart = "|".$this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
         }
-        return '{{:' . $this->getAbsoluteId() . $descriptionPart . '}}';
+        return '{{:' . $this->getId() . $descriptionPart . '}}';
     }
 
 

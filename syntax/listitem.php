@@ -65,6 +65,12 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
         return 'block';
     }
 
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
+
+
     /**
      * @return array
      * Allow which kind of plugin inside

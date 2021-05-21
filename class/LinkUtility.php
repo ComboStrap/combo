@@ -100,7 +100,7 @@ class LinkUtility
     /**
      * @var mixed|string
      */
-    private $id;
+    private $pathId;
     /**
      * @var mixed|string
      */
@@ -226,7 +226,7 @@ class LinkUtility
         $position = strpos($refProcessing, "?");
         if ($position !== false) {
 
-            $this->id = substr($refProcessing, 0, $position);
+            $this->pathId = substr($refProcessing, 0, $position);
             $secondPart = substr($refProcessing, $position + 1);
             $anchorPosition = strpos($secondPart, "#");
             if ($anchorPosition !== false) {
@@ -239,10 +239,10 @@ class LinkUtility
 
             $anchorPosition = strpos($refProcessing, "#");
             if ($anchorPosition !== false) {
-                $this->id = substr($refProcessing, 0, $anchorPosition);
+                $this->pathId = substr($refProcessing, 0, $anchorPosition);
                 $this->fragment = substr($refProcessing, $anchorPosition + 1);
             } else {
-                $this->id = $refProcessing;
+                $this->pathId = $refProcessing;
             }
         }
 
@@ -359,7 +359,7 @@ class LinkUtility
                  * Internal Page
                  */
                 $linkedPage = $this->getInternalPage();
-                $this->attributes["data-wiki-id"] = $this->toAbsoluteId();
+                $this->attributes["data-wiki-id"] = $linkedPage->getId();
 
                 /**
                  * If this is a low quality internal page,
@@ -451,7 +451,7 @@ class LinkUtility
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->getId());
+            $emailAddress = $this->emailObfuscation($this->getPathId());
             $returnedHTML .= " href=\"$url\"";
             $returnedHTML .= " title=\"$emailAddress\"";
             unset($this->attributes["href"]);
@@ -600,32 +600,6 @@ class LinkUtility
     }
 
     /**
-     * @return string - the internal absolute page id
-     */
-    public
-    function toAbsoluteId()
-    {
-        if ($this->getType() == self::TYPE_INTERNAL) {
-
-            $absoluteId = $this->id;
-            if (strpos($absoluteId, ':') !== 0) {
-                // Relative
-                global $ID;
-                resolve_pageid(getNS($ID), $absoluteId, $exists);
-            }
-            // https://www.dokuwiki.org/config:useslash
-            global $conf;
-            if ($conf['useslash']) {
-                $absoluteId = str_replace(":", "/", $absoluteId);
-            }
-
-            return cleanID($absoluteId);
-        } else {
-            throw new \RuntimeException("You can't ask an absolute id from a link that is not an internal one");
-        }
-    }
-
-    /**
      * @return Page - the internal page or an error if the link is not an internal one
      */
     public
@@ -636,8 +610,7 @@ class LinkUtility
                 /**
                  * Create the linked page object
                  */
-                $qualifiedPageLinkId = $this->toAbsoluteId();
-                $this->linkedPage = new Page($qualifiedPageLinkId);
+                $this->linkedPage = new Page($this->pathId);
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
             }
@@ -667,7 +640,7 @@ class LinkUtility
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::render($name, $this->toAbsoluteId());
+                    $name = TemplateUtility::render($name, $this->pathId);
                 }
                 if (empty($name)) {
                     $name = $this->ref;
@@ -693,7 +666,7 @@ class LinkUtility
             case self::TYPE_EMAIL:
                 if (empty($name)) {
                     global $conf;
-                    $email = $this->getId();
+                    $email = $this->getPathId();
                     switch ($conf['mailguard']) {
                         case 'none' :
                             $name = $email;
@@ -708,7 +681,7 @@ class LinkUtility
                 break;
             case self::TYPE_INTERWIKI:
                 if (empty($name)) {
-                    $name = $this->getId();
+                    $name = $this->getPathId();
                 }
                 break;
             case self::TYPE_LOCAL:
@@ -753,9 +726,9 @@ class LinkUtility
 
 
     public
-    function getId()
+    function getPathId()
     {
-        return $this->id;
+        return $this->pathId;
     }
 
     public
@@ -776,14 +749,15 @@ class LinkUtility
         $url = "";
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
-                $url = wl($this->toAbsoluteId(), $this->parameters);
+                $page = $this->getInternalPage();
+                $url = wl($page->getId(), $this->parameters);
                 if ($this->fragment) {
                     $url .= '#' . $this->fragment;
                 }
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $url = $this->renderer->_resolveInterWiki($wiki, $this->getId());
+                $url = $this->renderer->_resolveInterWiki($wiki, $this->getPathId());
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());
@@ -928,7 +902,7 @@ class LinkUtility
 
     public function isRelative()
     {
-        return strpos($this->getId(), ':') !== 0;
+        return strpos($this->getPathId(), ':') !== 0;
     }
 
     /**

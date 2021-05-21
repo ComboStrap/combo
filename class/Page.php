@@ -5,7 +5,6 @@ namespace ComboStrap;
 
 use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
-use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;
 use RuntimeException;
 
@@ -60,10 +59,7 @@ class Page extends DokuPath
      * @var string - the dokuwiki
      */
     private $descriptionOrigin;
-    /**
-     * @var CacheRenderer
-     */
-    private $xhtmlCache;
+
     private $instructionCache;
 
     /**
@@ -99,8 +95,11 @@ class Page extends DokuPath
 
             /**
              * Find the first physical file
+             * Don't use ACL otherwise the ACL protection event 'AUTH_ACL_CHECK' will kick in
+             * and we got then a recursive problem
+             * with the {@link \action_plugin_combo_pageprotection}
              */
-            $useAcl = true;
+            $useAcl = false;
             $id = page_findnearest($pathId, $useAcl);
             if ($id!==false){
                 $pathId = $id;
@@ -1342,14 +1341,12 @@ class Page extends DokuPath
 
     public function hasXhtmlCache()
     {
-        if ($this->xhtmlCache == null) {
-            $file = $this->getFilePath();
-            $this->xhtmlCache = new CacheRenderer($this->getId(), $file, 'xhtml');
-        }
+
+        $renderCache = $this->getRenderCache();
         /**
          * $cache->cache is the file
          */
-        return file_exists($this->xhtmlCache->cache);
+        return file_exists($renderCache->cache);
     }
 
     public function hasInstructionCache()

@@ -62,6 +62,7 @@ class Prism
      */
     const CONF_PRISM_THEME = "prismTheme";
     const PRISM_THEME_DEFAULT = "tomorrow";
+    const SNIPPET_ID_AUTOLOADER = self::SNIPPET_NAME . "-autoloader";
 
 
     /**
@@ -400,7 +401,7 @@ EOD;
     {
         $tags = [];
         $tags['script'][] = array("src" => self::BASE_PRISM_CDN."/plugins/autoloader/prism-autoloader.min.js");
-        PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_NAME."-autoloader", $tags);
+        PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_ID_AUTOLOADER, $tags);
     }
 
 

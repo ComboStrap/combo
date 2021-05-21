@@ -380,11 +380,11 @@ class LinkUtility
                     unset($this->attributes["href"]);
                     $dataNamespace = Bootstrap::getDataNamespace();
                     $this->attributes["data{$dataNamespace}-toggle"] = "tooltip";
-                    $this->attributes["title"] = "To follow this link ({$this->toAbsoluteId()}), you need to log in (" . $protectionSourceAcronym . ")";
+                    $this->attributes["title"] = "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")";
 
                 } else {
 
-                    if (!$linkedPage->existInFs()) {
+                    if (!$linkedPage->exists()) {
 
                         /**
                          * Red color

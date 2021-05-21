@@ -103,15 +103,11 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $dokuPath = DokuPath::createUnknownFromId($id);
         if ($dokuPath->isPage()) {
             /**
-             * ACL ID have the root form
-             */
-            $cleanId = cleanID($id);
-            /**
              * It should be only a page
              * https://www.dokuwiki.org/devel:event:auth_acl_check
              */
             $user = $event->data['user'];
-            $page = new Page($cleanId);
+            $page = new Page($id);
             if ($page->isProtected($user)) {
                 $event->result = AUTH_NONE;
             }

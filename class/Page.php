@@ -60,7 +60,6 @@ class Page extends DokuPath
      */
     private $descriptionOrigin;
 
-    private $instructionCache;
 
     /**
      * @var string the logical id is used with bars
@@ -83,13 +82,21 @@ class Page extends DokuPath
     public function __construct($pathId)
     {
 
+        /**
+         * Bars have a logical reasoning (ie such as a virtual, alias)
+         * They are logically located in the same namespace
+         * but the file may be located on the parent
+         *
+         * This block of code is processing this case
+         */
         global $conf;
         $sidebars = array($conf['sidebar']);
         $strapTemplateName = 'strap';
         if ($conf['template'] === $strapTemplateName) {
             $sidebars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
         }
-        if (in_array($pathId, $sidebars)) {
+        $lastPathPart = DokuPath::getLastPart($pathId);
+        if (in_array($lastPathPart, $sidebars)) {
 
             $this->isSideBar = true;
 
@@ -375,9 +382,11 @@ class Page extends DokuPath
         return in_array($this->getName(), $barsName);
     }
 
-    public function isSideBar()
+    public function isStrapSideBar()
     {
-        return $this->isSideBar;
+
+        return $this->isSideBar && Site::isStrapTemplate();
+
     }
 
 
@@ -1354,22 +1363,20 @@ class Page extends DokuPath
     public function hasInstructionCache()
     {
 
-        if ($this->instructionCache == null) {
-            $file = $this->getFilePath();
-            $this->instructionCache = new CacheInstructions($this->getId(), $file);
-        }
+        $instructionCache = $this->getInstructionsCache();
         /**
          * $cache->cache is the file
          */
-        return file_exists($this->instructionCache->cache);
+        return file_exists($instructionCache->cache);
 
     }
 
     public function render()
     {
 
-        if (!$this->isSideBar()) {
-            LogUtility::msg("This function render only sidebar for now and the page ($this) is not a sidebar", LogUtility::LVL_MSG_ERROR);
+        if (!$this->isStrapSideBar()) {
+            $template = Site::getTemplate();
+            LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getUrl("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
             return "";
         }
 
@@ -1450,7 +1457,7 @@ class Page extends DokuPath
     private function getRenderCache($outputFormat)
     {
 
-        if ($this->isSideBar()) {
+        if ($this->isStrapSideBar()) {
 
             /**
              * Logical id is the scope and part of the key
@@ -1471,7 +1478,7 @@ class Page extends DokuPath
     private function getInstructionsCache()
     {
 
-        if ($this->isSideBar()) {
+        if ($this->isStrapSideBar()) {
 
             /**
              * @noinspection PhpIncompatibleReturnTypeInspection
@@ -1487,6 +1494,11 @@ class Page extends DokuPath
 
         }
 
+    }
+
+    public function deleteXhtmlCache()
+    {
+        $this->deleteCache("xhtml");
     }
 
 

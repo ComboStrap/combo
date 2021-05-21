@@ -11,6 +11,11 @@ class DokuPath extends File
     const UNKNOWN_TYPE = "unknown";
     const SEPARATOR = ":";
 
+    // https://www.dokuwiki.org/config:useslash
+    const SEPARATOR_SLASH = "/";
+
+    const SEPARATORS = [self::SEPARATOR,self::SEPARATOR_SLASH];
+
     /**
      * @var string the path id passed to function (cleaned)
      */
@@ -61,7 +66,7 @@ class DokuPath extends File
         // https://www.dokuwiki.org/config:useslash
         global $conf;
         if ($conf['useslash']) {
-            $pathId = str_replace("/", ":", $pathId);
+            $pathId = str_replace(self::SEPARATOR_SLASH, self::SEPARATOR, $pathId);
         }
 
         /**
@@ -172,6 +177,25 @@ class DokuPath extends File
             $id = substr(str_replace("/", ":", $urlPath), 1);
         }
         return self::createUnknownFromId($id);
+    }
+
+    /**
+     * Static don't ask why
+     * @param $pathId
+     * @return false|string
+     */
+    public static function getLastPart($pathId)
+    {
+        $endSeparatorLocation = StringUtility::lastIndexOf($pathId, DokuPath::SEPARATOR);
+        if ($endSeparatorLocation === false) {
+            $endSeparatorLocation = StringUtility::lastIndexOf($pathId, DokuPath::SEPARATOR_SLASH);
+        }
+        if ($endSeparatorLocation === false) {
+            $lastPathPart = $pathId;
+        } else {
+            $lastPathPart = substr($pathId, $endSeparatorLocation + 1);
+        }
+        return $lastPathPart;
     }
 
     public function getName()

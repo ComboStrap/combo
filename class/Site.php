@@ -221,7 +221,7 @@ class Site
         }
     }
 
-    private static function getTemplate()
+    public static function getTemplate()
     {
         global $conf;
         return $conf['template'];

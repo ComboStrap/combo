@@ -101,7 +101,10 @@ class Page extends DokuPath
              * Find the first physical file
              */
             $useAcl = true;
-            $pathId = page_findnearest($pathId, $useAcl);
+            $id = page_findnearest($pathId, $useAcl);
+            if ($id!==false){
+                $pathId = $id;
+            }
 
             /**
              * Set the logical id

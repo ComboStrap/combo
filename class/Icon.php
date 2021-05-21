@@ -81,10 +81,20 @@ class Icon
         $iconNameAttribute = $tagAttributes->getValue($name);
 
         /**
+         * Bug on name when it was a id from the library
+         * If there is an extension (ie has a point, we add the root character)
+         */
+        $hasPoint = StringUtility::lastIndexOf($iconNameAttribute, ".");
+        $iconPath = $iconNameAttribute;
+        if ($hasPoint !== false) {
+            // The root was not mandatory
+            $iconPath = DokuPath::SEPARATOR . $iconNameAttribute;
+        }
+        /**
          * If the name have an extension, it's a file from the media directory
          * Otherwise, it's an icon from a library
          */
-        $mediaDokuPath = DokuPath::createMediaPathFromId($iconNameAttribute);
+        $mediaDokuPath = DokuPath::createMediaPathFromId($iconPath);
         if (!empty($mediaDokuPath->getExtension())) {
 
             // loop through candidates until a match was found:
@@ -194,8 +204,8 @@ class Icon
             $tagAttributes->addComponentAttributeValue("type", SvgDocument::ICON_TYPE);
 
 
-            $svgImageLink = SvgImageLink::createMediaLinkFromId(
-                $mediaDokuPath->getId(),
+            $svgImageLink = SvgImageLink::createMediaLinkFromPathId(
+                $iconPath,
                 null,
                 $tagAttributes
             );

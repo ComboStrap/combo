@@ -125,7 +125,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 $attributes = TagAttributes::createFromTagMatch($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 if ($tag->isDescendantOf(syntax_plugin_combo_list::TAG)) {
-                    $attributes->addClassName("mr-2");
+                    $attributes->addComponentAttributeValue( "spacing","mr-2");
                 }
                 return array(
                     PluginUtility::STATE => $state,

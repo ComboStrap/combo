@@ -160,7 +160,7 @@ abstract class InternalMediaLink extends DokuPath
         $tagAttributes->addComponentAttributeValue(Cache::CACHE_KEY, $cache);
         $tagAttributes->addComponentAttributeValue(TagAttributes::LINKING_KEY, $linking);
 
-        return self::createMediaLinkFromId($id, $tagAttributes);
+        return self::createMediaLinkFromPathId($id, $tagAttributes);
 
     }
 
@@ -200,7 +200,7 @@ abstract class InternalMediaLink extends DokuPath
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
-        return self::createMediaLinkFromId($src, $rev, $tagAttributes);
+        return self::createMediaLinkFromPathId($src, $rev, $tagAttributes);
 
     }
 
@@ -309,7 +309,7 @@ abstract class InternalMediaLink extends DokuPath
      * @param string $rev
      * @return InternalMediaLink
      */
-    public static function createMediaLinkFromId($id, $rev = null, $tagAttributes = null)
+    public static function createMediaLinkFromPathId($id, $rev = null, $tagAttributes = null)
     {
         if (is_object($rev)) {
             LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");

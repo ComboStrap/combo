@@ -87,6 +87,25 @@ class DokuPath extends File
         }
 
         /**
+         * ACL check does not care about the type of id
+         * https://www.dokuwiki.org/devel:event:auth_acl_check
+         * https://github.com/splitbrain/dokuwiki/issues/3476
+         *
+         * We check if there is an extension
+         * If this is the case, this is a media
+         */
+        if ($type == self::UNKNOWN_TYPE) {
+            $lastPosition = StringUtility::lastIndexOf($pathId, ".");
+            if ($lastPosition === FALSE) {
+                $type = self::PAGE_TYPE;
+            } else {
+                $type = self::MEDIA_TYPE;
+            }
+        }
+        $this->finalType = $type;
+        $this->rev = $rev;
+
+        /**
          * Absolute id cleaned for the index
          * See the $page argument of {@link resolve_pageid}
          */
@@ -100,24 +119,7 @@ class DokuPath extends File
         $this->absoluteIdWithSeparator = self::SEPARATOR . $this->absoluteIdWithoutSeparator;
 
 
-        /**
-         * ACL check does not care about the type of id
-         * https://www.dokuwiki.org/devel:event:auth_acl_check
-         * https://github.com/splitbrain/dokuwiki/issues/3476
-         *
-         * We check if there is an extension
-         * If this is the case, this is a media
-         */
-        if ($type == self::UNKNOWN_TYPE) {
-            $lastPosition = StringUtility::lastIndexOf($this->getId(), ".");
-            if ($lastPosition === FALSE) {
-                $type = self::PAGE_TYPE;
-            } else {
-                $type = self::MEDIA_TYPE;
-            }
-        }
-        $this->finalType = $type;
-        $this->rev = $rev;
+
 
 
         if ($type == self::MEDIA_TYPE) {

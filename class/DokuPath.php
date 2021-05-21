@@ -282,14 +282,17 @@ class DokuPath extends File
 
     /**
      * @return string
-     * @deprecated
      *
-     * This is not really deprecated but there is a lot of chance that if you use this function
-     * not in a test, you are wrong
+     * This is the absolute path WITH the root separator
      *
-     * For Dokuwiki, the absolute id does not have any root separator, use {@link DokuPath::getId()}
+     * This is generally NOT what you need.
+     * unless you use this value on {@link InternalMediaLink} and {@link DokuPath} because in this functions it may be relative or not
+     *
+     * Otherwise everywhere in Dokuwiki, use the {@link DokuPath::getId()} absolute value that does not have any root separator
+     * and is absolute (index, ...)
+     *
      */
-    public function getAbsoluteIdWithRoot()
+    public function getAbsolutePathId()
     {
 
         return $this->absoluteIdWithSeparator;

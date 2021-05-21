@@ -304,12 +304,12 @@ abstract class InternalMediaLink extends DokuPath
 
 
     /**
-     * @param $id
+     * @param $pathId
      * @param TagAttributes $tagAttributes
      * @param string $rev
      * @return InternalMediaLink
      */
-    public static function createMediaLinkFromPathId($id, $rev = null, $tagAttributes = null)
+    public static function createMediaLinkFromPathId($pathId, $rev = null, $tagAttributes = null)
     {
         if (is_object($rev)) {
             LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");
@@ -317,7 +317,7 @@ abstract class InternalMediaLink extends DokuPath
         if (!($tagAttributes instanceof TagAttributes) && $tagAttributes != null) {
             LogUtility::msg("TagAttributes is not an instance of Tag Attributes", LogUtility::LVL_MSG_ERROR, "support");
         }
-        $dokuPath = DokuPath::createMediaPathFromId($id, $rev);
+        $dokuPath = DokuPath::createMediaPathFromId($pathId, $rev);
         if ($dokuPath->getExtension() == "svg") {
             /**
              * The mime type is set when uploading, not when
@@ -334,18 +334,18 @@ abstract class InternalMediaLink extends DokuPath
             if (substr($mime, 6) == "svg+xml") {
                 // The require is here because Svg Image Link is child of Internal Media Link (extends)
                 require_once(__DIR__ . '/SvgImageLink.php');
-                $internalMedia = new SvgImageLink($id, $tagAttributes, $rev);
+                $internalMedia = new SvgImageLink($pathId, $tagAttributes, $rev);
             } else {
                 // The require is here because Raster Image Link is child of Internal Media Link (extends)
                 require_once(__DIR__ . '/RasterImageLink.php');
-                $internalMedia = new RasterImageLink($id, $tagAttributes);
+                $internalMedia = new RasterImageLink($pathId, $tagAttributes);
             }
         } else {
             if ($mime == false) {
-                LogUtility::msg("The mime type of the media ($id) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
-                $internalMedia = new RasterImageLink($id, $tagAttributes);
+                LogUtility::msg("The mime type of the media ($pathId) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
+                $internalMedia = new RasterImageLink($pathId, $tagAttributes);
             } else {
-                LogUtility::msg("The type ($mime) of media ($id) is not an image", LogUtility::LVL_MSG_ERROR, "image");
+                LogUtility::msg("The type ($mime) of media ($pathId) is not an image", LogUtility::LVL_MSG_ERROR, "image");
                 $internalMedia = null;
             }
         }

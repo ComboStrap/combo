@@ -113,8 +113,8 @@ class Icon
 
             // It may be a icon already downloaded
             $iconNameSpace = ConfUtility::getConf(self::CONF_ICONS_MEDIA_NAMESPACE);
-            $mediaId = $iconNameSpace . ":" . $iconNameAttribute . ".svg";
-            $mediaDokuPath = DokuPath::createMediaPathFromId($mediaId);
+            $mediaPathId = $iconNameSpace . ":" . $iconNameAttribute . ".svg";
+            $mediaDokuPath = DokuPath::createMediaPathFromId($mediaPathId);
 
             // Bug: null file created when the stream could not get any byte
             // We delete them
@@ -171,9 +171,9 @@ class Icon
 
                     $numberOfByte = @file_put_contents($mediaDokuPath->getPath(), $filePointer);
                     if ($numberOfByte != false) {
-                        LogUtility::msg("The icon ($iconName) from the library ($library) was downloaded to ($mediaId)", LogUtility::LVL_MSG_INFO, self::NAME);
+                        LogUtility::msg("The icon ($iconName) from the library ($library) was downloaded to ($mediaPathId)", LogUtility::LVL_MSG_INFO, self::NAME);
                     } else {
-                        LogUtility::msg("Internal error: The icon ($iconName) from the library ($library) could no be written to ($mediaId)", LogUtility::LVL_MSG_ERROR, self::NAME);
+                        LogUtility::msg("Internal error: The icon ($iconName) from the library ($library) could no be written to ($mediaPathId)", LogUtility::LVL_MSG_ERROR, self::NAME);
                     }
 
                 } else {
@@ -205,7 +205,7 @@ class Icon
 
 
             $svgImageLink = SvgImageLink::createMediaLinkFromPathId(
-                $iconPath,
+                $mediaDokuPath->getAbsolutePathId(),
                 null,
                 $tagAttributes
             );

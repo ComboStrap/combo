@@ -39,7 +39,7 @@ class DokuPath extends File
     /**
      * @var bool true if the id is an absolute one
      */
-    private $isAbsoluteId;
+    private $wasPathIdAbsolute;
 
     /**
      * DokuPath constructor.
@@ -74,8 +74,8 @@ class DokuPath extends File
          * The id have no root character due to {@link cleanID()}
          * function, we correct that (and therefore in the index also)
          */
-        $this->isAbsoluteId = (strpos($pathId, self::SEPARATOR) === 0);
-        if ($this->isAbsoluteId) {
+        $this->wasPathIdAbsolute = (strpos($pathId, self::SEPARATOR) === 0);
+        if ($this->wasPathIdAbsolute) {
             $this->pathId = self::SEPARATOR . $cleanedId;
         } else {
             $this->pathId = $cleanedId;
@@ -285,9 +285,9 @@ class DokuPath extends File
         }
     }
 
-    public function isAbsolute()
+    public function wasPathIdAbsolute()
     {
-        return $this->isAbsoluteId;
+        return $this->wasPathIdAbsolute;
     }
 
 }

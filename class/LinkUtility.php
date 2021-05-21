@@ -98,9 +98,10 @@ class LinkUtility
      */
     private $title;
     /**
+     * The path part of the link
      * @var mixed|string
      */
-    private $pathId;
+    private $path;
     /**
      * @var mixed|string
      */
@@ -226,7 +227,12 @@ class LinkUtility
         $position = strpos($refProcessing, "?");
         if ($position !== false) {
 
-            $this->pathId = substr($refProcessing, 0, $position);
+            $this->path = substr($refProcessing, 0, $position);
+            if ($this->path==""){
+                // no path, this is the requested page
+                global $ID;
+                $this->path = $ID;
+            }
             $secondPart = substr($refProcessing, $position + 1);
             $anchorPosition = strpos($secondPart, "#");
             if ($anchorPosition !== false) {
@@ -239,10 +245,10 @@ class LinkUtility
 
             $anchorPosition = strpos($refProcessing, "#");
             if ($anchorPosition !== false) {
-                $this->pathId = substr($refProcessing, 0, $anchorPosition);
+                $this->path = substr($refProcessing, 0, $anchorPosition);
                 $this->fragment = substr($refProcessing, $anchorPosition + 1);
             } else {
-                $this->pathId = $refProcessing;
+                $this->path = $refProcessing;
             }
         }
 
@@ -451,7 +457,7 @@ class LinkUtility
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->getPathId());
+            $emailAddress = $this->emailObfuscation($this->getPath());
             $returnedHTML .= " href=\"$url\"";
             $returnedHTML .= " title=\"$emailAddress\"";
             unset($this->attributes["href"]);
@@ -610,7 +616,7 @@ class LinkUtility
                 /**
                  * Create the linked page object
                  */
-                $this->linkedPage = new Page($this->pathId);
+                $this->linkedPage = new Page($this->path);
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
             }
@@ -640,7 +646,7 @@ class LinkUtility
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::render($name, $this->pathId);
+                    $name = TemplateUtility::render($name, $this->path);
                 }
                 if (empty($name)) {
                     $name = $this->ref;
@@ -666,7 +672,7 @@ class LinkUtility
             case self::TYPE_EMAIL:
                 if (empty($name)) {
                     global $conf;
-                    $email = $this->getPathId();
+                    $email = $this->getPath();
                     switch ($conf['mailguard']) {
                         case 'none' :
                             $name = $email;
@@ -681,7 +687,7 @@ class LinkUtility
                 break;
             case self::TYPE_INTERWIKI:
                 if (empty($name)) {
-                    $name = $this->getPathId();
+                    $name = $this->getPath();
                 }
                 break;
             case self::TYPE_LOCAL:
@@ -726,9 +732,9 @@ class LinkUtility
 
 
     public
-    function getPathId()
+    function getPath()
     {
-        return $this->pathId;
+        return $this->path;
     }
 
     public
@@ -757,7 +763,7 @@ class LinkUtility
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $url = $this->renderer->_resolveInterWiki($wiki, $this->getPathId());
+                $url = $this->renderer->_resolveInterWiki($wiki, $this->getPath());
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());
@@ -902,7 +908,7 @@ class LinkUtility
 
     public function isRelative()
     {
-        return strpos($this->getPathId(), ':') !== 0;
+        return strpos($this->getPath(), ':') !== 0;
     }
 
     /**

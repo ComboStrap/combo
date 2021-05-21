@@ -101,7 +101,7 @@ class Page extends DokuPath
              */
             $useAcl = false;
             $id = page_findnearest($pathId, $useAcl);
-            if ($id!==false){
+            if ($id !== false) {
                 $pathId = $id;
             }
 
@@ -522,9 +522,11 @@ class Page extends DokuPath
 
     }
 
+    /**
+     * @param string $mode delete the cache for the format XHTML and {@link Analytics::RENDERER_NAME_MODE}
+     */
     public function deleteCache($mode = "xhtml")
     {
-
 
         if ($this->exists()) {
 
@@ -532,7 +534,7 @@ class Page extends DokuPath
             $cache = $this->getInstructionsCache();
             $cache->removeCache();
 
-            $cache = $this->getRenderCache();
+            $cache = $this->getRenderCache($mode);
             $cache->removeCache();
 
         }
@@ -1342,7 +1344,7 @@ class Page extends DokuPath
     public function hasXhtmlCache()
     {
 
-        $renderCache = $this->getRenderCache();
+        $renderCache = $this->getRenderCache("xhtml");
         /**
          * $cache->cache is the file
          */
@@ -1393,7 +1395,7 @@ class Page extends DokuPath
         global $conf;
         $format = 'xhtml';
 
-        $renderCache = $this->getRenderCache();
+        $renderCache = $this->getRenderCache($format);
         if ($renderCache->useCache()) {
             $xhtml = $renderCache->retrieveCache(false);
             if ($conf['allowdebug'] && $format == 'xhtml') {
@@ -1439,23 +1441,25 @@ class Page extends DokuPath
     }
 
     /**
+     * @param string $outputFormat For instance, "xhtml" or {@links Analytics::RENDERER_NAME_MODE}
      * @return \dokuwiki\Cache\Cache the cache of the page
      *
      * Output of {@link DokuWiki_Syntax_Plugin::render()}
+     *
      */
-    private function getRenderCache()
+    private function getRenderCache($outputFormat)
     {
-        $format = "xhtml";
+
         if ($this->isSideBar()) {
 
             /**
              * Logical id is the scope and part of the key
              */
-            return new CacheByLogicalKey($this->getLogicalId(), $this->getFilePath(), $format);
+            return new CacheByLogicalKey($this->getLogicalId(), $this->getFilePath(), $outputFormat);
 
         } else {
 
-            return new CacheRenderer($this->getId(), $this->getFilePath(), $format);
+            return new CacheRenderer($this->getId(), $this->getFilePath(), $outputFormat);
 
         }
     }

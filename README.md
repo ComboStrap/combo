@@ -18,6 +18,7 @@
   * [Social (Google, Twitter, Facebook)](https://combostrap.com/social)
   * [Styling](https://combostrap.com/styling)
   * [Performance (Lazy loading, responsive image)](https://combostrap.com/performance)
+  * [Animation (hover, visible)](https://combostrap.com/animation)
 
 
 More ... [ComboStrap](https://combostrap.com)

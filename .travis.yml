@@ -14,6 +14,8 @@ env:
     - DOKUWIKI=stable
 
 before_script:
+    - "echo travis branch ${TRAVIS_BRANCH}"
+    - "echo travis pull request branch ${TRAVIS_PULL_REQUEST_BRANCH}"
     - "curl -H \"Authorization: token ${TOKEN}\" -o \"boot.sh\" \"https://raw.githubusercontent.com/ComboStrap/combo_test/${TRAVIS_BRANCH}/ci/boot.sh\""
     - wget https://raw.githubusercontent.com/splitbrain/dokuwiki-travis/master/travis.sh
     - bash boot.sh

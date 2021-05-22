@@ -20,6 +20,7 @@
   * [Performance (Lazy loading, responsive image)](https://combostrap.com/performance)
   * [Animation (hover, visible)](https://combostrap.com/animation)
   * [First Class Image (responsive resizing, native svg)](https://combostrap.com/image)
+  * [Easy Emphasis](https://combostrap.com/emphasis)
 
 
 More ... [ComboStrap](https://combostrap.com)

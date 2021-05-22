@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\Bootstrap;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 use ComboStrap\PluginUtility;
@@ -27,6 +28,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 
     const TITLE = 'title';
     const LEVEL = 'level';
+    const DISPLAY_BS_4 = "display-bs-4";
 
 
     private static function getParent(Tag $tag)
@@ -274,10 +276,12 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
         $type = $attributes["type"];
         if ($type != 0) {
             PluginUtility::addClass2Attributes("display-" . $type, $attributes);
-            /**
-             * Make Bootstrap display responsive
-             */
-            PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+            if (Bootstrap::getBootStrapMajorVersion()=="4") {
+                /**
+                 * Make Bootstrap display responsive
+                 */
+                PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::DISPLAY_BS_4);
+            }
         }
         if (isset($attributes[self::TITLE])) {
             unset($attributes[self::TITLE]);

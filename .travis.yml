@@ -4,17 +4,17 @@ language: php
 # and https://github.com/splitbrain/dokuwiki-travis
 php:
 #    - "7.4" - Array and string offset access syntax with curly braces is deprecated vendor/marcusschwarz/lesserphp/lessc.inc.php:761
-    - "7.3"
-    - "7.2"
-    - "7.1"
-    - "7.0"
+#    - "7.3"
+#    - "7.2"
+#    - "7.1"
+#    - "7.0"
     - "5.6"
 
 env:
     - DOKUWIKI=stable
 
 before_script:
-    - "curl -H \"Authorization: token ${TOKEN}\" -o \"boot.sh\" \"https://raw.githubusercontent.com/ComboStrap/combo_dev/master/ci/boot.sh\""
+    - "curl -H \"Authorization: token ${TOKEN}\" -o \"boot.sh\" \"https://raw.githubusercontent.com/ComboStrap/combo_test/${TRAVIS_BRANCH}/ci/boot.sh\""
     - wget https://raw.githubusercontent.com/splitbrain/dokuwiki-travis/master/travis.sh
     - bash boot.sh
     - sh travis.sh

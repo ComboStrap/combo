@@ -21,6 +21,7 @@
   * [Animation (hover, visible)](https://combostrap.com/animation)
   * [First Class Image (responsive resizing, native svg)](https://combostrap.com/image)
   * [Easy Emphasis](https://combostrap.com/emphasis)
+  * [Native Icon Support](https://combostrap.com/icon)
 
 
 More ... [ComboStrap](https://combostrap.com)

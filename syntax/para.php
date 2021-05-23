@@ -298,7 +298,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
                             $callstack->next();
                             break;
                         default:
-                            LogUtility::msg("The eol action for the combination enter / (" . $nextDisplay . ") of the call ( $nextCall ) was not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            LogUtility::msg("The eol action for the combination enter / (" . $nextDisplay . ") of the call ( $nextCall ) was not implemented", LogUtility::LVL_MSG_ERROR);
                             break;
                     }
                 } else {
@@ -334,7 +334,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
                             $paragraphIsOpen = false;
                             break;
                         default:
-                            LogUtility::msg("The display for a open paragraph (" . $nextDisplay . ") is not implemented", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            LogUtility::msg("The display for a open paragraph (" . $nextDisplay . ") is not implemented", LogUtility::LVL_MSG_ERROR);
                             break;
                     }
                 }

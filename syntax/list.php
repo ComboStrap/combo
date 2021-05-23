@@ -44,7 +44,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -60,6 +60,14 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
+
+    public function accepts($mode)
+    {
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
+    }
+
 
     function getSort()
     {
@@ -107,7 +115,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
 
                 $html = '<ul';
                 if (sizeof($attributes)) {
-                    $html .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                    $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
                 }
                 $html .= '>';
 
@@ -119,7 +127,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 

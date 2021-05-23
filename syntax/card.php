@@ -4,8 +4,14 @@
  *
  */
 
+use ComboStrap\Bootstrap;
+use ComboStrap\Call;
+use ComboStrap\CallStack;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -31,25 +37,19 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
     const TAG = 'card';
 
-    /**
-     * The card body html
-     * It's created as a constant because
-     * the below card property such as {@link syntax_plugin_combo_img}
-     * may remove it if they are used
-     */
-    const CARD_BODY = '<div class="card-body">' . DOKU_LF;
 
     /**
      * Key of the attributes that says if the card has an image illustration
      */
-    const HAS_IMAGE_ILLUSTRATION_KEY = "hasImageIllustration";
+    const IMAGE_ILLUSTRATION_KEY = "imageIllustration";
+    const CONF_ENABLE_SECTION_EDITING = "enableCardSectionEditing";
 
 
     /**
      * @var int a counter for an unknown card type
      */
     private $cardCounter = 0;
-
+    private $sectionCounter = 0;
 
 
     /**
@@ -86,23 +86,24 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
         if ($mode == "header") {
             return false;
         }
-        /**
-         * If preformatted is disable, we does not accept it
-         */
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**
      * How Dokuwiki will add P element
      *
-     * * 'normal' - The plugin can be used inside paragraphs
-     *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
-     *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
+     *  * 'normal' - The plugin output will be inside a paragraph (or another block element), no paragraphs will be inside
+     *               No paragraph - the plugin can be used inside paragraphs (inline)
+     *  * 'block'  - Open paragraphs need to be closed before plugin output -
+     *               the plugin output will not start with a paragraph -
+     *               block should not be inside paragraphs
+     *               block will add a `eol` call at the beginning
+     *  * 'stack'  - Open paragraphs will be closed before plugin output, the plugin output wraps other paragraphs
+     *               Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs (ie paragraph will be added)
      *
+     * @see https://www.dokuwiki.org/devel:syntax_plugins
      * @see DokuWiki_Syntax_Plugin::getPType()
      */
     function getPType()
@@ -167,10 +168,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                // A card alone
-
                 $attributes = PluginUtility::getTagAttributes($match);
-
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
 
                 $parentTag = $tag->getParent();
@@ -186,41 +184,107 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 /** A card without context */
                 PluginUtility::addClass2Attributes("card", $attributes);
-                /**
-                 * Image illustration is checked on exit
-                 * but we add the attributes now to avoid null exception
-                 * on render
-                 */
-                $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY] = false;
 
 
                 if (!in_array("id", $attributes)) {
-                    $attributes["id"] = $context . $id;
+                    $attributes["id"] = self::TAG . $id;
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::POSITION => $pos
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
-                $firstDescendant = $openingTag->getFirstMeaningFullDescendant();
-                if ($firstDescendant->getName() == syntax_plugin_combo_img::TAG) {
-                    $openingTag->addAttribute(self::HAS_IMAGE_ILLUSTRATION_KEY, true);
+                $callStack = CallStack::createFromHandler($handler);
+
+                // Processing
+                $callStack->moveToEnd();
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                // Gather the context for the data returned
+                $context = $openingCall->getContext();
+                // First child image ?
+                $firstOpeningChild = $callStack->moveToFirstChildTag();
+                if ($firstOpeningChild !== false) {
+                    if ($firstOpeningChild->getTagName() == syntax_plugin_combo_media::TAG) {
+                        $imageAttributes = $firstOpeningChild->getAttributes();
+                        $openingCall->addAttribute(syntax_plugin_combo_card::IMAGE_ILLUSTRATION_KEY, $imageAttributes);
+                        /**
+                         * We delete the image to not create
+                         * a paragraph (when the {@link syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack() process is kicking)
+                         * as an image is a inline component
+                         * We add it in the index in the render
+                         */
+                        $callStack->deleteActualCallAndPrevious();
+
+
+                    }
                 }
-                $context = $openingTag->getContext();
+
+                // Transform eol to paragraph
+                // after the image illustration (otherwise, the image may be wrapped in a paragraph)
+                $callStack->moveToEnd();
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $callStack->insertEolIfNextCallIsNotEolOrBlock(); // a paragraph is mandatory
+                $callStack->processEolToEndStack("card-text");
+
+                // Insert the card body enter
+                $callStack->moveToEnd();
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $firstChild = $callStack->moveToFirstChildTag();
+                if ($firstChild !== false) {
+                    if ($firstChild->getTagName() == syntax_plugin_combo_header::TAG) {
+                        $callStack->moveToNextSiblingTag();
+                    }
+                    $callStack->insertBefore(
+                        Call::createComboCall(
+                            syntax_plugin_combo_cardbody::TAG,
+                            DOKU_LEXER_ENTER
+                        )
+                    );
+                } else {
+                    // no child
+                    $callStack->moveToEnd();
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
+                    $callStack->insertAfter(
+                        Call::createComboCall(
+                            syntax_plugin_combo_cardbody::TAG,
+                            DOKU_LEXER_ENTER
+                        )
+                    );
+                }
+
+
+                // Insert the card body exit
+                $callStack->moveToEnd();
+                $callStack->insertBefore(
+                    Call::createComboCall(
+                        syntax_plugin_combo_cardbody::TAG,
+                        DOKU_LEXER_EXIT
+                    )
+                );
+
+                // close
+                $callStack->closeAndResetPointer();
+
+                /**
+                 * Section editing
+                 * +1 to go at the line ?
+                 */
+                $endPosition = $pos + strlen($match) + 1;
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::POSITION => $endPosition
                 );
 
 
@@ -251,36 +315,97 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER:
 
-                    $hasImageIllustration = $attributes[self::HAS_IMAGE_ILLUSTRATION_KEY];
-                    unset($attributes[self::HAS_IMAGE_ILLUSTRATION_KEY]);
+                    /**
+                     * Tag Attributes
+                     */
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
 
-                    $renderer->doc .= '<div ' . PluginUtility::array2HTMLAttributes($attributes) . '>' . DOKU_LF;
+                    /**
+                     * Section (Edit button)
+                     */
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                        $position = $data[PluginUtility::POSITION];
+                        $this->sectionCounter++;
+                        $name = "section" . self::TAG . $this->sectionCounter;
+                        PluginUtility::startSection($renderer, $position, $name);
+                    }
 
-                    if (!$hasImageIllustration) {
-                        $renderer->doc .= self::CARD_BODY;
+                    $context = $data[PluginUtility::CONTEXT];
+                    syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns($renderer, $context);
+
+                    /**
+                     * Illustrations
+                     * (Must come before the next {@link TagAttributes::toHtmlEnterTag()} of the enter tag
+                     * to remove the image illustration attribute
+                     */
+                    $imageIllustration = $tagAttributes->getValueAndRemove(self::IMAGE_ILLUSTRATION_KEY, array());
+
+                    /**
+                     * Card
+                     */
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
+
+                    /**
+                     * Image
+                     */
+                    if (sizeof($imageIllustration) > 0) {
+                        $image = InternalMediaLink::createFromCallStackArray($imageIllustration);
+                        $image->getTagAttributes()->addClassName("card-img-top");
+                        $renderer->doc .= $image->renderMediaTag();
                     }
 
                     break;
 
                 case DOKU_LEXER_EXIT:
-                    $context = $data[PluginUtility::CONTEXT];
-                    switch ($context) {
-                        case syntax_plugin_combo_cardcolumns::TAG:
-                        case syntax_plugin_combo_cardcolumns::TAG_TEASER:
-                            $renderer->doc .= '</div>' . DOKU_LF;
-                            break;
-                        default:
-                            $renderer->doc .= '</div>' . DOKU_LF . "</div>" . DOKU_LF;
+
+                    /**
+                     * End section
+                     */
+                    if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
+                        $renderer->finishSectionEdit($data[PluginUtility::POSITION]);
                     }
+
+                    /**
+                     * End card
+                     */
+                    $renderer->doc .= "</div>" . DOKU_LF;
+
+                    /**
+                     * End Massonry column if any
+                     * {@link syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns()}
+                     */
+                    $context = $data[PluginUtility::CONTEXT];
+                    syntax_plugin_combo_cardcolumns::endColIfBootstrap5AnCardColumns($renderer, $context);
+
+
                     break;
 
                 case DOKU_LEXER_UNMATCHED:
+
+                    /**
+                     * Render
+                     */
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
 
             }
 
+            return true;
+
+        } else if ($format == 'metadata') {
+
+            /** @var Doku_Renderer_metadata $renderer */
+            $state = $data[PluginUtility::STATE];
+            if ($state==DOKU_LEXER_ENTER) {
+
+                $attributes = $data[PluginUtility::ATTRIBUTES];
+                $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+                $imageIllustration = $tagAttributes->getValueAndRemove(self::IMAGE_ILLUSTRATION_KEY, array());
+                if (sizeof($imageIllustration) > 0) {
+                    syntax_plugin_combo_media::registerImageMeta($imageIllustration, $renderer);
+                }
+            }
             return true;
         }
         return false;

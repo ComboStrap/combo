@@ -78,9 +78,18 @@ EOF;
         $webcode = array(
             'type' => 'format',
             'title' => 'webcode',
-            'icon' => $imageBase . '/webcode.png',
+            'icon' => $imageBase . '/code-square.svg',
             'open' => '<webcode name="Default" frameborder="0">\n',
             'close' => '\n</webcode>\n'
+            //'key' => $webCodeShortcutKey
+        );
+
+        $twitter = array(
+            'type' => 'format',
+            'title' => 'twitter',
+            'icon' => $imageBase . '/twitter.svg',
+            'open' => '<blockquote>\n<cite>[[',
+            'close' => ']]</cite>\n</webcode>\n'
             //'key' => $webCodeShortcutKey
         );
 
@@ -88,8 +97,10 @@ EOF;
             'type' => 'picker',
             'title' => "Choose comboStrap component",
             'icon' => $imageBase . '/logo.svg',
-            'list' => array($frontmatter, $blockquote, $unit, $webcode)
+            'list' => array($frontmatter, $blockquote, $webcode, $twitter, $unit)
         );
+
+
 
 
         return true;

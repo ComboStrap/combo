@@ -1,5 +1,7 @@
 <?php
 /**
+ *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * The config manager is parsing this fucking file because they want
  * to be able to use 60*60*24 ???? :(
  *
@@ -18,8 +20,7 @@
  */
 
 
-use ComboStrap\IconUtility;
-use ComboStrap\MetadataUtility;
+use ComboStrap\Icon;
 use ComboStrap\Prism;
 
 
@@ -67,10 +68,16 @@ $conf['MinimalNamesCountForAutomaticCanonical'] = 0;
 
 /**
  * Icon Namespace
- * See {@link IconUtility::CONF_ICONS_MEDIA_NAMESPACE}
- * See {@link IconUtility::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT}
+ * See {@link Icon::CONF_ICONS_MEDIA_NAMESPACE}
+ * See {@link Icon::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT}
  */
 $conf['icons_namespace'] = ":combostrap:icons";
+
+/**
+ * Default library
+ * See {@link Icon::CONF_DEFAULT_ICON_LIBRARYE}
+ */
+$conf['defaultIconLibrary'] = "material-design";
 
 /**
  * Css Optimization
@@ -130,8 +137,10 @@ $conf['pageProtectionMode'] = "";
 /**
  * Preformatted mode disable
  * See {@link syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE}
+ * See {@link syntax_plugin_combo_preformatted::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE}
  */
-$conf['preformattedEnable'] = 0;
+$conf['preformattedEnable'] = 1;
+$conf['preformattedEmptyContentNotPrintedEnable'] = 1;
 
 /**
  * {@link renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES}
@@ -151,9 +160,14 @@ $conf['excludedQualityRulesFromDynamicMonitoring'] = 'words_by_section_avg_min,w
 $conf['disableDynamicQualityMonitoring'] = 0;
 
 /**
+ * Link
  * Class in link {@link \ComboStrap\LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME}
+ * Enable {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
+ * MultiLines {@link syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK}
  */
 $conf['useDokuwikiLinkClassName'] = 0;
+$conf['disableLink'] = 0;
+$conf['enableMultiLinesLink'] = 0;
 
 /**
  * Twitter
@@ -194,3 +208,102 @@ $conf['latePublicationProtectionEnable'] = 1;
  * {@link Page::CONF_DEFAULT_PAGE_TYPE}
  */
 $conf["defaultPageType"] = "article";
+
+/**
+ * Default shadow elevation
+ * {@link \ComboStrap\Shadow::CONF_DEFAULT_VALUE}
+ */
+$conf["defaultShadowLevel"] = "medium";
+
+
+/**
+ * Lazy loading {@link \ComboStrap\SvgImageLink::CONF_LAZY_LOAD_ENABLE}
+ */
+$conf["svgLazyLoadEnable"] = 1;
+
+/**
+ * Lazy loading {@link \ComboStrap\SvgImageLink::CONF_SVG_INJECTION_ENABLE}
+ */
+$conf["svgInjectionEnable"] = 1;
+
+/**
+ * Svg Optimization Disable {@link \ComboStrap\SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE}
+ */
+$conf["svgOptimizationEnable"] = 1;
+
+/**
+ * Svg Inline Max size {@link \ComboStrap\SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG}
+ */
+$conf["svgMaxInlineSizeKb"] = 2;
+
+/**
+ * The name of the group of user that can upload svg
+ * {@link action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME}
+ */
+$conf["svgUploadGroupName"] = "";
+
+/**
+ * Svg Optimization
+ * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP}
+ * The attribute to delete separates by a ,
+ */
+$conf["svgOptimizationNamespacesToKeep"] = "";
+
+/**
+ * Svg Optimization
+ * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
+ * The attribute to delete separates by a ,
+ */
+$conf["svgOptimizationAttributesToDelete"] = "id, style";
+/**
+ * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE}
+ */
+$conf["svgOptimizationElementsToDelete"] = "script, style, title, desc";
+/**
+ * {@link \ComboStrap\SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY}
+ */
+$conf["svgOptimizationElementsToDeleteIfEmpty"] = "metadata, defs";
+
+/**
+ * {@link \ComboStrap\SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT}
+ */
+
+$conf["svgPreserveAspectRatioDefault"] = "xMidYMid slice";
+
+/**
+ * Lazy loading {@link \ComboStrap\RasterImageLink::CONF_LAZY_LOADING_ENABLE}
+ */
+$conf["rasterImageLazyLoadingEnable"] = 1;
+
+/**
+ * {@link \ComboStrap\RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN}
+ */
+$conf["responsiveImageMargin"] = "20px";
+
+/**
+ * {@link \ComboStrap\RasterImageLink::CONF_RETINA_SUPPORT_ENABLED}
+ */
+$conf["retinaRasterImageEnable"] = 0;
+
+/**
+ * {@link \ComboStrap\LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR
+ */
+$conf["lazyLoadingPlaceholderColor"] = "#cbf1ea";
+
+
+/**
+ * {@link \ComboStrap\InternalMediaLink::CONF_IMAGE_ENABLE}
+ */
+$conf["imageEnable"] = 1;
+
+/**
+ * Default linking value
+ * {@link \ComboStrap\InternalMediaLink::CONF_DEFAULT_LINKING}
+ */
+$conf["defaultImageLinking"] = "direct";
+
+/**
+ * Float
+ *  {@link \ComboStrap\FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT}
+ */
+$conf["floatDefaultBreakpoint"] = "sm";

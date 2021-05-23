@@ -59,9 +59,8 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 
                 $handler->internallink($match, $state, $pos);
                 $suffix = "]]";
-                $suffixStartPosition = strlen($handler->calls) - strlen($suffix);
-                if (strpos($handler->calls, $suffix) === $suffixStartPosition) {
-                    $handler->calls = substr($handler->calls ,0,$suffixStartPosition);
+                if (substr($handler->calls, -strlen($suffix)) == $suffix) {
+                    $handler->calls = substr($handler->calls, 0, strlen($handler->calls) - strlen($suffix));
                 }
 
             } else {

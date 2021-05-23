@@ -4,18 +4,44 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_preformatted;
-use TestRequest;
 
-require_once(__DIR__ . '/LogUtility.php');
-require_once(__DIR__ . '/FsWikiUtility.php');
-require_once(__DIR__ . '/IconUtility.php');
-require_once(__DIR__ . '/StringUtility.php');
+/**
+ * Plugin Utility is added in all Dokuwiki extension
+ * and
+ * all classes are added in plugin utility
+ */
+require_once(__DIR__ . '/Animation.php');
+require_once(__DIR__ . '/Background.php');
+require_once(__DIR__ . '/Bootstrap.php');
+require_once(__DIR__ . '/Cache.php');
+require_once(__DIR__ . '/CacheByLogicalKey.php');
+require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
+require_once(__DIR__ . '/Call.php');
+require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/ColorUtility.php');
+require_once(__DIR__ . '/Dimension.php');
+require_once(__DIR__ . '/FloatAttribute.php');
+require_once(__DIR__ . '/FsWikiUtility.php');
+require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/Hover.php');
+require_once(__DIR__ . '/HtmlUtility.php');
+require_once(__DIR__ . '/Icon.php');
+require_once(__DIR__ . '/LogUtility.php');
+require_once(__DIR__ . '/Page.php');
+require_once(__DIR__ . '/Position.php');
 require_once(__DIR__ . '/RenderUtility.php');
-require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Resources.php');
-
+require_once(__DIR__ . '/Skin.php');
+require_once(__DIR__ . '/Shadow.php');
+require_once(__DIR__ . '/SnippetManager.php');
+require_once(__DIR__ . '/Sqlite.php');
+require_once(__DIR__ . '/StringUtility.php');
+require_once(__DIR__ . '/StyleUtility.php');
+require_once(__DIR__ . '/TagAttributes.php');
+require_once(__DIR__ . '/XmlDocument.php');
+require_once(__DIR__ . '/XmlUtility.php');
 
 /**
  * Class url static
@@ -36,7 +62,6 @@ class PluginUtility
     // The context is generally the parent tag but it may be also the grandfather.
     // It permits to determine the HTML that is outputted
     const CONTEXT = 'context';
-    const CONTENT = 'content';
     const TAG = "tag";
 
     /**
@@ -45,36 +70,16 @@ class PluginUtility
      */
     const COMBOSTRAP_NAMESPACE_NAME = "combostrap";
 
-    /**
-     * List of inline components
-     * Used to manage white space before an unmatched string.
-     * The syntax tree of Dokuwiki (ie {@link \Doku_Handler::$calls})
-     * has only data and no class, for now, we create this
-     * lists manually because this is a hassle to retrieve this information from {@link \DokuWiki_Syntax_Plugin::getType()}
-     */
-    const PRESERVE_LEFT_WHITE_SPACE_COMPONENTS = array(
-        /**
-         * The inline of combo
-         */
-        \syntax_plugin_combo_link::TAG,
-        \syntax_plugin_combo_icon::TAG,
-        \syntax_plugin_combo_inote::TAG,
-        \syntax_plugin_combo_button::TAG,
-        \syntax_plugin_combo_tooltip::TAG,
-        /**
-         * Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
-         * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class
-         */
-        "strong",
-        "emphasis",
-        "underline",
-        "monospace",
-        "subscript",
-        "superscript",
-        "deleted",
-        "footnote"
-    );
+    const PARENT = "parent";
+    const POSITION = "position";
 
+    /**
+     * Class to center an element
+     */
+    const CENTER_CLASS = "mx-auto";
+
+
+    const EDIT_SECTION_TARGET = 'section';
 
     /**
      * The URL base of the documentation
@@ -185,6 +190,7 @@ class PluginUtility
         return '<' . $tag . '.*?>';
     }
 
+
     /**
      * Take an array  where the key is the attribute name
      * and return a HTML tag string
@@ -193,49 +199,52 @@ class PluginUtility
      *
      * @param $attributes - combo attributes
      * @return string
+     * @deprecated to allowed background and other metadata, use {@link TagAttributes::toHtmlEnterTag()}
      */
-    public static function array2HTMLAttributes($attributes)
+    public static function array2HTMLAttributesAsString($attributes)
     {
-        // Process the style attributes if any
-        self::processStyle($attributes);
 
-        // Process the attributes that have an effect on the class
-        self::processClass($attributes);
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+        return $tagAttributes->toHTMLAttributeString();
 
-        self::processCollapse($attributes);
-        // Then transform
-        $tagAttributeString = "";
-        foreach ($attributes as $name => $value) {
-
-            if ($name !== "type") {
-                $tagAttributeString .= hsc($name) . '="' . self::escape(StringUtility::toString($value)) . '" ';
-            }
-
-        }
-        return trim($tagAttributeString);
     }
 
     /**
      *
+     * Parse the attributes part of a match
+     *
      * Example:
      *   line-numbers="value"
      *   line-numbers='value'
+     *
+     * This value may be in:
+     *   * configuration value
+     *   * as well as in the match of a {@link SyntaxPlugin}
+     *
      * @param $string
      * @return array
      *
-     * Parse a string to HTML attribute
+     * To parse a match, use {@link PluginUtility::getTagAttributes()}
+     *
+     *
      */
-    public static function parse2HTMLAttributes($string)
+    public static function parseAttributes($string)
     {
 
         $parameters = array();
 
         // /i not case sensitive
-        $attributePattern = "\\s*([-\w]+)\\s*=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*";
+        $attributePattern = "\\s*([-\w]+)\\s*(?:=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*)?";
         $result = preg_match_all('/' . $attributePattern . '/i', $string, $matches);
         if ($result != 0) {
             foreach ($matches[1] as $key => $parameterKey) {
-                $parameters[hsc(strtolower($parameterKey))] = hsc($matches[2][$key]);
+                $value = $matches[2][$key];
+                if ($value == "") {
+                    $value = true;
+                } else {
+                    $value = hsc($value);
+                }
+                $parameters[hsc(strtolower($parameterKey))] = $value;
             }
         }
         return $parameters;
@@ -252,34 +261,14 @@ class PluginUtility
      * Because they are users input, they are all escaped
      * @param $match
      * @param $hasThirdValue - if true, the third parameter is treated as value, not a property and returned in the `third` key
-     * use for the code/file/console where the accept a name as third value
+     * use for the code/file/console where they accept a name as third value
      * @param $keyThirdArgument - if a third argument is found, return it with this key
      * @return array
      */
     public static function getQualifiedTagAttributes($match, $hasThirdValue, $keyThirdArgument)
     {
 
-        // Until the first >
-        $pos = strpos($match, ">");
-        if ($pos == false) {
-            LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_WARNING);
-            return array();
-        }
-        $match = substr($match, 0, $pos);
-
-
-        // Trim to start clean
-        $match = trim($match);
-
-        // Suppress the <
-        if ($match[0] == "<") {
-            $match = substr($match, 1);
-        }
-
-        // Suppress the / for a leaf tag
-        if ($match[strlen($match) - 1] == "/") {
-            $match = substr($match, 0, strlen($match) - 1);
-        }
+        $match = PluginUtility::getPreprocessEnterTag($match);
 
         // Suppress the tag name (ie until the first blank)
         $spacePosition = strpos($match, " ");
@@ -324,7 +313,7 @@ class PluginUtility
         }
 
         // Parse the remaining attributes
-        $parsedAttributes = self::parse2HTMLAttributes($match);
+        $parsedAttributes = self::parseAttributes($match);
 
         // Merge
         $attributes = array_merge($attributes, $parsedAttributes);;
@@ -427,173 +416,63 @@ class PluginUtility
 
 
     /**
-     * Set the environment to be able to
-     * run a {@link TestRequest} as admin
-     * @param TestRequest $request
-     */
-    public static function runAsAdmin($request)
-    {
-        Auth::becomeSuperUser($request);
-
-    }
-
-    /**
      * This method will takes attributes
      * and process the plugin styling attribute such as width and height
      * to put them in a style HTML attribute
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
     public static function processStyle(&$attributes)
     {
         // Style
         $styleAttributeName = "style";
-        $styleProperties = array();
-        if (array_key_exists($styleAttributeName, $attributes)) {
-            foreach (explode(";", $attributes[$styleAttributeName]) as $property) {
+        if ($attributes->hasComponentAttribute($styleAttributeName)) {
+            $properties = explode(";", $attributes->getValueAndRemove($styleAttributeName));
+            foreach ($properties as $property) {
                 list($key, $value) = explode(":", $property);
                 if ($key != "") {
-                    $styleProperties[$key] = $value;
+                    $attributes->addStyleDeclaration($key, $value);
                 }
             }
         }
 
-        // Skin
-        $skinAttributes = "skin";
-        if (array_key_exists($skinAttributes, $attributes)) {
-            $skinValue = $attributes[$skinAttributes];
-            unset($attributes[$skinAttributes]);
-            if (array_key_exists("type", $attributes)) {
-                $type = $attributes["type"];
-                if (isset(ColorUtility::$colors[$type])) {
-                    $color = ColorUtility::$colors[$type];
-                    switch ($skinValue) {
-                        case "contained":
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $color[ColorUtility::COLOR]);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
-                            $attributes["elevation"] = true;
-                            break;
-                        case "filled":
-                        case "solid":
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $color[ColorUtility::COLOR]);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, $color[ColorUtility::BACKGROUND_COLOR]);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, $color[ColorUtility::BORDER_COLOR]);
-                            break;
-                        case "outline":
-                            $primaryColor = $color[ColorUtility::COLOR];
-                            if ($primaryColor === "#fff") {
-                                $primaryColor = $color[ColorUtility::BACKGROUND_COLOR];
-                            }
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $primaryColor);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, "transparent");
-                            $borderColor = $color[ColorUtility::BACKGROUND_COLOR];
-                            if(isset($styleProperties[ColorUtility::BORDER_COLOR])){
-                                // Color in the `border` attribute
-                                // takes precedence in the `border-color` if located afterwards
-                                // We don't take the risk
-                                $borderColor = $styleProperties[ColorUtility::BORDER_COLOR];
-                                unset($styleProperties[ColorUtility::BORDER_COLOR]);
-                            }
-                            ArrayUtility::addIfNotSet($styleProperties, "border", "1px solid " . $borderColor);
 
-                            break;
-                        case "text":
-                            $primaryColor = $color[ColorUtility::COLOR];
-                            if ($primaryColor === "#fff") {
-                                $primaryColor = $color[ColorUtility::BACKGROUND_COLOR];
-                            }
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::COLOR, $primaryColor);
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BACKGROUND_COLOR, "transparent");
-                            ArrayUtility::addIfNotSet($styleProperties, ColorUtility::BORDER_COLOR, "transparent");
-                            break;
-                    }
-                }
-            }
-        }
-
-        // Color
-        $colorAttributes = ["color", "background-color", "border-color"];
+        /**
+         * Text and border Color
+         * For background color, see {@link TagAttributes::processBackground()}
+         */
+        $colorAttributes = ["color", ColorUtility::BORDER_COLOR];
         foreach ($colorAttributes as $colorAttribute) {
-            if (array_key_exists($colorAttribute, $attributes)) {
-                $colorValue = $attributes[$colorAttribute];
-                $gradientPrefix = 'gradient-';
-                if (strpos($colorValue, $gradientPrefix) === 0) {
-                    $mainColorValue = substr($colorValue, strlen($gradientPrefix));
-                    $styleProperties['background-image'] = 'linear-gradient(to top,#fff 0,' . self::getColorValue($mainColorValue) . ' 100%)';
-                    $styleProperties['background-color'] = 'unset!important';
-                } else {
-                    $styleProperties[$colorAttribute] = self::getColorValue($colorValue);
+            if ($attributes->hasComponentAttribute($colorAttribute)) {
+                $colorValue = $attributes->getValueAndRemove($colorAttribute);
+                switch ($colorAttribute) {
+                    case "color":
+                        $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
+                        break;
+                    case ColorUtility::BORDER_COLOR:
+                        $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
+                        self::checkDefaultBorderColorAttributes($attributes);
+                        break;
                 }
-
-                if ($colorAttribute == "border-color") {
-                    self::checkDefaultBorderColorAttributes($styleProperties);
-                }
-
-
-                unset($attributes[$colorAttribute]);
             }
         }
 
-        $widthName = "width";
-        if (array_key_exists($widthName, $attributes)) {
-            $styleProperties['max-width'] = trim($attributes[$widthName]);
-            unset($attributes[$widthName]);
-        }
-
-        $heightName = "height";
-        if (array_key_exists($heightName, $attributes)) {
-            $styleProperties[$heightName] = trim($attributes[$heightName]);
-            if (!array_key_exists("overflow", $attributes)) {
-                $styleProperties["overflow"] = "auto";
-            }
-            unset($attributes[$heightName]);
-        }
 
         $textAlign = "text-align";
-        if (array_key_exists($textAlign, $attributes)) {
-            $styleProperties[$textAlign] = trim($attributes[$textAlign]);
-            unset($attributes[$textAlign]);
+        if ($attributes->hasComponentAttribute($textAlign)) {
+            $textAlignValue = trim($attributes->getValueAndRemove($textAlign));
+            $attributes->addStyleDeclaration($textAlign, $textAlignValue);
         }
 
-        $elevation = "elevation";
-        if (array_key_exists($elevation, $attributes)) {
-            $elevationValue = $attributes[$elevation];
-            if ($elevationValue == "high") {
-                $styleProperties["box-shadow"] = "0 0 0 .2em rgba(3,102,214,0),0 13px 27px -5px rgba(50,50,93,.25),0 8px 16px -8px rgba(0,0,0,.3),0 -6px 16px -6px rgba(0,0,0,.025)";
-            } else {
-                $styleProperties["box-shadow"] = "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)";
-            }
-            $styleProperties["transition"] = ".2s";
-            $styleProperties["transition-property"] = "color,box-shadow";
-            unset($attributes[$elevation]);
-        }
+        Shadow::process($attributes);
 
 
-        if (sizeof($styleProperties) != 0) {
-            $attributes[$styleAttributeName] = PluginUtility::array2InlineStyle($styleProperties);
-        }
-
-    }
-
-    /**
-     * Return a combostrap value to a web color value
-     * @param string $color a color value
-     * @return string
-     */
-    public static function getColorValue($color)
-    {
-        if ($color[0] == "#") {
-            $colorValue = $color;
-        } else {
-            $colorValue = "var(--" . $color . ")";
-        }
-        return $colorValue;
     }
 
     /**
      * Return the name of the requested script
      */
-    public static function getRequestScript()
+    public
+    static function getRequestScript()
     {
         $scriptPath = null;
         $testPropertyValue = self::getPropertyValue("SCRIPT_NAME");
@@ -622,7 +501,8 @@ class PluginUtility
      * This is used to test script that are not supported by the dokuwiki test framework
      * such as css.php
      */
-    public static function getPropertyValue($name, $default = null)
+    public
+    static function getPropertyValue($name, $default = null)
     {
         global $INPUT;
         $value = $INPUT->str($name);
@@ -642,10 +522,11 @@ class PluginUtility
      * Create an URL to the documentation website
      * @param $canonical - canonical id or slug
      * @param $text -  the text of the link
-     * @param bool $withIcon - used to break the recursion with the message in the {@link IconUtility}
+     * @param bool $withIcon - used to break the recursion with the message in the {@link Icon}
      * @return string - an url
      */
-    public static function getUrl($canonical, $text, $withIcon = true)
+    public
+    static function getUrl($canonical, $text, $withIcon = true)
     {
         /** @noinspection SpellCheckingInspection */
 
@@ -668,7 +549,8 @@ class PluginUtility
      * @param array $defaultAttributes - the default configuration attributes
      * @return array - a merged array
      */
-    public static function mergeAttributes(array $inlineAttributes, array $defaultAttributes = array())
+    public
+    static function mergeAttributes(array $inlineAttributes, array $defaultAttributes = array())
     {
         return array_merge($defaultAttributes, $inlineAttributes);
     }
@@ -683,7 +565,8 @@ class PluginUtility
      * @param $tag
      * @return string - a pattern
      */
-    public static function getLeafContainerTagPattern($tag)
+    public
+    static function getLeafContainerTagPattern($tag)
     {
         return '<' . $tag . '.*?>.*?<\/' . $tag . '>';
     }
@@ -694,7 +577,8 @@ class PluginUtility
      * @param $match
      * @return string the content
      */
-    public static function getTagContent($match)
+    public
+    static function getTagContent($match)
     {
         // From the first >
         $start = strpos($match, ">");
@@ -725,7 +609,8 @@ class PluginUtility
      * An indicator array should be provided
      * @return string
      */
-    public static function getRequestId()
+    public
+    static function getRequestId()
     {
 
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
@@ -748,7 +633,8 @@ class PluginUtility
      * but the one of the page
      * @return string
      */
-    public static function getPageId()
+    public
+    static function getPageId()
     {
         global $ID;
         global $INFO;
@@ -761,9 +647,20 @@ class PluginUtility
         return $callingId;
     }
 
-    public static function escape($payload)
+    /**
+     * Transform special HTML characters to entity
+     * Example:
+     * <hello>world</hello>
+     * to
+     * "&lt;hello&gt;world&lt;/hello&gt;"
+     *
+     * @param $text
+     * @return string
+     */
+    public
+    static function htmlEncode($text)
     {
-        return hsc($payload);
+        return htmlspecialchars($text, ENT_QUOTES);
     }
 
 
@@ -772,37 +669,95 @@ class PluginUtility
      * @param $classValue
      * @param array $attributes
      */
-    public static function addClass2Attributes($classValue, array &$attributes)
+    public
+    static function addClass2Attributes($classValue, array &$attributes)
     {
         self::addAttributeValue("class", $classValue, $attributes);
     }
 
     /**
-     * Process the attributes that have an impact on the class
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
-    private static function processClass(&$attributes)
+    public
+    static function processAlignAttributes(&$attributes)
     {
         // The class shortcut
-        $align = "align";
-        if (array_key_exists($align, $attributes)) {
-            $alignValue = $attributes[$align];
-            unset($attributes[$align]);
-            if ($alignValue == "center") {
-                if (array_key_exists("class", $attributes)) {
-                    $attributes["class"] .= " mx-auto";
-                } else {
-                    $attributes["class"] = " mx-auto";
-                }
+        $align = TagAttributes::ALIGN_KEY;
+        if ($attributes->hasComponentAttribute($align)) {
+
+            $alignValue = $attributes->getValueAndRemove($align);
+
+            switch ($alignValue) {
+                case "center":
+                    $attributes->addClassName(PluginUtility::CENTER_CLASS);
+                    break;
+                case "right":
+                    $attributes->addStyleDeclaration("margin-left", "auto");
+                    $attributes->addStyleDeclaration("width", "fit-content");
+                    break;
+            }
+
+            /**
+             * For inline element,
+             * center should be a block
+             * (svg is not a block by default for instance)
+             * !
+             * this should not be the case for flex block such as a row
+             * therefore the condition
+             * !
+             */
+            if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
+                $attributes->addClassName("d-block");
             }
         }
+    }
+
+    /**
+     * Process the attributes that have an impact on the class
+     * @param TagAttributes $attributes
+     */
+    public
+    static function processSpacingAttributes(&$attributes)
+    {
 
         // Spacing is just a class
         $spacing = "spacing";
-        if (array_key_exists($spacing, $attributes)) {
-            $spacingValue = $attributes[$spacing];
-            unset($attributes[$spacing]);
-            self::addClass2Attributes($spacingValue, $attributes);
+        if ($attributes->hasComponentAttribute($spacing)) {
+
+            $spacingValue = $attributes->getValueAndRemove($spacing);
+
+            $spacingNames = preg_split("/\s/", $spacingValue);
+            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+            foreach ($spacingNames as $spacingClass) {
+                if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
+
+                    // The sides r and l has been renamed to e and s
+                    // https://getbootstrap.com/docs/5.0/migration/#utilities-2
+                    //
+
+                    // https://getbootstrap.com/docs/5.0/utilities/spacing/
+                    // By default, we consider tha there is no size and breakpoint
+                    $sizeAndBreakPoint = "";
+                    $propertyAndSide = $spacingClass;
+
+                    $minusCharacter = "-";
+                    $minusLocation = strpos($spacingClass, $minusCharacter);
+                    if ($minusLocation !== false) {
+                        // There is no size or break point
+                        $sizeAndBreakPoint = substr($spacingClass, $minusLocation + 1);
+                        $propertyAndSide = substr($spacingClass, 0, $minusLocation);
+                    }
+                    $propertyAndSide = str_replace("r", "e", $propertyAndSide);
+                    $propertyAndSide = str_replace("l", "s", $propertyAndSide);
+                    if ($sizeAndBreakPoint === "") {
+                        $spacingClass = $propertyAndSide;
+                    } else {
+                        $spacingClass = $propertyAndSide . $minusCharacter . $sizeAndBreakPoint;
+                    }
+
+                }
+                $attributes->addClassName($spacingClass);
+            }
         }
 
     }
@@ -813,7 +768,8 @@ class PluginUtility
      * @param $value
      * @param array $attributes
      */
-    public static function addStyleProperty($property, $value, array &$attributes)
+    public
+    static function addStyleProperty($property, $value, array &$attributes)
     {
         if (isset($attributes["style"])) {
             $attributes["style"] .= ";$property:$value";
@@ -828,21 +784,22 @@ class PluginUtility
      * to see a border
      * Doc
      * https://combostrap.com/styling/color#border_color
-     * @param array $styleProperties
+     * @param TagAttributes $tagAttributes
      */
-    private static function checkDefaultBorderColorAttributes(array &$styleProperties)
+    private
+    static function checkDefaultBorderColorAttributes(&$tagAttributes)
     {
         /**
          * border color was set without the width
          * setting the width
          */
         if (!(
-            isset($styleProperties["border"])
+            $tagAttributes->hasStyleDeclaration("border")
             ||
-            isset($styleProperties["border-width"])
+            $tagAttributes->hasStyleDeclaration("border-width")
         )
         ) {
-            $styleProperties["border-width"] = "1px";
+            $tagAttributes->addStyleDeclaration("border-width", "1px");
         }
         /**
          * border color was set without the style
@@ -850,31 +807,37 @@ class PluginUtility
          */
         if (!
         (
-            isset($styleProperties["border"])
+            $tagAttributes->hasStyleDeclaration("border")
             ||
-            isset($styleProperties["border-style"])
+            $tagAttributes->hasStyleDeclaration("border-style")
         )
         ) {
-            $styleProperties["border-style"] = "solid";
+            $tagAttributes->addStyleDeclaration("border-style", "solid");
 
         }
-        if (!isset($styleProperties["border-radius"])) {
-            $styleProperties["border-radius"] = ".25rem";
+        if (!$tagAttributes->hasStyleDeclaration("border-radius")) {
+            $tagAttributes->addStyleDeclaration("border-radius", ".25rem");
         }
 
     }
 
-    public static function getConfValue($confName)
+    public
+    static function getConfValue($confName, $defaultValue = null)
     {
         global $conf;
-        return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
+        if (isset($conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName])) {
+            return $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][$confName];
+        } else {
+            return $defaultValue;
+        }
     }
 
     /**
      * @param $match
      * @return null|string - return the tag name or null if not found
      */
-    public static function getTag($match)
+    public
+    static function getTag($match)
     {
 
         // Trim to start clean
@@ -909,29 +872,31 @@ class PluginUtility
     /**
      * The collapse attribute are the same
      * for all component except a link
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
-    private static function processCollapse(&$attributes)
+    public
+    static function processCollapse(&$attributes)
     {
 
         $collapse = "collapse";
-        if (array_key_exists($collapse, $attributes)) {
-            $targetId = $attributes[$collapse];
-            unset($attributes[$collapse]);
-            $attributes['data-toggle'] = "collapse";
-            $attributes['data-target'] = $targetId;
+        if ($attributes->hasComponentAttribute($collapse)) {
+            $targetId = $attributes->getValueAndRemove($collapse);
+            $attributes->addComponentAttributeValue('data-toggle', "collapse");
+            $attributes->addComponentAttributeValue('data-target', $targetId);
         }
     }
 
     /**
      * @param string $string add a command into HTML
      */
-    public static function addAsHtmlComment($string)
+    public
+    static function addAsHtmlComment($string)
     {
-        print_r('<!-- ' . self::escape($string) . '-->');
+        print_r('<!-- ' . self::htmlEncode($string) . '-->');
     }
 
-    public static function getResourceBaseUrl()
+    public
+    static function getResourceBaseUrl()
     {
         return DOKU_URL . 'lib/plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/resources';
     }
@@ -940,7 +905,8 @@ class PluginUtility
      * @param $TAG - the name of the tag that should correspond to the name of the css file in the style directory
      * @return string - a inline style element to inject in the page or blank if no file exists
      */
-    public static function getTagStyle($TAG)
+    public
+    static function getTagStyle($TAG)
     {
         $script = self::getCssRules($TAG);
         if (!empty($script)) {
@@ -952,30 +918,14 @@ class PluginUtility
     }
 
 
-    /**
-     * Utility function to disable preformatted
-     * @param $mode
-     * @return bool
-     */
-    public static function disablePreformatted($mode)
-    {
-        if (
-            $mode == 'preformatted'
-            ||
-            $mode == PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
-        ) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    public static function getComponentName($tag)
+    public
+    static function getComponentName($tag)
     {
         return strtolower(PluginUtility::PLUGIN_BASE_NAME) . "_" . $tag;
     }
 
-    public static function addAttributeValue($attribute, $value, array &$attributes)
+    public
+    static function addAttributeValue($attribute, $value, array &$attributes)
     {
         if (array_key_exists($attribute, $attributes) && $attributes[$attribute] !== "") {
             $attributes[$attribute] .= " {$value}";
@@ -989,12 +939,14 @@ class PluginUtility
      * this is a convenient way to the the snippet manager
      * @return SnippetManager
      */
-    public static function getSnippetManager()
+    public
+    static function getSnippetManager()
     {
         return SnippetManager::get();
     }
 
-    public static function initSnippetManager()
+    public
+    static function initSnippetManager()
     {
         SnippetManager::init();
     }
@@ -1004,15 +956,29 @@ class PluginUtility
      * @param $data - the data from {@link PluginUtility::handleAndReturnUnmatchedData()}
      * @return string
      */
-    public static function renderUnmatched($data)
+    public
+    static function renderUnmatched($data)
     {
-
-        $payload = $data[self::PAYLOAD];
-        $context = $data[self::CONTEXT];
-        if (!in_array($context, self::PRESERVE_LEFT_WHITE_SPACE_COMPONENTS)) {
-            $payload = ltrim($payload);
+        /**
+         * Attributes
+         */
+        if (isset($data[PluginUtility::ATTRIBUTES])) {
+            $attributes = $data[PluginUtility::ATTRIBUTES];
+        } else {
+            $attributes = [];
         }
-        return PluginUtility::escape($payload);
+        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+        $display = $tagAttributes->getValue(TagAttributes::DISPLAY);
+        if ($display != "none") {
+            $payload = $data[self::PAYLOAD];
+            $context = $data[self::CONTEXT];
+            if (!in_array($context, Call::INLINE_DOKUWIKI_COMPONENTS)) {
+                $payload = ltrim($payload);
+            }
+            return PluginUtility::htmlEncode($payload);
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -1023,7 +989,8 @@ class PluginUtility
      * @param \Doku_Handler $handler
      * @return array
      */
-    public static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
+    public
+    static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
     {
         $tag = new Tag($tagName, array(), DOKU_LEXER_UNMATCHED, $handler);
         $sibling = $tag->getPreviousSibling();
@@ -1038,7 +1005,172 @@ class PluginUtility
         );
     }
 
+    public
+    static function setConf($key, $value, $namespace = 'plugin')
+    {
+        global $conf;
+        if ($namespace != null) {
+            $conf[$namespace][PluginUtility::PLUGIN_BASE_NAME][$key] = $value;
+        } else {
+            $conf[$key] = $value;
+        }
 
+    }
+
+    /**
+     * Utility methodPreprocess a start tag to be able to extract the name
+     * and the attributes easily
+     *
+     * It will delete:
+     *   * the characters <> and the /> if present
+     *   * and trim
+     *
+     * It will remain the tagname and its attributes
+     * @param $match
+     * @return false|string|null
+     */
+    private
+    static function getPreprocessEnterTag($match)
+    {
+        // Until the first >
+        $pos = strpos($match, ">");
+        if ($pos == false) {
+            LogUtility::msg("The match does not contain any tag. Match: {$match}", LogUtility::LVL_MSG_WARNING);
+            return null;
+        }
+        $match = substr($match, 0, $pos);
+
+
+        // Trim to start clean
+        $match = trim($match);
+
+        // Suppress the <
+        if ($match[0] == "<") {
+            $match = substr($match, 1);
+        }
+
+        // Suppress the / for a leaf tag
+        if ($match[strlen($match) - 1] == "/") {
+            $match = substr($match, 0, strlen($match) - 1);
+        }
+        return $match;
+    }
+
+    /**
+     * Retrieve the tag name used in the text document
+     * @param $match
+     * @return false|string|null
+     */
+    public
+    static function getSyntaxTagNameFromMatch($match)
+    {
+        $preprocessMatch = PluginUtility::getPreprocessEnterTag($match);
+
+        // Tag name (ie until the first blank)
+        $spacePosition = strpos($match, " ");
+        if (!$spacePosition) {
+            // No space, meaning this is only the tag name
+            return $preprocessMatch;
+        } else {
+            return trim(substr(0, $spacePosition));
+        }
+
+    }
+
+    /**
+     * @param \Doku_Renderer_xhtml $renderer
+     * @param $position
+     * @param $name
+     */
+    public
+    static function startSection($renderer, $position, $name)
+    {
+
+
+        if (empty($position)) {
+            LogUtility::msg("The position for a start section should not be empty", LogUtility::LVL_MSG_ERROR, "support");
+        }
+        if (empty($name)) {
+            LogUtility::msg("The name for a start section should not be empty", LogUtility::LVL_MSG_ERROR, "support");
+        }
+
+        /**
+         * New Dokuwiki Version
+         * for DokuWiki Greebo and more recent versions
+         */
+        if (defined('SEC_EDIT_PATTERN')) {
+            $renderer->startSectionEdit($position, array('target' => self::EDIT_SECTION_TARGET, 'name' => $name));
+        } else {
+            /**
+             * Old version
+             */
+            /** @noinspection PhpParamsInspection */
+            $renderer->startSectionEdit($position, self::EDIT_SECTION_TARGET, $name);
+        }
+    }
+
+    /**
+     * Add an enter call to the stack
+     * @param \Doku_Handler $handler
+     * @param $tagName
+     * @param array $callStackArray
+     */
+    public
+    static function addEnterCall(
+        \Doku_Handler &$handler,
+        $tagName,
+        $callStackArray = array()
+    )
+    {
+        $pluginName = PluginUtility::getComponentName($tagName);
+        $handler->addPluginCall(
+            $pluginName,
+            $callStackArray,
+            DOKU_LEXER_ENTER,
+            null,
+            null
+        );
+    }
+
+    /**
+     * Add an end call dynamically
+     * @param \Doku_Handler $handler
+     * @param $tagName
+     * @param array $callStackArray
+     */
+    public
+    static function addEndCall(\Doku_Handler $handler, $tagName, $callStackArray = array())
+    {
+        $pluginName = PluginUtility::getComponentName($tagName);
+        $handler->addPluginCall(
+            $pluginName,
+            $callStackArray,
+            DOKU_LEXER_END,
+            null,
+            null
+        );
+    }
+
+    /**
+     * General Debug
+     */
+    public static function isDebug()
+    {
+        global $conf;
+        return $conf["allowdebug"] === 1;
+
+    }
+
+    public static function loadStrapUtilityTemplate()
+    {
+        $templateUtilitFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
+        if (file_exists($templateUtilitFile)) {
+            /** @noinspection PhpIncludeInspection */
+            require_once($templateUtilitFile);
+        } else {
+            LogUtility::msg("Internal Error: The strap template utility could not be loaded", LogUtility::LVL_MSG_WARNING, "support");
+        }
+    }
 
 
 }

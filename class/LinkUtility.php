@@ -42,8 +42,10 @@ class LinkUtility
      * are valid
      *
      * Get the content until | or ]
+     * No line break allowed
      */
-    const ENTRY_PATTERN = "\[\[[^\|\]]*(?=.*\]\])";
+    const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
+    const ENTRY_PATTERN_MULTI_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
     const EXIT_PATTERN = "\]\]";
 
     /**
@@ -52,6 +54,7 @@ class LinkUtility
     const TYPE_INTERWIKI = 'interwiki';
     const TYPE_WINDOWS_SHARE = 'windowsShare';
     const TYPE_EXTERNAL = 'external';
+
     const TYPE_EMAIL = 'email';
     const TYPE_LOCAL = 'local';
     const TYPE_INTERNAL = 'internal';
@@ -64,21 +67,6 @@ class LinkUtility
     const ATTRIBUTE_IMAGE = 'image';
 
 
-    /**
-     * Style to cancel the dokuwiki styling
-     * when the page linked exists
-     * Is a constant to be able to use it in the test
-     * background is transparent, otherwise, you may see a rectangle with a link in button
-     */
-    const STYLE_VALUE_WHEN_EXIST =
-        array(
-            "background-color" => "transparent",
-            "border-color" => "inherit",
-            "color" => "inherit",
-            "background-image" => "unset",
-            "padding" => "unset"
-        );
-
 
     /**
      * Class added to the type of link
@@ -86,6 +74,7 @@ class LinkUtility
      * but this configuration permits to turn it back
      */
     const CONF_USE_DOKUWIKI_CLASS_NAME = "useDokuwikiLinkClassName";
+    const TEXT_ERROR_CLASS = "text-danger";
 
     /**
      * @var mixed
@@ -109,9 +98,10 @@ class LinkUtility
      */
     private $title;
     /**
+     * The path part of the link
      * @var mixed|string
      */
-    private $id;
+    private $path;
     /**
      * @var mixed|string
      */
@@ -237,7 +227,12 @@ class LinkUtility
         $position = strpos($refProcessing, "?");
         if ($position !== false) {
 
-            $this->id = substr($refProcessing, 0, $position);
+            $this->path = substr($refProcessing, 0, $position);
+            if ($this->path==""){
+                // no path, this is the requested page
+                global $ID;
+                $this->path = $ID;
+            }
             $secondPart = substr($refProcessing, $position + 1);
             $anchorPosition = strpos($secondPart, "#");
             if ($anchorPosition !== false) {
@@ -250,10 +245,10 @@ class LinkUtility
 
             $anchorPosition = strpos($refProcessing, "#");
             if ($anchorPosition !== false) {
-                $this->id = substr($refProcessing, 0, $anchorPosition);
+                $this->path = substr($refProcessing, 0, $anchorPosition);
                 $this->fragment = substr($refProcessing, $anchorPosition + 1);
             } else {
-                $this->id = $refProcessing;
+                $this->path = $refProcessing;
             }
         }
 
@@ -370,7 +365,7 @@ class LinkUtility
                  * Internal Page
                  */
                 $linkedPage = $this->getInternalPage();
-                $this->attributes["data-wiki-id"] = $this->toAbsoluteId();
+                $this->attributes["data-wiki-id"] = $linkedPage->getId();
 
                 /**
                  * If this is a low quality internal page,
@@ -389,12 +384,13 @@ class LinkUtility
                     }
                     PluginUtility::addAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym, $this->attributes);
                     unset($this->attributes["href"]);
-                    $this->attributes["data-toggle"] = "tooltip";
-                    $this->attributes["title"] = "To follow this link ({$this->toAbsoluteId()}), you need to log in (" . $protectionSourceAcronym . ")";
+                    $dataNamespace = Bootstrap::getDataNamespace();
+                    $this->attributes["data{$dataNamespace}-toggle"] = "tooltip";
+                    $this->attributes["title"] = "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")";
 
                 } else {
 
-                    if (!$linkedPage->existInFs()) {
+                    if (!$linkedPage->exists()) {
 
                         /**
                          * Red color
@@ -461,14 +457,14 @@ class LinkUtility
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->getId());
+            $emailAddress = $this->emailObfuscation($this->getPath());
             $returnedHTML .= " href=\"$url\"";
             $returnedHTML .= " title=\"$emailAddress\"";
             unset($this->attributes["href"]);
             unset($this->attributes["title"]);
         }
         if (sizeof($this->attributes) > 0) {
-            $returnedHTML .= " " . PluginUtility::array2HTMLAttributes($this->attributes);
+            $returnedHTML .= " " . PluginUtility::array2HTMLAttributesAsString($this->attributes);
         }
         return $returnedHTML . ">";
 
@@ -521,34 +517,6 @@ class LinkUtility
         return $this->type;
     }
 
-    /**
-     * Inherit the color of their parent and not from Dokuwiki
-     * @param $htmlLink
-     * @return bool|false|string
-     * @deprecated as we have taken the link creation over from dokuwiki
-     */
-    public
-    static function inheritColorFromParent($htmlLink)
-    {
-        /**
-         * The extra style for the link
-         */
-        $inlineStyle = StyleUtility::createInlineValue(self::STYLE_VALUE_WHEN_EXIST);
-        return HtmlUtility::addAttributeValue($htmlLink, "style", $inlineStyle);
-
-    }
-
-    /**
-     * Delete wikilink1 from the link
-     * @param $htmlLink
-     * @return bool|false|string
-     */
-    public
-    static function deleteDokuWikiClass($htmlLink)
-    {
-        // only wikilink1 (wikilink2 shows a red link if the page does not exist)
-        return HtmlUtility::deleteClassValue($htmlLink, self::CLASS_DOES_NOT_EXIST);
-    }
 
 
     /**
@@ -638,32 +606,6 @@ class LinkUtility
     }
 
     /**
-     * @return string - the internal absolute page id
-     */
-    public
-    function toAbsoluteId()
-    {
-        if ($this->getType() == self::TYPE_INTERNAL) {
-
-            $absoluteId = $this->id;
-            if (strpos($absoluteId, ':') !== 0) {
-                // Relative
-                global $ID;
-                resolve_pageid(getNS($ID), $absoluteId, $exists);
-            }
-            // https://www.dokuwiki.org/config:useslash
-            global $conf;
-            if ($conf['useslash']) {
-                $absoluteId = str_replace(":", "/", $absoluteId);
-            }
-
-            return cleanID($absoluteId);
-        } else {
-            throw new \RuntimeException("You can't ask an absolute id from a link that is not an internal one");
-        }
-    }
-
-    /**
      * @return Page - the internal page or an error if the link is not an internal one
      */
     public
@@ -674,8 +616,7 @@ class LinkUtility
                 /**
                  * Create the linked page object
                  */
-                $qualifiedPageLinkId = $this->toAbsoluteId();
-                $this->linkedPage = new Page($qualifiedPageLinkId);
+                $this->linkedPage = new Page($this->path);
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
             }
@@ -705,7 +646,7 @@ class LinkUtility
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::render($name, $this->toAbsoluteId());
+                    $name = TemplateUtility::render($name, $this->path);
                 }
                 if (empty($name)) {
                     $name = $this->ref;
@@ -731,7 +672,7 @@ class LinkUtility
             case self::TYPE_EMAIL:
                 if (empty($name)) {
                     global $conf;
-                    $email = $this->getId();
+                    $email = $this->getPath();
                     switch ($conf['mailguard']) {
                         case 'none' :
                             $name = $email;
@@ -746,7 +687,7 @@ class LinkUtility
                 break;
             case self::TYPE_INTERWIKI:
                 if (empty($name)) {
-                    $name = $this->getId();
+                    $name = $this->getPath();
                 }
                 break;
             case self::TYPE_LOCAL:
@@ -791,9 +732,9 @@ class LinkUtility
 
 
     public
-    function getId()
+    function getPath()
     {
-        return $this->id;
+        return $this->path;
     }
 
     public
@@ -814,14 +755,15 @@ class LinkUtility
         $url = "";
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
-                $url = wl($this->toAbsoluteId(), $this->parameters);
+                $page = $this->getInternalPage();
+                $url = wl($page->getId(), $this->parameters);
                 if ($this->fragment) {
                     $url .= '#' . $this->fragment;
                 }
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $url = $this->renderer->_resolveInterWiki($wiki, $this->getId());
+                $url = $this->renderer->_resolveInterWiki($wiki, $this->getPath());
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());
@@ -966,7 +908,7 @@ class LinkUtility
 
     public function isRelative()
     {
-        return strpos($this->getId(), ':') !== 0;
+        return strpos($this->getPath(), ':') !== 0;
     }
 
     /**
@@ -1020,7 +962,7 @@ class LinkUtility
         if ($oldClassName) {
             return "wikilink2";
         } else {
-            return "text-danger";
+            return self::TEXT_ERROR_CLASS;
         }
     }
 

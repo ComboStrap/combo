@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\HtmlUtility;
 use ComboStrap\LinkUtility;
 use ComboStrap\NavBarUtility;
@@ -56,11 +57,8 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        $accept = true;
 
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            $accept = PluginUtility::disablePreformatted($mode);
-        }
+        $accept = syntax_plugin_combo_preformatted::disablePreformatted($mode);
 
         // P element are not welcome in a navbar
         if ($mode == "eol") {
@@ -83,7 +81,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -143,7 +141,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES=> $tagAttributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -187,7 +185,8 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
 
                         // The button is the hamburger menu that will be shown
                         $idElementToCollapse = 'navbarcollapse';
-                        $renderer->doc .= '<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#' . $idElementToCollapse . '" aria-controls="' . $idElementToCollapse . '" aria-expanded="false" aria-label="Toggle navigation"';
+                        $dataNamespace = Bootstrap::getDataNamespace();
+                        $renderer->doc .= "<button class=\"navbar-toggler\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$idElementToCollapse\" aria-controls=\"$idElementToCollapse\" aria-expanded=\"false\" aria-label=\"Toggle navigation\"";
                         if (array_key_exists("order", $attributes)) {
                             $renderer->doc .= ' style="order:' . $attributes["order"] . '"';
                             unset($attributes["order"]);
@@ -203,7 +202,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
                         } else {
                             $attributes["class"] = "{$classValue}";
                         }
-                        $renderer->doc .= '<div id="' . $idElementToCollapse . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '>';
+                        $renderer->doc .= '<div id="' . $idElementToCollapse . '" ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '>';
 
                         // All element below will collapse
                         break;

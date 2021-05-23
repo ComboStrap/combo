@@ -166,7 +166,7 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
                     } else {
                         $attributes["class"] .= self::TAG;
                     }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                     $renderer->doc .= "<footer $inlineAttributes>" . DOKU_LF;
                     break;
 

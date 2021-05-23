@@ -12,9 +12,6 @@
 
 use ComboStrap\PluginUtility;
 
-if (!defined('DOKU_INC')) {
-    die();
-}
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
@@ -57,17 +54,30 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
+
+        /**
+         * header mode is disable to take over
+         * and replace it with {@link syntax_plugin_combo_title}
+         */
+        if ($mode == "header") {
+            return false;
         }
+
+        /**
+         * p element are making the layout horrible
+         */
+        if ($mode == "eol") {
+            return false;
+        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**
      * How Dokuwiki will add P element
      *
-     * * 'normal' - The plugin can be used inside paragraphs
+     *  * 'normal' - The plugin can be used inside paragraphs
      *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
      *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
      *
@@ -75,7 +85,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'stack';
     }
 
     /**
@@ -184,7 +194,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
                     } else {
                         $attributes["class"] .= "col";
                     }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                     $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;
                     break;
 

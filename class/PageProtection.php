@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 
-use Doku_Renderer_xhtml;
 use syntax_plugin_combo_tooltip;
 
 /**
@@ -60,7 +59,6 @@ class PageProtection
 
     /**
      * Add the HTML snippet
-     * @param Doku_Renderer_xhtml $renderer
      */
     public static function addPageProtectionSnippet()
     {

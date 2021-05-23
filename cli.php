@@ -95,7 +95,11 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
 
         $cache = $options->getOpt('cache', false);
         $depth = $options->getOpt('depth', 0);
-        switch ($options->getCmd()) {
+        $cmd = $options->getCmd();
+        if ($cmd == "") {
+            $cmd = self::ANALYTICS;
+        }
+        switch ($cmd) {
             case self::ANALYTICS:
                 $output = $options->getOpt('output', '');
                 //if ($output == '-') $output = 'php://stdout';
@@ -105,7 +109,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
                 $this->syncPages();
                 break;
             default:
-                throw new \RuntimeException("Command unknown (" . $options->getCmd() . ")");
+                throw new \RuntimeException("Combo: Command unknown (" . $cmd . ")");
         }
 
 
@@ -262,7 +266,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
             $id = $row['ID'];
             if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
-                Page::createFromId($id)->deleteInDb();
+                Page::createPageFromPathId($id)->deleteInDb();
             }
         }
 

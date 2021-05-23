@@ -4,8 +4,10 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\NavBarUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -184,12 +186,17 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
 
                     if (array_key_exists("expand", $attributes)) {
                         if ($attributes["expand"]=="true") {
-                            $attributes["class"] .= " mr-auto";
+                            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+                            if($bootstrapVersion== Bootstrap::BootStrapFiveMajorVersion){
+                                $attributes["class"] .= " me-auto";
+                            } else {
+                                $attributes["class"] .= " mr-auto";
+                            }
                         }
                         unset($attributes["expand"]);
                     }
 
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                     $renderer->doc .= "<ul {$inlineAttributes}>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :

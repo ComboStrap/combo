@@ -7,15 +7,14 @@ use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use RuntimeException;
-use Locale;
 
 
 /**
  * Page
  */
-require_once(__DIR__ . '/PluginUtility.php');
+require_once(__DIR__ . '/DokuPath.php');
 
-class Page
+class Page extends DokuPath
 {
     const CANONICAL_PROPERTY = 'canonical';
     const TITLE_PROPERTY = 'title';
@@ -45,13 +44,8 @@ class Page
     const TYPE_PROPERTY = "type";
 
 
-    private $id;
     private $canonical;
 
-    /**
-     * @var string the absolute or resolved id
-     */
-    private $absoluteId;
 
     /**
      * @var array|array[]
@@ -65,33 +59,81 @@ class Page
      * @var string - the dokuwiki
      */
     private $descriptionOrigin;
+
+
     /**
-     * @var CacheRenderer
+     * @var string the logical id is used with bars
+     * If a bar is asked in the namespace, the logical id is `:ns:bar`
+     * This is used to store the output of the cache
+     * If this is not a bar the logical id is the {@link DokuPath::getId()}
      */
-    private $xhtmlCache;
-    private $instructionCache;
+    private $logicalId = null;
+
+    /**
+     * @var bool Indicator to say if this is a sidebar (or sidekick bar)
+     */
+    private $isSideBar = false;
 
     /**
      * Page constructor.
-     * @param $id - the id of the page
+     * @param $pathId - the path id of a page (it may be relative to the requested page)
+     *
      */
-    public function __construct($id)
+    public function __construct($pathId)
     {
 
-        if (empty($id)) {
-            LogUtility::msg("A null page id was given");
-        }
-
         /**
-         * characters are not all authorized, all lowercase
-         * such as `_` at the end
+         * Bars have a logical reasoning (ie such as a virtual, alias)
+         * They are logically located in the same namespace
+         * but the file may be located on the parent
          *
+         * This block of code is processing this case
          */
-        $this->id = cleanID($id);
-        if ($this->id !== $id) {
-            LogUtility::msg("Internal error, the page id ({$id}) is not conform and should be `{$this->id}`)", LogUtility::LVL_MSG_ERROR);
+        global $conf;
+        $sidebars = array($conf['sidebar']);
+        $strapTemplateName = 'strap';
+        if ($conf['template'] === $strapTemplateName) {
+            $sidebars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
+        }
+        $lastPathPart = DokuPath::getLastPart($pathId);
+        if (in_array($lastPathPart, $sidebars)) {
+
+            $this->isSideBar = true;
+
+            /**
+             * Find the first physical file
+             * Don't use ACL otherwise the ACL protection event 'AUTH_ACL_CHECK' will kick in
+             * and we got then a recursive problem
+             * with the {@link \action_plugin_combo_pageprotection}
+             */
+            $useAcl = false;
+            $id = page_findnearest($pathId, $useAcl);
+            if ($id !== false) {
+                $pathId = $id;
+            }
+
+            /**
+             * Set the logical id
+             */
+            global $ID;
+            $actualNamespace = getNS($ID);
+            $this->logicalId = $pathId;
+            resolve_pageid($actualNamespace, $logicalBarId, $exists);
+
         }
 
+
+        parent::__construct($pathId, DokuPath::PAGE_TYPE);
+
+    }
+
+    public function getLogicalId()
+    {
+        if ($this->logicalId == null) {
+            return $this->getId();
+        } else {
+            return $this->logicalId;
+        }
     }
 
 
@@ -106,24 +148,14 @@ class Page
         if ($this->isHomePage()) {
             $url = DOKU_URL;
         } else {
-            $url = wl($this->id, '', true, '&');
+            $url = wl($this->getId(), '', true, '&');
         }
         return $url;
     }
 
-    public static function createFromEnvironment()
+    public static function createPageFromEnvironment()
     {
         return new Page(PluginUtility::getPageId());
-    }
-
-    public static function isDirectoryId($id)
-    {
-        /**
-         * {@link search_universal} triggers ACL check
-         * with id of the form :path:*
-         * for directory
-         */
-        return StringUtility::endWiths($id, ":*");
     }
 
 
@@ -135,7 +167,7 @@ class Page
     {
 
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT * FROM pages where id = ?", $this->id);
+        $res = $sqlite->query("SELECT * FROM pages where id = ?", $this->getId());
         if (!$res) {
             throw new RuntimeException("An exception has occurred with the select pages query");
         }
@@ -152,7 +184,7 @@ class Page
     function deleteInDb()
     {
 
-        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->id);
+        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->getId());
         if (!$res) {
             LogUtility::msg("Something went wrong when deleting a page");
         }
@@ -166,7 +198,7 @@ class Page
     function existInDb()
     {
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $this->id);
+        $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $this->getId());
         $count = $sqlite->res2single($res);
         $sqlite->res_close($res);
         return $count;
@@ -176,10 +208,11 @@ class Page
     /**
      * Exist in FS
      * @return bool
+     * @deprecated use {@link DokuPath::exists()} instead
      */
     function existInFs()
     {
-        return page_exists($this->id);
+        return $this->exists();
     }
 
     private function persistPageAlias($canonical, $alias)
@@ -209,9 +242,9 @@ class Page
 
     }
 
-    static function createFromId($id)
+    static function createPageFromPathId($pathId)
     {
-        return new Page($id);
+        return new Page($pathId);
     }
 
     /**
@@ -231,7 +264,7 @@ class Page
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            return self::createFromId($id)->setCanonical($canonical);
+            return self::createPageFromPathId($id)->setCanonical($canonical);
         }
 
 
@@ -247,11 +280,11 @@ class Page
         foreach ($res2arr as $row) {
             $id = $row['ID'];
 
-            return self::createFromId($id)
+            return self::createPageFromPathId($id)
                 ->setCanonical($canonical);
         }
 
-        return self::createFromId($canonical);
+        return self::createPageFromPathId($canonical);
 
     }
 
@@ -261,7 +294,7 @@ class Page
     function processAndPersistInDb()
     {
 
-        $canonical = p_get_metadata($this->id, "canonical");
+        $canonical = p_get_metadata($this->getId(), "canonical");
         if ($canonical != "") {
 
             // Do we have a page attached to this canonical
@@ -272,7 +305,7 @@ class Page
             }
             $idInDb = $sqlite->res2single($res);
             $sqlite->res_close($res);
-            if ($idInDb && $idInDb != $this->id) {
+            if ($idInDb && $idInDb != $this->getId()) {
                 // If the page does not exist anymore we delete it
                 if (!page_exists($idInDb)) {
                     $res = $sqlite->query("delete from pages where ID = ?", $idInDb);
@@ -282,13 +315,13 @@ class Page
                     $sqlite->res_close($res);
 
                 } else {
-                    LogUtility::msg("The page ($this->id) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
+                    LogUtility::msg("The page ($this) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
                 }
                 $this->persistPageAlias($canonical, $idInDb);
             }
 
             // Do we have a canonical on this page
-            $res = $sqlite->query("select canonical from pages where ID = ?", $this->id);
+            $res = $sqlite->query("select canonical from pages where ID = ?", $this->getId());
             if (!$res) {
                 LogUtility::msg("An exception has occurred with the query");
             }
@@ -297,12 +330,12 @@ class Page
 
             $row = array(
                 "CANONICAL" => $canonical,
-                "ID" => $this->id
+                "ID" => $this->getId()
             );
             if ($canonicalInDb && $canonicalInDb != $canonical) {
 
                 // Persist alias
-                $this->persistPageAlias($canonical, $this->id);
+                $this->persistPageAlias($canonical, $this->getId());
 
                 // Update
                 $statement = 'update pages set canonical = ? where id = ?';
@@ -329,38 +362,12 @@ class Page
 
     }
 
-    /**
-     * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
-     * @return string - a dokuwiki Id hello:my:lord
-     */
-    static function createFromUrl($url)
-    {
-        // Replace / by : and suppress the first : because the global $ID does not have it
-        $parsedQuery = parse_url($url, PHP_URL_QUERY);
-        $parsedQueryArray = [];
-        parse_str($parsedQuery, $parsedQueryArray);
-        $queryId = 'id';
-        if (array_key_exists($queryId, $parsedQueryArray)) {
-            // Doku form (ie doku.php?id=)
-            $id = $parsedQueryArray[$queryId];
-        } else {
-            // Slash form ie (/my/id)
-            $urlPath = parse_url($url, PHP_URL_PATH);
-            $id = substr(str_replace("/", ":", $urlPath), 1);
-        }
-        return self::createFromId($id);
-    }
-
     private function setCanonical($canonical)
     {
         $this->canonical = $canonical;
         return $this;
     }
 
-    public function getId()
-    {
-        return $this->id;
-    }
 
     public function isBar()
     {
@@ -375,19 +382,13 @@ class Page
         return in_array($this->getName(), $barsName);
     }
 
-    private function getName()
+    public function isStrapSideBar()
     {
-        /**
-         * See also {@link noNSorNS}
-         */
-        $names = $this->getNames();
-        return $names[sizeOf($names) - 1];
+
+        return $this->isSideBar && Site::isStrapTemplate();
+
     }
 
-    public function getNames()
-    {
-        return preg_split("/:/", $this->id);
-    }
 
     public function isStartPage()
     {
@@ -430,7 +431,7 @@ class Page
                     $names = array_slice($names, 0, $namesLength - 1);
                 }
                 $this->canonical = implode(":", $names);
-                p_set_metadata($this->id, array(Page::CANONICAL_PROPERTY => $this->canonical));
+                p_set_metadata($this->getId(), array(Page::CANONICAL_PROPERTY => $this->canonical));
             }
 
         }
@@ -446,7 +447,7 @@ class Page
         if ($sqlite == null) {
             return array();
         }
-        $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->id);
+        $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->getId());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the pages selection query");
         }
@@ -471,7 +472,7 @@ class Page
          * Read / not get (get can trigger a rendering of the meta again)
          */
         if ($this->metadatas == null) {
-            $this->metadatas = p_read_metadata($this->id);
+            $this->metadatas = p_read_metadata($this->getId());
         }
         return $this->metadatas;
 
@@ -530,22 +531,19 @@ class Page
 
     }
 
+    /**
+     * @param string $mode delete the cache for the format XHTML and {@link Analytics::RENDERER_NAME_MODE}
+     */
     public function deleteCache($mode = "xhtml")
     {
-        if ($this->existInFs()) {
 
-            $file = wikiFN($this->id);
+        if ($this->exists()) {
 
-            /**
-             * Output of {@link DokuWiki_Syntax_Plugin::handle}
-             */
-            $cache = new CacheInstructions($this->id, $file);
+
+            $cache = $this->getInstructionsCache();
             $cache->removeCache();
 
-            /**
-             * Output of {@link DokuWiki_Syntax_Plugin::render()}
-             */
-            $cache = new CacheRenderer($this->id, $file, $mode);
+            $cache = $this->getRenderCache($mode);
             $cache->removeCache();
 
         }
@@ -554,8 +552,8 @@ class Page
 
     public function isAnalyticsCached()
     {
-        $file = wikiFN($this->id);
-        $cache = new CacheRenderer($this->id, $file, Analytics::RENDERER_NAME_MODE);
+
+        $cache = new CacheRenderer($this->getId(), $this->getFilePath(), Analytics::RENDERER_NAME_MODE);
         $cacheFile = $cache->cache;
         return file_exists($cacheFile);
     }
@@ -566,7 +564,7 @@ class Page
      */
     public function getMetaFile()
     {
-        return metaFN($this->id, '.meta');
+        return metaFN($this->getId(), '.meta');
     }
 
     /**
@@ -581,7 +579,7 @@ class Page
             /**
              * Check if exists
              */
-            $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->id));
+            $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->getId()));
             if (!$res) {
                 LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
             }
@@ -593,7 +591,7 @@ class Page
              */
             if ($result != 1) {
                 $entry = array(
-                    "ID" => $this->id,
+                    "ID" => $this->getId(),
                     "TIMESTAMP" => date('Y-m-d H:i:s', time()),
                     "REASON" => $reason
                 );
@@ -666,7 +664,7 @@ class Page
              * Note for dev: because cache is off in dev environment,
              * you will get it always processed
              */
-            return Analytics::processAndGetDataAsArray($this->id, $cache);
+            return Analytics::processAndGetDataAsArray($this->getId(), $cache);
         } else {
             /**
              * Process analytics delete at the same a asked refresh
@@ -690,7 +688,7 @@ class Page
              * otherwise dokuwiki will not see a change
              * between true and a string and will not persist the value
              */
-            p_set_metadata($this->id, array(self::LOW_QUALITY_PAGE_INDICATOR => $newIndicator));
+            p_set_metadata($this->getId(), array(self::LOW_QUALITY_PAGE_INDICATOR => $newIndicator));
 
             /**
              * Delete the cache to rewrite the links
@@ -713,7 +711,7 @@ class Page
     public function getBacklinks()
     {
         $backlinks = array();
-        foreach (ft_backlinks($this->getAbsoluteId()) as $backlinkId) {
+        foreach (ft_backlinks($this->getId()) as $backlinkId) {
             $backlinks[] = new Page($backlinkId);
         }
         return $backlinks;
@@ -725,7 +723,7 @@ class Page
      */
     public function getAuthAclValue()
     {
-        return auth_quickaclcheck($this->id);
+        return auth_quickaclcheck($this->getId());
     }
 
     /**
@@ -753,7 +751,7 @@ class Page
     public function getLowQualityIndicator()
     {
 
-        $low = p_get_metadata($this->id, self::LOW_QUALITY_PAGE_INDICATOR);
+        $low = p_get_metadata($this->getId(), self::LOW_QUALITY_PAGE_INDICATOR);
         if ($low === null) {
             return null;
         } else {
@@ -786,7 +784,7 @@ class Page
         $sqlite = Sqlite::getSqlite();
         if ($sqlite != null) {
 
-            $res = $sqlite->query("select count(1) from pages where ID = ? and ANALYTICS is null", $this->id);
+            $res = $sqlite->query("select count(1) from pages where ID = ? and ANALYTICS is null", $this->getId());
             if (!$res) {
                 LogUtility::msg("An exception has occurred with the analytics detection");
             }
@@ -813,17 +811,13 @@ class Page
         return false;
     }
 
-    public function __toString()
-    {
-        return $this->id; //. " ({$this->getH1()})";
-    }
 
     public function getH1()
     {
 
-        $heading = p_get_metadata(cleanID($this->id), Analytics::H1, METADATA_RENDER_USING_SIMPLE_CACHE);
+        $heading = p_get_metadata($this->getId(), Analytics::H1, METADATA_RENDER_USING_SIMPLE_CACHE);
         if (!blank($heading)) {
-            return PluginUtility::escape($heading);
+            return PluginUtility::htmlEncode($heading);
         } else {
             return null;
         }
@@ -836,11 +830,12 @@ class Page
     public function getTitle()
     {
 
-        $title = p_get_metadata(cleanID($this->id), Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
+        $id = $this->getId();
+        $title = p_get_metadata($id, Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
         if (!blank($title)) {
-            return PluginUtility::escape($title);
+            return PluginUtility::htmlEncode($title);
         } else {
-            return $this->id;
+            return $id;
         }
 
     }
@@ -851,7 +846,7 @@ class Page
      */
     public function isQualityMonitored()
     {
-        $dynamicQualityIndicator = p_get_metadata(cleanID($this->id), action_plugin_combo_qualitymessage::DISABLE_INDICATOR, METADATA_RENDER_USING_SIMPLE_CACHE);
+        $dynamicQualityIndicator = p_get_metadata($this->getId(), action_plugin_combo_qualitymessage::DISABLE_INDICATOR, METADATA_RENDER_USING_SIMPLE_CACHE);
         if ($dynamicQualityIndicator === null) {
             return true;
         } else {
@@ -923,56 +918,33 @@ class Page
     public
     function getContent()
     {
-        return rawWiki($this->id);
+        /**
+         * use {@link io_readWikiPage(wikiFN($id, $rev), $id, $rev)};
+         */
+        return rawWiki($this->getId());
     }
 
-    /**
-     * The index and  most of the function that are not links related
-     * does not have the path to a page with the root element ie ':'
-     *
-     * This function makes sure that the id does not have ':' as root character
-     *
-     * See the $page argument of {@link resolve_pageid}
-     *
-     */
-    public
-    function getAbsoluteId()
-    {
-        if ($this->absoluteId == null) {
-            $this->absoluteId = cleanID($this->id);
-        }
-        return $this->absoluteId;
-
-    }
 
     public
     function isInIndex()
     {
         $Indexer = idx_get_indexer();
         $pages = $Indexer->getPages();
-        $return = array_search($this->getAbsoluteId(), $pages, true);
+        $return = array_search($this->getId(), $pages, true);
         return $return !== false;
     }
 
-    /**
-     * @return string an absolute id with `:`
-     */
-    public
-    function getAbsoluteLinkId()
-    {
-        return ":" . $this->id;
-    }
 
     public
     function upsertContent($content, $summary = "Default")
     {
-        saveWikiText($this->id, $content, $summary);
+        saveWikiText($this->getId(), $content, $summary);
     }
 
     public
     function addToIndex()
     {
-        idx_addPage($this->id);
+        idx_addPage($this->getId());
     }
 
     public
@@ -1005,7 +977,7 @@ class Page
             if (empty($firstImage)) {
                 return null;
             } else {
-                return new Image($firstImage);
+                return InternalMediaLink::createMediaLinkFromPathId($firstImage);
             }
         }
         return null;
@@ -1016,7 +988,7 @@ class Page
      * An array of images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
-     * @return Image[]
+     * @return InternalMediaLink[]
      */
     public
     function getImageSet()
@@ -1032,10 +1004,10 @@ class Page
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = new Image($imageIdFromMeta);
+                    $images[] = InternalMediaLink::createMediaLinkFromPathId(cleanID($imageIdFromMeta));
                 }
             } else {
-                $images = array(new Image($imageMeta));
+                $images = array(InternalMediaLink::createMediaLinkFromPathId(cleanID($imageMeta)));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
@@ -1050,7 +1022,7 @@ class Page
 
 
     /**
-     * @return Image|null
+     * @return RasterImageLink|null
      */
     public
     function getImage()
@@ -1223,13 +1195,13 @@ class Page
     public function isHomePage()
     {
         global $conf;
-        return $this->id == $conf['start'];
+        return $this->getId() == $conf['start'];
     }
 
     public function getMetadata($key)
     {
         $persistentMetadata = $this->getPersistentMetadata($key);
-        if(empty($persistentMetadata)){
+        if (empty($persistentMetadata)) {
             $persistentMetadata = $this->getCurrentMetadata($key);
         }
         return $persistentMetadata;
@@ -1241,7 +1213,7 @@ class Page
         if (!empty($persistentMetadata)) {
             $timestamp = strtotime($persistentMetadata);
             if ($timestamp === false) {
-                LogUtility::msg("The published date ($persistentMetadata) of the page ($this->id) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, "published");
+                LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, "published");
             } else {
                 return date("U", $timestamp);
             }
@@ -1380,28 +1352,153 @@ class Page
 
     public function hasXhtmlCache()
     {
-        if ($this->xhtmlCache == null) {
-            $file = $this->getFilePath();
-            $this->xhtmlCache = new CacheRenderer($this->id, $file, 'xhtml');
-        }
+
+        $renderCache = $this->getRenderCache("xhtml");
         /**
          * $cache->cache is the file
          */
-        return file_exists($this->xhtmlCache->cache);
+        return file_exists($renderCache->cache);
     }
 
     public function hasInstructionCache()
     {
 
-        if ($this->instructionCache == null) {
-            $file = $this->getFilePath();
-            $this->instructionCache = new CacheInstructions($this->getId(), $file);
-        }
+        $instructionCache = $this->getInstructionsCache();
         /**
          * $cache->cache is the file
          */
-        return file_exists($this->instructionCache->cache);
+        return file_exists($instructionCache->cache);
 
+    }
+
+    public function render()
+    {
+
+        if (!$this->isStrapSideBar()) {
+            $template = Site::getTemplate();
+            LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getUrl("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
+            return "";
+        }
+
+
+        /**
+         * When running a bar rendering
+         * The global ID should become the id of bar
+         * (needed for parsing)
+         * The $ID is restored at the end of the function
+         */
+        global $ID;
+        $keep = $ID;
+        $ID = $this->getLogicalId();
+
+
+        /**
+         * The code below is adapted from {@link p_cached_output()}
+         * $ret = p_cached_output($file, 'xhtml', $pageid);
+         *
+         * We don't use {@link CacheRenderer}
+         * because the cache key is the physical file
+         */
+        global $conf;
+        $format = 'xhtml';
+
+        $renderCache = $this->getRenderCache($format);
+        if ($renderCache->useCache()) {
+            $xhtml = $renderCache->retrieveCache(false);
+            if ($conf['allowdebug'] && $format == 'xhtml') {
+                $xhtml .= "\n<!-- bar cachefile {$renderCache->cache} used -->\n";
+            }
+        } else {
+
+            /**
+             * Get the instructions
+             * Adapted from {@link p_cached_instructions()}
+             */
+            $instructionsCache = $this->getInstructionsCache();
+            if ($instructionsCache->useCache()) {
+                $instructions = $instructionsCache->retrieveCache();
+            } else {
+                // no cache - do some work
+                $instructions = p_get_instructions($this->getContent());
+                if (!$instructionsCache->storeCache($instructions)) {
+                    msg('Unable to save cache file. Hint: disk full; file permissions; safe_mode setting.', -1);
+                }
+            }
+
+            /**
+             * Render
+             */
+            $xhtml = p_render($format, $instructions, $info);
+            if ($info['cache'] && $renderCache->storeCache($xhtml)) {
+                if ($conf['allowdebug'] && $format == 'xhtml') {
+                    $xhtml .= "\n<!-- no bar cachefile used, but created {$renderCache->cache} -->\n";
+                }
+            } else {
+                $renderCache->removeCache();   //   try to delete cachefile
+                if ($conf['allowdebug'] && $format == 'xhtml') {
+                    $xhtml .= "\n<!-- no bar cachefile used, caching forbidden -->\n";
+                }
+            }
+        }
+
+        // restore ID
+        $ID = $keep;
+        return $xhtml;
+
+    }
+
+    /**
+     * @param string $outputFormat For instance, "xhtml" or {@links Analytics::RENDERER_NAME_MODE}
+     * @return \dokuwiki\Cache\Cache the cache of the page
+     *
+     * Output of {@link DokuWiki_Syntax_Plugin::render()}
+     *
+     */
+    private function getRenderCache($outputFormat)
+    {
+
+        if ($this->isStrapSideBar()) {
+
+            /**
+             * Logical id is the scope and part of the key
+             */
+            return new CacheByLogicalKey($this->getLogicalId(), $this->getFilePath(), $outputFormat);
+
+        } else {
+
+            return new CacheRenderer($this->getId(), $this->getFilePath(), $outputFormat);
+
+        }
+    }
+
+    /**
+     * @return CacheInstructions
+     * The cache of the {@link CallStack call stack} (ie list of output of {@link DokuWiki_Syntax_Plugin::handle})
+     */
+    private function getInstructionsCache()
+    {
+
+        if ($this->isStrapSideBar()) {
+
+            /**
+             * @noinspection PhpIncompatibleReturnTypeInspection
+             * No inspection because this is not the same object interface
+             * because we can't overide the constructor of {@link CacheInstructions}
+             * but they should used the same interface (ie manipulate array data)
+             */
+            return new CacheInstructionsByLogicalKey($this->getLogicalId(), $this->getFilePath());
+
+        } else {
+
+            return new CacheInstructions($this->getId(), $this->getFilePath());
+
+        }
+
+    }
+
+    public function deleteXhtmlCache()
+    {
+        $this->deleteCache("xhtml");
     }
 
 

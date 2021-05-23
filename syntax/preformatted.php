@@ -1,7 +1,10 @@
 <?php
 
 
+use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
+use ComboStrap\Prism;
+use ComboStrap\TagAttributes;
 
 
 /**
@@ -9,16 +12,33 @@ use ComboStrap\PluginUtility;
  */
 if (!defined('DOKU_INC')) die();
 
-
+/**
+ *
+ * Preformatted shows a block of text as code via space at the beginning of the line
+ *
+ * It is the same as <a href="https://github.github.com/gfm/#indented-code-blocks">indented-code-blocks</a>
+ * but with 2 characters in place of 4
+ *
+ * This component is used to:
+ *   * showcase preformatted as {@link \ComboStrap\Prism} component
+ *   * disable preformatted mode via the function {@link syntax_plugin_combo_preformatted::disablePreformatted()}
+ * used in other HTML super set syntax component to disable this behavior
+ *
+ *
+ */
 class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG='preformatted';
+    const TAG = 'preformatted';
 
+
+    const CONF_PREFORMATTED_ENABLE = "preformattedEnable";
     /**
-     * Enable or disable preformatted
+     * The content is not printed when the content of a preformatted block is empty
      */
-    const CONF_PREFORMATTED_ENABLE = 'preformattedEnable';
+    const CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE = "preformattedEmptyContentNotPrintedEnable";
+
+    const HAS_EMPTY_CONTENT = "hasEmptyContent";
 
     /**
      * Syntax Type.
@@ -43,9 +63,8 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
-
 
 
     /**
@@ -67,6 +86,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
         /**
          * Should be less than the preformatted mode
          * which is 20
+         * From {@link \dokuwiki\Parsing\ParserMode\Preformatted::getSort()}
          **/
         return 19;
     }
@@ -75,25 +95,30 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        if (!$this->getConf(self::CONF_PREFORMATTED_ENABLE)) {
+        if ($this->getConf(self::CONF_PREFORMATTED_ENABLE, 1)) {
 
+            /**
+             * From {@link \dokuwiki\Parsing\ParserMode\Preformatted}
+             */
             $patterns = array('\n  (?![\*\-])', '\n\t(?![\*\-])');
             foreach ($patterns as $pattern) {
                 $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
             }
+            $this->Lexer->addPattern('\n  ', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addPattern('\n\t', PluginUtility::getModeForComponent($this->getPluginComponent()));
 
         }
-
 
     }
 
 
     function postConnect()
     {
-        $patterns = array('\n  ', '\n\t');
-        foreach ($patterns as $pattern) {
-            $this->Lexer->addExitPattern($pattern, PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
+        /**
+         * From {@link \dokuwiki\Parsing\ParserMode\Preformatted}
+         */
+        $this->Lexer->addExitPattern('\n', PluginUtility::getModeForComponent($this->getPluginComponent()));
+
     }
 
     /**
@@ -112,7 +137,47 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+        switch ($state) {
+            case DOKU_LEXER_ENTER:
+                /**
+                 * used at the {@link DOKU_LEXER_EXIT} state
+                 * to add the {@link syntax_plugin_combo_preformatted::HAS_EMPTY_CONTENT}
+                 * flag
+                 */
+                $attributes = [];
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
+            case DOKU_LEXER_MATCHED:
+                return array(
+                    PluginUtility::STATE => $state
+                );
+            case DOKU_LEXER_UNMATCHED:
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $match
+                );
+            case DOKU_LEXER_EXIT:
+                $callStack = CallStack::createFromHandler($handler);
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $text = "";
+                while ($callStack->next()) {
+                    $actualCall = $callStack->getActualCall();
+                    if ($actualCall->getState() == DOKU_LEXER_UNMATCHED && $actualCall->getTagName() == self::TAG) {
+                        $text .= $actualCall->getPayload() . "\n";
+                        $callStack->deleteActualCallAndPrevious();
+                    }
+                }
+                if (trim($text) == "") {
+                    $openingCall->addAttribute(self::HAS_EMPTY_CONTENT, true);
+                }
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::PAYLOAD => $text
+                );
+        }
+        return array();
 
     }
 
@@ -128,12 +193,59 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data)
     {
-        if ($format=="xhtml") {
-            $renderer->doc .= PluginUtility::renderUnmatched($data);
+        if ($format == "xhtml") {
+            /**
+             * @var Doku_Renderer_xhtml $renderer
+             */
+            $state = $data[PluginUtility::STATE];
+            $emptyContentShouldBeDeleted = $this->getConf(self::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE, 1);
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+                    $hasEmptyContent = $tagAttributes->getValueAndRemove(self::HAS_EMPTY_CONTENT,0);
+                    if (!($hasEmptyContent && $emptyContentShouldBeDeleted)) {
+                        Prism::htmlEnter($renderer, $this, $tagAttributes);
+                    }
+                    break;
+                case DOKU_LEXER_EXIT:
+                    // Delete the eol at the beginning and end
+                    // otherwise we get a big block
+                    $text = trim($data[PluginUtility::PAYLOAD], "\n\r");
+                    if (!(trim($text) == "" && $emptyContentShouldBeDeleted)) {
+
+                        $renderer->doc .= PluginUtility::htmlEncode($text);
+                        Prism::htmlExit($renderer);
+                    }
+                    break;
+            }
         }
         return false;
     }
 
+    /**
+     * Utility function to disable preformatted formatting
+     * in a HTML super set element
+     *
+     * @param $mode
+     * @return bool
+     */
+    public
+    static function disablePreformatted($mode)
+    {
+        /**
+         * Disable {@link \dokuwiki\Parsing\ParserMode\Preformatted}
+         * and this syntax
+         */
+        if (
+            $mode == 'preformatted'
+            ||
+            $mode == PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
+        ) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
 }
 

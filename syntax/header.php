@@ -1,14 +1,11 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
-// must be run within Dokuwiki
 use ComboStrap\HeaderUtility;
-use ComboStrap\TitleUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../class/HeaderUtility.php');
 
@@ -18,6 +15,8 @@ if (!defined('DOKU_INC')) die();
 class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
 {
 
+
+    const TAG = "header";
 
     function getType()
     {
@@ -35,7 +34,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     function getAllowedTypes()
@@ -67,26 +66,15 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
                 $tagAttributes = PluginUtility::getTagAttributes($match);
-                $htmlAttributes = $tagAttributes;
                 $tag = new Tag(HeaderUtility::HEADER, $tagAttributes, $state, $handler);
                 $parent = $tag->getParent();
                 $parentName = "";
-                $html = "";
                 if ($parent != null) {
                     $parentName = $parent->getName();
-                    switch ($parentName) {
-                        case syntax_plugin_combo_blockquote::TAG:
-                        case syntax_plugin_combo_card::TAG:
-                            PluginUtility::addClass2Attributes("card-header", $htmlAttributes);
-                            $inlineAttributes = PluginUtility::array2HTMLAttributes($htmlAttributes);
-                            $html = "<div {$inlineAttributes}>" . DOKU_LF;
-                            break;
-                    }
                 }
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes,
-                    PluginUtility::PAYLOAD => $html,
                     PluginUtility::CONTEXT => $parentName
                 );
 
@@ -96,22 +84,8 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
                     PluginUtility::PAYLOAD => $match);
 
             case DOKU_LEXER_EXIT :
-                $html = "</div>";
-                $tag = new Tag(HeaderUtility::HEADER, array(), $state, $handler);
-                $parent = $tag->getParent();
-                if ($parent != null) {
-                    switch ($parent->getName()) {
-                        case syntax_plugin_combo_blockquote::TAG:
-                            $html .= syntax_plugin_combo_blockquote::CARD_BODY_BLOCKQUOTE_OPEN_TAG;
-                            break;
-                        case syntax_plugin_combo_card::TAG:
-                            $html .= syntax_plugin_combo_card::CARD_BODY;
-                            break;
-                    }
-                }
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -143,13 +117,13 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
                     $parent = $data[PluginUtility::CONTEXT];
                     switch ($parent) {
                         case syntax_plugin_combo_blockquote::TAG:
-                            StringUtility::rtrim($renderer->doc, syntax_plugin_combo_blockquote::CARD_BODY_BLOCKQUOTE_OPEN_TAG);
-                            break;
                         case syntax_plugin_combo_card::TAG:
-                            StringUtility::rtrim($renderer->doc, syntax_plugin_combo_card::CARD_BODY);
+                        default:
+                            $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                            $tagAttributes->addClassName("card-header");
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
                             break;
                     }
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -157,7 +131,7 @@ class syntax_plugin_combo_header extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT:
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $renderer->doc .= "</div>". DOKU_LF;
                     break;
 
 

@@ -150,7 +150,7 @@ MathJax.Hub.Config({
 });
 EOD;
 
-                PluginUtility::getSnippetManager()->upsertHeadTagsForBar(self::TAG,
+                PluginUtility::getSnippetManager()->upsertTagsForBar(self::TAG,
                     array("script" => [
                         array(
                             "type" => "text/x-mathjax-config",

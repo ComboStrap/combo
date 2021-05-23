@@ -1,12 +1,14 @@
 <?php
 
-use ComboStrap\Image;
+use ComboStrap\RasterImageLink;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Page;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -94,9 +96,11 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
 
         $page = new Page($ID);
+
         if(!$page->existInFs()){
             return;
         }
+
         /**
          * No social for bars
          */
@@ -143,7 +147,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (empty($twitterImages)) {
             $defaultImageIdConf = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE));
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = new Image($defaultImageIdConf);
+                $twitterImage = InternalMediaLink::createMediaLinkFromPathId($defaultImageIdConf);
                 if ($twitterImage->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {
@@ -157,9 +161,10 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (!empty($twitterImages)) {
             foreach ($twitterImages as $twitterImage) {
                 if ($twitterImage->exists()) {
-                    $twitterMeta[self::META_IMAGE] = $twitterImage->getUrl();
-                    if (!empty($twitterImage->getAlt())) {
-                        $twitterMeta[self::META_IMAGE_ALT] = $twitterImage->getAlt();
+                    $twitterMeta[self::META_IMAGE] = $twitterImage->getAbsoluteUrl();
+                    $title = $twitterImage->getTagAttributes()->getComponentAttributeValue(TagAttributes::TITLE_KEY);
+                    if (!empty($title)) {
+                        $twitterMeta[self::META_IMAGE_ALT] = $title;
                     }
                     // One image only
                     break;

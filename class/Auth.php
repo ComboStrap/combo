@@ -39,20 +39,23 @@ class Auth
 
     /**
      * @param TestRequest $request
-     * @param null $user
+     * @param string $user
      */
-    public static function becomeSuperUser(&$request,$user = null)
+    public static function becomeSuperUser(&$request = null, $user = 'admin')
     {
         global $conf;
         $conf['useacl'] = 1;
-        if ($user!=null) {
-            $user = 'admin';
-            $conf['superuser'] = $user;
+        $conf['superuser'] = $user;
+        $conf['remoteuser'] = $user;
+
+        if ($request != null) {
+            $request->setServer('REMOTE_USER', $user);
+        } else {
+            global $INPUT;
+            $INPUT->server->set('REMOTE_USER', $user);
         }
 
         // $_SERVER[] = $user;
-        $request->setServer('REMOTE_USER', $conf['superuser']);
-
         // global $USERINFO;
         // $USERINFO['grps'] = array('admin', 'user');
 
@@ -65,7 +68,7 @@ class Auth
      * @param $request
      * @param string $user - the user to login
      */
-    public static function logIn(&$request, $user='defaultUser')
+    public static function logIn(&$request, $user = 'defaultUser')
     {
 
         $request->setServer('REMOTE_USER', $user);
@@ -81,5 +84,41 @@ class Auth
         return auth_quickaclcheck(PluginUtility::getPageId()) >= AUTH_EDIT;
 
     }
+
+    public static function isAdmin()
+    {
+        global $INFO;
+        if (!empty($INFO)) {
+            return $INFO['isadmin'];
+        } else {
+            return auth_isadmin(self::getUser(), self::getUserGroups());
+        }
+    }
+
+    public static function isMember($group)
+    {
+
+        return auth_isMember($group, self::getUser(), self::getUserGroups());
+
+    }
+
+    public static function isManager()
+    {
+        global $INFO;
+        return $INFO['ismanager'];
+    }
+
+    private static function getUser()
+    {
+        global $INPUT;
+        return $INPUT->server->str('REMOTE_USER');
+    }
+
+    private static function getUserGroups()
+    {
+        global $USERINFO;
+        return is_array($USERINFO) ? $USERINFO['grps'] : array();
+    }
+
 
 }

@@ -2,7 +2,9 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -60,7 +62,7 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('formatting', 'substition', 'paragraphs');
     }
 
     function getSort()
@@ -91,19 +93,25 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $attributes = PluginUtility::getTagAttributes($match);
+                $defaultConfValue = $this->getConf(self::CONF_DEFAULT_ATTRIBUTES_KEY);
+                $defaultAttributes = PluginUtility::parseAttributes($defaultConfValue);
+                $attributes = PluginUtility::mergeAttributes($attributes, $defaultAttributes);
+                if (!isset($attributes[TagAttributes::TYPE_KEY])) {
+                    $attributes[TagAttributes::TYPE_KEY] = "info";
+                }
                 return array(
-                    PluginUtility::STATE=> $state,
+                    PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
                 // Important otherwise we don't get an exit in the render
                 return array(
-                    PluginUtility::STATE=> $state
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -131,49 +139,46 @@ class syntax_plugin_combo_inote extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    $defaultConfValue = $this->getConf(self::CONF_DEFAULT_ATTRIBUTES_KEY);
-                    $defaultAttributes = PluginUtility::parse2HTMLAttributes($defaultConfValue);
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $attributes = PluginUtility::mergeAttributes($attributes,$defaultAttributes);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    $tagAttributes->addClassName("badge");
 
-                    $classValue = "badge";
-                    $type = $attributes[self::ATTRIBUTE_TYPE];
-                    if (empty($type)) {
-                        $type = "info";
+
+                    $type = $tagAttributes->getValue(TagAttributes::TYPE_KEY);
+
+                    // Switch for the color
+                    switch ($type) {
+                        case "important":
+                            $type = "warning";
+                            break;
+                        case "warning":
+                            $type = "danger";
+                            break;
                     }
-                    if (array_key_exists("type", $attributes)) {
-                        $type = $attributes["type"];
-                        // Switch for the color
-                        switch ($type) {
-                            case "important":
-                                $type = "warning";
-                                break;
-                            case "warning":
-                                $type = "danger";
-                                break;
-                        }
-                    }
+
                     if ($type != "tip") {
-                        $classValue .= " badge-" . $type;
+                        $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+                        if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
+                            /**
+                             * We are using
+                             */
+                            $tagAttributes->addClassName("alert-" . $type);
+                        } else {
+                            $tagAttributes->addClassName("badge-" . $type);
+                        }
                     } else {
-                        if (!array_key_exists("background-color", $attributes)) {
-                            $attributes["background-color"] = "#fff79f"; // lum - 195
+                        if (!$tagAttributes->hasComponentAttribute("background-color")) {
+                            $tagAttributes->addStyleDeclaration("background-color", "#fff79f"); // lum - 195
+                            $tagAttributes->addClassName("text-dark");
                         }
                     }
-
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " {$classValue}";
-                    } else {
-                        $attributes["class"] = "{$classValue}";
+                    $rounded = $tagAttributes->getValueAndRemove(self::ATTRIBUTE_ROUNDED);
+                    if (!empty($rounded)) {
+                        $tagAttributes->addClassName("badge-pill");
                     }
 
-                    $rounded = $attributes[self::ATTRIBUTE_ROUNDED];
-                    if (!empty($rounded)){
-                        $attributes["class"] .= " badge-pill";
-                        unset($attributes[self::ATTRIBUTE_ROUNDED]);
-                    }
 
-                    $renderer->doc .= '<span ' . PluginUtility::array2HTMLAttributes($attributes) . '>';
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("span");
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

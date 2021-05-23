@@ -2,12 +2,15 @@
 
 
 use ComboStrap\Auth;
+use ComboStrap\DokuPath;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Page;
 use ComboStrap\PageProtection;
+use ComboStrap\StringUtility;
 
 require_once(__DIR__ . '/../class/LowQualityPage.php');
 require_once(__DIR__ . '/../class/PageProtection.php');
+require_once(__DIR__ . '/../class/DokuPath.php');
 
 /**
  *
@@ -83,23 +86,29 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     function handleAclCheck(&$event, $param)
     {
 
-        $id = $event->data['id'];
         /**
-         * ACL ID have the root form
+         * Are we on a page script
          */
-        $cleanId = cleanID($id);
-        if (Page::isDirectoryId($id)){
-
+        $imageScript = ["/lib/exe/mediamanager.php","/lib/exe/detail.php"];
+        if (in_array($_SERVER['SCRIPT_NAME'], $imageScript)) {
+            // id may be null or end with a star
+            // this is not a image
             return;
+        }
 
-        } else {
+        $id = $event->data['id'];
 
+        $dokuPath = DokuPath::createUnknownFromId($id);
+        if ($dokuPath->isPage()) {
+            /**
+             * It should be only a page
+             * https://www.dokuwiki.org/devel:event:auth_acl_check
+             */
             $user = $event->data['user'];
-            $page = new Page($cleanId);
+            $page = new Page($id);
             if ($page->isProtected($user)) {
                 $event->result = AUTH_NONE;
             }
-
         }
 
     }

@@ -1,7 +1,11 @@
 <?php
 
 use ComboStrap\AdsUtility;
-use ComboStrap\IconUtility;
+use ComboStrap\FloatAttribute;
+use ComboStrap\Icon;
+use ComboStrap\InternalMediaLink;
+use ComboStrap\LazyLoad;
+use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
@@ -9,7 +13,10 @@ use ComboStrap\PageProtection;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
+use ComboStrap\Shadow;
 use ComboStrap\Site;
+use ComboStrap\SvgDocument;
+use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -57,7 +64,9 @@ $meta[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = arra
  * Icon namespace where the downloaded icon are stored
  */
 require_once(__DIR__ . '/../syntax/icon.php');
-$meta[IconUtility::CONF_ICONS_MEDIA_NAMESPACE] = array('string');
+$meta[Icon::CONF_ICONS_MEDIA_NAMESPACE] = array('string');
+$meta[Icon::CONF_DEFAULT_ICON_LIBRARY] = array('multichoice', '_choices' => array_keys(Icon::LIBRARY_ACRONYM));
+
 
 /**
  * Css optimization
@@ -106,6 +115,7 @@ $meta[PageProtection::CONF_PAGE_PROTECTION_MODE] = array('multichoice', '_choice
  * Preformatted mode enable
  */
 $meta[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE] = array('onoff');
+$meta[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE] = array('onoff');
 
 /**
  * The mandatory rules
@@ -124,9 +134,11 @@ $meta[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = arr
 $meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);
 
 /**
- * Dokuwiki Class Name
+ * Link
  */
 $meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
+$meta[syntax_plugin_combo_link::CONF_DISABLE_LINK] = array('onoff');
+$meta[syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK] = array('onoff');
 
 /**
  * Twitter
@@ -165,3 +177,89 @@ $meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
  * Default Page Type
  */
 $meta[Page::CONF_DEFAULT_PAGE_TYPE] = array("string");
+
+/**
+ * Default Shadow level
+ */
+$meta[Shadow::CONF_DEFAULT_VALUE] = array('multichoice', '_choices' => array(
+    Shadow::CONF_SMALL_LEVEL_VALUE,
+    Shadow::CONF_MEDIUM_LEVEL_VALUE,
+    Shadow::CONF_LARGE_LEVEL_VALUE,
+    Shadow::CONF_EXTRA_LARGE_LEVEL_VALUE
+));
+
+
+/**
+ * Big Svg Lazy load
+ */
+require_once(__DIR__ . '/../class/SvgImageLink.php');
+$meta[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = array('onoff');
+
+/**
+ * Big Svg Injection
+ */
+$meta[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = array('onoff');
+
+/**
+ * Svg Optimization
+ */
+$meta[SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE] = array('onoff');
+
+/**
+ * Svg Optimization Inline
+ */
+$meta[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = array('string');
+
+/**
+ * Svg Upload Group Name
+ */
+$meta[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = array('string');
+
+/**
+ * Svg The attribute that are deleted with the optimization
+ * {@link SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE}
+ */
+$meta[SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = array('string');
+$meta[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = array('string');
+$meta[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = array('string');
+$meta[SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = array('string');
+$meta[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = array('string');
+
+/**
+ * Raster Lazy load image
+ */
+$meta[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = array('onoff');
+$meta[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = array('string');
+$meta[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = array('onoff');
+
+/**
+ * Lazy loading
+ */
+$meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("string");
+
+/**
+ * Internal media
+ */
+$meta[InternalMediaLink::CONF_IMAGE_ENABLE] = array('onoff');
+
+/**
+ * Internal media default linking
+ */
+$meta[InternalMediaLink::CONF_DEFAULT_LINKING] = array('multichoice', '_choices' => array(
+    InternalMediaLink::LINKING_DIRECT_VALUE,
+    InternalMediaLink::LINKING_DETAILS_VALUE,
+    InternalMediaLink::LINKING_LINKONLY_VALUE,
+    InternalMediaLink::LINKING_NOLINK_VALUE,
+));
+
+/**
+ * Default breakpoint
+ */
+$meta[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = array('multichoice', '_choices' => array(
+    "xs",
+    "sm",
+    "md",
+    "lg",
+    "xl",
+    "xxl"
+));

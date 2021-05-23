@@ -86,7 +86,7 @@ class Message
 
             $message .= $this->getContent();
 
-            $message .='<div class="'.self::SIGNATURE_CLASS.'">' . $this->plugin->getLang('message_come_from') . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName) . '</div>';
+            $message .='<div class="'.self::SIGNATURE_CLASS.'">' . $this->plugin->getLang('message_come_from') . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName, false) . '</div>';
             $message .='</div>';
 
         }

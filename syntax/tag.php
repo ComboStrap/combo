@@ -42,7 +42,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -112,7 +112,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['has-siblings'] = $tag->hasSiblings();
                 $attributes['first-sibling'] = $tag->getPreviousSibling() !== null ? $tag->getPreviousSibling()->getName() : false;
 
-                $payload = '<tag-enter type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-enter>';
+                $payload = '<tag-enter type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '></tag-enter>';
 
                 /**
                  * Attributes needs to be given
@@ -134,7 +134,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
                 $attributes['first-sibling'] = $tag->getPreviousSibling() !== null ? $tag->getPreviousSibling() : false;
-                $payload = '<tag-unmatched type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-unmatched>';
+                $payload = '<tag-unmatched type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '></tag-unmatched>';
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $payload
@@ -151,7 +151,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $attributes['descendant-of-card'] = $tag->isDescendantOf("card");
                 $attributes['has-siblings'] = $tag->hasSiblings();
                 $attributes['first-sibling'] = $tag->getPreviousSibling()->getName();
-                $payload = '<tag-special type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-special>';
+                $payload = '<tag-special type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '></tag-special>';
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $payload
@@ -174,7 +174,7 @@ class syntax_plugin_combo_tag extends DokuWiki_Syntax_Plugin
                 $badgeTag = $openingTag->getDescendant("badge");
                 $attributes['has-badge-descendant'] = $badgeTag !== null;
                 $attributes['badge-content'] = $badgeTag !== null ? $badgeTag->getContentRecursively() : "";
-                $payload = '<tag-exit type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributes($attributes) . '></tag-exit>';
+                $payload = '<tag-exit type="' . $attributes['type'] . '" ' . PluginUtility::array2HTMLAttributesAsString($attributes) . '></tag-exit>';
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::PAYLOAD => $payload

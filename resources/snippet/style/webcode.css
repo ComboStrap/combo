@@ -1,14 +1,3 @@
-/*
- * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
- *
- * This source code is licensed under the GPL license found in the
- * COPYING  file in the root directory of this source tree.
- *
- * @license  GPL 3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
- * @author   ComboStrap <support@combostrap.com>
- *
- */
-
 div.webcode{
     position: relative;
 }
@@ -18,7 +7,6 @@ div.webcode>.webcode-bar {
     top: .3em;
     right: .2em;
     transition: opacity .3s ease-in-out;
-    opacity: 0;
 }
 
 div.webcode>.webcode-bar .webcode-bar-item {
@@ -41,14 +29,6 @@ div.webcode>.webcode-bar button {
     border: 0;
     line-height: normal;
     overflow: visible;
-}
-
-div.webcode:hover>.webcode-bar {
-    opacity: 1
-}
-
-div.webcode-bar:focus-within>.webcode-bar {
-    opacity: 1
 }
 
 div.webcode>.webcode-bar a:focus, div.webcode>.webcode-bar a:hover, div.webcode>.webcode-bar button:focus, div.webcode>.webcode-bar button:hover {

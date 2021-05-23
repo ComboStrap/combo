@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
@@ -47,7 +48,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -60,6 +61,13 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
     public function getAllowedTypes()
     {
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+    }
+
+    public function accepts($mode)
+    {
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     /**
@@ -141,14 +149,45 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 $inLinesAttributes = PluginUtility::getTagAttributes($match);
                 $attributes = PluginUtility::mergeAttributes($inLinesAttributes, $defaultAttributes);
 
+                /**
+                 * The parent
+                 * to apply automatically styling in a bar
+                 */
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                if ($tag->isDescendantOf(syntax_plugin_combo_navbar::TAG)) {
+                    if (!isset($attributes["class"]) && !isset($attributes["spacing"])) {
+                        $attributes["spacing"] = "mr-2 mb-2 mt-2 mb-lg-0 mt-lg-0";
+                    }
+                }
+
+                /**
+                 * The context give set if this is a button
+                 * or a link button
+                 * The context is checked in the exist
+                 * Default context: This is not a link button
+                 */
+                $context = self::TAG;
+
+                /**
+                 * The parent is used to close
+                 * the text of a card if any
+                 */
+                $parentName = "";
+                $parent = $tag->getParent();
+                if ($parent != null) {
+                    $parentName = $parent->getName();
+                }
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::PARENT => $parentName
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
@@ -161,6 +200,8 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                     $context = self::TAG;
                 }
                 $openingTag->setContext($context);
+
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::CONTEXT => $context
@@ -194,9 +235,11 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
 
                 /**
-                 * CSS
+                 * CSS if dokuwiki class name for link
                  */
-                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
+                if ($this->getConf(LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME, false)) {
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                }
 
                 /**
                  * HTML
@@ -206,29 +249,38 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 $context = $data[PluginUtility::CONTEXT];
                 switch ($state) {
 
+                    case DOKU_LEXER_ENTER :
+
+                        /**
+                         * If this not a link button
+                         * The context is set on the handle exit
+                         */
+                        if ($context == self::TAG) {
+                            self::processButtonAttributesToHtmlAttributes($attributes);
+                            $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
+                            $renderer->doc .= '<button type="button" ' . $inlineAttributes . '>';
+                        }
+                        break;
+
                     case DOKU_LEXER_UNMATCHED:
+
+
                         /**
                          * If this is a button and not a link button
                          */
                         $renderer->doc .= PluginUtility::renderUnmatched($data);
                         break;
-                    case DOKU_LEXER_ENTER :
-
-                        if ($context == self::TAG) {
-                            self::processButtonAttributesToHtmlAttributes($attributes);
-                            $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
-                            $renderer->doc .= '<button type="button" ' . $inlineAttributes . '>';
-                        }
-                        break;
-
 
                     case DOKU_LEXER_EXIT :
+
+
                         /**
                          * If this is a button and not a link button
                          */
                         if ($context == self::TAG) {
                             $renderer->doc .= '</button>';
                         }
+
                         break;
                 }
                 return true;

@@ -44,7 +44,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'formatting';
+        return 'container';
     }
 
     /**
@@ -59,8 +59,17 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        /**
+         * No paragraph between
+         */
+        return 'block';
     }
+
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
+
 
     /**
      * @return array
@@ -143,7 +152,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
                 PluginUtility::addClass2Attributes(self::COMBO_LIST_ITEM_CLASS, $attributes);
                 $html = '<li';
                 if (sizeof($attributes)) {
-                    $html .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                    $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
                 }
                 $html .= '>';
                 return array(

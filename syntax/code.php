@@ -7,6 +7,7 @@
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../class/StringUtility.php');
 require_once(__DIR__ . '/../class/Prism.php');
@@ -128,6 +129,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
                 /**
                  * Attribute are send for the
                  * export of code functionality
+                 * and display = none
                  */
                 $tag = new Tag(self::CODE_TAG, array(), $state, $handler);
                 $tagAttributes = $tag->getParent()->getAttributes();
@@ -136,7 +138,16 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 
 
             case DOKU_LEXER_EXIT :
-                return array(PluginUtility::STATE => $state);
+                /**
+                 * Tag Attributes are passed
+                 * because it's possible to not display a code with the display attributes = none
+                 */
+                $tag = new Tag(self::CODE_TAG, array(), $state, $handler);
+                $tagAttributes = $tag->getOpeningTag()->getAttributes();
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $tagAttributes
+                );
 
 
         }
@@ -164,23 +175,35 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    Prism::htmlEnter($renderer, $attributes, $this);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CODE_TAG);
+                    Prism::htmlEnter($renderer, $this, $attributes);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $display = $attributes->getValue("display");
+                    if ($display != "none") {
+                        // Delete the eol at the beginning and end
+                        // otherwise we get a big block
+                        $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
+                        $renderer->doc .= PluginUtility::htmlEncode($payload);
+                    }
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    Prism::htmlExit($renderer);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    Prism::htmlExit($renderer, $attributes);
                     break;
 
             }
             return true;
         } else if ($format == 'code') {
 
-            /** @var Doku_Renderer_code $renderer */
+            /**
+             * The renderer to download the code
+             * @var Doku_Renderer_code $renderer
+             */
             $state = $data [PluginUtility::STATE];
             if ($state == DOKU_LEXER_UNMATCHED) {
 

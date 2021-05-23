@@ -155,7 +155,7 @@ class AdsUtility
         $htmlAttributes["id"] = AdsUtility::getTagId($name);
         $htmlAttributes = PluginUtility::mergeAttributes($attributes, $htmlAttributes);
         unset($htmlAttributes["name"]);
-        $divHtmlWrapper .= " " . PluginUtility::array2HTMLAttributes($htmlAttributes);
+        $divHtmlWrapper .= " " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes);
         return $divHtmlWrapper . ">" . $html . '</div>';
     }
 }

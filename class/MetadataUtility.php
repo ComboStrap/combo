@@ -48,7 +48,7 @@ class MetadataUtility
 
         // Attributes processing
         $defaultStringAttributes = $plugin->getConf(MetadataUtility::CONF_METADATA_DEFAULT_ATTRIBUTES);
-        $defaultAttributes = PluginUtility::parse2HTMLAttributes($defaultStringAttributes);
+        $defaultAttributes = PluginUtility::parseAttributes($defaultStringAttributes);
         $attributes = PluginUtility::mergeAttributes($inlineAttributes, $defaultAttributes);
 
         // Building the box

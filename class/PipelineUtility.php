@@ -12,7 +12,14 @@
 
 namespace ComboStrap;
 
-
+/**
+ * Class PipelineUtility
+ * @package ComboStrap
+ * A pipeline to perform filter transformation
+ *
+ * See also
+ * https://getbootstrap.com/docs/5.0/helpers/text-truncation/
+ */
 class PipelineUtility
 {
 

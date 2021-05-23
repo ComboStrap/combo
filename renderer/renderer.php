@@ -145,6 +145,10 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         $this->previousNodePosition = $nodePosition;
         $this->previousSectionTextHeader = $text;
 
+        /**
+         * TODO: replace with CSS styling
+         * https://datacadamia.com/web/css/content#heading_numbering
+         */
         $numbering = "";
         if ($level == 2) {
             $numbering = $nodePosition;

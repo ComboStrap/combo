@@ -27,7 +27,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     * * 'normal' - The plugin can be used inside paragraphs
+     *  * 'normal' - The plugin can be used inside paragraphs
      *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
      *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
      *
@@ -35,7 +35,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -168,7 +168,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                             StringUtility::addEolCharacterIfNotPresent($renderer->doc);
                             $renderer->doc .= "<footer class=\"blockquote-footer\"><cite";
                             if (sizeof($attributes) > 0) {
-                                $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                                $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                                 $renderer->doc .= " $inlineAttributes>";
                             } else {
                                 $renderer->doc .= '>';
@@ -180,7 +180,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                         default:
                             $renderer->doc .= "<cite";
                             if (sizeof($attributes) > 0) {
-                                $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                                $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
                                 $renderer->doc .= " $inlineAttributes";
                             }
                             $renderer->doc .= ">";

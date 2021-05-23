@@ -45,4 +45,20 @@ class StyleUtility
         return $inline;
 
     }
+
+    /**
+     * Add class for user styling
+     * See
+     * https://combostrap.com/styling/userstyle#class
+     * @param TagAttributes $param
+     */
+    public static function addStylingClass(TagAttributes &$param)
+    {
+        if (!empty($param->getLogicalTag())) {
+            $param->addClassName($param->getLogicalTag() . "-combo");
+            if (!empty($param->getType())) {
+                $param->addClassName($param->getLogicalTag() . "-" . $param->getType() . "-combo");
+            }
+        }
+    }
 }

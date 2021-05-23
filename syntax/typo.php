@@ -6,15 +6,7 @@ use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
 
-/**
- * Class syntax_plugin_combo_typo
- *
- * TODO: https://github.com/typekit/webfontloader
- * https://www.dokuwiki.org/plugin:typography
- * https://stackoverflow.design/email/base/typography/
- * http://kyleamathews.github.io/typography.js/
- * https://docs.gitbook.com/features/advanced-branding (Roboto, Roboto Slab, Open Sans, Source Sans Pro, Lato, Ubuntu, Raleway, Merriweather)
- */
+
 class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
 {
 
@@ -59,6 +51,14 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
+    public function accepts($mode)
+    {
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
+    }
+
+
     function getSort()
     {
         return 201;
@@ -93,7 +93,7 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
                         PluginUtility::addClass2Attributes("lead", $attributes);
                     }
                 }
-                $html = "<p " . PluginUtility::array2HTMLAttributes($attributes) . ">";
+                $html = "<p " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">";
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,

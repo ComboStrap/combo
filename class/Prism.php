@@ -62,6 +62,7 @@ class Prism
      */
     const CONF_PRISM_THEME = "prismTheme";
     const PRISM_THEME_DEFAULT = "tomorrow";
+    const SNIPPET_ID_AUTOLOADER = self::SNIPPET_NAME . "-autoloader";
 
 
     /**
@@ -73,7 +74,7 @@ class Prism
     public static function addSnippet($theme)
     {
         $BASE_PRISM_CDN = self::BASE_PRISM_CDN;
-        $SCRIPT_ID = "prism";
+
         if ($theme == self::PRISM_THEME) {
             $themeStyleSheet = "prism.min.css";
         } else {
@@ -83,7 +84,6 @@ class Prism
 
         $tags = array();
         $tags['script'][] = array("src" => "$BASE_PRISM_CDN/components/prism-core.min.js");
-        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/autoloader/prism-autoloader.min.js");
         $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js");
         // https://prismjs.com/plugins/normalize-whitespace/
         $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js");
@@ -100,7 +100,7 @@ class Prism
             "crossorigin" => "anonymous"
         );
 
-        PluginUtility::getSnippetManager()->upsertHeadTagsForBar($SCRIPT_ID, $tags);
+        PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_NAME, $tags);
 
         $javascriptCode = <<<EOD
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -214,30 +214,54 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 });
 EOD;
-        PluginUtility::getSnippetManager()->upsertJavascriptForBar($SCRIPT_ID, $javascriptCode);
+        PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::SNIPPET_NAME, $javascriptCode);
 
     }
 
     /**
      * Add the first block of prism
      * @param \Doku_Renderer_xhtml $renderer
-     * @param $attributes
+     * @param TagAttributes $attributes
      * @param \DokuWiki_Syntax_Plugin $plugin
      */
-    public static function htmlEnter(\Doku_Renderer_xhtml $renderer, $attributes, \DokuWiki_Syntax_Plugin $plugin)
+    public static function htmlEnter(\Doku_Renderer_xhtml $renderer, \DokuWiki_Syntax_Plugin $plugin, $attributes = null)
     {
 
+        if ($attributes == null) {
+            $attributes = TagAttributes::createEmpty();
+        }
+
+        /**
+         * Display none, no rendering
+         */
+        $display = $attributes->getValueAndRemove("display");
+        if ($display != null) {
+            if ($display == "none") {
+                return;
+            }
+        }
+
         $theme = $plugin->getConf(Prism::CONF_PRISM_THEME);
+
         /**
          * Add prism
          */
         Prism::addSnippet($theme);
 
-
         /**
          * Add HTML
          */
-        $language = strtolower($attributes["type"]);
+        $language = $attributes->getValue(TagAttributes::TYPE_KEY);
+        if ($language == null) {
+            // Prism does not have any default language
+            // There is a bug has it tried to download the txt javascript
+            // but without language, there is no styling
+            $language = "txt";
+        } else {
+            $language = strtolower($language);
+            Prism::addAutoloaderSnippet();
+        }
+
         if ($language == "dw") {
             $language = "html";
         }
@@ -254,77 +278,130 @@ EOD;
         if ($language == "apache") {
             $language = "apacheconf";
         }
+        if ($language == "babel") {
+            $language = "javascript";
+        }
 
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);
-        PluginUtility::addClass2Attributes('language-' . $language, $attributes);
-        if (array_key_exists("line-numbers", $attributes)) {
-            unset($attributes["line-numbers"]);
-            PluginUtility::addClass2Attributes('line-numbers', $attributes);
+        $attributes->addClassName('language-' . $language);
+
+
+
+
+        /**
+         * Line numbers
+         */
+        if ($attributes->hasComponentAttribute("line-numbers")) {
+            $attributes->removeComponentAttribute("line-numbers");
+            $attributes->addClassName('line-numbers');
         }
 
         /**
-         * Pre element
+         * Pre element the bar
          */
-        $preAttributes = [];
-        $addedClass = 'combo_' . $plugin->getPluginComponent();
-        PluginUtility::addClass2Attributes($addedClass, $preAttributes);
+        $preAttributes = TagAttributes::createEmpty();
+
+        /**
+         * Add the styling class
+         * https://combostrap.com/styling/userstyle
+         */
+        $pluginComponent = $plugin->getPluginComponent();
+        $preAttributes->addClassName($pluginComponent . '-combo-pre');
+        $type = $attributes->getType();
+        if (!empty($type)) {
+            $preAttributes->addClassName($pluginComponent . '-' . $type . '-combo-pre');
+        }
+
         // Command line
-        if (array_key_exists("prompt", $attributes)) {
-            PluginUtility::addClass2Attributes("command-line", $preAttributes);
-            $preAttributes["data-prompt"] = $attributes["prompt"];
-            unset($attributes["prompt"]);
+        if ($attributes->hasComponentAttribute("prompt")) {
+            $preAttributes->addClassName("command-line");
+            $preAttributes->addHtmlAttributeValue("data-prompt", $attributes->getValueAndRemove("prompt"));
         } else {
             switch ($language) {
                 case "bash":
-                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
-                    $preAttributes["data-prompt"] = $plugin->getConf(self::CONF_BASH_PROMPT);
+                    $preAttributes->addClassName("command-line");
+                    $preAttributes->addHtmlAttributeValue("data-prompt", $plugin->getConf(self::CONF_BASH_PROMPT));
                     break;
                 case "batch":
-                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
-                    $powerShell = trim($plugin->getConf(self::CONF_BATCH_PROMPT));
-                    if (!empty($powerShell)) {
-                        if (!strpos($powerShell, -1) == ">") {
-                            $powerShell .= ">";
+                    $preAttributes->addClassName("command-line");
+                    $batch = trim($plugin->getConf(self::CONF_BATCH_PROMPT));
+                    if (!empty($batch)) {
+                        if (!strpos($batch, -1) == ">") {
+                            $batch .= ">";
                         }
                     }
-                    $preAttributes["data-prompt"] = $powerShell;
+                    $preAttributes->addHtmlAttributeValue("data-prompt", $batch);
                     break;
                 case "powershell":
-                    PluginUtility::addClass2Attributes("command-line", $preAttributes);
+                    $preAttributes->addClassName("command-line");
                     $powerShell = trim($plugin->getConf(self::CONF_POWERSHELL_PROMPT));
                     if (!empty($powerShell)) {
                         if (!strpos($powerShell, -1) == ">") {
                             $powerShell .= ">";
                         }
                     }
-                    $preAttributes["data-prompt"] = $powerShell;
+                    $preAttributes->addHtmlAttributeValue("data-prompt", $powerShell);
                     break;
             }
         }
+
         // Download
-        $preAttributes['data-download-link'] = true;
-        if (array_key_exists(syntax_plugin_combo_code::FILE_PATH_KEY, $attributes)) {
-            $preAttributes['data-src'] = $attributes[syntax_plugin_combo_code::FILE_PATH_KEY];
-            unset($attributes[syntax_plugin_combo_code::FILE_PATH_KEY]);
-            $preAttributes['data-download-link-label'] = "Download " . $preAttributes['data-src'];
+        $preAttributes->addHtmlAttributeValue('data-download-link', true);
+        if ($attributes->hasComponentAttribute(syntax_plugin_combo_code::FILE_PATH_KEY)) {
+            $fileSrc = $attributes->getValueAndRemove(syntax_plugin_combo_code::FILE_PATH_KEY);
+            $preAttributes->addHtmlAttributeValue('data-src', $fileSrc);
+            $preAttributes->addHtmlAttributeValue('data-download-link-label', "Download " . $fileSrc);
         } else {
-            $preAttributes['data-src'] = "file." . $language;
+            $fileName = "file.". $language;
+            $preAttributes->addHtmlAttributeValue('data-src', $fileName);
         }
-        $htmlCode = '<pre ' . PluginUtility::array2HTMLAttributes($preAttributes) . '>' . DOKU_LF;
+        $htmlCode = $preAttributes->toHtmlEnterTag("pre") . DOKU_LF;
 
         /**
          * Code element
+         * Don't put a fucking EOL after it
+         * Otherwise it fucked up the output as the text below a code tag is printed
          */
-        $htmlCode .= '<code ';
-        PluginUtility::addClass2Attributes($addedClass, $attributes);
-        $htmlCode .= PluginUtility::array2HTMLAttributes($attributes) . ' >' . DOKU_LF;
+        $htmlCode .= $attributes->toHtmlEnterTag('code');
+
+        /**
+         * Return
+         */
         $renderer->doc .= $htmlCode;
 
     }
 
-    public static function htmlExit(\Doku_Renderer_xhtml $renderer)
+    /**
+     * @param Doku_Renderer_xhtml $renderer
+     * @param TagAttributes $attributes
+     */
+    public static function htmlExit(\Doku_Renderer_xhtml $renderer, $attributes = null)
     {
+
+        if ($attributes != null) {
+            /**
+             * Display none, no rendering
+             */
+            $display = $attributes->getValueAndRemove("display");
+            if ($display != null) {
+                if ($display == "none") {
+                    return;
+                }
+            }
+        }
         $renderer->doc .= '</code>' . DOKU_LF . '</pre>' . DOKU_LF;
+    }
+
+    /**
+     * The autoloader try to download all language
+     * Even the one such as txt that does not exist
+     * This function was created to add it conditionally
+     */
+    private static function addAutoloaderSnippet()
+    {
+        $tags = [];
+        $tags['script'][] = array("src" => self::BASE_PRISM_CDN."/plugins/autoloader/prism-autoloader.min.js");
+        PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_ID_AUTOLOADER, $tags);
     }
 
 

@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\Page;
+use ComboStrap\TplUtility;
 
 if (!defined('DOKU_INC')) die();
 
@@ -8,8 +9,9 @@ if (!defined('DOKU_INC')) die();
  *
  *
  * To delete sidebar (cache) cache when a page was modified in a namespace
+ * https://combostrap.com/sidebars
  */
-class action_plugin_combo_cachebursting extends DokuWiki_Action_Plugin
+class action_plugin_combo_sidebarscachebursting extends DokuWiki_Action_Plugin
 {
 
 
@@ -34,7 +36,6 @@ class action_plugin_combo_cachebursting extends DokuWiki_Action_Plugin
     function cacheBursting($event)
     {
 
-        $namespace = $event->data[1];
         global $conf;
 
         $sidebars = [
@@ -45,20 +46,18 @@ class action_plugin_combo_cachebursting extends DokuWiki_Action_Plugin
          * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
          */
         $sideKickBarName = $conf['tpl']['strap']['sidekickbar'];
-        if(!empty($sideKickBarName)){
-            $sidebars[]=$sideKickBarName;
+        if (!empty($sideKickBarName)) {
+            $sidebars[] = $sideKickBarName;
         }
 
         /**
-         * Delete the cache for the sidebar if they exists
+         * Delete the cache for the sidebar
          */
-        foreach ($sidebars as $sidebar) {
-            if (!empty($namespace)){
-                $id = new Page("$namespace:$sidebar");
-            } else {
-                $id = new Page($sidebar);
-            }
+        foreach ($sidebars as $sidebarRelativePath) {
+
+            $id = new Page($sidebarRelativePath);
             $id->deleteCache();
+
         }
 
     }

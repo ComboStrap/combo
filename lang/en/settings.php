@@ -1,7 +1,11 @@
 <?php
 
 use ComboStrap\AdsUtility;
-use ComboStrap\IconUtility;
+use ComboStrap\FloatAttribute;
+use ComboStrap\Icon;
+use ComboStrap\InternalMediaLink;
+use ComboStrap\LazyLoad;
+use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
@@ -10,7 +14,10 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
+use ComboStrap\Shadow;
 use ComboStrap\Site;
+use ComboStrap\SvgDocument;
+use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
 require_once(__DIR__ . '/../../class/PluginUtility.php');
@@ -49,13 +56,17 @@ $lang[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = Plug
 $lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getUrl("best:end:page:name", action_plugin_combo_urlmanager::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getUrl("id:redirect", "ID redirect") . ' (0 to disable)';
 
 
-$lang[IconUtility::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getUrl("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
+/**
+ * Icon
+ */
+$lang[Icon::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getUrl("icon#configuration", "UI Icon Component") . ' - The media namespace where the downloaded icons will be searched and saved';
+$lang[Icon::CONF_DEFAULT_ICON_LIBRARY] = PluginUtility::getUrl("icon#configuration", "UI Icon Component") . ' - The default icon library from where the icon is downloaded if not specified';
 
 /**
  * Css Optimization
  */
 $lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = PluginUtility::getUrl("css:optimization", "Css Optimization") . ' - If enabled, the DokuWiki Stylesheet for a public user will be minimized';
-$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getUrl("css:optimization", "Css Optimization") . ' - If disabled, the DokuWiki Stylesheet will not be loaded for a public user';
+$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getUrl("css:optimization", "Css Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
 
 /**
  * Metdataviewer
@@ -88,6 +99,7 @@ $lang[syntax_plugin_combo_file::CONF_FILE_ENABLE] = PluginUtility::getUrl("file"
  * Preformatted mode
  */
 $lang[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE] = PluginUtility::getUrl("preformatted", "Preformatted Component") . ' - If checked, the default preformatted mode of dokuwiki is enabled';
+$lang[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRINTED_ENABLE] = PluginUtility::getUrl("preformatted", "Preformatted Component") . ' - If unchecked, a blank line with only two spaces will be printed as an empty block of code';
 
 /**
  * Mandatory rules
@@ -106,10 +118,13 @@ $lang[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = Plugin
  */
 $lang[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - If chosen, the quality rules will not be monitored.)";
 $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = PluginUtility::getUrl("quality:dynamic_monitoring", "Quality Dynamic Monitoring") . " - Disable the Quality Dynamic Monitoring feature (the quality message will not appear anymore)";
+
 /**
- * Dokuwiki Class Name
+ * Link
  */
-$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the Dokuwiki class type for links (Bootstrap conflict if enabled)";
+$lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
+$lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
+$lang[syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - If checked, a link may spawn multilines";
 
 /**
  * Twitter
@@ -144,6 +159,50 @@ $lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::get
 /**
  * Default page type
  */
-$lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default page type for all pages (expected the home page)")
+$lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default page type for all pages (expected the home page)");
+
+/**
+ * Default Shadow level
+ */
+$lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "The default level applied to a shadow attributes");
+
+
+/**
+ * Svg
+ */
+$lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Load a svg only when they become visible");
+$lang[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "The maximum size in Kb of the SVG to be included as markup in the web page");
+$lang[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Injection - Replace the image as svg in the HTML when downloaded to be add styling capabilities");
+$lang[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "The name of the group of users that can upload SVG");
+$lang[SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - Reduce the size of the SVG by deleting non important meta");
+$lang[SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The namespace prefix to keep");
+$lang[SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The attribute deleted during optimization");
+$lang[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE_IF_EMPTY] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The element deleted if empty");
+$lang[SvgDocument::CONF_OPTIMIZATION_ELEMENTS_TO_DELETE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The element always deleted");
+$lang[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg - Default value for the preserveAspectRatio attribute");
+
+
+/**
+ * Lazy load image
+ */
+$lang[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the raster image only when they become visible");
+$lang[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Retina Support: If checked, the images downloaded will match the display capabilities (the size DPI correction will not be applied)");
+$lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Responsive image sizing: The image margin applied to screen size");
+
+/**
+ * Lazy loading
+ */
+$lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(LazyLoad::CANONICAL, "The placeholder background color");
+
+/**
+ * Image
+ */
+$lang[InternalMediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(InternalMediaLink::CANONICAL, "If unchecked, the image component will be disabled");
+$lang[InternalMediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(InternalMediaLink::CANONICAL, "The default link option from an internal image.");
+
+/**
+ * Float
+ */
+$lang[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getUrl(FloatAttribute::CANONICAL, "The default breakpoint that applies to floated value (left, right, none)");
 
 ?>

@@ -28,9 +28,19 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     const COMPONENT = 'combo_link';
 
     /**
+     * Disable the link
+     */
+    const CONF_DISABLE_LINK = "disableLink";
+
+    /**
      * The link Tag
      */
     const LINK_TAG = "linkTag";
+
+    /**
+     * Do the link component allows to be spawn on multilines
+     */
+    const CONF_ENABLE_MULTI_LINES_LINK = "enableMultiLinesLink";
 
 
     /**
@@ -110,13 +120,21 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $this->Lexer->addEntryPattern(LinkUtility::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
+            $pattern = LinkUtility::ENTRY_PATTERN_SINGLE_LINE;
+            if ($this->getConf(self::CONF_ENABLE_MULTI_LINES_LINK,false)){
+                $pattern = LinkUtility::ENTRY_PATTERN_MULTI_LINE;
+            }
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
     public function postConnect()
     {
-        $this->Lexer->addExitPattern(LinkUtility::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
+            $this->Lexer->addExitPattern(LinkUtility::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
     }
 
 
@@ -145,10 +163,31 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $parentName = "";
                 if ($parent != null) {
                     $parentName = $parent->getName();
-                    if ($parentName == syntax_plugin_combo_button::TAG) {
-                        $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
+                    switch ($parentName) {
+                        case syntax_plugin_combo_button::TAG:
+                            $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
+                            $firstContainingBlock = $parent->getParent();
+                            break;
+                        case syntax_plugin_combo_column::TAG:
+                            // A col is in a row
+                            $firstContainingBlock = $parent->getParent();
+                            break;
+                        case "section":
+                            // When editing, there is a section
+                            $firstContainingBlock = $parent->getParent();
+                            break;
+                        default:
+                            $firstContainingBlock = $parent;
+                    }
+                    if ($firstContainingBlock != null) {
+                        if ($firstContainingBlock->getAttribute("clickable")) {
+                            PluginUtility::addClass2Attributes("stretched-link", $attributes);
+                            $firstContainingBlock->addClass("position-relative");
+                            $firstContainingBlock->unsetAttribute("clickable");
+                        }
                     }
                 }
+
                 $link = new LinkUtility($attributes[LinkUtility::ATTRIBUTE_REF]);
                 $linkTag = $link->getHtmlTag();
                 return array(
@@ -178,7 +217,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $openingAttributes = $openingTag->getAttributes();
                 $linkTag = $openingTag->getData()[self::LINK_TAG];
 
-                if ($openingTag->getPosition() == $tag->getPosition() - 1) {
+                if ($openingTag->getActualPosition() == $tag->getActualPosition() - 1) {
                     // There is no name
                     $link = new LinkUtility($openingAttributes[LinkUtility::ATTRIBUTE_REF]);
                     $linkName = $link->getName();
@@ -224,7 +263,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $attributes = $data;
                 }
 
-                PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
+                PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
 
 
                 $state = $data[PluginUtility::STATE];
@@ -247,6 +286,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                          */
                         $parentTag = $data[PluginUtility::CONTEXT];
                         switch ($parentTag) {
+                            /**
+                             * Button link
+                             */
                             case syntax_plugin_combo_button::TAG:
                                 $attributes["role"] = "button";
                                 syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($attributes);

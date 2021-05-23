@@ -10,7 +10,9 @@
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -28,6 +30,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "row";
+    const SNIPPET_ID = "grid";
 
     /**
      * Syntax Type.
@@ -53,11 +56,9 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
 
@@ -135,7 +136,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED:
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -170,14 +171,20 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " " . self::TAG;
-                    } else {
-                        $attributes["class"] = self::TAG;
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $attributes->addClassName("row");
+
+                    $type = $attributes->getValueAndRemove(TagAttributes::TYPE_KEY);
+                    if ($type == "auto") {
+                        $attributes->addClassName("row-cols-auto");
                     }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
-                    $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;
+                    if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
+                        && $type == "auto") {
+                        // row-cols-auto is not in 4.0
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
+                    }
+
+                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -188,6 +195,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_EXIT :
 
                     $renderer->doc .= '</div>' . DOKU_LF;
+
                     break;
             }
             return true;

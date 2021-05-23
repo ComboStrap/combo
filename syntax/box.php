@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -45,8 +46,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
      * @return array
      * Allow which kind of plugin inside
      *
-     * No one of array('baseonly','container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
-     * because we manage self the content and we call self the parser
+     * Array('baseonly','container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
      *
      * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
      */
@@ -57,11 +57,9 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
     function getSort()
@@ -134,11 +132,8 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $renderer->doc .= '<div';
-                    if (sizeof($attributes) > 0) {
-                        $renderer->doc .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
-                    }
-                    $renderer->doc .= '>';
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

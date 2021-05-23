@@ -19,6 +19,8 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ *
+ * See also: doc : http://themenectar.com/docs/salient/theme-options/header-navigation
  */
 class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
 {
@@ -55,11 +57,9 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        $accept = true;
 
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            $accept = PluginUtility::disablePreformatted($mode);
-        }
+        $accept = syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
 
         // Create P element
         if ($mode == "eol") {
@@ -140,12 +140,12 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
                 $tagAttributes = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES=> $tagAttributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes
                 );
 
             case DOKU_LEXER_UNMATCHED:
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -234,7 +234,7 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
                     }
 
 
-                    $inlineAttributes = PluginUtility::array2HTMLAttributes($attributes);
+                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
 
                     $containerTag = "";
                     if ($this->containerInside) {

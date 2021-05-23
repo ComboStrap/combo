@@ -1,5 +1,11 @@
 # Combo
 
+> Volatile WebSite Generator based on Easy Markup File, Bootstrap Styled, and the power of the DokuWiki Platform
+
+![ComboStrap - Easy Markup WebSite Generator](./resources/images/banner-combostrap.png "combostrap website bootstrap dokuwiki")
+
+[![Build Status](https://travis-ci.com/ComboStrap/combo.svg?branch=master)](https://travis-ci.org/ComboStrap/combo)
+
 ## About
 
 [ComboStrap](https://combostrap.com) provides:
@@ -13,6 +19,11 @@
   * [Web Metadata Management](https://combostrap.com/metadata/manager)
   * [Social (Google, Twitter, Facebook)](https://combostrap.com/social)
   * [Styling](https://combostrap.com/styling)
+  * [Performance (Lazy loading, responsive image)](https://combostrap.com/performance)
+  * [Animation (hover, visible)](https://combostrap.com/animation)
+  * [First Class Image (responsive resizing, native svg)](https://combostrap.com/image)
+  * [Easy Emphasis](https://combostrap.com/emphasis)
+  * [Native Icon Support](https://combostrap.com/icon)
 
 
 More ... [ComboStrap](https://combostrap.com)

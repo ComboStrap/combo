@@ -17,6 +17,7 @@ class Site
 {
 
     const CONF_SITE_ISO_COUNTRY = "siteIsoCountry";
+    const STRAP_TEMPLATE_NAME = "strap";
 
     public static function getLogoUrlAsSvg()
     {
@@ -166,7 +167,7 @@ class Site
         // ensure the value is not -1, which disables caching
         // https://www.dokuwiki.org/config:cachetime
         global $conf;
-        $conf['cachetime'] = 60*60;
+        $conf['cachetime'] = 60 * 60;
     }
 
     public static function debugIsOn()
@@ -174,4 +175,69 @@ class Site
         global $conf;
         return $conf['allowdebug'];
     }
+
+    public static function setTemplateToStrap()
+    {
+        global $conf;
+        $conf['template'] = 'strap';
+    }
+
+    public static function setTemplateToDefault()
+    {
+        global $conf;
+        $conf['template'] = 'dokuwiki';
+    }
+
+    public static function setCacheDefault()
+    {
+        // The value is -1, which disables caching
+        // https://www.dokuwiki.org/config:cachetime
+        global $conf;
+        $conf['cachetime'] = -1;
+    }
+
+    public static function useHeadingAsTitle()
+    {
+        // https://www.dokuwiki.org/config:useheading
+        global $conf;
+        $conf['useheading'] = 1;
+    }
+
+    public static function useHeadingDefault()
+    {
+        // https://www.dokuwiki.org/config:useheading
+        global $conf;
+        $conf['useheading'] = 0;
+    }
+
+    public static function getTopSpacing()
+    {
+        $template = Site::getTemplate();
+        if ($template == self::STRAP_TEMPLATE_NAME) {
+            require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
+            return tpl_getConf(TplUtility::CONF_HEIGHT_FIXED_TOP_NAVBAR);
+        } else {
+            return 0;
+        }
+    }
+
+    public static function getTemplate()
+    {
+        global $conf;
+        return $conf['template'];
+
+    }
+
+    public static function isStrapTemplate()
+    {
+        global $conf;
+        return $conf['template'] == self::STRAP_TEMPLATE_NAME;
+    }
+
+    public static function getAjaxUrl()
+    {
+        return self::getUrl() . "/lib/exe/ajax.php";
+    }
+
+
 }

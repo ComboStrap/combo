@@ -63,6 +63,12 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
         return 'block';
     }
 
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
+
+
     /**
      * @see Doku_Parser_Mode::getSort()
      *

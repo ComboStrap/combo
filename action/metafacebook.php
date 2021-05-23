@@ -1,6 +1,7 @@
 <?php
 
-use ComboStrap\Image;
+use ComboStrap\RasterImageLink;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -11,7 +12,7 @@ use ComboStrap\StringUtility;
 if (!defined('DOKU_INC')) die();
 
 require_once(__DIR__ . '/../class/Site.php');
-require_once(__DIR__ . '/../class/Image.php');
+require_once(__DIR__ . '/../class/RasterImageLink.php');
 
 /**
  *
@@ -63,9 +64,10 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
 
         $page = new Page($ID);
-        if(!$page->existInFs()){
+        if (!$page->existInFs()) {
             return;
         }
+
         /**
          * No social for bars
          */
@@ -106,13 +108,13 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
         /**
-         * @var Image[]
+         * @var InternalMediaLink[]
          */
         $facebookImages = $page->getImageSet();
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = new Image($defaultFacebookImage);
+                $image = InternalMediaLink::createMediaLinkFromPathId($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {
@@ -125,7 +127,23 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             }
         }
         if (!empty($facebookImages)) {
+
+            /**
+             * One of image/jpeg, image/gif or image/png
+             * As stated here: https://developers.facebook.com/docs/sharing/webmasters#images
+             **/
+            $facebookMime = ["image/jpeg","image/gif","image/png"];
             foreach ($facebookImages as $facebookImage) {
+
+                if(!in_array($facebookImage->getMime(),$facebookMime)){
+                    continue;
+                }
+
+                /** @var RasterImageLink $facebookImage */
+                if (!($facebookImage instanceof RasterImageLink)) {
+                    LogUtility::msg("Internal: The image ($facebookImage) is not a raster image and this should not be the case for facebook", LogUtility::LVL_MSG_ERROR, "support");
+                    continue;
+                }
 
                 if (!$facebookImage->exists()) {
                     LogUtility::msg("The image ($facebookImage) does not exist and was not added", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -135,20 +153,20 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     if ($facebookImage->isAnalyzable()) {
 
                         // There is a minimum size constraint of 200px by 200px
-                        if ($facebookImage->getWidth() < 200) {
+                        if ($facebookImage->getMediaWidth() < 200) {
                             $toSmall = true;
                         } else {
-                            $facebookMeta["og:image:width"] = $facebookImage->getWidth();
-                            if ($facebookImage->getHeight() < 200) {
+                            $facebookMeta["og:image:width"] = $facebookImage->getMediaWidth();
+                            if ($facebookImage->getMediaHeight() < 200) {
                                 $toSmall = true;
                             } else {
-                                $facebookMeta["og:image:height"] = $facebookImage->getHeight();
+                                $facebookMeta["og:image:height"] = $facebookImage->getMediaHeight();
                             }
                         }
                     }
 
                     if ($toSmall) {
-                        $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getWidth() . " x " . $facebookImage->getHeight() . "). The minimum size constraint is 200px by 200px";
+                        $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getMediaWidth() . " x " . $facebookImage->getMediaHeight() . "). The minimum size constraint is 200px by 200px";
                         if ($facebookImage->getId() != $page->getFirstImage()->getId()) {
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         } else {
@@ -165,7 +183,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                         if (!empty($mime)) {
                             $facebookMeta["og:image:type"] = $mime[1];
                         }
-                        $facebookMeta["og:image"] = $facebookImage->getUrl();
+                        $facebookMeta["og:image"] = $facebookImage->getAbsoluteUrl();
                         // One image only
                         break;
                     }

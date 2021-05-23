@@ -50,11 +50,14 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
 
         PluginUtility::getSnippetManager()->upsertHeadTagForRequest(
             self::ANCHOR,
-            "script",
-            array("src" => "https://cdn.jsdelivr.net/npm/anchor-js/anchor.min.js")
+            array("script" => [
+                array(
+                    "src" => "https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js",
+                    "integrity" => "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs=",
+                    "crossorigin" => "anonymous"
+                )
+            ])
         );
-
-
         PluginUtility::getSnippetManager()->upsertJavascriptSnippetForRequest(self::ANCHOR);
 
 

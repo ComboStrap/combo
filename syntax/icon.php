@@ -4,13 +4,14 @@
  *
  */
 
-use ComboStrap\IconUtility;
+use ComboStrap\Icon;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
-require_once(__DIR__ . '/../class/IconUtility.php');
+require_once(__DIR__ . '/../class/Icon.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
@@ -24,7 +25,8 @@ require_once(__DIR__ . '/../class/IconUtility.php');
  * !!!!!!!!!!! The component name must be the name of the php file !!!
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
- *
+ * https://icons.getbootstrap.com/
+ * https://remixicon.com/
  */
 class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 {
@@ -90,8 +92,10 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+
         $pattern = PluginUtility::getEmptyTagPattern(self::TAG);
         $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
 
     }
 
@@ -118,20 +122,14 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL:
 
                 // Get the parameters
-                $originalAttributes = PluginUtility::getTagAttributes($match);
-                $attributesToRender = $originalAttributes;
-                $tag = new Tag(self::TAG,$originalAttributes,$state,$handler);
-                if($tag->isDescendantOf(syntax_plugin_combo_list::TAG)){
-                    PluginUtility::addClass2Attributes("mr-2",$attributesToRender);
+                $attributes = TagAttributes::createFromTagMatch($match);
+                $tag = new Tag(self::TAG, $attributes, $state, $handler);
+                if ($tag->isDescendantOf(syntax_plugin_combo_list::TAG)) {
+                    $attributes->addComponentAttributeValue( "spacing","mr-2");
                 }
-                /**
-                 * TODO: When getting the instructions, the file is loaded. This should go to the render if there is too much file open
-                 */
-                $html = IconUtility::renderIconByAttributes($attributesToRender);
                 return array(
-                    PluginUtility::STATE=> $state,
-                    PluginUtility::ATTRIBUTES => $originalAttributes,
-                    PluginUtility::PAYLOAD => $html);
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray());
 
 
         }
@@ -160,7 +158,8 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                     /** @var Doku_Renderer_xhtml $renderer */
                     $state = $data[PluginUtility::STATE];
                     if ($state === DOKU_LEXER_SPECIAL) {
-                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                        $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                        $renderer->doc .= Icon::renderIconByAttributes($tagAttribute);
                     }
 
                 }
@@ -169,9 +168,6 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
         }
         return true;
     }
-
-
-
 
 
 }

@@ -2,6 +2,7 @@
 
 
 use ComboStrap\AdsUtility;
+use ComboStrap\CallStack;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -65,7 +66,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -85,6 +86,11 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
     function getSort()
     {
         return 201;
+    }
+
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
 
@@ -136,20 +142,20 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_UNMATCHED :
 
                 // We should not ever come here but a user does not not known that
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_MATCHED :
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
-                    PluginUtility::CONTENT => PluginUtility::getTagContent($match),
+                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
                     PluginUtility::TAG => PluginUtility::getTag($match)
                 );
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $callStack = CallStack::createFromHandler($handler);
 
                 /**
                  * The attributes to send to the render
@@ -159,42 +165,49 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                 /**
                  * Get the opening tag
                  */
-                $openingTag = $tag->getOpeningTag();
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
 
-                /**
-                 * Pattern for a page
-                 */
-                $pageTag = $openingTag->getDescendant(self::PAGE_ITEM);
-                $pageTemplate = null;
-                if ($pageTag != null) {
-                    $pageTemplate = $pageTag->getData()[PluginUtility::CONTENT];
+                $found = false;
+                while ($callStack->next()) {
+                    $actualCall = $callStack->getActualCall();
+                    if ($actualCall->getTagName() == self::TAG && $actualCall->getState() == DOKU_LEXER_MATCHED) {
+                        $tagName = PluginUtility::getTag($actualCall->getMatchedContent());
+                        switch ($tagName) {
+                            case self::PAGE_ITEM:
+                                /**
+                                 * Pattern for a page
+                                 */
+                                $pageTemplate = $actualCall->getPayload();
+                                $attributes[self::PAGE_TEMPLATE_KEY] = $pageTemplate;
+                                $found = true;
+                                break;
+                            case self::NAMESPACE_ITEM:
+                                /**
+                                 * Pattern for a ns
+                                 */
+                                $nsTemplate = $actualCall->getPayload();
+                                $attributes[self::NS_TEMPLATE_KEY] = $nsTemplate;
+                                $found = true;
+                                break;
+                            case self::INDEX_ITEM:
+                                /**
+                                 * Pattern for a header
+                                 */
+                                $headerTemplate = $actualCall->getPayload();
+                                $headerAttributes = $actualCall->getAttributes();
+                                $attributes[self::INDEX_TEMPLATE_KEY] = $headerTemplate;
+                                $attributes[self::INDEX_ATTRIBUTES_KEY] = $headerAttributes;
+                                $found = true;
+                                break;
+                            default:
+                                LogUtility::msg("The tag ($tagName) is unknown",LogUtility::LVL_MSG_ERROR,self::TAG);
+                                break;
+                        }
+                        $callStack->deleteActualCallAndPrevious();
+                    }
                 }
-                $attributes[self::PAGE_TEMPLATE_KEY] = $pageTemplate;
 
-                /**
-                 * Pattern for a ns
-                 */
-                $nsTag = $openingTag->getDescendant(self::NAMESPACE_ITEM);
-                $nsTemplate = null;
-                if ($nsTag != null) {
-                    $nsTemplate = $nsTag->getData()[PluginUtility::CONTENT];
-                }
-                $attributes[self::NS_TEMPLATE_KEY] = $nsTemplate;
-
-                /**
-                 * Pattern for a header
-                 */
-                $headerTag = $openingTag->getDescendant(self::INDEX_ITEM);
-                $headerTemplate = null;
-                $headerAttributes = array();
-                if ($headerTag != null) {
-                    $headerTemplate = $headerTag->getData()[PluginUtility::CONTENT];
-                    $headerAttributes = $headerTag->getAttributes();
-                }
-                $attributes[self::INDEX_TEMPLATE_KEY] = $headerTemplate;
-                $attributes[self::INDEX_ATTRIBUTES_KEY] = $headerAttributes;
-
-                if ($pageTemplate == null && $nsTemplate == null && $headerTemplate == null) {
+                if (!$found) {
                     LogUtility::msg("There should be at minimum a `" . self::INDEX_ITEM . "`, `" . self::NAMESPACE_ITEM . "` or a `" . self::INDEX_ITEM . "` defined", LogUtility::LVL_MSG_ERROR, self::CANONICAL_NTOC);
                 }
 
@@ -281,7 +294,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                      */
                     $list = "<list";
                     if (sizeof($attributes) > 0) {
-                        $list .= ' ' . PluginUtility::array2HTMLAttributes($attributes);
+                        $list .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
                     }
                     $list .= ">";
 
@@ -301,14 +314,14 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                             $headerAttributes["background-color"] = "light";
                             PluginUtility::addStyleProperty("border-bottom", "1px solid #e5e5e5", $headerAttributes);
                         }
-                        $list .= '<li ' . PluginUtility::array2HTMLAttributes($headerAttributes) . '>' . $tpl . '</li>';
+                        $list .= '<li ' . PluginUtility::array2HTMLAttributesAsString($headerAttributes) . '>' . $tpl . '</li>';
                     }
                     $pageNum = 0;
 
                     foreach ($pages as $page) {
 
                         // If it's a directory
-                        if ($page['type'] == "d" ) {
+                        if ($page['type'] == "d") {
 
                             if (!empty($nsTemplate)) {
                                 $pageId = FsWikiUtility::getIndex($page['id']);
@@ -323,7 +336,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                             if (!empty($pageTemplate)) {
                                 $pageNum++;
                                 $pageId = $page['id'];
-                                if (":" . $pageId != $pageIndex && $pageId != $pageIndex ) {
+                                if (":" . $pageId != $pageIndex && $pageId != $pageIndex) {
                                     $tpl = TemplateUtility::render($pageTemplate, $pageId);
                                     $list .= '<li>' . $tpl . '</li>';
                                 }

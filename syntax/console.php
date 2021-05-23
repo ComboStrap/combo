@@ -1,12 +1,10 @@
 <?php
 
-// implementation of
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
 
-// must be run within Dokuwiki
-use ComboStrap\Prism;
-use ComboStrap\StringUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Prism;
+use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../class/StringUtility.php');
 require_once(__DIR__ . '/../class/Prism.php');
@@ -107,17 +105,33 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match,true, syntax_plugin_combo_code::FILE_PATH_KEY);
+                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match, true, syntax_plugin_combo_code::FILE_PATH_KEY);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                $data = PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+                /**
+                 * Attribute are send for display = none
+                 */
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $tagAttributes = $tag->getParent()->getAttributes();
+                $data[PluginUtility::ATTRIBUTES] = $tagAttributes;
+                return $data;
 
             case DOKU_LEXER_EXIT :
-                return array(PluginUtility::STATE => $state);
+                /**
+                 * Tag Attributes are passed
+                 * because it's possible to not display a code with the display attributes = none
+                 */
+                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $tagAttributes = $tag->getOpeningTag()->getAttributes();
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $tagAttributes
+                );
 
 
         }
@@ -146,16 +160,24 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    Prism::htmlEnter($renderer, $attributes, $this);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+                    Prism::htmlEnter($renderer, $this, $attributes);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $display = $attributes->getValue("display");
+                    if ($display != "none") {
+                        // Delete the eol at the beginning and end
+                        // otherwise we get a big block
+                        $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
+                        $renderer->doc .= PluginUtility::htmlEncode($payload);
+                    }
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    Prism::htmlExit($renderer);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    Prism::htmlExit($renderer, $attributes);
                     break;
 
             }

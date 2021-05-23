@@ -4,10 +4,14 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 
 // must be run within Dokuwiki
+use ComboStrap\Bootstrap;
+use ComboStrap\CallStack;
+use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
-use ComboStrap\TitleUtility;
+use ComboStrap\TagAttributes;
+
 
 require_once(__DIR__ . '/../class/HeaderUtility.php');
 
@@ -50,7 +54,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     function getAllowedTypes()
@@ -112,6 +116,13 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             default:
                                 LogUtility::log2FrontEnd("The label is included in the $grandFatherName component and this is unexpected", LogUtility::LVL_MSG_WARNING, self::TAG);
                         }
+                    } else {
+                        /**
+                         * An panel may render alone in preview
+                         */
+                        if ($parentTag->getContext() == syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE) {
+                            $context = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE;
+                        }
                     }
                 }
 
@@ -122,12 +133,26 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $context = $openingTag->getContext();
+
+                /**
+                 * An image in a label should have no link (ie no anchor)
+                 * because a anchor is used for navigation
+                 */
+                while ($callStack->next()) {
+                    $actualCall = $callStack->getActualCall();
+                    if ($actualCall->getTagName() == syntax_plugin_combo_media::TAG) {
+                        $actualCall->addAttribute(TagAttributes::LINKING_KEY, InternalMediaLink::LINKING_NOLINK_VALUE);
+                    }
+                }
+
+                $callStack->closeAndResetPointer();
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::CONTEXT => $context,
@@ -175,14 +200,21 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                             }
                             $renderer->doc .= "<div class=\"card-header\" id=\"$headingId\">" . DOKU_LF;
                             $renderer->doc .= "<h2 class=\"mb-0\">";
-                            $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data-toggle=\"collapse\" data-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
+                            $dataNamespace = Bootstrap::getDataNamespace();
+                            $renderer->doc .= "<button class=\"btn btn-link btn-block text-left $collapsedClass\" type=\"button\" data{$dataNamespace}-toggle=\"collapse\" data{$dataNamespace}-target=\"#$collapseId\" aria-expanded=\"true\" aria-controls=\"$collapseId\">";
                             break;
-                        case  syntax_plugin_combo_tabs::TAG:
+                        case syntax_plugin_combo_tabs::TAG:
                             $attributes = $data[PluginUtility::ATTRIBUTES];
                             $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
                             break;
+                        case syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE:
+                            $attributes = syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE_ATTRIBUTES;
+                            $renderer->doc .= "<ul style=\"list-style-type: none;padding-inline-start: 0;\">";
+                            $renderer->doc .= syntax_plugin_combo_tabs::openNavigationalTabElement($attributes);
+                            break;
                         default:
-                            LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
+                            LogUtility::log2FrontEnd("The context ($context) of the label is unknown in enter", LogUtility::LVL_MSG_WARNING, self::TAG);
+
                     }
                     break;
 
@@ -204,14 +236,20 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                                 $showClass = "";
                             }
                             $renderer->doc .= "</button></h2></div>";
-                            $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse $showClass\" aria-labelledby=\"$headingId\" data-parent=\"#$headingId\">";
+                            $dataNamespace = Bootstrap::getDataNamespace();
+                            $renderer->doc .= "<div id=\"$collapseId\" class=\"collapse $showClass\" aria-labelledby=\"$headingId\" data-{$dataNamespace}parent=\"#$headingId\">";
                             $renderer->doc .= "<div class=\"card-body\">" . DOKU_LF;
                             break;
-                        case  syntax_plugin_combo_tabs::TAG:
+                        case syntax_plugin_combo_tabs::TAG:
                             $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
+                            break;
+                        case syntax_plugin_combo_panel::CONTEXT_PREVIEW_ALONE:
+                            $renderer->doc .= syntax_plugin_combo_tabs::closeNavigationalTabElement();
+                            $renderer->doc .= "</ul>";
                             break;
                         default:
                             LogUtility::log2FrontEnd("The context ($context) of the label is unknown in exit", LogUtility::LVL_MSG_WARNING, self::TAG);
+
 
                     }
                     break;

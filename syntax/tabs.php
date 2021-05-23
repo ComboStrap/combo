@@ -4,10 +4,13 @@
  *
  */
 
+use ComboStrap\Bootstrap;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -28,6 +31,10 @@ require_once(__DIR__ . '/../class/CallStack.php');
  *   * the new syntax to create the tabs
  *   * the old syntax to create the tabs
  * The code is using the context to manage this cases
+ *
+ * Full example can be found
+ * in the Javascript section of tabs and navs
+ * https://getbootstrap.com/docs/5.0/components/navs-tabs/#javascript-behavior
  */
 class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 {
@@ -81,7 +88,16 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
     public static function openTabPanelsElement(&$attributes)
     {
         PluginUtility::addClass2Attributes("tab-content", $attributes);
-        $html = "<div " . PluginUtility::array2HTMLAttributes($attributes) . ">" . DOKU_LF;
+
+        /**
+         * In preview with only one panel
+         */
+        global $ACT;
+        if($ACT=="preview"&& isset($attributes["selected"])){
+            unset($attributes["selected"]);
+        }
+
+        $html = "<div " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">" . DOKU_LF;
         $type = self::getComponentType($attributes);
         switch ($type) {
             case self::ENCLOSED_TABS_TYPE:
@@ -124,20 +140,18 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
          * Check all attributes for the link (not the li)
          * and delete them
          */
-        $active = "false";
+        $active = syntax_plugin_combo_panel::getSelectedValue($attributes);
         $panel = "";
-        if (isset($attributes[syntax_plugin_combo_panel::SELECTED])) {
-            $active = $attributes[syntax_plugin_combo_panel::SELECTED];
-            unset($attributes[syntax_plugin_combo_panel::SELECTED]);
-        }
+
+
         $panelAttrName = "panel";
         if (isset($attributes[$panelAttrName])) {
             $panel = $attributes[$panelAttrName];
+            unset($attributes[$panelAttrName]);
         } else {
             if (isset($attributes["id"])) {
                 $panel = $attributes["id"];
                 unset($attributes["id"]);
-                $attributes[$panelAttrName] = $panel;
             } else {
                 LogUtility::msg("A id attribute is missing on a panel tag", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_tabs::TAG);
             }
@@ -147,24 +161,25 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
          * Creating the li element
          */
         PluginUtility::addClass2Attributes("nav-item", $attributes);
-        $html = "<li " . PluginUtility::array2HTMLAttributes($attributes) . ">" . DOKU_LF;
+        $html = "<li " . PluginUtility::array2HTMLAttributesAsString($attributes) . " role=\"presentation\">" . DOKU_LF;
 
         /**
          * Creating the a element
          */
         $htmlAttributes = array();
         PluginUtility::addClass2Attributes("nav-link", $htmlAttributes);
-        if ($active === "true") {
+        if ($active === true) {
             PluginUtility::addClass2Attributes("active", $htmlAttributes);
             $htmlAttributes["aria-selected"] = "true";
         }
         $htmlAttributes['id'] = $panel . "-tab";
-        $htmlAttributes['data-toggle'] = "tab";
+        $namespace = Bootstrap::getDataNamespace();
+        $htmlAttributes["data{$namespace}-toggle"] = "tab";
         $htmlAttributes['aria-controls'] = $panel;
         $htmlAttributes["role"] = "tab";
         $htmlAttributes['href'] = "#$panel";
 
-        $html .= "<a " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">";
+        $html .= "<a " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes) . ">";
         return $html;
     }
 
@@ -184,7 +199,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
      * @param $attributes
      * @return string - the opening HTML code of the tab navigational header
      */
-    private static function openNavigationalTabsElement(&$attributes)
+    public static function openNavigationalTabsElement(&$attributes)
     {
         $htmlAttributes = $attributes;
         /**
@@ -227,7 +242,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                 PluginUtility::addClass2Attributes("nav", $htmlAttributes);
                 PluginUtility::addClass2Attributes("nav-$skin", $htmlAttributes);
                 $htmlAttributes['role'] = 'tablist';
-                $html = "<ul " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">";
+                $html = "<ul " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes) . ">";
                 break;
             case self::ENCLOSED_TABS_TYPE:
             case self::ENCLOSED_PILLS_TYPE:
@@ -235,7 +250,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                  * The HTML opening for cards
                  */
                 PluginUtility::addClass2Attributes("card", $htmlAttributes);
-                $html = "<div " . PluginUtility::array2HTMLAttributes($htmlAttributes) . ">" . DOKU_LF .
+                $html = "<div " . PluginUtility::array2HTMLAttributesAsString($htmlAttributes) . ">" . DOKU_LF .
                     "<div class=\"card-header\">" . DOKU_LF;
                 /**
                  * The HTML opening for the menu (UL)
@@ -244,7 +259,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                 PluginUtility::addClass2Attributes("nav", $ulHtmlAttributes);
                 PluginUtility::addClass2Attributes("nav-$skin", $ulHtmlAttributes);
                 PluginUtility::addClass2Attributes("card-header-$skin", $ulHtmlAttributes);
-                $html .= "<ul " . PluginUtility::array2HTMLAttributes($ulHtmlAttributes) . ">" . DOKU_LF;
+                $html .= "<ul " . PluginUtility::array2HTMLAttributesAsString($ulHtmlAttributes) . ">" . DOKU_LF;
                 break;
             default:
                 LogUtility::log2FrontEnd("The tabs type ($type) is unknown", LogUtility::LVL_MSG_ERROR, self::TAG);
@@ -289,11 +304,8 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
         /**
          * If preformatted is disable, we does not accept it
          */
-        if (!$this->getConf(syntax_plugin_combo_preformatted::CONF_PREFORMATTED_ENABLE)) {
-            return PluginUtility::disablePreformatted($mode);
-        } else {
-            return true;
-        }
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+
     }
 
 
@@ -398,11 +410,12 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                          * Start the navigation tabs element
                          * We add calls in the stack to create the tabs navigational element
                          */
-                        $navigationalCallElements[] = CallStack::createCall(self::TAG,
+                        $navigationalCallElements[] = Call::createComboCall(
+                            self::TAG,
                             DOKU_LEXER_ENTER,
                             $openingTag->getAttributes(),
                             self::NAVIGATIONAL_ELEMENT_CONTEXT
-                        );
+                        )->toCallArray();
                         $labelStacksToDelete = array();
                         foreach ($descendants as $descendant) {
 
@@ -442,8 +455,8 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                                  * (done at the end)
                                  */
                                 $labelStacksSize = sizeof($labelStacks);
-                                $firstPosition = $descendant->getPosition(); // the enter label is deleted
-                                $lastPosition = $labelStacks[$labelStacksSize - 1]->getPosition() + 1; // the exit label is deleted
+                                $firstPosition = $descendant->getActualPosition(); // the enter label is deleted
+                                $lastPosition = $labelStacks[$labelStacksSize - 1]->getActualPosition() + 1; // the exit label is deleted
                                 $labelStacksToDelete[] = [$firstPosition, $lastPosition];
 
 
@@ -451,26 +464,26 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                                  * Build the navigational call stack for this label
                                  * with another context just to tag them and see them in the stack
                                  */
-                                $firstLabelCall = $handler->calls[$descendant->getPosition()];
+                                $firstLabelCall = $handler->calls[$descendant->getActualPosition()];
                                 $firstLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
                                 $navigationalCallElements[] = $firstLabelCall;
                                 for ($i = 1; $i <= $labelStacksSize; $i++) {
-                                    $intermediateLabelCall = $handler->calls[$descendant->getPosition() + $i];
+                                    $intermediateLabelCall = $handler->calls[$descendant->getActualPosition() + $i];
                                     $intermediateLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
                                     $navigationalCallElements[] = $intermediateLabelCall;
                                 }
                                 $lastLabelCall = $handler->calls[$lastPosition];
                                 $lastLabelCall[1][PluginUtility::CONTEXT] = self::NAVIGATIONAL_ELEMENT_CONTEXT;
                                 $navigationalCallElements[] = $lastLabelCall;
-                                continue;
                             }
 
                         }
-                        $navigationalCallElements[] = CallStack::createCall(self::TAG,
+                        $navigationalCallElements[] = Call::createComboCall(
+                            self::TAG,
                             DOKU_LEXER_EXIT,
                             $openingTag->getAttributes(),
                             self::NAVIGATIONAL_ELEMENT_CONTEXT
-                        );
+                        )->toCallArray();
 
 
                         /**
@@ -485,7 +498,7 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
                         /**
                          * Then deleting
                          */
-                        CallStack::insertCallStackUpWards($handler->calls, $openingTag->getPosition(), $navigationalCallElements);
+                        CallStack::insertCallStackUpWards($handler->calls, $openingTag->getActualPosition(), $navigationalCallElements);
                     }
                 }
 

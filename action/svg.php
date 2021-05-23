@@ -85,6 +85,11 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
                 case "rev":
                     $rev = $value;
                     break;
+                case "u":
+                case "p":
+                case "http_credentials":
+                    // Credentials data
+                    break;
                 default:
                     if (!empty($value)) {
                         if (!in_array($name, InternalMediaLink::TAG_ATTRIBUTES_ONLY)) {

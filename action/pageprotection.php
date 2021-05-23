@@ -86,19 +86,17 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     function handleAclCheck(&$event, $param)
     {
 
-        $id = $event->data['id'];
-
         /**
-         * When deleting a media, we get this id value
-         * This is not a page
+         * Are we on a page script
          */
-        if (StringUtility::endWiths($id, "*")) {
-
-            if ($_SERVER['SCRIPT_NAME'] == "/lib/exe/mediamanager.php") {
-                return;
-            }
-
+        $imageScript = ["/lib/exe/mediamanager.php","/lib/exe/detail.php"];
+        if (in_array($_SERVER['SCRIPT_NAME'], $imageScript)) {
+            // id may be null or end with a star
+            // this is not a image
+            return;
         }
+
+        $id = $event->data['id'];
 
         $dokuPath = DokuPath::createUnknownFromId($id);
         if ($dokuPath->isPage()) {

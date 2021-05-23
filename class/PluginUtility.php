@@ -22,7 +22,7 @@ require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/Dimension.php');
-require_once(__DIR__ . '/Float.php');
+require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/Hover.php');

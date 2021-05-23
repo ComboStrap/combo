@@ -232,7 +232,7 @@ abstract class InternalMediaLink extends DokuPath
          */
         if ($attributes[TagAttributes::ALIGN_KEY] === "right") {
             unset($attributes[TagAttributes::ALIGN_KEY]);
-            $attributes[Float::FLOAT_KEY] = "right";
+            $attributes[FloatAttribute::FLOAT_KEY] = "right";
         }
 
         /**

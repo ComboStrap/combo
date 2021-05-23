@@ -3,8 +3,15 @@
 
 namespace ComboStrap;
 
-
-class Float
+/**
+ * Class Float
+ * @package ComboStrap
+ *
+ *
+ * Don't use float:
+ * PHP Fatal error:  Cannot use 'Float' as class name as it is reserved
+ */
+class FloatAttribute
 {
     const CANONICAL = "float";
     const CONF_FLOAT_DEFAULT_BREAKPOINT = "floatDefaultBreakpoint";

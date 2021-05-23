@@ -4,6 +4,8 @@
 
 ![ComboStrap - Easy Markup WebSite Generator](./resources/images/banner-combostrap.png "combostrap website bootstrap dokuwiki")
 
+[![Build Status](https://travis-ci.com/ComboStrap/combo.svg?branch=master)](https://travis-ci.org/ComboStrap/combo)
+
 ## About
 
 [ComboStrap](https://combostrap.com) provides:

@@ -304,6 +304,6 @@ $conf["defaultImageLinking"] = "direct";
 
 /**
  * Float
- *  {@link \ComboStrap\Float::CONF_FLOAT_DEFAULT_BREAKPOINT}
+ *  {@link \ComboStrap\FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT}
  */
 $conf["floatDefaultBreakpoint"] = "sm";

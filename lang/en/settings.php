@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\AdsUtility;
-use ComboStrap\Float;
+use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\LazyLoad;
@@ -203,6 +203,6 @@ $lang[InternalMediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(InternalM
 /**
  * Float
  */
-$lang[Float::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getUrl(Float::CANONICAL, "The default breakpoint that applies to floated value (left, right, none)");
+$lang[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getUrl(FloatAttribute::CANONICAL, "The default breakpoint that applies to floated value (left, right, none)");
 
 ?>

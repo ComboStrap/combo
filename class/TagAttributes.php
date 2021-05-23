@@ -340,7 +340,7 @@ class TagAttributes
             /**
              * Float
              */
-            Float::processFloat($this);
+            FloatAttribute::processFloat($this);
 
             /**
              * Process the attributes that have an effect on the class

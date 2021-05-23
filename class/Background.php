@@ -235,7 +235,7 @@ class Background
                 case TagAttributes::LINKING_KEY:
                 case TagAttributes::TITLE_KEY:
                 case TagAttributes::ALIGN_KEY:
-                case Float::FLOAT_KEY: // Float is when the image is at the right
+                case FloatAttribute::FLOAT_KEY: // Float is when the image is at the right
                 case TagAttributes::TYPE_KEY:
                     /**
                      * Attributes not taken

@@ -16,9 +16,7 @@ env:
 before_script:
     # - set | grep TRAVIS
     - "curl -H \"Authorization: token ${TOKEN}\" -o \"boot.sh\" \"https://raw.githubusercontent.com/ComboStrap/combo_test/${TRAVIS_BRANCH}/resources/script/ci/boot.sh\""
-    - wget https://raw.githubusercontent.com/splitbrain/dokuwiki-travis/master/travis.sh
     - bash boot.sh
-    - sh travis.sh
 
 script:
     - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug

@@ -3,7 +3,7 @@ language: php
 # https://www.ovh.nl/shared-hosting/persoonlijke-shared-hosting.xml
 # and https://github.com/splitbrain/dokuwiki-travis
 php:
-    - "7.4" - Array and string offset access syntax with curly braces is deprecated vendor/marcusschwarz/lesserphp/lessc.inc.php:761
+## not "7.4" because Array and string offset access syntax with curly braces is deprecated vendor/marcusschwarz/lesserphp/lessc.inc.php:761
     - "7.3"
     - "7.2"
     - "7.1"

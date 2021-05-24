@@ -62,28 +62,12 @@ class DokuPath extends File
         if (empty($pathId)) {
             LogUtility::msg("A null path id was given", LogUtility::LVL_MSG_WARNING);
         }
+        $this->pathId = $pathId;
 
         // https://www.dokuwiki.org/config:useslash
         global $conf;
         if ($conf['useslash']) {
             $pathId = str_replace(self::SEPARATOR_SLASH, self::SEPARATOR, $pathId);
-        }
-
-        /**
-         * characters are not all authorized, all lowercase
-         * such as `_` at the end
-         */
-        $cleanedId = cleanID($pathId);
-
-        /**
-         * The id have no root character due to {@link cleanID()}
-         * function, we correct that (and therefore in the index also)
-         */
-        $this->wasPathIdAbsolute = (strpos($pathId, self::SEPARATOR) === 0);
-        if ($this->wasPathIdAbsolute) {
-            $this->pathId = self::SEPARATOR . $cleanedId;
-        } else {
-            $this->pathId = $cleanedId;
         }
 
         /**
@@ -105,9 +89,12 @@ class DokuPath extends File
         $this->finalType = $type;
         $this->rev = $rev;
 
+
+
         /**
          * Absolute id cleaned for the index
          * See the $page argument of {@link resolve_pageid}
+         * Resolution clean the id {@link cleanID()}
          */
         global $ID;
         $this->absoluteIdWithoutSeparator = $this->pathId;
@@ -117,9 +104,6 @@ class DokuPath extends File
             resolve_pageid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
         }
         $this->absoluteIdWithSeparator = self::SEPARATOR . $this->absoluteIdWithoutSeparator;
-
-
-
 
 
         if ($type == self::MEDIA_TYPE) {
@@ -314,9 +298,9 @@ class DokuPath extends File
         }
     }
 
-    public function wasPathIdAbsolute()
+    public function isPathIdAbsolute()
     {
-        return $this->wasPathIdAbsolute;
+        return  strpos($this->pathId, self::SEPARATOR) === 0;
     }
 
 }

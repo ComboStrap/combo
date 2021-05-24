@@ -58,6 +58,7 @@ class Call
         "strong_open",
         "monospace_open",
         "monospace_close",
+        "doublequoteopening", // ie the character " in "The"
         /**
          * The inline of combo
          * TODO: Should be deleted when {@link PluginUtility::renderUnmatched()} is not using the array anymore
@@ -69,6 +70,17 @@ class Call
         \syntax_plugin_combo_button::TAG,
         \syntax_plugin_combo_tooltip::TAG,
     );
+
+
+    const BLOCK_DOKUWIKI_COMPONENTS = array(
+        "listu_open", // ul
+        "listu_close",
+        "listitem_open", //li
+        "listitem_close",
+        "listcontent_open", // after li ???
+        "listcontent_close"
+    );
+
     private $call;
 
     /**
@@ -346,6 +358,10 @@ class Call
 
                 if (in_array($mode, self::INLINE_DOKUWIKI_COMPONENTS)) {
                     return Call::INLINE_DISPLAY;
+                }
+
+                if (in_array($mode, self::BLOCK_DOKUWIKI_COMPONENTS)) {
+                    return Call::BlOCK_DISPLAY;
                 }
 
                 LogUtility::msg("The display of the call with the mode " . $mode . " is unknown");

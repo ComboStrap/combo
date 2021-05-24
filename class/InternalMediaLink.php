@@ -176,6 +176,12 @@ abstract class InternalMediaLink extends DokuPath
     public static function createFromCallStackArray($attributes, $rev = null)
     {
 
+        if (!is_array($attributes)){
+            // Debug for the key_exist below because of the following message:
+            // `PHP Warning:  key_exists() expects parameter 2 to be array, array given`
+            LogUtility::msg("The `attributes` parameter is not an array. Value ($attributes)",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+        }
+
         /**
          * Media id are not cleaned
          * They are always absolute ?

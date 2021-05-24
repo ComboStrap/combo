@@ -31,6 +31,7 @@ require_once(__DIR__ . '/Icon.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/Page.php');
 require_once(__DIR__ . '/Position.php');
+require_once(__DIR__ . '/Prism.php');
 require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/Resources.php');
 require_once(__DIR__ . '/Skin.php');

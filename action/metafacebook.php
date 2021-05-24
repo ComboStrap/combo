@@ -64,7 +64,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
 
         $page = new Page($ID);
-        if (!$page->existInFs()) {
+        if (!$page->exists()) {
             return;
         }
 
@@ -81,9 +81,13 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
          * "og:description" is already created in the {@link action_plugin_combo_metadescription}
          */
         $facebookMeta = array(
-            "og:title" => StringUtility::truncateString($page->getTitleNotEmpty(), 70),
-            "og:description" => $page->getDescriptionOrElseDokuWiki(),
+            "og:title" => StringUtility::truncateString($page->getTitleNotEmpty(), 70)
         );
+        $descriptionOrElseDokuWiki = $page->getDescriptionOrElseDokuWiki();
+        if (!empty($descriptionOrElseDokuWiki)) {
+            // happens in test with document without content
+            $facebookMeta["og:description"] = $descriptionOrElseDokuWiki;
+        }
 
         $title = Site::getTitle();
         if (!empty($title)) {
@@ -132,10 +136,10 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
              * One of image/jpeg, image/gif or image/png
              * As stated here: https://developers.facebook.com/docs/sharing/webmasters#images
              **/
-            $facebookMime = ["image/jpeg","image/gif","image/png"];
+            $facebookMime = ["image/jpeg", "image/gif", "image/png"];
             foreach ($facebookImages as $facebookImage) {
 
-                if(!in_array($facebookImage->getMime(),$facebookMime)){
+                if (!in_array($facebookImage->getMime(), $facebookMime)) {
                     continue;
                 }
 

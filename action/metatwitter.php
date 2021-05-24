@@ -1,12 +1,9 @@
 <?php
 
-use ComboStrap\RasterImageLink;
 use ComboStrap\InternalMediaLink;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataUtility;
-use ComboStrap\PluginUtility;
 use ComboStrap\Page;
-use ComboStrap\Site;
+use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\TagAttributes;
 
@@ -97,7 +94,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
         $page = new Page($ID);
 
-        if(!$page->existInFs()){
+        if(!$page->exists()){
             return;
         }
 
@@ -113,14 +110,18 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         // https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/markup
         // https://cards-dev.twitter.com/validator
 
-        $description = $page->getDescriptionOrElseDokuWiki();
+
         $twitterMeta = array(
             self::META_CARD => "summary",
             self::META_TITLE => StringUtility::truncateString($page->getTitleNotEmpty(), 70),
-            self::META_DESCRIPTION => StringUtility::truncateString($description, 200),
             self::META_CREATOR => self::COMBO_STRAP_TWITTER_HANDLE,
             self::META_CREATOR_ID => self::COMBO_STRAP_TWITTER_ID
         );
+        $description = $page->getDescriptionOrElseDokuWiki();
+        if (!empty($description)){
+            // happens in test with document without content
+            $twitterMeta[self::META_DESCRIPTION] = StringUtility::truncateString($description, 200);
+        }
 
 
         /**

@@ -116,11 +116,13 @@ class LogUtility
             global $INPUT;
             global $conf;
 
+            global $ID;
+
             $file = $conf['cachedir'] . '/debug.log';
             $fh = fopen($file, 'a');
             if ($fh) {
                 $sep = " - ";
-                fwrite($fh, date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . "\n");
+                fwrite($fh, date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . $sep . $ID ."\n");
                 fclose($fh);
             }
         }

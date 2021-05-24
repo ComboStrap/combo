@@ -973,11 +973,11 @@ class Page extends DokuPath
 
         $relation = $this->getCurrentMetadata('relation');
         if (isset($relation['firstimage'])) {
-            $firstImage = $relation['firstimage'];
-            if (empty($firstImage)) {
+            $firstImageId = $relation['firstimage'];
+            if (empty($firstImageId)) {
                 return null;
             } else {
-                return InternalMediaLink::createMediaLinkFromPathId($firstImage);
+                return InternalMediaLink::createMediaLinkFromPathId(DokuPath::SEPARATOR . $firstImageId);
             }
         }
         return null;
@@ -1004,10 +1004,10 @@ class Page extends DokuPath
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = InternalMediaLink::createMediaLinkFromPathId(cleanID($imageIdFromMeta));
+                    $images[] = InternalMediaLink::createMediaLinkFromPathId($imageIdFromMeta);
                 }
             } else {
-                $images = array(InternalMediaLink::createMediaLinkFromPathId(cleanID($imageMeta)));
+                $images = array(InternalMediaLink::createMediaLinkFromPathId($imageMeta));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
@@ -1022,7 +1022,7 @@ class Page extends DokuPath
 
 
     /**
-     * @return RasterImageLink|null
+     * @return InternalMediaLink
      */
     public
     function getImage()

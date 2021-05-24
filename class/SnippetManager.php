@@ -183,7 +183,13 @@ class SnippetManager
             switch ($snippetType) {
                 case Snippet::TYPE_JS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
-
+                        /**
+                         * Bug: just debug
+                         */
+                        if (is_string($snippet)){
+                            LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object",LogUtility::LVL_MSG_ERROR);
+                            continue;
+                        }
                         /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["script"][] = array(
                             "class" => self::getClassFromSnippetId($snippetId),
@@ -193,6 +199,13 @@ class SnippetManager
                     break;
                 case Snippet::TYPE_CSS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
+                        /**
+                         * Bug: just debug
+                         */
+                        if (is_string($snippet)){
+                            LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object",LogUtility::LVL_MSG_ERROR);
+                            continue;
+                        }
                         $snippetArray = array(
                             "class" => self::getClassFromSnippetId($snippetId),
                             "_data" => $snippet->getContent()

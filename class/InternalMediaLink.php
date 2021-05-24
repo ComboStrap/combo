@@ -173,7 +173,7 @@ abstract class InternalMediaLink extends DokuPath
      * @param $rev - the mtime
      * @return InternalMediaLink|RasterImageLink|SvgImageLink
      */
-    public static function createFromCallStackArray(&$attributes, $rev = null)
+    public static function createFromCallStackArray($attributes, $rev = null)
     {
 
         /**
@@ -345,8 +345,8 @@ abstract class InternalMediaLink extends DokuPath
                 LogUtility::msg("The mime type of the media ($pathId) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
                 $internalMedia = new RasterImageLink($pathId, $tagAttributes);
             } else {
-                LogUtility::msg("The type ($mime) of media ($pathId) is not an image", LogUtility::LVL_MSG_ERROR, "image");
-                $internalMedia = null;
+                LogUtility::msg("The type ($mime) of media ($pathId) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
+                $internalMedia = new ThirdMediaLink($pathId, $tagAttributes);
             }
         }
 
@@ -376,7 +376,7 @@ abstract class InternalMediaLink extends DokuPath
          * We use the 'src' attributes as id
          */
         $array = array(
-            'src' => $this->getId()
+            'src' => $this->getAbsolutePathId()
         );
         // Add the extra attribute
         return array_merge($this->tagAttributes->toCallStackArray(), $array);

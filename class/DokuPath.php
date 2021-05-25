@@ -73,20 +73,28 @@ class DokuPath extends File
         }
         $this->path = $path;
 
-        // https://www.dokuwiki.org/config:useslash
-        global $conf;
-        if ($conf['useslash']) {
-            $path = str_replace(self::SEPARATOR_SLASH, self::SEPARATOR, $path);
-        }
 
         // Check whether this is a local or remote image or interwiki
         if (media_isexternal($path)) {
+
             $this->scheme = self::INTERNET_SCHEME;
+
         } else if (link_isinterwiki($path)) {
+
             $this->scheme = self::INTERWIKI_SCHEME;
+
         } else {
+
             $this->scheme = self::LOCAL_SCHEME;
+
+            // https://www.dokuwiki.org/config:useslash
+            global $conf;
+            if ($conf['useslash']) {
+                $path = str_replace(self::SEPARATOR_SLASH, self::SEPARATOR, $path);
+            }
         }
+
+
 
         /**
          * ACL check does not care about the type of id
@@ -107,33 +115,38 @@ class DokuPath extends File
         $this->finalType = $type;
         $this->rev = $rev;
 
-
         /**
-         * Absolute id cleaned for the index
-         * See the $page argument of {@link resolve_pageid}
-         * Resolution clean the id {@link cleanID()}
+         * File path
          */
-        global $ID;
-        $this->absoluteIdWithoutSeparator = $this->path;
-        if ($this->finalType == self::MEDIA_TYPE) {
-            resolve_mediaid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
-        } else {
-            resolve_pageid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
-        }
-        $this->absoluteIdWithSeparator = self::SEPARATOR . $this->absoluteIdWithoutSeparator;
-
-
-        if ($type == self::MEDIA_TYPE) {
-            if (!empty($rev)) {
-                $filePath = mediaFN($this->absoluteIdWithoutSeparator, $rev);
+        $filePath = $this->path;
+        if ($this->scheme == self::LOCAL_SCHEME) {
+            /**
+             * Absolute id cleaned for the index
+             * See the $page argument of {@link resolve_pageid}
+             * Resolution clean the id {@link cleanID()}
+             */
+            global $ID;
+            $this->absoluteIdWithoutSeparator = $this->path;
+            if ($this->finalType == self::MEDIA_TYPE) {
+                resolve_mediaid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
             } else {
-                $filePath = mediaFN($this->absoluteIdWithoutSeparator);
+                resolve_pageid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
             }
-        } else {
-            if (!empty($rev)) {
-                $filePath = wikiFN($this->absoluteIdWithoutSeparator, $rev);
+            $this->absoluteIdWithSeparator = self::SEPARATOR . $this->absoluteIdWithoutSeparator;
+
+
+            if ($type == self::MEDIA_TYPE) {
+                if (!empty($rev)) {
+                    $filePath = mediaFN($this->absoluteIdWithoutSeparator, $rev);
+                } else {
+                    $filePath = mediaFN($this->absoluteIdWithoutSeparator);
+                }
             } else {
-                $filePath = wikiFN($this->absoluteIdWithoutSeparator);
+                if (!empty($rev)) {
+                    $filePath = wikiFN($this->absoluteIdWithoutSeparator, $rev);
+                } else {
+                    $filePath = wikiFN($this->absoluteIdWithoutSeparator);
+                }
             }
         }
         parent::__construct($filePath);
@@ -150,9 +163,9 @@ class DokuPath extends File
         return new DokuPath($pathId, DokuPath::PAGE_TYPE);
     }
 
-    public static function createMediaPathFromId($id, $rev = '')
+    public static function createMediaPathFromPath($path, $rev = '')
     {
-        return new DokuPath(DokuPath::SEPARATOR . $id, DokuPath::MEDIA_TYPE, $rev);
+        return new DokuPath($path, DokuPath::MEDIA_TYPE, $rev);
     }
 
     public static function createUnknownFromId($id)

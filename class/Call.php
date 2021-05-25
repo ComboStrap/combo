@@ -44,6 +44,8 @@ class Call
          */
         "strong",
         "emphasis",
+        "emphasis_open",
+        "emphasis_close",
         "underline",
         "monospace",
         "subscript",

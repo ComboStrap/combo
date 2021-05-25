@@ -60,6 +60,7 @@ class Call
         "monospace_close",
         "doublequoteopening", // ie the character " in "The"
         "entity", // for instance `...` are transformed in character
+        "linebreak",
         /**
          * The inline of combo
          * TODO: Should be deleted when {@link PluginUtility::renderUnmatched()} is not using the array anymore

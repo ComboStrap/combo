@@ -49,7 +49,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -78,7 +78,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array();
     }
 
     function getSort()

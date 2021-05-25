@@ -5,7 +5,6 @@ namespace ComboStrap;
 
 
 use dokuwiki\Extension\SyntaxPlugin;
-use syntax_plugin_combo_preformatted;
 
 /**
  * Plugin Utility is added in all Dokuwiki extension

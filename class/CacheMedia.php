@@ -3,12 +3,14 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Cache\Cache;
+
 /**
  * Class Cache
  * A wrapper around {@link \dokuwiki\Cache\Cache}
  * @package ComboStrap
  */
-class Cache
+class CacheMedia
 {
     /**
      * Cache
@@ -33,7 +35,7 @@ class Cache
      */
     private $path;
     /**
-     * @var \dokuwiki\Cache\Cache
+     * @var Cache
      */
     private $fileCache;
     private $maxAge;
@@ -50,7 +52,7 @@ class Cache
         /**
          * Cache Key Construction
          */
-        $cacheKey = $this->path->getPath();
+        $cacheKey = $this->path->getFileSystemPath();
         foreach ($tagAttributes->getComponentAttributes() as $name => $value) {
 
             /**
@@ -58,8 +60,8 @@ class Cache
              * obviously
              */
             if (in_array($name,[
-                Cache::CACHE_KEY,
-                Cache::CACHE_BUSTER_KEY,
+                CacheMedia::CACHE_KEY,
+                CacheMedia::CACHE_BUSTER_KEY,
             ])){
                 continue;
             }
@@ -80,7 +82,7 @@ class Cache
         /**
          * Cache transformation
          * From Image cache value (https://www.dokuwiki.org/images#caching)
-         * to {@link Cache::setMaxAgeInSec()}
+         * to {@link CacheMedia::setMaxAgeInSec()}
          */
         switch ($cacheParameter) {
             case "cache":
@@ -97,8 +99,7 @@ class Cache
         $this->setMaxAgeInSec($cacheParameter);
 
 
-
-        $this->fileCache = new \dokuwiki\Cache\Cache($cacheKey, $this->path->getExtension());
+        $this->fileCache = new Cache($cacheKey, $this->path->getExtension());
 
     }
 
@@ -107,7 +108,7 @@ class Cache
         if ($tagAttributes == null) {
             $tagAttributes = TagAttributes::createEmpty();
         }
-        return new Cache($file, $tagAttributes);
+        return new CacheMedia($file, $tagAttributes);
     }
 
 
@@ -118,7 +119,7 @@ class Cache
         } else {
             $dependencies = array(
                 'files' => [
-                    $this->path->getPath(),
+                    $this->path->getFileSystemPath(),
                     Resources::getComboHome() . "/plugin.info.txt"
                 ]
             );

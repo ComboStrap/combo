@@ -184,34 +184,43 @@ class SnippetManager
                 case Snippet::TYPE_JS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
                         /**
-                         * Bug: just debug
+                         * Bug (Quick fix)
                          */
                         if (is_string($snippet)){
                             LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object",LogUtility::LVL_MSG_ERROR);
-                            continue;
+                            $content = $snippet;
+                        } else {
+                            $content = $snippet->getContent();
                         }
                         /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["script"][] = array(
                             "class" => self::getClassFromSnippetId($snippetId),
-                            "_data" => $snippet->getContent()
+                            "_data" => $content
                         );
                     }
                     break;
                 case Snippet::TYPE_CSS:
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
                         /**
-                         * Bug: just debug
+                         * Bug (Quick fix)
                          */
                         if (is_string($snippet)){
                             LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object",LogUtility::LVL_MSG_ERROR);
-                            continue;
+                            $content = $snippet;
+                            $critical = true;
+                        } else {
+                            /**
+                             * @var Snippet $snippet
+                             */
+                            $content = $snippet->getContent();
+                            $critical = $snippet->getCritical();
                         }
                         $snippetArray = array(
                             "class" => self::getClassFromSnippetId($snippetId),
-                            "_data" => $snippet->getContent()
+                            "_data" => $content
                         );
                         if (Site::isStrapTemplate()) {
-                            $snippetArray[self::CRITICAL_ATTRIBUTE] = $snippet->getCritical();
+                            $snippetArray[self::CRITICAL_ATTRIBUTE] = $critical;
                         }
                         /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["style"][] = $snippetArray;

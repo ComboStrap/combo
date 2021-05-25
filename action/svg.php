@@ -1,10 +1,10 @@
 <?php
 
 
-require_once(__DIR__ . '/../class/Cache.php');
+require_once(__DIR__ . '/../class/CacheMedia.php');
 
 use ComboStrap\Auth;
-use ComboStrap\Cache;
+use ComboStrap\CacheMedia;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Resources;
@@ -62,7 +62,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         if ($height != 0) {
             $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, $height);
         }
-        $tagAttributes->addComponentAttributeValue(\ComboStrap\Cache::CACHE_KEY, $event->data['cache']);
+        $tagAttributes->addComponentAttributeValue(\ComboStrap\CacheMedia::CACHE_KEY, $event->data['cache']);
 
         $mime = "image/svg+xml";
         $event->data["mime"] = $mime;
@@ -78,7 +78,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
                 case "w":
                 case "h":
                 case "cache":
-                case Cache::CACHE_BUSTER_KEY:
+                case CacheMedia::CACHE_BUSTER_KEY:
                 case "tok": // A checker
                     // Nothing to do, we take them
                     break;

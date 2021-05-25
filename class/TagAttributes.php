@@ -60,7 +60,7 @@ class TagAttributes
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
         TagAttributes::LINKING_KEY, // internal to image
-        Cache::CACHE_KEY, // internal also
+        CacheMedia::CACHE_KEY, // internal also
     ];
 
     /**

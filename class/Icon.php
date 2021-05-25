@@ -169,7 +169,7 @@ class Icon
                 $filePointer = @fopen($downloadUrl, 'r');
                 if ($filePointer != false) {
 
-                    $numberOfByte = @file_put_contents($mediaDokuPath->getPath(), $filePointer);
+                    $numberOfByte = @file_put_contents($mediaDokuPath->getFileSystemPath(), $filePointer);
                     if ($numberOfByte != false) {
                         LogUtility::msg("The icon ($iconName) from the library ($library) was downloaded to ($mediaPathId)", LogUtility::LVL_MSG_INFO, self::NAME);
                     } else {

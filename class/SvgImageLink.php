@@ -93,7 +93,7 @@ class SvgImageLink extends MediaLink
          * Remove the cache attribute
          * (no cache for the img tag)
          */
-        $this->tagAttributes->removeComponentAttributeIfPresent(Cache::CACHE_KEY);
+        $this->tagAttributes->removeComponentAttributeIfPresent(CacheMedia::CACHE_KEY);
 
         /**
          * Remove linking (not yet implemented)
@@ -226,7 +226,7 @@ class SvgImageLink extends MediaLink
                             break;
                     }
 
-                    if ($newName== Cache::CACHE_KEY && $value== Cache::CACHE_DEFAULT_VALUE){
+                    if ($newName== CacheMedia::CACHE_KEY && $value== CacheMedia::CACHE_DEFAULT_VALUE){
                         // This is the default
                         // No need to add it
                         continue;
@@ -242,8 +242,8 @@ class SvgImageLink extends MediaLink
             /**
              * Cache bursting
              */
-            if (!$this->tagAttributes->hasComponentAttribute(Cache::CACHE_BUSTER_KEY)) {
-                $att[Cache::CACHE_BUSTER_KEY] = $this->getModifiedTime();
+            if (!$this->tagAttributes->hasComponentAttribute(CacheMedia::CACHE_BUSTER_KEY)) {
+                $att[CacheMedia::CACHE_BUSTER_KEY] = $this->getModifiedTime();
             }
 
             $direct = true;
@@ -319,12 +319,12 @@ class SvgImageLink extends MediaLink
     public function getSvgFile()
     {
 
-        $cache = new Cache($this, $this->tagAttributes);
+        $cache = new CacheMedia($this, $this->tagAttributes);
         if (!$cache->isCacheUsable()) {
             $content = SvgDocument::createFromPath($this)->getXmlText($this->tagAttributes);
             $cache->storeCache($content);
         }
-        return $cache->getFile()->getPath();
+        return $cache->getFile()->getFileSystemPath();
 
     }
 

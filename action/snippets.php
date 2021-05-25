@@ -1,7 +1,9 @@
 <?php
 
+use ComboStrap\DokuPath;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Resources;
 use ComboStrap\Site;
 use ComboStrap\SnippetManager;
 use dokuwiki\Cache\CacheRenderer;
@@ -92,7 +94,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             if (!strpos($requestUri, "/lib/exe/ajax.php") !== false) {
                 global $_REQUEST;
                 $call = $_REQUEST['call'];
-                if($call != action_plugin_combo_webcode::CALL_ID) {
+                if ($call != action_plugin_combo_webcode::CALL_ID) {
                     return;
                 }
             }
@@ -115,35 +117,42 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          *   * add the cache information in meta
          */
         $bars = $snippetManager->getBarsOfPage();
-        foreach ($bars as $bar => $servedFromCache) {
+        foreach ($bars as $barId => $servedFromCache) {
 
             // Add cache information into the head meta
-            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $bar, "content" => var_export($servedFromCache, true));
+            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $barId, "content" => var_export($servedFromCache, true));
 
             // Get or store the data
-            $cache = new \dokuwiki\Cache\Cache($bar, "snippet");
+            $cache = new \dokuwiki\Cache\Cache($barId, "snippet");
+            $barFileSystemPath = DokuPath::createPagePathFromPath(DokuPath::SEPARATOR . $barId)->getFileSystemPath();
+            $dependencies = array(
+                "files" => [
+                    $barFileSystemPath,
+                    Resources::getComboHome() . "/plugin.info.txt"
+                ]
+            );
 
             // if the bar was served from the cache
-            if ($servedFromCache) {
+            if ($servedFromCache && $cache->useCache($dependencies)) {
 
                 // Retrieve snippets from previous run
                 $data = $cache->retrieveCache();
 
                 if (!empty($data)) {
                     $snippets = unserialize($data);
-                    $snippetManager->addSnippetsFromCacheForBar($bar, $snippets);
+                    $snippetManager->addSnippetsFromCacheForBar($barId, $snippets);
 
                     if (Site::debugIsOn()) {
                         LogUtility::log2file("Snippet cache file {$cache->cache} used", LogUtility::LVL_MSG_DEBUG);
                         $event->data['script'][] = array(
                             "type" => "application/json",
                             "_data" => json_encode($snippets),
-                            "class" => "combo-snippet-cache-" . str_replace(":", "-", $bar));
+                            "class" => "combo-snippet-cache-" . str_replace(":", "-", $barId));
                     }
 
                 }
             } else {
-                $snippets = $snippetManager->getSnippetsForBar($bar);
+                $snippets = $snippetManager->getSnippetsForBar($barId);
                 if (!empty($snippets)) {
                     $cache->storeCache(serialize($snippets));
                 }
@@ -233,9 +242,9 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         if ($data->mode == "xhtml") {
 
             /* @var CacheRenderer $data */
-            $page = $data->page;
+            $pageId = $data->page;
             $cached = $event->result;
-            PluginUtility::getSnippetManager()->addBar($page, $cached);
+            PluginUtility::getSnippetManager()->addBar($pageId, $cached);
 
         }
 

@@ -84,7 +84,9 @@ class Call
         "listitem_open", //li
         "listitem_close",
         "listcontent_open", // after li ???
-        "listcontent_close"
+        "listcontent_close",
+        "table_open",
+        "table_close",
     );
 
     private $call;

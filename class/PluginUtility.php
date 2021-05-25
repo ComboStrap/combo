@@ -14,7 +14,7 @@ use dokuwiki\Extension\SyntaxPlugin;
 require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/Background.php');
 require_once(__DIR__ . '/Bootstrap.php');
-require_once(__DIR__ . '/Cache.php');
+require_once(__DIR__ . '/CacheMedia.php');
 require_once(__DIR__ . '/CacheByLogicalKey.php');
 require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
 require_once(__DIR__ . '/Call.php');

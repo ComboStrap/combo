@@ -106,7 +106,7 @@ class RasterImageLink extends MediaLink
             }
 
             if ($this->getCache()) {
-                $att[Cache::CACHE_KEY] = $this->getCache();
+                $att[CacheMedia::CACHE_KEY] = $this->getCache();
             }
             $direct = true;
 
@@ -375,7 +375,7 @@ class RasterImageLink extends MediaLink
                  * $dimensions = media_image_preview_size($this->id, '', false);
                  */
                 $imageInfo = array();
-                $imageSize = getimagesize($this->getPath(), $imageInfo);
+                $imageSize = getimagesize($this->getFileSystemPath(), $imageInfo);
                 if ($imageSize === false) {
                     $this->analyzable = false;
                     LogUtility::msg("The image ($this) could not be analyzed", LogUtility::LVL_MSG_ERROR, "image");

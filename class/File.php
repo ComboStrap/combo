@@ -17,10 +17,6 @@ class File
 {
 
     private $path;
-    /**
-     * @var \dokuwiki\Cache\Cache
-     */
-    private $fileCache;
 
 
     /**
@@ -35,7 +31,7 @@ class File
     /**
      * @return mixed
      */
-    public function getPath()
+    public function getFileSystemPath()
     {
         return $this->path;
     }
@@ -106,12 +102,12 @@ class File
 
     public function getContent()
     {
-        return file_get_contents($this->getPath());
+        return file_get_contents($this->getFileSystemPath());
     }
 
     public function remove()
     {
-        unlink($this->getPath());
+        unlink($this->getFileSystemPath());
     }
 
     public function getParent()
@@ -122,7 +118,7 @@ class File
     public function createAsDirectory()
     {
 
-        return mkdir($this->getPath(), $mode = 0770, $recursive = true);
+        return mkdir($this->getFileSystemPath(), $mode = 0770, $recursive = true);
     }
 
     public static function createFromPath($path)

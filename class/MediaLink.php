@@ -65,7 +65,7 @@ abstract class MediaLink extends DokuPath
     const URL_ATTRIBUTES = [
         TagAttributes::WIDTH_KEY,
         TagAttributes::HEIGHT_KEY,
-        Cache::CACHE_KEY,
+        CacheMedia::CACHE_KEY,
     ];
 
     /**
@@ -156,7 +156,7 @@ abstract class MediaLink extends DokuPath
         $tagAttributes->addComponentAttributeValue(TagAttributes::ALIGN_KEY, $align);
         $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, $width);
         $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, $height);
-        $tagAttributes->addComponentAttributeValue(Cache::CACHE_KEY, $cache);
+        $tagAttributes->addComponentAttributeValue(CacheMedia::CACHE_KEY, $cache);
         $tagAttributes->addComponentAttributeValue(TagAttributes::LINKING_KEY, $linking);
 
         return self::createMediaLinkFromPathId($id, $tagAttributes);
@@ -443,7 +443,7 @@ abstract class MediaLink extends DokuPath
 
     public function getCache()
     {
-        return $this->tagAttributes->getValue(Cache::CACHE_KEY);
+        return $this->tagAttributes->getValue(CacheMedia::CACHE_KEY);
     }
 
     protected function getTitle()

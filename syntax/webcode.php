@@ -348,7 +348,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
 
                     // The extracted data are the attribute of the webcode tag
                     // We put in a class variable so that we can use in the last step (DOKU_LEXER_EXIT)
@@ -368,7 +368,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         return false;
                     }
 
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
 
                     // Dokuwiki Code ?
                     if (array_key_exists('dw', $codes)) {

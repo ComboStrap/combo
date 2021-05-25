@@ -1,7 +1,9 @@
 <?php
 
 
-use ComboStrap\InternalMediaLink;
+use ComboStrap\DokuPath;
+use ComboStrap\LogUtility;
+use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
@@ -12,7 +14,14 @@ if (!defined('DOKU_INC')) die();
 
 
 /**
- * Internal media
+ * Media
+ *
+ * Takes over the {@link \dokuwiki\Parsing\ParserMode\Media media mode}
+ * that is processed by {@link Doku_Handler_Parse_Media}
+ *
+ *
+ *
+ * It can be a internal / external media
  */
 class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 {
@@ -34,10 +43,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     const IS_FIRST_IMAGE_KEY = "isFirstImage";
 
     /**
-     * If the image is a card illustration it's not printed
-     * The call is kept to update the index
+     * Found at {@link \dokuwiki\Parsing\ParserMode\Media}
      */
-    const IS_CARD_ILLUSTRATION = "isCardIllustration";
+    const MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
 
 
     function getType()
@@ -56,6 +64,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
+        /**
+         * An image is not a block (it can be inside paragraph)
+         */
         return 'normal';
     }
 
@@ -64,15 +75,21 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         return array('substition', 'formatting', 'disabled');
     }
 
+    /**
+     * It should be less than {@link \dokuwiki\Parsing\ParserMode\Media::getSort()}
+     * (It was 320 at the time of writing this code)
+     * @return int
+     *
+     */
     function getSort()
     {
-        return 201;
+        return 319;
     }
 
 
     function connectTo($mode)
     {
-        $enable = $this->getConf(InternalMediaLink::CONF_IMAGE_ENABLE, 1);
+        $enable = $this->getConf(MediaLink::CONF_IMAGE_ENABLE, 1);
         if (!$enable) {
 
             // Inside a card, we need to take over and enable it
@@ -83,7 +100,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         }
 
         if ($enable) {
-            $this->Lexer->addSpecialPattern(InternalMediaLink::INTERNAL_MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(self::MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
 
@@ -96,7 +113,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
-                $media = InternalMediaLink::createFromRenderMatch($match);
+                $media = MediaLink::createFromRenderMatch($match);
                 $attributes = $media->toCallStackArray();
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
                 $parent = $tag->getParent();
@@ -108,7 +125,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                          * The image is in a link, we don't want another link
                          * to the image
                          */
-                        $attributes[TagAttributes::LINKING_KEY] = InternalMediaLink::LINKING_NOLINK_VALUE;
+                        $attributes[TagAttributes::LINKING_KEY] = MediaLink::LINKING_NOLINK_VALUE;
                     }
                 }
                 $isFirstSibling = $tag->isFirstMeaningFullSibling();
@@ -145,29 +162,40 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $media = InternalMediaLink::createFromCallStackArray($attributes, $renderer->date_at);
-                if ($media->isImage()) {
-
-                    $renderer->doc .= $media->renderMediaTagWithLink();
-
-                } else {
-
-                    /**
-                     * This is not a media image (a video)
-                     * Dokuwiki takes over
-                     */
-                    $src = $attributes['src'];
-                    $title = $attributes['title'];
-                    $align = $attributes['align'];
-                    $width = $attributes['width'];
-                    $height = $attributes['height'];
-                    $cache = $attributes['cache'];
-                    $linking = $attributes['linking'];
-                    $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
-
+                $media = MediaLink::createFromCallStackArray($attributes);
+                if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
+                    $media = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
+                    if ($media->isImage()) {
+                        $renderer->doc .= $media->renderMediaTagWithLink();
+                        return true;
+                    }
                 }
 
-                break;
+                /**
+                 * This is not an local internal media image (a video or an url image)
+                 * Dokuwiki takes over
+                 */
+                $type = $attributes['type'];
+                $src = $attributes['src'];
+                $title = $attributes['title'];
+                $align = $attributes['align'];
+                $width = $attributes['width'];
+                $height = $attributes['height'];
+                $cache = $attributes['cache'];
+                $linking = $attributes['linking'];
+                switch ($type) {
+                    case MediaLink::INTERNAL_MEDIA:
+                        $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
+                        break;
+                    case MediaLink::EXTERNAL_MEDIA:
+                        $renderer->doc .= $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
+                        break;
+                    default:
+                        LogUtility::msg("The dokuwiki media type ($type) is unknown");
+                        break;
+                }
+
+                return true;
 
             case "metadata":
 
@@ -176,7 +204,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * @var Doku_Renderer_metadata $renderer
                  */
                 self::registerImageMeta($attributes, $renderer);
-                break;
+                return true;
 
         }
         // unsupported $mode
@@ -189,6 +217,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     static public function registerImageMeta($attributes, $renderer)
     {
+        $type = $attributes['type'];
         $src = $attributes['src'];
         $title = $attributes['title'];
         $align = $attributes['align'];
@@ -196,7 +225,19 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $height = $attributes['height'];
         $cache = $attributes['cache']; // Cache: https://www.dokuwiki.org/images#caching
         $linking = $attributes['linking'];
-        $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
+
+        switch ($type) {
+            case MediaLink::INTERNAL_MEDIA:
+                $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
+                break;
+            case MediaLink::EXTERNAL_MEDIA:
+                $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking);
+                break;
+            default:
+                LogUtility::msg("The dokuwiki media type ($type)  for metadata registration is unknown");
+                break;
+        }
+
     }
 
 

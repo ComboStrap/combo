@@ -21,3 +21,4 @@ class/UrlCanonical.php
 action/lowqualitypage.php
 style.css
 syntax/img.php
+class/InternalMediaLink.php

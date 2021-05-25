@@ -3,7 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
-use ComboStrap\InternalMediaLink;
+use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;

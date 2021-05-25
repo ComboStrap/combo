@@ -12,7 +12,7 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/InternalMediaLink.php');
+require_once(__DIR__ . '/MediaLink.php');
 require_once(__DIR__ . '/PluginUtility.php');
 require_once(__DIR__ . '/SvgDocument.php');
 
@@ -21,7 +21,7 @@ require_once(__DIR__ . '/SvgDocument.php');
  * This is the class that handles the
  * svg link type
  */
-class SvgImageLink extends InternalMediaLink
+class SvgImageLink extends MediaLink
 {
 
     const CANONICAL = "svg";
@@ -177,7 +177,7 @@ class SvgImageLink extends InternalMediaLink
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl($ampersand = InternalMediaLink::URL_ENCODED_AND)
+    public function getUrl($ampersand = MediaLink::URL_ENCODED_AND)
     {
 
         if ($this->exists()) {
@@ -197,7 +197,7 @@ class SvgImageLink extends InternalMediaLink
             $componentAttributes = $this->tagAttributes->getComponentAttributes();
             foreach ($componentAttributes as $name => $value) {
 
-                if (!in_array($name, InternalMediaLink::TAG_ATTRIBUTES_ONLY)) {
+                if (!in_array($name, MediaLink::NON_URL_ATTRIBUTES)) {
                     $newName = $name;
 
                     /**
@@ -267,6 +267,10 @@ class SvgImageLink extends InternalMediaLink
 
         if ($this->exists()) {
 
+            /**
+             * This attribute should not be in the render
+             */
+            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
 
             if (
                 $this->getSize() > $this->getMaxInlineSize()

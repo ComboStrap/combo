@@ -3,7 +3,7 @@
 use ComboStrap\AdsUtility;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
-use ComboStrap\InternalMediaLink;
+use ComboStrap\MediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
@@ -197,8 +197,8 @@ $lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(Laz
 /**
  * Image
  */
-$lang[InternalMediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(InternalMediaLink::CANONICAL, "If unchecked, the image component will be disabled");
-$lang[InternalMediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(InternalMediaLink::CANONICAL, "The default link option from an internal image.");
+$lang[MediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(MediaLink::CANONICAL, "If unchecked, the image component will be disabled");
+$lang[MediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(MediaLink::CANONICAL, "The default link option from an internal image.");
 
 /**
  * Float

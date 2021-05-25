@@ -12,16 +12,16 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/InternalMediaLink.php');
+require_once(__DIR__ . '/MediaLink.php');
 require_once(__DIR__ . '/LazyLoad.php');
 require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  * Image
  * This is the class that handles the
- * raster image type of the dokuwiki {@link InternalMediaLink}
+ * raster image type of the dokuwiki {@link MediaLink}
  */
-class RasterImageLink extends InternalMediaLink
+class RasterImageLink extends MediaLink
 {
 
     const CANONICAL = "image";
@@ -82,7 +82,7 @@ class RasterImageLink extends InternalMediaLink
      * @param null $localWidth - the asked width - use for responsive image
      * @return string|null
      */
-    public function getUrl($ampersand = InternalMediaLink::URL_ENCODED_AND, $localWidth = null)
+    public function getUrl($ampersand = MediaLink::URL_ENCODED_AND, $localWidth = null)
     {
 
         if ($this->exists()) {
@@ -141,6 +141,11 @@ class RasterImageLink extends InternalMediaLink
 
 
             /**
+             * No dokuwiki type attribute
+             */
+            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
+
+            /**
              * Responsive image
              * https://getbootstrap.com/docs/5.0/content/images/
              * to apply max-width: 100%; and height: auto;
@@ -166,10 +171,9 @@ class RasterImageLink extends InternalMediaLink
              * The style is set in {@link Dimension::processWidthAndHeight()}
              */
             $internalHeight = $this->getMediaHeight();
-            if(!empty($internalHeight)) {
+            if (!empty($internalHeight)) {
                 $this->tagAttributes->addHtmlAttributeValue("height", $internalHeight . $htmlLengthUnit);
             }
-
 
 
             /**
@@ -222,12 +226,12 @@ class RasterImageLink extends InternalMediaLink
 
                     if ($mediaWith > $breakpointWidth) {
 
-                        if (!empty($srcSet)){
+                        if (!empty($srcSet)) {
                             $srcSet .= ", ";
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $this->getUrl(InternalMediaLink::URL_ENCODED_AND, $breakpointWidthMinusMargin);
+                        $xsmUrl = $this->getUrl(MediaLink::URL_ENCODED_AND, $breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -327,7 +331,7 @@ class RasterImageLink extends InternalMediaLink
              * Create the img element
              */
             $htmlAttributes = $this->tagAttributes->toHTMLAttributeString();
-            $imgHTML = '<img '.$htmlAttributes.'/>';
+            $imgHTML = '<img ' . $htmlAttributes . '/>';
 
         } else {
 

@@ -205,7 +205,7 @@ class Icon
 
 
             $svgImageLink = SvgImageLink::createMediaLinkFromPathId(
-                $mediaDokuPath->getAbsolutePathId(),
+                $mediaDokuPath->getAbsolutePath(),
                 null,
                 $tagAttributes
             );

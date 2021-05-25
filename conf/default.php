@@ -21,6 +21,7 @@
 
 
 use ComboStrap\Icon;
+use ComboStrap\MediaLink;
 use ComboStrap\Prism;
 
 
@@ -292,13 +293,13 @@ $conf["lazyLoadingPlaceholderColor"] = "#cbf1ea";
 
 
 /**
- * {@link \ComboStrap\InternalMediaLink::CONF_IMAGE_ENABLE}
+ * {@link \ComboStrap\MediaLink::CONF_IMAGE_ENABLE}
  */
 $conf["imageEnable"] = 1;
 
 /**
  * Default linking value
- * {@link \ComboStrap\InternalMediaLink::CONF_DEFAULT_LINKING}
+ * {@link \ComboStrap\MediaLink::CONF_DEFAULT_LINKING}
  */
 $conf["defaultImageLinking"] = "direct";
 

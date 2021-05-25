@@ -4,7 +4,7 @@
 // must be run within Dokuwiki
 use ComboStrap\Background;
 use ComboStrap\ColorUtility;
-use ComboStrap\InternalMediaLink;
+use ComboStrap\MediaLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
@@ -164,7 +164,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                      * if the media of Combo is not used, try to retrieve the media of dokuwiki
                      * @var $callImage
                      */
-                    $callImage = $openingTag->getDescendant(InternalMediaLink::INTERNAL_MEDIA);
+                    $callImage = $openingTag->getDescendant(MediaLink::INTERNAL_MEDIA);
                 }
                 if ($callImage != null) {
                     $callImage->deleteCall();

@@ -6,7 +6,7 @@
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
-use ComboStrap\InternalMediaLink;
+use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -147,7 +147,7 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                 while ($callStack->next()) {
                     $actualCall = $callStack->getActualCall();
                     if ($actualCall->getTagName() == syntax_plugin_combo_media::TAG) {
-                        $actualCall->addAttribute(TagAttributes::LINKING_KEY, InternalMediaLink::LINKING_NOLINK_VALUE);
+                        $actualCall->addAttribute(TagAttributes::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
                     }
                 }
 

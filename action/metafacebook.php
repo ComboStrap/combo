@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\RasterImageLink;
-use ComboStrap\InternalMediaLink;
+use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -112,13 +112,13 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
         /**
-         * @var InternalMediaLink[]
+         * @var MediaLink[]
          */
-        $facebookImages = $page->getImageSet();
+        $facebookImages = $page->getLocalImageSet();
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = InternalMediaLink::createMediaLinkFromPathId($defaultFacebookImage);
+                $image = MediaLink::createMediaLinkFromPathId($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {

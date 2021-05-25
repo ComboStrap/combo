@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
+use syntax_plugin_combo_media;
 
 require_once(__DIR__ . '/DokuPath.php');
 
@@ -20,34 +21,41 @@ require_once(__DIR__ . '/DokuPath.php');
  * Class InternalMedia
  * Represent a media link
  * @package ComboStrap
+ *
+ * Wrapper around {@link Doku_Handler_Parse_Media}
+ *
+ * Not that for dokuwiki the `type` key of the attributes is the `call`
+ * and therefore determine the function in an render
+ * (ie {@link \Doku_Renderer::internalmedialink()} or {@link \Doku_Renderer::externalmedialink()}
+ *
  */
-abstract class InternalMediaLink extends DokuPath
+abstract class MediaLink extends DokuPath
 {
 
     /**
      * The dokuwiki mode name
-     * for an internal media
+     * (ie call)
      */
     const INTERNAL_MEDIA = "internalmedia";
-    const INTERNAL_MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
+    const EXTERNAL_MEDIA = "externalmedia";
 
-    // Pattern to capture the link as first capture group
-    const LINK_PATTERN = "{{\s*([^|\s]*)\s*\|?.*}}";
 
     const CONF_IMAGE_ENABLE = "imageEnable";
     const CANONICAL = "image";
 
     /**
-     * This attributes apply
-     * to a image tag (img, svg, ...)
-     * not in a URL
+     * This attributes does not apply
+     * to a URL
+     * They are only for the tag (img, svg, ...)
+     * or internal
      */
-    const TAG_ATTRIBUTES_ONLY = [
+    const NON_URL_ATTRIBUTES = [
         TagAttributes::ALIGN_KEY,
         TagAttributes::LINKING_KEY,
         TagAttributes::TITLE_KEY,
         Hover::ON_HOVER_ATTRIBUTE,
-        Animation::ON_VIEW_ATTRIBUTE
+        Animation::ON_VIEW_ATTRIBUTE,
+        MediaLink::MEDIA_DOKUWIKI_TYPE
     ];
 
     /**
@@ -71,25 +79,29 @@ abstract class InternalMediaLink extends DokuPath
     const URL_AND = "&";
 
     /**
-     * Default image linking value
-     */
-    const CONF_DEFAULT_LINKING = "defaultImageLinking";
-    const LINKING_DIRECT_VALUE = 'direct';
-    const LINKING_NOLINK_VALUE = 'nolink';
-    const LINKING_DETAILS_VALUE = 'details';
-    const LINKING_LINKONLY_VALUE = "linkonly";
-    const SRC_KEY = "src";
-
-    /**
      * The dokuwiki media property used in a link
      */
     const DOKUWIKI_QUERY_MEDIA_PROPERTY = ["w", "h"];
+    /**
+     * Default image linking value
+     */
+    const CONF_DEFAULT_LINKING = "defaultImageLinking";
+    const LINKING_LINKONLY_VALUE = "linkonly";
+    const LINKING_DETAILS_VALUE = 'details';
+    const SRC_KEY = "src"; // called pathId in Combo
+    const LINKING_NOLINK_VALUE = 'nolink';
+    const LINK_PATTERN = "{{\s*([^|\s]*)\s*\|?.*}}";
+    const LINKING_DIRECT_VALUE = 'direct';
 
-
+    /**
+     * The dokuwiki type
+     * ie {@link MediaLink::EXTERNAL_MEDIA}
+     * or {@link MediaLink::INTERNAL_MEDIA}
+     */
+    const MEDIA_DOKUWIKI_TYPE = 'dokuwiki_type';
 
 
     private $lazyLoad = null;
-
 
 
     /**
@@ -125,22 +137,9 @@ abstract class InternalMediaLink extends DokuPath
 
 
     /**
-     * Parse the img dokuwiki syntax
-     * The output can be used to create an image object with the {@link self::createFromRenderAttributes()} function
-     *
-     * @param $match
-     * @return array
-     */
-    public static function getParseAttributes($match)
-    {
-        require_once(__DIR__ . '/../../../../inc/parser/handler.php');
-        return Doku_Handler_Parse_Media($match);
-    }
-
-    /**
      * Create an image from dokuwiki internal call media attributes
      * @param array $callAttributes
-     * @return InternalMediaLink
+     * @return MediaLink
      */
     public static function createFromIndexAttributes(array $callAttributes)
     {
@@ -167,19 +166,19 @@ abstract class InternalMediaLink extends DokuPath
     /**
      * A function to explicitly create an internal media from
      * a call stack array (ie key string and value) that we get in the {@link SyntaxPlugin::render()}
-     * from the {@link InternalMediaLink::toCallStackArray()}
+     * from the {@link MediaLink::toCallStackArray()}
      *
-     * @param $attributes - the attributes created by the function {@link InternalMediaLink::getParseAttributes()}
+     * @param $attributes - the attributes created by the function {@link MediaLink::getParseAttributes()}
      * @param $rev - the mtime
-     * @return InternalMediaLink|RasterImageLink|SvgImageLink
+     * @return MediaLink|RasterImageLink|SvgImageLink
      */
     public static function createFromCallStackArray($attributes, $rev = null)
     {
 
-        if (!is_array($attributes)){
+        if (!is_array($attributes)) {
             // Debug for the key_exist below because of the following message:
             // `PHP Warning:  key_exists() expects parameter 2 to be array, array given`
-            LogUtility::msg("The `attributes` parameter is not an array. Value ($attributes)",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            LogUtility::msg("The `attributes` parameter is not an array. Value ($attributes)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
 
         /**
@@ -191,15 +190,16 @@ abstract class InternalMediaLink extends DokuPath
 
         /**
          * Type for Dokuwiki is the type of the media link (internal, external, ...)
-         * This is also a ComboStrap attribute where we set the type of a SVG
+         * This is also a ComboStrap attribute where we set the type of a SVG (icon, illustration, background)
          * We delete only the dokuwiki type that we don't use
-         * otherwise we get an error because the type has already be set
+         * otherwise we get an error because the type has already been set
          */
         if (key_exists(TagAttributes::TYPE_KEY, $attributes)) {
-            $dokuWikiTypeValues = [self::INTERNAL_MEDIA];
+            $dokuWikiTypeValues = [self::INTERNAL_MEDIA, self::EXTERNAL_MEDIA];
             $type = $attributes[TagAttributes::TYPE_KEY];
             if (in_array($type, $dokuWikiTypeValues)) {
                 unset($attributes[TagAttributes::TYPE_KEY]);
+                $attributes[self::MEDIA_DOKUWIKI_TYPE]=$type;
             }
         }
 
@@ -212,7 +212,7 @@ abstract class InternalMediaLink extends DokuPath
 
     /**
      * @param $match - the match of the renderer (just a shortcut)
-     * @return InternalMediaLink
+     * @return MediaLink
      */
     public static function createFromRenderMatch($match)
     {
@@ -220,80 +220,84 @@ abstract class InternalMediaLink extends DokuPath
          * Even if deprecated because of dimension we use
          * it to handle the other attributes such as cache, an align
          */
-        $attributes = self::getParseAttributes($match);
+        require_once(__DIR__ . '/../../../../inc/parser/handler.php');
+        $attributes = Doku_Handler_Parse_Media($match);
 
-        /**
-         * The {@link InternalMediaLink::getParseAttributes() previous function}
-         * takes the first digit as the width
-         * (bad pattern for the width and height parsing)
-         * We set them to null and parse them below
-         */
-        $attributes[TagAttributes::WIDTH_KEY] = null;
-        $attributes[TagAttributes::HEIGHT_KEY] = null;
+        if ($attributes["type"] == MediaLink::INTERNAL_MEDIA) {
+            /**
+             * The {@link MediaLink::createFromRenderMatch() previous function}
+             * takes the first digit as the width
+             * (bad pattern for the width and height parsing)
+             * We set them to null and parse them below
+             */
+            $attributes[TagAttributes::WIDTH_KEY] = null;
+            $attributes[TagAttributes::HEIGHT_KEY] = null;
 
-        /**
-         * The align attribute on an image parse
-         * is a float right
-         * ComboStrap does a difference between a block right and a float right
-         */
-        if ($attributes[TagAttributes::ALIGN_KEY] === "right") {
-            unset($attributes[TagAttributes::ALIGN_KEY]);
-            $attributes[FloatAttribute::FLOAT_KEY] = "right";
-        }
+            /**
+             * The align attribute on an image parse
+             * is a float right
+             * ComboStrap does a difference between a block right and a float right
+             */
+            if ($attributes[TagAttributes::ALIGN_KEY] === "right") {
+                unset($attributes[TagAttributes::ALIGN_KEY]);
+                $attributes[FloatAttribute::FLOAT_KEY] = "right";
+            }
 
-        /**
-         * Do we have a linking attribute
-         */
-        $linkingAttributeFound = false;
+            /**
+             * Do we have a linking attribute
+             */
+            $linkingAttributeFound = false;
 
-        // Add the non-standard attribute in the form name=value
-        $matches = array();
-        $pattern = self::LINK_PATTERN;
-        $found = preg_match("/$pattern/", $match, $matches);
-        if ($found) {
-            $link = $matches[1];
-            $positionQueryCharacter = strpos($link, "?");
-            if ($positionQueryCharacter !== false) {
-                $queryParameters = substr($link, $positionQueryCharacter + 1);
-                $parameters = StringUtility::explodeAndTrim($queryParameters, InternalMediaLink::URL_AND);
-                foreach ($parameters as $parameter) {
-                    $equalCharacterPosition = strpos($parameter, "=");
-                    if ($equalCharacterPosition !== false) {
-                        $parameterProp = explode("=", $parameter);
-                        $key = $parameterProp[0];
-                        if (!in_array($key, self::DOKUWIKI_QUERY_MEDIA_PROPERTY)) {
+            // Add the non-standard attribute in the form name=value
+            $matches = array();
+            $pattern = self::LINK_PATTERN;
+            $found = preg_match("/$pattern/", $match, $matches);
+            if ($found) {
+                $link = $matches[1];
+                $positionQueryCharacter = strpos($link, "?");
+                if ($positionQueryCharacter !== false) {
+                    $queryParameters = substr($link, $positionQueryCharacter + 1);
+                    $parameters = StringUtility::explodeAndTrim($queryParameters, MediaLink::URL_AND);
+                    foreach ($parameters as $parameter) {
+                        $equalCharacterPosition = strpos($parameter, "=");
+                        if ($equalCharacterPosition !== false) {
+                            $parameterProp = explode("=", $parameter);
+                            $key = $parameterProp[0];
+                            if (!in_array($key, self::DOKUWIKI_QUERY_MEDIA_PROPERTY)) {
+                                /**
+                                 * exclude already parsed w=xxxx and h=wwww
+                                 */
+                                $attributes[$key] = $parameterProp[1];
+                            }
+                        } else {
                             /**
-                             * exclude already parsed w=xxxx and h=wwww
+                             * Linking
                              */
-                            $attributes[$key] = $parameterProp[1];
-                        }
-                    } else {
-                        /**
-                         * Linking
-                         */
-                        if ($linkingAttributeFound == false
-                            &&
-                            preg_match('/(nolink|direct|linkonly|details)/i', $parameter)) {
-                            $linkingAttributeFound = true;
-                        }
-                        /**
-                         * Sizing (wxh)
-                         */
-                        $sizing = [];
-                        if (preg_match('/([0-9]+)(x([0-9]+))?/', $parameter, $sizing)) {
-                            $attributes[TagAttributes::WIDTH_KEY] = $sizing[1];
-                            if (isset($sizing[3])) {
-                                $attributes[TagAttributes::HEIGHT_KEY] = $sizing[3];
+                            if ($linkingAttributeFound == false
+                                &&
+                                preg_match('/(nolink|direct|linkonly|details)/i', $parameter)) {
+                                $linkingAttributeFound = true;
+                            }
+                            /**
+                             * Sizing (wxh)
+                             */
+                            $sizing = [];
+                            if (preg_match('/([0-9]+)(x([0-9]+))?/', $parameter, $sizing)) {
+                                $attributes[TagAttributes::WIDTH_KEY] = $sizing[1];
+                                if (isset($sizing[3])) {
+                                    $attributes[TagAttributes::HEIGHT_KEY] = $sizing[3];
+                                }
                             }
                         }
                     }
                 }
             }
+
+            if (!$linkingAttributeFound) {
+                $attributes[TagAttributes::LINKING_KEY] = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
+            }
         }
 
-        if (!$linkingAttributeFound) {
-            $attributes[TagAttributes::LINKING_KEY] = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
-        }
         return self::createFromCallStackArray($attributes);
     }
 
@@ -313,7 +317,7 @@ abstract class InternalMediaLink extends DokuPath
      * @param $pathId
      * @param TagAttributes $tagAttributes
      * @param string $rev
-     * @return InternalMediaLink
+     * @return MediaLink
      */
     public static function createMediaLinkFromPathId($pathId, $rev = null, $tagAttributes = null)
     {
@@ -366,7 +370,7 @@ abstract class InternalMediaLink extends DokuPath
      * is used in the returned data of a {@link SyntaxPlugin::handle()}
      * (which ultimately is stored in the {@link CallStack)
      *
-     * This is to make the difference with the {@link InternalMediaLink::createFromIndexAttributes()}
+     * This is to make the difference with the {@link MediaLink::createFromIndexAttributes()}
      * that is indexed by number (ie without property name)
      *
      *
@@ -380,12 +384,25 @@ abstract class InternalMediaLink extends DokuPath
         /**
          * Trying to stay inline with the dokuwiki key
          * We use the 'src' attributes as id
+         *
+         * src is a path (not an id)
          */
         $array = array(
-            'src' => $this->getAbsolutePathId()
+            'src' => $this->getAbsolutePath()
         );
+
+        /**
+         * Rewrite the type
+         * needed for render
+         */
+        $dokuwikiType = $this->tagAttributes->getValueAndRemove(self::MEDIA_DOKUWIKI_TYPE);
+        if ($dokuwikiType != null) {
+            $array["type"] = $dokuwikiType;
+        }
+
         // Add the extra attribute
         return array_merge($this->tagAttributes->toCallStackArray(), $array);
+
 
     }
 
@@ -397,16 +414,15 @@ abstract class InternalMediaLink extends DokuPath
     {
         $descriptionPart = "";
         if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
-             $descriptionPart = "|".$this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
+            $descriptionPart = "|" . $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
         }
         return '{{:' . $this->getId() . $descriptionPart . '}}';
     }
 
 
-
     public static function isInternalMediaSyntax($text)
     {
-        return preg_match(' / ' . InternalMediaLink::INTERNAL_MEDIA_PATTERN . ' / msSi', $text);
+        return preg_match(' / ' . syntax_plugin_combo_media::MEDIA_PATTERN . ' / msSi', $text);
     }
 
 
@@ -542,8 +558,6 @@ abstract class InternalMediaLink extends DokuPath
     public abstract function renderMediaTag();
 
     public abstract function getAbsoluteUrl();
-
-
 
 
 }

@@ -198,7 +198,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     "image/webp",
                     "image/svg+xml",
                 ];
-                $imagesSet = $page->getImageSet();
+                $imagesSet = $page->getLocalImageSet();
                 $schemaImages = array();
                 foreach ($imagesSet as $image) {
 

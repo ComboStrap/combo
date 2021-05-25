@@ -10,7 +10,7 @@ namespace ComboStrap;
  * returns a media link object and not null
  * otherwise, we get an error
  */
-class ThirdMediaLink extends InternalMediaLink
+class ThirdMediaLink extends MediaLink
 {
 
     public function renderMediaTag()

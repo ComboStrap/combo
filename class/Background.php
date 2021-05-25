@@ -157,7 +157,7 @@ class Background
                             break;
                     }
 
-                    $media = InternalMediaLink::createFromCallStackArray($backgroundImageValue);
+                    $media = MediaLink::createFromCallStackArray($backgroundImageValue);
                     $url = $media->getUrl("&",$media->getRequestedWidth());
                     if ($url !== false) {
 
@@ -223,7 +223,7 @@ class Background
 
     /**
      * Return a background array with background properties
-     * from a media {@link InternalMediaLink::toCallStackArray()}
+     * from a media {@link MediaLink::toCallStackArray()}
      * @param array $mediaCallStackArray
      * @return array
      */
@@ -236,11 +236,11 @@ class Background
                 case TagAttributes::TITLE_KEY:
                 case TagAttributes::ALIGN_KEY:
                 case FloatAttribute::FLOAT_KEY: // Float is when the image is at the right
-                case TagAttributes::TYPE_KEY:
                     /**
                      * Attributes not taken
                      */
                     break;
+                case TagAttributes::TYPE_KEY: // needed for the metadata registration
                 default:
                     /**
                      * Attributes taken

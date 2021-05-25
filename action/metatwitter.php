@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\InternalMediaLink;
+use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -144,11 +144,11 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Card image
          */
-        $twitterImages = $page->getImageSet();
+        $twitterImages = $page->getLocalImageSet();
         if (empty($twitterImages)) {
             $defaultImageIdConf = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE));
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = InternalMediaLink::createMediaLinkFromPathId($defaultImageIdConf);
+                $twitterImage = MediaLink::createMediaLinkFromPathId($defaultImageIdConf);
                 if ($twitterImage->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {

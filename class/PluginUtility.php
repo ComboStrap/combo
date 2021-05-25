@@ -27,6 +27,7 @@ require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/Hover.php');
 require_once(__DIR__ . '/HtmlUtility.php');
 require_once(__DIR__ . '/Icon.php');
+require_once(__DIR__ . '/MediaLink.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/Page.php');
 require_once(__DIR__ . '/Position.php');

@@ -3,7 +3,7 @@
 use ComboStrap\AdsUtility;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
-use ComboStrap\InternalMediaLink;
+use ComboStrap\MediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
@@ -240,16 +240,16 @@ $meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("string");
 /**
  * Internal media
  */
-$meta[InternalMediaLink::CONF_IMAGE_ENABLE] = array('onoff');
+$meta[MediaLink::CONF_IMAGE_ENABLE] = array('onoff');
 
 /**
  * Internal media default linking
  */
-$meta[InternalMediaLink::CONF_DEFAULT_LINKING] = array('multichoice', '_choices' => array(
-    InternalMediaLink::LINKING_DIRECT_VALUE,
-    InternalMediaLink::LINKING_DETAILS_VALUE,
-    InternalMediaLink::LINKING_LINKONLY_VALUE,
-    InternalMediaLink::LINKING_NOLINK_VALUE,
+$meta[MediaLink::CONF_DEFAULT_LINKING] = array('multichoice', '_choices' => array(
+    MediaLink::LINKING_DIRECT_VALUE,
+    MediaLink::LINKING_DETAILS_VALUE,
+    MediaLink::LINKING_LINKONLY_VALUE,
+    MediaLink::LINKING_NOLINK_VALUE,
 ));
 
 /**

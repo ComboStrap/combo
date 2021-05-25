@@ -76,10 +76,10 @@ class Page extends DokuPath
 
     /**
      * Page constructor.
-     * @param $pathId - the path id of a page (it may be relative to the requested page)
+     * @param $path - the path id of a page (it may be relative to the requested page)
      *
      */
-    public function __construct($pathId)
+    public function __construct($path)
     {
 
         /**
@@ -95,7 +95,7 @@ class Page extends DokuPath
         if ($conf['template'] === $strapTemplateName) {
             $sidebars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
         }
-        $lastPathPart = DokuPath::getLastPart($pathId);
+        $lastPathPart = DokuPath::getLastPart($path);
         if (in_array($lastPathPart, $sidebars)) {
 
             $this->isSideBar = true;
@@ -107,9 +107,9 @@ class Page extends DokuPath
              * with the {@link \action_plugin_combo_pageprotection}
              */
             $useAcl = false;
-            $id = page_findnearest($pathId, $useAcl);
+            $id = page_findnearest($path, $useAcl);
             if ($id !== false) {
-                $pathId = $id;
+                $path = $id;
             }
 
             /**
@@ -117,13 +117,13 @@ class Page extends DokuPath
              */
             global $ID;
             $actualNamespace = getNS($ID);
-            $this->logicalId = $pathId;
+            $this->logicalId = $path;
             resolve_pageid($actualNamespace, $logicalBarId, $exists);
 
         }
 
 
-        parent::__construct($pathId, DokuPath::PAGE_TYPE);
+        parent::__construct($path, DokuPath::PAGE_TYPE);
 
     }
 
@@ -242,7 +242,7 @@ class Page extends DokuPath
 
     }
 
-    static function createPageFromPathId($pathId)
+    static function createPagePathFromPath($pathId)
     {
         return new Page($pathId);
     }
@@ -264,7 +264,7 @@ class Page extends DokuPath
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            return self::createPageFromPathId($id)->setCanonical($canonical);
+            return self::createPagePathFromPath($id)->setCanonical($canonical);
         }
 
 
@@ -280,11 +280,11 @@ class Page extends DokuPath
         foreach ($res2arr as $row) {
             $id = $row['ID'];
 
-            return self::createPageFromPathId($id)
+            return self::createPagePathFromPath($id)
                 ->setCanonical($canonical);
         }
 
-        return self::createPageFromPathId($canonical);
+        return self::createPagePathFromPath($canonical);
 
     }
 
@@ -977,7 +977,13 @@ class Page extends DokuPath
             if (empty($firstImageId)) {
                 return null;
             } else {
-                return InternalMediaLink::createMediaLinkFromPathId(DokuPath::SEPARATOR . $firstImageId);
+                // The  metadata store the Id or the url
+                // We transform them to a path id
+                $pathId = $firstImageId;
+                if (!media_isexternal($firstImageId)) {
+                    $pathId = DokuPath::SEPARATOR . $firstImageId;
+                }
+                return MediaLink::createMediaLinkFromPathId($pathId);
             }
         }
         return null;
@@ -985,13 +991,13 @@ class Page extends DokuPath
     }
 
     /**
-     * An array of images that represents the same image
+     * An array of local images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
-     * @return InternalMediaLink[]
+     * @return MediaLink[]
      */
     public
-    function getImageSet()
+    function getLocalImageSet()
     {
 
         /**
@@ -1004,15 +1010,18 @@ class Page extends DokuPath
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = InternalMediaLink::createMediaLinkFromPathId($imageIdFromMeta);
+                    $images[] = MediaLink::createMediaLinkFromPathId($imageIdFromMeta);
                 }
             } else {
-                $images = array(InternalMediaLink::createMediaLinkFromPathId($imageMeta));
+                $images = array(MediaLink::createMediaLinkFromPathId($imageMeta));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
-                if (!empty($this->getFirstImage())) {
-                    $images = array($this->getFirstImage());
+                $firstImage = $this->getFirstImage();
+                if ($firstImage!=null) {
+                    if ($firstImage->getScheme()==DokuPath::LOCAL_SCHEME) {
+                        $images = array($firstImage);
+                    }
                 }
             }
         }
@@ -1022,13 +1031,13 @@ class Page extends DokuPath
 
 
     /**
-     * @return InternalMediaLink
+     * @return MediaLink
      */
     public
     function getImage()
     {
 
-        $images = $this->getImageSet();
+        $images = $this->getLocalImageSet();
         if (sizeof($images) >= 1) {
             return $images[0];
         } else {

@@ -7,7 +7,7 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\InternalMediaLink;
+use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\Tag;
@@ -349,7 +349,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * Image
                      */
                     if (sizeof($imageIllustration) > 0) {
-                        $image = InternalMediaLink::createFromCallStackArray($imageIllustration);
+                        $image = MediaLink::createFromCallStackArray($imageIllustration);
                         $image->getTagAttributes()->addClassName("card-img-top");
                         $renderer->doc .= $image->renderMediaTag();
                     }

@@ -61,6 +61,8 @@ class Call
         "doublequoteopening", // ie the character " in "The"
         "entity", // for instance `...` are transformed in character
         "linebreak",
+        MediaLink::INTERNAL_MEDIA,
+        MediaLink::EXTERNAL_MEDIA,
         /**
          * The inline of combo
          * TODO: Should be deleted when {@link PluginUtility::renderUnmatched()} is not using the array anymore
@@ -276,7 +278,7 @@ class Call
 
         $tagName = $this->getTagName();
         switch ($tagName) {
-            case InternalMediaLink::INTERNAL_MEDIA:
+            case MediaLink::INTERNAL_MEDIA:
                 return $this->call[1];
             default:
                 $data = $this->getPluginData();

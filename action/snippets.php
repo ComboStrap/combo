@@ -120,6 +120,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         foreach ($bars as $barId => $servedFromCache) {
 
             // Add cache information into the head meta
+            // to test
             $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $barId, "content" => var_export($servedFromCache, true));
 
             // Get or store the data

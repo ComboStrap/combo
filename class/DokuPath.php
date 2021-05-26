@@ -219,7 +219,7 @@ class DokuPath extends File
      * @return string
      * Return an path from a id
      */
-    public static function IdToPath($id)
+    public static function IdToAbsolutePath($id)
     {
      return DokuPath::SEPARATOR.$id;
     }

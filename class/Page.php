@@ -114,11 +114,15 @@ class Page extends DokuPath
 
             /**
              * Set the logical id
+             * When no $ID is set (for instance, test),
+             * the logical id is the id
              */
             global $ID;
-            $actualNamespace = getNS($ID);
-            $this->logicalId = $lastPathPart;
-            resolve_pageid($actualNamespace, $this->logicalId, $exists);
+            if ($ID != null) {
+                $actualNamespace = getNS($ID);
+                $this->logicalId = $lastPathPart;
+                resolve_pageid($actualNamespace, $this->logicalId, $exists);
+            }
 
         }
 
@@ -127,7 +131,8 @@ class Page extends DokuPath
 
     }
 
-    public function getLogicalId()
+    public
+    function getLogicalId()
     {
         if ($this->logicalId == null) {
             return $this->getId();
@@ -143,7 +148,8 @@ class Page extends DokuPath
      * Dokuwiki Methodology taken from {@link tpl_metaheaders()}
      * @return string - the Dokuwiki URL
      */
-    public function getUrl()
+    public
+    function getUrl()
     {
         if ($this->isHomePage()) {
             $url = DOKU_URL;
@@ -153,7 +159,8 @@ class Page extends DokuPath
         return $url;
     }
 
-    public static function createPageFromEnvironment()
+    public
+    static function createPageFromEnvironment()
     {
         return new Page(PluginUtility::getPageId());
     }
@@ -215,7 +222,8 @@ class Page extends DokuPath
         return $this->exists();
     }
 
-    private function persistPageAlias($canonical, $alias)
+    private
+    function persistPageAlias($canonical, $alias)
     {
 
         $row = array(
@@ -362,14 +370,16 @@ class Page extends DokuPath
 
     }
 
-    private function setCanonical($canonical)
+    private
+    function setCanonical($canonical)
     {
         $this->canonical = $canonical;
         return $this;
     }
 
 
-    public function isBar()
+    public
+    function isBar()
     {
         global $conf;
         $barsName = array($conf['sidebar']);
@@ -382,7 +392,8 @@ class Page extends DokuPath
         return in_array($this->getName(), $barsName);
     }
 
-    public function isStrapSideBar()
+    public
+    function isStrapSideBar()
     {
 
         return $this->isSideBar && Site::isStrapTemplate();
@@ -390,7 +401,8 @@ class Page extends DokuPath
     }
 
 
-    public function isStartPage()
+    public
+    function isStartPage()
     {
         global $conf;
         return $this->getName() == $conf['start'];
@@ -403,7 +415,8 @@ class Page extends DokuPath
      *
      * @return string
      */
-    public function getCanonical()
+    public
+    function getCanonical()
     {
         if (empty($this->canonical)) {
 
@@ -441,7 +454,8 @@ class Page extends DokuPath
     /**
      * @return array|null the analytics array or null if not in db
      */
-    public function getAnalyticsFromDb()
+    public
+    function getAnalyticsFromDb()
     {
         $sqlite = Sqlite::getSqlite();
         if ($sqlite == null) {
@@ -465,7 +479,8 @@ class Page extends DokuPath
      * Return the metadata stored in the file system
      * @return array|array[]
      */
-    public function getMetadatas()
+    public
+    function getMetadatas()
     {
 
         /**
@@ -482,7 +497,8 @@ class Page extends DokuPath
      *
      * @return mixed the internal links or null
      */
-    public function getInternalLinksFromMeta()
+    public
+    function getInternalLinksFromMeta()
     {
         $metadata = $this->getMetadatas();
         if (key_exists('current', $metadata)) {
@@ -499,7 +515,8 @@ class Page extends DokuPath
         return null;
     }
 
-    public function saveAnalytics(array $analytics)
+    public
+    function saveAnalytics(array $analytics)
     {
 
         $sqlite = Sqlite::getSqlite();
@@ -534,7 +551,8 @@ class Page extends DokuPath
     /**
      * @param string $mode delete the cache for the format XHTML and {@link Analytics::RENDERER_NAME_MODE}
      */
-    public function deleteCache($mode = "xhtml")
+    public
+    function deleteCache($mode = "xhtml")
     {
 
         if ($this->exists()) {
@@ -550,7 +568,8 @@ class Page extends DokuPath
     }
 
 
-    public function isAnalyticsCached()
+    public
+    function isAnalyticsCached()
     {
 
         $cache = new CacheRenderer($this->getId(), $this->getFileSystemPath(), Analytics::RENDERER_NAME_MODE);
@@ -562,7 +581,8 @@ class Page extends DokuPath
      *
      * @return string - the full path to the meta file
      */
-    public function getMetaFile()
+    public
+    function getMetaFile()
     {
         return metaFN($this->getId(), '.meta');
     }
@@ -570,7 +590,8 @@ class Page extends DokuPath
     /**
      * @param $reason - a string with the reason
      */
-    public function deleteCacheAndAskAnalyticsRefresh($reason)
+    public
+    function deleteCacheAndAskAnalyticsRefresh($reason)
     {
         $this->deleteCache(Analytics::RENDERER_NAME_MODE);
         $sqlite = Sqlite::getSqlite();
@@ -606,7 +627,8 @@ class Page extends DokuPath
 
     }
 
-    public function isAnalyticsStale()
+    public
+    function isAnalyticsStale()
     {
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
@@ -626,7 +648,8 @@ class Page extends DokuPath
      * instead
      * @return mixed analytics as array
      */
-    public function processAnalytics()
+    public
+    function processAnalytics()
     {
 
         /**
@@ -657,7 +680,8 @@ class Page extends DokuPath
      * @return mixed
      *
      */
-    public function getAnalyticsFromFs($cache = true)
+    public
+    function getAnalyticsFromFs($cache = true)
     {
         if ($cache) {
             /**
@@ -678,7 +702,8 @@ class Page extends DokuPath
      * @param boolean $newIndicator true if this is a low quality page rank false otherwise
      */
 
-    public function setLowQualityIndicator($newIndicator)
+    public
+    function setLowQualityIndicator($newIndicator)
     {
         $actualIndicator = $this->getLowQualityIndicator();
         if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
@@ -708,7 +733,8 @@ class Page extends DokuPath
     /**
      * @return Page[] the backlinks
      */
-    public function getBacklinks()
+    public
+    function getBacklinks()
     {
         $backlinks = array();
         foreach (ft_backlinks($this->getId()) as $backlinkId) {
@@ -721,7 +747,8 @@ class Page extends DokuPath
      * @return int - An AUTH_ value for this page for the current logged user
      *
      */
-    public function getAuthAclValue()
+    public
+    function getAuthAclValue()
     {
         return auth_quickaclcheck($this->getId());
     }
@@ -748,7 +775,8 @@ class Page extends DokuPath
     }
 
 
-    public function getLowQualityIndicator()
+    public
+    function getLowQualityIndicator()
     {
 
         $low = p_get_metadata($this->getId(), self::LOW_QUALITY_PAGE_INDICATOR);
@@ -763,7 +791,8 @@ class Page extends DokuPath
     /**
      * @return bool - if a {@link Page::processAnalytics()} for the page should occurs
      */
-    public function shouldAnalyticsProcessOccurs()
+    public
+    function shouldAnalyticsProcessOccurs()
     {
         /**
          * If cache is on
@@ -812,7 +841,8 @@ class Page extends DokuPath
     }
 
 
-    public function getH1()
+    public
+    function getH1()
     {
 
         $heading = p_get_metadata($this->getId(), Analytics::H1, METADATA_RENDER_USING_SIMPLE_CACHE);
@@ -827,7 +857,8 @@ class Page extends DokuPath
     /**
      * Return the Title
      */
-    public function getTitle()
+    public
+    function getTitle()
     {
 
         $id = $this->getId();
@@ -844,7 +875,8 @@ class Page extends DokuPath
      * If true, the page is quality monitored (a note is shown to the writer)
      * @return bool|mixed
      */
-    public function isQualityMonitored()
+    public
+    function isQualityMonitored()
     {
         $dynamicQualityIndicator = p_get_metadata($this->getId(), action_plugin_combo_qualitymessage::DISABLE_INDICATOR, METADATA_RENDER_USING_SIMPLE_CACHE);
         if ($dynamicQualityIndicator === null) {
@@ -857,7 +889,8 @@ class Page extends DokuPath
     /**
      * @return string|null the title, or h1 if empty or the id if empty
      */
-    public function getTitleNotEmpty()
+    public
+    function getTitleNotEmpty()
     {
         $pageTitle = $this->getTitle();
         if ($pageTitle == null) {
@@ -871,7 +904,8 @@ class Page extends DokuPath
 
     }
 
-    public function getH1NotEmpty()
+    public
+    function getH1NotEmpty()
     {
 
         $h1Title = $this->getH1();
@@ -886,7 +920,8 @@ class Page extends DokuPath
 
     }
 
-    public function getDescription()
+    public
+    function getDescription()
     {
 
         $this->processDescriptionIfNeeded();
@@ -903,7 +938,8 @@ class Page extends DokuPath
     /**
      * @return string - the description or the dokuwiki generated description
      */
-    public function getDescriptionOrElseDokuWiki()
+    public
+    function getDescriptionOrElseDokuWiki()
     {
         $this->processDescriptionIfNeeded();
         return $this->description;
@@ -963,7 +999,8 @@ class Page extends DokuPath
     }
 
 
-    public function getFirstImage()
+    public
+    function getFirstImage()
     {
 
         $relation = $this->getCurrentMetadata('relation');
@@ -1046,7 +1083,8 @@ class Page extends DokuPath
      *
      * @return string
      */
-    public function getAuthor()
+    public
+    function getAuthor()
     {
         $author = $this->getPersistentMetadata('creator');
         return ($author ? $author : null);
@@ -1057,14 +1095,16 @@ class Page extends DokuPath
      *
      * @return string
      */
-    public function getAuthorID()
+    public
+    function getAuthorID()
     {
         $user = $this->getPersistentMetadata('user');
         return ($user ? $user : null);
     }
 
 
-    private function getPersistentMetadata($key)
+    private
+    function getPersistentMetadata($key)
     {
         if (isset($this->getMetadatas()['persistent'][$key])) {
             return $this->getMetadatas()['persistent'][$key];
@@ -1078,7 +1118,8 @@ class Page extends DokuPath
      * the first time, this is the creation date
      * @return false|string|null
      */
-    public function getModifiedDateString()
+    public
+    function getModifiedDateString()
     {
         $modified = $this->getModifiedTimestamp();
         if (!empty($modified)) {
@@ -1088,7 +1129,8 @@ class Page extends DokuPath
         }
     }
 
-    private function getCurrentMetadata($key)
+    private
+    function getCurrentMetadata($key)
     {
         $key = $this->getMetadatas()['current'][$key];
         return ($key ? $key : null);
@@ -1099,7 +1141,8 @@ class Page extends DokuPath
      *
      * @return int
      */
-    public function getCreatedTimestamp()
+    public
+    function getCreatedTimestamp()
     {
         $created = $this->getPersistentMetadata('date')['created'];
         return ($created ? $created : null);;
@@ -1113,7 +1156,8 @@ class Page extends DokuPath
      *
      * @return int
      */
-    public function getModifiedTimestamp()
+    public
+    function getModifiedTimestamp()
     {
         $modified = $this->getCurrentMetadata('date')['modified'];
         return ($modified ? $modified : null);
@@ -1123,7 +1167,8 @@ class Page extends DokuPath
      * Creation date can not be null
      * @return false|string
      */
-    public function getCreatedDateString()
+    public
+    function getCreatedDateString()
     {
 
         $created = $this->getCreatedTimestamp();
@@ -1139,7 +1184,8 @@ class Page extends DokuPath
     /**
      * Refresh the metadata (used only in test)
      */
-    public function refreshMetadata()
+    public
+    function refreshMetadata()
     {
 
         if ($this->metadatas == null) {
@@ -1167,7 +1213,8 @@ class Page extends DokuPath
 
     }
 
-    public function getCountry()
+    public
+    function getCountry()
     {
 
         $country = $this->getPersistentMetadata("country");
@@ -1184,7 +1231,8 @@ class Page extends DokuPath
 
     }
 
-    public function getLang()
+    public
+    function getLang()
     {
         $lang = $this->getPersistentMetadata("lang");
         if (empty($lang)) {
@@ -1196,13 +1244,15 @@ class Page extends DokuPath
         return $lang;
     }
 
-    public function isHomePage()
+    public
+    function isHomePage()
     {
         global $conf;
         return $this->getId() == $conf['start'];
     }
 
-    public function getMetadata($key)
+    public
+    function getMetadata($key)
     {
         $persistentMetadata = $this->getPersistentMetadata($key);
         if (empty($persistentMetadata)) {
@@ -1211,7 +1261,8 @@ class Page extends DokuPath
         return $persistentMetadata;
     }
 
-    public function getPublishedTimestamp()
+    public
+    function getPublishedTimestamp()
     {
         $persistentMetadata = $this->getPersistentMetadata(Publication::META_KEY_PUBLISHED);
         if (!empty($persistentMetadata)) {
@@ -1230,7 +1281,8 @@ class Page extends DokuPath
     /**
      * @return false|int|string|null
      */
-    public function getPublishedElseCreationTimeStamp()
+    public
+    function getPublishedElseCreationTimeStamp()
     {
         $publishedDate = $this->getPublishedTimestamp();
         if (empty($publishedDate)) {
@@ -1245,7 +1297,8 @@ class Page extends DokuPath
      * @param $user
      * @return bool if the page should be protected
      */
-    public function isProtected($user = '')
+    public
+    function isProtected($user = '')
     {
         $protected = false;
         if (!Auth::isLoggedIn($user)) {
@@ -1275,12 +1328,14 @@ class Page extends DokuPath
 
     }
 
-    public function isLatePublication()
+    public
+    function isLatePublication()
     {
         return $this->getPublishedElseCreationTimeStamp() > time();
     }
 
-    public function getCanonicalUrl()
+    public
+    function getCanonicalUrl()
     {
         if (!empty($this->getCanonical())) {
             return getBaseURL(true) . strtr($this->getCanonical(), ':', '/');
@@ -1288,7 +1343,8 @@ class Page extends DokuPath
         return null;
     }
 
-    public function getCanonicalUrlOrDefault()
+    public
+    function getCanonicalUrlOrDefault()
     {
         $url = $this->getCanonicalUrl();
         if (empty($url)) {
@@ -1301,7 +1357,8 @@ class Page extends DokuPath
      *
      * @return string|null - the locale facebook way
      */
-    public function getLocale()
+    public
+    function getLocale()
     {
         $lang = $this->getLang();
         if (!empty($lang)) {
@@ -1315,7 +1372,8 @@ class Page extends DokuPath
         return null;
     }
 
-    private function processDescriptionIfNeeded()
+    private
+    function processDescriptionIfNeeded()
     {
 
         if ($this->descriptionOrigin == null) {
@@ -1354,7 +1412,8 @@ class Page extends DokuPath
 
     }
 
-    public function hasXhtmlCache()
+    public
+    function hasXhtmlCache()
     {
 
         $renderCache = $this->getRenderCache("xhtml");
@@ -1364,7 +1423,8 @@ class Page extends DokuPath
         return file_exists($renderCache->cache);
     }
 
-    public function hasInstructionCache()
+    public
+    function hasInstructionCache()
     {
 
         $instructionCache = $this->getInstructionsCache();
@@ -1375,7 +1435,8 @@ class Page extends DokuPath
 
     }
 
-    public function render()
+    public
+    function render()
     {
 
         if (!$this->isStrapSideBar()) {
@@ -1458,7 +1519,8 @@ class Page extends DokuPath
      * Output of {@link DokuWiki_Syntax_Plugin::render()}
      *
      */
-    private function getRenderCache($outputFormat)
+    private
+    function getRenderCache($outputFormat)
     {
 
         if ($this->isStrapSideBar()) {
@@ -1479,7 +1541,8 @@ class Page extends DokuPath
      * @return CacheInstructions
      * The cache of the {@link CallStack call stack} (ie list of output of {@link DokuWiki_Syntax_Plugin::handle})
      */
-    private function getInstructionsCache()
+    private
+    function getInstructionsCache()
     {
 
         if ($this->isStrapSideBar()) {
@@ -1500,7 +1563,8 @@ class Page extends DokuPath
 
     }
 
-    public function deleteXhtmlCache()
+    public
+    function deleteXhtmlCache()
     {
         $this->deleteCache("xhtml");
     }

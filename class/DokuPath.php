@@ -214,6 +214,16 @@ class DokuPath extends File
         return $lastPathPart;
     }
 
+    /**
+     * @param $id
+     * @return string
+     * Return an path from a id
+     */
+    public static function IdToPath($id)
+    {
+     return DokuPath::SEPARATOR.$id;
+    }
+
     public function getName()
     {
         /**

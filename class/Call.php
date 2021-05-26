@@ -63,6 +63,7 @@ class Call
         "doublequoteopening", // ie the character " in "The"
         "entity", // for instance `...` are transformed in character
         "linebreak",
+        "externallink",
         MediaLink::INTERNAL_MEDIA,
         MediaLink::EXTERNAL_MEDIA,
         /**

@@ -109,7 +109,7 @@ class Page extends DokuPath
             $useAcl = false;
             $id = page_findnearest($path, $useAcl);
             if ($id !== false) {
-                $path = $id;
+                $path = DokuPath::SEPARATOR . $id;
             }
 
             /**
@@ -117,8 +117,8 @@ class Page extends DokuPath
              */
             global $ID;
             $actualNamespace = getNS($ID);
-            $this->logicalId = $path;
-            resolve_pageid($actualNamespace, $logicalBarId, $exists);
+            $this->logicalId = $lastPathPart;
+            resolve_pageid($actualNamespace, $this->logicalId, $exists);
 
         }
 
@@ -553,7 +553,7 @@ class Page extends DokuPath
     public function isAnalyticsCached()
     {
 
-        $cache = new CacheRenderer($this->getId(), $this->getFilePath(), Analytics::RENDERER_NAME_MODE);
+        $cache = new CacheRenderer($this->getId(), $this->getFileSystemPath(), Analytics::RENDERER_NAME_MODE);
         $cacheFile = $cache->cache;
         return file_exists($cacheFile);
     }
@@ -910,11 +910,6 @@ class Page extends DokuPath
     }
 
 
-    public function getFilePath()
-    {
-        return wikiFN($this->getId());
-    }
-
     public
     function getContent()
     {
@@ -1018,8 +1013,8 @@ class Page extends DokuPath
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
                 $firstImage = $this->getFirstImage();
-                if ($firstImage!=null) {
-                    if ($firstImage->getScheme()==DokuPath::LOCAL_SCHEME) {
+                if ($firstImage != null) {
+                    if ($firstImage->getScheme() == DokuPath::LOCAL_SCHEME) {
                         $images = array($firstImage);
                     }
                 }
@@ -1471,11 +1466,11 @@ class Page extends DokuPath
             /**
              * Logical id is the scope and part of the key
              */
-            return new CacheByLogicalKey($this->getLogicalId(), $this->getFilePath(), $outputFormat);
+            return new CacheByLogicalKey($this->getLogicalId(), $this->getFileSystemPath(), $outputFormat);
 
         } else {
 
-            return new CacheRenderer($this->getId(), $this->getFilePath(), $outputFormat);
+            return new CacheRenderer($this->getId(), $this->getFileSystemPath(), $outputFormat);
 
         }
     }
@@ -1495,11 +1490,11 @@ class Page extends DokuPath
              * because we can't overide the constructor of {@link CacheInstructions}
              * but they should used the same interface (ie manipulate array data)
              */
-            return new CacheInstructionsByLogicalKey($this->getLogicalId(), $this->getFilePath());
+            return new CacheInstructionsByLogicalKey($this->getLogicalId(), $this->getFileSystemPath());
 
         } else {
 
-            return new CacheInstructions($this->getId(), $this->getFilePath());
+            return new CacheInstructions($this->getId(), $this->getFileSystemPath());
 
         }
 

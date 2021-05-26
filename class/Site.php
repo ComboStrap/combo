@@ -239,5 +239,11 @@ class Site
         return self::getUrl() . "/lib/exe/ajax.php";
     }
 
+    public static function getPageDirectory()
+    {
+        global $conf;
+        return $conf['datadir'];
+    }
+
 
 }

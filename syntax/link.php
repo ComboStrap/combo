@@ -95,6 +95,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
             "internallink",
             "interwikilink",
             "emaillink",
+            "emphasis", // double slash can not be used inside to preserve the possibility to write an URL in the description
             //"emphasis_open", // italic use // and therefore take over a link as description which is not handy when copying a tweet
             //"emphasis_close",
             //"acrnonym"

@@ -13,17 +13,38 @@ class TextAlign
      * @param TagAttributes $attributes
      * https://getbootstrap.com/docs/5.0/utilities/text/#text-alignment
      */
-    public static function processTextAlign(&$attributes){
+    public static function processTextAlign(&$attributes)
+    {
 
         if ($attributes->hasComponentAttribute(self::ATTRIBUTE_NAME)) {
             $textAlignValue = trim($attributes->getValueAndRemove(self::ATTRIBUTE_NAME));
 
             $bootstrapMajorVersion = Bootstrap::getBootStrapMajorVersion();
-            if ($bootstrapMajorVersion==Bootstrap::BootStrapFourMajorVersion) {
-                $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, $textAlignValue);
+            if ($bootstrapMajorVersion == Bootstrap::BootStrapFourMajorVersion) {
+
+                // Bootstrap 4
+                switch ($textAlignValue) {
+                    case "left":
+                    case "start":
+                        $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, "left");
+                        break;
+                    case "right":
+                    case "end":
+                        $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, "right");
+                        break;
+                    case "center":
+                    case "justify":
+                        $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, $textAlignValue);
+                        break;
+                    default:
+                        LogUtility::msg("The text-align value ($textAlignValue) is unknown.", self::CANONICAL);
+                        break;
+                }
+
             } else {
+
                 // Bootstrap 5
-                switch ($textAlignValue){
+                switch ($textAlignValue) {
                     case "start":
                     case "left": // from bs4
                         $attributes->addClassName("text-start");
@@ -39,7 +60,7 @@ class TextAlign
                         $attributes->addStyleDeclaration(self::ATTRIBUTE_NAME, $textAlignValue);
                         break;
                     default:
-                        LogUtility::msg("The text-align value ($textAlignValue) is unknown.",self::CANONICAL);
+                        LogUtility::msg("The text-align value ($textAlignValue) is unknown.", self::CANONICAL);
                         break;
                 }
             }

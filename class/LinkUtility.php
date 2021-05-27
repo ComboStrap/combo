@@ -370,6 +370,10 @@ class LinkUtility
                 /**
                  * If this is a low quality internal page,
                  * print a shallow link for the anonymous user
+                 *
+                 * We could also use the `pointer-events:none!important ` css property
+                 * to avoid a navigation
+                 * https://getbootstrap.com/docs/5.0/utilities/interactions/#pointer-events
                  */
                 $lowLink = $this->isProtectedLink();
                 if ($lowLink) {

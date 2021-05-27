@@ -1,0 +1,2 @@
+/* p has a default margin via the brower stylesheet */
+.note-combo > p:last-child { margin-bottom: 0; }

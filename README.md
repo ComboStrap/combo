@@ -11,6 +11,7 @@
 [ComboStrap](https://combostrap.com) the publication platform, provides:
 
   * [Markdown like UI Components (Bootstrap based)](https://combostrap.com/ui/components)
+  * [Easy Styling](https://combostrap.com/styling)
   * [Seo](https://combostrap.com/seo)
   * [Social (Google, Twitter, Facebook)](https://combostrap.com/social)
   * [Blazing Fast Performance (Lazy loading, responsive image)](https://combostrap.com/performance)
@@ -20,7 +21,6 @@
   * [Quality Control](https://combostrap.com/quality)
   * [URL Management](https://combostrap.com/url/manager)
   * [Web Metadata Management](https://combostrap.com/metadata/manager)
-  * [Easy Styling](https://combostrap.com/styling)
   * [First Class Image (responsive resizing, native svg)](https://combostrap.com/image)
   * [Easy Emphasis](https://combostrap.com/emphasis)
   * [Native Icon Support](https://combostrap.com/icon)

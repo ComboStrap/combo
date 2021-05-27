@@ -39,7 +39,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'stack';
     }
 
     /**

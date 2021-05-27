@@ -2,15 +2,27 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
-
-class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
+/**
+ * Class syntax_plugin_combo_text
+ * A text block that permits to style
+ * paragraph at once
+ *
+ * The output will be a series of {@link syntax_plugin_combo_para paragraph}
+ * with the same properties
+ *
+ * It permits to have several paragraph
+ */
+class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "typo";
+    const TAG = "text";
+    const TAGS = ["typo", self::TAG];
 
     /**
      * Syntax Type.
@@ -20,7 +32,7 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'formatting';
+        return 'paragraphs';
     }
 
     /**
@@ -34,7 +46,7 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'stack';
     }
 
     /**
@@ -48,7 +60,7 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('formatting', 'substition', 'paragraphs');
     }
 
     public function accepts($mode)
@@ -68,15 +80,18 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::TAGS as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
     }
 
 
     function postConnect()
     {
-
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::TAGS as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
@@ -86,29 +101,25 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $attributes = PluginUtility::getTagAttributes($match);
-                if (isset($attributes["type"])) {
-                    $type = $attributes["type"];
-                    if ($type == "lead") {
-                        PluginUtility::addClass2Attributes("lead", $attributes);
-                    }
-                }
-                $html = "<p " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">";
+                $attributes = TagAttributes::createFromTagMatch($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
-
-                // Important otherwise we don't get an exit in the render
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => "</p>");
+                /**
+                 * Transform all paragraphs
+                 * with the type as class
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $type = $openingCall->getType();
+                $callStack->processEolToEndStack($type);
+                return array(PluginUtility::STATE => $state);
 
 
         }
@@ -133,15 +144,16 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
+                case DOKU_LEXER_EXIT :
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    /**
+                     * The {@link DOKU_LEXER_EXIT} of the {@link syntax_plugin_combo_text::handle()}
+                     * has already created in the callstack the {@link syntax_plugin_combo_para} call
+                     */
+                    $renderer->doc .= "";
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    break;
-
-                case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
                     break;
             }
             return true;

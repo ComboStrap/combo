@@ -5,6 +5,7 @@
 use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
+use ComboStrap\TextAlign;
 
 if (!defined('DOKU_INC')) die();
 
@@ -102,9 +103,21 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $attributes = TagAttributes::createFromTagMatch($match);
+
+                /**
+                 * To not repeat `text` between the tag name and
+                 * the attribute, the text-align is called align for the text component
+                 */
+                if ($attributes->hasComponentAttribute("align")){
+                    $value = $attributes->getValueAndRemove("align");
+                    $attributes->addComponentAttributeValue(TextAlign::ATTRIBUTE_NAME, $value);
+                }
+
+                $callStackArray = $attributes->toCallStackArray();
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $callStackArray
                 );
 
             case DOKU_LEXER_UNMATCHED :

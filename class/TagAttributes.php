@@ -353,6 +353,7 @@ class TagAttributes
              * Process text attributes
              */
             LineSpacing::processLineSpacingAttributes($this);
+            TextAlign::processTextAlign($this);
 
             /**
              * Process the style attributes if any

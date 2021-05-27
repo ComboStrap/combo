@@ -43,6 +43,7 @@ require_once('Spacing.php');
 require_once('Sqlite.php');
 require_once('StringUtility.php');
 require_once('StyleUtility.php');
+require_once('TextAlign.php');
 require_once('ThirdMediaLink.php');
 require_once('TagAttributes.php');
 require_once('XmlDocument.php');
@@ -461,12 +462,6 @@ class PluginUtility
             }
         }
 
-
-        $textAlign = "text-align";
-        if ($attributes->hasComponentAttribute($textAlign)) {
-            $textAlignValue = trim($attributes->getValueAndRemove($textAlign));
-            $attributes->addStyleDeclaration($textAlign, $textAlignValue);
-        }
 
         Shadow::process($attributes);
 

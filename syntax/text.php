@@ -117,8 +117,8 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
                  */
                 $callStack = CallStack::createFromHandler($handler);
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $type = $openingCall->getType();
-                $callStack->processEolToEndStack($type);
+                $attributes = $openingCall->getAttributes();
+                $callStack->processEolToEndStack($attributes);
                 return array(PluginUtility::STATE => $state);
 
 

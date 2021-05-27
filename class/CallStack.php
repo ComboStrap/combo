@@ -156,12 +156,12 @@ class CallStack
      * state of {@link SyntaxPlugin::handle()} to create paragraph
      * with the class given as parameter
      *
-     * @param $class - the class of the paragraph
+     * @param $attributes - the attributes in an array callstack form for the paragraph
      */
-    public function processEolToEndStack($class = "")
+    public function processEolToEndStack($attributes = [])
     {
 
-        \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack($this, $class);
+        \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack($this, $attributes);
 
     }
 

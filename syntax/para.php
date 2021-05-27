@@ -174,13 +174,20 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
                 $state = $data[PluginUtility::STATE];
+
                 switch ($state) {
                     case DOKU_LEXER_ENTER:
-                        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                        if ($tagAttributes->hasComponentAttribute(TagAttributes::TYPE_KEY)){
+                            $class = $tagAttributes->getType();
+                            $tagAttributes->addClassName($class);
+                        }
                         $renderer->doc .= $tagAttributes->toHtmlEnterTag("p");
                         break;
                     case DOKU_LEXER_SPECIAL:
-                        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
                         $renderer->doc .= $tagAttributes->toHtmlEnterTag("p");
                         $renderer->doc .= "</p>";
                         break;
@@ -225,14 +232,11 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      * and transformed to `p_open` and `p_close` via {@link \dokuwiki\Parsing\Handler\Block::process()}
      *
      * @param \ComboStrap\CallStack $callstack
-     * @param $class
+     * @param $attributes - the attributes passed to the paragraph
      */
-    public static function fromEolToParagraphUntilEndOfStack(&$callstack, $class)
+    public static function fromEolToParagraphUntilEndOfStack(&$callstack, $attributes)
     {
-        /**
-         * The attributes passed to the paragraph
-         */
-        $attributes = array("class" => $class);
+
 
         /**
          * The syntax plugin that implements the paragraph

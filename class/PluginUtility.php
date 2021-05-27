@@ -11,39 +11,42 @@ use dokuwiki\Extension\SyntaxPlugin;
  * and
  * all classes are added in plugin utility
  */
-require_once(__DIR__ . '/Animation.php');
-require_once(__DIR__ . '/Background.php');
-require_once(__DIR__ . '/Bootstrap.php');
-require_once(__DIR__ . '/CacheMedia.php');
-require_once(__DIR__ . '/CacheByLogicalKey.php');
-require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
-require_once(__DIR__ . '/Call.php');
-require_once(__DIR__ . '/CallStack.php');
-require_once(__DIR__ . '/ColorUtility.php');
-require_once(__DIR__ . '/Dimension.php');
-require_once(__DIR__ . '/FloatAttribute.php');
-require_once(__DIR__ . '/FsWikiUtility.php');
-require_once(__DIR__ . '/File.php');
-require_once(__DIR__ . '/Hover.php');
-require_once(__DIR__ . '/HtmlUtility.php');
-require_once(__DIR__ . '/Icon.php');
-require_once(__DIR__ . '/MediaLink.php');
-require_once(__DIR__ . '/LogUtility.php');
-require_once(__DIR__ . '/Page.php');
-require_once(__DIR__ . '/Position.php');
-require_once(__DIR__ . '/Prism.php');
-require_once(__DIR__ . '/RenderUtility.php');
-require_once(__DIR__ . '/Resources.php');
-require_once(__DIR__ . '/Skin.php');
-require_once(__DIR__ . '/Shadow.php');
-require_once(__DIR__ . '/SnippetManager.php');
-require_once(__DIR__ . '/Sqlite.php');
-require_once(__DIR__ . '/StringUtility.php');
-require_once(__DIR__ . '/StyleUtility.php');
-require_once(__DIR__ . '/ThirdMediaLink.php');
-require_once(__DIR__ . '/TagAttributes.php');
-require_once(__DIR__ . '/XmlDocument.php');
-require_once(__DIR__ . '/XmlUtility.php');
+require_once('Align.php');
+require_once('Animation.php');
+require_once('Background.php');
+require_once('Bootstrap.php');
+require_once('CacheMedia.php');
+require_once('CacheByLogicalKey.php');
+require_once('CacheInstructionsByLogicalKey.php');
+require_once('Call.php');
+require_once('CallStack.php');
+require_once('ColorUtility.php');
+require_once('Dimension.php');
+require_once('FloatAttribute.php');
+require_once('FsWikiUtility.php');
+require_once('File.php');
+require_once('Hover.php');
+require_once('HtmlUtility.php');
+require_once('Icon.php');
+require_once('MediaLink.php');
+require_once('LineSpacing.php');
+require_once('LogUtility.php');
+require_once('Page.php');
+require_once('Position.php');
+require_once('Prism.php');
+require_once('RenderUtility.php');
+require_once('Resources.php');
+require_once('Skin.php');
+require_once('Shadow.php');
+require_once('SnippetManager.php');
+require_once('Spacing.php');
+require_once('Sqlite.php');
+require_once('StringUtility.php');
+require_once('StyleUtility.php');
+require_once('ThirdMediaLink.php');
+require_once('TagAttributes.php');
+require_once('XmlDocument.php');
+require_once('XmlUtility.php');
 
 /**
  * Class url static
@@ -124,7 +127,7 @@ class PluginUtility
     static function init()
     {
 
-        $pluginInfoFile = __DIR__ . '/../plugin.info.txt';
+        $pluginInfoFile = '../plugin.info.txt';
         self::$INFO_PLUGIN = confToHash($pluginInfoFile);
         self::$PLUGIN_NAME = 'ComboStrap';
         global $lang;
@@ -678,93 +681,6 @@ class PluginUtility
     }
 
     /**
-     * @param TagAttributes $attributes
-     */
-    public
-    static function processAlignAttributes(&$attributes)
-    {
-        // The class shortcut
-        $align = TagAttributes::ALIGN_KEY;
-        if ($attributes->hasComponentAttribute($align)) {
-
-            $alignValue = $attributes->getValueAndRemove($align);
-
-            switch ($alignValue) {
-                case "center":
-                    $attributes->addClassName(PluginUtility::CENTER_CLASS);
-                    break;
-                case "right":
-                    $attributes->addStyleDeclaration("margin-left", "auto");
-                    $attributes->addStyleDeclaration("width", "fit-content");
-                    break;
-            }
-
-            /**
-             * For inline element,
-             * center should be a block
-             * (svg is not a block by default for instance)
-             * !
-             * this should not be the case for flex block such as a row
-             * therefore the condition
-             * !
-             */
-            if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
-                $attributes->addClassName("d-block");
-            }
-        }
-    }
-
-    /**
-     * Process the attributes that have an impact on the class
-     * @param TagAttributes $attributes
-     */
-    public
-    static function processSpacingAttributes(&$attributes)
-    {
-
-        // Spacing is just a class
-        $spacing = "spacing";
-        if ($attributes->hasComponentAttribute($spacing)) {
-
-            $spacingValue = $attributes->getValueAndRemove($spacing);
-
-            $spacingNames = preg_split("/\s/", $spacingValue);
-            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-            foreach ($spacingNames as $spacingClass) {
-                if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
-
-                    // The sides r and l has been renamed to e and s
-                    // https://getbootstrap.com/docs/5.0/migration/#utilities-2
-                    //
-
-                    // https://getbootstrap.com/docs/5.0/utilities/spacing/
-                    // By default, we consider tha there is no size and breakpoint
-                    $sizeAndBreakPoint = "";
-                    $propertyAndSide = $spacingClass;
-
-                    $minusCharacter = "-";
-                    $minusLocation = strpos($spacingClass, $minusCharacter);
-                    if ($minusLocation !== false) {
-                        // There is no size or break point
-                        $sizeAndBreakPoint = substr($spacingClass, $minusLocation + 1);
-                        $propertyAndSide = substr($spacingClass, 0, $minusLocation);
-                    }
-                    $propertyAndSide = str_replace("r", "e", $propertyAndSide);
-                    $propertyAndSide = str_replace("l", "s", $propertyAndSide);
-                    if ($sizeAndBreakPoint === "") {
-                        $spacingClass = $propertyAndSide;
-                    } else {
-                        $spacingClass = $propertyAndSide . $minusCharacter . $sizeAndBreakPoint;
-                    }
-
-                }
-                $attributes->addClassName($spacingClass);
-            }
-        }
-
-    }
-
-    /**
      * Add a style property to the attributes
      * @param $property
      * @param $value
@@ -1165,7 +1081,7 @@ class PluginUtility
 
     public static function loadStrapUtilityTemplate()
     {
-        $templateUtilitFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
+        $templateUtilitFile = '../../../tpl/strap/class/TplUtility.php';
         if (file_exists($templateUtilitFile)) {
             /** @noinspection PhpIncludeInspection */
             require_once($templateUtilitFile);

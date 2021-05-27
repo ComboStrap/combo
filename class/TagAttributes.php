@@ -72,6 +72,7 @@ class TagAttributes
 
     const CANONICAL = "tag";
     const DISPLAY = "display";
+    const CLASS_KEY = "class";
 
 
     /**
@@ -230,13 +231,13 @@ class TagAttributes
     public function addClassName($className)
     {
 
-        $this->addComponentAttributeValue('class', $className);
+        $this->addComponentAttributeValue(self::CLASS_KEY, $className);
 
     }
 
     public function getClass()
     {
-        return $this->getValue('class');
+        return $this->getValue(self::CLASS_KEY);
     }
 
     public function getStyle()
@@ -345,8 +346,13 @@ class TagAttributes
             /**
              * Process the attributes that have an effect on the class
              */
-            PluginUtility::processSpacingAttributes($this);
-            PluginUtility::processAlignAttributes($this);
+            Spacing::processSpacingAttributes($this);
+            Align::processAlignAttributes($this);
+
+            /**
+             * Process text attributes
+             */
+            LineSpacing::processLineSpacingAttributes($this);
 
             /**
              * Process the style attributes if any

@@ -234,7 +234,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 $callStack->moveToEnd();
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 $callStack->insertEolIfNextCallIsNotEolOrBlock(); // a paragraph is mandatory
-                $callStack->processEolToEndStack("card-text");
+
+                $callStack->processEolToEndStack([TagAttributes::CLASS_KEY => "card-text"]);
 
                 // Insert the card body enter
                 $callStack->moveToEnd();
@@ -397,7 +398,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_metadata $renderer */
             $state = $data[PluginUtility::STATE];
-            if ($state==DOKU_LEXER_ENTER) {
+            if ($state == DOKU_LEXER_ENTER) {
 
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);

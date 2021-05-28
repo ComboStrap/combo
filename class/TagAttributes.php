@@ -698,5 +698,16 @@ class TagAttributes
         return $this->getValue(self::TYPE_KEY);
     }
 
+    /**
+     * @param $attributeName
+     * @return ConditionalValue
+     */
+    public function getConditionalValueAndRemove($attributeName)
+    {
+        $value = $this->getConditionalValueAndRemove($attributeName);
+        return new ConditionalValue($value);
+
+    }
+
 
 }

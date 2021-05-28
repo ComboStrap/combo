@@ -17,8 +17,9 @@ class TextAlign
     {
 
         if ($attributes->hasComponentAttribute(self::ATTRIBUTE_NAME)) {
-            $textAlignValue = trim($attributes->getValueAndRemove(self::ATTRIBUTE_NAME));
+            $textAlignValue = $attributes->getConditionalValueAndRemove(self::ATTRIBUTE_NAME);
 
+            $breakpoint =
             $bootstrapMajorVersion = Bootstrap::getBootStrapMajorVersion();
             if ($bootstrapMajorVersion == Bootstrap::BootStrapFourMajorVersion) {
 

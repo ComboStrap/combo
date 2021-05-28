@@ -14,6 +14,7 @@ use dokuwiki\Extension\SyntaxPlugin;
 require_once('Align.php');
 require_once('Animation.php');
 require_once('Background.php');
+require_once('Boldness.php');
 /**
  * There is already a bootstrap file
  * and it seems that php is loosing

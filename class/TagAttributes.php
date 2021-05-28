@@ -364,7 +364,9 @@ class TagAttributes
             /**
              * Background
              */
+            Opacity::processOpacityAttribute($this);
             Background::processBackgroundAttributes($this);
+
 
             /**
              * Skin Attribute

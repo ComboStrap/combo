@@ -13,7 +13,6 @@ class Background
      * Background Logical attribute / Public
      */
     const BACKGROUND_COLOR = 'background-color';
-    const BACKGROUND_OPACITY = "opacity";
     const BACKGROUND_FILL = "fill";
 
 
@@ -76,7 +75,7 @@ class Background
                          */
                         $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_IMAGE, $background[self::BACKGROUND_IMAGE]);
                         $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_COLOR, $background[self::BACKGROUND_COLOR]);
-                        $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_OPACITY, $background[self::BACKGROUND_OPACITY]);
+                        $tagAttributes->addComponentAttributeValueIfNotEmpty(Opacity::OPACITY_ATTRIBUTE, $background[Opacity::OPACITY_ATTRIBUTE]);
                         $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_POSITION, $background[self::BACKGROUND_POSITION]);
                         $tagAttributes->addComponentAttributeValueIfNotEmpty(self::BACKGROUND_FILL, $background[self::BACKGROUND_FILL]);
                     } else {
@@ -174,14 +173,12 @@ class Background
             }
         }
         if (!empty($backgroundImageStyleValue)) {
-            if ($tagAttributes->hasComponentAttribute(self::BACKGROUND_OPACITY)) {
-                $opacity = $tagAttributes->getValueAndRemove(self::BACKGROUND_OPACITY);
+            if ($tagAttributes->hasComponentAttribute(Opacity::OPACITY_ATTRIBUTE)) {
+                $opacity = $tagAttributes->getValueAndRemove(Opacity::OPACITY_ATTRIBUTE);
                 $finalOpacity = 1 - $opacity;
                 $backgroundImageStyleValue = "linear-gradient(to right, rgba(255,255,255, $finalOpacity) 0 100%)," . $backgroundImageStyleValue;
             }
             $tagAttributes->addStyleDeclaration(self::BACKGROUND_IMAGE, $backgroundImageStyleValue);
-
-
         }
 
 

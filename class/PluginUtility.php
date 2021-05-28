@@ -38,6 +38,7 @@ require_once('Icon.php');
 require_once('MediaLink.php');
 require_once('LineSpacing.php');
 require_once('LogUtility.php');
+require_once('Opacity.php');
 require_once('Page.php');
 require_once('Position.php');
 require_once('Prism.php');

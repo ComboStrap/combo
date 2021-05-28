@@ -21,6 +21,7 @@ require_once('CacheInstructionsByLogicalKey.php');
 require_once('Call.php');
 require_once('CallStack.php');
 require_once('ColorUtility.php');
+require_once('ConditionalValue.php');
 require_once('Dimension.php');
 require_once('FloatAttribute.php');
 require_once('FsWikiUtility.php');

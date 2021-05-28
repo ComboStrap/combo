@@ -150,7 +150,7 @@ class TagAttributes
 
     public static function createEmpty($logicalTag = "")
     {
-        if ($logicalTag!=="") {
+        if ($logicalTag !== "") {
             return new TagAttributes([], $logicalTag);
         } else {
             return new TagAttributes();
@@ -706,6 +706,21 @@ class TagAttributes
     {
         $value = $this->getConditionalValueAndRemove($attributeName);
         return new ConditionalValue($value);
+
+    }
+
+    public function getValuesAndRemove($attributeName)
+    {
+
+        /**
+         * Trim
+         */
+        $trim = trim($this->getValue($attributeName));
+        /**
+         * Replace all suite of space that have more than 2 characters
+         */
+        $value = preg_replace("/\s{2,}/", " ", $trim);
+        return explode(" ", $value);
 
     }
 

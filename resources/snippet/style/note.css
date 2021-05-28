@@ -1,2 +1,3 @@
-/* p has a default margin via the brower stylesheet */
+/* p and ul have a default margin via the default browser stylesheet */
 .note-combo > p:last-child { margin-bottom: 0; }
+.note-combo > ul:last-child { margin-bottom: 0; }

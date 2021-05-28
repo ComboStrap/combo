@@ -131,6 +131,8 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $attributes = $openingCall->getAttributes();
+                // if there is no EOL, we add one to create at minimal a paragraph
+                $callStack->insertEolIfNextCallIsNotEolOrBlock();
                 $callStack->processEolToEndStack($attributes);
                 return array(PluginUtility::STATE => $state);
 

@@ -14,7 +14,13 @@ use dokuwiki\Extension\SyntaxPlugin;
 require_once('Align.php');
 require_once('Animation.php');
 require_once('Background.php');
-require_once('Bootstrap.php');
+/**
+ * There is already a bootstrap file
+ * and it seems that php is loosing
+ * its mind on it and will then not load it.
+ * we give the qualified path to boostrap then
+ */
+require_once(__DIR__.'/Bootstrap.php');
 require_once('CacheMedia.php');
 require_once('CacheByLogicalKey.php');
 require_once('CacheInstructionsByLogicalKey.php');

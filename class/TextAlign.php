@@ -1,11 +1,11 @@
 <?php
 
-
 namespace ComboStrap;
 
 
 class TextAlign
 {
+
     const ATTRIBUTE_NAME = "text-align";
     const CANONICAL = "text-align";
 
@@ -22,7 +22,6 @@ class TextAlign
             $textAlignValues = $attributes->getValuesAndRemove(self::ATTRIBUTE_NAME);
             foreach ($textAlignValues as $textAlignValue) {
                 $conditionalTextAlignValue = ConditionalValue::createFrom($textAlignValue);
-
 
                 $bootstrapMajorVersion = Bootstrap::getBootStrapMajorVersion();
                 if ($bootstrapMajorVersion == Bootstrap::BootStrapFourMajorVersion) {

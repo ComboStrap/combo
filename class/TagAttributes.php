@@ -715,7 +715,8 @@ class TagAttributes
         /**
          * Trim
          */
-        $trim = trim($this->getValue($attributeName));
+        $trim = trim($this->getValueAndRemove($attributeName));
+
         /**
          * Replace all suite of space that have more than 2 characters
          */

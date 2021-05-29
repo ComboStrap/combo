@@ -11,7 +11,12 @@ require_once(__DIR__ . '/../class/Prism.php');
 
 if (!defined('DOKU_INC')) die();
 
-
+/**
+ * Class syntax_plugin_combo_console
+ *
+ * Should output the `samp` tag ?
+ * https://getbootstrap.com/docs/5.0/content/reboot/#sample-output
+ */
 class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
 {
 

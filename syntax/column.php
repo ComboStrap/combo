@@ -11,6 +11,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -147,7 +148,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = TagAttributes::createFromTagMatch($match)->toCallStackArray();
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes);
@@ -188,14 +189,17 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " col";
-                    } else {
-                        $attributes["class"] .= "col";
+                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                    $attributes = TagAttributes::createFromCallStackArray($callStackArray);
+                    $attributes->addClassName("col");
+                    if ($attributes->hasComponentAttribute("vertical")) {
+                        $value = $attributes->getValueAndRemove("vertical");
+                        if ($value == "center") {
+                            $attributes->addClassName("d-inline-flex");
+                            $attributes->addClassName("align-items-center");
+                        }
                     }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-                    $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;
+                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

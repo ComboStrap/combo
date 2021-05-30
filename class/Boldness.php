@@ -10,23 +10,36 @@ class Boldness
     const BOLDNESS_ATTRIBUTE = "boldness";
     const CANONICAL = self::BOLDNESS_ATTRIBUTE;
 
+    const BOOLEAN_ATTRIBUTES = ["bold", "bolder"];
+
     /**
      *
      * https://getbootstrap.com/docs/5.0/utilities/text/#font-weight-and-italics
      * @param TagAttributes $tagAttributes
      */
-    public static function processOpacityAttribute(TagAttributes &$tagAttributes)
+    public static function processBoldnessAttribute(TagAttributes &$tagAttributes)
     {
 
         if ($tagAttributes->hasComponentAttribute(self::BOLDNESS_ATTRIBUTE)) {
             $value = $tagAttributes->getValueAndRemove(self::BOLDNESS_ATTRIBUTE);
-            if (in_array($value,["bolder","lighter"])){
+        }
+
+        foreach(Boldness::BOOLEAN_ATTRIBUTES as $booleanAttribute) {
+            if ($tagAttributes->hasComponentAttribute($booleanAttribute)) {
+                $tagAttributes->removeComponentAttribute($booleanAttribute);
+                $value = $booleanAttribute;
+            }
+        }
+
+        if (!empty($value)) {
+            if (in_array($value, ["bolder", "lighter"])) {
                 $tagAttributes->addClassName("fw-$value");
             } else {
                 $value = Boldness::toNumericValue($value);
                 $tagAttributes->addStyleDeclaration("font-weight", $value);
             }
         }
+
 
     }
 
@@ -58,7 +71,7 @@ class Boldness
             case 'extra-black':
                 return 950;
             default:
-                LogUtility::msg("The boldness name ($value) is unknown. The attribute was not applied",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                LogUtility::msg("The boldness name ($value) is unknown. The attribute was not applied", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return 400;
         }
 

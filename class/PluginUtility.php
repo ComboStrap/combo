@@ -33,6 +33,7 @@ require_once('Dimension.php');
 require_once('FloatAttribute.php');
 require_once('FsWikiUtility.php');
 require_once('File.php');
+require_once('FontSize.php');
 require_once('Hover.php');
 require_once('HtmlUtility.php');
 require_once('Icon.php');

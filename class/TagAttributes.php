@@ -354,7 +354,8 @@ class TagAttributes
              */
             LineSpacing::processLineSpacingAttributes($this);
             TextAlign::processTextAlign($this);
-            Boldness::processOpacityAttribute($this);
+            Boldness::processBoldnessAttribute($this);
+            FontSize::processFontSizeAttribute($this);
 
             /**
              * Process the style attributes if any

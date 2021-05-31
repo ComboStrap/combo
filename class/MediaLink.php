@@ -69,16 +69,6 @@ abstract class MediaLink extends DokuPath
     ];
 
     /**
-     * This URL encoding is mandatory for the {@link ml} function
-     * when there is a width and use them not otherwise
-     */
-    const URL_ENCODED_AND = '&amp;';
-    /**
-     * Used in dokuwiki syntax
-     */
-    const URL_AND = "&";
-
-    /**
      * The dokuwiki media property used in a link
      */
     const DOKUWIKI_QUERY_MEDIA_PROPERTY = ["w", "h"];
@@ -199,7 +189,7 @@ abstract class MediaLink extends DokuPath
             $type = $attributes[TagAttributes::TYPE_KEY];
             if (in_array($type, $dokuWikiTypeValues)) {
                 unset($attributes[TagAttributes::TYPE_KEY]);
-                $attributes[self::MEDIA_DOKUWIKI_TYPE]=$type;
+                $attributes[self::MEDIA_DOKUWIKI_TYPE] = $type;
             }
         }
 
@@ -257,17 +247,14 @@ abstract class MediaLink extends DokuPath
                 $positionQueryCharacter = strpos($link, "?");
                 if ($positionQueryCharacter !== false) {
                     $queryParameters = substr($link, $positionQueryCharacter + 1);
-                    $parameters = StringUtility::explodeAndTrim($queryParameters, MediaLink::URL_AND);
-                    foreach ($parameters as $parameter) {
-                        $equalCharacterPosition = strpos($parameter, "=");
-                        if ($equalCharacterPosition !== false) {
-                            $parameterProp = explode("=", $parameter);
-                            $key = $parameterProp[0];
+                    $parameters = Url::queryParametersToArray($queryParameters);
+                    foreach ($parameters as $key => $value) {
+                        if ($value != null) {
                             if (!in_array($key, self::DOKUWIKI_QUERY_MEDIA_PROPERTY)) {
                                 /**
                                  * exclude already parsed w=xxxx and h=wwww
                                  */
-                                $attributes[$key] = $parameterProp[1];
+                                $attributes[$key] = $value;
                             }
                         } else {
                             /**
@@ -275,14 +262,14 @@ abstract class MediaLink extends DokuPath
                              */
                             if ($linkingAttributeFound == false
                                 &&
-                                preg_match('/(nolink|direct|linkonly|details)/i', $parameter)) {
+                                preg_match('/(nolink|direct|linkonly|details)/i', $key)) {
                                 $linkingAttributeFound = true;
                             }
                             /**
                              * Sizing (wxh)
                              */
                             $sizing = [];
-                            if (preg_match('/([0-9]+)(x([0-9]+))?/', $parameter, $sizing)) {
+                            if (preg_match('/([0-9]+)(x([0-9]+))?/', $key, $sizing)) {
                                 $attributes[TagAttributes::WIDTH_KEY] = $sizing[1];
                                 if (isset($sizing[3])) {
                                     $attributes[TagAttributes::HEIGHT_KEY] = $sizing[3];

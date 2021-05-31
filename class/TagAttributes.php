@@ -309,7 +309,19 @@ class TagAttributes
     public function hasComponentAttribute($attributeName)
     {
         $lowerAtt = strtolower($attributeName);
-        return isset($this->componentAttributes[$lowerAtt]);
+        $isset = isset($this->componentAttributes[$lowerAtt]);
+        if ($isset === false) {
+            /**
+             * Edge effect
+             * if this is a boolean value and the first value, it may be stored in the type
+             */
+            if (isset($this->componentAttributes[TagAttributes::TYPE_KEY])) {
+                if ($lowerAtt == $this->componentAttributes[TagAttributes::TYPE_KEY]) {
+                    return true;
+                }
+            }
+        }
+        return $isset;
     }
 
     /**
@@ -364,15 +376,13 @@ class TagAttributes
             Boldness::processBoldnessAttribute($this);
             FontSize::processFontSizeAttribute($this);
             TextColor::processTextColorAttribute($this);
+            Underline::processUnderlineAttribute($this);
 
             /**
              * Process the style attributes if any
              */
             PluginUtility::processStyle($this);
             PluginUtility::processCollapse($this);
-
-
-
 
 
             /**
@@ -667,7 +677,14 @@ class TagAttributes
         if (isset($this->componentAttributes[$lowerAtt])) {
             unset($this->componentAttributes[$lowerAtt]);
         } else {
-            LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR, "support");
+            /**
+             * Edge case, this is the first boolean attribute
+             * and may has been categorized as the type
+             */
+            if(!$this->getType()==$lowerAtt){
+                LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR);
+            }
+
         }
 
     }
@@ -736,7 +753,7 @@ class TagAttributes
 
     public function setType($type)
     {
-        $this->addComponentAttributeValue(TagAttributes::TYPE_KEY,$type);
+        $this->addComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
     }
 
 

@@ -82,7 +82,7 @@ class RasterImageLink extends MediaLink
      * @param null $localWidth - the asked width - use for responsive image
      * @return string|null
      */
-    public function getUrl($ampersand = MediaLink::URL_ENCODED_AND, $localWidth = null)
+    public function getUrl($ampersand = Url::URL_ENCODED_AND, $localWidth = null)
     {
 
         if ($this->exists()) {
@@ -231,7 +231,7 @@ class RasterImageLink extends MediaLink
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $this->getUrl(MediaLink::URL_ENCODED_AND, $breakpointWidthMinusMargin);
+                        $xsmUrl = $this->getUrl(Url::URL_ENCODED_AND, $breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 

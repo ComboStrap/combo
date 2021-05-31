@@ -264,6 +264,34 @@ class LinkUtility
             }
         }
 
+        /**
+         * Styling attribute
+         * may be passed via parameters
+         * for internal link
+         * We are doing it here because
+         * the query parameters are used
+         * in the creation of the URL
+         * and we don't want the styling attribute
+         * in the URL
+         */
+        if ( $this->type == self::TYPE_INTERNAL) {
+
+            $parameters = Url::queryParametersToArray($this->parameters);
+            $this->parameters = null;
+            foreach ($parameters as $key => $value) {
+                if ($key == "do") {
+                    // dokuwiki
+                    $this->parameters = "$key=$value";
+                } else {
+                    // boolean attributes
+                    if (empty($value)) {
+                        $value = true;
+                    }
+                    $this->attributes->addComponentAttributeValue($key, $value);
+                }
+            }
+        }
+
 
     }
 

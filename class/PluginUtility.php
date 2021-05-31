@@ -57,6 +57,8 @@ require_once('TextAlign.php');
 require_once('TextColor.php');
 require_once('ThirdMediaLink.php');
 require_once('TagAttributes.php');
+require_once('Underline.php');
+require_once('Url.php');
 require_once('XmlDocument.php');
 require_once('XmlUtility.php');
 

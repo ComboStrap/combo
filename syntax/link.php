@@ -10,6 +10,7 @@ use ComboStrap\Analytics;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -123,7 +124,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
         if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
             $pattern = LinkUtility::ENTRY_PATTERN_SINGLE_LINE;
-            if ($this->getConf(self::CONF_ENABLE_MULTI_LINES_LINK,false)){
+            if ($this->getConf(self::CONF_ENABLE_MULTI_LINES_LINK, false)) {
                 $pattern = LinkUtility::ENTRY_PATTERN_MULTI_LINE;
             }
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
@@ -259,28 +260,19 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                  * Cache problem may occurs while releasing
                  */
                 if (isset($data[PluginUtility::ATTRIBUTES])) {
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $callStackAttributes = $data[PluginUtility::ATTRIBUTES];
                 } else {
-                    $attributes = $data;
+                    $callStackAttributes = $data;
                 }
 
                 PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
 
-
                 $state = $data[PluginUtility::STATE];
-                $payload = $data[PluginUtility::PAYLOAD];
                 switch ($state) {
                     case DOKU_LEXER_ENTER:
-                        $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
-                        unset($attributes[LinkUtility::ATTRIBUTE_REF]);
-                        $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
-                        unset($attributes[LinkUtility::ATTRIBUTE_NAME]);
-                        $link = new LinkUtility($ref);
-                        if ($name != null) {
-                            $link->setName($name);
-                        }
-                        $link->setAttributes($attributes);
-
+                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes);
+                        $ref = $tagAttributes->getValueAndRemove(LinkUtility::ATTRIBUTE_REF);
+                        $link = new LinkUtility($ref, $tagAttributes);
 
                         /**
                          * Extra styling
@@ -291,8 +283,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                              * Button link
                              */
                             case syntax_plugin_combo_button::TAG:
-                                $attributes["role"] = "button";
-                                syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($attributes);
+                                $tagAttributes->addHtmlAttributeValue("role", "button");
+                                syntax_plugin_combo_button::processButtonAttributesToHtmlAttributes($tagAttributes);
                                 $htmlLink = $link->renderOpenTag($renderer);
                                 break;
                             case syntax_plugin_combo_badge::TAG:
@@ -302,19 +294,18 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 $htmlLink = $link->renderOpenTag($renderer);
                                 break;
                             case syntax_plugin_combo_dropdown::TAG:
-                                PluginUtility::addClass2Attributes("dropdown-item", $attributes);
+                                $tagAttributes->addClassName("dropdown-item");
                                 $htmlLink = $link->renderOpenTag($renderer);
                                 break;
                             case syntax_plugin_combo_navbarcollapse::COMPONENT:
-                                PluginUtility::addClass2Attributes("navbar-link", $attributes);
+                                $tagAttributes->addClassName("navbar-link");
                                 $htmlLink = '<div class="navbar-nav">' . $link->renderOpenTag($renderer);
                                 break;
                             case syntax_plugin_combo_navbargroup::COMPONENT:
-                                PluginUtility::addClass2Attributes("nav-link", $attributes);
+                                $tagAttributes->addClassName("nav-link");
                                 $htmlLink = '<li class="nav-item">' . $link->renderOpenTag($renderer);
                                 break;
                             default:
-
                                 $htmlLink = $link->renderOpenTag($renderer);
 
                         }
@@ -332,7 +323,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
                         // if there is no link name defined, we get the name as ref in the payload
                         // otherwise null string
-                        $renderer->doc .= $payload;
+                        $renderer->doc .= $data[PluginUtility::PAYLOAD];;
 
                         // Close the link
                         $linkTag = $data[self::LINK_TAG];
@@ -365,14 +356,14 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      * @var Doku_Renderer_metadata $renderer
                      */
                     if (isset($data[PluginUtility::ATTRIBUTES])) {
-                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = $data[PluginUtility::ATTRIBUTES];
                     } else {
-                        $attributes = $data;
+                        $tagAttributes = $data;
                     }
-                    $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+                    $ref = $tagAttributes[LinkUtility::ATTRIBUTE_REF];
 
                     $link = new LinkUtility($ref);
-                    $name = $attributes[LinkUtility::ATTRIBUTE_NAME];
+                    $name = $tagAttributes[LinkUtility::ATTRIBUTE_NAME];
                     if ($name != null) {
                         $link->setName($name);
                     }
@@ -390,8 +381,8 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                      *
                      * @var renderer_plugin_combo_analytics $renderer
                      */
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $ref = $attributes[LinkUtility::ATTRIBUTE_REF];
+                    $tagAttributes = $data[PluginUtility::ATTRIBUTES];
+                    $ref = $tagAttributes[LinkUtility::ATTRIBUTE_REF];
                     $link = new LinkUtility($ref);
                     $link->processLinkStats($renderer->stats);
                     break;

@@ -65,8 +65,14 @@ class TagAttributes
 
     /**
      * The inline element
+     * We could pass the plugin object into tag attribute in place of the logical tag and check if the {@link SyntaxPlugin::getPType()} is normal
      */
-    const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
+    const INLINE_LOGICAL_ELEMENTS = [
+        SvgImageLink::CANONICAL,
+        RasterImageLink::CANONICAL,
+        \syntax_plugin_combo_link::TAG, // link button for instance
+        \syntax_plugin_combo_button::TAG
+    ];
     const SCRIPT_KEY = "script";
     const TRANSFORM = "transform";
 
@@ -339,15 +345,16 @@ class TagAttributes
             Position::processPosition($this);
 
             /**
-             * Float
+             * Block processing
+             *
+             * Float, align, spacing
              */
             FloatAttribute::processFloat($this);
-
-            /**
-             * Process the attributes that have an effect on the class
-             */
-            Spacing::processSpacingAttributes($this);
             Align::processAlignAttributes($this);
+            Spacing::processSpacingAttributes($this);
+            Opacity::processOpacityAttribute($this);
+            Background::processBackgroundAttributes($this);
+            Shadow::process($this);
 
             /**
              * Process text attributes
@@ -356,6 +363,7 @@ class TagAttributes
             TextAlign::processTextAlign($this);
             Boldness::processBoldnessAttribute($this);
             FontSize::processFontSizeAttribute($this);
+            TextColor::processTextColorAttribute($this);
 
             /**
              * Process the style attributes if any
@@ -363,11 +371,8 @@ class TagAttributes
             PluginUtility::processStyle($this);
             PluginUtility::processCollapse($this);
 
-            /**
-             * Background
-             */
-            Opacity::processOpacityAttribute($this);
-            Background::processBackgroundAttributes($this);
+
+
 
 
             /**
@@ -727,6 +732,11 @@ class TagAttributes
         $value = preg_replace("/\s{2,}/", " ", $trim);
         return explode(" ", $value);
 
+    }
+
+    public function setType($type)
+    {
+        $this->addComponentAttributeValue(TagAttributes::TYPE_KEY,$type);
     }
 
 

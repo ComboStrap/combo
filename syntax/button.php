@@ -6,7 +6,10 @@
 
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
+use ComboStrap\Shadow;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
+use ComboStrap\TextColor;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -299,68 +302,53 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param $attributes
+     * @param TagAttributes $attributes
      */
     public static function processButtonAttributesToHtmlAttributes(&$attributes)
     {
         # A button
-        PluginUtility::addClass2Attributes("btn", $attributes);
+        $btn = "btn";
+        $attributes->addClassName($btn);
 
-        $type = $attributes["type"];
-        if (blank($type)) {
-            $type = "primary";
-        }
-        $skin = $attributes["skin"];
-        if (blank($skin)) {
-            $skin = "filled";
-        }
-        $class = "btn";
+        $type = $attributes->getValue(TagAttributes::TYPE_KEY, "primary");
+        $skin = $attributes->getValueAndRemove("skin", "filled");
         switch ($skin) {
             case "contained":
             {
-                $class .= "-" . $type;
-                $attributes["elevation"] = true;
+                $attributes->addClassName("$btn-$type");
+                $attributes->addComponentAttributeValue(Shadow::CANONICAL, true);
                 break;
             }
             case "filled":
             {
-                $class .= "-" . $type;
+                $attributes->addClassName("$btn-$type");
                 break;
             }
             case "outline":
             {
-                $class .= "-outline-" . $type;
+                $attributes->addClassName("$btn-outline-$type");
                 break;
             }
             case "text":
             {
-                $class .= "-link";
-                $attributes["color"] = $type;
+                $attributes->addClassName("$btn-link");
+                $attributes->addComponentAttributeValue(TextColor::TEXT_COLOR_ATTRIBUTE, $type);
                 break;
             }
         }
-        unset($attributes["skin"]);
-        PluginUtility::addClass2Attributes($class, $attributes);
 
-        if (array_key_exists("align", $attributes)) {
-            $align = $attributes["align"];
-            if ($align == "center") {
-                PluginUtility::addStyleProperty("display", "block", $attributes);
-            }
-        }
 
         $sizeAttribute = "size";
-        if (array_key_exists($sizeAttribute, $attributes)) {
-            $size = $attributes[$sizeAttribute];
-            unset($attributes[$sizeAttribute]);
+        if ($attributes->hasComponentAttribute($sizeAttribute)) {
+            $size = $attributes->getValueAndRemove($sizeAttribute);
             switch ($size) {
                 case "lg":
                 case "large":
-                    PluginUtility::addClass2Attributes("btn-lg", $attributes);
+                    $attributes->addClassName("btn-lg");
                     break;
                 case "sm":
                 case "small":
-                    PluginUtility::addClass2Attributes("btn-sm", $attributes);
+                    $attributes->addClassName("btn-sm");
                     break;
             }
         }

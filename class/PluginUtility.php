@@ -21,7 +21,7 @@ require_once('Boldness.php');
  * its mind on it and will then not load it.
  * we give the qualified path to boostrap then
  */
-require_once(__DIR__.'/Bootstrap.php');
+require_once(__DIR__ . '/Bootstrap.php');
 require_once('CacheMedia.php');
 require_once('CacheByLogicalKey.php');
 require_once('CacheInstructionsByLogicalKey.php');
@@ -54,6 +54,7 @@ require_once('Sqlite.php');
 require_once('StringUtility.php');
 require_once('StyleUtility.php');
 require_once('TextAlign.php');
+require_once('TextColor.php');
 require_once('ThirdMediaLink.php');
 require_once('TagAttributes.php');
 require_once('XmlDocument.php');
@@ -453,27 +454,17 @@ class PluginUtility
 
 
         /**
-         * Text and border Color
+         * Border Color
          * For background color, see {@link TagAttributes::processBackground()}
+         * For text color, see {@link TextColor}
          */
-        $colorAttributes = ["color", ColorUtility::BORDER_COLOR];
-        foreach ($colorAttributes as $colorAttribute) {
-            if ($attributes->hasComponentAttribute($colorAttribute)) {
-                $colorValue = $attributes->getValueAndRemove($colorAttribute);
-                switch ($colorAttribute) {
-                    case "color":
-                        $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
-                        break;
-                    case ColorUtility::BORDER_COLOR:
-                        $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
-                        self::checkDefaultBorderColorAttributes($attributes);
-                        break;
-                }
-            }
+
+        if ($attributes->hasComponentAttribute(ColorUtility::BORDER_COLOR)) {
+            $colorValue = $attributes->getValueAndRemove(ColorUtility::BORDER_COLOR);
+            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, ColorUtility::getColorValue($colorValue));
+            self::checkDefaultBorderColorAttributes($attributes);
         }
 
-
-        Shadow::process($attributes);
 
 
     }
@@ -1077,14 +1068,16 @@ class PluginUtility
     /**
      * General Debug
      */
-    public static function isDebug()
+    public
+    static function isDebug()
     {
         global $conf;
         return $conf["allowdebug"] === 1;
 
     }
 
-    public static function loadStrapUtilityTemplate()
+    public
+    static function loadStrapUtilityTemplate()
     {
         $templateUtilitFile = '../../../tpl/strap/class/TplUtility.php';
         if (file_exists($templateUtilitFile)) {

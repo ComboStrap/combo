@@ -67,7 +67,6 @@ class LinkUtility
     const ATTRIBUTE_IMAGE = 'image';
 
 
-
     /**
      * Class added to the type of link
      * Class have styling rule conflict, they are by default not set
@@ -111,7 +110,11 @@ class LinkUtility
      */
     private $fragment;
 
-    private $attributes = array();
+    /**
+     * @var TagAttributes|null
+     */
+    private $attributes;
+
     /**
      * The name of the wiki for an inter wiki link
      * @var string
@@ -138,10 +141,19 @@ class LinkUtility
     /**
      * Link constructor.
      * @param $ref
+     * @param TagAttributes $tagAttributes
      */
-    public function __construct($ref)
+    public function __construct($ref, &$tagAttributes = null)
     {
 
+        if ($tagAttributes == null) {
+            $tagAttributes = TagAttributes::createEmpty(\syntax_plugin_combo_link::TAG);
+        }
+        $this->attributes = &$tagAttributes;
+
+        if ($tagAttributes->hasComponentAttribute("name")) {
+            $this->name = $tagAttributes->getValueAndRemove("name");
+        }
 
         /**
          * Windows share link
@@ -228,7 +240,7 @@ class LinkUtility
         if ($position !== false) {
 
             $this->path = substr($refProcessing, 0, $position);
-            if ($this->path==""){
+            if ($this->path == "") {
                 // no path, this is the requested page
                 global $ID;
                 $this->path = $ID;
@@ -329,6 +341,7 @@ class LinkUtility
          */
         $this->renderer = $renderer;
 
+
         global $conf;
 
         /**
@@ -336,7 +349,7 @@ class LinkUtility
          */
         $url = $this->getUrl();
         if (!empty($url)) {
-            PluginUtility::addAttributeValue("href", $url, $this->attributes);
+            $this->attributes->addHtmlAttributeValue("href", $url);
         }
 
         /**
@@ -348,15 +361,14 @@ class LinkUtility
                 /**
                  * Target
                  */
-                $interwikiConf = $conf['target']['interwiki'];
-                if ($interwikiConf) {
-
-                    PluginUtility::addAttributeValue('target', $interwikiConf, $this->attributes);
-                    PluginUtility::addAttributeValue('rel', 'noopener', $this->attributes);
+                $interWikiConf = $conf['target']['interwiki'];
+                if ($interWikiConf) {
+                    $this->attributes->addHtmlAttributeValue('target', $interWikiConf);
+                    $this->attributes->addHtmlAttributeValue('rel', 'noopener');
                 }
-                PluginUtility::addClass2Attributes("interwiki", $this->attributes);
+                $this->attributes->addClassName("interwiki");
                 $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
-                PluginUtility::addClass2Attributes($wikiClass, $this->attributes);
+                $this->attributes->addClassName($wikiClass);
 
                 break;
             case self::TYPE_INTERNAL:
@@ -365,7 +377,7 @@ class LinkUtility
                  * Internal Page
                  */
                 $linkedPage = $this->getInternalPage();
-                $this->attributes["data-wiki-id"] = $linkedPage->getId();
+                $this->attributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getId());
 
                 /**
                  * If this is a low quality internal page,
@@ -379,15 +391,15 @@ class LinkUtility
                 if ($lowLink) {
 
                     PageProtection::addPageProtectionSnippet();
-                    PluginUtility::addClass2Attributes(PageProtection::PROTECTED_LINK_CLASS, $this->attributes);
+                    $this->attributes->addClassName(PageProtection::PROTECTED_LINK_CLASS);
                     $protectionSourceAcronym = "";
                     if ($this->getInternalPage()->isLowQualityPage()) {
                         $protectionSourceAcronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                     } else if ($this->getInternalPage()->isLatePublication()) {
                         $protectionSourceAcronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
                     }
-                    PluginUtility::addAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym, $this->attributes);
-                    unset($this->attributes["href"]);
+                    $this->attributes->addHtmlAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym);
+                    $this->attributes->removeComponentAttributeIfPresent("href");
                     $dataNamespace = Bootstrap::getDataNamespace();
                     $this->attributes["data{$dataNamespace}-toggle"] = "tooltip";
                     $this->attributes["title"] = "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")";
@@ -399,36 +411,35 @@ class LinkUtility
                         /**
                          * Red color
                          */
-                        PluginUtility::addClass2Attributes(self::getHtmlClassNotExist(), $this->attributes);
-                        PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
+                        $this->attributes->addClassName(self::getHtmlClassNotExist());
+                        $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
 
                     } else {
 
-                        PluginUtility::addClass2Attributes(self::getHtmlClassInternalLink(), $this->attributes);
+                        $this->attributes->addClassName(self::getHtmlClassInternalLink());
 
                     }
 
-                    $this->attributes["title"] = $linkedPage->getTitle();
+                    $this->attributes->addHtmlAttributeValue("title", $linkedPage->getTitle());
 
                 }
                 break;
             case self::TYPE_EXTERNAL:
                 if ($conf['relnofollow']) {
-                    PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
-                    PluginUtility::addAttributeValue("rel", 'ugc', $this->attributes);
+                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow ugc');
                 }
                 if ($conf['target']['extern']) {
-                    PluginUtility::addAttributeValue("rel", 'noopener', $this->attributes);
+                    $this->attributes->addHtmlAttributeValue("rel", 'noopener');
                 }
-                PluginUtility::addClass2Attributes(self::getHtmlClassExternalLink(), $this->attributes);
+                $this->attributes->addClassName(self::getHtmlClassExternalLink());
                 break;
             case self::TYPE_WINDOWS_SHARE:
-                PluginUtility::addClass2Attributes("windows", $this->attributes);
+                $this->attributes->addClassName("windows");
                 break;
             case self::TYPE_LOCAL:
                 break;
             case self::TYPE_EMAIL:
-                PluginUtility::addClass2Attributes(self::getHtmlClassEmailLink(), $this->attributes);
+                $this->attributes->addClassName(self::getHtmlClassEmailLink());
                 break;
             default:
                 LogUtility::msg("The type (" . $this->getType() . ") is unknown", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
@@ -438,39 +449,31 @@ class LinkUtility
         /**
          * Title settings
          */
-        if (!key_exists("title", $this->attributes)) {
+        if (!$this->attributes->hasComponentAttribute("title")) {
             $title = $this->getTitle();
             if (!empty($title)) {
-                $this->attributes["title"] = $title;
+                $this->attributes->addHtmlAttributeValue("title", $title);
             }
+        }
+        /**
+         * An email URL and title
+         * may be already encoded because of the vanguard configuration
+         *
+         * The url is not treated as an attribute
+         * because the transformation function encodes the value
+         * to mitigate XSS
+         *
+         */
+        if ($this->getType() == self::TYPE_EMAIL) {
+            $emailAddress = $this->emailObfuscation($this->getPath());
+            $this->attributes->addHtmlAttributeValue("title", $emailAddress);
         }
 
         /**
          * Return
          */
         $tag = $this->getHTMLTag();
-        $returnedHTML = "<$tag";
-
-        /**
-         * An email URL and title
-         * may be already encoded because of the vanguard configuration
-         *
-         * The url is not treated as an attribute
-         * because the function array2HTMLAttributes encodes the value
-         * to mitigate XSS
-         *
-         */
-        if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->getPath());
-            $returnedHTML .= " href=\"$url\"";
-            $returnedHTML .= " title=\"$emailAddress\"";
-            unset($this->attributes["href"]);
-            unset($this->attributes["title"]);
-        }
-        if (sizeof($this->attributes) > 0) {
-            $returnedHTML .= " " . PluginUtility::array2HTMLAttributesAsString($this->attributes);
-        }
-        return $returnedHTML . ">";
+        return $this->attributes->toHtmlEnterTag($tag);
 
 
     }
@@ -520,7 +523,6 @@ class LinkUtility
     {
         return $this->type;
     }
-
 
 
     /**
@@ -617,10 +619,16 @@ class LinkUtility
     {
         if ($this->linkedPage == null) {
             if ($this->getType() == self::TYPE_INTERNAL) {
+                // if there is no path, this is the actual paeg
+                $path = $this->path;
+                if ($path == null) {
+                    global $ID;
+                    $path = DokuPath::IdToAbsolutePath($ID);
+                }
                 /**
                  * Create the linked page object
                  */
-                $this->linkedPage = new Page($this->path);
+                $this->linkedPage = new Page($path);
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
             }

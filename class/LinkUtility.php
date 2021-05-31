@@ -274,15 +274,15 @@ class LinkUtility
          * and we don't want the styling attribute
          * in the URL
          */
-        if ( $this->type == self::TYPE_INTERNAL) {
+        if ($this->type == self::TYPE_INTERNAL) {
 
             $parameters = Url::queryParametersToArray($this->parameters);
-            $this->parameters = null;
-            foreach ($parameters as $key => $value) {
-                if ($key == "do") {
-                    // dokuwiki
-                    $this->parameters = "$key=$value";
-                } else {
+
+            // we will not overwrite the parameters if this an dokuwiki
+            // action link
+            if (!isset($parameters["do"])) {
+                $this->parameters = null;
+                foreach ($parameters as $key => $value) {
                     // boolean attributes
                     if (empty($value)) {
                         $value = true;
@@ -290,6 +290,7 @@ class LinkUtility
                     $this->attributes->addComponentAttributeValue($key, $value);
                 }
             }
+
         }
 
 

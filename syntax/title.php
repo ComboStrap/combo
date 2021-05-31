@@ -23,8 +23,9 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
     /**
      * Header pattern that we expect ie  ==== Hello =====
      * Found in {@link \dokuwiki\Parsing\ParserMode\Header}
+     * One modification is that it permits one `=` to get the h6
      */
-    const HEADING_PATTERN = '[ \t]*={2,}[^\n]+={2,}[ \t]*(?=\n)';
+    const HEADING_PATTERN = '[ \t]*={1,}[^\n]+={1,}[ \t]*(?=\n)';
 
     const TITLE = 'title';
     const LEVEL = 'level';

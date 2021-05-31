@@ -491,5 +491,15 @@ class Call
         return $this;
     }
 
+    public function hasAttribute($attributeName)
+    {
+        $attributes = $this->getAttributes();
+        if (isset($attributes[$attributeName])) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
 }

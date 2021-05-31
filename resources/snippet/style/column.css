@@ -1,0 +1,2 @@
+/* p bottom margin of zero from the default stylesheet makes the first p touching the top of the background */
+.col > p:first-child { margin-top: revert; }

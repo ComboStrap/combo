@@ -10,6 +10,7 @@
  *
  */
 
+use ComboStrap\ConditionalValue;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -26,6 +27,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "column";
+    const WIDTH_ATTRIBUTE = TagAttributes::WIDTH_KEY;
 
     static function getTags()
     {
@@ -64,12 +66,6 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
             return false;
         }
 
-        /**
-         * p element are making the layout horrible
-         */
-        if ($mode == "eol") {
-            return false;
-        }
 
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
 
@@ -189,14 +185,41 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
+
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
                     $attributes = TagAttributes::createFromCallStackArray($callStackArray);
                     $attributes->addClassName("col");
                     if ($attributes->hasComponentAttribute("vertical")) {
                         $value = $attributes->getValueAndRemove("vertical");
                         if ($value == "center") {
-                            $attributes->addClassName("d-inline-flex");
-                            $attributes->addClassName("align-items-center");
+                            //$attributes->addClassName("d-inline-flex");
+                            $attributes->addClassName("align-self-center");
+                        }
+                    }
+                    if ($attributes->hasComponentAttribute(syntax_plugin_combo_column::WIDTH_ATTRIBUTE)) {
+                        $sizeValues = $attributes->getValuesAndRemove(syntax_plugin_combo_column::WIDTH_ATTRIBUTE);
+                        foreach ($sizeValues as $sizeValue) {
+                            $conditionalValue = ConditionalValue::createFrom($sizeValue);
+                            if ($conditionalValue->getBreakpoint() == "xs") {
+                                $attributes->addClassName("col-" . $conditionalValue->getValue());
+                            } else {
+                                if ($conditionalValue->getBreakpoint() != null) {
+                                    $attributes->addClassName("col-$sizeValue");
+                                } else {
+                                    /**
+                                     * No breakpoint given
+                                     * If this is a number between 1 and 12,
+                                     * we take the assumption that this is a ratio
+                                     * otherwise, this a width in CSS length
+                                     */
+                                    if ($sizeValue >= 1 && $sizeValue <= syntax_plugin_combo_row::GRID_TOTAL_COLUMNS) {
+                                        $attributes->addClassName("col-$sizeValue");
+                                    } else {
+                                        $attributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, $sizeValue);
+                                    }
+                                }
+                            }
                         }
                     }
                     $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;

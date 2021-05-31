@@ -735,6 +735,10 @@ class TagAttributes
 
     }
 
+    /**
+     * @param $attributeName
+     * @return false|string[] - an array of values
+     */
     public function getValuesAndRemove($attributeName)
     {
 

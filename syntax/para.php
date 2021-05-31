@@ -232,11 +232,15 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      * and transformed to `p_open` and `p_close` via {@link \dokuwiki\Parsing\Handler\Block::process()}
      *
      * @param \ComboStrap\CallStack $callstack
-     * @param $attributes - the attributes passed to the paragraph
+     * @param array $attributes - the attributes passed to the paragraph
      */
     public static function fromEolToParagraphUntilEndOfStack(&$callstack, $attributes)
     {
 
+        if (!is_array($attributes)){
+            LogUtility::msg("The passed attributes array ($attributes) for the creation of the paragraph is not an array",LogUtility::LVL_MSG_ERROR);
+            $attributes = [];
+        }
 
         /**
          * The syntax plugin that implements the paragraph

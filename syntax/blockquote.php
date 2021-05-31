@@ -198,12 +198,12 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                 // Create the paragraph
                 $callStack->insertEolIfNextCallIsNotEolOrBlock(); // eol is mandatory to have a paragraph if there is only content
-                $paragraphClass = null;
+                $paragraphAttributes = [];
                 if ($type == "typo") {
                     // As seen here https://getbootstrap.com/docs/4.0/content/typography/#blockquotes
-                    $paragraphClass = "mb-0";
+                    $paragraphAttributes["class"] = "mb-0";
                 }
-                $callStack->processEolToEndStack($paragraphClass);
+                $callStack->processEolToEndStack($paragraphAttributes);
 
                 // Go back
                 $callStack->moveToPreviousCorrespondingOpeningCall();

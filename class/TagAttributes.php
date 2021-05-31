@@ -164,13 +164,18 @@ class TagAttributes
     }
 
     /**
-     * @param $renderArray - an array of key value pair
+     * @param array $renderArray - an array of key value pair
      * @param string $logicalTag - the logical tag for which this attribute will apply
      * @return TagAttributes
      */
     public static function createFromCallStackArray($renderArray, $logicalTag = null)
     {
-        $attributes = self::CallStackArrayToInternalArray($renderArray);
+        if(is_array($renderArray)) {
+            $attributes = self::CallStackArrayToInternalArray($renderArray);
+        } else {
+            LogUtility::msg("The renderArray variable passed is not an array ($renderArray)",LogUtility::LVL_MSG_ERROR);
+            $attributes = TagAttributes::createEmpty($logicalTag);
+        }
         return new TagAttributes($attributes, $logicalTag);
     }
 

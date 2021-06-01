@@ -31,6 +31,13 @@ class Spacing
                     return;
                 }
             }
+            if ($logicalTag == \syntax_plugin_combo_column::TAG) {
+                if (StringUtility::startWiths($spacingValue, "m")) {
+                    $expectedValue = "p" . substr($spacingValue, 1);
+                    LogUtility::msg("We didn't apply the margin value ($spacingValue) on your column because it will make the last column in the grid to go to the line. Apply the following padding instead ($expectedValue)", LogUtility::LVL_MSG_WARNING, \syntax_plugin_combo_row::CANONICAL);
+                    $spacingValue = $expectedValue;
+                }
+            }
 
             $spacingNames = preg_split("/\s/", $spacingValue);
             $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();

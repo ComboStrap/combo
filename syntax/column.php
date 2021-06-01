@@ -188,7 +188,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
                     PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                    $attributes = TagAttributes::createFromCallStackArray($callStackArray);
+                    $attributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
                     $attributes->addClassName("col");
                     if ($attributes->hasComponentAttribute("vertical")) {
                         $value = $attributes->getValueAndRemove("vertical");

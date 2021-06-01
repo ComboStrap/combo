@@ -5,6 +5,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
+use ComboStrap\SvgDocument;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
@@ -216,7 +217,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     static public function registerImageMeta($attributes, $renderer)
     {
-        $type = $attributes['type'];
+        $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
         $src = $attributes['src'];
         $title = $attributes['title'];
         $align = $attributes['align'];

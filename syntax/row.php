@@ -44,6 +44,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
     const TYPE_AUTO_VALUE = "auto";
     const TYPE_NATURAL_VALUE = "natural";
+    const CANONICAL = "grid";
 
     /**
      * Syntax Type.

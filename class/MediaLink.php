@@ -32,15 +32,23 @@ require_once(__DIR__ . '/DokuPath.php');
 abstract class MediaLink extends DokuPath
 {
 
+
     /**
-     * The dokuwiki mode name
+     * The dokuwiki type and mode name
      * (ie call)
+     *  * ie {@link MediaLink::EXTERNAL_MEDIA}
+     *  or {@link MediaLink::INTERNAL_MEDIA}
+     *
+     * The dokuwiki type (internalmedia/externalmedia)
+     * is saved in a `type` key that clash with the
+     * combostrap type. To avoid the clash, we renamed it
      */
+    const MEDIA_DOKUWIKI_TYPE = 'dokuwiki_type';
     const INTERNAL_MEDIA = "internalmedia";
     const EXTERNAL_MEDIA = "externalmedia";
 
-
     const CONF_IMAGE_ENABLE = "imageEnable";
+
     const CANONICAL = "image";
 
     /**
@@ -67,7 +75,6 @@ abstract class MediaLink extends DokuPath
         TagAttributes::HEIGHT_KEY,
         CacheMedia::CACHE_KEY,
     ];
-
     /**
      * The dokuwiki media property used in a link
      */
@@ -81,14 +88,8 @@ abstract class MediaLink extends DokuPath
     const SRC_KEY = "src"; // called pathId in Combo
     const LINKING_NOLINK_VALUE = 'nolink';
     const LINK_PATTERN = "{{\s*([^|\s]*)\s*\|?.*}}";
-    const LINKING_DIRECT_VALUE = 'direct';
 
-    /**
-     * The dokuwiki type
-     * ie {@link MediaLink::EXTERNAL_MEDIA}
-     * or {@link MediaLink::INTERNAL_MEDIA}
-     */
-    const MEDIA_DOKUWIKI_TYPE = 'dokuwiki_type';
+    const LINKING_DIRECT_VALUE = 'direct';
 
 
     private $lazyLoad = null;
@@ -178,21 +179,6 @@ abstract class MediaLink extends DokuPath
         $src = $attributes['src'];
         unset($attributes["src"]);
 
-        /**
-         * Type for Dokuwiki is the type of the media link (internal, external, ...)
-         * This is also a ComboStrap attribute where we set the type of a SVG (icon, illustration, background)
-         * We delete only the dokuwiki type that we don't use
-         * otherwise we get an error because the type has already been set
-         */
-        if (key_exists(TagAttributes::TYPE_KEY, $attributes)) {
-            $dokuWikiTypeValues = [self::INTERNAL_MEDIA, self::EXTERNAL_MEDIA];
-            $type = $attributes[TagAttributes::TYPE_KEY];
-            if (in_array($type, $dokuWikiTypeValues)) {
-                unset($attributes[TagAttributes::TYPE_KEY]);
-                $attributes[self::MEDIA_DOKUWIKI_TYPE] = $type;
-            }
-        }
-
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
@@ -213,7 +199,16 @@ abstract class MediaLink extends DokuPath
         require_once(__DIR__ . '/../../../../inc/parser/handler.php');
         $attributes = Doku_Handler_Parse_Media($match);
 
-        if ($attributes["type"] == MediaLink::INTERNAL_MEDIA) {
+        /**
+         * To avoid clash with the combostrap type
+         * ie this is also a ComboStrap attribute where we set the type of a SVG (icon, illustration, background)
+         * we store the media type (ie external/internal) in another key
+         */
+        $type = $attributes["type"];
+        $attributes[self::MEDIA_DOKUWIKI_TYPE] = $type;
+        unset($attributes["type"]);
+        if ($type == MediaLink::INTERNAL_MEDIA) {
+
             /**
              * The {@link MediaLink::createFromRenderMatch() previous function}
              * takes the first digit as the width
@@ -378,14 +373,6 @@ abstract class MediaLink extends DokuPath
             'src' => $this->getAbsolutePath()
         );
 
-        /**
-         * Rewrite the type
-         * needed for render
-         */
-        $dokuwikiType = $this->tagAttributes->getValueAndRemove(self::MEDIA_DOKUWIKI_TYPE);
-        if ($dokuwikiType != null) {
-            $array["type"] = $dokuwikiType;
-        }
 
         // Add the extra attribute
         return array_merge($this->tagAttributes->toCallStackArray(), $array);

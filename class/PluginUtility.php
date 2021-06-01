@@ -142,7 +142,7 @@ class PluginUtility
     static function init()
     {
 
-        $pluginInfoFile = '../plugin.info.txt';
+        $pluginInfoFile = __DIR__ . '/../plugin.info.txt';
         self::$INFO_PLUGIN = confToHash($pluginInfoFile);
         self::$PLUGIN_NAME = 'ComboStrap';
         global $lang;
@@ -467,7 +467,6 @@ class PluginUtility
             $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, ColorUtility::getColorValue($colorValue));
             self::checkDefaultBorderColorAttributes($attributes);
         }
-
 
 
     }

@@ -248,7 +248,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                  * HTML
                  */
                 $state = $data[PluginUtility::STATE];
-                $attributes = $data[PluginUtility::ATTRIBUTES];
+                $callStackAttributes = $data[PluginUtility::ATTRIBUTES];
                 $context = $data[PluginUtility::CONTEXT];
                 switch ($state) {
 
@@ -259,9 +259,10 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                          * The context is set on the handle exit
                          */
                         if ($context == self::TAG) {
-                            self::processButtonAttributesToHtmlAttributes($attributes);
-                            $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-                            $renderer->doc .= '<button type="button" ' . $inlineAttributes . '>';
+                            $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes);
+                            self::processButtonAttributesToHtmlAttributes($tagAttributes);
+                            $tagAttributes->addHtmlAttributeValue("type","button");
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag('button');
                         }
                         break;
 
@@ -302,53 +303,53 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param TagAttributes $attributes
+     * @param TagAttributes $tagAttributes
      */
-    public static function processButtonAttributesToHtmlAttributes(&$attributes)
+    public static function processButtonAttributesToHtmlAttributes(&$tagAttributes)
     {
         # A button
         $btn = "btn";
-        $attributes->addClassName($btn);
+        $tagAttributes->addClassName($btn);
 
-        $type = $attributes->getValue(TagAttributes::TYPE_KEY, "primary");
-        $skin = $attributes->getValueAndRemove("skin", "filled");
+        $type = $tagAttributes->getValue(TagAttributes::TYPE_KEY, "primary");
+        $skin = $tagAttributes->getValueAndRemove("skin", "filled");
         switch ($skin) {
             case "contained":
             {
-                $attributes->addClassName("$btn-$type");
-                $attributes->addComponentAttributeValue(Shadow::CANONICAL, true);
+                $tagAttributes->addClassName("$btn-$type");
+                $tagAttributes->addComponentAttributeValue(Shadow::CANONICAL, true);
                 break;
             }
             case "filled":
             {
-                $attributes->addClassName("$btn-$type");
+                $tagAttributes->addClassName("$btn-$type");
                 break;
             }
             case "outline":
             {
-                $attributes->addClassName("$btn-outline-$type");
+                $tagAttributes->addClassName("$btn-outline-$type");
                 break;
             }
             case "text":
             {
-                $attributes->addClassName("$btn-link");
-                $attributes->addComponentAttributeValue(TextColor::TEXT_COLOR_ATTRIBUTE, $type);
+                $tagAttributes->addClassName("$btn-link");
+                $tagAttributes->addComponentAttributeValue(TextColor::TEXT_COLOR_ATTRIBUTE, $type);
                 break;
             }
         }
 
 
         $sizeAttribute = "size";
-        if ($attributes->hasComponentAttribute($sizeAttribute)) {
-            $size = $attributes->getValueAndRemove($sizeAttribute);
+        if ($tagAttributes->hasComponentAttribute($sizeAttribute)) {
+            $size = $tagAttributes->getValueAndRemove($sizeAttribute);
             switch ($size) {
                 case "lg":
                 case "large":
-                    $attributes->addClassName("btn-lg");
+                    $tagAttributes->addClassName("btn-lg");
                     break;
                 case "sm":
                 case "small":
-                    $attributes->addClassName("btn-sm");
+                    $tagAttributes->addClassName("btn-sm");
                     break;
             }
         }

@@ -114,7 +114,7 @@ class TagAttributes
      * It's not an HTML tag (a div can have a flex display or a block and they don't carry this information)
      * The tag gives also context for the attributes (ie an div has no natural width while an img has)
      */
-    private $tag;
+    private $logicalTag;
 
     /**
      * An html that should be added after the enter tag
@@ -138,7 +138,7 @@ class TagAttributes
      */
     private function __construct($componentAttributes = array(), $tag = null)
     {
-        $this->tag = $tag;
+        $this->logicalTag = $tag;
         $this->componentAttributes = $componentAttributes;
     }
 
@@ -570,7 +570,11 @@ class TagAttributes
     {
         $array = array();
         foreach ($this->componentAttributes as $key => $value) {
-            if (!empty($value)) {
+            /**
+             * blank and not empty
+             * because the width can be zero
+             */
+            if (!blank($value)) {
                 $array[$key] = StringUtility::toString($value);
             }
         }
@@ -668,12 +672,12 @@ class TagAttributes
 
     public function getLogicalTag()
     {
-        return $this->tag;
+        return $this->logicalTag;
     }
 
-    public function setTag($tag)
+    public function setLogicalTag($tag)
     {
-        $this->tag = $tag;
+        $this->logicalTag = $tag;
     }
 
     public function removeComponentAttribute($attribute)

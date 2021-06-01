@@ -51,7 +51,7 @@ class SvgImageLink extends MediaLink
     public function __construct($id, $tagAttributes = null, $rev = '')
     {
         parent::__construct($id, $tagAttributes, $rev);
-        $this->getTagAttributes()->setTag(self::CANONICAL);
+        $this->getTagAttributes()->setLogicalTag(self::CANONICAL);
     }
 
 

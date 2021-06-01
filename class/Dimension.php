@@ -21,37 +21,49 @@ class Dimension
         if ($attributes->hasComponentAttribute($widthName)) {
 
             $widthValue = trim($attributes->getValueAndRemove($widthName));
-            if ($widthValue == "fit") {
-                $widthValue = "fit-content";
-            } else {
-                /** Numeric value */
-                $widthValue = TagAttributes::toQualifiedCssValue($widthValue);
-            }
 
+            if ($widthValue == "0") {
 
-            /**
-             * For an image
-             */
-            if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
-
-                /**
-                 * If the image is not ask as static resource (ie HTTP request)
-                 * but added in HTML
-                 * (ie {@link \action_plugin_combo_svg})
-                 */
-                $requestedMime = $attributes->getMime();
-                if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
-                    $attributes->addStyleDeclaration('max-width', $widthValue);
-                    $attributes->addStyleDeclaration('width', "100%");
+                // The dimension are restricted by height
+                if($attributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
+                    $attributes->addStyleDeclaration("width", "auto");
                 }
 
             } else {
 
-                /**
-                 * For a block
-                 */
-                $attributes->addStyleDeclaration('max-width', $widthValue);
 
+                if ($widthValue == "fit") {
+                    $widthValue = "fit-content";
+                } else {
+                    /** Numeric value */
+                    $widthValue = TagAttributes::toQualifiedCssValue($widthValue);
+                }
+
+
+                /**
+                 * For an image
+                 */
+                if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
+
+                    /**
+                     * If the image is not ask as static resource (ie HTTP request)
+                     * but added in HTML
+                     * (ie {@link \action_plugin_combo_svg})
+                     */
+                    $requestedMime = $attributes->getMime();
+                    if ($requestedMime == TagAttributes::TEXT_HTML_MIME) {
+                        $attributes->addStyleDeclaration('max-width', $widthValue);
+                        $attributes->addStyleDeclaration('width', "100%");
+                    }
+
+                } else {
+
+                    /**
+                     * For a block
+                     */
+                    $attributes->addStyleDeclaration('max-width', $widthValue);
+
+                }
             }
 
         }

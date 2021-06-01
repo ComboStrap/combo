@@ -248,11 +248,9 @@ class SvgDocument extends XmlDocument
                  * as in CSS
                  */
                 $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY, $defaultWidth);
-                $pixelWidth = Unit::toPixel($width);
-                $tagAttributes->addHtmlAttributeValue("width", $pixelWidth);
-                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY, $pixelWidth);
-                $qualifiedHeight = Unit::toPixel($height);
-                $tagAttributes->addHtmlAttributeValue("height", $qualifiedHeight);
+                $tagAttributes->addHtmlAttributeValue("width", $width);
+                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY, $width);
+                $tagAttributes->addHtmlAttributeValue("height", $height);
                 break;
             default:
                 /**

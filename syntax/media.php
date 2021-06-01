@@ -8,7 +8,6 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
-require_once(__DIR__ . '/../class/RasterImageLink.php');
 
 if (!defined('DOKU_INC')) die();
 

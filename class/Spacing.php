@@ -20,6 +20,18 @@ class Spacing
 
             $spacingValue = $attributes->getValueAndRemove($spacing);
 
+            /**
+             * Applying a padding on svg is not really recommended
+             * because it makes the icon invisble
+             */
+            $logicalTag = $attributes->getLogicalTag();
+            if ($logicalTag == SvgImageLink::CANONICAL) {
+                if (StringUtility::startWiths($spacingValue, "p")) {
+                    LogUtility::msg("We didn't apply the padding value ($spacingValue) on your svg or icon because it will make the icon invisible. Apply a margin or apply the spacing to the container component.", LogUtility::LVL_MSG_WARNING, SvgImageLink::CANONICAL);
+                    return;
+                }
+            }
+
             $spacingNames = preg_split("/\s/", $spacingValue);
             $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
             foreach ($spacingNames as $spacingClass) {

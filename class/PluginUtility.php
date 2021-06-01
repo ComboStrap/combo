@@ -44,6 +44,7 @@ require_once('Opacity.php');
 require_once('Page.php');
 require_once('Position.php');
 require_once('Prism.php');
+require_once('RasterImageLink.php');
 require_once('RenderUtility.php');
 require_once('Resources.php');
 require_once('Skin.php');

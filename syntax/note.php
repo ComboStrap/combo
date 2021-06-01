@@ -18,6 +18,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "note";
+    const COMPONENT = "combo_note";
 
     /**
      * Syntax Type.

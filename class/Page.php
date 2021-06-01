@@ -6,6 +6,7 @@ namespace ComboStrap;
 use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
+use renderer_plugin_combo_analytics;
 use RuntimeException;
 
 
@@ -549,7 +550,7 @@ class Page extends DokuPath
     }
 
     /**
-     * @param string $mode delete the cache for the format XHTML and {@link Analytics::RENDERER_NAME_MODE}
+     * @param string $mode delete the cache for the format XHTML and {@link renderer_plugin_combo_analytics::RENDERER_NAME_MODE}
      */
     public
     function deleteCache($mode = "xhtml")
@@ -572,7 +573,7 @@ class Page extends DokuPath
     function isAnalyticsCached()
     {
 
-        $cache = new CacheRenderer($this->getId(), $this->getFileSystemPath(), Analytics::RENDERER_NAME_MODE);
+        $cache = new CacheRenderer($this->getId(), $this->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
         $cacheFile = $cache->cache;
         return file_exists($cacheFile);
     }
@@ -593,7 +594,7 @@ class Page extends DokuPath
     public
     function deleteCacheAndAskAnalyticsRefresh($reason)
     {
-        $this->deleteCache(Analytics::RENDERER_NAME_MODE);
+        $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
         $sqlite = Sqlite::getSqlite();
         if ($sqlite != null) {
 
@@ -656,7 +657,7 @@ class Page extends DokuPath
          * Refresh and cache
          * (The delete is normally not needed, just to be sure)
          */
-        $this->deleteCache(Analytics::RENDERER_NAME_MODE);
+        $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
         $analytics = Analytics::processAndGetDataAsArray($this->getId(), true);
 
         /**

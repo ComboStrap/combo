@@ -373,7 +373,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 }
                 break;
 
-            case Analytics::RENDERER_FORMAT:
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
                 $state = $data[PluginUtility::STATE];
                 if ($state == DOKU_LEXER_ENTER) {

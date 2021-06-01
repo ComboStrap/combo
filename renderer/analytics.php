@@ -86,6 +86,11 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     const SCORING = "scoring";
     const SCORE = "score";
     const HEADER_STRUCT = 'header_struct';
+    const RENDERER_NAME_MODE = "combo_" . renderer_plugin_combo_analytics::RENDERER_FORMAT;
+    /**
+     * The format returned by the renderer
+     */
+    const RENDERER_FORMAT = "analytics";
 
 
     /**
@@ -546,7 +551,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
      */
     public function getFormat()
     {
-        return Analytics::RENDERER_FORMAT;
+        return self::RENDERER_FORMAT;
     }
 
     public function internallink($id, $name = null, $search = null, $returnonly = false, $linktype = 'content')

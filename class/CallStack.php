@@ -30,7 +30,7 @@ use dokuwiki\Parsing\Parser;
  *
  * You can move on the stack with the function:
  *   * {@link CallStack::next()}
- *   * {@link CallStack::prev()}
+ *   * {@link CallStack::previous()}
  *   * `MoveTo`. example: {@link CallStack::moveToPreviousCorrespondingOpeningCall()}
  *
  *
@@ -63,6 +63,12 @@ class CallStack
      * If true, we are at the offset: end of th array + 1
      */
     private $endWasReached = false;
+    /**
+     * If true, we are at the offset: start of th array - 1
+     * You can use {@link CallStack::next()}
+     * @var bool
+     */
+    private $startWasReached = false;
 
     /**
      * A callstack is a pointer implementation to manipulate
@@ -204,14 +210,18 @@ class CallStack
      */
     public function getActualCall()
     {
-        if (!$this->endWasReached) {
-            $actualCallKey = key($this->callStack);
-            $actualCallArray = &$this->callStack[$actualCallKey];
-            return new Call($actualCallArray, $actualCallKey);
-        } else {
+        if ($this->endWasReached) {
             LogUtility::msg("The actual call cannot be ask because the end of the stack was reached", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return null;
         }
+        if ($this->startWasReached) {
+            LogUtility::msg("The actual call cannot be ask because the start of the stack was reached", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return null;
+        }
+        $actualCallKey = key($this->callStack);
+        $actualCallArray = &$this->callStack[$actualCallKey];
+        return new Call($actualCallArray, $actualCallKey);
+
     }
 
     /**
@@ -221,13 +231,20 @@ class CallStack
      */
     public function next()
     {
-        $next = next($this->callStack);
-        if ($next === false) {
-            $this->endWasReached = true;
-            return $next;
-        } else {
+        if ($this->startWasReached) {
+            $this->startWasReached = false;
+            reset($this->callStack);
             return $this->getActualCall();
+        } else {
+            $next = next($this->callStack);
+            if ($next === false) {
+                $this->endWasReached = true;
+                return $next;
+            } else {
+                return $this->getActualCall();
+            }
         }
+
     }
 
     /**
@@ -254,9 +271,8 @@ class CallStack
             }
         }
         $level = 0;
-        while ($this->prev()) {
+        while ($actualCall = $this->previous()) {
 
-            $actualCall = $this->getActualCall();
             $state = $actualCall->getState();
             switch ($state) {
                 case DOKU_LEXER_ENTER:
@@ -278,15 +294,23 @@ class CallStack
         }
     }
 
-    public function prev()
+
+    public function previous()
     {
         if ($this->endWasReached) {
             $this->endWasReached = false;
             end($this->callStack);
+            return $this->getActualCall();
         } else {
-            prev($this->callStack);
+            $prev = prev($this->callStack);
+            if ($prev === false) {
+                $this->startWasReached = true;
+                return $prev;
+            } else {
+                return $this->getActualCall();
+            }
         }
-        return $this->getActualCall();
+
     }
 
     /**
@@ -394,7 +418,7 @@ class CallStack
         $this->resetPointer();
         for ($i = 0; $i < $offset; $i++) {
             $result = $this->next();
-            if ($result === false){
+            if ($result === false) {
                 break;
             }
         }
@@ -448,10 +472,10 @@ class CallStack
                         Call::createNativeCall("eol")
                     );
                     // move on the eol
-                    $this->prev();
+                    $this->previous();
                 }
                 // move back
-                $this->prev();
+                $this->previous();
             }
         }
     }
@@ -482,7 +506,14 @@ class CallStack
     private function resetPointer()
     {
         reset($this->callStack);
-        $this->endWasReached=false;
+        $this->endWasReached = false;
     }
+
+    public function moveToStart()
+    {
+        $this->resetPointer();
+        $this->previous();
+    }
+
 
 }

@@ -241,7 +241,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     $renderer->finishSectionEdit($endPosition);
                 }
                 break;
-            case Analytics::RENDERER_FORMAT:
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
                 /** @var renderer_plugin_combo_analytics $renderer */
                 if (array_key_exists("description", $data)) {
                     $renderer->setMeta("description", $data["description"]);

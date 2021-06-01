@@ -205,7 +205,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
                 return true;
 
 
-            case Analytics::RENDERER_FORMAT:
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
                 /**
                  * @var renderer_plugin_combo_analytics $renderer
@@ -263,7 +263,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
                  * Next Call
                  */
                 $nextCall = $callstack->next();
-                $callstack->prev();
+                $callstack->previous();
                 if ($nextCall === false) {
                     $nextDisplay = "last";
                     $nextCall = null;

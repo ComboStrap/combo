@@ -385,7 +385,7 @@ class Call
     /**
      * @return string
      */
-    private function getComponentName()
+    public function getComponentName()
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {
@@ -499,6 +499,11 @@ class Call
         } else {
             return false;
         }
+    }
+
+    public function isPluginCall()
+    {
+        return $this->call[0] === "plugin";
     }
 
 

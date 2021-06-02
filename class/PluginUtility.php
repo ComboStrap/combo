@@ -38,6 +38,7 @@ require_once('Hover.php');
 require_once('HtmlUtility.php');
 require_once('Icon.php');
 require_once('MediaLink.php');
+require_once('Lang.php');
 require_once('LineSpacing.php');
 require_once('LogUtility.php');
 require_once('Opacity.php');

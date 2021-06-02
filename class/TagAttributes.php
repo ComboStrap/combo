@@ -396,6 +396,11 @@ class TagAttributes
             Skin::processSkinAttribute($this);
 
             /**
+             * Lang
+             */
+            Lang::processLangAttribute($this);
+
+            /**
              * Transform
              */
             if ($this->hasComponentAttribute(self::TRANSFORM)) {

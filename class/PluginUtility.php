@@ -647,6 +647,17 @@ class PluginUtility
         if ($INFO != null) {
             $callingId = $INFO['id'];
         }
+        /**
+         * This is the case with event triggered
+         * before DokuWiki such as
+         * https://www.dokuwiki.org/devel:event:init_lang_load
+         */
+        if ($callingId == null) {
+            global $_REQUEST;
+            if (isset($_REQUEST["id"])) {
+                $callingId = $_REQUEST["id"];
+            }
+        }
         return $callingId;
     }
 

@@ -1,0 +1,6 @@
+{
+    "name": "combostrap/combo",
+    "require": {
+        "mpdf/mpdf": "8.0.*"
+    }
+}

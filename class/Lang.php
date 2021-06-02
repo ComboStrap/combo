@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Cache\Cache;
+
 class Lang
 {
 
@@ -31,17 +33,51 @@ class Lang
     {
 
 
-
         /**
          * Adding the lang attribute
          * if set
          */
         if ($attributes->hasComponentAttribute(self::LANG_ATTRIBUTES)) {
             $langValue = $attributes->getValueAndRemove(self::LANG_ATTRIBUTES);
-            $attributes->addHtmlAttributeValue("lang",$langValue);
+            $attributes->addHtmlAttributeValue("lang", $langValue);
 
-            // Language about the data
-            $layoutUrl = "https://github.com/unicode-org/cldr-json/blob/master/cldr-json/cldr-misc-modern/main/$langValue/layout.json";
+            $languageDataCache = new Cache("combo_" . $langValue, "json");
+            $cacheDataUsable = $languageDataCache->useCache();
+            if (!$cacheDataUsable) {
+
+                // Language about the data
+                $downloadUrl = "https://github.com/unicode-org/cldr-json/blob/master/cldr-json/cldr-misc-modern/main/$langValue/layout.json";
+
+                $filePointer = @fopen($downloadUrl, 'r');
+                if ($filePointer != false) {
+
+                    $numberOfByte = @file_put_contents($languageDataCache->cache, $filePointer);
+                    if ($numberOfByte != false) {
+                        LogUtility::msg("The new language data ($langValue) was downloaded", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                        $cacheDataUsable = true;
+                    } else {
+                        LogUtility::msg("Internal error: The language data ($langValue) could no be written to ($languageDataCache->cache)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    }
+
+                } else {
+
+                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+
+                }
+            }
+
+            if ($cacheDataUsable) {
+                $jsonAsArray = true;
+                $languageData = json_decode(file_get_contents($languageDataCache->cache), $jsonAsArray);
+                $characterOrder = $languageData["main"][$langValue]["layout"]["orientation"]["characterOrder"];
+                if ($characterOrder == "right-to-left") {
+                    $attributes->addHtmlAttributeValue("dir", "rtl");
+                } else {
+                    $attributes->addHtmlAttributeValue("dir", "ltr");
+                }
+            } else {
+                LogUtility::msg("The language direction cannot be set because no language data was found for the language ($langValue)", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+            }
 
         }
 

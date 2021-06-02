@@ -41,12 +41,12 @@ class Lang
             $langValue = $attributes->getValueAndRemove(self::LANG_ATTRIBUTES);
             $attributes->addHtmlAttributeValue("lang", $langValue);
 
-            $languageDataCache = new Cache("combo_" . $langValue, "json");
+            $languageDataCache = new Cache("combo_" . $langValue, ".json");
             $cacheDataUsable = $languageDataCache->useCache();
             if (!$cacheDataUsable) {
 
                 // Language about the data
-                $downloadUrl = "https://github.com/unicode-org/cldr-json/blob/master/cldr-json/cldr-misc-modern/main/$langValue/layout.json";
+                $downloadUrl = "https://raw.githubusercontent.com/unicode-org/cldr-json/master/cldr-json/cldr-misc-modern/main/$langValue/layout.json";
 
                 $filePointer = @fopen($downloadUrl, 'r');
                 if ($filePointer != false) {
@@ -69,6 +69,10 @@ class Lang
             if ($cacheDataUsable) {
                 $jsonAsArray = true;
                 $languageData = json_decode(file_get_contents($languageDataCache->cache), $jsonAsArray);
+                if($languageData==null){
+                    LogUtility::msg("We could not read the data from the language ($langValue). No direction was set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return;
+                }
                 $characterOrder = $languageData["main"][$langValue]["layout"]["orientation"]["characterOrder"];
                 if ($characterOrder == "right-to-left") {
                     $attributes->addHtmlAttributeValue("dir", "rtl");

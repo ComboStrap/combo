@@ -51,11 +51,8 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
     public static function renderClosingTag($context, $tagAttributes)
     {
         $level = $tagAttributes->getValueAndRemove(self::LEVEL);
-        switch ($context) {
-            default:
-                $html = "</h$level>" . DOKU_LF;
-        }
-        return $html;
+
+        return "</h$level>" . DOKU_LF;
     }
 
     function getType()

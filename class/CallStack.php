@@ -210,10 +210,14 @@ class CallStack
      * And go to the previous position
      *
      * This function can be used in a next loop
+     *
+     * @return Call the deleted call
      */
     public
     function deleteActualCallAndPrevious()
     {
+
+        $actualCall = $this->getActualCall();
 
         $offset = $this->getActualOffset();
         array_splice($this->callStack, $offset, 1, []);
@@ -222,7 +226,7 @@ class CallStack
          * Move to the next element (array splice reset the pointer)
          * if there is a eol as, we delete it
          * otherwise we may end up with two eol
-         *  and this is an empty paragraph
+         * and this is an empty paragraph
          */
         $this->moveToOffset($offset);
         if (!$this->isPointerAtEnd()) {
@@ -230,10 +234,13 @@ class CallStack
                 array_splice($this->callStack, $offset, 1, []);
             }
         }
+
         /**
          * Move to the previous element
          */
         $this->moveToOffset($offset - 1);
+
+        return $actualCall;
 
     }
 
@@ -392,6 +399,9 @@ class CallStack
     public
     function moveToEnd()
     {
+        if($this->startWasReached){
+            $this->startWasReached = false;
+        }
         end($this->callStack);
         $this->next();
     }
@@ -643,6 +653,8 @@ class CallStack
             }
         }
     }
+
+
 
 
 }

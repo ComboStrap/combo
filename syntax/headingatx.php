@@ -2,6 +2,7 @@
 
 
 use ComboStrap\Bootstrap;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -23,6 +24,16 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     const TAG = "headingatx";
     const LEVEL = 'level';
     const EXIT_PATTERN = "\r??\n";
+    const OUTLINE = "outline";
+
+
+    public static function toc(Doku_Renderer_xhtml $renderer, $text, $level)
+    {
+        $hid = $renderer->_headerToLink($text, true);
+
+        //only add items within configured levels
+        $renderer->toc_additem($hid, $text, $level);
+    }
 
 
     function getType()
@@ -95,49 +106,113 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                 $attributes = [syntax_plugin_combo_title::LEVEL => strlen(trim($match))];
                 $callStack = CallStack::createFromHandler($handler);
 
-                $parentTagName = "";
                 $parent = $callStack->moveToParent();
-                if ($parent != false) {
-                    $parentTagName = $parent->getTagName();
+                if ($parent != false && $parent->getComponentName() != "section_open") {
+
+                    // Context
+                    $context = $parent->getTagName();
+
+
+                } else {
+
+                    // Outline heading
+                    $context = self::OUTLINE;
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $parentTagName
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => PluginUtility::htmlEncode($match),
+                    PluginUtility::CONTEXT => $parent->getContext(),
+                    PluginUtility::PAYLOAD => $match,
                 );
 
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
+
+                /**
+                 * Get the level (ie in the attributes)
+                 */
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $openingTagAttributes = $openingTag->getAttributes();
 
                 /**
-                 * No link on image
+                 * If it's an outline
+                 * We render the input
+                 * and we create the call
+                 * We do this because the outline element
+                 * needed for toc building such as the {@link Doku_Renderer_xhtml::node}
+                 * is private. We can't therefore plug in in the toc
+                 * without writing our own.
+                 * One limitation is that the TOC can be only in HTML
                  */
-                $callStack->processNoLinkOnImageToEndStack();
+                $context = $openingTag->getContext();
+                if ($context == self::OUTLINE) {
 
-                /**
-                 * Go to the parent
-                 */
-                $parent = $callStack->moveToParent();
-                $parentTagName = "";
-                // Heading may lived outside a component
-                if ($parent != null) {
-                    $parentTagName = $parent->getTagName();
+                    // Outline heading
+                    $context = self::OUTLINE;
+                    $callStack->moveToEnd();
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
+
+                    /**
+                     * Extract the heading content instructions
+                     * and print them
+                     */
+                    $headingContentInstructions = [];
+                    $textForId = "";
+                    while ($actualCall = $callStack->next()) {
+                        $headingContentInstructions[] = $actualCall->getCall();
+                        /**
+                         * Unmatched content should not be printed twice
+                         */
+                        if (
+                            $actualCall->getTagName() == $this->getPluginComponent()
+                            && $actualCall->getState() == DOKU_LEXER_UNMATCHED
+                        ) {
+                            $textForId .= $actualCall->getMatchedContent();
+                        }
+                        $callStack->deleteActualCallAndPrevious();
+                    }
+                    $textForId = trim($textForId);
+                    $headingContent = p_render('xhtml', $headingContentInstructions, $info);
+                    $level = $openingTagAttributes[syntax_plugin_combo_title::LEVEL];
+
+                    /**
+                     * Code extracted from the end of {@link Doku_Handler::header()}
+                     */
+                    if ($handler->getStatus('section')) {
+                        $handler->addCall('section_close', array(), $pos);
+                    }
+                    $handler->addCall('header', array($textForId, $level, $pos), $pos);
+                    $handler->addPluginCall(
+                        PluginUtility::getComponentName(self::TAG),
+                        [
+                            PluginUtility::PAYLOAD => $headingContent,
+                            PluginUtility::STATE => DOKU_LEXER_SPECIAL
+                        ],
+                        DOKU_LEXER_SPECIAL,
+                        0,
+                        ""
+                    );
+                    $handler->addCall('section_open', array($level), $pos);
+                    $handler->setStatus('section', true);
+
+
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $parentTagName,
+                    PluginUtility::CONTEXT => $context,
                     PluginUtility::ATTRIBUTES => $openingTagAttributes
 
                 );
@@ -168,19 +243,34 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
-                    $parentTag = $data[PluginUtility::CONTEXT];
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                    syntax_plugin_combo_title::renderOpeningTag($parentTag, $tagAttributes, $renderer);
+                    $context = $data[PluginUtility::CONTEXT];
+                    if ($context != self::OUTLINE) {
+
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                        syntax_plugin_combo_title::renderOpeningTag($context, $tagAttributes, $renderer);
+
+                    }
+
                     break;
                 case DOKU_LEXER_UNMATCHED:
+
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
+
+                    break;
+                case DOKU_LEXER_SPECIAL:
+
+                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . "</h1>";
+
                     break;
                 case DOKU_LEXER_EXIT:
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+
                     $context = $data[PluginUtility::CONTEXT];
-                    $renderer->doc .= syntax_plugin_combo_title::renderClosingTag($context, $tagAttributes);
+                    if ($context != self::OUTLINE) {
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                        $renderer->doc .= syntax_plugin_combo_title::renderClosingTag($context, $tagAttributes, $renderer);
+                    }
                     break;
 
             }

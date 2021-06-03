@@ -514,5 +514,10 @@ class Call
         return $this->key;
     }
 
+    public function getCall()
+    {
+        return $this->call;
+    }
+
 
 }

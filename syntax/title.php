@@ -5,6 +5,7 @@ use ComboStrap\Bootstrap;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 
 if (!defined('DOKU_INC')) die();
@@ -44,12 +45,12 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 
     /**
      * @param $context
-     * @param $attributes
+     * @param TagAttributes $tagAttributes
      * @return string
      */
-    private static function renderClosingTag($context, $attributes)
+    public static function renderClosingTag($context, $tagAttributes)
     {
-        $level = $attributes[self::LEVEL];
+        $level = $tagAttributes->getValueAndRemove(self::LEVEL);
         switch ($context) {
             default:
                 $html = "</h$level>" . DOKU_LF;
@@ -226,25 +227,28 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                     /**
                      * The short title ie ( === title === )
                      */
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                     $context = $data[PluginUtility::CONTEXT];
-                    $title = $attributes[self::TITLE];
-                    self::renderOpeningTag($context, $attributes,$renderer);
+                    $title = $tagAttributes->getValueAndRemove(self::TITLE);
+                    self::renderOpeningTag($context, $tagAttributes, $renderer);
                     $renderer->doc .= PluginUtility::htmlEncode($title);
-                    $renderer->doc .= self::renderClosingTag($context, $attributes);
+                    $renderer->doc .= self::renderClosingTag($context, $tagAttributes);
                     break;
                 case DOKU_LEXER_ENTER:
                     $parentTag = $data[PluginUtility::CONTEXT];
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    self::renderOpeningTag($parentTag, $attributes, $renderer);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    self::renderOpeningTag($parentTag, $tagAttributes, $renderer);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
                 case DOKU_LEXER_EXIT:
                     $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
                     $context = $data[PluginUtility::CONTEXT];
-                    $renderer->doc .= self::renderClosingTag($context, $attributes);
+                    $renderer->doc .= self::renderClosingTag($context, $tagAttributes);
                     break;
 
             }
@@ -255,10 +259,10 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 
     /**
      * @param $context
-     * @param $attributes
+     * @param TagAttributes $tagAttributes
      * @param Doku_Renderer_xhtml $renderer
      */
-    static function renderOpeningTag($context, $attributes, &$renderer)
+    static function renderOpeningTag($context, $tagAttributes, &$renderer)
     {
 
 
@@ -266,7 +270,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
 
             case syntax_plugin_combo_blockquote::TAG:
             case syntax_plugin_combo_card::TAG:
-                PluginUtility::addClass2Attributes("card-title", $attributes);
+                $tagAttributes->addClassName("card-title");
                 break;
 
         }
@@ -274,27 +278,22 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
         /**
          * Printing
          */
-        $type = $attributes["type"];
+        $type = $tagAttributes->getType();
         if ($type != 0) {
-            PluginUtility::addClass2Attributes("display-" . $type, $attributes);
-            if (Bootstrap::getBootStrapMajorVersion()=="4") {
+            $tagAttributes->addClassName("display-" . $type);
+            if (Bootstrap::getBootStrapMajorVersion() == "4") {
                 /**
                  * Make Bootstrap display responsive
                  */
                 PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::DISPLAY_BS_4);
             }
         }
-        if (isset($attributes[self::TITLE])) {
-            unset($attributes[self::TITLE]);
-        }
-        $level = $attributes[self::LEVEL];
-        unset($attributes[self::LEVEL]);
-        $html = '<h' . $level;
-        if (sizeof($attributes) > 0) {
-            $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-        }
-        $html .= ' >';
-        $renderer->doc .= $html;
+        $tagAttributes->removeComponentAttributeIfPresent(self::TITLE);
+
+        $level = $tagAttributes->getValueAndRemove(self::LEVEL);
+
+        $renderer->doc .= $tagAttributes->toHtmlEnterTag("h$level");
+
     }
 
     public

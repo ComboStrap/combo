@@ -16,6 +16,7 @@ namespace ComboStrap;
 use Doku_Handler;
 use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\Parsing\Parser;
+use syntax_plugin_combo_media;
 
 /**
  * Class CallStack
@@ -332,6 +333,9 @@ class CallStack
     }
 
 
+    /**
+     * @return Call|false the previous call or false if there is no more previous call
+     */
     public
     function previous()
     {
@@ -565,6 +569,79 @@ class CallStack
     {
         $this->resetPointer();
         $this->previous();
+    }
+
+    /**
+     * @return Call|false the parent call or false if there is no parent
+     */
+    public function moveToParent()
+    {
+
+        /**
+         * Case when we start from the exit state element
+         * We go first to the opening tag
+         * because the algorithm is level based.
+         *
+         * When the end is reached, there is no call
+         * (this not the {@link end php end} but one further
+         */
+        if (!$this->endWasReached && $this->getActualCall()->getState() == DOKU_LEXER_EXIT) {
+
+            $this->moveToPreviousCorrespondingOpeningCall();
+
+        }
+
+
+        /**
+         * We are in a parent when the tree level is negative
+         */
+        $treeLevel = 0;
+        while ($actualCall = $this->previous()) {
+
+            /**
+             * Add
+             * would become a parent on its enter state
+             */
+            $actualCallState = $actualCall->getState();
+            switch ($actualCallState) {
+                case DOKU_LEXER_ENTER:
+                    $treeLevel = $treeLevel - 1;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    /**
+                     * When the tag has a sibling with an exit tag
+                     */
+                    $treeLevel = $treeLevel + 1;
+                    break;
+            }
+
+            /**
+             * The breaking statement
+             */
+            if ($treeLevel < 0) {
+                break;
+            }
+
+        }
+        return $actualCall;
+
+
+    }
+
+    /**
+     * Delete the anchor link to the image (ie the lightbox)
+     *
+     * This is used in navigation and for instance
+     * in heading
+     */
+    public function processNoLinkOnImageToEndStack()
+    {
+        while ($this->next()) {
+            $actualCall = $this->getActualCall();
+            if ($actualCall->getTagName() == syntax_plugin_combo_media::TAG) {
+                $actualCall->addAttribute(TagAttributes::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+            }
+        }
     }
 
 

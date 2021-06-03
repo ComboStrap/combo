@@ -144,14 +144,11 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
                  * An image in a label should have no link (ie no anchor)
                  * because a anchor is used for navigation
                  */
-                while ($callStack->next()) {
-                    $actualCall = $callStack->getActualCall();
-                    if ($actualCall->getTagName() == syntax_plugin_combo_media::TAG) {
-                        $actualCall->addAttribute(TagAttributes::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
-                    }
-                }
+                $callStack->processNoLinkOnImageToEndStack();
 
                 $callStack->closeAndResetPointer();
+
+                $callStack->noLinkToImageInComponent();
 
                 return array(
                     PluginUtility::STATE => $state,

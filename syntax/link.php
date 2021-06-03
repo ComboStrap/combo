@@ -6,7 +6,7 @@ require_once(__DIR__ . "/../class/PluginUtility.php");
 require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/HtmlUtility.php");
 
-use ComboStrap\Analytics;
+use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -35,6 +35,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
     /**
      * The link Tag
+     * a or p
      */
     const LINK_TAG = "linkTag";
 
@@ -214,12 +215,22 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 return $data;
 
             case DOKU_LEXER_EXIT:
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $openingAttributes = $openingTag->getAttributes();
-                $linkTag = $openingTag->getData()[self::LINK_TAG];
+                $linkTag = $openingTag->getPluginData()[self::LINK_TAG];
+                $openingPosition = $openingTag->getPosition();
 
-                if ($openingTag->getActualPosition() == $tag->getActualPosition() - 1) {
+                $callStack->moveToEnd();
+                $previousCall = $callStack->previous();
+                $previousCallPosition  = $previousCall->getPosition();
+                $previousCallContent = $previousCall->getMatchedContent();
+
+                if (
+                    $openingPosition == $previousCallPosition // ie [[id]]
+                    ||
+                    ($openingPosition == $previousCallPosition - 1 && $previousCallContent == "|") // ie [[id|]]
+                ) {
                     // There is no name
                     $link = new LinkUtility($openingAttributes[LinkUtility::ATTRIBUTE_REF]);
                     $linkName = $link->getName();

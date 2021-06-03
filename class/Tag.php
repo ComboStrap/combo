@@ -45,14 +45,6 @@ class Tag
     const INVISIBLE_CONTENT_TAG = ["p"];
 
     /**
-     * The type of callstack
-     *   * main is the normal
-     *   * writer is when there is a temporary call stack from the writer
-     */
-    const CALLSTACK_WRITER = "writer";
-    const CALLSTACK_MAIN = "main";
-
-    /**
      * The {@link Doku_Handler::$calls} or {@link CallWriter::$calls}
      * @var
      */
@@ -132,17 +124,17 @@ class Tag
              */
             if (!empty($writerCalls)) {
                 $this->calls = &$writerCalls;
-                $this->callStackType = self::CALLSTACK_WRITER;
+                $this->callStackType = CallStack::CALLSTACK_WRITER;
             } else {
                 $this->calls = &$handler->calls;
-                $this->callStackType = self::CALLSTACK_MAIN;
+                $this->callStackType = CallStack::CALLSTACK_MAIN;
             }
         } else {
             if ($callStackType == null) {
                 LogUtility::msg("When the position is set, the callstack type should be given", LogUtility::LVL_MSG_ERROR);
             }
             $this->callStackType = $callStackType;
-            if ($callStackType == self::CALLSTACK_MAIN) {
+            if ($callStackType == CallStack::CALLSTACK_MAIN) {
                 $this->calls = &$handler->calls;
             } else {
                 $this->calls = &$writerCalls;

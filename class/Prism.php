@@ -286,8 +286,6 @@ EOD;
         $attributes->addClassName('language-' . $language);
 
 
-
-
         /**
          * Line numbers
          */
@@ -305,11 +303,14 @@ EOD;
          * Add the styling class
          * https://combostrap.com/styling/userstyle
          */
-        $pluginComponent = $plugin->getPluginComponent();
-        $preAttributes->addClassName($pluginComponent . '-combo-pre');
+        $logicalTag = $plugin->getPluginComponent();
+        if ($attributes->getLogicalTag() != null) {
+            $logicalTag = $attributes->getLogicalTag();
+        }
+        $preAttributes->addClassName($logicalTag . '-combo-pre');
         $type = $attributes->getType();
         if (!empty($type)) {
-            $preAttributes->addClassName($pluginComponent . '-' . $type . '-combo-pre');
+            $preAttributes->addClassName($logicalTag . '-' . $type . '-combo-pre');
         }
 
         // Command line
@@ -352,7 +353,7 @@ EOD;
             $preAttributes->addHtmlAttributeValue('data-src', $fileSrc);
             $preAttributes->addHtmlAttributeValue('data-download-link-label', "Download " . $fileSrc);
         } else {
-            $fileName = "file.". $language;
+            $fileName = "file." . $language;
             $preAttributes->addHtmlAttributeValue('data-src', $fileName);
         }
         $htmlCode = $preAttributes->toHtmlEnterTag("pre") . DOKU_LF;
@@ -400,7 +401,7 @@ EOD;
     private static function addAutoloaderSnippet()
     {
         $tags = [];
-        $tags['script'][] = array("src" => self::BASE_PRISM_CDN."/plugins/autoloader/prism-autoloader.min.js");
+        $tags['script'][] = array("src" => self::BASE_PRISM_CDN . "/plugins/autoloader/prism-autoloader.min.js");
         PluginUtility::getSnippetManager()->upsertTagsForBar(self::SNIPPET_ID_AUTOLOADER, $tags);
     }
 

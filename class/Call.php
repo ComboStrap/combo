@@ -506,5 +506,13 @@ class Call
         return $this->call[0] === "plugin";
     }
 
+    /**
+     * @return mixed|string the position (ie key) in the array
+     */
+    public function getPosition()
+    {
+        return $this->key;
+    }
+
 
 }

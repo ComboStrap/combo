@@ -133,7 +133,10 @@ class TagAttributes
     /**
      * ComponentAttributes constructor.
      * Use the static create function to instantiate this object
-     * @param $tag - tag (the tag gives context for the attributes (ie an div has no natural width while an img has)
+     * @param $tag - tag (the tag gives context for the attributes
+     *     * an div has no natural width while an img has
+     *     * this is not always the component name / syntax name (for instance the {@link \syntax_plugin_combo_codemarkdown} is another syntax
+     * for a {@link \syntax_plugin_combo_code} and have therefore the same logical name)
      * @param array $componentAttributes
      */
     private function __construct($componentAttributes = array(), $tag = null)

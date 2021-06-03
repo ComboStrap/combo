@@ -15,26 +15,31 @@ require_once(__DIR__ . '/../class/Prism.php');
 if (!defined('DOKU_INC')) die();
 
 /**
- * Class syntax_plugin_combo_code
  *
  * Support <a href="https://github.github.com/gfm/#fenced-code-blocks">Github code block</a>
  *
  * The original code markdown code block is the {@link syntax_plugin_combo_preformatted}
  */
-class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_codemarkdown extends DokuWiki_Syntax_Plugin
 {
 
-    /**
-     * Enable or disable the code component
-     */
-    const CONF_CODE_ENABLE = 'codeEnable';
-
 
     /**
-     * The tag of the ui component
+     * The exit pattern of markdown
+     * use in the enter pattern as regexp look-ahead
      */
-    const CODE_TAG = "code";
-    const FILE_PATH_KEY = "file-path";
+    const MARKDOWN_EXIT_PATTERN = "^\s*(?:\`|~){3}\s*$";
+
+    /**
+     * The syntax name, not a tag
+     * This must be the same that the last part name
+     * of the class (without any space !)
+     * This is the id in the callstack
+     * and gives us just a way to get the
+     * {@link \dokuwiki\Extension\SyntaxPlugin::getPluginComponent()}
+     * value (tag = plugin component)
+     */
+    const TAG = "codemarkdown";
 
 
     function getType()
@@ -75,10 +80,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 
     function getSort()
     {
-        /**
-         * Should be less than the code syntax plugin
-         * which is 200
-         **/
+
         return 199;
     }
 
@@ -86,10 +88,20 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        if ($this->getConf(self::CONF_CODE_ENABLE)) {
-            $pattern = PluginUtility::getContainerTagPattern(self::CODE_TAG);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
+        //
+        // This pattern works with mgs flag
+        //
+        // Match:
+        //  * the start of a line
+        //  * any consecutive blank character
+        //  * 3 consecutive backtick characters (`) or tildes (~)
+        //  * a word (info string - ie the language)
+        //  * any consecutive blank character
+        //  * the end of a line
+        //  * a look ahead to see if we have the exit pattern
+        // https://github.github.com/gfm/#fenced-code-blocks
+        $gitHubMarkdownPattern = "^\s*(?:\`|~){3}\w*\s*$(?=.*?" . self::MARKDOWN_EXIT_PATTERN . ")";
+        $this->Lexer->addEntryPattern($gitHubMarkdownPattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
 
     }
@@ -97,9 +109,9 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 
     function postConnect()
     {
-        if ($this->getConf(self::CONF_CODE_ENABLE)) {
-            $this->Lexer->addExitPattern('</' . self::CODE_TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
+
+
+        $this->Lexer->addExitPattern(self::MARKDOWN_EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
 
     }
@@ -122,38 +134,24 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 
         switch ($state) {
 
-            case DOKU_LEXER_ENTER :
-                $tagAttributes = PluginUtility::getQualifiedTagAttributes($match, true, self::FILE_PATH_KEY);
+            case DOKU_LEXER_ENTER:
+                $trimmedMatch = trim($match);
+                $language = preg_replace("(`{3}|~{3})", "", $trimmedMatch);
+
+                $attributes = [TagAttributes::TYPE_KEY => $language];
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
-                $data = PluginUtility::handleAndReturnUnmatchedData(self::CODE_TAG, $match, $handler);
-                /**
-                 * Attribute are send for the
-                 * export of code functionality
-                 * and display = none
-                 */
-                $tag = new Tag(self::CODE_TAG, array(), $state, $handler);
-                $tagAttributes = $tag->getParent()->getAttributes();
-                $data[PluginUtility::ATTRIBUTES] = $tagAttributes;
-                return $data;
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
 
             case DOKU_LEXER_EXIT :
-                /**
-                 * Tag Attributes are passed
-                 * because it's possible to not display a code with the display attributes = none
-                 */
-                $tag = new Tag(self::CODE_TAG, array(), $state, $handler);
-                $tagAttributes = $tag->getOpeningTag()->getAttributes();
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes
-                );
+
+                return array(PluginUtility::STATE => $state);
 
 
         }
@@ -181,25 +179,21 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CODE_TAG);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], syntax_plugin_combo_code::CODE_TAG);
                     Prism::htmlEnter($renderer, $this, $attributes);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
 
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $display = $attributes->getValue("display");
-                    if ($display != "none") {
-                        // Delete the eol at the beginning and end
-                        // otherwise we get a big block
-                        $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
-                        $renderer->doc .= PluginUtility::htmlEncode($payload);
-                    }
+                    // Delete the eol at the beginning and end
+                    // otherwise we get a big block
+                    $payload = trim($data[PluginUtility::PAYLOAD], "\n\r");
+                    $renderer->doc .= PluginUtility::htmlEncode($payload);
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    Prism::htmlExit($renderer, $attributes);
+
+                    Prism::htmlExit($renderer);
                     break;
 
             }
@@ -215,8 +209,8 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $text = $data[PluginUtility::PAYLOAD];
-                $filename = $attributes[self::FILE_PATH_KEY];
                 $language = strtolower($attributes["type"]);
+                $filename = $language;
                 $renderer->code($text, $language, $filename);
 
             }

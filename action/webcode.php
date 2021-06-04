@@ -14,7 +14,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
     const CALL_ID = "webcode";
     const DW_PARAM = "dw";
-    const CALL_PARAM = "call";
+
 
     function register(Doku_Event_Handler $controller)
     {
@@ -79,6 +79,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
             PluginUtility::loadStrapUtilityTemplate();
             TplUtility::registerHeaderHandler();
         }
+
         /**
          * To delete the not needed headers for an export
          * such as manifest, alternate, ...
@@ -102,6 +103,11 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
     }
 
+    /**
+     * Dynamically called in the previous function
+     * to delete the head
+     * @param $event
+     */
     public function _delete_not_needed_headers(&$event)
     {
         $data = &$event->data;

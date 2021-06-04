@@ -147,13 +147,15 @@ class TagAttributes
 
     /**
      * @param $match - the {@link SyntaxPlugin::handle()} match
+     * @param array $defaultAttributes
      * @return TagAttributes
      */
-    public static function createFromTagMatch($match)
+    public static function createFromTagMatch($match, $defaultAttributes = [])
     {
-        $htmlAttributes = PluginUtility::getTagAttributes($match);
+        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match);
         $tag = PluginUtility::getTag($match);
-        return self::createFromCallStackArray($htmlAttributes, $tag);
+        $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
+        return self::createFromCallStackArray($mergedAttributes, $tag);
     }
 
 

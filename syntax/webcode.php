@@ -16,9 +16,9 @@
  */
 
 // must be run within Dokuwiki
+use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
@@ -51,11 +51,6 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     const USE_CONSOLE_ATTRIBUTE = "useConsole";
     const RENDERINGMODE_ATTRIBUTE = 'renderingmode';
     const RENDERING_ONLY_RESULT = "onlyresult";
-
-    /**
-     * @var array that holds the iframe attributes
-     */
-    private $attributes = array();
 
 
     /**
@@ -162,47 +157,19 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                // We got the first webcode tag and its attributes
+                // Default
+                $defaultAttributes = array();
+                $defaultAttributes['frameborder'] = 1;
+                $defaultAttributes['width'] = '100%';
+                $defaultAttributes[self::RENDERINGMODE_ATTRIBUTE] = 'story';
 
-                $match = substr($match, 8, -1); //9 = strlen("<webcode")
+                // Parse and create the call stack array
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes);
+                $callStackArray = $tagAttributes->toCallStackArray();
 
-                // Reset of the attributes
-                // With some framework the php object may be still persisted in memory
-                // And you may get some attributes from other page
-                $attributes = array();
-                $attributes['frameborder'] = 1;
-                $attributes['width'] = '100%';
-
-                $renderingModeKey = self::RENDERINGMODE_ATTRIBUTE;
-                $attributes[$renderingModeKey] = 'story';
-
-                // config Parameters will get their value in lowercase
-                $configAttributes = [$renderingModeKey];
-
-                // /i not case sensitive
-                $attributePattern = "\s*(\w+)\s*=\s*\"?([^\"\s]+)\"?\\s*";
-                $result = preg_match_all('/' . $attributePattern . '/i', $match, $matches);
-
-
-                if ($result != 0) {
-                    foreach ($matches[1] as $key => $lang) {
-                        $attributeKey = strtolower($lang);
-                        $attributeValue = $matches[2][$key];
-                        if (in_array($attributeKey, $configAttributes)) {
-                            $attributeValue = strtolower($attributeValue);
-                        }
-                        $attributes[$attributeKey] = $attributeValue;
-                    }
-                }
-
-                // We set the attributes on a class scope
-                // to be used in the DOKU_LEXER_UNMATCHED step
-                $this->attributes = $attributes;
-
-                // Cache the values to be used by the render method
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $callStackArray
                 );
 
 
@@ -221,32 +188,45 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                  * Does the javascript contains a console statement
                  */
                 $useConsole = false;
-                $exitTag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $exitTag->getOpeningTag();
+
+                /**
+                 * Callstack
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $renderingMode = strtolower($openingTag->getAttribute(self::RENDERINGMODE_ATTRIBUTE));
-                if ($openingTag->hasDescendants()) {
-                    $tags = $openingTag->getDescendants();
-                    /**
-                     * Mime and code content are in two differents
-                     * tag. To be able to set the content to the good type
-                     * we keep a trace of it
-                     */
-                    $actualCodeType = "";
-                    foreach ($tags as $tag) {
-                        if (in_array($tag->getName(), self::CODE_TAGS)) {
 
-                            /**
-                             * Only rendering mode
-                             * on all node (unmatched also)
-                             */
-                            if ($renderingMode == self::RENDERING_ONLY_RESULT) {
-                                $tag->addAttribute(TagAttributes::DISPLAY, "none");
-                            }
+                /**
+                 * The mime (ie xml,html, ...) and code content are in two differents
+                 * call. To be able to set the content to the good type
+                 * we keep a trace of it
+                 */
+                $actualCodeType = "";
 
-                            if ($tag->getState() == DOKU_LEXER_ENTER) {
+                /**
+                 * Loop
+                 */
+                while ($actualTag = $callStack->next()) {
+
+
+                    if (
+                    in_array($actualTag->getTagName(), self::CODE_TAGS)
+                    ) {
+
+                        /**
+                         * Only rendering mode, we don't display the node
+                         * on all node (enter, exit and unmatched)
+                         */
+                        if ($renderingMode == self::RENDERING_ONLY_RESULT) {
+                            $actualTag->addAttribute(TagAttributes::DISPLAY, "none");
+                        }
+
+                        switch ($actualTag->getState()) {
+
+                            case DOKU_LEXER_ENTER:
                                 // Get the code (The content between the code nodes)
                                 // We ltrim because the match gives us the \n at the beginning and at the end
-                                $actualCodeType = strtolower(trim($tag->getType()));
+                                $actualCodeType = strtolower(trim($actualTag->getType()));
 
                                 // Xml is html
                                 if ($actualCodeType == 'xml') {
@@ -257,16 +237,15 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                                     $codes[$actualCodeType] = "";
                                 }
 
-                                continue;
-                            }
+                                continue 2;
 
-                            if ($tag->getState() == DOKU_LEXER_UNMATCHED) {
+                            case DOKU_LEXER_UNMATCHED:
 
-                                $codeContent = $tag->getData()[PluginUtility::PAYLOAD];
+                                $codeContent = $actualTag->getPluginData()[PluginUtility::PAYLOAD];
 
                                 if (empty($actualCodeType)) {
                                     LogUtility::msg("The type of the code should not be null for the code content " . $codeContent, LogUtility::LVL_MSG_WARNING, self::TAG);
-                                    continue;
+                                    continue 2;
                                 }
 
                                 // Append it
@@ -284,36 +263,18 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                                 }
                                 // Reset
                                 $actualCodeType = "";
-                            }
+                                break;
+
                         }
                     }
+
                 }
-//                if(isset($codes["dw"])){
-//                    // http://php.net/manual/en/function.stream-context-create.php
-//                    $dw = $codes["dw"];
-//
-//                    $url = Site::getAjaxUrl();
-//                    $data = array(
-//                        action_plugin_combo_webcode::DW_PARAM => $dw,
-//                        action_plugin_combo_webcode::CALL_PARAM => action_plugin_combo_webcode::CALL_ID
-//                    );
-//
-//                    // use key 'http' even if you send the request to https://...
-//                    $options = array(
-//                        'http' => array(
-//                            'method'  => 'POST',
-//                            'content' => http_build_query($data)
-//                        )
-//                    );
-//                    $context  = stream_context_create($options);
-//                    $result = file_get_contents($url, false, $context);
-//                    if ($result === FALSE) { /* Handle error */ }
-//
-//                }
+
                 return array(
                     PluginUtility::STATE => $state,
                     self::CODES_ATTRIBUTE => $codes,
-                    self::USE_CONSOLE_ATTRIBUTE => $useConsole
+                    self::USE_CONSOLE_ATTRIBUTE => $useConsole,
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
 
         }
@@ -350,10 +311,6 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                     PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
 
-                    // The extracted data are the attribute of the webcode tag
-                    // We put in a class variable so that we can use in the last step (DOKU_LEXER_EXIT)
-                    $this->attributes = $data[PluginUtility::ATTRIBUTES];
-
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -363,6 +320,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
                     $codes = $data[self::CODES_ATTRIBUTE];
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+
                     // Create the real output of webcode
                     if (sizeof($codes) == 0) {
                         return false;
@@ -387,8 +346,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // External Resources such as css stylesheet or js
                         $externalResources = array();
-                        if (array_key_exists(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY, $this->attributes)) {
-                            $externalResources = explode(",", $this->attributes[self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY]);
+                        if (array_key_exists(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY, $attributes)) {
+                            $externalResources = explode(",", $attributes[self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY]);
                         }
 
                         // Babel Preprocessor, if babel is used, add it to the external resources
@@ -459,8 +418,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // We add the name HTML attribute
                         $name = "WebCode iFrame";
-                        if (array_key_exists('name', $this->attributes)) {
-                            $name .= ' ' . $this->attributes['name'];
+                        if (array_key_exists('name', $attributes)) {
+                            $name .= ' ' . $attributes['name'];
                         }
                         $iFrameHtml .= ' name="' . $name . '" ';
 
@@ -469,7 +428,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // We add the others HTML attributes
                         $iFrameHtmlAttributes = array('width', 'height', 'frameborder', 'scrolling');
-                        foreach ($this->attributes as $attribute => $value) {
+                        foreach ($attributes as $attribute => $value) {
                             if (in_array($attribute, $iFrameHtmlAttributes)) {
                                 $iFrameHtml .= ' ' . $attribute . '=' . $value;
                             }
@@ -479,7 +438,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         // Credits bar
                         $bar = '<div class="webcode-bar">';
                         $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by Webcode", false) . '</div>';
-                        $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $this->attributes) . '</div>';
+                        $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $attributes) . '</div>';
                         $bar .= '</div>';
                         $renderer->doc .= '<div class="webcode">' . $iFrameHtml . $bar . '</div>';
                     }

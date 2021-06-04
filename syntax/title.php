@@ -144,7 +144,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
-
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
 
                 /**
                  * Heading may lived outside a component
@@ -159,7 +159,7 @@ class syntax_plugin_combo_title extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::CONTEXT => $context,
-                    PluginUtility::ATTRIBUTES => $tag->getOpeningTag()->getAttributes()
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
 
                 );
 

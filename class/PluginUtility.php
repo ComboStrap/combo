@@ -254,12 +254,25 @@ class PluginUtility
 
         $parameters = array();
 
+        // Rules
+        //  * name may be alone (ie true boolean attribute)
+        //  * a name may get a `-`
+        //  * there may be space every everywhere when the value is enclosed with a quote
+        //  * there may be no space in the value and between the equal sign when the value is not enclosed
+        //
         // /i not case sensitive
-        $attributePattern = "\\s*([-\w]+)\\s*(?:=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*)?";
+        $attributePattern = '\s*([-\w]+)\s*(?:=(\s*[\'"]([^`"]*)[\'"]\s*|[^\s]*))?';
         $result = preg_match_all('/' . $attributePattern . '/i', $string, $matches);
         if ($result != 0) {
             foreach ($matches[1] as $key => $parameterKey) {
-                $value = $matches[2][$key];
+
+                // group 3 (ie the value between quotes)
+                $value = $matches[3][$key];
+                if ($value == "") {
+                    // check the value without quotes
+                    $value = $matches[2][$key];
+                }
+                // if there is no value, this is a boolean
                 if ($value == "") {
                     $value = true;
                 } else {

@@ -148,7 +148,6 @@ class syntax_plugin_combo_label extends DokuWiki_Syntax_Plugin
 
                 $callStack->closeAndResetPointer();
 
-                $callStack->noLinkToImageInComponent();
 
                 return array(
                     PluginUtility::STATE => $state,

@@ -4,6 +4,7 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
@@ -24,7 +25,6 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     const TAG = "headingatx";
     const LEVEL = 'level';
     const EXIT_PATTERN = "\r??\n";
-    const OUTLINE = "outline";
 
 
     public static function toc(Doku_Renderer_xhtml $renderer, $text, $level)
@@ -55,7 +55,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'stack';
     }
 
     /**
@@ -106,33 +106,45 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                 $attributes = [syntax_plugin_combo_title::LEVEL => strlen(trim($match))];
                 $callStack = CallStack::createFromHandler($handler);
 
+                // Determine the type
                 $parent = $callStack->moveToParent();
-                if ($parent != false && $parent->getComponentName() != "section_open") {
+                $headingType = syntax_plugin_combo_headingutil::getHeadingType($parent);
+                switch ($headingType) {
+                    case syntax_plugin_combo_headingutil::TYPE_TITLE:
 
-                    // Context
-                    $context = $parent->getTagName();
+                        $context = $parent->getTagName();
+                        break;
 
+                    case syntax_plugin_combo_headingutil::TYPE_OUTLINE:
 
-                } else {
+                        $context = syntax_plugin_combo_headingutil::TYPE_OUTLINE;
+                        break;
 
-                    // Outline heading
-                    $context = self::OUTLINE;
+                    default:
+                        LogUtility::msg("The heading type ($headingType) is unknown");
+                        $context = "";
+                        break;
                 }
 
+                /**
+                 * The context is needed:
+                 *   * to add the bootstrap class if it's a card title for instance
+                 *   * and to delete {@link syntax_plugin_combo_headingutil::TYPE_OUTLINE} call
+                 * in the {@link action_plugin_combo_headingpostprocess} (The rendering is done via Dokuwiki,
+                 * see the exit processing for more info on the handling of outline headings)
+                 *
+                 */
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::POSITION =>$pos
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
-                $callStack = CallStack::createFromHandler($handler);
-                $parent = $callStack->moveToParent();
-
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $parent->getContext(),
                     PluginUtility::PAYLOAD => $match,
                 );
 
@@ -146,41 +158,40 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $openingTagAttributes = $openingTag->getAttributes();
 
+
                 /**
                  * If it's an outline
                  * We render the input
                  * and we create the call
                  * We do this because the outline element
-                 * needed for toc building such as the {@link Doku_Renderer_xhtml::node}
-                 * is private. We can't therefore plug in in the toc
-                 * without writing our own.
-                 * One limitation is that the TOC can be only in HTML
+                 * needed for toc building in {@link Doku_Renderer_xhtml::header()}
+                 * such as the {@link Doku_Renderer_xhtml::node}
+                 * is private. We can't therefore plug in the toc
+                 * without writing our own and we can't use two different headings
+                 * in the same page
                  */
                 $context = $openingTag->getContext();
-                if ($context == self::OUTLINE) {
+                if ($context == syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
 
                     // Outline heading
-                    $context = self::OUTLINE;
                     $callStack->moveToEnd();
                     $callStack->moveToPreviousCorrespondingOpeningCall();
 
                     /**
                      * Extract the heading content instructions
-                     * and print them
+                     * Delete them and print them
                      */
                     $headingContentInstructions = [];
                     $textForId = "";
                     while ($actualCall = $callStack->next()) {
                         $headingContentInstructions[] = $actualCall->getCall();
-                        /**
-                         * Unmatched content should not be printed twice
-                         */
                         if (
                             $actualCall->getTagName() == $this->getPluginComponent()
                             && $actualCall->getState() == DOKU_LEXER_UNMATCHED
                         ) {
                             $textForId .= $actualCall->getMatchedContent();
                         }
+                        // Delete to not render it twice
                         $callStack->deleteActualCallAndPrevious();
                     }
                     $textForId = trim($textForId);
@@ -188,14 +199,17 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                     $level = $openingTagAttributes[syntax_plugin_combo_title::LEVEL];
 
                     /**
-                     * Code extracted from the end of {@link Doku_Handler::header()}
+                     * Code extracted and adapted from the end of {@link Doku_Handler::header()}
                      */
+                    $headingPosition = $openingTag->getPosition();
                     if ($handler->getStatus('section')) {
-                        $handler->addCall('section_close', array(), $pos);
+                        $handler->addCall('section_close', array(), $headingPosition);
                     }
-                    $handler->addCall('header', array($textForId, $level, $pos), $pos);
+                    $handler->addCall('header', array($textForId, $level, $headingPosition), $headingPosition);
+                    // This call was added to correct the content of the heading generated by Dokuwiki
+                    // if html
                     $handler->addPluginCall(
-                        PluginUtility::getComponentName(self::TAG),
+                        syntax_plugin_combo_headingutil::PLUGIN_COMPONENT,
                         [
                             PluginUtility::PAYLOAD => $headingContent,
                             PluginUtility::STATE => DOKU_LEXER_SPECIAL
@@ -204,7 +218,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                         0,
                         ""
                     );
-                    $handler->addCall('section_open', array($level), $pos);
+                    $handler->addCall('section_open', array($level), $headingPosition);
                     $handler->setStatus('section', true);
 
 
@@ -212,9 +226,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $context,
                     PluginUtility::ATTRIBUTES => $openingTagAttributes
-
                 );
 
 
@@ -236,6 +248,14 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
 
+        /**
+         * Note: This code will render only {@link syntax_plugin_combo_headingutil::TYPE_TITLE title heading}
+         *
+         * {@link syntax_plugin_combo_headingutil::TYPE_OUTLINE Outline heading}} are printed by Dokuwiki
+         * and the outline atx calls are deleted via postprocessing at {@link action_plugin_combo_headingpostprocess}
+         * because we can't delete the last call (ie {@link DOKU_LEXER_EXIT}) on return
+         * (We can delete the first (enter) from the last (exit) but never the last
+         */
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
@@ -243,39 +263,29 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
+
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
                     $context = $data[PluginUtility::CONTEXT];
-                    if ($context != self::OUTLINE) {
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    syntax_plugin_combo_headingutil::renderOpeningTag($context, $tagAttributes, $renderer);
+                    return true;
 
-                        $attributes = $data[PluginUtility::ATTRIBUTES];
-                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                        syntax_plugin_combo_title::renderOpeningTag($context, $tagAttributes, $renderer);
-
-                    }
-
-                    break;
                 case DOKU_LEXER_UNMATCHED:
 
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    return true;
 
-                    break;
-                case DOKU_LEXER_SPECIAL:
-
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . "</h1>";
-
-                    break;
                 case DOKU_LEXER_EXIT:
 
-                    $context = $data[PluginUtility::CONTEXT];
-                    if ($context != self::OUTLINE) {
-                        $attributes = $data[PluginUtility::ATTRIBUTES];
-                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                        $renderer->doc .= syntax_plugin_combo_title::renderClosingTag($context, $tagAttributes, $renderer);
-                    }
-                    break;
+                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    $level = $tagAttributes->getValue(syntax_plugin_combo_title::LEVEL);
+                    $renderer->doc .= "</h$level>";
+                    return true;
 
             }
         }
-        // unsupported $mode
+
         return false;
     }
 

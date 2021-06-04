@@ -155,9 +155,24 @@ class Call
         return new Call($call);
     }
 
+
+
     /**
+     *
      * Return the tag name from a call array
-     * (much more what's called the component name)
+     *
+     * This is not the logical tag.
+     * This is much more what's called:
+     *   * the component name for a plugin
+     *   * or the handler name for dokuwiki
+     *
+     * For a plugin, this is equivalent
+     * to the {@link SyntaxPlugin::getPluginComponent()}
+     *
+     * This is not the fully qualified component name:
+     *   * with the plugin as prefix such as in {@link Call::getComponentName()}
+     *   * or with the `open` and `close` prefix such as `p_close` ...
+     *
      * @return mixed|string
      */
     public function getTagName()
@@ -383,6 +398,8 @@ class Call
     }
 
     /**
+     * Same as {@link Call::getTagName()}
+     * but fully qualified
      * @return string
      */
     public function getComponentName()

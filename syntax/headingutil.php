@@ -101,6 +101,39 @@ class syntax_plugin_combo_headingutil extends DokuWiki_Syntax_Plugin
     }
 
 
+    /**
+     * Replace the last content of a tag
+     * @param $input - the input should have a heading at the end (ie <h1>blabla</h1>)
+     * @param $newContent -  the new content (ie <h1>newContent</h1>
+     */
+    public static function modifyLastTagContent(&$input, $newContent)
+    {
+        // the variable that will capture the heading tag
+        $headingEndTag = "";
+        // Set to true when the heading tag has completed
+        $headingComplete = false;
+        // We start from the edn
+        $position = strlen($input) - 1;
+        while ($position > 0) {
+            $character = $input[$position];
+            if (!$headingComplete) {
+                $headingEndTag = $character . $headingEndTag;
+            }
+            if ($character == "<") {
+                $headingComplete = true;
+            }
+            if ($character == ">" && $headingComplete) {
+                // We have delete all character until the heading start tag
+                break;
+            } else {
+                // position --
+                $position--;
+            }
+        }
+        $input = substr($input, 0, $position + 1) . $newContent . $headingEndTag;
+    }
+
+
     function getType()
     {
         return 'formatting';
@@ -120,10 +153,6 @@ class syntax_plugin_combo_headingutil extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        /**
-         * Important to not get
-         *
-         */
         return 'stack';
     }
 
@@ -199,7 +228,7 @@ class syntax_plugin_combo_headingutil extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_SPECIAL:
 
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . "</h1>";
+                    self::modifyLastTagContent($renderer->doc, trim($data[PluginUtility::PAYLOAD]));
                     break;
 
             }

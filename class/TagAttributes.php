@@ -61,6 +61,7 @@ class TagAttributes
         TagAttributes::TYPE_KEY, // type is the component class
         TagAttributes::LINKING_KEY, // internal to image
         CacheMedia::CACHE_KEY, // internal also
+        \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE
     ];
 
     /**

@@ -85,7 +85,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = "^#{1,6}(?=.*" . self::EXIT_PATTERN . ")";
+        $pattern = '\r??\n#{1,6}(?=.*' . self::EXIT_PATTERN . ')';
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
     }
 
@@ -285,7 +285,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
                     $level = $tagAttributes->getValue(syntax_plugin_combo_title::LEVEL);
-                    $renderer->doc .= "</h$level>".DOKU_LF;
+                    $renderer->doc .= "</h$level>" . DOKU_LF;
                     return true;
 
             }

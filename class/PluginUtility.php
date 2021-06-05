@@ -1106,13 +1106,22 @@ class PluginUtility
     public
     static function loadStrapUtilityTemplate()
     {
-        $templateUtilitFile = '../../../tpl/strap/class/TplUtility.php';
-        if (file_exists($templateUtilitFile)) {
+        $templateUtilityFile = __DIR__. '/../../../tpl/strap/class/TplUtility.php';
+        if (file_exists($templateUtilityFile)) {
             /** @noinspection PhpIncludeInspection */
-            require_once($templateUtilitFile);
+            require_once($templateUtilityFile);
             return true;
         } else {
-            LogUtility::msg("The strap template is not installed", LogUtility::LVL_MSG_DEBUG);
+            $level = LogUtility::LVL_MSG_DEBUG;
+            if (defined('DOKU_UNITTEST')) {
+                // fail
+                $level = LogUtility::LVL_MSG_ERROR;
+            }
+            if (Site::getTemplate()!="strap") {
+                LogUtility::msg("The strap template is not installed", $level);
+            } else {
+                LogUtility::msg("The file ($templateUtilityFile) was not found", $level);
+            }
             return false;
         }
     }

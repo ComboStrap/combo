@@ -236,7 +236,7 @@ class Site
 
     public static function getAjaxUrl()
     {
-        return self::getUrl() . "/lib/exe/ajax.php";
+        return self::getUrl() . "lib/exe/ajax.php";
     }
 
     public static function getPageDirectory()

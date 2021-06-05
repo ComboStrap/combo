@@ -201,7 +201,7 @@ class ColorUtility
     /**
      * Return a combostrap value to a web color value
      * @param string $color a color value
-     * @return string
+     * @return string the color value
      */
     public static function getColorValue($color)
     {
@@ -231,4 +231,6 @@ class ColorUtility
         }
         return $colorValue;
     }
+
+
 }

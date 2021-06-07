@@ -323,11 +323,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
 
-                case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
-
-                    break;
 
                 case DOKU_LEXER_UNMATCHED :
 
@@ -344,24 +340,45 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         return false;
                     }
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
-
-                    /**
-                     * Here the magic from the plugin happens
-                     * We add the Iframe and the JsFiddleButton
-                     */
-
-
                     // Credits bar
                     $bar = '<div class="webcode-bar">';
                     $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by WebCode", false) . '</div>';
 
+                    /**
+                     * If there is no height
+                     */
+                    if(!$iFrameAttributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
+                        /**
+                         * Will adjust after an image is loaded
+                         */
+                        $iFrameAttributes->addStyleDeclaration("height", "auto");
+                        /**
+                         * Due to margin at the bottom, we may see a scroll bar
+                         */
+                        if(!$iFrameAttributes->hasComponentAttribute("scrolling")) {
+                            $iFrameAttributes->addHtmlAttributeValue("scrolling", "no");
+                        }
+                    }
+
                     // Dokuwiki Code ?
                     if (array_key_exists(self::MARKI_LANG, $codes)) {
 
+                        $markiCode = $codes[self::MARKI_LANG];
+                        /**
+                         * By default, markup code
+                         * is rendered inside the page
+                         * We got less problem such as iframe overflow
+                         * due to lazy loading, such as relative link, ...
+                         *
+                         */
+                        if (!$iFrameAttributes->hasComponentAttribute("iframe")){
+                            $renderer->doc .= PluginUtility::render($markiCode);
+                            return true;
+                        }
+
                         $queryParams = array(
                             'call' => action_plugin_combo_webcode::CALL_ID,
-                            action_plugin_combo_webcode::MARKI_PARAM => $codes[self::MARKI_LANG]
+                            action_plugin_combo_webcode::MARKI_PARAM => $markiCode
                         );
                         $queryString = http_build_query($queryParams);
                         $url = Site::getAjaxUrl() . "?$queryString";
@@ -452,6 +469,9 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
 
                     }
+
+                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
 
                     $iFrameHtml = $iFrameAttributes->toHtmlEnterTag("iframe") . '</iframe>';
                     $bar .= '</div>'; // close the bar

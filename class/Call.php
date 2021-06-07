@@ -14,6 +14,7 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
 
+
 /**
  * Class Call
  * @package ComboStrap
@@ -142,14 +143,15 @@ class Call
     /**
      * Insert a dokuwiki call
      * @param $callName
+     * @param $array
+     * @param $positionInText
      * @return Call
      */
-    public static function createNativeCall($callName)
+    public static function createNativeCall($callName, $array = [], $positionInText = null)
     {
-        $positionInText = null;
         $call = [
             $callName,
-            array(),
+            $array,
             $positionInText
         ];
         return new Call($call);
@@ -534,6 +536,25 @@ class Call
     public function getCall()
     {
         return $this->call;
+    }
+
+    public function setState($state)
+    {
+        if ($this->call[0]=="plugin") {
+            // for dokuwiki
+            $this->call[1][2] = $state;
+            // for the combo plugin if any
+            if (isset($this->call[1][1][PluginUtility::STATE])) {
+                $this->call[1][1][PluginUtility::STATE] = $state;
+            }
+        } else {
+            LogUtility::msg("This modification of state is not yet supported for a native call");
+        }
+    }
+
+    public function setComboComponent($TAG)
+    {
+        throw new RuntimeException("Not yet implemented");
     }
 
 

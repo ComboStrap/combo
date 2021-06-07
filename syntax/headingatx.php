@@ -1,12 +1,9 @@
 <?php
 
 
-use ComboStrap\Bootstrap;
-use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 
@@ -51,7 +48,6 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
      *
-     * This is the equivalent of inline or block for css
      */
     function getPType()
     {
@@ -85,14 +81,11 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = '\r??\n#{1,6}(?=.*' . self::EXIT_PATTERN . ')';
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $pattern = '\r??\n\s*#{1,6}\s?(?=.*' . self::EXIT_PATTERN . ')';
+        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
     }
 
-    public function postConnect()
-    {
-        $this->Lexer->addExitPattern(self::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
-    }
 
 
     function handle($match, $state, $pos, Doku_Handler $handler)
@@ -100,8 +93,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
         switch ($state) {
 
-
-            case DOKU_LEXER_ENTER :
+            case DOKU_LEXER_SPECIAL :
 
                 $attributes = [syntax_plugin_combo_title::LEVEL => strlen(trim($match))];
                 $callStack = CallStack::createFromHandler($handler);
@@ -139,13 +131,6 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                     PluginUtility::ATTRIBUTES => $attributes,
                     PluginUtility::CONTEXT => $context,
                     PluginUtility::POSITION => $pos
-                );
-
-            case DOKU_LEXER_UNMATCHED :
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $match,
                 );
 
             case DOKU_LEXER_EXIT :

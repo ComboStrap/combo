@@ -348,8 +348,13 @@ class CallStack
     {
         if ($this->endWasReached) {
             $this->endWasReached = false;
-            end($this->callStack);
-            return $this->getActualCall();
+            $return = end($this->callStack);
+            if ($return == false) {
+                // empty array (first call on the stack)
+                return false;
+            } else {
+                return $this->getActualCall();
+            }
         } else {
             $prev = prev($this->callStack);
             if ($prev === false) {
@@ -399,7 +404,7 @@ class CallStack
     public
     function moveToEnd()
     {
-        if($this->startWasReached){
+        if ($this->startWasReached) {
             $this->startWasReached = false;
         }
         end($this->callStack);
@@ -505,11 +510,19 @@ class CallStack
     function insertAfter($call)
     {
         $actualKey = key($this->callStack);
-        $offset = array_search($actualKey, array_keys($this->callStack), true);
-        array_splice($this->callStack, $offset + 1, 0, [$call->toCallArray()]);
-        // array splice reset the pointer
-        // we move it to the actual element
-        $this->moveToKey($actualKey);
+        if ($actualKey == null) {
+            if ($this->endWasReached == true) {
+                $this->callStack[] = $call->toCallArray();
+            } else {
+                LogUtility::msg("Callstack: Actual key is null, we can't insert after null");
+            }
+        } else {
+            $offset = array_search($actualKey, array_keys($this->callStack), true);
+            array_splice($this->callStack, $offset + 1, 0, [$call->toCallArray()]);
+            // array splice reset the pointer
+            // we move it to the actual element
+            $this->moveToKey($actualKey);
+        }
     }
 
     public
@@ -653,8 +666,6 @@ class CallStack
             }
         }
     }
-
-
 
 
 }

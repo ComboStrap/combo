@@ -1,11 +1,9 @@
 <?php
 
 
-use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
-use ComboStrap\StringUtility;
-use ComboStrap\Tag;
 use ComboStrap\PluginUtility;
+use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 

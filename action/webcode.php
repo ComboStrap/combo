@@ -59,6 +59,8 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
          * Main content happens before the headers
          * to set the headers right
          */
+        global $conf;
+        $conf["renderer_xhtml"] = "xhtml";
         $mainContent = p_render('xhtml', p_get_instructions($marki), $info);
 
         /**

@@ -5,7 +5,6 @@ use ComboStrap\DokuPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
-use ComboStrap\SvgDocument;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 

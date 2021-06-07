@@ -3,6 +3,7 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\PluginUtility;
 
 class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
 {
@@ -26,7 +27,11 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
 
 
     /**
-     * Delete the combo call for outline heading
+     * Transform the special heading atx call
+     * in an enter and exit heading atx calls
+     *
+     * Code extracted and adapted from the end of {@link Doku_Handler::header()}
+     *
      * @param   $event Doku_Event
      */
     function _post_process_heading(&$event, $param)
@@ -37,36 +42,91 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
         $handler = $event->data;
         $callStack = CallStack::createFromHandler($handler);
         $callStack->moveToStart();
-        $comboHeadingComponents = [syntax_plugin_combo_headingatx::TAG];
+
+        /**
+         * Processing variable about the context
+         */
+        $actualParsingState = DOKU_LEXER_EXIT; // enter if we have entered a heading, exit otherwise
+        $headingEnterCall = null; // the enter call
         while ($actualCall = $callStack->next()) {
             $componentName = $actualCall->getTagName();
-            if (in_array($componentName, $comboHeadingComponents)) {
-                $context = $actualCall->getContext();
-                if ($context == syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
-                    $callStack->deleteActualCallAndPrevious();
+            if ($componentName == syntax_plugin_combo_headingatx::TAG) {
+                $actualCall->setState(DOKU_LEXER_ENTER);
+                $actualParsingState = DOKU_LEXER_ENTER;
+                $headingEnterCall = $actualCall;
+                if ($handler->getStatus('section')) {
+                    $callStack->insertAfter(
+                        Call::createNativeCall(
+                            'section_close',
+                            array(),
+                            $actualCall->getPosition()
+                        )
+                    );
+                    $callStack->next();
                 }
+                continue;
             }
-            /**
-             * {@link \dokuwiki\Parsing\Handler\Block::process()}
-             * will add p_open and p_close tag around the {@link syntax_plugin_combo_headingutil}
-             * call  whatever the {@link syntax_plugin_combo_headingutil::getPType()}
-             * value is (stack does not work)
-             */
-            if (
-                $componentName == syntax_plugin_combo_headingutil::PLUGIN_COMPONENT &&
-                $actualCall->getState() == DOKU_LEXER_SPECIAL
-            ) {
-                $previousCall = $callStack->previous();
-                if ($previousCall->getComponentName() == "p_open") {
-                    $callStack->deleteActualCallAndPrevious();
-                }
-                $callStack->next(); // the current
-                $nextCall = $callStack->next();
-                if ($nextCall->getComponentName() == "p_close") {
-                    $callStack->deleteActualCallAndPrevious();
+            if ($actualParsingState == DOKU_LEXER_ENTER) {
+                // we are in a heading description
+                switch ($actualCall->getComponentName()) {
+                    case "p_open":
+                        $callStack->deleteActualCallAndPrevious();
+                        continue 2;
+                    case "p_close":
+                        /**
+                         * Create the exit call
+                         * and open the section
+                         * Code extracted and adapted from the end of {@link Doku_Handler::header()}
+                         */
+                        $callStack->insertBefore(
+                            Call::createComboCall(
+                                syntax_plugin_combo_headingatx::TAG,
+                                DOKU_LEXER_EXIT,
+                                [
+                                    PluginUtility::ATTRIBUTES => $headingEnterCall->getAttributes(),
+                                    PluginUtility::STATE => DOKU_LEXER_EXIT
+                                ]
+                            )
+                        );
+                        $callStack->insertBefore(
+                            Call::createNativeCall(
+                                'section_open',
+                                array($headingEnterCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
+                                $headingEnterCall->getPosition()
+                            )
+                        );
+                        $handler->setStatus('section', true);
+
+                        /**
+                         * Delete the p_close
+                         * and set the parsing state to not enter
+                         */
+                        $callStack->deleteActualCallAndPrevious();
+                        $actualParsingState = DOKU_LEXER_EXIT;
+
+                        continue 2;
+                    default:
+                        if ($actualParsingState == DOKU_LEXER_UNMATCHED) {
+                            $actualCall->setComboComponent(syntax_plugin_combo_headingatx::TAG);
+                        }
                 }
             }
 
+        }
+
+        /**
+         * If the section was open, close it
+         */
+        if ($headingEnterCall != null) {
+            if ($handler->getStatus('section')) {
+                $callStack->insertAfter(
+                    Call::createNativeCall(
+                        'section_close',
+                        array(),
+                        $headingEnterCall->getPosition()
+                    )
+                );
+            }
         }
 
     }

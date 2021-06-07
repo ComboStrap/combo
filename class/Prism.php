@@ -262,8 +262,8 @@ EOD;
             Prism::addAutoloaderSnippet();
         }
 
-        if ($language == "dw") {
-            $language = "html";
+        if (in_array($language, \syntax_plugin_combo_webcode::MARKIS)) {
+            $language = "md";
         }
         /**
          * Language name mapping between the dokuwiki default

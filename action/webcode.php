@@ -13,7 +13,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 {
 
     const CALL_ID = "webcode";
-    const DW_PARAM = "dw";
+    const MARKI_PARAM = "marki";
 
 
     function register(Doku_Event_Handler $controller)
@@ -44,7 +44,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
 
         global $INPUT;
-        $dw = $INPUT->str(self::DW_PARAM);
+        $marki = $INPUT->str(self::MARKI_PARAM);
         $title = $INPUT->str('title') ?: "ComboStrap WebCode - Dokuwiki Renderer";
 
 
@@ -59,7 +59,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
          * Main content happens before the headers
          * to set the headers right
          */
-        $mainContent = p_render('xhtml', p_get_instructions($dw), $info);
+        $mainContent = p_render('xhtml', p_get_instructions($marki), $info);
 
         /**
          * Html

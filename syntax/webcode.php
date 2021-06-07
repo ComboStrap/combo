@@ -53,6 +53,12 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     const RENDERING_MODE_ATTRIBUTE = 'renderingmode';
     const RENDERING_ONLY_RESULT = "onlyresult";
 
+    /**
+     * Marki code
+     */
+    const MARKI_LANG = 'marki';
+    const DOKUWIKI_LANG = 'dw';
+    const MARKIS = [self::MARKI_LANG, self::DOKUWIKI_LANG];
 
     /**
      * Syntax Type.
@@ -236,6 +242,12 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                                 if ($actualCodeType == 'xml') {
                                     $actualCodeType = 'html';
                                 }
+
+                                // markdown, dokuwiki is marki
+                                if (in_array($actualCodeType, ['md', 'markdown', 'dw'])) {
+                                    $actualCodeType = self::MARKI_LANG;
+                                }
+
                                 // The code for a language may be scattered in multiple block
                                 if (!isset($codes[$actualCodeType])) {
                                     $codes[$actualCodeType] = "";
@@ -345,11 +357,11 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by WebCode", false) . '</div>';
 
                     // Dokuwiki Code ?
-                    if (array_key_exists('dw', $codes)) {
+                    if (array_key_exists(self::MARKI_LANG, $codes)) {
 
                         $queryParams = array(
                             'call' => action_plugin_combo_webcode::CALL_ID,
-                            "dw" => $codes['dw']
+                            action_plugin_combo_webcode::MARKI_PARAM => $codes[self::MARKI_LANG]
                         );
                         $queryString = http_build_query($queryParams);
                         $url = Site::getAjaxUrl() . "?$queryString";

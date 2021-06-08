@@ -587,5 +587,36 @@ class Call
         return $this->getFirstMatchedCharacterPosition() + strlen($this->getMatchedContent());
     }
 
+    /**
+     * @param $string string the class string to add
+     */
+    public function addClass($string)
+    {
+        $class = $this->getAttribute("class");
+        if ($class != null) {
+            $class = "$class $string";
+        }
+        $this->addAttribute("class", $class);
+
+    }
+
+    /**
+     * @param $key
+     * @return mixed|null - the delete value of null if not found
+     */
+    public function removeAttribute($key)
+    {
+
+        $data = $this->getPluginData();
+        if (isset($data[PluginUtility::ATTRIBUTES][$key])) {
+            $value = $data[PluginUtility::ATTRIBUTES][$key];
+            unset($data[PluginUtility::ATTRIBUTES][$key]);
+            return $value;
+        } else {
+            return null;
+        }
+
+    }
+
 
 }

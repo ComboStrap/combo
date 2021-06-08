@@ -155,38 +155,37 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     function handle($match, $state, $pos, Doku_Handler $handler)
     {
 
-        /**
-         * Because we use the specialPattern, there is only one state ie DOKU_LEXER_SPECIAL
-         */
+
         switch ($state) {
             case DOKU_LEXER_ENTER:
                 $attributes = LinkUtility::parse($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler);
-                $parent = $tag->getParent();
+                $callStack = CallStack::createFromHandler($handler);
+
+                $parent = $callStack->moveToParent();
                 $parentName = "";
-                if ($parent != null) {
-                    $parentName = $parent->getName();
+                if ($parent != false) {
+                    $parentName = $parent->getTagName();
                     switch ($parentName) {
                         case syntax_plugin_combo_button::TAG:
                             $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
-                            $firstContainingBlock = $parent->getParent();
+                            $firstContainingBlock = $callStack->moveToParent();
                             break;
                         case syntax_plugin_combo_column::TAG:
                             // A col is in a row
-                            $firstContainingBlock = $parent->getParent();
+                            $firstContainingBlock = $callStack->moveToParent();
                             break;
                         case "section":
                             // When editing, there is a section
-                            $firstContainingBlock = $parent->getParent();
+                            $firstContainingBlock = $callStack->moveToParent();
                             break;
                         default:
                             $firstContainingBlock = $parent;
                     }
-                    if ($firstContainingBlock != null) {
+                    if ($firstContainingBlock != false) {
                         if ($firstContainingBlock->getAttribute("clickable")) {
-                            PluginUtility::addClass2Attributes("stretched-link", $attributes);
+                            $firstContainingBlock->addClass("stretched-link");
                             $firstContainingBlock->addClass("position-relative");
-                            $firstContainingBlock->unsetAttribute("clickable");
+                            $firstContainingBlock->removeAttribute("clickable");
                         }
                     }
                 }

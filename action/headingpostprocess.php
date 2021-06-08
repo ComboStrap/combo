@@ -68,7 +68,7 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                 $headingEnterCall = $callStack->getActualCall();
                 if ($actualCall->getContext() == syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
                     if ($handler->getStatus('section')) {
-                        $callStack->insertAfter(
+                        $callStack->insertBefore(
                             Call::createNativeCall(
                                 'section_close',
                                 array(),
@@ -76,7 +76,6 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                             )
                         );
                         $actualSectionState = DOKU_LEXER_EXIT;
-                        $callStack->next();
                     }
                 }
                 continue;
@@ -153,11 +152,18 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                         }
                 }
             }
-
+            /**
+             * when a heading of dokuwiki is mixed with
+             * an atx heading, there is already a section close
+             * at the end or in the middle
+             */
+            if ($actualCall->getComponentName() == "section_close") {
+                $actualSectionState = DOKU_LEXER_EXIT;
+            }
         }
 
         /**
-         * If the section was open by us, we close it
+         * If the section was open by us or is still open, we close it
          *
          * We don't use the standard `section` key (ie  $handler->getStatus('section')
          * because it's open when we receive the handler
@@ -166,6 +172,7 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
          * We make sure that we close only what we have open
          */
         if ($actualSectionState == DOKU_LEXER_ENTER) {
+            $handler->setStatus('section', false);
             $callStack->insertAfter(
                 Call::createNativeCall(
                     'section_close',

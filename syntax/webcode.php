@@ -324,7 +324,6 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
 
-
                 case DOKU_LEXER_UNMATCHED :
 
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -344,21 +343,6 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     $bar = '<div class="webcode-bar">';
                     $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by WebCode", false) . '</div>';
 
-                    /**
-                     * If there is no height
-                     */
-                    if(!$iFrameAttributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
-                        /**
-                         * Will adjust after an image is loaded
-                         */
-                        $iFrameAttributes->addStyleDeclaration("height", "auto");
-                        /**
-                         * Due to margin at the bottom, we may see a scroll bar
-                         */
-                        if(!$iFrameAttributes->hasComponentAttribute("scrolling")) {
-                            $iFrameAttributes->addHtmlAttributeValue("scrolling", "no");
-                        }
-                    }
 
                     // Dokuwiki Code ?
                     if (array_key_exists(self::MARKI_LANG, $codes)) {
@@ -371,7 +355,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                          * due to lazy loading, such as relative link, ...
                          *
                          */
-                        if (!$iFrameAttributes->hasComponentAttribute("iframe")){
+                        if (!$iFrameAttributes->hasComponentAttribute("iframe")) {
                             $renderer->doc .= PluginUtility::render($markiCode);
                             return true;
                         }
@@ -470,7 +454,35 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                     }
 
-                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
+                    /**
+                     * If there is no height
+                     */
+                    if (!$iFrameAttributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
+
+                        /**
+                         * Adjust the height attribute
+                         * of the iframe element
+                         * Any styling attribute would take over
+                         */
+                        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
+                        /**
+                         * CSS Height auto works when an image is loaded asynchronously but not
+                         * when there is only text in the iframe
+                         */
+                        //$iFrameAttributes->addStyleDeclaration("height", "auto");
+                        /**
+                         * Due to margin at the bottom with css height=auto,
+                         * we may see a scroll bar
+                         * This block of code is to avoid scrolling,
+                         * then scrolling = no if not set
+                         */
+                        if (!$iFrameAttributes->hasComponentAttribute("scrolling")) {
+                            $iFrameAttributes->addHtmlAttributeValue("scrolling", "no");
+                        }
+
+                    }
+
+
                     PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
 
                     $iFrameHtml = $iFrameAttributes->toHtmlEnterTag("iframe") . '</iframe>';

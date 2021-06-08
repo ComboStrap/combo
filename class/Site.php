@@ -245,5 +245,11 @@ class Site
         return $conf['datadir'];
     }
 
+    public static function disableHeadingSectionEditing()
+    {
+        global $conf;
+        $conf['maxseclevel']=0;
+    }
+
 
 }

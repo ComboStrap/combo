@@ -37,19 +37,33 @@ class RenderUtility
         $instructions = p_get_instructions($pageContent);
 
         if ($stripOpenAndEnd) {
-            $lastPBlockPosition = sizeof($instructions) - 2;
+
             /**
              * p_open = document_start in renderer
              */
             if ($instructions[1][0] == 'p_open') {
                 unset($instructions[1]);
+
+                /**
+                 * The last p position is not fix
+                 * We may have other calls due for instance
+                 * of {@link \action_plugin_combo_syntaxanalytics}
+                 */
+                $n = 1;
+                while (($lastPBlockPosition = (sizeof($instructions) - $n)) >= 0) {
+
+                    /**
+                     * p_open = document_end in renderer
+                     */
+                    if ($instructions[$lastPBlockPosition][0] == 'p_close') {
+                        unset($instructions[$lastPBlockPosition]);
+                        break;
+                    } else {
+                        $n = $n + 1;
+                    }
+                }
             }
-            /**
-             * p_open = document_end in renderer
-             */
-            if ($instructions[$lastPBlockPosition][0] == 'p_close') {
-                unset($instructions[$lastPBlockPosition]);
-            }
+
         }
 
         return $instructions;
@@ -59,7 +73,8 @@ class RenderUtility
      * @param $pageId
      * @return string|null
      */
-    public static function renderId2Xhtml($pageId)
+    public
+    static function renderId2Xhtml($pageId)
     {
         $file = wikiFN($pageId);
         if (file_exists($file)) {
@@ -70,7 +85,8 @@ class RenderUtility
         }
     }
 
-    public static function renderId2Json($pageId)
+    public
+    static function renderId2Json($pageId)
     {
         return Analytics::processAndGetDataAsJson($pageId);
     }

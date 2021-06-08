@@ -64,16 +64,18 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                 $actualCall->setState(DOKU_LEXER_ENTER);
                 $actualHeadingState = DOKU_LEXER_ENTER;
                 $headingEnterCall = $callStack->getActualCall();
-                if ($handler->getStatus('section')) {
-                    $callStack->insertAfter(
-                        Call::createNativeCall(
-                            'section_close',
-                            array(),
-                            $actualCall->getLastMatchedCharacterPosition()
-                        )
-                    );
-                    $actualSectionState = DOKU_LEXER_EXIT;
-                    $callStack->next();
+                if($actualCall->getContext()==syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
+                    if ($handler->getStatus('section')) {
+                        $callStack->insertAfter(
+                            Call::createNativeCall(
+                                'section_close',
+                                array(),
+                                $actualCall->getLastMatchedCharacterPosition()
+                            )
+                        );
+                        $actualSectionState = DOKU_LEXER_EXIT;
+                        $callStack->next();
+                    }
                 }
                 continue;
             }
@@ -84,11 +86,6 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                         $callStack->deleteActualCallAndPrevious();
                         continue 2;
                     case "p_close":
-                        /**
-                         * Update the entering call with the text capture
-                         */
-                        $headingEnterCall->addAttribute(syntax_plugin_combo_headingutil::HEADING_TEXT_ATTRIBUTE, $headingText);
-                        $headingText = "";
 
                         /**
                          * Create the exit call
@@ -102,16 +99,27 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                                 $headingEnterCall->getAttributes()
                             )
                         );
-                        $callStack->insertBefore(
-                            Call::createNativeCall(
-                                'section_open',
-                                array($headingEnterCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
-                                $headingEnterCall->getFirstMatchedCharacterPosition()
-                            )
-                        );
-                        $handler->setStatus('section', true);
-                        $actualHeadingState = DOKU_LEXER_EXIT;
-                        $actualSectionState = DOKU_LEXER_ENTER;
+
+                        if($headingEnterCall->getContext()==syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
+                            /**
+                             * Update the entering call with the text capture
+                             */
+                            $headingEnterCall->addAttribute(syntax_plugin_combo_headingutil::HEADING_TEXT_ATTRIBUTE, $headingText);
+                            $headingText = "";
+
+
+                            $callStack->insertBefore(
+                                Call::createNativeCall(
+                                    'section_open',
+                                    array($headingEnterCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
+                                    $headingEnterCall->getFirstMatchedCharacterPosition()
+                                )
+                            );
+                            $handler->setStatus('section', true);
+                            $actualHeadingState = DOKU_LEXER_EXIT;
+                            $actualSectionState = DOKU_LEXER_ENTER;
+
+                        }
 
                         /**
                          * Delete the p_close

@@ -263,3 +263,15 @@ $meta[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = array('multichoice', '_ch
     "xl",
     "xxl"
 ));
+
+/**
+ * Outline Numbering
+ */
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR] = array("string");
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX] = array("string");
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX] = array("string");

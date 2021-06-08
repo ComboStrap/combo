@@ -164,16 +164,16 @@ $lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getUrl("type", "The default
 /**
  * Default Shadow level
  */
-$lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "The default level applied to a shadow attributes");
+$lang[Shadow::CONF_DEFAULT_VALUE] = PluginUtility::getUrl(Shadow::CANONICAL, "Shadow - The default level applied to a shadow attributes");
 
 
 /**
  * Svg
  */
-$lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Load a svg only when they become visible");
-$lang[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "The maximum size in Kb of the SVG to be included as markup in the web page");
+$lang[SvgImageLink::CONF_LAZY_LOAD_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg - Load a svg only when they become visible");
+$lang[SvgImageLink::CONF_MAX_KB_SIZE_FOR_INLINE_SVG] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg - The maximum size in Kb of the SVG to be included as markup in the web page");
 $lang[SvgImageLink::CONF_SVG_INJECTION_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Injection - Replace the image as svg in the HTML when downloaded to be add styling capabilities");
-$lang[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "The name of the group of users that can upload SVG");
+$lang[action_plugin_combo_svg::CONF_SVG_UPLOAD_GROUP_NAME] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Security - The name of the group of users that can upload SVG");
 $lang[SvgDocument::CONF_SVG_OPTIMIZATION_ENABLE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - Reduce the size of the SVG by deleting non important meta");
 $lang[SvgDocument::CONF_OPTIMIZATION_NAMESPACES_TO_KEEP] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The namespace prefix to keep");
 $lang[SvgDocument::CONF_OPTIMIZATION_ATTRIBUTES_TO_DELETE] = PluginUtility::getUrl(SvgImageLink::CANONICAL, "Svg Optimization - The attribute deleted during optimization");
@@ -185,24 +185,36 @@ $lang[SvgDocument::CONF_PRESERVE_ASPECT_RATIO_DEFAULT] = PluginUtility::getUrl(S
 /**
  * Lazy load image
  */
-$lang[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Load the raster image only when they become visible");
-$lang[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Retina Support: If checked, the images downloaded will match the display capabilities (the size DPI correction will not be applied)");
-$lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Responsive image sizing: The image margin applied to screen size");
+$lang[RasterImageLink::CONF_LAZY_LOADING_ENABLE] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Raster Image - Load the raster image only when they become visible");
+$lang[RasterImageLink::CONF_RETINA_SUPPORT_ENABLED] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Raster Image - Retina Support: If checked, the images downloaded will match the display capabilities (the size DPI correction will not be applied)");
+$lang[RasterImageLink::CONF_RESPONSIVE_IMAGE_MARGIN] = PluginUtility::getUrl(RasterImageLink::CANONICAL, "Raster Image - Responsive image sizing: The image margin applied to screen size");
 
 /**
  * Lazy loading
  */
-$lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(LazyLoad::CANONICAL, "The placeholder background color");
+$lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(LazyLoad::CANONICAL, "Lazy Loading - The placeholder background color");
 
 /**
  * Image
  */
-$lang[MediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(MediaLink::CANONICAL, "If unchecked, the image component will be disabled");
-$lang[MediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(MediaLink::CANONICAL, "The default link option from an internal image.");
+$lang[MediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(MediaLink::CANONICAL, "Image - If unchecked, the image component will be disabled");
+$lang[MediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(MediaLink::CANONICAL, "Image - The default link option from an internal image.");
 
 /**
  * Float
  */
-$lang[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getUrl(FloatAttribute::CANONICAL, "The default breakpoint that applies to floated value (left, right, none)");
+$lang[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getUrl(FloatAttribute::CANONICAL, "Float - The default breakpoint that applies to floated value (left, right, none)");
+
+/**
+ * Outline
+ */
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 2");
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 3");
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 4");
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 5");
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 6");
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The separator between counters");
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The prefix of the outline numbering");
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The suffix of the outline numbering");
 
 ?>

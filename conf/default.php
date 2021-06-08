@@ -308,3 +308,23 @@ $conf["defaultImageLinking"] = "direct";
  *  {@link \ComboStrap\FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT}
  */
 $conf["floatDefaultBreakpoint"] = "sm";
+
+/**
+ * Outline Numbering
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2}
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3}
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4}
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5}
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6}
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR}
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX}
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX}
+ */
+$conf["outlineNumberingCounterStyleLevel2"] = "decimal";
+$conf["outlineNumberingCounterStyleLevel3"] = "decimal";
+$conf["outlineNumberingCounterStyleLevel4"] = "decimal";
+$conf["outlineNumberingCounterStyleLevel5"] = "decimal";
+$conf["outlineNumberingCounterStyleLevel6"] = "decimal";
+$conf["outlineNumberingCounterSeparator"] = ".";
+$conf["outlineNumberingPrefix"] = "";
+$conf["outlineNumberingSuffix"] = " - ";

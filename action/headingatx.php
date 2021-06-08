@@ -4,10 +4,9 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\MediaLink;
-use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
-class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
+class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
 {
 
     public function register(\Doku_Event_Handler $controller)

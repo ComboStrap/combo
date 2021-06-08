@@ -145,34 +145,13 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         $this->previousNodePosition = $nodePosition;
         $this->previousSectionTextHeader = $text;
 
-        /**
-         * TODO: replace with CSS styling
-         * https://datacadamia.com/web/css/content#heading_numbering
-         */
-        $numbering = "";
-        if ($level == 2) {
-            $numbering = $nodePosition;
-        }
-        if ($level == 3) {
-            $numbering = $this->nodeParentPosition[$level - 1] . "." . $nodePosition;
-        }
-        if ($level == 4) {
-            $numbering = $this->nodeParentPosition[$level - 2] . "." . $this->nodeParentPosition[$level - 1] . "." . $nodePosition;
-        }
-        if ($level == 5) {
-            $numbering = $this->nodeParentPosition[$level - 3] . "." . $this->nodeParentPosition[$level - 2] . "." . $this->nodeParentPosition[$level - 1] . "." . $nodePosition;
-        }
-        if ($numbering <> "") {
-            $textWithLocalization = $numbering . " - " . $text;
-        } else {
-            $textWithLocalization = $text;
-        }
+
 
         // Rendering is done by the parent
-        parent::header($textWithLocalization, $level, $pos);
+        parent::header($text, $level, $pos);
 
 
-        // Add the page detail after the first header
+        // Add the hierarchical breadcrumb detail after the first header
         if ($level == 1 and $nodePosition == 1) {
 
             $this->doc .= BreadcrumbHierarchical::render();

@@ -219,11 +219,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $openingAttributes = $openingTag->getAttributes();
                 $linkTag = $openingTag->getPluginData()[self::LINK_TAG];
-                $openingPosition = $openingTag->getPosition();
+                $openingPosition = $openingTag->getKey();
 
                 $callStack->moveToEnd();
                 $previousCall = $callStack->previous();
-                $previousCallPosition  = $previousCall->getPosition();
+                $previousCallPosition  = $previousCall->getKey();
                 $previousCallContent = $previousCall->getMatchedContent();
 
                 if (

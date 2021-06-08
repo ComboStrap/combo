@@ -46,27 +46,37 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
         /**
          * Processing variable about the context
          */
-        $actualParsingState = DOKU_LEXER_EXIT; // enter if we have entered a heading, exit otherwise
+        $actualHeadingState = DOKU_LEXER_EXIT; // enter if we have entered a heading, exit otherwise
+        $actualSectionState = null; // enter if we have created a section
         $headingEnterCall = null; // the enter call
+        $lastEndPosition = null; // the last end position to close the section if any
         while ($actualCall = $callStack->next()) {
             $componentName = $actualCall->getTagName();
+            if (
+                ($lastEndPosition != null && $actualCall->getFirstMatchedCharacterPosition() >= $lastEndPosition)
+                || $lastEndPosition == null
+            ) {
+                // p_open and p_close have always a position value of 0, we filter them
+                $lastEndPosition = $actualCall->getLastMatchedCharacterPosition();
+            }
             if ($componentName == syntax_plugin_combo_headingatx::TAG) {
                 $actualCall->setState(DOKU_LEXER_ENTER);
-                $actualParsingState = DOKU_LEXER_ENTER;
+                $actualHeadingState = DOKU_LEXER_ENTER;
                 $headingEnterCall = $actualCall;
                 if ($handler->getStatus('section')) {
                     $callStack->insertAfter(
                         Call::createNativeCall(
                             'section_close',
                             array(),
-                            $actualCall->getPosition()
+                            $actualCall->getLastMatchedCharacterPosition()
                         )
                     );
+                    $actualSectionState = DOKU_LEXER_EXIT;
                     $callStack->next();
                 }
                 continue;
             }
-            if ($actualParsingState == DOKU_LEXER_ENTER) {
+            if ($actualHeadingState == DOKU_LEXER_ENTER) {
                 // we are in a heading description
                 switch ($actualCall->getComponentName()) {
                     case "p_open":
@@ -92,21 +102,23 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                             Call::createNativeCall(
                                 'section_open',
                                 array($headingEnterCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
-                                $headingEnterCall->getPosition()
+                                $headingEnterCall->getFirstMatchedCharacterPosition()
                             )
                         );
                         $handler->setStatus('section', true);
+                        $actualHeadingState = DOKU_LEXER_EXIT;
+                        $actualSectionState = DOKU_LEXER_ENTER;
 
                         /**
                          * Delete the p_close
                          * and set the parsing state to not enter
                          */
                         $callStack->deleteActualCallAndPrevious();
-                        $actualParsingState = DOKU_LEXER_EXIT;
+
 
                         continue 2;
                     default:
-                        if ($actualParsingState == DOKU_LEXER_UNMATCHED) {
+                        if ($actualHeadingState == DOKU_LEXER_UNMATCHED) {
                             $actualCall->setComboComponent(syntax_plugin_combo_headingatx::TAG);
                         }
                 }
@@ -115,19 +127,24 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
         }
 
         /**
-         * If the section was open, close it
+         * If the section was open by us, we close it
+         *
+         * We don't use the standard `section` key (ie  $handler->getStatus('section')
+         * because it's open when we receive the handler
+         * even if the `section_close` is present in the call stack
+         *
+         * We make sure that we close only what we have open
          */
-        if ($headingEnterCall != null) {
-            if ($handler->getStatus('section')) {
-                $callStack->insertAfter(
-                    Call::createNativeCall(
-                        'section_close',
-                        array(),
-                        $headingEnterCall->getPosition()
-                    )
-                );
-            }
+        if ($actualSectionState == DOKU_LEXER_ENTER) {
+            $callStack->insertAfter(
+                Call::createNativeCall(
+                    'section_close',
+                    array(),
+                    $lastEndPosition
+                )
+            );
         }
+
 
     }
 }

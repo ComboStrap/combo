@@ -186,7 +186,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                     /**
                      * Code extracted and adapted from the end of {@link Doku_Handler::header()}
                      */
-                    $headingPosition = $openingTag->getPosition();
+                    $headingPosition = $openingTag->getKey();
                     if ($handler->getStatus('section')) {
                         $handler->addCall('section_close', array(), $headingPosition);
                     }

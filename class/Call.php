@@ -158,7 +158,6 @@ class Call
     }
 
 
-
     /**
      *
      * Return the tag name from a call array
@@ -289,8 +288,15 @@ class Call
                 return '[[' . $this->call[1][0] . '|' . $this->call[1][1] . ']]';
             case "eol":
                 return DOKU_LF;
+            case "header":
+            case "cdata":
+                return $this->call[1][0];
             default:
-                return null;
+                if (isset($this->call[1][0]) && is_string($this->call[1][0])) {
+                    return $this->call[1][0];
+                } else {
+                    return "";
+                }
         }
     }
 
@@ -528,7 +534,7 @@ class Call
     /**
      * @return mixed|string the position (ie key) in the array
      */
-    public function getPosition()
+    public function getKey()
     {
         return $this->key;
     }
@@ -540,7 +546,7 @@ class Call
 
     public function setState($state)
     {
-        if ($this->call[0]=="plugin") {
+        if ($this->call[0] == "plugin") {
             // for dokuwiki
             $this->call[1][2] = $state;
             // for the combo plugin if any
@@ -555,6 +561,30 @@ class Call
     public function setComboComponent($TAG)
     {
         throw new RuntimeException("Not yet implemented");
+    }
+
+    /**
+     * Return the position of the first matched character in the text file
+     * @return mixed
+     */
+    public function getFirstMatchedCharacterPosition()
+    {
+
+        return $this->call[2];
+
+    }
+
+    /**
+     * Return the position of the last matched character in the text file
+     *
+     * This is the {@link Call::getFirstMatchedCharacterPosition()}
+     * plus the length of the {@link Call::getMatchedContent()}
+     * matched content
+     * @return int|mixed
+     */
+    public function getLastMatchedCharacterPosition()
+    {
+        return $this->getFirstMatchedCharacterPosition() + strlen($this->getMatchedContent());
     }
 
 

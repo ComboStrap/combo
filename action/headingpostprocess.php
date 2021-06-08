@@ -50,6 +50,7 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
         $actualSectionState = null; // enter if we have created a section
         $headingEnterCall = null; // the enter call
         $lastEndPosition = null; // the last end position to close the section if any
+        $headingText = ""; // text only content in the heading
         while ($actualCall = $callStack->next()) {
             $componentName = $actualCall->getTagName();
             if (
@@ -62,7 +63,7 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
             if ($componentName == syntax_plugin_combo_headingatx::TAG) {
                 $actualCall->setState(DOKU_LEXER_ENTER);
                 $actualHeadingState = DOKU_LEXER_ENTER;
-                $headingEnterCall = $actualCall;
+                $headingEnterCall = $callStack->getActualCall();
                 if ($handler->getStatus('section')) {
                     $callStack->insertAfter(
                         Call::createNativeCall(
@@ -84,6 +85,12 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                         continue 2;
                     case "p_close":
                         /**
+                         * Update the entering call with the text capture
+                         */
+                        $headingEnterCall->addAttribute(syntax_plugin_combo_headingutil::HEADING_TEXT_ATTRIBUTE, $headingText);
+                        $headingText = "";
+
+                        /**
                          * Create the exit call
                          * and open the section
                          * Code extracted and adapted from the end of {@link Doku_Handler::header()}
@@ -92,10 +99,7 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                             Call::createComboCall(
                                 syntax_plugin_combo_headingatx::TAG,
                                 DOKU_LEXER_EXIT,
-                                [
-                                    PluginUtility::ATTRIBUTES => $headingEnterCall->getAttributes(),
-                                    PluginUtility::STATE => DOKU_LEXER_EXIT
-                                ]
+                                $headingEnterCall->getAttributes()
                             )
                         );
                         $callStack->insertBefore(
@@ -121,6 +125,10 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                         if ($actualHeadingState == DOKU_LEXER_UNMATCHED) {
                             $actualCall->setComboComponent(syntax_plugin_combo_headingatx::TAG);
                         }
+                        if ($headingText != "") {
+                            $headingText .= " ";
+                        }
+                        $headingText .= trim($actualCall->getMatchedContent());
                 }
             }
 

@@ -36,6 +36,11 @@ class syntax_plugin_combo_headingutil extends DokuWiki_Syntax_Plugin
      */
     const TYPE_OUTLINE = "outline";
     const TYPE_TITLE = "title";
+    /**
+     * The attribute that holds only the text of the heading
+     * (used to create the id and the text in the toc)
+     */
+    const HEADING_TEXT_ATTRIBUTE = "heading_text";
 
     /**
      * @param Call|bool $parent
@@ -55,37 +60,52 @@ class syntax_plugin_combo_headingutil extends DokuWiki_Syntax_Plugin
      * @param TagAttributes $tagAttributes
      * @param Doku_Renderer_xhtml $renderer
      */
-    public static function renderOpeningTag($context, $tagAttributes, &$renderer)
+    public static function renderOpeningTag($context, $tagAttributes, &$renderer, $pos = null)
     {
 
 
-        switch ($context) {
-
-            case syntax_plugin_combo_blockquote::TAG:
-            case syntax_plugin_combo_card::TAG:
-                $tagAttributes->addClassName("card-title");
-                break;
-
-        }
-
-        /**
-         * Printing
-         */
-        $type = $tagAttributes->getType();
-        if ($type != 0) {
-            $tagAttributes->addClassName("display-" . $type);
-            if (Bootstrap::getBootStrapMajorVersion() == "4") {
-                /**
-                 * Make Bootstrap display responsive
-                 */
-                PluginUtility::getSnippetManager()->attachCssSnippetForBar(syntax_plugin_combo_title::DISPLAY_BS_4);
-            }
-        }
-        $tagAttributes->removeComponentAttributeIfPresent(syntax_plugin_combo_title::TITLE);
-
         $level = $tagAttributes->getValueAndRemove(syntax_plugin_combo_title::LEVEL);
 
-        $renderer->doc .= $tagAttributes->toHtmlEnterTag("h$level");
+        if ($context == self::TYPE_OUTLINE) {
+            /**
+             * Calling the {@link Doku_Renderer_xhtml::header()}
+             * with the captured text
+             */
+            $tocText = "Heading Text Not found";
+            if ($tagAttributes->hasComponentAttribute(self::HEADING_TEXT_ATTRIBUTE)) {
+                $tocText = $tagAttributes->getValueAndRemove(self::HEADING_TEXT_ATTRIBUTE);
+            }
+            $renderer->header($tocText, $level, $pos);
+            self::reduceToFirstOpeningTagAndReturnedClosingTag($renderer->doc);
+
+        } else {
+            switch ($context) {
+
+                case syntax_plugin_combo_blockquote::TAG:
+                case syntax_plugin_combo_card::TAG:
+                    $tagAttributes->addClassName("card-title");
+                    break;
+
+
+            }
+
+            /**
+             * Printing
+             */
+            $type = $tagAttributes->getType();
+            if ($type != 0) {
+                $tagAttributes->addClassName("display-" . $type);
+                if (Bootstrap::getBootStrapMajorVersion() == "4") {
+                    /**
+                     * Make Bootstrap display responsive
+                     */
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(syntax_plugin_combo_title::DISPLAY_BS_4);
+                }
+            }
+            $tagAttributes->removeComponentAttributeIfPresent(syntax_plugin_combo_title::TITLE);
+            $renderer->doc .= $tagAttributes->toHtmlEnterTag("h$level");
+
+        }
 
     }
 
@@ -100,13 +120,14 @@ class syntax_plugin_combo_headingutil extends DokuWiki_Syntax_Plugin
         return "</h$level>" . DOKU_LF;
     }
 
-
     /**
-     * Replace the last content of a tag
-     * @param $input - the input should have a heading at the end (ie <h1>blabla</h1>)
-     * @param $newContent -  the new content (ie <h1>newContent</h1>
+     * Reduce the end of the input string
+     * to the first opening tag and returns the closing tag
+     *
+     * @param $input
+     * @return string - the closing ending tag
      */
-    public static function modifyLastTagContent(&$input, $newContent)
+    public static function reduceToFirstOpeningTagAndReturnedClosingTag(&$input)
     {
         // the variable that will capture the heading tag
         $headingEndTag = "";
@@ -130,7 +151,20 @@ class syntax_plugin_combo_headingutil extends DokuWiki_Syntax_Plugin
                 $position--;
             }
         }
-        $input = substr($input, 0, $position + 1) . $newContent . $headingEndTag;
+        $input = substr($input, 0, $position + 1);
+        return $headingEndTag;
+    }
+
+
+    /**
+     * Replace the last content of a tag
+     * @param $input - the input should have a heading at the end (ie <h1>blabla</h1>)
+     * @param $newContent -  the new content (ie <h1>newContent</h1>
+     */
+    public static function modifyLastTagContent(&$input, $newContent)
+    {
+        $headingEndTag = self::reduceToFirstOpeningTagAndReturnedClosingTag($input);
+        $input .= $newContent . $headingEndTag;
     }
 
 

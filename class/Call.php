@@ -539,7 +539,7 @@ class Call
         return $this->key;
     }
 
-    public function getCall()
+    public function &getCall()
     {
         return $this->call;
     }

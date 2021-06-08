@@ -3,7 +3,9 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
 {
@@ -64,7 +66,7 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                 $actualCall->setState(DOKU_LEXER_ENTER);
                 $actualHeadingState = DOKU_LEXER_ENTER;
                 $headingEnterCall = $callStack->getActualCall();
-                if($actualCall->getContext()==syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
+                if ($actualCall->getContext() == syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
                     if ($handler->getStatus('section')) {
                         $callStack->insertAfter(
                             Call::createNativeCall(
@@ -82,6 +84,14 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
             if ($actualHeadingState == DOKU_LEXER_ENTER) {
                 // we are in a heading description
                 switch ($actualCall->getComponentName()) {
+                    case "internalmedia":
+                        // no link for media in heading
+                        $actualCall->getCall()[1][6] = MediaLink::LINKING_NOLINK_VALUE;
+                        continue 2;
+                    case syntax_plugin_combo_media::COMPONENT:
+                        // no link for media in heading
+                        $actualCall->addAttribute(TagAttributes::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+                        continue 2;
                     case "p_open":
                         $callStack->deleteActualCallAndPrevious();
                         continue 2;
@@ -100,7 +110,7 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                             )
                         );
 
-                        if($headingEnterCall->getContext()==syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
+                        if ($headingEnterCall->getContext() == syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
                             /**
                              * Update the entering call with the text capture
                              */
@@ -133,10 +143,14 @@ class action_plugin_combo_headingpostprocess extends DokuWiki_Action_Plugin
                         if ($actualHeadingState == DOKU_LEXER_UNMATCHED) {
                             $actualCall->setComboComponent(syntax_plugin_combo_headingatx::TAG);
                         }
-                        if ($headingText != "") {
-                            $headingText .= " ";
+                        // only cdata for now
+                        // no image, ...
+                        if ($componentName == "cdata") {
+                            if ($headingText != "") {
+                                $headingText .= " ";
+                            }
+                            $headingText .= trim($actualCall->getMatchedContent());
                         }
-                        $headingText .= trim($actualCall->getMatchedContent());
                 }
             }
 

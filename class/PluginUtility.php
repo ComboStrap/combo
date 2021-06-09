@@ -200,6 +200,18 @@ class PluginUtility
     }
 
     /**
+     * This pattern allows space after the tag name
+     * for an end tag
+     * As XHTML (https://www.w3.org/TR/REC-xml/#dt-etag)
+     * @param $tag
+     * @return string
+     */
+    public static function getEndTagPattern($tag)
+    {
+        return "</$tag\s*>";
+    }
+
+    /**
      * @param $tag
      * @return string
      *

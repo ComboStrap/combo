@@ -341,7 +341,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
         foreach (self::TAGS as $tag) {
-            $this->Lexer->addExitPattern("</" . $tag . ">", PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern(PluginUtility::getEndTagPattern($tag), PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
 

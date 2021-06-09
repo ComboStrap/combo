@@ -22,6 +22,7 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
     const CONF_OUTLINE_NUMBERING_PREFIX = "outlineNumberingPrefix";
     const CONF_OUTLINE_NUMBERING_SUFFIX = "outlineNumberingSuffix";
     const CANONICAL = "outline";
+    const CONF_OUTLINE_NUMBERING_ENABLE = "outlineNumberingEnable";
 
 
     public function register(Doku_Event_Handler $controller)
@@ -76,15 +77,17 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
     function _outline_numbering($event)
     {
 
-        $level2CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2, "decimal");
-        $level3CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3, "decimal");
-        $level4CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4, "decimal");
-        $level5CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5, "decimal");
-        $level6CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6, "decimal");
-        $counterSeparator = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR, ".");
-        $prefix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_PREFIX, "");
-        $suffix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_SUFFIX, " - ");
-        $numberingCss = <<<EOF
+        $enable = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, 0);
+        if ($enable) {
+            $level2CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2, "decimal");
+            $level3CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3, "decimal");
+            $level4CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4, "decimal");
+            $level5CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5, "decimal");
+            $level6CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6, "decimal");
+            $counterSeparator = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR, ".");
+            $prefix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_PREFIX, "");
+            $suffix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_SUFFIX, " - ");
+            $numberingCss = <<<EOF
 main > h2 { counter-increment: h2; }
 main > h3 { counter-increment: h3; }
 main > h4 { counter-increment: h4; }
@@ -108,8 +111,8 @@ main > h6::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counte
 EOF;
 
 
-        PluginUtility::getSnippetManager()->upsertCssSnippetForRequest(self::SNIPPET_ID, $numberingCss);
-
+            PluginUtility::getSnippetManager()->upsertCssSnippetForRequest(self::SNIPPET_ID, $numberingCss);
+        }
     }
 
 

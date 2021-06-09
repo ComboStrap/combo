@@ -208,6 +208,7 @@ $lang[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = PluginUtility::getUrl(Flo
 /**
  * Outline
  */
+$lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_ENABLE] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - if checked, outline numbering will be applied");
 $lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 2");
 $lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 3");
 $lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The counter style for the level 4");

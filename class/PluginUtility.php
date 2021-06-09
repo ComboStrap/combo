@@ -547,17 +547,30 @@ class PluginUtility
     {
         /** @noinspection SpellCheckingInspection */
 
-        $icon = "";
+        $xhtmlIcon = "";
         if ($withIcon) {
 
             /**
-             * The best would be
+             * We don't include it as an external resource via url
+             * because it then make a http request for every logo
+             * in the configuration page and makes it really slow
              */
-            //$icon = "<img src=\"https://combostrap.com/_media/logo.svg\" width='40px'/>";
-            $icon = "<object type=\"image/svg+xml\" data=\"https://combostrap.com/_media/logo.svg\" style=\"max-width: 16px\"></object>";
+            $path = File::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
+            $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
+            $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY,SvgDocument::ICON_TYPE);
+            $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY,"20");
+            $cache = new CacheMedia($path, $tagAttributes);
+            if (!$cache->isCacheUsable()) {
+                $xhtmlIcon = SvgDocument::createFromPath($path)
+                    ->setShouldBeOptimized(true)
+                    ->getXmlText($tagAttributes);
+                $cache->storeCache($xhtmlIcon);
+            }
+            $xhtmlIcon = file_get_contents($cache->getFile()->getFileSystemPath());
+
 
         }
-        return $icon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
+        return $xhtmlIcon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
     }
 
     /**

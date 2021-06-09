@@ -311,6 +311,7 @@ $conf["floatDefaultBreakpoint"] = "sm";
 
 /**
  * Outline Numbering
+ * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_ENABLE}
  * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2}
  * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3}
  * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4}
@@ -320,6 +321,7 @@ $conf["floatDefaultBreakpoint"] = "sm";
  * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX}
  * {@link action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX}
  */
+$conf["outlineNumberingEnable"] = 0;
 $conf["outlineNumberingCounterStyleLevel2"] = "decimal";
 $conf["outlineNumberingCounterStyleLevel3"] = "decimal";
 $conf["outlineNumberingCounterStyleLevel4"] = "decimal";

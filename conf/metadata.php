@@ -267,6 +267,7 @@ $meta[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = array('multichoice', '_ch
 /**
  * Outline Numbering
  */
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_ENABLE] = array("onoff");
 $meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
 $meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
 $meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);

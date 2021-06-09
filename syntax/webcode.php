@@ -341,7 +341,6 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                     // Credits bar
                     $bar = '<div class="webcode-bar">';
-                    $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by WebCode", false) . '</div>';
 
 
                     // Dokuwiki Code ?
@@ -449,6 +448,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         $iFrameAttributes->addHtmlAttributeValue("srcdoc", htmlentities($iframeSrcValue));
 
                         // Code bar with button
+                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by WebCode", false) . '</div>';
                         $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $externalResources, $useConsole, $iFrameAttributes->getValue("name")) . '</div>';
 
 

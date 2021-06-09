@@ -22,3 +22,4 @@ action/lowqualitypage.php
 style.css
 syntax/img.php
 class/InternalMediaLink.php
+syntax/title.php

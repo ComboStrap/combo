@@ -95,21 +95,21 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_SPECIAL :
 
-                $attributes = [syntax_plugin_combo_title::LEVEL => strlen(trim($match))];
+                $attributes = [syntax_plugin_combo_heading::LEVEL => strlen(trim($match))];
                 $callStack = CallStack::createFromHandler($handler);
 
                 // Determine the type
                 $parent = $callStack->moveToParent();
-                $headingType = syntax_plugin_combo_headingutil::getHeadingType($parent);
+                $headingType = syntax_plugin_combo_heading::getHeadingType($parent);
                 switch ($headingType) {
-                    case syntax_plugin_combo_headingutil::TYPE_TITLE:
+                    case syntax_plugin_combo_heading::TYPE_TITLE:
 
                         $context = $parent->getTagName();
                         break;
 
-                    case syntax_plugin_combo_headingutil::TYPE_OUTLINE:
+                    case syntax_plugin_combo_heading::TYPE_OUTLINE:
 
-                        $context = syntax_plugin_combo_headingutil::TYPE_OUTLINE;
+                        $context = syntax_plugin_combo_heading::TYPE_OUTLINE;
                         break;
 
                     default:
@@ -121,7 +121,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                 /**
                  * The context is needed:
                  *   * to add the bootstrap class if it's a card title for instance
-                 *   * and to delete {@link syntax_plugin_combo_headingutil::TYPE_OUTLINE} call
+                 *   * and to delete {@link syntax_plugin_combo_heading::TYPE_OUTLINE} call
                  * in the {@link action_plugin_combo_headingpostprocess} (The rendering is done via Dokuwiki,
                  * see the exit processing for more info on the handling of outline headings)
                  *
@@ -168,7 +168,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $context = $data[PluginUtility::CONTEXT];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                    syntax_plugin_combo_headingutil::renderOpeningTag($context, $tagAttributes, $renderer);
+                    syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer);
                     return true;
 
 
@@ -176,7 +176,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                    $level = $tagAttributes->getValue(syntax_plugin_combo_title::LEVEL);
+                    $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
                     $renderer->doc .= "</h$level>" . DOKU_LF;
                     return true;
 

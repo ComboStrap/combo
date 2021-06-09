@@ -65,7 +65,7 @@ class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
                 $actualCall->setState(DOKU_LEXER_ENTER);
                 $actualHeadingState = DOKU_LEXER_ENTER;
                 $headingEnterCall = $callStack->getActualCall();
-                if ($actualCall->getContext() == syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
+                if ($actualCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
                     if ($handler->getStatus('section')) {
                         $callStack->insertBefore(
                             Call::createNativeCall(
@@ -108,11 +108,11 @@ class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
                             )
                         );
 
-                        if ($headingEnterCall->getContext() == syntax_plugin_combo_headingutil::TYPE_OUTLINE) {
+                        if ($headingEnterCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
                             /**
                              * Update the entering call with the text capture
                              */
-                            $headingEnterCall->addAttribute(syntax_plugin_combo_headingutil::HEADING_TEXT_ATTRIBUTE, $headingText);
+                            $headingEnterCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
                             $headingText = "";
 
 

@@ -60,7 +60,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
         /**
          * header mode is disable to take over
-         * and replace it with {@link syntax_plugin_combo_title}
+         * and replace it with {@link syntax_plugin_combo_heading}
          */
         if ($mode == "header") {
             return false;

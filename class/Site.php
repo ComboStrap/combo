@@ -251,5 +251,11 @@ class Site
         $conf['maxseclevel']=0;
     }
 
+    public static function setBreadCrumbOn()
+    {
+        global $conf;
+        $conf['youarehere'] = 1;
+    }
+
 
 }

@@ -22,6 +22,7 @@ require_once('Boldness.php');
  * we give the qualified path to boostrap then
  */
 require_once(__DIR__ . '/Bootstrap.php');
+require_once('BreadcrumbHierarchical.php');
 require_once('CacheMedia.php');
 require_once('CacheByLogicalKey.php');
 require_once('CacheInstructionsByLogicalKey.php');

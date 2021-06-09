@@ -147,16 +147,16 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
 
 
 
-        // Rendering is done by the parent
+        /**
+         * Rendering is done by the parent
+         * And should be the last one
+         * Because we delete the heading
+         * with {@link syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes()}
+         * in order to be able to add the toc and section
+         *
+         */
         parent::header($text, $level, $pos);
 
-
-        // Add the hierarchical breadcrumb detail after the first header
-        if ($level == 1 and $nodePosition == 1) {
-
-            $this->doc .= BreadcrumbHierarchical::render();
-
-        }
 
 
     }
@@ -185,6 +185,9 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
 
 
             if ($section['level'] == 1 and $section['position'] == 1) {
+
+                // Add the hierarchical breadcrumb detail after the first header
+                $sectionContent .= BreadcrumbHierarchical::render();
 
                 if (TocUtility::showToc($this)) {
                     $sectionContent .= TocUtility::renderToc($this);

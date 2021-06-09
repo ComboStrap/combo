@@ -1,8 +1,10 @@
 <?php
 
 
+use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -15,7 +17,6 @@ if (!defined('DOKU_INC')) die();
  *
  * It contains also all heading utility class
  *
- * Taking over {@link \dokuwiki\Parsing\ParserMode\Header}
  */
 class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 {
@@ -25,18 +26,12 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     const OLD_TITLE_TAG = "title"; // old tag
     const TAGS = [self::TAG, self::OLD_TITLE_TAG];
 
-    /**
-     * Header pattern that we expect ie  ==== Hello =====
-     * Found in {@link \dokuwiki\Parsing\ParserMode\Header}
-     * One modification is that it permits one `=` to get the h6
-     */
-    const HEADING_PATTERN = '[ \t]*={1,}[^\n]+={1,}[ \t]*(?=\n)';
-
-    const TITLE = 'title';
     const LEVEL = 'level';
-    const DISPLAY_BS_4 = "display-bs-4";
-    const ALL_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "d1", "d2", "d3", "d4"];
-    const DISPLAY_TYPES = ["d1", "d2", "d3", "d4"];
+    const DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID = "display-bs-4";
+    const ALL_TYPES = ["h1", "h2", "h3", "h4", "h5", "h6", "d1", "d2", "d3", "d4", "d5", "d6"];
+    const DISPLAY_TYPES = ["d1", "d2", "d3", "d4", "d5", "d6"];
+    const DISPLAY_TYPES_ONLY_BS_5 = ["d5", "d6"]; // only available in 5
+
     /**
      * An heading may be printed
      * as outline and should be in the toc
@@ -50,17 +45,54 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     const HEADING_TEXT_ATTRIBUTE = "heading_text";
     const TYPE_TITLE = "title";
 
+    const CANONICAL = "heading";
+    const SYNTAX_TYPE = 'formatting';
+    const SYNTAX_PTYPE = 'block';
+
+    /**
+     * The default level if not set
+     * Not level 1 because this is the top level heading
+     * Not level 2 because this is the most used level and we can confound with it
+     */
+    const DEFAULT_LEVEL = "3";
+
     /**
      * @param Call|bool $parent
      * @return string the type of heading
      */
-    public static function getHeadingType($parent)
+    static function getHeadingType($parent)
     {
         if ($parent != false && $parent->getComponentName() != "section_open") {
             return self::TYPE_TITLE;
         } else {
             return self::TYPE_OUTLINE;
         }
+    }
+
+    /**
+     * @param $parent Call|false
+     * @return string
+     */
+    public static function getContext($parent)
+    {
+        $headingType = syntax_plugin_combo_heading::getHeadingType($parent);
+        switch ($headingType) {
+            case syntax_plugin_combo_heading::TYPE_TITLE:
+
+                $context = $parent->getTagName();
+                break;
+
+            case syntax_plugin_combo_heading::TYPE_OUTLINE:
+
+                $context = syntax_plugin_combo_heading::TYPE_OUTLINE;
+                break;
+
+            default:
+                LogUtility::msg("The heading type ($headingType) is unknown");
+                $context = "";
+                break;
+        }
+        return $context;
     }
 
     /**
@@ -83,8 +115,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         $startTagClosingCharacterParsed = false;
         // We start from the edn
         $position = strlen($input) - 1;
-        // tag attributes
-        $tagAttributes = [];
         while ($position > 0) {
             $character = $input[$position];
 
@@ -121,8 +151,13 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         }
         $input = substr($input, 0, $position);
 
+        if (!empty($headingStartTagString)) {
+            return PluginUtility::getTagAttributes($headingStartTagString);
+        } else {
+            LogUtility::msg("The attributes of the heading are empty and this should not be possible");
+            return [];
+        }
 
-        return PluginUtility::getTagAttributes($headingStartTagString);
 
     }
 
@@ -140,57 +175,35 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          */
         $type = $tagAttributes->getType();
 
-        /**
-         * Display class if any
-         */
-        $displayClass = null;
 
         /**
-         * Level determination
+         * Level
          */
         $level = $tagAttributes->getValueAndRemove(syntax_plugin_combo_heading::LEVEL);
-        if ($level == null) {
-            /**
-             * Old title type
-             * from 1 to 4 to set the display heading
-             */
-            if (is_integer($type) && $type != 0) {
-                $level = $type;
-                $displayClass = "display-$level";
-            }
-            /**
-             * Still null, check the type
-             */
-            if ($level == null) {
-                if (in_array($type, self::ALL_TYPES)) {
-                    $level = substr($type, 1);
-                }
-            }
-            /**
-             * Still null, default to level 3
-             * Not level 1 because this is the top level heading
-             * Not level 2 because this is the most used level and we can confound with it
-             */
-            if ($level == null) {
-                $level = "3";
-            }
-        }
+
 
         /**
          * Display Heading
          * https://getbootstrap.com/docs/5.0/content/typography/#display-headings
          */
         if (in_array($type, self::DISPLAY_TYPES)) {
+
             $displayClass = "display-$level";
-            if (\ComboStrap\Bootstrap::getBootStrapMajorVersion() == "4") {
+
+            if (Bootstrap::getBootStrapMajorVersion() == "4") {
                 /**
                  * Make Bootstrap display responsive
                  */
-                PluginUtility::getSnippetManager()->attachCssSnippetForBar(syntax_plugin_combo_heading::DISPLAY_BS_4);
+                PluginUtility::getSnippetManager()->attachCssSnippetForBar(syntax_plugin_combo_heading::DISPLAY_BS_4_RESPONSIVE_SNIPPET_ID);
+
+                if (in_array($type, self::DISPLAY_TYPES_ONLY_BS_5)) {
+                    $displayClass = "display-4";
+                    LogUtility::msg("Bootstrap 4 does not support the type ($type). Switch to " . PluginUtility::getUrl(Bootstrap::CANONICAL, "bootstrap 5") . " if you want to use it. The display type was set to `d4`", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                }
+
             }
-        }
-        if ($displayClass != null) {
             $tagAttributes->addClassName($displayClass);
+
         }
 
         /**
@@ -217,11 +230,15 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
              * with the captured text to be Dokuwiki Template compatible
              * It will create the toc and the section editing
              */
+            $tocText = "";
             if ($tagAttributes->hasComponentAttribute(self::HEADING_TEXT_ATTRIBUTE)) {
                 $tocText = $tagAttributes->getValueAndRemove(self::HEADING_TEXT_ATTRIBUTE);
+                if (empty($tocText)) {
+                    LogUtility::msg("The heading text should be not null on the enter tag");
+                }
             } else {
                 $tocText = "Heading Text Not found";
-                \ComboStrap\LogUtility::msg("The heading text was not found for the toc");
+                LogUtility::msg("The heading text attribute was not found for the toc");
             }
             $renderer->header($tocText, $level, $pos);
             $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
@@ -235,7 +252,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          * In dokuwiki, the description is called the `title`
          * We make sure that we don't have any side effect
          */
-        $tagAttributes->removeComponentAttributeIfPresent(syntax_plugin_combo_heading::TITLE);
+        $tagAttributes->removeComponentAttributeIfPresent(syntax_plugin_combo_headingwiki::TITLE);
 
         /**
          * Printing
@@ -251,14 +268,22 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     public static function renderClosingTag($tagAttributes)
     {
         $level = $tagAttributes->getValueAndRemove(syntax_plugin_combo_heading::LEVEL);
-
+        if ($level == null) {
+            LogUtility::msg("The level is mandatory when closing a heading", self::CANONICAL);
+        }
         return "</h$level>" . DOKU_LF;
     }
 
 
+    /**
+     * Syntax Type.
+     *
+     * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
+     * @see DokuWiki_Syntax_Plugin::getType()
+     */
     function getType()
     {
-        return 'formatting';
+        return self::SYNTAX_TYPE;
     }
 
     /**
@@ -275,7 +300,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return self::SYNTAX_PTYPE;
     }
 
     /**
@@ -293,26 +318,20 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * Less than {@link \dokuwiki\Parsing\ParserMode\Header::getSort()}
+     *
      * @return int
      */
     function getSort()
     {
-        return 49;
+        return 50;
     }
 
 
     function connectTo($mode)
     {
-        /**
-         * Title regexp
-         */
-
-        $this->Lexer->addSpecialPattern(self::HEADING_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-
 
         /**
-         * Title tag
+         * Heading tag
          */
         foreach (self::TAGS as $tag) {
             $this->Lexer->addEntryPattern(PluginUtility::getContainerTagPattern($tag), $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
@@ -322,7 +341,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
         foreach (self::TAGS as $tag) {
-            $this->Lexer->addExitPattern("</" . self::TAG . ">", PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern("</" . $tag . ">", PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
     }
 
@@ -336,12 +355,48 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
+
+                /**
+                 * Level is mandatory (for the closing tag)
+                 */
+                $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
+                if ($level == null) {
+
+                    /**
+                     * Old title type
+                     * from 1 to 4 to set the display heading
+                     */
+                    $type = $tagAttributes->getType();
+                    if (is_numeric($type) && $type != 0) {
+                        $level = $type;
+                        $tagAttributes->setType("d$level");
+                    }
+                    /**
+                     * Still null, check the type
+                     */
+                    if ($level == null) {
+                        if (in_array($type, self::ALL_TYPES)) {
+                            $level = substr($type, 1);
+                        }
+                    }
+                    /**
+                     * Still null, default level
+                     */
+                    if ($level == null) {
+                        $level = self::DEFAULT_LEVEL;
+                    }
+                    /**
+                     * Set the level
+                     */
+                    $tagAttributes->addComponentAttributeValue(self::LEVEL, $level);
+                }
+
+                /**
+                 * Context determination
+                 */
                 $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
-                $context = "";
-                if ($parent != false) {
-                    $context = $parent->getTagName();
-                }
+                $context = self::getContext($parent);
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -360,35 +415,14 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $context = $openingTag->getContext(); // for sectioning
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $openingTag->getContext(),
+                    PluginUtility::CONTEXT => $context,
                     PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
-
                 );
 
-            /**
-             * Title regexp
-             */
-            case DOKU_LEXER_SPECIAL :
-
-                $attributes = self::parseWikiHeading($match);
-                $callStack = CallStack::createFromHandler($handler);
-
-                $parentTag = $callStack->moveToParent();
-                if ($parentTag == false) {
-                    $context = "";
-                } else {
-                    $context = $parentTag->getTagName();
-                }
-
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $context
-                );
 
         }
         return array();
@@ -414,18 +448,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
 
-                case DOKU_LEXER_SPECIAL:
-                    /**
-                     * The short title ie ( === title === )
-                     */
-                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
-                    $context = $data[PluginUtility::CONTEXT];
-                    $title = $tagAttributes->getValueAndRemove(self::TITLE);
-                    self::renderOpeningTag($context, $tagAttributes, $renderer);
-                    $renderer->doc .= PluginUtility::htmlEncode($title);
-                    $renderer->doc .= self::renderClosingTag($tagAttributes);
-                    break;
                 case DOKU_LEXER_ENTER:
                     $parentTag = $data[PluginUtility::CONTEXT];
                     $attributes = $data[PluginUtility::ATTRIBUTES];
@@ -447,18 +469,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         return false;
     }
 
-    public
-    static function parseWikiHeading($match)
-    {
-        $title = trim($match);
-        $level = 7 - strspn($title, '=');
-        if ($level < 1) $level = 1;
-        $title = trim($title, '=');
-        $title = trim($title);
-        $parameters[self::TITLE] = $title;
-        $parameters[self::LEVEL] = $level;
-        return $parameters;
-    }
 
 }
 

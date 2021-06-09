@@ -24,13 +24,6 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     const EXIT_PATTERN = "\r??\n";
 
 
-    public static function toc(Doku_Renderer_xhtml $renderer, $text, $level)
-    {
-        $hid = $renderer->_headerToLink($text, true);
-
-        //only add items within configured levels
-        $renderer->toc_additem($hid, $text, $level);
-    }
 
 
     function getType()
@@ -100,23 +93,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
                 // Determine the type
                 $parent = $callStack->moveToParent();
-                $headingType = syntax_plugin_combo_heading::getHeadingType($parent);
-                switch ($headingType) {
-                    case syntax_plugin_combo_heading::TYPE_TITLE:
-
-                        $context = $parent->getTagName();
-                        break;
-
-                    case syntax_plugin_combo_heading::TYPE_OUTLINE:
-
-                        $context = syntax_plugin_combo_heading::TYPE_OUTLINE;
-                        break;
-
-                    default:
-                        LogUtility::msg("The heading type ($headingType) is unknown");
-                        $context = "";
-                        break;
-                }
+                $context = syntax_plugin_combo_heading::getContext($parent);
 
                 /**
                  * The context is needed:

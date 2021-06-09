@@ -777,7 +777,7 @@ class TagAttributes
 
     public function setType($type)
     {
-        $this->addComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
+        $this->setComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
     }
 
 

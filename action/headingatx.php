@@ -9,6 +9,76 @@ use ComboStrap\TagAttributes;
 class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
 {
 
+
+    private static function addToTextHeading(&$headingText, $textToAdd)
+    {
+        // Building the text for the toc
+        // only cdata for now
+        // no image, ...
+        if ($headingText != "") {
+            $headingText .= " ";
+        }
+        $headingText .= trim($textToAdd);
+    }
+
+    /**
+     * @param $headingEntryCall
+     * @param $handler
+     * @param CallStack $callStack
+     * @param $actualSectionState
+     * @param $headingText
+     * @param $actualHeadingParsingState
+     */
+    private static function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(&$headingEntryCall, &$handler, &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
+    {
+        /**
+         * We are no more in a heading
+         */
+        $actualHeadingParsingState = DOKU_LEXER_EXIT;
+
+        /**
+         * Outline ?
+         * Update the text and open a section
+         */
+        if ($headingEntryCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
+
+            /**
+             * Update the entering call with the text capture
+             */
+            $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
+            $headingText = "";
+
+            $callStack->insertAfter(
+                Call::createNativeCall(
+                    'section_open',
+                    array($headingEntryCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
+                    $headingEntryCall->getFirstMatchedCharacterPosition()
+                )
+            );
+            $handler->setStatus('section', true);
+            $actualSectionState = DOKU_LEXER_ENTER;
+            $callStack->next();
+
+        }
+    }
+
+    private static function closeSectionIfNeeded(&$actualCall, &$handler, &$callStack, &$actualSectionState)
+    {
+        if ($actualCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
+            if ($handler->getStatus('section')) {
+                $callStack->insertBefore(
+                    Call::createNativeCall(
+                        'section_close',
+                        array(),
+                        $actualCall->getLastMatchedCharacterPosition()
+                    )
+                );
+                $actualSectionState = DOKU_LEXER_EXIT;
+                $handler->setStatus('section', false);
+            }
+        }
+    }
+
     public function register(\Doku_Event_Handler $controller)
     {
         /**
@@ -47,13 +117,13 @@ class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
         /**
          * Processing variable about the context
          */
-        $actualHeadingState = DOKU_LEXER_EXIT; // enter if we have entered a heading, exit otherwise
+        $actualHeadingParsingState = DOKU_LEXER_EXIT; // enter if we have entered a heading, exit otherwise
         $actualSectionState = null; // enter if we have created a section
         $headingEnterCall = null; // the enter call
         $lastEndPosition = null; // the last end position to close the section if any
         $headingText = ""; // text only content in the heading
         while ($actualCall = $callStack->next()) {
-            $componentName = $actualCall->getTagName();
+            $tagName = $actualCall->getTagName();
             if (
                 ($lastEndPosition != null && $actualCall->getFirstMatchedCharacterPosition() >= $lastEndPosition)
                 || $lastEndPosition == null
@@ -61,95 +131,116 @@ class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
                 // p_open and p_close have always a position value of 0, we filter them
                 $lastEndPosition = $actualCall->getLastMatchedCharacterPosition();
             }
-            if ($componentName == syntax_plugin_combo_headingatx::TAG) {
-                $actualCall->setState(DOKU_LEXER_ENTER);
-                $actualHeadingState = DOKU_LEXER_ENTER;
-                $headingEnterCall = $callStack->getActualCall();
-                if ($actualCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
-                    if ($handler->getStatus('section')) {
-                        $callStack->insertBefore(
-                            Call::createNativeCall(
-                                'section_close',
-                                array(),
-                                $actualCall->getLastMatchedCharacterPosition()
-                            )
-                        );
-                        $actualSectionState = DOKU_LEXER_EXIT;
+
+            /**
+             * Enter
+             */
+            switch ($tagName) {
+                case syntax_plugin_combo_headingatx::TAG:
+                    $actualCall->setState(DOKU_LEXER_ENTER);
+                    $actualHeadingParsingState = DOKU_LEXER_ENTER;
+                    $headingEnterCall = $callStack->getActualCall();
+                    self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState);
+                    continue 2;
+                case syntax_plugin_combo_heading::TAG:
+                    if ($actualCall->getState() == DOKU_LEXER_ENTER) {
+                        $actualHeadingParsingState = DOKU_LEXER_ENTER;
+                        $headingEnterCall = $callStack->getActualCall();
+                        self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState);
+                        continue 2;
                     }
-                }
-                continue;
+                    break;
             }
-            if ($actualHeadingState == DOKU_LEXER_ENTER) {
-                // we are in a heading description
-                switch ($actualCall->getComponentName()) {
+
+
+            /**
+             * Close and Inside the heading description
+             */
+            if ($actualHeadingParsingState == DOKU_LEXER_ENTER) {
+
+                switch ($actualCall->getTagName()) {
+
+                    case syntax_plugin_combo_heading::TAG:
+                        if ($actualCall->getState() == DOKU_LEXER_EXIT) {
+                            self::insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
+                                $headingEnterCall,
+                                $handler,
+                                $callStack,
+                                $actualSectionState,
+                                $headingText,
+                                $actualHeadingParsingState
+                            );
+                        } else {
+                            // unmatched
+                            self::addToTextHeading($headingText, $actualCall->getMatchedContent());
+                        }
+                        continue 2;
+
                     case "internalmedia":
                         // no link for media in heading
                         $actualCall->getCall()[1][6] = MediaLink::LINKING_NOLINK_VALUE;
                         continue 2;
-                    case syntax_plugin_combo_media::COMPONENT:
+
+                    case syntax_plugin_combo_media::TAG:
                         // no link for media in heading
                         $actualCall->addAttribute(TagAttributes::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
                         continue 2;
-                    case "p_open":
-                        $callStack->deleteActualCallAndPrevious();
+
+                    case "cdata":
+                        self::addToTextHeading($headingText, $actualCall->getMatchedContent());
                         continue 2;
-                    case "p_close":
 
-                        /**
-                         * Create the exit call
-                         * and open the section
-                         * Code extracted and adapted from the end of {@link Doku_Handler::header()}
-                         */
-                        $callStack->insertBefore(
-                            Call::createComboCall(
-                                syntax_plugin_combo_headingatx::TAG,
-                                DOKU_LEXER_EXIT,
-                                $headingEnterCall->getAttributes()
-                            )
-                        );
+                    case "p":
+                        if ($headingEnterCall->getTagName() == syntax_plugin_combo_headingatx::TAG) {
 
-                        if ($headingEnterCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
                             /**
-                             * Update the entering call with the text capture
+                             * Delete the p_enter / close
                              */
-                            $headingEnterCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
-                            $headingText = "";
+                            $callStack->deleteActualCallAndPrevious();
+
+                            /**
+                             * If this was a close tag
+                             */
+                            if ($actualCall->getComponentName() == "p_close") {
+
+                                $callStack->next();
+
+                                /**
+                                 * Create the exit call
+                                 * and open the section
+                                 * Code extracted and adapted from the end of {@link Doku_Handler::header()}
+                                 */
+                                $callStack->insertBefore(
+                                    Call::createComboCall(
+                                        syntax_plugin_combo_headingatx::TAG,
+                                        DOKU_LEXER_EXIT,
+                                        $headingEnterCall->getAttributes()
+                                    )
+                                );
+                                $callStack->previous();
+
+                                /**
+                                 * Close and section
+                                 */
+                                self::insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
+                                    $headingEnterCall,
+                                    $handler,
+                                    $callStack,
+                                    $actualSectionState,
+                                    $headingText,
+                                    $actualHeadingParsingState
+                                );
 
 
-                            $callStack->insertBefore(
-                                Call::createNativeCall(
-                                    'section_open',
-                                    array($headingEnterCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
-                                    $headingEnterCall->getFirstMatchedCharacterPosition()
-                                )
-                            );
-                            $handler->setStatus('section', true);
-                            $actualHeadingState = DOKU_LEXER_EXIT;
-                            $actualSectionState = DOKU_LEXER_ENTER;
-
-                        }
-
-                        /**
-                         * Delete the p_close
-                         * and set the parsing state to not enter
-                         */
-                        $callStack->deleteActualCallAndPrevious();
-
-
-                        continue 2;
-                    default:
-                        if ($actualHeadingState == DOKU_LEXER_UNMATCHED) {
-                            $actualCall->setComboComponent(syntax_plugin_combo_headingatx::TAG);
-                        }
-                        // only cdata for now
-                        // no image, ...
-                        if ($componentName == "cdata") {
-                            if ($headingText != "") {
-                                $headingText .= " ";
                             }
-                            $headingText .= trim($actualCall->getMatchedContent());
+
                         }
+                        continue 2;
+
+
                 }
+
+
             }
             /**
              * when a heading of dokuwiki is mixed with

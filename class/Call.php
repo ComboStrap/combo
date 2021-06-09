@@ -558,10 +558,7 @@ class Call
         }
     }
 
-    public function setComboComponent($TAG)
-    {
-        throw new RuntimeException("Not yet implemented");
-    }
+
 
     /**
      * Return the position of the first matched character in the text file

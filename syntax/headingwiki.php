@@ -159,7 +159,15 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                     return true;
 
             }
+        } else if ($format == renderer_plugin_combo_analytics::RENDERER_FORMAT) {
+
+            /**
+             * @var renderer_plugin_combo_analytics $renderer
+             */
+            syntax_plugin_combo_heading::processMetadataAnalytics($data,$renderer);
+
         }
+
         return false;
     }
 
@@ -167,13 +175,15 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      * @param $match
      * @return int
      */
-    public function getLevelFromMatch($match)
+    public
+    function getLevelFromMatch($match)
     {
         return 7 - strlen(trim($match));
     }
 
 
-    private function enableWikiHeading($mode)
+    private
+    function enableWikiHeading($mode)
     {
         /**
          * Basically all mode that are not `base`

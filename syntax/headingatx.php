@@ -158,6 +158,13 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                     return true;
 
             }
+        }  else if ($format == renderer_plugin_combo_analytics::RENDERER_FORMAT) {
+
+            /**
+             * @var renderer_plugin_combo_analytics $renderer
+             */
+            syntax_plugin_combo_heading::processMetadataAnalytics($data,$renderer);
+
         }
 
         return false;

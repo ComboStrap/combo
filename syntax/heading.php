@@ -56,6 +56,26 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      */
     const DEFAULT_LEVEL = "3";
 
+    public static function processMetadataAnalytics(array $data, renderer_plugin_combo_analytics $renderer)
+    {
+
+        $state = $data[PluginUtility::STATE];
+        if ($state == DOKU_LEXER_ENTER) {
+            /**
+             * Only outline heading metadata
+             * Not component heading
+             */
+            $context = $data[PluginUtility::CONTEXT];
+            if($context==self::TYPE_OUTLINE) {
+                $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+                $text = $tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
+                $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
+                $renderer->header($text, $level, null);
+            }
+        }
+    }
+
     /**
      * @param Call|bool $parent
      * @return string the type of heading
@@ -459,6 +479,13 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                     break;
 
             }
+        } else if ($format == renderer_plugin_combo_analytics::RENDERER_FORMAT) {
+
+            /**
+             * @var renderer_plugin_combo_analytics $renderer
+             */
+            syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
+
         }
         // unsupported $mode
         return false;

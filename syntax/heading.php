@@ -248,11 +248,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
         }
 
-        /**
-         * In dokuwiki, the description is called the `title`
-         * We make sure that we don't have any side effect
-         */
-        $tagAttributes->removeComponentAttributeIfPresent(syntax_plugin_combo_headingwiki::TITLE);
 
         /**
          * Printing

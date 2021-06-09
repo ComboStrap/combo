@@ -6,7 +6,7 @@ use ComboStrap\CallStack;
 use ComboStrap\MediaLink;
 use ComboStrap\TagAttributes;
 
-class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
+class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
 
 
@@ -143,6 +143,7 @@ class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
                     self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState);
                     continue 2;
                 case syntax_plugin_combo_heading::TAG:
+                case syntax_plugin_combo_headingwiki::TAG:
                     if ($actualCall->getState() == DOKU_LEXER_ENTER) {
                         $actualHeadingParsingState = DOKU_LEXER_ENTER;
                         $headingEnterCall = $callStack->getActualCall();
@@ -161,6 +162,7 @@ class action_plugin_combo_headingatx extends DokuWiki_Action_Plugin
                 switch ($actualCall->getTagName()) {
 
                     case syntax_plugin_combo_heading::TAG:
+                    case syntax_plugin_combo_headingwiki::TAG:
                         if ($actualCall->getState() == DOKU_LEXER_EXIT) {
                             self::insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(
                                 $headingEnterCall,

@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\CallStack;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -21,6 +22,9 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     const ENTRY_PATTERN = '^[\s\t]*={1,6}(?=.*={1,6}\s*\r??\n)';
     const EXIT_PATTERN = '={1,6}\s*(?=\r??\n)';
     const TAG = "headingwiki";
+
+    const CONF_WIKI_HEADING_ENABLE = "headingWikiEnable";
+    const CONF_DEFAULT_WIKI_ENABLE_VALUE = 1;
 
     public function getSort()
     {
@@ -56,17 +60,32 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
     public function connectTo($mode)
     {
-
-
-        $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if ($this->enableWikiHeading($mode)) {
+            $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
     }
 
     public function postConnect()
     {
+
         $this->Lexer->addExitPattern(self::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
     }
 
 
+    /**
+     * Handle the syntax
+     *
+     * At the end of the parser, the `section_open` and `section_close` calls
+     * are created in {@link action_plugin_combo_headingpostprocessing}
+     * and the text inside for the toc is captured
+     *
+     * @param string $match
+     * @param int $state
+     * @param int $pos
+     * @param Doku_Handler $handler
+     * @return array
+     */
     public function handle($match, $state, $pos, Doku_Handler $handler)
     {
         switch ($state) {
@@ -75,7 +94,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 /**
                  * Title regexp
                  */
-                $attributes[syntax_plugin_combo_heading::LEVEL] = 7 - strlen(trim($match));
+                $attributes[syntax_plugin_combo_heading::LEVEL] = $this->getLevelFromMatch($match);
                 $callStack = CallStack::createFromHandler($handler);
 
                 $parentTag = $callStack->moveToParent();
@@ -93,6 +112,18 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $openingAttributes = $openingTag->getAttributes();
+
+                // Control of the Number of `=` before and after
+                $levelFromMatch = $this->getLevelFromMatch($match);
+                $levelFromStartTag = $openingAttributes[syntax_plugin_combo_heading::LEVEL];
+                if ($levelFromMatch != $levelFromStartTag) {
+                    $content = "";
+                    while ($actualCall = $callStack->next()) {
+                        $content .= $actualCall->getMatchedContent();
+                    }
+                    LogUtility::msg("The number of `=` character for a wiki heading is not the same before ($levelFromStartTag) and after ($levelFromMatch) the content ($content).", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_heading::CANONICAL);
+                }
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
@@ -106,14 +137,13 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     {
 
         if ($format == "xhtml") {
+            /**
+             * @var Doku_Renderer_xhtml $renderer
+             */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
 
                 case DOKU_LEXER_ENTER:
-                    /**
-                     * The short title ie ( === title === )
-                     * @var Doku_Renderer_xhtml $renderer
-                     */
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                     $context = $data[PluginUtility::CONTEXT];
@@ -133,6 +163,30 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
         return false;
     }
 
+    /**
+     * @param $match
+     * @return int
+     */
+    public function getLevelFromMatch($match)
+    {
+        return 7 - strlen(trim($match));
+    }
+
+
+    private function enableWikiHeading($mode)
+    {
+        /**
+         * Basically all mode that are not `base`
+         * To not take the dokuwiki heading
+         */
+        if (!(in_array($mode, ['base', 'header']))) {
+            return true;
+        } else {
+            return PluginUtility::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);
+        }
+
+
+    }
 
 
 }

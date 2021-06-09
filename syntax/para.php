@@ -179,7 +179,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
                     case DOKU_LEXER_ENTER:
                         $attributes = $data[PluginUtility::ATTRIBUTES];
                         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
-                        if ($tagAttributes->hasComponentAttribute(TagAttributes::TYPE_KEY)){
+                        if ($tagAttributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
                             $class = $tagAttributes->getType();
                             $tagAttributes->addClassName($class);
                         }
@@ -237,8 +237,8 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
     public static function fromEolToParagraphUntilEndOfStack(&$callstack, $attributes)
     {
 
-        if (!is_array($attributes)){
-            LogUtility::msg("The passed attributes array ($attributes) for the creation of the paragraph is not an array",LogUtility::LVL_MSG_ERROR);
+        if (!is_array($attributes)) {
+            LogUtility::msg("The passed attributes array ($attributes) for the creation of the paragraph is not an array", LogUtility::LVL_MSG_ERROR);
             $attributes = [];
         }
 
@@ -249,14 +249,32 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
          * to create the paragraph
          */
         $paragraphComponent = \syntax_plugin_combo_para::COMPONENT;
+        $paragraphTag = \syntax_plugin_combo_para::TAG;
 
         /**
          * The running variables
          */
         $paragraphIsOpen = false; // A pointer to see if the paragraph is open
-        while ($callstack->next()) {
+        while ($actualCall = $callstack->next()) {
 
-            $actualCall = $callstack->getActualCall();
+            /**
+             * end of line is not always present
+             * because the pattern is eating it
+             * Example (list_open)
+             */
+            if ($paragraphIsOpen && $actualCall->getTagName() !== "eol") {
+                if ($actualCall->getDisplay() == Call::BlOCK_DISPLAY) {
+                    $paragraphIsOpen = false;
+                    $callstack->insertBefore(
+                        Call::createComboCall(
+                            $paragraphTag,
+                            DOKU_LEXER_EXIT,
+                            $attributes
+                        )
+                    );
+                }
+            }
+
             if ($actualCall->getTagName() === "eol") {
 
                 /**

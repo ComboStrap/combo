@@ -43,6 +43,12 @@ class Call
          * Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
          * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class
          */
+        "cdata",
+        "doublequoteclosing", // https://www.dokuwiki.org/config:typography / https://www.dokuwiki.org/wiki:syntax#text_to_html_conversions
+        "doublequoteopening",
+        "singlequoteopening",
+        "singlequoteclosing",
+        "apostrophe",
         "strong",
         "emphasis",
         "emphasis_open",

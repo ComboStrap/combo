@@ -4,12 +4,10 @@
  *
  */
 
-use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 

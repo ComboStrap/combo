@@ -105,7 +105,14 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
          * Save the H1 even if the heading dokuwiki is not enable
          */
         if(!PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE)){
-            syntax_plugin_combo_heading::processHeadingMetadata($level, $text);
+            /**
+             * $ACT == 'show'
+             * Otherwise we may capture the title of the admin page ...
+             */
+            global $ACT;
+            if ($ACT == 'show') {
+                syntax_plugin_combo_heading::processHeadingMetadata($level, $text);
+            }
         }
 
         // We are going from 2 to 3

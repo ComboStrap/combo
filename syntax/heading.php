@@ -63,15 +63,10 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          * Capture the h1
          */
         if ($level == 1) {
-            /**
-             * $ACT == 'show'
-             * Otherwise we get the title of the admin page ...
-             */
-            global $ACT;
-            if ($ACT == 'show') {
-                global $ID;
-                p_set_metadata($ID, array(Analytics::H1 => $text));
-            }
+
+            global $ID;
+            p_set_metadata($ID, array(Analytics::H1 => trim($text)));
+
         }
     }
 
@@ -89,9 +84,9 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             if ($context == self::TYPE_OUTLINE) {
                 $callStackArray = $data[PluginUtility::ATTRIBUTES];
                 $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
-                $text = $tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
+                $text = trim($tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE));
                 $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
-                self::processHeadingMetadataH1($level,$text);
+                self::processHeadingMetadataH1($level, $text);
                 $renderer->header($text, $level, null);
             }
         }
@@ -411,7 +406,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $tagAttributes = TagAttributes::createFromTagMatch($match );
 
                 /**
                  * Level is mandatory (for the closing tag)
@@ -508,7 +503,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER:
                     $parentTag = $data[PluginUtility::CONTEXT];
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes,syntax_plugin_combo_heading::TAG);
                     self::renderOpeningTag($parentTag, $tagAttributes, $renderer);
                     break;
                 case DOKU_LEXER_UNMATCHED:

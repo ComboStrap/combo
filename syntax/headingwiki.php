@@ -58,6 +58,21 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
         return syntax_plugin_combo_heading::SYNTAX_PTYPE;
     }
 
+    /**
+     * @return array
+     * Allow which kind of plugin inside
+     *
+     * No one of array('baseonly','container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs')
+     * because we manage self the content and we call self the parser
+     *
+     * Return an array of one or more of the mode types {@link $PARSER_MODES} in Parser.php
+     */
+    function getAllowedTypes()
+    {
+        return array('formatting', 'substition', 'protected', 'disabled');
+    }
+
+
     public function connectTo($mode)
     {
         if ($this->enableWikiHeading($mode)) {
@@ -145,7 +160,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER:
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, syntax_plugin_combo_heading::TAG);
                     $context = $data[PluginUtility::CONTEXT];
                     syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer);
                     return true;

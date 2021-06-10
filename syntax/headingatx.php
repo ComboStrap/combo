@@ -144,7 +144,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
 
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $context = $data[PluginUtility::CONTEXT];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, syntax_plugin_combo_heading::TAG);
                     syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer);
                     return true;
 

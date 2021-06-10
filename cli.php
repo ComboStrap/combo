@@ -172,7 +172,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
                     'chars' => $statistics[Analytics::CHARS_COUNT],
                     'external_links' => $statistics[Analytics::EXTERNAL_LINKS_COUNT],
                     'external_medias' => $statistics[Analytics::EXTERNAL_MEDIAS],
-                    'h1' => $statistics[Analytics::HEADERS_COUNT]['h1'],
+                    Analytics::H1 => $statistics[Analytics::HEADERS_COUNT][Analytics::H1],
                     'h2' => $statistics[Analytics::HEADERS_COUNT]['h2'],
                     'h3' => $statistics[Analytics::HEADERS_COUNT]['h3'],
                     'h4' => $statistics[Analytics::HEADERS_COUNT]['h4'],

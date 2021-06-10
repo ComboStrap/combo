@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\Analytics;
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
@@ -56,7 +57,26 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      */
     const DEFAULT_LEVEL = "3";
 
-    public static function processMetadataAnalytics(array $data, renderer_plugin_combo_analytics $renderer)
+    private static function processHeadingMetadataH1($level, $text)
+    {
+        /**
+         * Capture the h1
+         */
+        if ($level == 1) {
+            /**
+             * $ACT == 'show'
+             * Otherwise we get the title of the admin page ...
+             */
+            global $ACT;
+            if ($ACT == 'show') {
+                global $ID;
+                p_set_metadata($ID, array(Analytics::H1 => $text));
+            }
+        }
+    }
+
+
+    public static function processHeadingMetadata($data, $renderer)
     {
 
         $state = $data[PluginUtility::STATE];
@@ -66,7 +86,28 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
              * Not component heading
              */
             $context = $data[PluginUtility::CONTEXT];
-            if($context==self::TYPE_OUTLINE) {
+            if ($context == self::TYPE_OUTLINE) {
+                $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
+                $text = $tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
+                $level = $tagAttributes->getValue(syntax_plugin_combo_heading::LEVEL);
+                self::processHeadingMetadataH1($level,$text);
+                $renderer->header($text, $level, null);
+            }
+        }
+
+    }
+
+    public static function processMetadataAnalytics(array $data, renderer_plugin_combo_analytics $renderer)
+    {
+        $state = $data[PluginUtility::STATE];
+        if ($state == DOKU_LEXER_ENTER) {
+            /**
+             * Only outline heading metadata
+             * Not component heading
+             */
+            $context = $data[PluginUtility::CONTEXT];
+            if ($context == self::TYPE_OUTLINE) {
                 $callStackArray = $data[PluginUtility::ATTRIBUTES];
                 $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray);
                 $text = $tagAttributes->getValue(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE);
@@ -351,6 +392,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         foreach (self::TAGS as $tag) {
             $this->Lexer->addEntryPattern(PluginUtility::getContainerTagPattern($tag), $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
+
     }
 
     public function postConnect()
@@ -485,6 +527,13 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
              * @var renderer_plugin_combo_analytics $renderer
              */
             syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
+
+        } else if ($format == "metadata") {
+
+            /**
+             * @var Doku_Renderer_metadata $renderer
+             */
+            syntax_plugin_combo_heading::processHeadingMetadata($data, $renderer);
 
         }
         // unsupported $mode

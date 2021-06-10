@@ -165,6 +165,13 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
              */
             syntax_plugin_combo_heading::processMetadataAnalytics($data,$renderer);
 
+        } else if ($format == "metadata") {
+
+            /**
+             * @var Doku_Renderer_metadata $renderer
+             */
+            syntax_plugin_combo_heading::processHeadingMetadata($data, $renderer);
+
         }
 
         return false;

@@ -504,8 +504,8 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         $title = $dokuWikiMetadata['title'];
         $this->analyticsMetadata[Analytics::TITLE] = $title;
-        if ($title != @$dokuWikiMetadata['h1']) {
-            $this->analyticsMetadata[Analytics::H1] = $dokuWikiMetadata['h1'];
+        if ($title != @$dokuWikiMetadata[Analytics::H1]) {
+            $this->analyticsMetadata[Analytics::H1] = $dokuWikiMetadata[Analytics::H1];
         }
         $timestampCreation = $dokuWikiMetadata['date']['created'];
         $this->analyticsMetadata[self::DATE_CREATED] = date('Y-m-d h:i:s', $timestampCreation);

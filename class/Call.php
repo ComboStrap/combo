@@ -48,6 +48,7 @@ class Call
         "doublequoteopening",
         "singlequoteopening",
         "singlequoteclosing",
+        "multiplyentity",
         "apostrophe",
         "strong",
         "emphasis",

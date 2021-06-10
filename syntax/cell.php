@@ -105,12 +105,11 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
      */
     function connectTo($mode)
     {
-        // Only inside a row
-        if ($mode == PluginUtility::getModeForComponent(syntax_plugin_combo_row::TAG)) {
-            foreach (self::getTags() as $tag) {
-                $pattern = PluginUtility::getContainerTagPattern($tag);
-                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-            }
+
+        // A cell can be anywhere
+        foreach (self::getTags() as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
 
 

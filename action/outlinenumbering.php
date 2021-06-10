@@ -79,6 +79,13 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
 
         $enable = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_ENABLE, 0);
         if ($enable) {
+
+            global $ACT;
+            if($ACT=="preview"){
+                $mainContainerSelector = ".pad";
+            } else {
+                $mainContainerSelector = "main";
+            }
             $level2CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2, "decimal");
             $level3CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3, "decimal");
             $level4CounterStyle = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4, "decimal");
@@ -88,16 +95,16 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
             $prefix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_PREFIX, "");
             $suffix = PluginUtility::getConfValue(self::CONF_OUTLINE_NUMBERING_SUFFIX, " - ");
             $numberingCss = <<<EOF
-main > h2 { counter-increment: h2; }
-main > h3 { counter-increment: h3; }
-main > h4 { counter-increment: h4; }
-main > h5 { counter-increment: h5; }
-main > h6 { counter-increment: h6; }
-main > h2::before { content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
-main > h3::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
-main > h4::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }
-main > h5::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
-main > h6::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
+$mainContainerSelector > h2 { counter-increment: h2; }
+$mainContainerSelector > h3 { counter-increment: h3; }
+$mainContainerSelector > h4 { counter-increment: h4; }
+$mainContainerSelector > h5 { counter-increment: h5; }
+$mainContainerSelector > h6 { counter-increment: h6; }
+$mainContainerSelector > h2::before { content: "$prefix" counter(h2, $level2CounterStyle) "$suffix\A"; }
+$mainContainerSelector > h3::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$suffix\A"; }
+$mainContainerSelector > h4::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$suffix\A"; }
+$mainContainerSelector > h5::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$suffix\A"; }
+$mainContainerSelector > h6::before { content: "$prefix" counter(h2, $level2CounterStyle) "$counterSeparator" counter(h3,$level3CounterStyle) "$counterSeparator" counter(h4,$level4CounterStyle) "$counterSeparator" counter(h5,$level5CounterStyle) "$counterSeparator" counter(h6,$level6CounterStyle) "$suffix\A"; }
 #dw__toc .level2 { counter-increment: toc2; }
 #dw__toc .level3 { counter-increment: toc3; }
 #dw__toc .level4 { counter-increment: toc4; }

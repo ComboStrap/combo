@@ -162,33 +162,41 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromCallStackArray(LinkUtility::parse($match));
                 $callStack = CallStack::createFromHandler($handler);
 
+
                 $parent = $callStack->moveToParent();
                 $parentName = "";
                 if ($parent != false) {
+
+                    /**
+                     * Button Link
+                     * Getting the attributes
+                     */
                     $parentName = $parent->getTagName();
-                    switch ($parentName) {
-                        case syntax_plugin_combo_button::TAG:
-                            $tagAttributes->mergeWithCallStackArray($parent->getAttributes());
-                            $firstContainingBlock = $callStack->moveToParent();
-                            break;
-                        case syntax_plugin_combo_cell::TAG:
-                            // A col is in a row
-                            $firstContainingBlock = $callStack->moveToParent();
-                            break;
-                        case "section":
-                            // When editing, there is a section
-                            $firstContainingBlock = $callStack->moveToParent();
-                            break;
-                        default:
-                            $firstContainingBlock = $parent;
+                    if ($parentName == syntax_plugin_combo_button::TAG) {
+                        $tagAttributes->mergeWithCallStackArray($parent->getAttributes());
                     }
-                    if ($firstContainingBlock != false) {
-                        if ($firstContainingBlock->getAttribute(self::CLICKABLE_ATTRIBUTE)) {
+
+                    /**
+                     * Searching Clickable parent
+                     */
+                    $maxLevel = 3;
+                    $level = 0;
+                    while (
+                        $parent != false &&
+                        !$parent->hasAttribute(self::CLICKABLE_ATTRIBUTE) &&
+                        $level < $maxLevel
+                    ) {
+                        $parent = $callStack->moveToParent();
+                        $level++;
+                    }
+                    if ($parent != false) {
+                        if ($parent->getAttribute(self::CLICKABLE_ATTRIBUTE)) {
                             $tagAttributes->addClassName("stretched-link");
-                            $firstContainingBlock->addClassName("position-relative");
-                            $firstContainingBlock->removeAttribute(self::CLICKABLE_ATTRIBUTE);
+                            $parent->addClassName("position-relative");
+                            $parent->removeAttribute(self::CLICKABLE_ATTRIBUTE);
                         }
                     }
+
                 }
 
                 $link = new LinkUtility($tagAttributes->getValue(LinkUtility::ATTRIBUTE_REF));
@@ -223,7 +231,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
                 $callStack->moveToEnd();
                 $previousCall = $callStack->previous();
-                $previousCallPosition  = $previousCall->getKey();
+                $previousCallPosition = $previousCall->getKey();
                 $previousCallContent = $previousCall->getMatchedContent();
 
                 if (

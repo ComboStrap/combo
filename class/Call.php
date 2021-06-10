@@ -487,7 +487,15 @@ class Call
             LogUtility::msg("The unmatched tag (" . $this->name . ") does not have any attributes. Get its parent if you want the type", LogUtility::LVL_MSG_ERROR);
             return null;
         } else {
-            return $this->getAttribute("type");
+            /**
+             * don't use {@link Call::getAttribute()} to get the type
+             * as this function stack also depends on
+             * this function {@link Call::getType()}
+             * to return the value
+             * Ie: if this is a boolean attribute without specified type
+             * if the boolean value is in the type, we return it
+             */
+            return $this->call[1][1][PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY];
         }
     }
 
@@ -501,7 +509,12 @@ class Call
         if (isset($attributes[$key])) {
             return $attributes[$key];
         } else {
-            return null;
+            // boolean attribute
+            if($this->getType()==$key){
+                return true;
+            } else {
+                return null;
+            }
         }
     }
 
@@ -528,7 +541,11 @@ class Call
         if (isset($attributes[$attributeName])) {
             return true;
         } else {
-            return false;
+            if($this->getType()==$attributeName){
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -591,15 +608,15 @@ class Call
     }
 
     /**
-     * @param $string string the class string to add
+     * @param $value string the class string to add
      */
-    public function addClassName($string)
+    public function addClassName($value)
     {
         $class = $this->getAttribute("class");
         if ($class != null) {
-            $class = "$class $string";
+            $value = "$class $value";
         }
-        $this->addAttribute("class", $class);
+        $this->addAttribute("class", $value);
 
     }
 
@@ -616,6 +633,11 @@ class Call
             unset($data[PluginUtility::ATTRIBUTES][$key]);
             return $value;
         } else {
+            // boolean attribute as first attribute
+            if($this->getType()==$key){
+                unset($data[PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY]);
+                return true;
+            }
             return null;
         }
 

@@ -593,7 +593,7 @@ class Call
     /**
      * @param $string string the class string to add
      */
-    public function addClass($string)
+    public function addClassName($string)
     {
         $class = $this->getAttribute("class");
         if ($class != null) {
@@ -610,7 +610,7 @@ class Call
     public function removeAttribute($key)
     {
 
-        $data = $this->getPluginData();
+        $data = &$this->getPluginData();
         if (isset($data[PluginUtility::ATTRIBUTES][$key])) {
             $value = $data[PluginUtility::ATTRIBUTES][$key];
             unset($data[PluginUtility::ATTRIBUTES][$key]);

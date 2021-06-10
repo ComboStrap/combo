@@ -43,6 +43,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      * Do the link component allows to be spawn on multilines
      */
     const CONF_ENABLE_MULTI_LINES_LINK = "enableMultiLinesLink";
+    const CLICKABLE_ATTRIBUTE = "clickable";
 
 
     /**
@@ -158,7 +159,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
         switch ($state) {
             case DOKU_LEXER_ENTER:
-                $attributes = LinkUtility::parse($match);
+                $tagAttributes = TagAttributes::createFromCallStackArray(LinkUtility::parse($match));
                 $callStack = CallStack::createFromHandler($handler);
 
                 $parent = $callStack->moveToParent();
@@ -167,7 +168,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     $parentName = $parent->getTagName();
                     switch ($parentName) {
                         case syntax_plugin_combo_button::TAG:
-                            $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
+                            $tagAttributes->mergeWithCallStackArray($parent->getAttributes());
                             $firstContainingBlock = $callStack->moveToParent();
                             break;
                         case syntax_plugin_combo_cell::TAG:
@@ -182,19 +183,19 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $firstContainingBlock = $parent;
                     }
                     if ($firstContainingBlock != false) {
-                        if ($firstContainingBlock->getAttribute("clickable")) {
-                            $firstContainingBlock->addClass("stretched-link");
-                            $firstContainingBlock->addClass("position-relative");
-                            $firstContainingBlock->removeAttribute("clickable");
+                        if ($firstContainingBlock->getAttribute(self::CLICKABLE_ATTRIBUTE)) {
+                            $tagAttributes->addClassName("stretched-link");
+                            $firstContainingBlock->addClassName("position-relative");
+                            $firstContainingBlock->removeAttribute(self::CLICKABLE_ATTRIBUTE);
                         }
                     }
                 }
 
-                $link = new LinkUtility($attributes[LinkUtility::ATTRIBUTE_REF]);
+                $link = new LinkUtility($tagAttributes->getValue(LinkUtility::ATTRIBUTE_REF));
                 $linkTag = $link->getHtmlTag();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
                     PluginUtility::CONTEXT => $parentName,
                     self::LINK_TAG => $linkTag
                 );

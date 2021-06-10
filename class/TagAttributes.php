@@ -176,10 +176,10 @@ class TagAttributes
      */
     public static function createFromCallStackArray($renderArray, $logicalTag = null)
     {
-        if(is_array($renderArray)) {
+        if (is_array($renderArray)) {
             $attributes = self::CallStackArrayToInternalArray($renderArray);
         } else {
-            LogUtility::msg("The renderArray variable passed is not an array ($renderArray)",LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The renderArray variable passed is not an array ($renderArray)", LogUtility::LVL_MSG_ERROR);
             $attributes = TagAttributes::createEmpty($logicalTag);
         }
         return new TagAttributes($attributes, $logicalTag);
@@ -701,7 +701,7 @@ class TagAttributes
              * Edge case, this is the first boolean attribute
              * and may has been categorized as the type
              */
-            if(!$this->getType()==$lowerAtt){
+            if (!$this->getType() == $lowerAtt) {
                 LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR);
             }
 
@@ -778,6 +778,22 @@ class TagAttributes
     public function setType($type)
     {
         $this->setComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
+    }
+
+    /**
+     * Merging will add the values, no replace or overwrite
+     * @param $callStackArray
+     */
+    public function mergeWithCallStackArray($callStackArray)
+    {
+        foreach ($callStackArray as $key => $value) {
+            if ($this->hasComponentAttribute($key)) {
+                $this->addComponentAttributeValue($key, $value);
+            } else {
+                $this->setComponentAttributeValue($key, $value);
+            }
+        }
+
     }
 
 

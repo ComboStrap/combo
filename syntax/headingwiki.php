@@ -206,4 +206,6 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     }
 
 
+
+
 }

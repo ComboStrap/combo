@@ -66,7 +66,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     {
         /**
          * Only column.
-         * See {@link syntax_plugin_combo_column::getType()}
+         * See {@link syntax_plugin_combo_cell::getType()}
          */
         return array('container');
     }
@@ -172,12 +172,12 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                      */
                     $hasSizeOrClass = false;
                     while ($actualCall = $callStack->next()) {
-                        if ($actualCall->getTagName() == syntax_plugin_combo_column::TAG
+                        if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
                             &&
                             $actualCall->getState() == DOKU_LEXER_ENTER
                         ) {
                             $numberOfColumns++;
-                            if ($actualCall->hasAttribute(syntax_plugin_combo_column::WIDTH_ATTRIBUTE)) {
+                            if ($actualCall->hasAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
                                 $hasSizeOrClass = true;
                             }
                             if ($actualCall->hasAttribute(TagAttributes::CLASS_KEY)) {
@@ -232,11 +232,11 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         $sizeValue = implode(" ", $sizes);
                         $callStack->moveToPreviousCorrespondingOpeningCall();
                         while ($actualCall = $callStack->next()) {
-                            if ($actualCall->getTagName() == syntax_plugin_combo_column::TAG
+                            if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
                                 &&
                                 $actualCall->getState() == DOKU_LEXER_ENTER
                             ) {
-                                $actualCall->addAttribute(syntax_plugin_combo_column::WIDTH_ATTRIBUTE, $sizeValue);
+                                $actualCall->addAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE, $sizeValue);
                             }
                         }
                     }

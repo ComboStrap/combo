@@ -170,7 +170,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                             $attributes = PluginUtility::mergeAttributes($attributes, $parent->getAttributes());
                             $firstContainingBlock = $callStack->moveToParent();
                             break;
-                        case syntax_plugin_combo_column::TAG:
+                        case syntax_plugin_combo_cell::TAG:
                             // A col is in a row
                             $firstContainingBlock = $callStack->moveToParent();
                             break;

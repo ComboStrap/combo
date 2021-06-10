@@ -23,15 +23,16 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  *
  * Note: The name of the class must follow this pattern ie syntax_plugin_PluginName_ComponentName
  */
-class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "column";
+    const TAG = "cell";
+
     const WIDTH_ATTRIBUTE = TagAttributes::WIDTH_KEY;
 
     static function getTags()
     {
-        return [self::TAG, "col"];
+        return [self::TAG, "col", "column"];
     }
 
     /**
@@ -197,8 +198,8 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
                             $attributes->addClassName("align-self-center");
                         }
                     }
-                    if ($attributes->hasComponentAttribute(syntax_plugin_combo_column::WIDTH_ATTRIBUTE)) {
-                        $sizeValues = $attributes->getValuesAndRemove(syntax_plugin_combo_column::WIDTH_ATTRIBUTE);
+                    if ($attributes->hasComponentAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
+                        $sizeValues = $attributes->getValuesAndRemove(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE);
                         foreach ($sizeValues as $sizeValue) {
                             $conditionalValue = ConditionalValue::createFrom($sizeValue);
                             if ($conditionalValue->getBreakpoint() == "xs") {

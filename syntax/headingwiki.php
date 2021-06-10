@@ -122,7 +122,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 );
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, trim($match), $handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
                 $callStack = CallStack::createFromHandler($handler);

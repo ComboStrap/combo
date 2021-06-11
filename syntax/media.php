@@ -174,7 +174,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * This is not an local internal media image (a video or an url image)
                  * Dokuwiki takes over
                  */
-                $type = $attributes['type'];
+                $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
                 $src = $attributes['src'];
                 $title = $attributes['title'];
                 $align = $attributes['align'];

@@ -775,24 +775,20 @@ class LinkUtility
     }
 
 
-    public
-    function getPath()
+    /**
+     * The path as seen in the link
+     *
+     * (In case of an internal link, the function
+     * {@link LinkUtility::getInternalPage()} is used
+     * and the path is resolved
+     *
+     * @return false|mixed|string
+     */
+    public function getPath()
     {
-        if ($this->path == "") {
-            /** no path, this is the requested page
-             *
-             * TODO: extends from {@link DokuPath}
-             * Returning the absolute request page path
-             * is not really conceptually correct
-             * as we should transform it as an absolute path
-             * before but yeah we don't extend from
-             * the {@link DokuPath} object yet
-             */
-            global $ID;
-            return DokuPath::SEPARATOR . $ID;
-        } else {
-            return $this->path;
-        }
+
+        return $this->path;
+
     }
 
     public

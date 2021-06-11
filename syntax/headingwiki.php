@@ -21,7 +21,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      * See also for information,
      * the original heading pattern of Dokuwiki {@link \dokuwiki\Parsing\ParserMode\Header}
      */
-    const ENTRY_PATTERN = '^[\s\t]?={1,6}[\s\t]?(?=[^\n]*={1,6}\s*\r??\n)';
+    const ENTRY_PATTERN = '^[\s\t]+={1,6}[\s\t]?(?=[^\n]*={1,6}\s*\r??\n)';
     const EXIT_PATTERN = '\s={1,6}\s*(?=$)';
     const TAG = "headingwiki";
 

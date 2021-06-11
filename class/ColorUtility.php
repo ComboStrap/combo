@@ -205,28 +205,29 @@ class ColorUtility
      */
     public static function getColorValue($color)
     {
-        $color = strtolower($color);
 
         if ($color[0] == "#") {
-            $colorValue = $color;
-        } else if ($color == "reset") {
+            return $color;
+        }
+        $lowerColor = strtolower($color);
+        if ($lowerColor == "reset") {
             $colorValue = "inherit!important";
         } else {
             // Custom Css variable
-            if (in_array($color, self::BOOTSTRAP_COLORS)) {
+            if (in_array($lowerColor, self::BOOTSTRAP_COLORS)) {
                 $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                 switch ($bootstrapVersion) {
                     case Bootstrap::BootStrapFiveMajorVersion:
-                        $colorValue = "bs-" . $color;
+                        $colorValue = "bs-" . $lowerColor;
                         break;
                     default:
-                        $colorValue = $color;
+                        $colorValue = $lowerColor;
                         break;
                 }
                 $colorValue = "var(--" . $colorValue . ")";
             } else {
                 // css color name
-                $colorValue = $color;
+                $colorValue = $lowerColor;
             }
         }
         return $colorValue;

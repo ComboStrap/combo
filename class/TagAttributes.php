@@ -631,7 +631,8 @@ class TagAttributes
         $tagAttributeString = "";
 
         $urlEncoding = ["href", "src", "data-src", "data-srcset"];
-        foreach ($this->toHtmlArray() as $name => $value) {
+        $htmlArray = $this->toHtmlArray();
+        foreach ($htmlArray as $name => $value) {
 
             if (!empty($value)) {
                 /**

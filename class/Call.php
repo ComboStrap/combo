@@ -661,7 +661,8 @@ class Call
     {
         return (
             $this->getState() == DOKU_LEXER_UNMATCHED ||
-            $this->getTagName() == "cdata"
+            $this->getTagName() == "cdata" ||
+            $this->getTagName() == "acronym"
         );
     }
 

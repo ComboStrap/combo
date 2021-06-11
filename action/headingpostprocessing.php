@@ -10,15 +10,21 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
 
 
-    private static function addToTextHeading(&$headingText, $textToAdd)
+    /**
+     * @param $headingText
+     * @param Call $call
+     */
+    private static function addToTextHeading(&$headingText, $call)
     {
-        // Building the text for the toc
-        // only cdata for now
-        // no image, ...
-        if ($headingText != "") {
-            $headingText .= " ";
+        if ($call->isTextCall()) {
+            // Building the text for the toc
+            // only cdata for now
+            // no image, ...
+            if ($headingText != "") {
+                $headingText .= " ";
+            }
+            $headingText .= trim($call->getCapturedContent());
         }
-        $headingText .= trim($textToAdd);
     }
 
     /**
@@ -174,7 +180,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                             );
                         } else {
                             // unmatched
-                            self::addToTextHeading($headingText, $actualCall->getCapturedContent());
+                            self::addToTextHeading($headingText, $actualCall);
                         }
                         continue 2;
 
@@ -188,8 +194,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                         $actualCall->addAttribute(TagAttributes::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
                         continue 2;
 
-                    case "cdata":
-                        self::addToTextHeading($headingText, $actualCall->getCapturedContent());
+                    default:
+                        self::addToTextHeading($headingText, $actualCall);
                         continue 2;
 
                     case "p":

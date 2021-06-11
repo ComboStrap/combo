@@ -70,7 +70,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      */
     public static function wrapInP($html)
     {
-        return "<p>".$html."</p>";
+        return "<p>" . $html . "</p>";
     }
 
 
@@ -294,10 +294,27 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
             if ($actualCall->getTagName() === "eol") {
 
                 /**
-                 * Next Call
+                 * Next Call that is not the empty string
+                 * Because Empty string would create an empty paragraph
+                 *
+                 * Start at 1 because we may not do
+                 * a loop if we are at the end, the next call
+                 * will return false
                  */
-                $nextCall = $callstack->next();
-                $callstack->previous();
+                $i = 1;
+                while ($nextCall = $callstack->next()) {
+                    if (!(
+                        trim($nextCall->getCapturedContent()) == "" &&
+                        $nextCall->isTextCall()
+                    )) {
+                        break;
+                    }
+                    $i++;
+                }
+                while ($i > 0) { // go back
+                    $i--;
+                    $callstack->previous();
+                }
                 if ($nextCall === false) {
                     $nextDisplay = "last";
                     $nextCall = null;

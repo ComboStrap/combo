@@ -11,6 +11,7 @@
  */
 
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -167,13 +168,8 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " " . self::TAG;
-                    } else {
-                        $attributes["class"] .= self::TAG;
-                    }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-                    $renderer->doc .= "<footer $inlineAttributes>" . DOKU_LF;
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("footer");
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

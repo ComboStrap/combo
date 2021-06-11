@@ -8,6 +8,7 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
@@ -188,18 +189,15 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $type = $openingTag->getType();
-                $context = $openingTag->getContext();
-                if ($context == null) {
-                    $context = $type;
-                }
-                $attributes = $openingTag->getAttributes();
 
                 /**
-                 * A cite should be wrapped into a {@link syntax_plugin_combo_footer}
-                 * This should happens before the p processing because we
-                 * are adding a {@link syntax_plugin_combo_footer} which is a stack
+                 * Pre-parsing:
+                 *    Cite: A cite should be wrapped into a {@link syntax_plugin_combo_footer}
+                 *          This should happens before the p processing because we
+                 *          are adding a {@link syntax_plugin_combo_footer} which is a stack
+                 *    Tweet blockquote: If a link has tweet link status, this is a tweet blockquote
                  */
+                $tweetUrlFound = false;
                 while ($actualCall = $callStack->next()) {
                     if ($actualCall->getTagName() == syntax_plugin_combo_cite::TAG) {
                         switch ($actualCall->getState()) {
@@ -220,7 +218,33 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                                 break;
                         }
                     }
+                    if(
+                        $actualCall->getTagName()==syntax_plugin_combo_link::TAG
+                        && $actualCall->getState()==DOKU_LEXER_ENTER
+                    ){
+                        $ref = $actualCall->getAttribute(LinkUtility::ATTRIBUTE_REF);
+                        if (StringUtility::match($ref, "https:\/\/twitter.com\/[^\/]*\/status\/.*")) {
+                            $tweetUrlFound = true;
+                        }
+                    }
                 }
+                if ($tweetUrlFound){
+                    $context = syntax_plugin_combo_blockquote::TWEET;
+                    $type = $context;
+                    $openingTag->setType($context);
+                    $openingTag->setContext($context);
+                }
+
+                /**
+                 * Because we can change the type above to tweet
+                 * we set them after
+                 */
+                $type = $openingTag->getType();
+                $context = $openingTag->getContext();
+                if ($context == null) {
+                    $context = $type;
+                }
+                $attributes = $openingTag->getAttributes();
 
                 /**
                  * Create the paragraph

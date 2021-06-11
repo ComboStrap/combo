@@ -486,7 +486,7 @@ class Call
     public function getType()
     {
         if ($this->getState() == DOKU_LEXER_UNMATCHED) {
-            LogUtility::msg("The unmatched tag (" . $this->name . ") does not have any attributes. Get its parent if you want the type", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The unmatched tag ($this) does not have any attributes. Get its parent if you want the type", LogUtility::LVL_MSG_ERROR);
             return null;
         } else {
             /**
@@ -503,9 +503,10 @@ class Call
 
     /**
      * @param $key
-     * @return mixed|null
+     * @param null $default
+     * @return string|null
      */
-    public function getAttribute($key)
+    public function getAttribute($key, $default=null)
     {
         $attributes = $this->getAttributes();
         if (isset($attributes[$key])) {
@@ -515,7 +516,7 @@ class Call
             if ($this->getType() == $key) {
                 return true;
             } else {
-                return null;
+                return $default;
             }
         }
     }
@@ -650,6 +651,26 @@ class Call
             $this->call[1][1][PluginUtility::PAYLOAD] = $text;
         } else {
             LogUtility::msg("Setting the payload for a non-native call ($this) is not yet implemented");
+        }
+    }
+
+    /**
+     * @return bool true if the call is a text call (same as dom text node)
+     */
+    public function isTextCall()
+    {
+        return (
+            $this->getState() == DOKU_LEXER_UNMATCHED ||
+            $this->getTagName() == "cdata"
+        );
+    }
+
+    public function setType($type)
+    {
+        if($this->isPluginCall()){
+            $this->call[1][1][PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY]=$type;
+        } else {
+            LogUtility::msg("This is not a plugin call ($this), you can't set the type");
         }
     }
 

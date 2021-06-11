@@ -14,13 +14,15 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 {
 
     /**
-     * Header pattern that we expect ie  ==== Hello =====
-     * Found in {@link \dokuwiki\Parsing\ParserMode\Header}
-     * One modification is that it permits one `=` to get the h6
+     * Header pattern
+     * At minimal, a space after and before the opening an closing `=` character is mandatory
+     * Not line break in the look ahead
+     *
+     * See also for information,
+     * the original heading pattern of Dokuwiki {@link \dokuwiki\Parsing\ParserMode\Header}
      */
-
-    const ENTRY_PATTERN = '^[\s\t]*={1,6}(?=.*={1,6}\s*\r??\n)';
-    const EXIT_PATTERN = '={1,6}\s*(?=\r??\n)';
+    const ENTRY_PATTERN = '^[\s\t]?={1,6}[\s\t]?(?=[^\n]*={1,6}\s*\r??\n)';
+    const EXIT_PATTERN = '\s={1,6}\s*(?=$)';
     const TAG = "headingwiki";
 
     const CONF_WIKI_HEADING_ENABLE = "headingWikiEnable";
@@ -213,6 +215,8 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     private
     function enableWikiHeading($mode)
     {
+
+
         /**
          * Basically all mode that are not `base`
          * To not take the dokuwiki heading

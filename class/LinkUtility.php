@@ -45,7 +45,7 @@ class LinkUtility
      * No line break allowed
      */
     const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
-    const ENTRY_PATTERN_MULTI_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
+    const ENTRY_PATTERN_MULTI_LINE =  "\[\[[^\|\]]*(?=.*\]\])";
     const EXIT_PATTERN = "\]\]";
 
     /**

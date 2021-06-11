@@ -5,14 +5,13 @@
  *
  */
 
-use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 use ComboStrap\TitleUtility;
-use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -88,7 +87,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
     {
         /**
          * header mode is disable to take over
-         * and replace it with {@link syntax_plugin_combo_heading}
+         * and replace it with {@link syntax_plugin_combo_headingwiki}
          */
         if ($mode == "header") {
             return false;
@@ -110,7 +109,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'stack';
     }
 
     /**
@@ -198,10 +197,10 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
 
                 // Create the paragraph
                 $callStack->insertEolIfNextCallIsNotEolOrBlock(); // eol is mandatory to have a paragraph if there is only content
-                $paragraphAttributes = [];
+                $paragraphAttributes["class"] = "blockquote-text";
                 if ($type == "typo") {
                     // As seen here https://getbootstrap.com/docs/4.0/content/typography/#blockquotes
-                    $paragraphAttributes["class"] = "mb-0";
+                    $paragraphAttributes["class"] .= " mb-0";
                 }
                 $callStack->processEolToEndStack($paragraphAttributes);
 
@@ -353,7 +352,6 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                             }
 
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("blockquote");
-                            $renderer->doc .= "<p>" . DOKU_LF;
                             break;
                         case "card":
                         default:

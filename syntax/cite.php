@@ -175,7 +175,7 @@ class syntax_plugin_combo_cite extends DokuWiki_Syntax_Plugin
                             }
                             break;
                         case syntax_plugin_combo_blockquote::TWEET:
-                            $renderer->doc .= '</p>';
+                            // There is no element
                             break;
                         default:
                             $renderer->doc .= "<cite";

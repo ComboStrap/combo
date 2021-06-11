@@ -19,12 +19,18 @@ if (!defined('DOKU_INC')) {
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
 /**
- * Implementation of the {@link https:/combostrap.com/footer}
+ * Implementation of the footer
+ *
+ * @see https:/combostrap.com/footer
  *
  *
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ *
+ * This is the HTML footer element
+ * It's is also added automatically to wrap a {@link syntax_plugin_combo_cite}
+ * in a blockquote
  */
 class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
 {
@@ -63,7 +69,7 @@ class syntax_plugin_combo_footer extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'stack';
     }
 
     /**

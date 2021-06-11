@@ -85,7 +85,7 @@ class Analytics
             $file = wikiFN($pageId);
             if (file_exists($file)) {
                 $content = file_get_contents($file);
-                $instructions = RenderUtility::getInstructions($content,false);
+                $instructions = RenderUtility::getInstructionsAndStripPEventually($content,false);
                 return p_render(renderer_plugin_combo_analytics::RENDERER_NAME_MODE, $instructions, $info);
             } else {
                 return false;

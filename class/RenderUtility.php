@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 class RenderUtility
 {
 
@@ -22,7 +24,7 @@ class RenderUtility
      */
     public static function renderText2Xhtml($content)
     {
-        $instructions = self::getInstructions($content);
+        $instructions = self::getInstructionsAndStripPEventually($content);
         return p_render('xhtml', $instructions, $info);
     }
 
@@ -31,7 +33,7 @@ class RenderUtility
      * @param bool $stripOpenAndEnd - to avoid the p element in test rendering
      * @return array
      */
-    public static function getInstructions($pageContent, $stripOpenAndEnd = true)
+    public static function getInstructionsAndStripPEventually($pageContent, $stripOpenAndEnd = true)
     {
 
         $instructions = p_get_instructions($pageContent);
@@ -39,6 +41,9 @@ class RenderUtility
         if ($stripOpenAndEnd) {
 
             /**
+             * Delete the p added by {@link Block::process()}
+             * if the plugin of the {@link SyntaxPlugin::getPType() normal} and not in a block
+             *
              * p_open = document_start in renderer
              */
             if ($instructions[1][0] == 'p_open') {

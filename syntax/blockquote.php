@@ -1,17 +1,17 @@
 <?php
 /**
  * DokuWiki Syntax Plugin Combostrap.
- * Implementatiojn of https://getbootstrap.com/docs/4.1/content/typography/#blockquotes
+ * Implementation of https://getbootstrap.com/docs/5.0/content/typography/#blockquotes
  *
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
-use ComboStrap\TitleUtility;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -195,30 +195,65 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                 }
                 $attributes = $openingTag->getAttributes();
 
-                // Create the paragraph
+                /**
+                 * A cite should be wrapped into a {@link syntax_plugin_combo_footer}
+                 * This should happens before the p processing because we
+                 * are adding a {@link syntax_plugin_combo_footer} which is a stack
+                 */
+                while ($actualCall = $callStack->next()) {
+                    if ($actualCall->getTagName() == syntax_plugin_combo_cite::TAG) {
+                        switch ($actualCall->getState()) {
+                            case DOKU_LEXER_ENTER:
+                                // insert before
+                                $callStack->insertBefore(Call::createComboCall(
+                                    syntax_plugin_combo_footer::TAG,
+                                    DOKU_LEXER_ENTER,
+                                    array("class" => "blockquote-footer")
+                                ));
+                                break;
+                            case DOKU_LEXER_EXIT:
+                                // insert after
+                                $callStack->insertAfter(Call::createComboCall(
+                                    syntax_plugin_combo_footer::TAG,
+                                    DOKU_LEXER_EXIT
+                                ));
+                                break;
+                        }
+                    }
+                }
+
+                /**
+                 * Create the paragraph
+                 */
+                $callStack->moveToPreviousCorrespondingOpeningCall();
                 $callStack->insertEolIfNextCallIsNotEolOrBlock(); // eol is mandatory to have a paragraph if there is only content
                 $paragraphAttributes["class"] = "blockquote-text";
                 if ($type == "typo") {
-                    // As seen here https://getbootstrap.com/docs/4.0/content/typography/#blockquotes
-                    $paragraphAttributes["class"] .= " mb-0";
+                    $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+                    if($bootstrapVersion==Bootstrap::BootStrapFourMajorVersion) {
+                        // As seen here https://getbootstrap.com/docs/4.0/content/typography/#blockquotes
+                        $paragraphAttributes["class"] .= " mb-0";
+                        // not on 5 https://getbootstrap.com/docs/5.0/content/typography/#blockquotes
+                    }
                 }
                 $callStack->processEolToEndStack($paragraphAttributes);
 
-                // Go back
-                $callStack->moveToPreviousCorrespondingOpeningCall();
+                /**
+                 * Wrap the blockquote into a card
+                 *
+                 * In a blockquote card, a blockquote typo is wrapped around a card
+                 *
+                 * We add then:
+                 *   * at the body location: a card body start and a blockquote typo start
+                 *   * at the end location: a card end body and a blockquote end typo
+                 */
                 if ($type == "card") {
-                    /**
-                     * A blockquote typo is wrapped around a card
-                     * We add then:
-                     *   * at the body location: a card body start and a blockquote typo start
-                     *   * at the end location: a card end body and a blockquote end typo
-                     */
+
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
                     $callEnterTypeCall = Call::createComboCall(
                         self::TAG,
                         DOKU_LEXER_ENTER,
-                        array(
-                            "type" => "typo"
-                        ),
+                        array(TagAttributes::TYPE_KEY => "typo"),
                         $context
                     );
                     $cardBodyEnterCall = Call::createComboCall(
@@ -268,6 +303,7 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                         )
                     );
                 }
+
 
                 return array(
                     PluginUtility::STATE => $state,

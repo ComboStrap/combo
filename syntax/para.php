@@ -59,6 +59,22 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
 
 
     /**
+     * The component that have a `normal` {@link \dokuwiki\Extension\SyntaxPlugin::getPType()}
+     * are wrapped in a p element by {@link Block::process()} if they are not in a component with a `block` ptype
+     *
+     * This function makes it easy for the test
+     * to do it and gives a little bit of documentation
+     * on why there is a `p` in the test
+     * @param $html
+     * @return string the html wrapped in p
+     */
+    public static function wrapInP($html)
+    {
+        return "<p>".$html."</p>";
+    }
+
+
+    /**
      * Syntax Type.
      *
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php

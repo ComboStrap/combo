@@ -780,7 +780,7 @@ class LinkUtility
      *
      * (In case of an internal link, the function
      * {@link LinkUtility::getInternalPage()} is used
-     * and the path is resolved
+     * and the path is resolved there to the actual requested page (global $ID)
      *
      * @return false|mixed|string
      */

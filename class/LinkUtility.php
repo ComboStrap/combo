@@ -45,7 +45,7 @@ class LinkUtility
      * No line break allowed
      */
     const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
-    const ENTRY_PATTERN_MULTI_LINE =  "\[\[[^\|\]]*(?=.*\]\])";
+    const ENTRY_PATTERN_MULTI_LINE = "\[\[[^\|\]]*(?=.*\]\])";
     const EXIT_PATTERN = "\]\]";
 
     /**
@@ -104,7 +104,7 @@ class LinkUtility
     /**
      * @var mixed|string
      */
-    private $parameters;
+    private $queryStringToReturn;
     /**
      * @var false|string
      */
@@ -137,6 +137,11 @@ class LinkUtility
      * @var array
      */
     private $authorizedSchemes;
+
+    /**
+     * @var string the query string as it was parsed
+     */
+    private $originalQueryString;
 
     /**
      * Link constructor.
@@ -240,18 +245,13 @@ class LinkUtility
         if ($position !== false) {
 
             $this->path = substr($refProcessing, 0, $position);
-            if ($this->path == "") {
-                // no path, this is the requested page
-                global $ID;
-                $this->path = $ID;
-            }
             $secondPart = substr($refProcessing, $position + 1);
             $anchorPosition = strpos($secondPart, "#");
             if ($anchorPosition !== false) {
-                $this->parameters = substr($secondPart, 0, $anchorPosition);
+                $this->originalQueryString = substr($secondPart, 0, $anchorPosition);
                 $this->fragment = substr($secondPart, $anchorPosition + 1);
             } else {
-                $this->parameters = $secondPart;
+                $this->originalQueryString = $secondPart;
             }
         } else {
 
@@ -274,14 +274,17 @@ class LinkUtility
          * and we don't want the styling attribute
          * in the URL
          */
+        $this->queryStringToReturn = $this->originalQueryString;
         if ($this->type == self::TYPE_INTERNAL) {
 
-            $parameters = Url::queryParametersToArray($this->parameters);
+            $parameters = Url::queryParametersToArray($this->originalQueryString);
 
             // we will not overwrite the parameters if this an dokuwiki
             // action link
             if (!isset($parameters["do"])) {
-                $this->parameters = null;
+
+                $this->queryStringToReturn = null;
+
                 foreach ($parameters as $key => $value) {
                     // boolean attributes
                     if (empty($value)) {
@@ -428,10 +431,10 @@ class LinkUtility
                         $protectionSourceAcronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
                     }
                     $this->attributes->addHtmlAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym);
-                    $this->attributes->removeComponentAttributeIfPresent("href");
+                    $this->attributes->removeAttributeIfPresent("href");
                     $dataNamespace = Bootstrap::getDataNamespace();
-                    $this->attributes["data{$dataNamespace}-toggle"] = "tooltip";
-                    $this->attributes["title"] = "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")";
+                    $this->attributes->addHtmlAttributeValue("data{$dataNamespace}-toggle", "tooltip");
+                    $this->attributes->addComponentAttributeValue("title", "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")");
 
                 } else {
 
@@ -775,14 +778,29 @@ class LinkUtility
     public
     function getPath()
     {
-        return $this->path;
+        if ($this->path == "") {
+            /** no path, this is the requested page
+             *
+             * TODO: extends from {@link DokuPath}
+             * Returning the absolute request page path
+             * is not really conceptually correct
+             * as we should transform it as an absolute path
+             * before but yeah we don't extend from
+             * the {@link DokuPath} object yet
+             */
+            global $ID;
+            return DokuPath::SEPARATOR . $ID;
+        } else {
+            return $this->path;
+        }
     }
 
     public
-    function getQueries()
+    function getQueryString()
     {
-        return $this->parameters;
+        return $this->queryStringToReturn;
     }
+
 
     public
     function getFragment()
@@ -797,7 +815,7 @@ class LinkUtility
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
                 $page = $this->getInternalPage();
-                $url = wl($page->getId(), $this->parameters);
+                $url = wl($page->getId(), $this->queryStringToReturn);
                 if ($this->fragment) {
                     $url .= '#' . $this->fragment;
                 }
@@ -949,7 +967,20 @@ class LinkUtility
 
     public function isRelative()
     {
-        return strpos($this->getPath(), ':') !== 0;
+        return strpos($this->path, ':') !== 0;
+    }
+
+    /**
+     * The query part parsed
+     * untouched
+     * We can pass internal attribute via the query
+     * Therefore the {@link LinkUtility::getQueryString()}
+     * may be not the original
+     */
+    public function getParsedQueryString()
+    {
+        return $this->originalQueryString;
+
     }
 
     /**

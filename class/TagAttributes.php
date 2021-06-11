@@ -796,5 +796,23 @@ class TagAttributes
 
     }
 
+    /**
+     * @param $string
+     */
+    public function removeAttributeIfPresent($string)
+    {
+        $this->removeComponentAttributeIfPresent($string);
+        $this->removeHTMLAttributeIfPresent($string);
+
+    }
+
+    private function removeHTMLAttributeIfPresent($string)
+    {
+        $lowerAtt = strtolower($string);
+        if (isset($this->htmlAttributes[$lowerAtt])) {
+            unset($this->htmlAttributes[$lowerAtt]);
+        }
+    }
+
 
 }

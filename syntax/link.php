@@ -289,7 +289,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $state = $data[PluginUtility::STATE];
                 switch ($state) {
                     case DOKU_LEXER_ENTER:
-                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes);
+                        $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes, self::TAG);
                         $ref = $tagAttributes->getValueAndRemove(LinkUtility::ATTRIBUTE_REF);
                         $link = new LinkUtility($ref, $tagAttributes);
 

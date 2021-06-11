@@ -24,8 +24,6 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     const EXIT_PATTERN = "\r??\n";
 
 
-
-
     function getType()
     {
         return 'formatting';
@@ -78,7 +76,6 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
         $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
     }
-
 
 
     function handle($match, $state, $pos, Doku_Handler $handler)
@@ -145,7 +142,8 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                     $attributes = $data[PluginUtility::ATTRIBUTES];
                     $context = $data[PluginUtility::CONTEXT];
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, syntax_plugin_combo_heading::TAG);
-                    syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer);
+                    $pos = $data[PluginUtility::POSITION];
+                    syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer, $pos);
                     return true;
 
 
@@ -158,12 +156,12 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                     return true;
 
             }
-        }  else if ($format == renderer_plugin_combo_analytics::RENDERER_FORMAT) {
+        } else if ($format == renderer_plugin_combo_analytics::RENDERER_FORMAT) {
 
             /**
              * @var renderer_plugin_combo_analytics $renderer
              */
-            syntax_plugin_combo_heading::processMetadataAnalytics($data,$renderer);
+            syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
 
         } else if ($format == "metadata") {
 

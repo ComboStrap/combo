@@ -171,7 +171,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                 while ($callStack->next()) {
                     $actualCall = $callStack->getActualCall();
                     if ($actualCall->getTagName() == self::TAG && $actualCall->getState() == DOKU_LEXER_MATCHED) {
-                        $tagName = PluginUtility::getTag($actualCall->getMatchedContent());
+                        $tagName = PluginUtility::getTag($actualCall->getCapturedContent());
                         switch ($tagName) {
                             case self::PAGE_ITEM:
                                 /**

@@ -174,7 +174,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                             );
                         } else {
                             // unmatched
-                            self::addToTextHeading($headingText, $actualCall->getMatchedContent());
+                            self::addToTextHeading($headingText, $actualCall->getCapturedContent());
                         }
                         continue 2;
 
@@ -189,7 +189,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                         continue 2;
 
                     case "cdata":
-                        self::addToTextHeading($headingText, $actualCall->getMatchedContent());
+                        self::addToTextHeading($headingText, $actualCall->getCapturedContent());
                         continue 2;
 
                     case "p":

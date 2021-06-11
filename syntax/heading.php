@@ -57,6 +57,37 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      */
     const DEFAULT_LEVEL = "3";
 
+    /**
+     * A common function used to handle exit of headings
+     * @param CallStack $callStack
+     * @return array
+     */
+    public static function handleExit(CallStack $callStack)
+    {
+        /**
+         * Delete the last space if any
+         */
+        $callStack->moveToEnd();
+        $previous = $callStack->previous();
+        if ($previous->getState() == DOKU_LEXER_UNMATCHED) {
+            $previous->setPayload(rtrim($previous->getCapturedContent()));
+        }
+        $callStack->next();
+
+        /**
+         * Get context data
+         */
+        $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+        $openingAttributes = $openingTag->getAttributes(); // for level
+        $context = $openingTag->getContext(); // for sectioning
+
+        return array(
+            PluginUtility::STATE => DOKU_LEXER_EXIT,
+            PluginUtility::ATTRIBUTES => $openingAttributes,
+            PluginUtility::CONTEXT => $context
+        );
+    }
+
     private static function processHeadingMetadataH1($level, $text)
     {
         /**
@@ -223,7 +254,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      * @param Doku_Renderer_xhtml $renderer
      * @param integer $pos
      */
-    public static function renderOpeningTag($context, $tagAttributes, &$renderer, $pos = null)
+    public static function renderOpeningTag($context, $tagAttributes, &$renderer, $pos)
     {
 
         /**
@@ -286,7 +317,6 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
              * with the captured text to be Dokuwiki Template compatible
              * It will create the toc and the section editing
              */
-            $tocText = "";
             if ($tagAttributes->hasComponentAttribute(self::HEADING_TEXT_ATTRIBUTE)) {
                 $tocText = $tagAttributes->getValueAndRemove(self::HEADING_TEXT_ATTRIBUTE);
                 if (empty($tocText)) {
@@ -296,7 +326,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 $tocText = "Heading Text Not found";
                 LogUtility::msg("The heading text attribute was not found for the toc");
             }
-            $renderer->header($tocText, $level, $pos);
+            $renderer->header($tocText, $level, $pos + 1);
             $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
             foreach ($attributes as $key => $value) {
                 $tagAttributes->addComponentAttributeValue($key, $value);
@@ -406,7 +436,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $tagAttributes = TagAttributes::createFromTagMatch($match );
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
 
                 /**
                  * Level is mandatory (for the closing tag)
@@ -453,26 +483,31 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::POSITION => $pos
                 );
 
             case DOKU_LEXER_UNMATCHED :
 
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => PluginUtility::htmlEncode($match),
-                );
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
+
+
+                /**
+                 * Get enter attributes and content
+                 */
+                $callStack->moveToEnd();
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $context = $openingTag->getContext(); // for sectioning
+                $attributes = $openingTag->getAttributes(); // for the level
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::CONTEXT => $context,
-                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
 
@@ -503,8 +538,9 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER:
                     $parentTag = $data[PluginUtility::CONTEXT];
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes,syntax_plugin_combo_heading::TAG);
-                    self::renderOpeningTag($parentTag, $tagAttributes, $renderer);
+                    $pos = $data[PluginUtility::POSITION];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, syntax_plugin_combo_heading::TAG);
+                    self::renderOpeningTag($parentTag, $tagAttributes, $renderer, $pos);
                     break;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);

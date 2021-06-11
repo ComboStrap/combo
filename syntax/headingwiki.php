@@ -118,31 +118,36 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $context
+                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::POSITION => $pos
                 );
             case DOKU_LEXER_UNMATCHED :
 
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
-                $callStack = CallStack::createFromHandler($handler);
-                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $openingAttributes = $openingTag->getAttributes();
 
-                // Control of the Number of `=` before and after
+                $callStack = CallStack::createFromHandler($handler);
+
+                $returnedData = syntax_plugin_combo_heading::handleExit($callStack);
+
+
+                /**
+                 * Control of the Number of `=` before and after
+                 */
+                $callStack->moveToEnd();
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $levelFromMatch = $this->getLevelFromMatch($match);
-                $levelFromStartTag = $openingAttributes[syntax_plugin_combo_heading::LEVEL];
+                $levelFromStartTag = $openingTag->getAttribute(syntax_plugin_combo_heading::LEVEL);
                 if ($levelFromMatch != $levelFromStartTag) {
                     $content = "";
                     while ($actualCall = $callStack->next()) {
-                        $content .= $actualCall->getMatchedContent();
+                        $content .= $actualCall->getCapturedContent();
                     }
                     LogUtility::msg("The number of `=` character for a wiki heading is not the same before ($levelFromStartTag) and after ($levelFromMatch) the content ($content).", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_heading::CANONICAL);
                 }
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
-                );
+
+                return $returnedData;
 
         }
         return array();
@@ -162,7 +167,8 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
                     $tagAttributes = TagAttributes::createFromCallStackArray($callStackArray, syntax_plugin_combo_heading::TAG);
                     $context = $data[PluginUtility::CONTEXT];
-                    syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer);
+                    $pos = $data[PluginUtility::POSITION];
+                    syntax_plugin_combo_heading::renderOpeningTag($context, $tagAttributes, $renderer, $pos);
                     return true;
                 case DOKU_LEXER_UNMATCHED:
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -179,7 +185,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
             /**
              * @var renderer_plugin_combo_analytics $renderer
              */
-            syntax_plugin_combo_heading::processMetadataAnalytics($data,$renderer);
+            syntax_plugin_combo_heading::processMetadataAnalytics($data, $renderer);
 
         } else if ($format == "metadata") {
 
@@ -219,8 +225,6 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
 
     }
-
-
 
 
 }

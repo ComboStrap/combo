@@ -232,7 +232,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $callStack->moveToEnd();
                 $previousCall = $callStack->previous();
                 $previousCallPosition = $previousCall->getKey();
-                $previousCallContent = $previousCall->getMatchedContent();
+                $previousCallContent = $previousCall->getCapturedContent();
 
                 if (
                     $openingPosition == $previousCallPosition // ie [[id]]

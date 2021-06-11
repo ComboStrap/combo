@@ -232,7 +232,7 @@ class Tag
             && $call->getState() == DOKU_LEXER_ENTER
             && $name != 'preformatted' // preformatted does not have any attributes
         ) {
-            $match = $call->getMatchedContent();
+            $match = $call->getCapturedContent();
             /**
              * If this is not a combo element, we got no match
              */
@@ -462,7 +462,7 @@ class Tag
                     $treeLevel = $treeLevel + 1;
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    if (empty(trim($call->getMatchedContent()))) {
+                    if (empty(trim($call->getCapturedContent()))) {
                         // An empty unmatched is not considered a sibling
                         // state = null will continue the loop
                         // we can't use a continue statement in a switch
@@ -673,7 +673,7 @@ class Tag
     {
         if ($this->tagCall != null) {
 
-            return $this->tagCall->getMatchedContent();
+            return $this->tagCall->getCapturedContent();
         } else {
             return null;
         }
@@ -731,7 +731,7 @@ class Tag
                     ) {
                         break;
                     } else {
-                        $content .= $currentCall->getMatchedContent();
+                        $content .= $currentCall->getCapturedContent();
                         $index++;
                     }
                 }
@@ -855,7 +855,7 @@ class Tag
     public function getContent()
     {
         if ($this->tagCall != null) {
-            return $this->tagCall->getMatchedContent();
+            return $this->tagCall->getCapturedContent();
         } else {
             return null;
         }

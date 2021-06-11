@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
+use Psr\Log\LogLevel;
 
 
 /**
@@ -285,7 +286,7 @@ class Call
     /**
      * @return mixed the matched content from the {@link DokuWiki_Syntax_Plugin::handle}
      */
-    public function getMatchedContent()
+    public function getCapturedContent()
     {
         $caller = $this->call[0];
         switch ($caller) {
@@ -511,7 +512,7 @@ class Call
             return $attributes[$key];
         } else {
             // boolean attribute
-            if($this->getType()==$key){
+            if ($this->getType() == $key) {
                 return true;
             } else {
                 return null;
@@ -525,7 +526,7 @@ class Call
         if ($mode == "plugin") {
             return $this->call[1][1][PluginUtility::PAYLOAD];
         } else {
-            LogUtility::msg("You can't ask for a payload from a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING, "support");
+            LogUtility::msg("You can't ask for a payload from a non plugin call mode (" . $mode . ").", LogUtility::LVL_MSG_WARNING, "support");
             return null;
         }
     }
@@ -542,7 +543,7 @@ class Call
         if (isset($attributes[$attributeName])) {
             return true;
         } else {
-            if($this->getType()==$attributeName){
+            if ($this->getType() == $attributeName) {
                 return true;
             } else {
                 return false;
@@ -583,7 +584,6 @@ class Call
     }
 
 
-
     /**
      * Return the position of the first matched character in the text file
      * @return mixed
@@ -599,13 +599,13 @@ class Call
      * Return the position of the last matched character in the text file
      *
      * This is the {@link Call::getFirstMatchedCharacterPosition()}
-     * plus the length of the {@link Call::getMatchedContent()}
+     * plus the length of the {@link Call::getCapturedContent()}
      * matched content
      * @return int|mixed
      */
     public function getLastMatchedCharacterPosition()
     {
-        return $this->getFirstMatchedCharacterPosition() + strlen($this->getMatchedContent());
+        return $this->getFirstMatchedCharacterPosition() + strlen($this->getCapturedContent());
     }
 
     /**
@@ -635,13 +635,22 @@ class Call
             return $value;
         } else {
             // boolean attribute as first attribute
-            if($this->getType()==$key){
+            if ($this->getType() == $key) {
                 unset($data[PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY]);
                 return true;
             }
             return null;
         }
 
+    }
+
+    public function setPayload($text)
+    {
+        if ($this->isPluginCall()) {
+            $this->call[1][1][PluginUtility::PAYLOAD] = $text;
+        } else {
+            LogUtility::msg("Setting the payload for a non-native call ($this) is not yet implemented");
+        }
     }
 
 

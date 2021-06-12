@@ -20,6 +20,8 @@ require_once(__DIR__ . '/DokuPath.php');
 /**
  * Class InternalMedia
  * Represent a media link
+ *
+ *
  * @package ComboStrap
  *
  * Wrapper around {@link Doku_Handler_Parse_Media}
@@ -28,6 +30,7 @@ require_once(__DIR__ . '/DokuPath.php');
  * and therefore determine the function in an render
  * (ie {@link \Doku_Renderer::internalmedialink()} or {@link \Doku_Renderer::externalmedialink()}
  *
+ * It's a HTML tag and a URL (in the dokuwiki mode) build around its file system path
  */
 abstract class MediaLink extends DokuPath
 {
@@ -75,21 +78,31 @@ abstract class MediaLink extends DokuPath
         TagAttributes::HEIGHT_KEY,
         CacheMedia::CACHE_KEY,
     ];
-    /**
-     * The dokuwiki media property used in a link
-     */
-    const DOKUWIKI_QUERY_MEDIA_PROPERTY = ["w", "h"];
+
     /**
      * Default image linking value
      */
     const CONF_DEFAULT_LINKING = "defaultImageLinking";
     const LINKING_LINKONLY_VALUE = "linkonly";
     const LINKING_DETAILS_VALUE = 'details';
-    const SRC_KEY = "src"; // called pathId in Combo
+    const SRC_KEY = self::DOKUWIKI_SRC; // called pathId in Combo
     const LINKING_NOLINK_VALUE = 'nolink';
+
+    /**
+     * @deprecated 2021-06-12
+     */
     const LINK_PATTERN = "{{\s*([^|\s]*)\s*\|?.*}}";
 
     const LINKING_DIRECT_VALUE = 'direct';
+    const ANCHOR_ATTRIBUTES = "anchor";
+    const PATH_ATTRIBUTE = "path";
+
+    /**
+     * Only used by Dokuwiki
+     * Contains the path and eventually an anchor
+     * never query parameters
+     */
+    const DOKUWIKI_SRC = "src";
 
 
     private $lazyLoad = null;
@@ -176,13 +189,14 @@ abstract class MediaLink extends DokuPath
          * Media id are not cleaned
          * They are always absolute ?
          */
-        $src = $attributes['src'];
-        unset($attributes["src"]);
+        $path = $attributes[MediaLink::PATH_ATTRIBUTE];
+        unset($attributes[MediaLink::PATH_ATTRIBUTE]);
+        unset($attributes[self::DOKUWIKI_SRC]); // src is a dokuwiki attributes and is only passed to dokuwiki
 
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
-        return self::createMediaLinkFromPathId($src, $rev, $tagAttributes);
+        return self::createMediaLinkFromPathId($path, $rev, $tagAttributes);
 
     }
 
@@ -192,95 +206,239 @@ abstract class MediaLink extends DokuPath
      */
     public static function createFromRenderMatch($match)
     {
-        /**
-         * Even if deprecated because of dimension we use
-         * it to handle the other attributes such as cache, an align
-         */
-        require_once(__DIR__ . '/../../../../inc/parser/handler.php');
-        $attributes = Doku_Handler_Parse_Media($match);
 
         /**
-         * To avoid clash with the combostrap type
+         * The parsing function {@link Doku_Handler_Parse_Media} has some flow / problem
+         *    * It keeps the anchor only if there is no query string
+         *    * It takes the first digit as the width (ie media.pdf?page=31 would have a width of 31)
+         *    * `src` is not only the media path but may have a anchor
+         * We parse it then
+         */
+
+        /**
+         *   * Delete the opening and closing character
+         *   * create the url and description
+         */
+        $match = preg_replace(array('/^\{\{/', '/\}\}$/u'), '', $match);
+        $parts = explode('|', $match, 2);
+        $description = null;
+        $url = $parts[0];
+        if (isset($parts[1])) {
+            $description = $parts[1];
+        }
+
+        /**
+         * Media Alignment
+         */
+        $rightAlign = (bool)preg_match('/^ /', $url);
+        $leftAlign = (bool)preg_match('/ $/', $url);
+        $url = trim($url);
+
+        // Logic = what's that ;)...
+        if ($leftAlign & $rightAlign) {
+            $align = 'center';
+        } else if ($rightAlign) {
+            $align = 'right';
+        } else if ($leftAlign) {
+            $align = 'left';
+        } else {
+            $align = null;
+        }
+
+        /**
+         * Path
+         */
+        $questionMarkPosition = strpos($url, "?");
+        $path = $url;
+        $queryStringAndAnchor = null;
+        if ($questionMarkPosition !== false) {
+            $path = substr($url, 0, $questionMarkPosition);
+            $queryStringAndAnchor = substr($url, $questionMarkPosition + 1);
+        }
+
+        /**
+         * Media Type
+         */
+        if (media_isexternal($path) || link_isinterwiki($path)) {
+            $mediaType = MediaLink::EXTERNAL_MEDIA;
+        } else {
+            $mediaType = MediaLink::INTERNAL_MEDIA;
+        }
+
+
+        /**
+         * Do we have a linking attribute
+         */
+        $linkingValue = null;
+        $widthValue = null;
+        $heightValue = null;
+        $cacheValue = "cache";
+        $comboAttributes = [
+            MediaLink::PATH_ATTRIBUTE => $path
+        ];
+        $anchor = null;
+
+        if ($queryStringAndAnchor !== null) {
+
+
+            $queryParameters = Url::queryParametersToArray($queryStringAndAnchor);
+
+            /**
+             * Anchor
+             * Because `#` is also used for hexadecimal color,
+             * the anchor is just seen as being the last parameters
+             *
+             * We give the burden to us and not to the user
+             */
+            if (sizeof($queryParameters) > 0) {
+                end($queryParameters);
+                $value = current($queryParameters);
+                $key = key($queryParameters);
+                reset($queryParameters);
+                if ($key == "color") {
+                    // case when we have the anchor after the color value
+                    if (substr_count($value, "#") >= 2) {
+                        // there is an anchor
+                        $anchorPosition = strrpos($value, "#");
+                        $anchor = substr($value, $anchorPosition + 1);
+                        $newValue = substr($value, $anchorPosition);
+                        $queryParameters[$key] = $newValue;
+                    }
+                } else {
+                    $searchString = $key;
+                    if ($value != null) {
+                        $searchString = $value;
+                    }
+                    if (($position = strrpos($searchString, "#")) !== false) {
+                        $anchor = substr($searchString, $position + 1);
+                        $newValue = substr($searchString, 0, $position);
+                        if ($value == null) {
+                            unset($queryParameters[$key]);
+                            $queryParameters[$newValue] = null;
+                        } else {
+                            $queryParameters[$key] = $newValue;
+                        }
+                    }
+                }
+            }
+
+
+            $length = sizeof($queryParameters);
+            $i = 0;
+            while (list($key, $value) = each($queryParameters)) {
+                $i++;
+                $lowerKey = strtolower($key);
+                if ($value != null) {
+                    switch ($lowerKey) {
+                        case "w": // used in a link w=xxx
+                            $widthValue = $value;
+                            break;
+                        case "h": // used in a link h=xxxx
+                            $heightValue = $value;
+                            break;
+                        default:
+                            $comboAttributes[$key] = $value;
+                    }
+
+                } else {
+
+
+                    /**
+                     * Linking
+                     */
+                    if ($linkingValue == null
+                        &&
+                        preg_match('/(nolink|direct|linkonly|details)/i', $lowerKey)) {
+                        $linkingValue = $lowerKey;
+                        continue;
+                    }
+
+                    /**
+                     * Cache
+                     */
+                    if ($lowerKey == "nocache") {
+                        $cacheValue = "nocache";
+                        continue;
+                    }
+
+                    /**
+                     * Anchor
+                     */
+                    if (strrpos($key, "#") == 0 && $i == $length) {
+                        $anchor = substr($key, 1);
+                        continue;
+                    }
+
+                    /**
+                     * Sizing (wxh)
+                     */
+                    $sizing = [];
+                    if (preg_match('/([0-9]+)(x([0-9]+))?/', $key, $sizing)) {
+                        $widthValue = $sizing[1];
+                        if (isset($sizing[3])) {
+                            $heightValue = $sizing[3];
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if ($linkingValue == null) {
+            $linkingValue = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
+        }
+
+        /**
+         * src in dokuwiki is the path and the anchor if any
+         */
+        $src = $path;
+        if ($anchor != null) {
+            $sizing = $parts . "#" . $anchor;
+        }
+
+        /**
+         * To avoid clash with the combostrap component type
          * ie this is also a ComboStrap attribute where we set the type of a SVG (icon, illustration, background)
          * we store the media type (ie external/internal) in another key
          */
-        $type = $attributes["type"];
-        $attributes[self::MEDIA_DOKUWIKI_TYPE] = $type;
-        unset($attributes["type"]);
-        if ($type == MediaLink::INTERNAL_MEDIA) {
+        $dokuwikiAttributes = array(
+            self::MEDIA_DOKUWIKI_TYPE => $mediaType,
+            self::DOKUWIKI_SRC => $src,
+            'title' => $description,
+            'align' => $align,
+            TagAttributes::WIDTH_KEY => $widthValue,
+            TagAttributes::HEIGHT_KEY => $heightValue,
+            CacheMedia::CACHE_KEY => $cacheValue,
+            'linking' => $linkingValue,
+        );
 
-            /**
-             * The {@link MediaLink::createFromRenderMatch() previous function}
-             * takes the first digit as the width
-             * (bad pattern for the width and height parsing)
-             * We set them to null and parse them below
-             */
-            $attributes[TagAttributes::WIDTH_KEY] = null;
-            $attributes[TagAttributes::HEIGHT_KEY] = null;
+        /**
+         * If this is an internal media,
+         * we are using our implementation
+         * and we have a change on attribute specification
+         */
+        if ($mediaType == MediaLink::INTERNAL_MEDIA) {
 
             /**
              * The align attribute on an image parse
              * is a float right
              * ComboStrap does a difference between a block right and a float right
              */
-            if ($attributes[TagAttributes::ALIGN_KEY] === "right") {
-                unset($attributes[TagAttributes::ALIGN_KEY]);
-                $attributes[FloatAttribute::FLOAT_KEY] = "right";
+            if ($dokuwikiAttributes[TagAttributes::ALIGN_KEY] === "right") {
+                unset($dokuwikiAttributes[TagAttributes::ALIGN_KEY]);
+                $dokuwikiAttributes[FloatAttribute::FLOAT_KEY] = "right";
             }
 
-            /**
-             * Do we have a linking attribute
-             */
-            $linkingAttributeFound = false;
 
-            // Add the non-standard attribute in the form name=value
-            $matches = array();
-            $pattern = self::LINK_PATTERN;
-            $found = preg_match("/$pattern/", $match, $matches);
-            if ($found) {
-                $link = $matches[1];
-                $positionQueryCharacter = strpos($link, "?");
-                if ($positionQueryCharacter !== false) {
-                    $queryParameters = substr($link, $positionQueryCharacter + 1);
-                    $parameters = Url::queryParametersToArray($queryParameters);
-                    foreach ($parameters as $key => $value) {
-                        if ($value != null) {
-                            if (!in_array($key, self::DOKUWIKI_QUERY_MEDIA_PROPERTY)) {
-                                /**
-                                 * exclude already parsed w=xxxx and h=wwww
-                                 */
-                                $attributes[$key] = $value;
-                            }
-                        } else {
-                            /**
-                             * Linking
-                             */
-                            if ($linkingAttributeFound == false
-                                &&
-                                preg_match('/(nolink|direct|linkonly|details)/i', $key)) {
-                                $linkingAttributeFound = true;
-                            }
-                            /**
-                             * Sizing (wxh)
-                             */
-                            $sizing = [];
-                            if (preg_match('/([0-9]+)(x([0-9]+))?/', $key, $sizing)) {
-                                $attributes[TagAttributes::WIDTH_KEY] = $sizing[1];
-                                if (isset($sizing[3])) {
-                                    $attributes[TagAttributes::HEIGHT_KEY] = $sizing[3];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!$linkingAttributeFound) {
-                $attributes[TagAttributes::LINKING_KEY] = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
-            }
         }
 
-        return self::createFromCallStackArray($attributes);
+        /**
+         * Merge standard dokuwiki attributes and
+         * combo attributes
+         */
+        $dokuwikiAttributes = PluginUtility::mergeAttributes($dokuwikiAttributes, $comboAttributes);
+
+        return self::createFromCallStackArray($dokuwikiAttributes);
     }
 
 
@@ -370,7 +528,7 @@ abstract class MediaLink extends DokuPath
          * src is a path (not an id)
          */
         $array = array(
-            'src' => $this->getAbsolutePath()
+            self::DOKUWIKI_SRC => $this->getAbsolutePath()
         );
 
 

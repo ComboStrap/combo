@@ -1153,6 +1153,20 @@ class PluginUtility
     }
 
 
+    /**
+     *
+     * See also dev.md file
+     */
+    public static function isDevOrTest()
+    {
+        global $_SERVER;
+        if ($_SERVER["REMOTE_ADDR"]=="127.0.0.1"){
+            return true;
+        }
+        return defined('DOKU_UNITTEST');
+    }
+
+
 }
 
 PluginUtility::init();

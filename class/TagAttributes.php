@@ -249,6 +249,7 @@ class TagAttributes
     {
 
         $this->addComponentAttributeValue(self::CLASS_KEY, $className);
+        return $this;
 
     }
 
@@ -512,7 +513,7 @@ class TagAttributes
             LogUtility::msg("The value of the HTML attribute is empty, use the if empty function instead", LogUtility::LVL_MSG_ERROR, "support");
         }
         $this->htmlAttributes[$key] = $value;
-
+        return $this;
     }
 
 

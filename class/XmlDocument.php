@@ -214,6 +214,13 @@ class XmlDocument
     }
 
     public
+    static function createFromString($string)
+    {
+        $mime = XmlDocument::XML_TYPE;
+        return new XmlDocument($string, $mime);
+    }
+
+    public
     function &getXmlDom()
     {
         return $this->xmlDom;

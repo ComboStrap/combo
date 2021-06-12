@@ -47,7 +47,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     const TYPE_TITLE = "title";
 
     const CANONICAL = "heading";
-    const SYNTAX_TYPE = 'formatting';
+    const SYNTAX_TYPE = 'baseonly';
     const SYNTAX_PTYPE = 'block';
 
     /**
@@ -321,6 +321,9 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 $tocText = $tagAttributes->getValueAndRemove(self::HEADING_TEXT_ATTRIBUTE);
                 if (empty($tocText)) {
                     LogUtility::msg("The heading text should be not null on the enter tag");
+                }
+                if(trim(strtolower($tocText))=="articles related"){
+                    $tagAttributes->addClassName("d-print-none");
                 }
             } else {
                 $tocText = "Heading Text Not found";

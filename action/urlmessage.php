@@ -159,7 +159,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
 
         if ($event->data == 'show' || $event->data == 'edit' || $event->data == 'search') {
 
-            ptln($message->getHtml());
+            ptln($message->toHtml());
 
         }
 

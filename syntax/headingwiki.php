@@ -31,10 +31,10 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     public function getSort()
     {
         /**
-         * Less than 50 from
+         * It's 50 for the original heading
          * {@link \dokuwiki\Parsing\ParserMode\Header::getSort()}
          */
-        return 49;
+        return 50;
     }
 
     public function getType()
@@ -221,7 +221,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
          * Basically all mode that are not `base`
          * To not take the dokuwiki heading
          */
-        if (!(in_array($mode, ['base', 'header']))) {
+        if (!(in_array($mode, ['base', 'header', 'table']))) {
             return true;
         } else {
             return PluginUtility::getConfValue(self::CONF_WIKI_HEADING_ENABLE, self::CONF_DEFAULT_WIKI_ENABLE_VALUE);

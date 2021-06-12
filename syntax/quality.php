@@ -137,7 +137,7 @@ class syntax_plugin_combo_quality extends DokuWiki_Syntax_Plugin
                         }
                         $note = action_plugin_combo_qualitymessage::createQualityNote($pageId, $this);
                         if ($note!=null) {
-                            $renderer->doc .= $note->getHtml();
+                            $renderer->doc .= $note->toHtml();
                         }
                     }
                     break;

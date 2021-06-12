@@ -60,6 +60,10 @@ class SvgImageLink extends MediaLink
 
 
         $lazyLoad = $this->getLazyLoad();
+        if ($lazyLoad) {
+            $this->tagAttributes->addClassName(LazyLoad::LAZY_CLASS);
+        }
+
         $svgInjection = PluginUtility::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
         /**
          * Snippet
@@ -101,23 +105,20 @@ class SvgImageLink extends MediaLink
         $this->tagAttributes->removeComponentAttributeIfPresent(TagAttributes::LINKING_KEY);
 
         /**
-         * Class
-         * functionalClass is not added
-         * as a normal class when injected
-         * This is why, it's not added in the {@link TagAttributes}
+         * functionalClass is the class used in Javascript
          */
         $functionalClass = "";
         if ($svgInjection && $lazyLoad) {
             PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg-injection");
-            $functionalClass = "combo-lazy-svg-injection";
+            $functionalClass = "lazy-svg-injection-combo";
         } else if ($lazyLoad && !$svgInjection) {
             PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg");
-            $functionalClass = "combo-lazy-svg";
+            $functionalClass = "lazy-svg-combo";
         } else if ($svgInjection && !$lazyLoad) {
             PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
-            $functionalClass = "combo-svg-injection";
+            $functionalClass = "svg-injection-combo";
         }
-
+        $this->tagAttributes->addClassName($functionalClass);
 
         /**
          * Src
@@ -153,8 +154,7 @@ class SvgImageLink extends MediaLink
                 $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAndRemove("class"));
             }
         }
-        // Add the functional class
-        $this->tagAttributes->addClassName($functionalClass);
+
 
         /**
          * Return the image
@@ -226,7 +226,7 @@ class SvgImageLink extends MediaLink
                             break;
                     }
 
-                    if ($newName== CacheMedia::CACHE_KEY && $value== CacheMedia::CACHE_DEFAULT_VALUE){
+                    if ($newName == CacheMedia::CACHE_KEY && $value == CacheMedia::CACHE_DEFAULT_VALUE) {
                         // This is the default
                         // No need to add it
                         continue;

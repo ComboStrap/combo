@@ -86,7 +86,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
             $note = $this->createQualityNote(PluginUtility::getPageId(), $this);
             if ($note != null) {
-                ptln($note->getHtml());
+                ptln($note->toHtml());
             }
         }
 

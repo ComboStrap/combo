@@ -31,7 +31,7 @@ class RasterImageLink extends MediaLink
 
     const CONF_RESPONSIVE_IMAGE_MARGIN = "responsiveImageMargin";
     const CONF_RETINA_SUPPORT_ENABLED = "retinaRasterImageEnable";
-    const LAZY_CLASS = "combo-lazy-raster";
+    const LAZY_CLASS = "lazy-raster-combo";
 
     const BREAKPOINTS =
         array(
@@ -263,6 +263,7 @@ class RasterImageLink extends MediaLink
                     LazyLoad::addLozadSnippet();
                     PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-raster");
                     $this->tagAttributes->addClassName(self::LAZY_CLASS);
+                    $this->tagAttributes->addClassName(LazyLoad::LAZY_CLASS);
 
                     /**
                      * A small image has no srcset

@@ -10,81 +10,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
 
 
-    /**
-     * @param $headingText
-     * @param Call $call
-     */
-    private static function addToTextHeading(&$headingText, $call)
-    {
-        if ($call->isTextCall()) {
-            // Building the text for the toc
-            // only cdata for now
-            // no image, ...
-            if ($headingText != "") {
-                $headingText .= " ";
-            }
-            $headingText .= trim($call->getCapturedContent());
-        }
-    }
-
-    /**
-     * @param $headingEntryCall
-     * @param $handler
-     * @param CallStack $callStack
-     * @param $actualSectionState
-     * @param $headingText
-     * @param $actualHeadingParsingState
-     */
-    private static function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(&$headingEntryCall, &$handler, &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
-    {
-        /**
-         * We are no more in a heading
-         */
-        $actualHeadingParsingState = DOKU_LEXER_EXIT;
-
-        /**
-         * Outline ?
-         * Update the text and open a section
-         */
-        if ($headingEntryCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
-
-            /**
-             * Update the entering call with the text capture
-             */
-            $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
-            $headingText = "";
-
-            $callStack->insertAfter(
-                Call::createNativeCall(
-                    'section_open',
-                    array($headingEntryCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
-                    $headingEntryCall->getFirstMatchedCharacterPosition()
-                )
-            );
-            $handler->setStatus('section', true);
-            $actualSectionState = DOKU_LEXER_ENTER;
-            $callStack->next();
-
-        }
-    }
-
-    private static function closeSectionIfNeeded(&$actualCall, &$handler, &$callStack, &$actualSectionState)
-    {
-        if ($actualCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
-            if ($handler->getStatus('section')) {
-                $callStack->insertBefore(
-                    Call::createNativeCall(
-                        'section_close',
-                        array(),
-                        $actualCall->getLastMatchedCharacterPosition()
-                    )
-                );
-                $actualSectionState = DOKU_LEXER_EXIT;
-                $handler->setStatus('section', false);
-            }
-        }
-    }
-
     public function register(\Doku_Event_Handler $controller)
     {
         /**
@@ -101,6 +26,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         );
 
     }
+
+
 
 
     /**
@@ -281,5 +208,80 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         }
 
 
+    }
+
+    /**
+     * @param $headingEntryCall
+     * @param $handler
+     * @param CallStack $callStack
+     * @param $actualSectionState
+     * @param $headingText
+     * @param $actualHeadingParsingState
+     */
+    private static function insertOpenSectionAfterAndCloseHeadingParsingStateAndNext(&$headingEntryCall, &$handler, &$callStack, &$actualSectionState, &$headingText, &$actualHeadingParsingState)
+    {
+        /**
+         * We are no more in a heading
+         */
+        $actualHeadingParsingState = DOKU_LEXER_EXIT;
+
+        /**
+         * Outline ?
+         * Update the text and open a section
+         */
+        if ($headingEntryCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
+
+            /**
+             * Update the entering call with the text capture
+             */
+            $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
+            $headingText = "";
+
+            $callStack->insertAfter(
+                Call::createNativeCall(
+                    'section_open',
+                    array($headingEntryCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
+                    $headingEntryCall->getFirstMatchedCharacterPosition()
+                )
+            );
+            $handler->setStatus('section', true);
+            $actualSectionState = DOKU_LEXER_ENTER;
+            $callStack->next();
+
+        }
+    }
+
+    private static function closeSectionIfNeeded(&$actualCall, &$handler, &$callStack, &$actualSectionState)
+    {
+        if ($actualCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
+            if ($handler->getStatus('section')) {
+                $callStack->insertBefore(
+                    Call::createNativeCall(
+                        'section_close',
+                        array(),
+                        $actualCall->getLastMatchedCharacterPosition()
+                    )
+                );
+                $actualSectionState = DOKU_LEXER_EXIT;
+                $handler->setStatus('section', false);
+            }
+        }
+    }
+
+    /**
+     * @param $headingText
+     * @param Call $call
+     */
+    private static function addToTextHeading(&$headingText, $call)
+    {
+        if ($call->isTextCall()) {
+            // Building the text for the toc
+            // only cdata for now
+            // no image, ...
+            if ($headingText != "") {
+                $headingText .= " ";
+            }
+            $headingText .= trim($call->getCapturedContent());
+        }
     }
 }

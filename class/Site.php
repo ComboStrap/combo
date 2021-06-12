@@ -130,10 +130,11 @@ class Site
     {
 
         /**
-         * In a dev environment,
+         * In a {@link PluginUtility::isDevOrTest()} dev environment,
          * don't set the
          * https://www.dokuwiki.org/config:baseurl
          * to be able to test the metadata / social integration
+         * via a tunnel
          */
 
         return DOKU_URL;

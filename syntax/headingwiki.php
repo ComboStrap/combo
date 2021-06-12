@@ -20,8 +20,11 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
      *
      * See also for information,
      * the original heading pattern of Dokuwiki {@link \dokuwiki\Parsing\ParserMode\Header}
+     *
+     * The capture of the first spaces should be optional
+     * otherwise the {@link \dokuwiki\Parsing\ParserMode\Header} is taking over
      */
-    const ENTRY_PATTERN = '^[\s\t]+={1,6}[\s\t]?(?=[^\n]*={1,6}\s*\r??\n)';
+    const ENTRY_PATTERN = '[\s\t]*={1,6}[\s\t]?(?=[^\n]*={1,6}\s*\r??\n)';
     const EXIT_PATTERN = '\s={1,6}\s*(?=$)';
     const TAG = "headingwiki";
 
@@ -31,10 +34,10 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     public function getSort()
     {
         /**
-         * It's 50 for the original heading
+         * It's 49 (on less than the original heading)
          * {@link \dokuwiki\Parsing\ParserMode\Header::getSort()}
          */
-        return 50;
+        return 49;
     }
 
     public function getType()

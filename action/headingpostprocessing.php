@@ -3,7 +3,9 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
@@ -46,6 +48,13 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $handler = $event->data;
         $callStack = CallStack::createFromHandler($handler);
         $callStack->moveToStart();
+
+        /**
+         * Close the section
+         * for whatever reason, the section status is true
+         * even if the sections are closed
+         */
+        $handler->setStatus('section', false);
 
         /**
          * Processing variable about the context
@@ -115,6 +124,12 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                         // no link for media in heading
                         $actualCall->getCall()[1][6] = MediaLink::LINKING_NOLINK_VALUE;
                         continue 2;
+
+                    case "header":
+                        if(PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE)==1){
+                            LogUtility::msg("The combo heading wiki is enabled, we should not see `header` calls in the call stack");
+                        }
+                        break;
 
                     case syntax_plugin_combo_media::TAG:
                         // no link for media in heading

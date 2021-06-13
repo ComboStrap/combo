@@ -280,54 +280,69 @@ abstract class MediaLink extends DokuPath
 
         if ($queryStringAndAnchor !== null) {
 
+            $queryParameters = array();
+            while (strlen($queryStringAndAnchor) > 0) {
+                /**
+                 * Extracting the next query parameter
+                 */
+                $questionMarkPos = strpos($queryStringAndAnchor, "&");
+                if ($questionMarkPos !== false) {
+                    $queryStringParameter = substr($queryStringAndAnchor, 0, $questionMarkPos);
+                    $queryStringAndAnchor = substr($queryStringAndAnchor, $questionMarkPos + 1);
+                } else {
+                    $queryStringParameter = $queryStringAndAnchor;
+                    $queryStringAndAnchor = "";
+                }
+                /**
+                 * Key, value
+                 */
+                list($key, $value) = explode("=", $queryStringParameter, 2);
+                $lowerCaseKey = strtolower($key);
 
-            $queryParameters = Url::queryParametersToArray($queryStringAndAnchor);
+                /**
+                 * Anchor
+                 */
+                if (($countHashTag = substr_count($value, "#")) >= 3) {
+                    LogUtility::msg("The value ($value) of the key ($key) for the image ($path) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    continue;
+                }
 
-            /**
-             * Anchor
-             * Because `#` is also used for hexadecimal color,
-             * the anchor is just seen as being the last parameters
-             *
-             * We give the burden to us and not to the user
-             */
-            if (sizeof($queryParameters) > 0) {
-                end($queryParameters);
-                $value = current($queryParameters);
-                $key = key($queryParameters);
-                reset($queryParameters);
-                if ($key == "color") {
-                    // case when we have the anchor after the color value
-                    if (substr_count($value, "#") >= 2) {
-                        // there is an anchor
-                        $anchorPosition = strrpos($value, "#");
-                        $anchor = substr($value, $anchorPosition + 1);
-                        $newValue = substr($value, $anchorPosition);
-                        $queryParameters[$key] = $newValue;
+                $anchorPosition = false;
+                if ($lowerCaseKey === "color") {
+                    /**
+                     * Special case when color has one color value as hexadecimal #
+                     * and the hashtag
+                     */
+                    if (strpos($value, '#') == 0) {
+                        if (substr_count($value, "#") >= 2) {
+
+                            /**
+                             * The last one
+                             */
+                            $anchorPosition = strrpos($value, '#');
+                        }
+                        // no anchor then
+                    } else {
+                        // a color that is not hexadecimal can have an anchor
+                        $anchorPosition = strpos($value, "#");
                     }
                 } else {
-                    $searchString = $key;
-                    if ($value != null) {
-                        $searchString = $value;
-                    }
-                    if (($position = strrpos($searchString, "#")) !== false) {
-                        $anchor = substr($searchString, $position + 1);
-                        $newValue = substr($searchString, 0, $position);
-                        if ($value == null) {
-                            unset($queryParameters[$key]);
-                            $queryParameters[$newValue] = null;
-                        } else {
-                            $queryParameters[$key] = $newValue;
-                        }
-                    }
+                    // general case
+                    $anchorPosition = strpos($value, "#");
                 }
-            }
+                if ($anchorPosition !== false) {
+                    $anchor = substr($value, $anchorPosition + 1);
+                    $value = substr($value, 0, $anchorPosition);
+                }
+                $queryParameters[$key] = $value;
 
+            }
 
             $length = sizeof($queryParameters);
             $i = 0;
-            while (list($key, $value) = each($queryParameters)) {
+            while (list($lowerCaseKey, $value) = each($queryParameters)) {
                 $i++;
-                $lowerKey = strtolower($key);
+                $lowerKey = strtolower($lowerCaseKey);
                 if ($value != null) {
                     switch ($lowerKey) {
                         case "w": // used in a link w=xxx
@@ -337,7 +352,7 @@ abstract class MediaLink extends DokuPath
                             $heightValue = $value;
                             break;
                         default:
-                            $comboAttributes[$key] = $value;
+                            $comboAttributes[$lowerCaseKey] = $value;
                     }
 
                 } else {
@@ -364,8 +379,8 @@ abstract class MediaLink extends DokuPath
                     /**
                      * Anchor
                      */
-                    if (strrpos($key, "#") == 0 && $i == $length) {
-                        $anchor = substr($key, 1);
+                    if (strrpos($lowerCaseKey, "#") == 0 && $i == $length) {
+                        $anchor = substr($lowerCaseKey, 1);
                         continue;
                     }
 
@@ -373,7 +388,7 @@ abstract class MediaLink extends DokuPath
                      * Sizing (wxh)
                      */
                     $sizing = [];
-                    if (preg_match('/([0-9]+)(x([0-9]+))?/', $key, $sizing)) {
+                    if (preg_match('/([0-9]+)(x([0-9]+))?/', $lowerCaseKey, $sizing)) {
                         $widthValue = $sizing[1];
                         if (isset($sizing[3])) {
                             $heightValue = $sizing[3];
@@ -442,12 +457,14 @@ abstract class MediaLink extends DokuPath
     }
 
 
-    public function setLazyLoad($false)
+    public
+    function setLazyLoad($false)
     {
         $this->lazyLoad = $false;
     }
 
-    public function getLazyLoad()
+    public
+    function getLazyLoad()
     {
         return $this->lazyLoad;
     }
@@ -459,7 +476,8 @@ abstract class MediaLink extends DokuPath
      * @param string $rev
      * @return MediaLink
      */
-    public static function createMediaLinkFromPathId($pathId, $rev = null, $tagAttributes = null)
+    public
+    static function createMediaLinkFromPathId($pathId, $rev = null, $tagAttributes = null)
     {
         if (is_object($rev)) {
             LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");
@@ -519,7 +537,8 @@ abstract class MediaLink extends DokuPath
      *
      * @return array of key string and value
      */
-    public function toCallStackArray()
+    public
+    function toCallStackArray()
     {
         /**
          * Trying to stay inline with the dokuwiki key
@@ -542,7 +561,8 @@ abstract class MediaLink extends DokuPath
     /**
      * @return string the wiki syntax
      */
-    public function getMarkupSyntax()
+    public
+    function getMarkupSyntax()
     {
         $descriptionPart = "";
         if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
@@ -552,13 +572,15 @@ abstract class MediaLink extends DokuPath
     }
 
 
-    public static function isInternalMediaSyntax($text)
+    public
+    static function isInternalMediaSyntax($text)
     {
         return preg_match(' / ' . syntax_plugin_combo_media::MEDIA_PATTERN . ' / msSi', $text);
     }
 
 
-    public function getRequestedHeight()
+    public
+    function getRequestedHeight()
     {
         return $this->tagAttributes->getValue(TagAttributes::HEIGHT_KEY);
     }
@@ -567,40 +589,47 @@ abstract class MediaLink extends DokuPath
     /**
      * The requested width
      */
-    public function getRequestedWidth()
+    public
+    function getRequestedWidth()
     {
         return $this->tagAttributes->getValue(TagAttributes::WIDTH_KEY);
     }
 
 
-    public function getCache()
+    public
+    function getCache()
     {
         return $this->tagAttributes->getValue(CacheMedia::CACHE_KEY);
     }
 
-    protected function getTitle()
+    protected
+    function getTitle()
     {
         return $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
     }
 
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->getId();
     }
 
-    private function getAlign()
+    private
+    function getAlign()
     {
         return $this->getTagAttributes()->getComponentAttributeValue(TagAttributes::ALIGN_KEY, null);
     }
 
-    private function getLinking()
+    private
+    function getLinking()
     {
         return $this->getTagAttributes()->getComponentAttributeValue(TagAttributes::LINKING_KEY, null);
     }
 
 
-    public function &getTagAttributes()
+    public
+    function &getTagAttributes()
     {
         return $this->tagAttributes;
     }
@@ -608,7 +637,8 @@ abstract class MediaLink extends DokuPath
     /**
      * @return string - the HTML of the image inside a link if asked
      */
-    public function renderMediaTagWithLink()
+    public
+    function renderMediaTagWithLink()
     {
 
         /**
@@ -687,7 +717,9 @@ abstract class MediaLink extends DokuPath
     /**
      * @return string - the HTML of the image
      */
-    public abstract function renderMediaTag();
+    public
+
+    abstract function renderMediaTag();
 
     public abstract function getAbsoluteUrl();
 

@@ -188,8 +188,13 @@ abstract class MediaLink extends DokuPath
          * Media id are not cleaned
          * They are always absolute ?
          */
-        $path = $attributes[DokuPath::PATH_ATTRIBUTE];
-        unset($attributes[DokuPath::PATH_ATTRIBUTE]);
+        if (!isset($attributes[DokuPath::PATH_ATTRIBUTE])) {
+            $path = "notfound";
+            LogUtility::msg("A path attribute is mandatory when creating a media link and was not found in the attributes " . print_r($attributes, true), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        } else {
+            $path = $attributes[DokuPath::PATH_ATTRIBUTE];
+            unset($attributes[DokuPath::PATH_ATTRIBUTE]);
+        }
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
@@ -337,8 +342,8 @@ abstract class MediaLink extends DokuPath
                 /**
                  * Anchor value after a single token case
                  */
-                if(strpos($token,'#')===0){
-                    $comboAttributes[MediaLink::ANCHOR_ATTRIBUTES] = substr($token,1);
+                if (strpos($token, '#') === 0) {
+                    $comboAttributes[MediaLink::ANCHOR_ATTRIBUTES] = substr($token, 1);
                     continue;
                 }
 
@@ -552,7 +557,6 @@ abstract class MediaLink extends DokuPath
          * src is a path (not an id)
          */
         $array = array(
-            self::DOKUWIKI_SRC => $this->getAbsolutePath(),
             DokuPath::PATH_ATTRIBUTE => $this->getPath()
         );
 

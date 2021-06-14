@@ -18,6 +18,7 @@ class DokuPath extends File
     const LOCAL_SCHEME = 'local'; // knwon also as internal media
     const INTERWIKI_SCHEME = 'interwiki';
     const INTERNET_SCHEME = "internet";
+    const PATH_ATTRIBUTE = "path";
 
     /**
      * @var string the path id passed to function (cleaned)
@@ -93,7 +94,6 @@ class DokuPath extends File
                 $path = str_replace(self::SEPARATOR_SLASH, self::SEPARATOR, $path);
             }
         }
-
 
 
         /**
@@ -221,7 +221,7 @@ class DokuPath extends File
      */
     public static function IdToAbsolutePath($id)
     {
-     return DokuPath::SEPARATOR.$id;
+        return DokuPath::SEPARATOR . $id;
     }
 
     public function getName()
@@ -289,6 +289,13 @@ class DokuPath extends File
             // the url (it's stored as id in the metadata)
             return $this->path;
         }
+
+    }
+
+    public function getPath()
+    {
+
+        return $this->path;
 
     }
 

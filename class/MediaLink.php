@@ -95,7 +95,6 @@ abstract class MediaLink extends DokuPath
 
     const LINKING_DIRECT_VALUE = 'direct';
     const ANCHOR_ATTRIBUTES = "anchor";
-    const PATH_ATTRIBUTE = "path";
 
     /**
      * Only used by Dokuwiki
@@ -189,10 +188,8 @@ abstract class MediaLink extends DokuPath
          * Media id are not cleaned
          * They are always absolute ?
          */
-        $path = $attributes[MediaLink::PATH_ATTRIBUTE];
-        unset($attributes[MediaLink::PATH_ATTRIBUTE]);
-        unset($attributes[self::DOKUWIKI_SRC]); // src is a dokuwiki attributes and is only passed to dokuwiki
-
+        $path = $attributes[DokuPath::PATH_ATTRIBUTE];
+        unset($attributes[DokuPath::PATH_ATTRIBUTE]);
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
@@ -274,9 +271,8 @@ abstract class MediaLink extends DokuPath
         $heightValue = null;
         $cacheValue = "cache";
         $comboAttributes = [
-            MediaLink::PATH_ATTRIBUTE => $path
+            DokuPath::PATH_ATTRIBUTE => $path
         ];
-        $anchor = null;
 
         if ($queryStringAndAnchor !== null) {
 
@@ -342,7 +338,7 @@ abstract class MediaLink extends DokuPath
                  * Anchor value after a single token case
                  */
                 if(strpos($token,'#')===0){
-                    $anchor = substr($token,1);
+                    $comboAttributes[MediaLink::ANCHOR_ATTRIBUTES] = substr($token,1);
                     continue;
                 }
 
@@ -388,7 +384,7 @@ abstract class MediaLink extends DokuPath
                     $anchorPosition = strpos($value, "#");
                 }
                 if ($anchorPosition !== false) {
-                    $anchor = substr($value, $anchorPosition + 1);
+                    $comboAttributes[MediaLink::ANCHOR_ATTRIBUTES] = substr($value, $anchorPosition + 1);
                     $value = substr($value, 0, $anchorPosition);
                 }
 
@@ -416,8 +412,8 @@ abstract class MediaLink extends DokuPath
          * src in dokuwiki is the path and the anchor if any
          */
         $src = $path;
-        if ($anchor != null) {
-            $sizing = $parts . "#" . $anchor;
+        if (isset($comboAttributes[MediaLink::ANCHOR_ATTRIBUTES]) != null) {
+            $src = $src . "#" . $comboAttributes[MediaLink::ANCHOR_ATTRIBUTES];
         }
 
         /**
@@ -556,7 +552,8 @@ abstract class MediaLink extends DokuPath
          * src is a path (not an id)
          */
         $array = array(
-            self::DOKUWIKI_SRC => $this->getAbsolutePath()
+            self::DOKUWIKI_SRC => $this->getAbsolutePath(),
+            DokuPath::PATH_ATTRIBUTE => $this->getPath()
         );
 
 

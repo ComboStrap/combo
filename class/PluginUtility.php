@@ -13,6 +13,8 @@ use dokuwiki\Extension\SyntaxPlugin;
  */
 require_once('Align.php');
 require_once('Animation.php');
+require_once('ArrayCaseInsensitive.php');
+require_once('ArrayUtility.php');
 require_once('Background.php');
 require_once('Boldness.php');
 /**

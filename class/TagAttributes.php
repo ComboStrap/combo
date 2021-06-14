@@ -85,7 +85,7 @@ class TagAttributes
     /**
      * @var array attribute that were set on a component
      */
-    private $componentAttributes;
+    private $componentAttributesCaseInsensitive;
 
     /**
      * @var array the style declaration array
@@ -131,6 +131,7 @@ class TagAttributes
     const TEXT_HTML_MIME = "text/html";
     private $mime = TagAttributes::TEXT_HTML_MIME;
 
+
     /**
      * ComponentAttributes constructor.
      * Use the static create function to instantiate this object
@@ -143,7 +144,8 @@ class TagAttributes
     private function __construct($componentAttributes = array(), $tag = null)
     {
         $this->logicalTag = $tag;
-        $this->componentAttributes = $componentAttributes;
+        $this->componentAttributesCaseInsensitive = new ArrayCaseInsensitive($componentAttributes);
+
     }
 
     /**
@@ -176,36 +178,13 @@ class TagAttributes
      */
     public static function createFromCallStackArray($renderArray, $logicalTag = null)
     {
-        if (is_array($renderArray)) {
-            $attributes = self::CallStackArrayToInternalArray($renderArray);
-        } else {
+        if (!is_array($renderArray)) {
             LogUtility::msg("The renderArray variable passed is not an array ($renderArray)", LogUtility::LVL_MSG_ERROR);
-            $attributes = TagAttributes::createEmpty($logicalTag);
+            $renderArray = TagAttributes::createEmpty($logicalTag);
         }
-        return new TagAttributes($attributes, $logicalTag);
+        return new TagAttributes($renderArray, $logicalTag);
     }
 
-    /**
-     * Utility function to go from an html array to a tag array
-     * Used during refactoring
-     * @param array $callStackAttributes
-     * @return array
-     */
-    private static function CallStackArrayToInternalArray(array $callStackAttributes)
-    {
-
-        $attributes = array();
-        foreach ($callStackAttributes as $key => $attribute) {
-
-            /**
-             * Key are always lower
-             */
-            $lowerKey = strtolower($key);
-            $attributes[$lowerKey] = $attribute;
-
-        }
-        return $attributes;
-    }
 
     /**
      * For CSS a unit is mandatory (not for HTML or SVG attributes)
@@ -277,7 +256,7 @@ class TagAttributes
 
         $attLower = strtolower($attributeName);
         if ($this->hasComponentAttribute($attLower)) {
-            $actual = $this->componentAttributes[$attLower];
+            $actual = $this->componentAttributesCaseInsensitive[$attLower];
         }
 
         if ($attributeName === "class") {
@@ -294,12 +273,12 @@ class TagAttributes
                 $actualValues = [];
             }
             $newValues = PluginUtility::mergeAttributes($newValues, $actualValues);
-            $this->componentAttributes[$attLower] = implode(" ", $newValues);
+            $this->componentAttributesCaseInsensitive[$attLower] = implode(" ", $newValues);
         } else {
             if (!empty($actual)) {
                 LogUtility::msg("The attribute ($attLower) has already a value ($actual). Adding another value ($attributeValue) is not yet implemented. Use the set operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
-            $this->componentAttributes[$attLower] = $attributeValue;
+            $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
         }
 
 
@@ -308,7 +287,7 @@ class TagAttributes
     public function setComponentAttributeValue($attributeName, $attributeValue)
     {
         $attLower = strtolower($attributeName);
-        $this->componentAttributes[$attLower] = $attributeValue;
+        $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
     }
 
     public function addComponentAttributeValueIfNotEmpty($attributeName, $attributeValue)
@@ -320,15 +299,14 @@ class TagAttributes
 
     public function hasComponentAttribute($attributeName)
     {
-        $lowerAtt = strtolower($attributeName);
-        $isset = isset($this->componentAttributes[$lowerAtt]);
+        $isset = isset($this->componentAttributesCaseInsensitive[$attributeName]);
         if ($isset === false) {
             /**
              * Edge effect
              * if this is a boolean value and the first value, it may be stored in the type
              */
-            if (isset($this->componentAttributes[TagAttributes::TYPE_KEY])) {
-                if ($lowerAtt == $this->componentAttributes[TagAttributes::TYPE_KEY]) {
+            if (isset($this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY])) {
+                if ($attributeName == $this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY]) {
                     return true;
                 }
             }
@@ -428,7 +406,7 @@ class TagAttributes
             /**
              * copy the unknown component attributes
              */
-            foreach ($this->componentAttributes as $key => $value) {
+            foreach ($this->componentAttributesCaseInsensitive->getOriginalArray() as $key => $value) {
 
                 // Null Value, not needed
                 if ($value == null) {
@@ -533,7 +511,7 @@ class TagAttributes
     {
         $attributeName = strtolower($attributeName);
         if ($this->hasComponentAttribute($attributeName)) {
-            return $this->componentAttributes[$attributeName];
+            return $this->componentAttributesCaseInsensitive[$attributeName];
         } else {
             return $default;
         }
@@ -544,7 +522,7 @@ class TagAttributes
      */
     public function toInternalArray()
     {
-        return $this->componentAttributes;
+        return $this->componentAttributesCaseInsensitive;
     }
 
     /**
@@ -565,7 +543,7 @@ class TagAttributes
                  * Don't remove for instance the `type`
                  * because it may be used elsewhere
                  */
-                unset($this->componentAttributes[$attributeName]);
+                unset($this->componentAttributesCaseInsensitive[$attributeName]);
             } else {
                 LogUtility::msg("Internal: The attribute $attributeName is a reserved word and cannot be removed. Use the get function instead", LogUtility::LVL_MSG_WARNING, "support");
             }
@@ -581,7 +559,7 @@ class TagAttributes
     public function toCallStackArray()
     {
         $array = array();
-        foreach ($this->componentAttributes as $key => $value) {
+        foreach ($this->componentAttributesCaseInsensitive->getOriginalArray() as $key => $value) {
             /**
              * blank and not empty
              * because the width can be zero
@@ -661,7 +639,7 @@ class TagAttributes
     public function removeComponentAttributeIfPresent($attributeName)
     {
         if ($this->hasComponentAttribute($attributeName)) {
-            unset($this->componentAttributes[$attributeName]);
+            unset($this->componentAttributesCaseInsensitive[$attributeName]);
         }
 
     }
@@ -696,8 +674,8 @@ class TagAttributes
     public function removeComponentAttribute($attribute)
     {
         $lowerAtt = strtolower($attribute);
-        if (isset($this->componentAttributes[$lowerAtt])) {
-            unset($this->componentAttributes[$lowerAtt]);
+        if (isset($this->componentAttributesCaseInsensitive[$lowerAtt])) {
+            unset($this->componentAttributesCaseInsensitive[$lowerAtt]);
         } else {
             /**
              * Edge case, this is the first boolean attribute

@@ -66,7 +66,8 @@ abstract class MediaLink extends DokuPath
         TagAttributes::TITLE_KEY,
         Hover::ON_HOVER_ATTRIBUTE,
         Animation::ON_VIEW_ATTRIBUTE,
-        MediaLink::MEDIA_DOKUWIKI_TYPE
+        MediaLink::MEDIA_DOKUWIKI_TYPE,
+        MediaLink::DOKUWIKI_SRC
     ];
 
     /**
@@ -195,6 +196,7 @@ abstract class MediaLink extends DokuPath
             $path = $attributes[DokuPath::PATH_ATTRIBUTE];
             unset($attributes[DokuPath::PATH_ATTRIBUTE]);
         }
+
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 

@@ -16,9 +16,10 @@ class ArrayCaseInsensitive implements ArrayAccess
 {
 
     /**
+     * A mapping between lower key and original key (ie offset)
      * @var array
      */
-    private $_lowerCaseArray = array();
+    private $_keyMapping = array();
     /**
      * @var array
      */
@@ -29,7 +30,7 @@ class ArrayCaseInsensitive implements ArrayAccess
     {
         $this->sourceArray = &$source;
         array_walk($source, function ($value, &$key) {
-            $this->_lowerCaseArray[strtolower($key)] = $value;
+            $this->_keyMapping[strtolower($key)] = $key;
         });
     }
 
@@ -37,11 +38,11 @@ class ArrayCaseInsensitive implements ArrayAccess
     {
 
         if (is_null($offset)) {
-            $this->_lowerCaseArray[] = $value;
+            LogUtility::msg("The offset (key) is null and this is not supported");
         } else {
             if (is_string($offset)) {
                 $lowerCaseOffset = strtolower($offset);
-                $this->_lowerCaseArray[$lowerCaseOffset] = $value;
+                $this->_keyMapping[$lowerCaseOffset] = $offset;
                 $this->sourceArray[$offset] = $value;
             } else {
                 LogUtility::msg("The offset should be a string", LogUtility::LVL_MSG_ERROR);
@@ -53,20 +54,24 @@ class ArrayCaseInsensitive implements ArrayAccess
     public function offsetExists($offset)
     {
         if (is_string($offset)) $offset = strtolower($offset);
-        return isset($this->_lowerCaseArray[$offset]);
+        return isset($this->_keyMapping[$offset]);
     }
 
     public function offsetUnset($offset)
     {
         if (is_string($offset)) $offset = strtolower($offset);
-        unset($this->_lowerCaseArray[$offset]);
+        $originalOffset = $this->_keyMapping[$offset];
+        unset($this->sourceArray[$originalOffset]);
+        unset($this->_keyMapping[$offset]);
+
     }
 
     public function offsetGet($offset)
     {
         if (is_string($offset)) $offset = strtolower($offset);
-        return isset($this->_lowerCaseArray[$offset])
-            ? $this->_lowerCaseArray[$offset]
+        $sourceOffset = $this->_keyMapping[$offset];
+        return isset($this->sourceArray[$sourceOffset])
+            ? $this->sourceArray[$sourceOffset]
             : null;
     }
 

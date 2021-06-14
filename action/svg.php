@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../class/CacheMedia.php');
 
 use ComboStrap\Auth;
 use ComboStrap\CacheMedia;
+use ComboStrap\DokuPath;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Resources;
@@ -105,7 +106,8 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
 
         $id = $event->data["media"];
-        $svgImageLink = SvgImageLink::createMediaLinkFromPathId($id, $rev, $tagAttributes);
+        $pathId = DokuPath::IdToAbsolutePath($id);
+        $svgImageLink = SvgImageLink::createMediaLinkFromPathId($pathId, $rev, $tagAttributes);
         $event->data['file'] = $svgImageLink->getSvgFile();
 
 

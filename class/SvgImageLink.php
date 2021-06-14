@@ -104,21 +104,7 @@ class SvgImageLink extends MediaLink
          */
         $this->tagAttributes->removeComponentAttributeIfPresent(TagAttributes::LINKING_KEY);
 
-        /**
-         * functionalClass is the class used in Javascript
-         */
-        $functionalClass = "";
-        if ($svgInjection && $lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg-injection");
-            $functionalClass = "lazy-svg-injection-combo";
-        } else if ($lazyLoad && !$svgInjection) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg");
-            $functionalClass = "lazy-svg-combo";
-        } else if ($svgInjection && !$lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
-            $functionalClass = "svg-injection-combo";
-        }
-        $this->tagAttributes->addClassName($functionalClass);
+
 
         /**
          * Src
@@ -146,15 +132,34 @@ class SvgImageLink extends MediaLink
             $this->tagAttributes->addHtmlAttributeValue("alt", $this->getTitle());
         }
 
+
         /**
-         * Class into data-class for injection
+         * Class management
+         *
+         * functionalClass is the class used in Javascript
+         * that should be in the class attribute
+         * When injected, the other class should come in a `data-class` attribute
          */
+        $svgFunctionalClass = "";
+        if ($svgInjection && $lazyLoad) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg-injection");
+            $svgFunctionalClass = "lazy-svg-injection-combo";
+        } else if ($lazyLoad && !$svgInjection) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg");
+            $svgFunctionalClass = "lazy-svg-combo";
+        } else if ($svgInjection && !$lazyLoad) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
+            $svgFunctionalClass = "svg-injection-combo";
+        }
         if ($svgInjection) {
+            /**
+             * Class into data-class if svg injection
+             */
             if ($this->tagAttributes->hasComponentAttribute("class")) {
                 $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAndRemove("class"));
             }
         }
-
+        $this->tagAttributes->addClassName($svgFunctionalClass);
 
         /**
          * Return the image
@@ -268,9 +273,10 @@ class SvgImageLink extends MediaLink
         if ($this->exists()) {
 
             /**
-             * This attribute should not be in the render
+             * This attributes should not be in the render
              */
             $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
+            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
 
             if (
                 $this->getSize() > $this->getMaxInlineSize()

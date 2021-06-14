@@ -251,6 +251,7 @@ class SvgDocument extends XmlDocument
                 $tagAttributes->addHtmlAttributeValue("width", $width);
                 $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY, $width);
                 $tagAttributes->addHtmlAttributeValue("height", $height);
+
                 break;
             default:
                 /**

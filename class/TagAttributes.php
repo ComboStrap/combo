@@ -146,6 +146,16 @@ class TagAttributes
         $this->logicalTag = $tag;
         $this->componentAttributesCaseInsensitive = new ArrayCaseInsensitive($componentAttributes);
 
+        /**
+         * Delete empty/null values
+         * From a functional point of view, they should not exist
+         */
+        foreach ($componentAttributes as $key => $value) {
+            if ($value == null || empty($value)) {
+                unset($this->componentAttributesCaseInsensitive[$key]);
+            }
+        }
+
     }
 
     /**
@@ -484,11 +494,12 @@ class TagAttributes
      * that we have in the written document set on a component
      * @param $key
      * @param $value
+     * @return TagAttributes
      */
     public function addHtmlAttributeValue($key, $value)
     {
         if (empty($value)) {
-            LogUtility::msg("The value of the HTML attribute is empty, use the if empty function instead", LogUtility::LVL_MSG_ERROR, "support");
+            LogUtility::msg("The value of the HTML attribute is empty", LogUtility::LVL_MSG_ERROR, "support");
         }
         $this->htmlAttributes[$key] = $value;
         return $this;
@@ -547,6 +558,7 @@ class TagAttributes
             } else {
                 LogUtility::msg("Internal: The attribute $attributeName is a reserved word and cannot be removed. Use the get function instead", LogUtility::LVL_MSG_WARNING, "support");
             }
+
         }
         return $value;
     }

@@ -5,6 +5,8 @@ namespace ComboStrap;
 
 
 use ArrayAccess;
+use ArrayObject;
+use Traversable;
 
 /**
  * Class ArrayCaseInsensitive
@@ -12,7 +14,7 @@ use ArrayAccess;
  *
  * Wrapper around an array to make it case access insensitive
  */
-class ArrayCaseInsensitive implements ArrayAccess
+class ArrayCaseInsensitive implements ArrayAccess, \Iterator
 {
 
     /**
@@ -24,6 +26,15 @@ class ArrayCaseInsensitive implements ArrayAccess
      * @var array
      */
     private $sourceArray;
+    /**
+     * @var false|mixed
+     */
+    private $valid;
+    private $iteratorIndex = 0;
+    /**
+     * @var \ArrayIterator
+     */
+    private $iterator;
 
 
     public function __construct(array &$source = array())
@@ -32,6 +43,11 @@ class ArrayCaseInsensitive implements ArrayAccess
         array_walk($source, function ($value, &$key) {
             $this->_keyMapping[strtolower($key)] = $key;
         });
+
+        /**
+         * Iterator
+         */
+        $this->rewind();
     }
 
     public function offsetSet($offset, $value)
@@ -78,5 +94,32 @@ class ArrayCaseInsensitive implements ArrayAccess
     function getOriginalArray()
     {
         return $this->sourceArray;
+    }
+
+
+    public function current()
+    {
+        return $this->iterator->current();
+    }
+
+    public function next()
+    {
+        $this->iterator->next();
+    }
+
+    public function key()
+    {
+        return $this->iterator->key();
+    }
+
+    public function valid()
+    {
+        return $this->iterator->valid();
+    }
+
+    public function rewind()
+    {
+        $obj = new ArrayObject( $this->sourceArray );
+        $this->iterator = $obj->getIterator();
     }
 }

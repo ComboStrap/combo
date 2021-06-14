@@ -280,23 +280,80 @@ abstract class MediaLink extends DokuPath
 
         if ($queryStringAndAnchor !== null) {
 
-            $queryParameters = array();
             while (strlen($queryStringAndAnchor) > 0) {
+
                 /**
-                 * Extracting the next query parameter
+                 * Capture the token
+                 * and reduce the text
                  */
                 $questionMarkPos = strpos($queryStringAndAnchor, "&");
                 if ($questionMarkPos !== false) {
-                    $queryStringParameter = substr($queryStringAndAnchor, 0, $questionMarkPos);
+                    $token = substr($queryStringAndAnchor, 0, $questionMarkPos);
                     $queryStringAndAnchor = substr($queryStringAndAnchor, $questionMarkPos + 1);
                 } else {
-                    $queryStringParameter = $queryStringAndAnchor;
+                    $token = $queryStringAndAnchor;
                     $queryStringAndAnchor = "";
                 }
+
+
+                /**
+                 * Sizing (wxh)
+                 */
+                $sizing = [];
+                if (preg_match('/^([0-9]+)(?:x([0-9]+))?/', $token, $sizing)) {
+                    $widthValue = $sizing[1];
+                    if (isset($sizing[2])) {
+                        $heightValue = $sizing[2];
+                    }
+                    $token = substr($token, strlen($sizing[0]));
+                    if ($token == "") {
+                        // no anchor behind we continue
+                        continue;
+                    }
+                }
+
+                /**
+                 * Linking
+                 */
+                $found = preg_match('/^(nolink|direct|linkonly|details)/i', $token, $matches);
+                if ($found) {
+                    $linkingValue = $matches[1];
+                    $token = substr($token, strlen($linkingValue));
+                    if ($token == "") {
+                        // no anchor behind we continue
+                        continue;
+                    }
+                }
+
+                /**
+                 * Cache
+                 */
+                $found = preg_match('/^(nocache)/i', $token, $matches);
+                if ($found) {
+                    $cacheValue = "nocache";
+                    $token = substr($token, strlen($cacheValue));
+                    if ($token == "") {
+                        // no anchor behind we continue
+                        continue;
+                    }
+                }
+
+                /**
+                 * Anchor value after a single token case
+                 */
+                if(strpos($token,'#')===0){
+                    $anchor = substr($token,1);
+                    continue;
+                }
+
                 /**
                  * Key, value
+                 * explode to the first `=`
+                 * in the anchor value, we can have one
+                 *
+                 * Ex with media.pdf#page=31
                  */
-                list($key, $value) = explode("=", $queryStringParameter, 2);
+                list($key, $value) = explode("=", $token, 2);
                 $lowerCaseKey = strtolower($key);
 
                 /**
@@ -334,67 +391,19 @@ abstract class MediaLink extends DokuPath
                     $anchor = substr($value, $anchorPosition + 1);
                     $value = substr($value, 0, $anchorPosition);
                 }
-                $queryParameters[$key] = $value;
 
-            }
-
-            $length = sizeof($queryParameters);
-            $i = 0;
-            while (list($lowerCaseKey, $value) = each($queryParameters)) {
-                $i++;
-                $lowerKey = strtolower($lowerCaseKey);
-                if ($value != null) {
-                    switch ($lowerKey) {
-                        case "w": // used in a link w=xxx
-                            $widthValue = $value;
-                            break;
-                        case "h": // used in a link h=xxxx
-                            $heightValue = $value;
-                            break;
-                        default:
-                            $comboAttributes[$lowerCaseKey] = $value;
-                    }
-
-                } else {
-
-
-                    /**
-                     * Linking
-                     */
-                    if ($linkingValue == null
-                        &&
-                        preg_match('/(nolink|direct|linkonly|details)/i', $lowerKey)) {
-                        $linkingValue = $lowerKey;
-                        continue;
-                    }
-
-                    /**
-                     * Cache
-                     */
-                    if ($lowerKey == "nocache") {
-                        $cacheValue = "nocache";
-                        continue;
-                    }
-
-                    /**
-                     * Anchor
-                     */
-                    if (strrpos($lowerCaseKey, "#") == 0 && $i == $length) {
-                        $anchor = substr($lowerCaseKey, 1);
-                        continue;
-                    }
-
-                    /**
-                     * Sizing (wxh)
-                     */
-                    $sizing = [];
-                    if (preg_match('/([0-9]+)(x([0-9]+))?/', $lowerCaseKey, $sizing)) {
-                        $widthValue = $sizing[1];
-                        if (isset($sizing[3])) {
-                            $heightValue = $sizing[3];
-                        }
-                    }
+                switch ($lowerCaseKey) {
+                    case "w": // used in a link w=xxx
+                        $widthValue = $value;
+                        break;
+                    case "h": // used in a link h=xxxx
+                        $heightValue = $value;
+                        break;
+                    default:
+                        $comboAttributes[$key] = $value;
                 }
+
+
             }
         }
 

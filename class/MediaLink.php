@@ -60,7 +60,7 @@ abstract class MediaLink extends DokuPath
      * They are only for the tag (img, svg, ...)
      * or internal
      */
-    const NON_URL_ATTRIBUTES = [
+    const NON_URL_ATTRIBUTES =  [
         TagAttributes::ALIGN_KEY,
         TagAttributes::LINKING_KEY,
         TagAttributes::TITLE_KEY,

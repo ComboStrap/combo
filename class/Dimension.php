@@ -71,27 +71,29 @@ class Dimension
         $heightName = TagAttributes::HEIGHT_KEY;
         if ($attributes->hasComponentAttribute($heightName)) {
             $heightValue = trim($attributes->getValueAndRemove($heightName));
-            $heightValue = TagAttributes::toQualifiedCssValue($heightValue);
+            if($heightValue!=="") {
+                $heightValue = TagAttributes::toQualifiedCssValue($heightValue);
 
-            if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
+                if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
 
-                /**
-                 * A element with a natural height is responsive, we set only the max-height
-                 *
-                 * By default, the image has a `height: auto` due to the img-fluid class
-                 * Making it height responsive
-                 */
-                $attributes->addStyleDeclaration("max-height", $heightValue);
+                    /**
+                     * A element with a natural height is responsive, we set only the max-height
+                     *
+                     * By default, the image has a `height: auto` due to the img-fluid class
+                     * Making it height responsive
+                     */
+                    $attributes->addStyleDeclaration("max-height", $heightValue);
 
-            } else {
+                } else {
 
-                /**
-                 * HTML Block
-                 *
-                 * Without the height value, a block display will collapse
-                 * min-height and not height to not constraint the box
-                 */
-                $attributes->addStyleDeclaration("min-height", $heightValue);
+                    /**
+                     * HTML Block
+                     *
+                     * Without the height value, a block display will collapse
+                     * min-height and not height to not constraint the box
+                     */
+                    $attributes->addStyleDeclaration("min-height", $heightValue);
+                }
             }
 
         }

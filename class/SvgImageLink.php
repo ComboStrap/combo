@@ -60,9 +60,6 @@ class SvgImageLink extends MediaLink
 
 
         $lazyLoad = $this->getLazyLoad();
-        if ($lazyLoad) {
-            $this->tagAttributes->addClassName(LazyLoad::LAZY_CLASS);
-        }
 
         $svgInjection = PluginUtility::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
         /**
@@ -151,6 +148,10 @@ class SvgImageLink extends MediaLink
             PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
             $svgFunctionalClass = "svg-injection-combo";
         }
+        if ($lazyLoad) {
+            // A class to all component lazy loaded to download them before print
+            $svgFunctionalClass .= " ".LazyLoad::LAZY_CLASS;
+        }
         if ($svgInjection) {
             /**
              * Class into data-class if svg injection
@@ -202,7 +203,7 @@ class SvgImageLink extends MediaLink
             $componentAttributes = $this->tagAttributes->getComponentAttributes();
             foreach ($componentAttributes as $name => $value) {
 
-                if (!in_array($name, MediaLink::NON_URL_ATTRIBUTES)) {
+                if (!in_array(strtolower($name), MediaLink::NON_URL_ATTRIBUTES)) {
                     $newName = $name;
 
                     /**

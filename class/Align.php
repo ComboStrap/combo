@@ -18,27 +18,29 @@ class Align
 
             $alignValue = $attributes->getValueAndRemove($align);
 
-            switch ($alignValue) {
-                case "center":
-                    $attributes->addClassName(PluginUtility::CENTER_CLASS);
-                    break;
-                case "right":
-                    $attributes->addStyleDeclaration("margin-left", "auto");
-                    $attributes->addStyleDeclaration("width", "fit-content");
-                    break;
-            }
+            if ($alignValue !== null && $alignValue !== "") {
+                switch ($alignValue) {
+                    case "center":
+                        $attributes->addClassName(PluginUtility::CENTER_CLASS);
+                        break;
+                    case "right":
+                        $attributes->addStyleDeclaration("margin-left", "auto");
+                        $attributes->addStyleDeclaration("width", "fit-content");
+                        break;
+                }
 
-            /**
-             * For inline element,
-             * center should be a block
-             * (svg is not a block by default for instance)
-             * !
-             * this should not be the case for flex block such as a row
-             * therefore the condition
-             * !
-             */
-            if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
-                $attributes->addClassName("d-block");
+                /**
+                 * For inline element,
+                 * center should be a block
+                 * (svg is not a block by default for instance)
+                 * !
+                 * this should not be the case for flex block such as a row
+                 * therefore the condition
+                 * !
+                 */
+                if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
+                    $attributes->addClassName("d-block");
+                }
             }
         }
     }

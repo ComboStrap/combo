@@ -39,7 +39,7 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
                     $pattern .= "|" . $footer;
                 }
                 if (defined('ComboStrap\TplUtility::CONF_SIDEKICK')) {
-                    $sidekick = tpl_getConf(TplUtility::CONF_SIDEKICK);
+                    $sidekick = TplUtility::getSideKickSlotPageName();
                     $pattern .= "|" . $sidekick;
                 }
                 if (defined('ComboStrap\TplUtility::CONF_HEADER')) {

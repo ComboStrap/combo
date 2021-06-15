@@ -92,7 +92,7 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
          */
         $authorizedMode = [
             PluginUtility::getModeForComponent(syntax_plugin_combo_navbarcollapse::COMPONENT),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_navbar::COMPONENT)
+            PluginUtility::getModeForComponent(syntax_plugin_combo_menubar::TAG)
         ];
 
 

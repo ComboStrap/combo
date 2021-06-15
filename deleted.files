@@ -24,3 +24,4 @@ syntax/img.php
 class/InternalMediaLink.php
 syntax/title.php
 syntax/column.php
+syntax/navbar.php

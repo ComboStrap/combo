@@ -216,7 +216,7 @@ class Site
         $template = Site::getTemplate();
         if ($template == self::STRAP_TEMPLATE_NAME) {
             require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
-            return tpl_getConf(TplUtility::CONF_HEIGHT_FIXED_TOP_NAVBAR);
+            return TplUtility::getTopFixedHeightForMenuBar();
         } else {
             return 0;
         }

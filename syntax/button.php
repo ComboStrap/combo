@@ -157,7 +157,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                  * to apply automatically styling in a bar
                  */
                 $tag = new Tag(self::TAG, array(), $state, $handler);
-                if ($tag->isDescendantOf(syntax_plugin_combo_navbar::TAG)) {
+                if ($tag->isDescendantOf(syntax_plugin_combo_menubar::TAG)) {
                     if (!isset($attributes["class"]) && !isset($attributes["spacing"])) {
                         $attributes["spacing"] = "mr-2 mb-2 mt-2 mb-lg-0 mt-lg-0";
                     }

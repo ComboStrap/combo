@@ -88,7 +88,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         );
     }
 
-    private static function processHeadingMetadataH1($level, $text)
+    public static function processHeadingMetadataH1($level, $text)
     {
         /**
          * Capture the h1
@@ -322,14 +322,16 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 if (empty($tocText)) {
                     LogUtility::msg("The heading text should be not null on the enter tag");
                 }
-                if(trim(strtolower($tocText))=="articles related"){
+                if (trim(strtolower($tocText)) == "articles related") {
                     $tagAttributes->addClassName("d-print-none");
                 }
             } else {
                 $tocText = "Heading Text Not found";
                 LogUtility::msg("The heading text attribute was not found for the toc");
             }
-            $renderer->header($tocText, $level, $pos + 1);
+            // The exact position because we does not capture any EOL
+            // and therefore the section should start at the first captured character
+            $renderer->header($tocText, $level, $pos);
             $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
             foreach ($attributes as $key => $value) {
                 $tagAttributes->addComponentAttributeValue($key, $value);

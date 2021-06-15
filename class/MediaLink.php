@@ -60,7 +60,7 @@ abstract class MediaLink extends DokuPath
      * They are only for the tag (img, svg, ...)
      * or internal
      */
-    const NON_URL_ATTRIBUTES =  [
+    const NON_URL_ATTRIBUTES = [
         TagAttributes::ALIGN_KEY,
         TagAttributes::LINKING_KEY,
         TagAttributes::TITLE_KEY,
@@ -220,6 +220,18 @@ abstract class MediaLink extends DokuPath
          */
 
         /**
+         * The Dokuwiki data to gather
+         */
+        $linkingValue = null;
+        $widthValue = null;
+        $heightValue = null;
+        $cacheValue = "cache";
+        /**
+         * The combo attributes array
+         */
+        $comboAttributes = [];
+
+        /**
          *   * Delete the opening and closing character
          *   * create the url and description
          */
@@ -258,7 +270,15 @@ abstract class MediaLink extends DokuPath
         if ($questionMarkPosition !== false) {
             $path = substr($url, 0, $questionMarkPosition);
             $queryStringAndAnchor = substr($url, $questionMarkPosition + 1);
+        } else {
+            // We may have only an anchor
+            $hashTagPosition = strpos($url, "#");
+            if ($hashTagPosition !== false) {
+                $path = substr($url, 0, $hashTagPosition);
+                $comboAttributes[MediaLink::ANCHOR_ATTRIBUTES] = substr($url, $hashTagPosition + 1);
+            }
         }
+        $comboAttributes[DokuPath::PATH_ATTRIBUTE] = $path;
 
         /**
          * Media Type
@@ -271,16 +291,8 @@ abstract class MediaLink extends DokuPath
 
 
         /**
-         * Do we have a linking attribute
+         * Parsing Query string if any
          */
-        $linkingValue = null;
-        $widthValue = null;
-        $heightValue = null;
-        $cacheValue = "cache";
-        $comboAttributes = [
-            DokuPath::PATH_ATTRIBUTE => $path
-        ];
-
         if ($queryStringAndAnchor !== null) {
 
             while (strlen($queryStringAndAnchor) > 0) {

@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 class BreadcrumbHierarchical
 {
+    const CANONICAL =  "breadcrumb-hierarchical";
 
     /**
      * Hierarchical breadcrumbs (you are here)

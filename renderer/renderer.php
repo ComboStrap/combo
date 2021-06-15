@@ -111,7 +111,7 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
              */
             global $ACT;
             if ($ACT == 'show') {
-                syntax_plugin_combo_heading::processHeadingMetadata($level, $text);
+                syntax_plugin_combo_heading::processHeadingMetadataH1($level, $text);
             }
         }
 

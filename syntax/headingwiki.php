@@ -15,17 +15,15 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
 
     /**
      * Header pattern
-     * At minimal, a space after and before the opening an closing `=` character is mandatory
-     * Not line break in the look ahead
+     *   * Dokuwiki does not made a space mandatory after and before the opening an closing `=` character
+     *   * No line break in the look ahead
+     *   * The capture of the first spaces should be optional otherwise the {@link \dokuwiki\Parsing\ParserMode\Header} is taking over
      *
      * See also for information,
      * the original heading pattern of Dokuwiki {@link \dokuwiki\Parsing\ParserMode\Header}
-     *
-     * The capture of the first spaces should be optional
-     * otherwise the {@link \dokuwiki\Parsing\ParserMode\Header} is taking over
      */
-    const ENTRY_PATTERN = '[\s\t]*={1,6}[\s\t]?(?=[^\n]*={1,6}\s*\r??\n)';
-    const EXIT_PATTERN = '\s={1,6}\s*(?=$)';
+    const ENTRY_PATTERN = '[ \t]*={1,6}(?=[^\n]*={1,6}\s*\r??\n)';
+    const EXIT_PATTERN = '={1,6}\s*(?=\r??\n)';
     const TAG = "headingwiki";
 
     const CONF_WIKI_HEADING_ENABLE = "headingWikiEnable";

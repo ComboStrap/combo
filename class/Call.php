@@ -73,8 +73,8 @@ class Call
         "entity", // for instance `...` are transformed in character
         "linebreak",
         "externallink",
-        MediaLink::INTERNAL_MEDIA,
-        MediaLink::EXTERNAL_MEDIA,
+        MediaLink::INTERNAL_MEDIA_CALL_NAME,
+        MediaLink::EXTERNAL_MEDIA_CALL_NAME,
         /**
          * The inline of combo
          * TODO: Should be deleted when {@link PluginUtility::renderUnmatched()} is not using the array anymore
@@ -314,7 +314,7 @@ class Call
 
         $tagName = $this->getTagName();
         switch ($tagName) {
-            case MediaLink::INTERNAL_MEDIA:
+            case MediaLink::INTERNAL_MEDIA_CALL_NAME:
                 return $this->call[1];
             default:
                 $data = $this->getPluginData();

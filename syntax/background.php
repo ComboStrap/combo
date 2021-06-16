@@ -3,12 +3,14 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
+use ComboStrap\CacheMedia;
+use ComboStrap\CallStack;
 use ComboStrap\ColorUtility;
-use ComboStrap\MediaLink;
 use ComboStrap\LinkUtility;
+use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
-use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -57,7 +59,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     /**
      * Syntax Type.
      *
-     * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
+     * Needs to return one of the mode types defined in {@link $PARSER_MODES} in parser.php
      * @see DokuWiki_Syntax_Plugin::getType()
      */
     function getType()
@@ -142,38 +144,54 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_SPECIAL :
+
                 $attributes = self::getAttributesAndAddBackgroundPrefix($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler);
-                return $this->setAttributesToParentAndReturnData($tag, $attributes, $state);
+                $callStack = CallStack::createFromHandler($handler);
+                return $this->setAttributesToParentAndReturnData($callStack, $attributes, $state);
 
             case DOKU_LEXER_UNMATCHED :
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $backgroundAttributes = $openingTag->getAttributes();
+
+                /**
+                 * if the media syntax of Combo is not used, try to retrieve the media of dokuwiki
+                 */
+                $imageTag = [syntax_plugin_combo_media::TAG, MediaLink::INTERNAL_MEDIA_CALL_NAME];
 
                 /**
                  * Collect the image if any
                  */
-                $callImage = $openingTag->getDescendant(syntax_plugin_combo_media::TAG);
-                if ($callImage == null) {
-                    /**
-                     * if the media of Combo is not used, try to retrieve the media of dokuwiki
-                     * @var $callImage
-                     */
-                    $callImage = $openingTag->getDescendant(MediaLink::INTERNAL_MEDIA);
-                }
-                if ($callImage != null) {
-                    $callImage->deleteCall();
-                    $imageAttribute = $callImage->getAttributes();
-                    $backgroundImageAttribute = Background::fromMediaToBackgroundImageStackArray($imageAttribute);
-                    $backgroundAttributes[Background::BACKGROUND_IMAGE] = $backgroundImageAttribute;
+                while ($actual = $callStack->next()) {
+
+                    $tagName = $actual->getTagName();
+                    if (in_array($tagName, $imageTag)) {
+                        $imageAttribute = $actual->getAttributes();
+                        if ($tagName == syntax_plugin_combo_media::TAG) {
+                            $backgroundImageAttribute = Background::fromMediaToBackgroundImageStackArray($imageAttribute);
+                        } else {
+                            /**
+                             * As seen in {@link Doku_Handler::media()}
+                             */
+                            $backgroundImageAttribute = [
+                                MediaLink::MEDIA_DOKUWIKI_TYPE => MediaLink::INTERNAL_MEDIA_CALL_NAME,
+                                MediaLink::PATH_ATTRIBUTE => $imageAttribute[0],
+                                TagAttributes::WIDTH_KEY => $imageAttribute[3],
+                                TagAttributes::HEIGHT_KEY => $imageAttribute[4],
+                                CacheMedia::CACHE_KEY => $imageAttribute[5]
+                            ];
+                        }
+                        $backgroundAttributes[Background::BACKGROUND_IMAGE] = $backgroundImageAttribute;
+                        $callStack->deleteActualCallAndPrevious();
+                    }
                 }
 
-                return $this->setAttributesToParentAndReturnData($openingTag, $backgroundAttributes, $state);
+
+                return $this->setAttributesToParentAndReturnData($callStack, $backgroundAttributes, $state);
 
 
         }
@@ -233,7 +251,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
             $attributes = $data[PluginUtility::ATTRIBUTES];
             if (isset($attributes[Background::BACKGROUND_IMAGE])) {
                 $image = $attributes[Background::BACKGROUND_IMAGE];
-                syntax_plugin_combo_media::registerImageMeta($image,$renderer);
+                syntax_plugin_combo_media::registerImageMeta($image, $renderer);
             }
         }
 
@@ -247,12 +265,12 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     }
 
     /**
-     * @param Tag $openingTag
+     * @param CallStack $callStack
      * @param array $backgroundAttributes
      * @param $state
      * @return array
      */
-    public function setAttributesToParentAndReturnData(Tag $openingTag, array $backgroundAttributes, $state)
+    public function setAttributesToParentAndReturnData(CallStack $callStack, array $backgroundAttributes, $state)
     {
 
         /**
@@ -264,31 +282,33 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
          * Set the backgrounds attributes
          * to the parent
          */
-        $parentTag = $openingTag->getParent();
+        $callStack->moveToEnd();
+        $callStack->moveToPreviousCorrespondingOpeningCall();
+        $parentCall = $callStack->moveToParent();
 
-        if ($parentTag != null) {
-            if ($parentTag->getName() == Background::BACKGROUNDS) {
+        if ($parentCall != false) {
+            if ($parentCall->getTagName() == Background::BACKGROUNDS) {
                 /**
                  * The backgrounds node
                  * (is already relative)
                  */
-                $parentTag = $parentTag->getParent();
+                $parentCall = $callStack->moveToParent();
             } else {
                 /**
                  * Another parent node
                  * With a image background, the node should be relative
                  */
                 if (isset($backgroundAttributes[Background::BACKGROUND_IMAGE])) {
-                    $parentTag->setAttributeIfNotPresent(Position::POSITION_ATTRIBUTE, "relative");
+                    $parentCall->addAttribute(Position::POSITION_ATTRIBUTE, "relative");
                 }
             }
-            $backgrounds = $parentTag->getAttribute(Background::BACKGROUNDS);
+            $backgrounds = $parentCall->getAttribute(Background::BACKGROUNDS);
             if ($backgrounds == null) {
                 $backgrounds = [$backgroundAttributes];
             } else {
                 $backgrounds[] = $backgroundAttributes;
             }
-            $parentTag->setAttribute(Background::BACKGROUNDS, $backgrounds);
+            $parentCall->addAttribute(Background::BACKGROUNDS, $backgrounds);
 
         } else {
             $data[self::ERROR] = "A background should have a parent";

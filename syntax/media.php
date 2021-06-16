@@ -183,10 +183,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $cache = $attributes['cache'];
                 $linking = $attributes['linking'];
                 switch ($type) {
-                    case MediaLink::INTERNAL_MEDIA:
+                    case MediaLink::INTERNAL_MEDIA_CALL_NAME:
                         $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
                         break;
-                    case MediaLink::EXTERNAL_MEDIA:
+                    case MediaLink::EXTERNAL_MEDIA_CALL_NAME:
                         $renderer->doc .= $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
                         break;
                     default:
@@ -226,10 +226,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $linking = $attributes['linking'];
 
         switch ($type) {
-            case MediaLink::INTERNAL_MEDIA:
+            case MediaLink::INTERNAL_MEDIA_CALL_NAME:
                 $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
                 break;
-            case MediaLink::EXTERNAL_MEDIA:
+            case MediaLink::EXTERNAL_MEDIA_CALL_NAME:
                 $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking);
                 break;
             default:

@@ -39,16 +39,16 @@ abstract class MediaLink extends DokuPath
     /**
      * The dokuwiki type and mode name
      * (ie call)
-     *  * ie {@link MediaLink::EXTERNAL_MEDIA}
-     *  or {@link MediaLink::INTERNAL_MEDIA}
+     *  * ie {@link MediaLink::EXTERNAL_MEDIA_CALL_NAME}
+     *  or {@link MediaLink::INTERNAL_MEDIA_CALL_NAME}
      *
      * The dokuwiki type (internalmedia/externalmedia)
      * is saved in a `type` key that clash with the
      * combostrap type. To avoid the clash, we renamed it
      */
     const MEDIA_DOKUWIKI_TYPE = 'dokuwiki_type';
-    const INTERNAL_MEDIA = "internalmedia";
-    const EXTERNAL_MEDIA = "externalmedia";
+    const INTERNAL_MEDIA_CALL_NAME = "internalmedia";
+    const EXTERNAL_MEDIA_CALL_NAME = "externalmedia";
 
     const CONF_IMAGE_ENABLE = "imageEnable";
 
@@ -283,9 +283,9 @@ abstract class MediaLink extends DokuPath
          * Media Type
          */
         if (media_isexternal($path) || link_isinterwiki($path)) {
-            $mediaType = MediaLink::EXTERNAL_MEDIA;
+            $mediaType = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
         } else {
-            $mediaType = MediaLink::INTERNAL_MEDIA;
+            $mediaType = MediaLink::INTERNAL_MEDIA_CALL_NAME;
         }
 
 
@@ -455,7 +455,7 @@ abstract class MediaLink extends DokuPath
          * we are using our implementation
          * and we have a change on attribute specification
          */
-        if ($mediaType == MediaLink::INTERNAL_MEDIA) {
+        if ($mediaType == MediaLink::INTERNAL_MEDIA_CALL_NAME) {
 
             /**
              * The align attribute on an image parse

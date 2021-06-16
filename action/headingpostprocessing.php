@@ -30,8 +30,6 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     }
 
 
-
-
     /**
      * Transform the special heading atx call
      * in an enter and exit heading atx calls
@@ -53,6 +51,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          * Close the section
          * for whatever reason, the section status is true
          * even if the sections are closed
+         * We take the hypothesis that the sections are closed
          */
         $handler->setStatus('section', false);
 
@@ -64,7 +63,11 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         $headingEnterCall = null; // the enter call
         $lastEndPosition = null; // the last end position to close the section if any
         $headingText = ""; // text only content in the heading
+        $headingComboCounter = 0; // The number of combo heading found (The first one that is not the first one should close)
+        $headingTotalCounter = 0; // The number of combo heading found (The first one that is not the first one should close)
         while ($actualCall = $callStack->next()) {
+
+
             $tagName = $actualCall->getTagName();
             if (
                 ($lastEndPosition != null && $actualCall->getFirstMatchedCharacterPosition() >= $lastEndPosition)
@@ -82,16 +85,23 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     $actualCall->setState(DOKU_LEXER_ENTER);
                     $actualHeadingParsingState = DOKU_LEXER_ENTER;
                     $headingEnterCall = $callStack->getActualCall();
-                    self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState);
+                    $headingComboCounter++;
+                    $headingTotalCounter++;
+                    self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState, $headingComboCounter, $headingTotalCounter);
                     continue 2;
                 case syntax_plugin_combo_heading::TAG:
                 case syntax_plugin_combo_headingwiki::TAG:
                     if ($actualCall->getState() == DOKU_LEXER_ENTER) {
                         $actualHeadingParsingState = DOKU_LEXER_ENTER;
                         $headingEnterCall = $callStack->getActualCall();
-                        self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState);
+                        $headingComboCounter++;
+                        $headingTotalCounter++;
+                        self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState, $headingComboCounter, $headingTotalCounter);
                         continue 2;
                     }
+                    break;
+                case "header":
+                    $headingTotalCounter++;
                     break;
             }
 
@@ -126,7 +136,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                         continue 2;
 
                     case "header":
-                        if(PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE)==1){
+                        if (PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE, syntax_plugin_combo_headingwiki::CONF_DEFAULT_WIKI_ENABLE_VALUE) == 1) {
                             LogUtility::msg("The combo heading wiki is enabled, we should not see `header` calls in the call stack");
                         }
                         break;
@@ -266,10 +276,19 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
         }
     }
 
-    private static function closeSectionIfNeeded(&$actualCall, &$handler, &$callStack, &$actualSectionState)
+    private static function closeSectionIfNeeded(&$actualCall, &$handler, &$callStack, &$actualSectionState, $headingComboCounter, $headingTotalCounter)
     {
         if ($actualCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
-            if ($handler->getStatus('section')) {
+            $close = $handler->getStatus('section');
+            if ($headingComboCounter == 1 && $headingTotalCounter != 1) {
+                /**
+                 * If this is the first combo heading
+                 * We need to close the previous to open
+                 * this one
+                 */
+                $close = true;
+            }
+            if ($close) {
                 $callStack->insertBefore(
                     Call::createNativeCall(
                         'section_close',

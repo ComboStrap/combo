@@ -70,7 +70,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
         /**
          * No metadata for bars
          */
-        if ($page->isBar()) {
+        if ($page->isSlot()) {
             return;
         }
 

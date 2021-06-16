@@ -322,7 +322,7 @@ class SnippetManager
                 // When we edit a sidebar
                 // The sidebar and the page competes
                 $barPage = new Page($bar);
-                if (!$barPage->isBar()) {
+                if (!$barPage->isSlot()) {
                     /**
                      * For what ever reason, this happens
                      * but it works

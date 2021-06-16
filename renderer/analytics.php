@@ -476,7 +476,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         } else {
             $lowLevel = filter_var($this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR], FILTER_VALIDATE_BOOLEAN);
         }
-        if (!$this->page->isBar()) {
+        if (!$this->page->isSlot()) {
             $this->page->setLowQualityIndicator($lowLevel);
         } else {
             $this->page->setLowQualityIndicator(false);

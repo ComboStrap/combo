@@ -93,7 +93,17 @@ class Message
 
             $message = $this->tagAttributes->toHtmlEnterTag("div");
             $message .= $this->getContent();
-            $message .= '<div class="' . self::SIGNATURE_CLASS . '">' . $this->plugin->getLang('message_come_from') . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName, false) . '</div>';
+
+            /**
+             * If this is a test call without a plugin
+             * we have no plugin attached
+             */
+            $firedByLang = "This message was fired by the ";
+            if($this->plugin!=null){
+                $firedByLang = $this->plugin->getLang('message_come_from');
+            }
+
+            $message .= '<div class="' . self::SIGNATURE_CLASS . '">' . $firedByLang . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName, false) . '</div>';
             $message .= '</div>';
 
             /**

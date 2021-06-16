@@ -380,15 +380,16 @@ class Page extends DokuPath
 
 
     public
-    function isBar()
+    function isSlot()
     {
         global $conf;
         $barsName = array($conf['sidebar']);
         $strapTemplateName = 'strap';
         if ($conf['template'] === $strapTemplateName) {
-            $barsName[] = $conf['tpl'][$strapTemplateName]['headerbar'];
-            $barsName[] = $conf['tpl'][$strapTemplateName]['footerbar'];
-            $barsName[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
+            PluginUtility::loadStrapUtilityTemplate();
+            $barsName[] = TplUtility::getHeaderSlotPageName();
+            $barsName[] = TplUtility::getFooterSlotPageName();
+            $barsName[] = TplUtility::getSideKickSlotPageName();
         }
         return in_array($this->getName(), $barsName);
     }

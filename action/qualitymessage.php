@@ -101,7 +101,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     {
         $page = new Page($pageId);
 
-        if ($page->isBar()) {
+        if ($page->isSlot()) {
             return null;
         }
 

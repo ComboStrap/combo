@@ -144,6 +144,7 @@ class RasterImageLink extends MediaLink
              * No dokuwiki type attribute
              */
             $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
+            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
 
             /**
              * Responsive image

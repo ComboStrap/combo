@@ -86,7 +86,6 @@ abstract class MediaLink extends DokuPath
     const CONF_DEFAULT_LINKING = "defaultImageLinking";
     const LINKING_LINKONLY_VALUE = "linkonly";
     const LINKING_DETAILS_VALUE = 'details';
-    const SRC_KEY = self::DOKUWIKI_SRC; // called pathId in Combo
     const LINKING_NOLINK_VALUE = 'nolink';
 
     /**

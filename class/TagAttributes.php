@@ -151,7 +151,7 @@ class TagAttributes
          * From a functional point of view, they should not exist
          */
         foreach ($componentAttributes as $key => $value) {
-            if ($value == null || empty($value)) {
+            if ($value == null || blank($value)) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
             }
         }

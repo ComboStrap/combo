@@ -34,18 +34,11 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
         if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {
             $loaded = PluginUtility::loadStrapUtilityTemplate();
             if ($loaded) {
-                if (defined('ComboStrap\TplUtility::CONF_FOOTER')) {
-                    $footer = tpl_getConf(TplUtility::CONF_FOOTER);
-                    $pattern .= "|" . $footer;
-                }
-                if (defined('ComboStrap\TplUtility::CONF_SIDEKICK')) {
-                    $sidekick = TplUtility::getSideKickSlotPageName();
-                    $pattern .= "|" . $sidekick;
-                }
-                if (defined('ComboStrap\TplUtility::CONF_HEADER')) {
-                    $header = tpl_getConf(TplUtility::CONF_HEADER);
-                    $pattern .= "|" . $header;
-                }
+
+                $pattern .= "|" . TplUtility::getFooterSlotPageName();
+                $pattern .= "|" . TplUtility::getSideKickSlotPageName();
+                $pattern .= "|" . TplUtility::getHeaderSlotPageName();
+
             }
         }
         $pattern .= ")";

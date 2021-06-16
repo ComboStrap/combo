@@ -1,10 +1,9 @@
 <?php
 
 use ComboStrap\AdsUtility;
-use ComboStrap\Analytics;
 use ComboStrap\BreadcrumbHierarchical;
-use ComboStrap\HtmlUtility;
 use ComboStrap\FsWikiUtility;
+use ComboStrap\HtmlUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TableUtility;
 use ComboStrap\TocUtility;

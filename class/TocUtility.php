@@ -60,6 +60,14 @@ class TocUtility
 
         }
 
+
+        /**
+         * If this is another template such as Dokuwiki, we get two TOC.
+         */
+        if (!Site::isStrapTemplate()){
+            return false;
+        }
+
         /**
          * On the admin page
          */

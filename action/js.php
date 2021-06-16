@@ -49,7 +49,7 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
             foreach ($scripts as &$script) {
                 $pos = strpos($script['src'], 'js.php');
                 if ($pos !== false) {
-                    $script['src'] = $script['src'] . '&'.self::ACCESS_PROPERTY_KEY.'='.self::ACCESS_PROPERTY_VALUE_PUBLIC.'';
+                    $script['src'] = $script['src'] . '&' . self::ACCESS_PROPERTY_KEY . '=' . self::ACCESS_PROPERTY_VALUE_PUBLIC . '';
                 }
             }
         }
@@ -90,7 +90,9 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
                     2 => $dokuScriptPath . "hotkeys.js",
                     3 => $dokuScriptPath . "locktimer.js", // Use in js.php - dw_locktimer
                     4 => $dokuScriptPath . "helpers.js", // substr_replace use in qsearch.php
-                    5 => 'conf' . $directorySeparatorInDokuwikiList . 'userscript.js'
+                    5 => 'conf' . $directorySeparatorInDokuwikiList . 'userscript.js',
+                    6 => $dokuScriptPath . "cookie.js", // plugin may depend on this library such as styling (lib/plugins/styling/script.js)
+                    7 => $dokuScriptPath . "jquery/jquery.cookie.js" // cookie.js depends on it
                 ];
 
             $scriptsToKeep = array();

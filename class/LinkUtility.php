@@ -394,7 +394,7 @@ class LinkUtility
                  * Target
                  */
                 $interWikiConf = $conf['target']['interwiki'];
-                if ($interWikiConf) {
+                if (!empty($interWikiConf)) {
                     $this->attributes->addHtmlAttributeValue('target', $interWikiConf);
                     $this->attributes->addHtmlAttributeValue('rel', 'noopener');
                 }
@@ -405,6 +405,11 @@ class LinkUtility
                 break;
             case self::TYPE_INTERNAL:
 
+                // https://www.dokuwiki.org/config:target
+                $target = $conf['target']['wiki'];
+                if(!empty($target)){
+                    $this->attributes->addHtmlAttributeValue('target', $target);
+                }
                 /**
                  * Internal Page
                  */
@@ -460,12 +465,20 @@ class LinkUtility
                 if ($conf['relnofollow']) {
                     $this->attributes->addHtmlAttributeValue("rel", 'nofollow ugc');
                 }
-                if ($conf['target']['extern']) {
+                // https://www.dokuwiki.org/config:target
+                $externTarget = $conf['target']['extern'];
+                if (!empty($externTarget)) {
+                    $this->attributes->addHtmlAttributeValue('target', $externTarget);
                     $this->attributes->addHtmlAttributeValue("rel", 'noopener');
                 }
                 $this->attributes->addClassName(self::getHtmlClassExternalLink());
                 break;
             case self::TYPE_WINDOWS_SHARE:
+                // https://www.dokuwiki.org/config:target
+                $windowsTarget = $conf['target']['windows'];
+                if (!empty($windowsTarget)){
+                    $this->attributes->addHtmlAttributeValue('target', $windowsTarget);
+                }
                 $this->attributes->addClassName("windows");
                 break;
             case self::TYPE_LOCAL:

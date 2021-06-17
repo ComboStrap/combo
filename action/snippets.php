@@ -5,7 +5,6 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
 use ComboStrap\Site;
-use ComboStrap\SnippetManager;
 use dokuwiki\Cache\CacheRenderer;
 
 if (!defined('DOKU_INC')) die();
@@ -44,8 +43,17 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         /**
          * To add the snippets in the content
          * if they have not been added to the header
+         *
+         * Not https://www.dokuwiki.org/devel:event:tpl_content_display TPL_ACT_RENDER
+         * or https://www.dokuwiki.org/devel:event:tpl_act_render
+         * because it works only for the main content
+         * in {@link tpl_content()}
+         *
+         * We use
+         * https://www.dokuwiki.org/devel:event:renderer_content_postprocess
+         * that is in {@link p_render()} and takes into account also the slot page.
          */
-        $controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'componentSnippetContent', array());
+        $controller->register_hook('RENDERER_CONTENT_POSTPROCESS', 'AFTER', $this, 'componentSnippetContent', array());
 
         /**
          * To reset the value
@@ -191,6 +199,10 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     function componentSnippetContent($event)
     {
 
+        $format = $event->data[0];
+        if($format!=="xhtml"){
+            return;
+        }
 
         /**
          * Run only if the header output was already called
@@ -199,10 +211,12 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
             $snippetManager = PluginUtility::getSnippetManager();
 
-            foreach ($snippetManager->getSnippets() as $tagType => $tags) {
+            $xhtmlContent = &$event->data[1];
+            $snippets = $snippetManager->getSnippets();
+            foreach ($snippets as $tagType => $tags) {
 
                 foreach ($tags as $tag) {
-                    $event->data .= DOKU_LF . "<$tagType";
+                    $xhtmlContent .= DOKU_LF . "<$tagType";
                     $attributes = "";
                     $content = null;
                     foreach ($tag as $attributeName => $attributeValue) {
@@ -212,21 +226,16 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                             $content = $attributeValue;
                         }
                     }
-                    $event->data .= "$attributes>";
+                    $xhtmlContent .= "$attributes>";
                     if (!empty($content)) {
-                        $event->data .= $content;
+                        $xhtmlContent .= $content;
                     }
-                    $event->data .= "</$tagType>" . DOKU_LF;
+                    $xhtmlContent .= "</$tagType>" . DOKU_LF;
                 }
 
             }
 
             $snippetManager->close();
-
-            /**
-             * Set the value back
-             */
-            $this->headerOutputWasCalled = false;
 
         }
 

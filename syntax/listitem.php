@@ -31,6 +31,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
         $styles['justify-content'] = 'flex-start';
         $styles['padding'] = '8px 16px'; // Padding at the left and right
         $styles['overflow'] = 'hidden';
+        $styles['margin'] = 'auto'; // Just to be able to work in other template
         return $styles;
     }
 

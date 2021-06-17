@@ -53,6 +53,7 @@ require_once('RenderUtility.php');
 require_once('Resources.php');
 require_once('Skin.php');
 require_once('Shadow.php');
+require_once('Site.php');
 require_once('SnippetManager.php');
 require_once('Spacing.php');
 require_once('Sqlite.php');

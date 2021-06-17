@@ -240,7 +240,7 @@ $meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("string");
 /**
  * Internal media
  */
-$meta[MediaLink::CONF_IMAGE_ENABLE] = array('onoff');
+$meta[syntax_plugin_combo_media::CONF_IMAGE_ENABLE] = array('onoff');
 
 /**
  * Internal media default linking

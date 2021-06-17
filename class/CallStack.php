@@ -608,7 +608,7 @@ class CallStack
          * When the end is reached, there is no call
          * (this not the {@link end php end} but one further
          */
-        if (!$this->endWasReached && $this->getActualCall()->getState() == DOKU_LEXER_EXIT) {
+        if (!$this->endWasReached && !$this->startWasReached && $this->getActualCall()->getState() == DOKU_LEXER_EXIT) {
 
             $this->moveToPreviousCorrespondingOpeningCall();
 

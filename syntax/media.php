@@ -46,6 +46,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     const MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
 
+    /**
+     * Enable or disable the image
+     */
+    const CONF_IMAGE_ENABLE = "imageEnable";
+
 
     function getType()
     {
@@ -88,7 +93,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        $enable = $this->getConf(MediaLink::CONF_IMAGE_ENABLE, 1);
+        $enable = $this->getConf(self::CONF_IMAGE_ENABLE, 1);
         if (!$enable) {
 
             // Inside a card, we need to take over and enable it
@@ -218,6 +223,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     {
         $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
         $src = $attributes['src'];
+        if($src==null){
+            $src = $attributes[DokuPath::PATH_ATTRIBUTE];
+        }
         $title = $attributes['title'];
         $align = $attributes['align'];
         $width = $attributes['width'];

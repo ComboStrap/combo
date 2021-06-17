@@ -124,7 +124,7 @@ $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = Plu
  */
 $lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
 $lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
-$lang[syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - If checked, a link may spawn multilines";
+$lang[syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - If checked, a link may spawn multilines (difficult to debug)";
 
 /**
  * Twitter
@@ -197,7 +197,7 @@ $lang[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = PluginUtility::getUrl(Laz
 /**
  * Image
  */
-$lang[MediaLink::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(MediaLink::CANONICAL, "Image - If unchecked, the image component will be disabled");
+$lang[syntax_plugin_combo_media::CONF_IMAGE_ENABLE] = PluginUtility::getUrl(MediaLink::CANONICAL, "Image - If unchecked, the image component will be disabled");
 $lang[MediaLink::CONF_DEFAULT_LINKING] = PluginUtility::getUrl(MediaLink::CANONICAL, "Image - The default link option from an internal image.");
 
 /**

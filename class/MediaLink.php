@@ -50,8 +50,6 @@ abstract class MediaLink extends DokuPath
     const INTERNAL_MEDIA_CALL_NAME = "internalmedia";
     const EXTERNAL_MEDIA_CALL_NAME = "externalmedia";
 
-    const CONF_IMAGE_ENABLE = "imageEnable";
-
     const CANONICAL = "image";
 
     /**

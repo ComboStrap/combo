@@ -281,9 +281,13 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
         /**
          * Set the backgrounds attributes
          * to the parent
+         * There is two state (special and exit)
+         * Go to the opening call if in exit
          */
-        $callStack->moveToEnd();
-        $callStack->moveToPreviousCorrespondingOpeningCall();
+        if($state== DOKU_LEXER_EXIT) {
+            $callStack->moveToEnd();
+            $callStack->moveToPreviousCorrespondingOpeningCall();
+        }
         $parentCall = $callStack->moveToParent();
 
         if ($parentCall != false) {
@@ -321,6 +325,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
         $data[PluginUtility::STATE] = $state;
         $data[PluginUtility::ATTRIBUTES] = $backgroundAttributes;
         return $data;
+
     }
 
 

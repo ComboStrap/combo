@@ -161,9 +161,11 @@ class RasterImageLink extends MediaLink
              * To allow responsive height, the height style property is set at auto
              * (ie img-fluid in bootstrap)
              */
-            // The unit is not mandatory in HTML
-            // but to be clear we add it.
-            $htmlLengthUnit = "px";
+            // The unit is not mandatory in HTML, this is expected to be CSS pixel
+            // https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+            // The HTML validator does not expect an unit otherwise it send an error
+            // https://validator.w3.org/
+            $htmlLengthUnit = "";
 
             /**
              * Height

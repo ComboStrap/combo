@@ -210,6 +210,10 @@ class SnippetManager
                     }
                     break;
                 case Snippet::TYPE_CSS:
+                    /**
+                     * CSS inline in script tag
+                     * They are all critical
+                     */
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
                         /**
                          * Bug (Quick fix)
@@ -217,21 +221,16 @@ class SnippetManager
                         if (is_string($snippet)) {
                             LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object", LogUtility::LVL_MSG_ERROR);
                             $content = $snippet;
-                            $critical = true;
                         } else {
                             /**
                              * @var Snippet $snippet
                              */
                             $content = $snippet->getContent();
-                            $critical = $snippet->getCritical();
                         }
                         $snippetArray = array(
                             "class" => self::getClassFromSnippetId($snippetId),
                             "_data" => $content
                         );
-                        if (Site::isStrapTemplate()) {
-                            $snippetArray[self::CRITICAL_ATTRIBUTE] = $critical;
-                        }
                         /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["style"][] = $snippetArray;
                     }

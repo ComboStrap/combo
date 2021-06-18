@@ -29,6 +29,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
     const TAG = "cell";
 
     const WIDTH_ATTRIBUTE = TagAttributes::WIDTH_KEY;
+    const VERTICAL_ATTRIBUTE = "vertical";
 
     static function getTags()
     {
@@ -190,8 +191,8 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                     $callStackArray = $data[PluginUtility::ATTRIBUTES];
                     $attributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
                     $attributes->addClassName("col");
-                    if ($attributes->hasComponentAttribute("vertical")) {
-                        $value = $attributes->getValueAndRemove("vertical");
+                    if ($attributes->hasComponentAttribute(self::VERTICAL_ATTRIBUTE)) {
+                        $value = $attributes->getValue(self::VERTICAL_ATTRIBUTE);
                         if ($value == "center") {
                             //$attributes->addClassName("d-inline-flex");
                             $attributes->addClassName("align-self-center");

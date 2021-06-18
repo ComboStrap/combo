@@ -172,7 +172,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
             $relatedPages = $this->related($id);
 
-            $renderer->doc .= '<div id="' . self::getElementId() . '" class="' . self::getElementName() . '-container d-print-none">' . DOKU_LF;
+            $renderer->doc .= '<div class="' . self::getElementName() . '-container d-print-none">' . DOKU_LF;
 
             if (empty($relatedPages)) {
 

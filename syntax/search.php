@@ -112,7 +112,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= "<label class=\"$visuallyHidden\" for=\"$inputSearchId\">Search Term</label>";
                     $renderer->doc .= '<input name="q" type="text" tabindex="1"';
                     if ($ACT == 'search') $renderer->doc .= ' value="' . htmlspecialchars($QUERY) . '" ';
-                    $renderer->doc .= 'placeholder="' . $lang['btn_search'] . '..." ';
+                    $renderer->doc .= ' placeholder="' . $lang['btn_search'] . '..." ';
                     if (!$parameters['autocomplete']) $renderer->doc .= 'autocomplete="off" ';
                     $renderer->doc .= 'id="' . $inputSearchId . '" accesskey="f" class="edit form-control" title="[F]"/>';
                     if ($parameters['ajax']) $renderer->doc .= '<div id="qsearch__out" class="ajax_qsearch JSpopup"></div>';

@@ -461,7 +461,7 @@ class PluginUtility
      */
     public static function render($pageContent)
     {
-        return RenderUtility::renderText2Xhtml($pageContent);
+        return RenderUtility::renderText2XhtmlAndStripPEventually($pageContent);
     }
 
 
@@ -573,8 +573,8 @@ class PluginUtility
              */
             $path = File::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
             $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
-            $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY,SvgDocument::ICON_TYPE);
-            $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY,"20");
+            $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+            $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "20");
             $cache = new CacheMedia($path, $tagAttributes);
             if (!$cache->isCacheUsable()) {
                 $xhtmlIcon = SvgDocument::createFromPath($path)
@@ -851,8 +851,13 @@ class PluginUtility
         $collapse = "collapse";
         if ($attributes->hasComponentAttribute($collapse)) {
             $targetId = $attributes->getValueAndRemove($collapse);
-            $attributes->addComponentAttributeValue('data-toggle', "collapse");
-            $attributes->addComponentAttributeValue('data-target', $targetId);
+            $bootstrapNamespace = "bs-";
+            if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFourMajorVersion) {
+                $bootstrapNamespace = "";
+            }
+            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}toggle", "collapse");
+            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}target", $targetId);
+
         }
     }
 
@@ -1135,7 +1140,7 @@ class PluginUtility
     public
     static function loadStrapUtilityTemplate()
     {
-        $templateUtilityFile = __DIR__. '/../../../tpl/strap/class/TplUtility.php';
+        $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
         if (file_exists($templateUtilityFile)) {
             /** @noinspection PhpIncludeInspection */
             require_once($templateUtilityFile);
@@ -1146,7 +1151,7 @@ class PluginUtility
                 // fail
                 $level = LogUtility::LVL_MSG_ERROR;
             }
-            if (Site::getTemplate()!="strap") {
+            if (Site::getTemplate() != "strap") {
                 LogUtility::msg("The strap template is not installed", $level);
             } else {
                 LogUtility::msg("The file ($templateUtilityFile) was not found", $level);
@@ -1163,7 +1168,7 @@ class PluginUtility
     public static function isDevOrTest()
     {
         global $_SERVER;
-        if ($_SERVER["REMOTE_ADDR"]=="127.0.0.1"){
+        if ($_SERVER["REMOTE_ADDR"] == "127.0.0.1") {
             return true;
         }
         return defined('DOKU_UNITTEST');

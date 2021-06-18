@@ -346,7 +346,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
 
                     }
                     $list .= "</list>";
-                    $renderer->doc .= RenderUtility::renderText2Xhtml($list) . DOKU_LF;
+                    $renderer->doc .= RenderUtility::renderText2XhtmlAndStripPEventually($list) . DOKU_LF;
                     break;
             }
             return true;

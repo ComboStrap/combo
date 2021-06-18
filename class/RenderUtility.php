@@ -20,11 +20,12 @@ class RenderUtility
 
     /**
      * @param $content
+     * @param bool $strip
      * @return string|null
      */
-    public static function renderText2Xhtml($content)
+    public static function renderText2XhtmlAndStripPEventually($content, $strip=true)
     {
-        $instructions = self::getInstructionsAndStripPEventually($content);
+        $instructions = self::getInstructionsAndStripPEventually($content,$strip);
         return p_render('xhtml', $instructions, $info);
     }
 
@@ -84,7 +85,7 @@ class RenderUtility
         $file = wikiFN($pageId);
         if (file_exists($file)) {
             $content = file_get_contents($file);
-            return self::renderText2Xhtml($content);
+            return self::renderText2XhtmlAndStripPEventually($content);
         } else {
             return false;
         }

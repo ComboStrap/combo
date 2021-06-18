@@ -55,6 +55,11 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         return 201;
     }
 
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
+
 
     /**
      * Create a pattern that will called this plugin

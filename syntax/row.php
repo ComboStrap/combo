@@ -146,11 +146,17 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = TagAttributes::createFromTagMatch($match);
+                if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)){
+                    /**
+                     * All element will be centered
+                     */
+                    $attributes->addClassName("justify-content-center");
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED:

@@ -461,7 +461,7 @@ class PluginUtility
      */
     public static function render($pageContent)
     {
-        return RenderUtility::renderText2XhtmlAndStripPEventually($pageContent);
+        return RenderUtility::renderText2XhtmlAndStripPEventually($pageContent,false);
     }
 
 
@@ -1172,6 +1172,11 @@ class PluginUtility
             return true;
         }
         return defined('DOKU_UNITTEST');
+    }
+
+    public static function getInstructions($markiCode)
+    {
+
     }
 
 

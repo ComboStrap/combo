@@ -78,6 +78,12 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
         return 'container';
     }
 
+    public function getPType()
+    {
+        return "stack";
+    }
+
+
     /**
      * @return array
      * Allow which kind of plugin inside

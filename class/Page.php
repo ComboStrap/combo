@@ -15,6 +15,14 @@ use RuntimeException;
  */
 require_once(__DIR__ . '/DokuPath.php');
 
+/**
+ *
+ * Class Page
+ * @package ComboStrap
+ *
+ * This is just a wrapper around a file with the mime Dokuwiki
+ * that has a doku path (ie with the `:` separator)
+ */
 class Page extends DokuPath
 {
     const CANONICAL_PROPERTY = 'canonical';

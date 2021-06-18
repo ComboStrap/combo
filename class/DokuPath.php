@@ -347,7 +347,7 @@ class DokuPath extends File
     }
 
     /**
-     * @return array the pages where the media is used
+     * @return array the pages where the dokuwiki file (page or media) is used
      *   * backlinks for page
      *   * page with media for media
      */

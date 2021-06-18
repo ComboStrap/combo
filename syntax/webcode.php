@@ -43,7 +43,12 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     /**
      * The tag that have codes
      */
-    const CODE_TAGS = array("code", "plugin_combo_code");
+    const CODE_TAGS =
+        array(
+            syntax_plugin_combo_code::CODE_TAG,
+            "plugin_combo_code",
+            syntax_plugin_combo_codemarkdown::TAG
+        );
 
     /**
      * The attribute names in the array
@@ -219,9 +224,8 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                 while ($actualTag = $callStack->next()) {
 
 
-                    if (
-                    in_array($actualTag->getTagName(), self::CODE_TAGS)
-                    ) {
+                    $tagName = $actualTag->getTagName();
+                    if (in_array($tagName, self::CODE_TAGS)) {
 
                         /**
                          * Only rendering mode, we don't display the node

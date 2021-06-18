@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
@@ -82,7 +83,14 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
+                $defaultParameters = [];
+                global $conf;
+                $title = $conf['title'];
+                if (!empty($title)) {
+                    $defaultParameters["title"] = $title;
+                }
                 $parameters = PluginUtility::getTagAttributes($match);
+                $parameters = PluginUtility::mergeAttributes($parameters, $defaultParameters);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $parameters
@@ -123,28 +131,13 @@ class syntax_plugin_combo_brand extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= '<a href="' . wl() . '" accesskey="h"';
-
                     $parameters = $data[PluginUtility::ATTRIBUTES];
-                    $title = ' title="';
-                    if (array_key_exists("title", $parameters)) {
-                        $title .= $parameters["title"];
-                    } else {
-                        global $conf;
-                        $title .= $conf['title'];
-                    }
-                    $title .= '"';
-                    $renderer->doc .= $title;
+                    $tagAttributes = TagAttributes::createFromCallStackArray($parameters);
+                    $tagAttributes->addHtmlAttributeValue("href", wl());
+                    $tagAttributes->addHtmlAttributeValue("accesskey", "h");
+                    $tagAttributes->addClassName("navbar-brand");
 
-                    $renderer->doc .= ' class="navbar-brand';
-                    if (array_key_exists("class", $parameters)) {
-                        $renderer->doc .= ' ' . hsc($parameters["class"]);
-                    }
-                    $renderer->doc .= '"';
-                    if (array_key_exists("style", $parameters)) {
-                        $renderer->doc .= ' style="' . hsc($parameters["style"]) . '"';
-                    }
-                    $renderer->doc .= '>';
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("a");
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

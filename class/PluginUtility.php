@@ -1137,8 +1137,11 @@ class PluginUtility
 
     }
 
+    /**
+     * @return bool true if loaded, false otherwise
+     */
     public
-    static function loadStrapUtilityTemplate()
+    static function loadStrapUtilityTemplateIfPresent()
     {
         $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
         if (file_exists($templateUtilityFile)) {

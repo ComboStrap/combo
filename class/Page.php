@@ -394,10 +394,12 @@ class Page extends DokuPath
         $barsName = array($conf['sidebar']);
         $strapTemplateName = 'strap';
         if ($conf['template'] === $strapTemplateName) {
-            PluginUtility::loadStrapUtilityTemplate();
-            $barsName[] = TplUtility::getHeaderSlotPageName();
-            $barsName[] = TplUtility::getFooterSlotPageName();
-            $barsName[] = TplUtility::getSideKickSlotPageName();
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresent();
+            if($loaded) {
+                $barsName[] = TplUtility::getHeaderSlotPageName();
+                $barsName[] = TplUtility::getFooterSlotPageName();
+                $barsName[] = TplUtility::getSideKickSlotPageName();
+            }
         }
         return in_array($this->getName(), $barsName);
     }

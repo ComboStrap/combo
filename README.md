@@ -24,6 +24,7 @@
   * [First Class Image (responsive resizing, native svg)](https://combostrap.com/image)
   * [Easy Emphasis](https://combostrap.com/emphasis)
   * [Native Icon Support](https://combostrap.com/icon)
+  * [Native Svg Support](https://combostrap.com/svg)
 
 
 And more. Discover them at [ComboStrap](https://combostrap.com)

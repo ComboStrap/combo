@@ -17,14 +17,15 @@
   * [Blazing Fast Performance (Lazy loading, responsive image)](https://combostrap.com/performance)
   * [Animation (hover, visible)](https://combostrap.com/animation)
   * [Ads](https://combostrap.com/ads)
-  * [Analytics](https://combostrap.com/analytics)
-  * [Quality Control](https://combostrap.com/quality)
+  * [Page Analytics](https://combostrap.com/analytics)
+  * [Page Quality Control](https://combostrap.com/quality)
   * [URL Management](https://combostrap.com/url/manager)
   * [Web Metadata Management](https://combostrap.com/metadata/manager)
   * [First Class Image (responsive resizing, native svg)](https://combostrap.com/image)
   * [Easy Emphasis](https://combostrap.com/emphasis)
   * [Native Icon Support](https://combostrap.com/icon)
   * [Native Svg Support](https://combostrap.com/svg)
+  * [Theme as you wish](https://combostrap.com/stylesheet)
   * [Theme as you wish](https://combostrap.com/stylesheet)
 
 

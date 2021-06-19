@@ -26,7 +26,6 @@
   * [Native Icon Support](https://combostrap.com/icon)
   * [Native Svg Support](https://combostrap.com/svg)
   * [Theme as you wish](https://combostrap.com/stylesheet)
-  * [Theme as you wish](https://combostrap.com/stylesheet)
 
 
 And more. Discover them at [ComboStrap](https://combostrap.com)

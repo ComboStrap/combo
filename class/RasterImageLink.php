@@ -24,7 +24,7 @@ require_once(__DIR__ . '/PluginUtility.php');
 class RasterImageLink extends MediaLink
 {
 
-    const CANONICAL = "image";
+    const CANONICAL = "raster";
     const CONF_LAZY_LOADING_ENABLE = "rasterImageLazyLoadingEnable";
 
     const RESPONSIVE_CLASS = "img-fluid";
@@ -169,13 +169,13 @@ class RasterImageLink extends MediaLink
 
             /**
              * Height
-             * The internal height set the intrinsic height of the image
+             * The logical height that the image should take on the page
              *
-             * The style is set in {@link Dimension::processWidthAndHeight()}
+             * Note: The style is also set in {@link Dimension::processWidthAndHeight()}
              */
-            $internalHeight = $this->getMediaHeight();
-            if (!empty($internalHeight)) {
-                $this->tagAttributes->addHtmlAttributeValue("height", $internalHeight . $htmlLengthUnit);
+            $imgTagHeight = $this->getImgTagHeightValue();
+            if (!empty($imgTagHeight)) {
+                $this->tagAttributes->addHtmlAttributeValue("height", $imgTagHeight . $htmlLengthUnit);
             }
 
 
@@ -216,9 +216,38 @@ class RasterImageLink extends MediaLink
                 /**
                  * The internal intrinsic value of the image
                  */
-                $mediaWith = $this->getMediaWidth();
-                $this->tagAttributes->addHtmlAttributeValue("width", $mediaWith . $htmlLengthUnit);
+                $imgTagWidth = $this->getImgTagWidthValue();
+                if (!empty($imgTagWidth)) {
 
+                    $this->tagAttributes->addHtmlAttributeValue("width", $imgTagWidth . $htmlLengthUnit);
+
+                    if (!empty($imgTagHeight)) {
+                        /**
+                         * Check of height and width dimension
+                         * as specified here
+                         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+                         */
+                        $targetRatio = $this->getMediaWidth() / $this->getMediaHeight();
+                        if (!(
+                            $imgTagHeight * $targetRatio >= $imgTagWidth - 0.5
+                            &&
+                            $imgTagHeight * $targetRatio <= $imgTagWidth + 0.5
+                        )) {
+                            // check the second statement
+                            if (!(
+                                $imgTagWidth / $targetRatio >= $imgTagHeight - 0.5
+                                &&
+                                $imgTagWidth / $targetRatio <= $imgTagHeight + 0.5
+                            )) {
+                                LogUtility::msg("The width and height specified on the image ($this) does not pass the ratio test.");
+                            }
+                        }
+                    }
+                }
+
+                /**
+                 * Continue
+                 */
                 $srcSet = "";
                 $sizes = "";
 
@@ -227,7 +256,7 @@ class RasterImageLink extends MediaLink
                  */
                 foreach (self::BREAKPOINTS as $breakpointWidth) {
 
-                    if ($mediaWith > $breakpointWidth) {
+                    if ($imgTagWidth > $breakpointWidth) {
 
                         if (!empty($srcSet)) {
                             $srcSet .= ", ";
@@ -243,15 +272,15 @@ class RasterImageLink extends MediaLink
                 }
 
                 /**
-                 * Add the natural size
-                 * If the image is really small, srcet and sizes are empty
+                 * Add the last size
+                 * If the image is really small, srcset and sizes are empty
                  */
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $this->getUrl();
-                    $srcSet .= "$srcUrl {$mediaWith}w";
-                    $sizes .= "{$mediaWith}px";
+                    $srcUrl = $this->getUrl(Url::URL_ENCODED_AND,$imgTagWidth);
+                    $srcSet .= "$srcUrl {$imgTagWidth}w";
+                    $sizes .= "{$imgTagWidth}px";
                 }
 
                 /**
@@ -417,7 +446,7 @@ class RasterImageLink extends MediaLink
 
 
     /**
-     * @return int - the width value attribute in a img
+     * @return int - the width value attribute in a img (in CSS pixel that the image should takes)
      */
     public
     function getImgTagWidthValue()
@@ -447,12 +476,55 @@ class RasterImageLink extends MediaLink
          * making a rounding if we pass a double (such as 37.5)
          * This is important because the security token is based on width and height
          * and therefore the fetch will failed
+         *
+         * And this is also ask by the specification
+         * a non-null positive integer
+         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+         *
+         * And not {@link intval} because it will make from 3.6, 3 and not 4
          */
-        return intval($linkWidth);
+        return round($linkWidth);
     }
 
+    public function getRequestedHeight()
+    {
+        $requestedHeight = parent::getRequestedHeight();
+        if (!empty($requestedHeight)) {
+            // it should not be bigger than the media Height
+            $mediaHeight = $this->getMediaHeight();
+            if (!empty($mediaHeight)) {
+                if ($requestedHeight > $mediaHeight) {
+                    LogUtility::msg("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $requestedHeight = $mediaHeight;
+                }
+            }
+        }
+        return $requestedHeight;
+    }
+
+    public function getRequestedWidth()
+    {
+        $requestedWidth = parent::getRequestedWidth();
+        if (!empty($requestedWidth)) {
+            // it should not be bigger than the media Height
+            $mediaWidth = $this->getMediaWidth();
+            if (!empty($mediaWidth)) {
+                if ($requestedWidth > $mediaWidth) {
+                    LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $requestedWidth = $mediaWidth;
+                }
+            }
+        }
+        return $requestedWidth;
+    }
+
+
     /**
+     * Return the height that the image should take on the screen
+     * for the specified size
+     *
      * @param null $localWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
+     * if not specified, the requested width and if not specified the intrinsic width
      * @return int the height value attribute in a img
      */
     public
@@ -492,8 +564,10 @@ class RasterImageLink extends MediaLink
          * making a rounding if we pass a double (such as 37.5)
          * This is important because the security token is based on width and height
          * and therefore the fetch will failed
+         *
+         * And not {@link intval} because it will make from 3.6, 3 and not 4
          */
-        return intval($height);
+        return round($height);
 
     }
 

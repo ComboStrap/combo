@@ -138,6 +138,10 @@ class PluginUtility
      * @var string
      */
     public static $PLUGIN_NAME;
+    /**
+     * @var mixed the version
+     */
+    private static $VERSION;
 
 
     /**
@@ -153,6 +157,7 @@ class PluginUtility
         global $lang;
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
         self::$URL_BASE = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
+        self::$VERSION = self::$INFO_PLUGIN['version'];
 
         PluginUtility::initSnippetManager();
 
@@ -461,7 +466,7 @@ class PluginUtility
      */
     public static function render($pageContent)
     {
-        return RenderUtility::renderText2XhtmlAndStripPEventually($pageContent,false);
+        return RenderUtility::renderText2XhtmlAndStripPEventually($pageContent, false);
     }
 
 
@@ -1139,15 +1144,32 @@ class PluginUtility
 
     /**
      * @return bool true if loaded, false otherwise
+     * Strap is loaded only if this is the same version
+     * to avoid function, class, or members that does not exist
      */
     public
-    static function loadStrapUtilityTemplateIfPresent()
+    static function loadStrapUtilityTemplateIfPresentAndSameVersion()
     {
         $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
         if (file_exists($templateUtilityFile)) {
-            /** @noinspection PhpIncludeInspection */
-            require_once($templateUtilityFile);
-            return true;
+            /**
+             * Check the version
+             */
+            $templateInfo = confToHash(__DIR__ . '/../../../tpl/strap/template.info.txt');
+            $templateVersion = $templateInfo['version'];
+            $comboVersion = self::$INFO_PLUGIN['version'];
+            if ($templateVersion != $comboVersion) {
+                if($comboVersion>$templateVersion){
+                    LogUtility::msg("You should upgrade <a href=\"https://www.dokuwiki.org/template:strap\">strap</a> to the latest version to get a fully functional experience. The version of Combo is ($comboVersion) while the version of Strap is ($templateVersion).");
+                } else {
+                    LogUtility::msg("You should upgrade <a href=\"https://www.dokuwiki.org/plugin:combo\">combo</a>  to the latest version to get a fully functional experience. The version of Combo is ($comboVersion) while the version of Strap is ($templateVersion).");
+                }
+                return false;
+            } else {
+                /** @noinspection PhpIncludeInspection */
+                require_once($templateUtilityFile);
+                return true;
+            }
         } else {
             $level = LogUtility::LVL_MSG_DEBUG;
             if (defined('DOKU_UNITTEST')) {

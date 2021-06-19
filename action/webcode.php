@@ -78,7 +78,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
             /**
              * The strap header function
              */
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresent();
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
             if($loaded) {
                 TplUtility::registerHeaderHandler();
             }

@@ -82,6 +82,15 @@ class Prism
         }
         $themeIntegrity = self::THEMES_INTEGRITY[$theme];
 
+        /**
+         * We miss a bottom margin
+         * as a paragraph
+         */
+        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_NAME );
+
+        /**
+         * Javascript
+         */
         $tags = array();
         $tags['script'][] = array("src" => "$BASE_PRISM_CDN/components/prism-core.min.js");
         $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js");

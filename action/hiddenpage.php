@@ -32,7 +32,7 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
          */
         $pattern = "(" . $conf['sidebar'] . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
         if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresent();
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
             if ($loaded) {
 
                 $pattern .= "|" . TplUtility::getFooterSlotPageName();

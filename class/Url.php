@@ -25,9 +25,10 @@ class Url
      *
      */
     const URL_ENCODED_AND = '&amp;';
+
     /**
-     *
-     * Used in dokuwiki syntax & in CSS
+     * Used in dokuwiki syntax & in CSS attribute
+     * (Css attribute value are then HTML encoded as value of the attribute)
      */
     const URL_AND = "&";
 

@@ -219,9 +219,8 @@ class RasterImageLink extends MediaLink
                 $imgTagWidth = $this->getImgTagWidthValue();
                 if (!empty($imgTagWidth)) {
 
-                    $this->tagAttributes->addHtmlAttributeValue("width", $imgTagWidth . $htmlLengthUnit);
-
                     if (!empty($imgTagHeight)) {
+
                         /**
                          * Check of height and width dimension
                          * as specified here
@@ -239,10 +238,28 @@ class RasterImageLink extends MediaLink
                                 &&
                                 $imgTagWidth / $targetRatio <= $imgTagHeight + 0.5
                             )) {
-                                LogUtility::msg("The width and height specified on the image ($this) does not pass the ratio test.");
+                                $requestedHeight = $this->getRequestedHeight();
+                                $requestedWidth = $this->getRequestedWidth();
+                                if(
+                                    !empty($requestedHeight)
+                                && !empty($requestedWidth)
+                                ){
+                                    /**
+                                     * The user has asked for a width and height
+                                     */
+                                    $imgTagWidth = round($imgTagHeight * $targetRatio);
+                                    LogUtility::msg("The width ($requestedWidth) and height ($requestedHeight) specified on the image ($this) does not follow the natural ratio as <a href=\"https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height\">required by HTML</a>. The width was then set to ($imgTagWidth).", LogUtility::LVL_MSG_INFO,self::CANONICAL);
+                                } else {
+                                    /**
+                                     * Programmatic error from the developer
+                                     */
+                                    LogUtility::msg("The width and height specified on the image ($this) does not pass the ratio test.");
+                                }
                             }
                         }
                     }
+
+                    $this->tagAttributes->addHtmlAttributeValue("width", $imgTagWidth . $htmlLengthUnit);
                 }
 
                 /**
@@ -510,7 +527,13 @@ class RasterImageLink extends MediaLink
             $mediaWidth = $this->getMediaWidth();
             if (!empty($mediaWidth)) {
                 if ($requestedWidth > $mediaWidth) {
-                    LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    global $ID;
+                    if ($ID!="wiki:syntax") {
+                        // There is a bug in the wiki syntax page
+                        // {{wiki:dokuwiki-128.png?200x50}}
+                        // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
+                        LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    }
                     $requestedWidth = $mediaWidth;
                 }
             }

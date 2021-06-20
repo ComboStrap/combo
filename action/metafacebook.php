@@ -71,7 +71,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         /**
          * No social for bars
          */
-        if ($page->isBar()) {
+        if ($page->isSlot()) {
             return;
         }
 

@@ -52,9 +52,9 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
         $page = new Page($ID);
 
         /**
-         * No canonical for bars
+         * No canonical for slot page
          */
-        if ($page->isBar()) {
+        if ($page->isSlot()) {
             return;
         }
 

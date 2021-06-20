@@ -15,20 +15,27 @@ class Message
 
     const TYPE_CLASSIC = 'Classic';
     const TYPE_WARNING = 'Warning';
-    private $class;
+
     /**
      * @var Plugin
      */
     private $plugin;
     private $signatureCanonical;
     private $signatureName;
+    /**
+     * @var TagAttributes
+     */
+    private $tagAttributes;
 
     /**
      * @param Plugin $plugin
      */
-    public function __construct($plugin)
+    public function __construct($plugin = null)
     {
         $this->plugin = $plugin;
+        $this->tagAttributes = TagAttributes::createEmpty("message")
+            ->addClassName("alert")
+            ->addHtmlAttributeValue("role", "alert");
     }
 
 
@@ -49,7 +56,7 @@ class Message
 
     public function setClass($class)
     {
-        $this->class = $class;
+        $this->tagAttributes->addClassName($class);
     }
 
     public function getContent()
@@ -71,7 +78,7 @@ class Message
      * Used when sending message and in the main content
      * @return string
      */
-    public function getHtml()
+    public function toHtml()
     {
 
         PluginUtility::getSnippetManager()->upsertCssSnippetForRequest(self::TAG);
@@ -79,15 +86,41 @@ class Message
         if ($this->getContent() <> "") {
 
             if ($this->getType() == Message::TYPE_CLASSIC) {
-                $message .='<div class="alert alert-success combo-message ' . $this->class . '" role="alert">';
+                $this->tagAttributes->addClassName("alert-success");
             } else {
-                $message .='<div class="alert alert-warning combo-message ' . $this->class . '" role="alert">';
+                $this->tagAttributes->addClassName("alert-warning");
             }
 
+            $message = $this->tagAttributes->toHtmlEnterTag("div");
             $message .= $this->getContent();
 
-            $message .='<div class="'.self::SIGNATURE_CLASS.'">' . $this->plugin->getLang('message_come_from') . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName, false) . '</div>';
-            $message .='</div>';
+            /**
+             * If this is a test call without a plugin
+             * we have no plugin attached
+             */
+            $firedByLang = "This message was fired by the ";
+            if($this->plugin!=null){
+                $firedByLang = $this->plugin->getLang('message_come_from');
+            }
+
+            $message .= '<div class="' . self::SIGNATURE_CLASS . '">' . $firedByLang . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName, false) . '</div>';
+            $message .= '</div>';
+
+            /**
+             * In dev, to spot the XHTML compliance error
+             */
+            if (PluginUtility::isDevOrTest()){
+                 $isXml = XmlUtility::isXml($message);
+                 if (!$isXml){
+                     LogUtility::msg("This message is not xml compliant ($message)");
+                     $message =<<<EOF
+<div class='alert alert-warning'>
+    <p>This message is not xml compliant</p>
+    <pre>$message</pre>
+</div>
+EOF;
+                 }
+            }
 
         }
         return $message;

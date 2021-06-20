@@ -18,6 +18,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "note";
+    const COMPONENT = "combo_note";
 
     /**
      * Syntax Type.
@@ -67,7 +68,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
     {
         /**
          * header mode is disable to take over
-         * and replace it with {@link syntax_plugin_combo_title}
+         * and replace it with {@link syntax_plugin_combo_heading}
          */
         if ($mode == "header") {
             return false;
@@ -140,7 +141,8 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::TAG);
                     $attributes->addClassName("alert");
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
                     // Switch for the color

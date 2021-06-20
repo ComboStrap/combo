@@ -16,9 +16,10 @@
  */
 
 // must be run within Dokuwiki
+use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
+use ComboStrap\Site;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
@@ -42,21 +43,27 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     /**
      * The tag that have codes
      */
-    const CODE_TAGS = array("code", "plugin_combo_code");
+    const CODE_TAGS =
+        array(
+            syntax_plugin_combo_code::CODE_TAG,
+            "plugin_combo_code",
+            syntax_plugin_combo_codemarkdown::TAG
+        );
 
     /**
      * The attribute names in the array
      */
     const CODES_ATTRIBUTE = "codes";
     const USE_CONSOLE_ATTRIBUTE = "useConsole";
-    const RENDERINGMODE_ATTRIBUTE = 'renderingmode';
+    const RENDERING_MODE_ATTRIBUTE = 'renderingmode';
     const RENDERING_ONLY_RESULT = "onlyresult";
 
     /**
-     * @var array that holds the iframe attributes
+     * Marki code
      */
-    private $attributes = array();
-
+    const MARKI_LANG = 'marki';
+    const DOKUWIKI_LANG = 'dw';
+    const MARKIS = [self::MARKI_LANG, self::DOKUWIKI_LANG];
 
     /**
      * Syntax Type.
@@ -70,6 +77,12 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     {
         return 'container';
     }
+
+    public function getPType()
+    {
+        return "stack";
+    }
+
 
     /**
      * @return array
@@ -162,47 +175,22 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                // We got the first webcode tag and its attributes
+                // Default
+                $defaultAttributes = array();
+                $defaultAttributes['frameborder'] = 1;
+                $defaultAttributes['width'] = '100%';
+                $defaultAttributes['name'] = "WebCode iFrame";
+                $defaultAttributes[self::RENDERING_MODE_ATTRIBUTE] = 'story';
+                // 'height' is set by the javascript if not set
+                // 'width' and 'scrolling' gets their natural value
 
-                $match = substr($match, 8, -1); //9 = strlen("<webcode")
+                // Parse and create the call stack array
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $defaultAttributes);
+                $callStackArray = $tagAttributes->toCallStackArray();
 
-                // Reset of the attributes
-                // With some framework the php object may be still persisted in memory
-                // And you may get some attributes from other page
-                $attributes = array();
-                $attributes['frameborder'] = 1;
-                $attributes['width'] = '100%';
-
-                $renderingModeKey = self::RENDERINGMODE_ATTRIBUTE;
-                $attributes[$renderingModeKey] = 'story';
-
-                // config Parameters will get their value in lowercase
-                $configAttributes = [$renderingModeKey];
-
-                // /i not case sensitive
-                $attributePattern = "\s*(\w+)\s*=\s*\"?([^\"\s]+)\"?\\s*";
-                $result = preg_match_all('/' . $attributePattern . '/i', $match, $matches);
-
-
-                if ($result != 0) {
-                    foreach ($matches[1] as $key => $lang) {
-                        $attributeKey = strtolower($lang);
-                        $attributeValue = $matches[2][$key];
-                        if (in_array($attributeKey, $configAttributes)) {
-                            $attributeValue = strtolower($attributeValue);
-                        }
-                        $attributes[$attributeKey] = $attributeValue;
-                    }
-                }
-
-                // We set the attributes on a class scope
-                // to be used in the DOKU_LEXER_UNMATCHED step
-                $this->attributes = $attributes;
-
-                // Cache the values to be used by the render method
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $callStackArray
                 );
 
 
@@ -221,52 +209,69 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                  * Does the javascript contains a console statement
                  */
                 $useConsole = false;
-                $exitTag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $exitTag->getOpeningTag();
-                $renderingMode = strtolower($openingTag->getAttribute(self::RENDERINGMODE_ATTRIBUTE));
-                if ($openingTag->hasDescendants()) {
-                    $tags = $openingTag->getDescendants();
-                    /**
-                     * Mime and code content are in two differents
-                     * tag. To be able to set the content to the good type
-                     * we keep a trace of it
-                     */
-                    $actualCodeType = "";
-                    foreach ($tags as $tag) {
-                        if (in_array($tag->getName(), self::CODE_TAGS)) {
 
-                            /**
-                             * Only rendering mode
-                             * on all node (unmatched also)
-                             */
-                            if ($renderingMode == self::RENDERING_ONLY_RESULT) {
-                                $tag->addAttribute(TagAttributes::DISPLAY, "none");
-                            }
+                /**
+                 * Callstack
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $renderingMode = strtolower($openingTag->getAttribute(self::RENDERING_MODE_ATTRIBUTE));
 
-                            if ($tag->getState() == DOKU_LEXER_ENTER) {
+                /**
+                 * The mime (ie xml,html, ...) and code content are in two differents
+                 * call. To be able to set the content to the good type
+                 * we keep a trace of it
+                 */
+                $actualCodeType = "";
+
+                /**
+                 * Loop
+                 */
+                while ($actualTag = $callStack->next()) {
+
+
+                    $tagName = $actualTag->getTagName();
+                    if (in_array($tagName, self::CODE_TAGS)) {
+
+                        /**
+                         * Only rendering mode, we don't display the node
+                         * on all node (enter, exit and unmatched)
+                         */
+                        if ($renderingMode == self::RENDERING_ONLY_RESULT) {
+                            $actualTag->addAttribute(TagAttributes::DISPLAY, "none");
+                        }
+
+                        switch ($actualTag->getState()) {
+
+                            case DOKU_LEXER_ENTER:
                                 // Get the code (The content between the code nodes)
                                 // We ltrim because the match gives us the \n at the beginning and at the end
-                                $actualCodeType = strtolower(trim($tag->getType()));
+                                $actualCodeType = strtolower(trim($actualTag->getType()));
 
                                 // Xml is html
                                 if ($actualCodeType == 'xml') {
                                     $actualCodeType = 'html';
                                 }
+
+                                // markdown, dokuwiki is marki
+                                if (in_array($actualCodeType, ['md', 'markdown', 'dw'])) {
+                                    $actualCodeType = self::MARKI_LANG;
+                                }
+
                                 // The code for a language may be scattered in multiple block
                                 if (!isset($codes[$actualCodeType])) {
                                     $codes[$actualCodeType] = "";
                                 }
 
-                                continue;
-                            }
+                                continue 2;
 
-                            if ($tag->getState() == DOKU_LEXER_UNMATCHED) {
+                            case DOKU_LEXER_UNMATCHED:
 
-                                $codeContent = $tag->getData()[PluginUtility::PAYLOAD];
+                                $codeContent = $actualTag->getPluginData()[PluginUtility::PAYLOAD];
 
                                 if (empty($actualCodeType)) {
                                     LogUtility::msg("The type of the code should not be null for the code content " . $codeContent, LogUtility::LVL_MSG_WARNING, self::TAG);
-                                    continue;
+                                    continue 2;
                                 }
 
                                 // Append it
@@ -284,36 +289,18 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                                 }
                                 // Reset
                                 $actualCodeType = "";
-                            }
+                                break;
+
                         }
                     }
+
                 }
-//                if(isset($codes["dw"])){
-//                    // http://php.net/manual/en/function.stream-context-create.php
-//                    $dw = $codes["dw"];
-//
-//                    $url = Site::getAjaxUrl();
-//                    $data = array(
-//                        action_plugin_combo_webcode::DW_PARAM => $dw,
-//                        action_plugin_combo_webcode::CALL_PARAM => action_plugin_combo_webcode::CALL_ID
-//                    );
-//
-//                    // use key 'http' even if you send the request to https://...
-//                    $options = array(
-//                        'http' => array(
-//                            'method'  => 'POST',
-//                            'content' => http_build_query($data)
-//                        )
-//                    );
-//                    $context  = stream_context_create($options);
-//                    $result = file_get_contents($url, false, $context);
-//                    if ($result === FALSE) { /* Handle error */ }
-//
-//                }
+
                 return array(
                     PluginUtility::STATE => $state,
                     self::CODES_ATTRIBUTE => $codes,
-                    self::USE_CONSOLE_ATTRIBUTE => $useConsole
+                    self::USE_CONSOLE_ATTRIBUTE => $useConsole,
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
 
         }
@@ -346,15 +333,6 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
 
-                case DOKU_LEXER_ENTER :
-
-                    PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
-
-                    // The extracted data are the attribute of the webcode tag
-                    // We put in a class variable so that we can use in the last step (DOKU_LEXER_EXIT)
-                    $this->attributes = $data[PluginUtility::ATTRIBUTES];
-
-                    break;
 
                 case DOKU_LEXER_UNMATCHED :
 
@@ -363,32 +341,57 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
                     $codes = $data[self::CODES_ATTRIBUTE];
+                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                    $iFrameAttributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
+
                     // Create the real output of webcode
                     if (sizeof($codes) == 0) {
                         return false;
                     }
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                    // Credits bar
+                    $bar = '<div class="webcode-bar">';
+
 
                     // Dokuwiki Code ?
-                    if (array_key_exists('dw', $codes)) {
+                    if (array_key_exists(self::MARKI_LANG, $codes)) {
 
-                        $renderer->doc .= PluginUtility::render($codes['dw']);
+                        $markiCode = $codes[self::MARKI_LANG];
+                        /**
+                         * By default, markup code
+                         * is rendered inside the page
+                         * We got less problem such as iframe overflow
+                         * due to lazy loading, such as relative link, ...
+                         *
+                         */
+                        if (!$iFrameAttributes->hasComponentAttribute("iframe")) {
+                            $renderer->doc .= PluginUtility::render($markiCode);
+                            return true;
+                        }
+
+                        $queryParams = array(
+                            'call' => action_plugin_combo_webcode::CALL_ID,
+                            action_plugin_combo_webcode::MARKI_PARAM => $markiCode
+                        );
+                        $queryString = http_build_query($queryParams);
+                        $url = Site::getAjaxUrl() . "?$queryString";
+                        $iFrameAttributes->addHtmlAttributeValue("src", $url);
 
                     } else {
 
 
                         // Js, Html, Css
-                        $iframeHtml = '<html><head>';
-                        $iframeHtml .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
-                        $iframeHtml .= '<title>Made by Webcode</title>';
-                        $iframeHtml .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">';
+                        $iframeSrcValue = '<html><head>';
+                        $iframeSrcValue .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
+                        $iframeSrcValue .= '<title>Made by WebCode</title>';
+                        $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">';
 
 
                         // External Resources such as css stylesheet or js
-                        $externalResources = array();
-                        if (array_key_exists(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY, $this->attributes)) {
-                            $externalResources = explode(",", $this->attributes[self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY]);
+                        $externalResources = [];
+                        if ($iFrameAttributes->hasComponentAttribute(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY)) {
+                            $resources = $iFrameAttributes->getValueAndRemove(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY);
+                            $externalResources = explode(",", $resources);
                         }
 
                         // Babel Preprocessor, if babel is used, add it to the external resources
@@ -406,83 +409,96 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $fileExtension = $pathInfo['extension'];
                             switch ($fileExtension) {
                                 case 'css':
-                                    $iframeHtml .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '">';
+                                    $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '">';
                                     break;
                                 case 'js':
-                                    $iframeHtml .= '<script type="text/javascript" src="' . $externalResource . '"></script>';
+                                    $iframeSrcValue .= '<script type="text/javascript" src="' . $externalResource . '"></script>';
                                     break;
                             }
                         }
 
 
                         // WebConsole style sheet
-                        $iframeHtml .= '<link rel="stylesheet" type="text/css" href="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-iframe.css?ver=' . self::WEB_CSS_VERSION . '"/>';
+                        $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-iframe.css?ver=' . self::WEB_CSS_VERSION . '"/>';
 
                         // A little margin to make it neater
                         // that can be overwritten via cascade
-                        $iframeHtml .= '<style>body { margin:10px } /* default margin */</style>';
+                        $iframeSrcValue .= '<style>body { margin:10px } /* default margin */</style>';
 
                         // The css
                         if (array_key_exists('css', $codes)) {
-                            $iframeHtml .= '<!-- The CSS code -->';
-                            $iframeHtml .= '<style>' . $codes['css'] . '</style>';
+                            $iframeSrcValue .= '<!-- The CSS code -->';
+                            $iframeSrcValue .= '<style>' . $codes['css'] . '</style>';
                         };
-                        $iframeHtml .= '</head><body>';
+                        $iframeSrcValue .= '</head><body>';
                         if (array_key_exists('html', $codes)) {
-                            $iframeHtml .= '<!-- The HTML code -->';
-                            $iframeHtml .= $codes['html'];
+                            $iframeSrcValue .= '<!-- The HTML code -->';
+                            $iframeSrcValue .= $codes['html'];
                         }
                         // The javascript console area is based at the end of the HTML document
                         $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
                         if ($useConsole) {
-                            $iframeHtml .= '<!-- WebCode Console -->';
-                            $iframeHtml .= '<div><p class=\'webConsoleTitle\'>Console Output:</p>';
-                            $iframeHtml .= '<div id=\'webCodeConsole\'></div>';
-                            $iframeHtml .= '<script type=\'text/javascript\' src=\'' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '\'></script>';
-                            $iframeHtml .= '</div>';
+                            $iframeSrcValue .= '<!-- WebCode Console -->';
+                            $iframeSrcValue .= '<div><p class=\'webConsoleTitle\'>Console Output:</p>';
+                            $iframeSrcValue .= '<div id=\'webCodeConsole\'></div>';
+                            $iframeSrcValue .= '<script type=\'text/javascript\' src=\'' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '\'></script>';
+                            $iframeSrcValue .= '</div>';
                         }
                         // The javascript comes at the end because it may want to be applied on previous HTML element
                         // as the page load in the IO order, javascript must be placed at the end
                         if (array_key_exists('javascript', $codes)) {
-                            $iframeHtml .= '<!-- The Javascript code -->';
-                            $iframeHtml .= '<script type="text/javascript">' . $codes['javascript'] . '</script>';
+                            $iframeSrcValue .= '<!-- The Javascript code -->';
+                            $iframeSrcValue .= '<script type="text/javascript">' . $codes['javascript'] . '</script>';
                         }
                         if (array_key_exists('babel', $codes)) {
-                            $iframeHtml .= '<!-- The Babel code -->';
-                            $iframeHtml .= '<script type="text/babel">' . $codes['babel'] . '</script>';
+                            $iframeSrcValue .= '<!-- The Babel code -->';
+                            $iframeSrcValue .= '<script type="text/babel">' . $codes['babel'] . '</script>';
                         }
-                        $iframeHtml .= '</body></html>';
+                        $iframeSrcValue .= '</body></html>';
+                        $iFrameAttributes->addHtmlAttributeValue("srcdoc", htmlentities($iframeSrcValue));
 
-                        // Here the magic from the plugin happens
-                        // We add the Iframe and the JsFiddleButton
-                        $iFrameHtml = '<iframe ';
+                        // Code bar with button
+                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by WebCode", false) . '</div>';
+                        $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $externalResources, $useConsole, $iFrameAttributes->getValue("name")) . '</div>';
 
-                        // We add the name HTML attribute
-                        $name = "WebCode iFrame";
-                        if (array_key_exists('name', $this->attributes)) {
-                            $name .= ' ' . $this->attributes['name'];
-                        }
-                        $iFrameHtml .= ' name="' . $name . '" ';
 
-                        // The class to be able to select them
-                        $iFrameHtml .= ' class="webCode" ';
-
-                        // We add the others HTML attributes
-                        $iFrameHtmlAttributes = array('width', 'height', 'frameborder', 'scrolling');
-                        foreach ($this->attributes as $attribute => $value) {
-                            if (in_array($attribute, $iFrameHtmlAttributes)) {
-                                $iFrameHtml .= ' ' . $attribute . '=' . $value;
-                            }
-                        }
-                        $iFrameHtml .= ' srcdoc="' . htmlentities($iframeHtml) . '" ></iframe>';//
-
-                        // Credits bar
-                        $bar = '<div class="webcode-bar">';
-                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by Webcode", false) . '</div>';
-                        $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $this->attributes) . '</div>';
-                        $bar .= '</div>';
-                        $renderer->doc .= '<div class="webcode">' . $iFrameHtml . $bar . '</div>';
                     }
+
+                    /**
+                     * If there is no height
+                     */
+                    if (!$iFrameAttributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
+
+                        /**
+                         * Adjust the height attribute
+                         * of the iframe element
+                         * Any styling attribute would take over
+                         */
+                        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
+                        /**
+                         * CSS Height auto works when an image is loaded asynchronously but not
+                         * when there is only text in the iframe
+                         */
+                        //$iFrameAttributes->addStyleDeclaration("height", "auto");
+                        /**
+                         * Due to margin at the bottom with css height=auto,
+                         * we may see a scroll bar
+                         * This block of code is to avoid scrolling,
+                         * then scrolling = no if not set
+                         */
+                        if (!$iFrameAttributes->hasComponentAttribute("scrolling")) {
+                            $iFrameAttributes->addHtmlAttributeValue("scrolling", "no");
+                        }
+
+                    }
+
+
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+
+                    $iFrameHtml = $iFrameAttributes->toHtmlEnterTag("iframe") . '</iframe>';
+                    $bar .= '</div>'; // close the bar
+                    $renderer->doc .= "<div class=\"webcode-wrapper\">" . $iFrameHtml . $bar . '</div>';
+
 
                     break;
             }
@@ -494,23 +510,20 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
     /**
      * @param array $codes the array containing the codes
-     * @param array $attributes the attributes of a call (for now the externalResources)
+     * @param array $externalResources the attributes of a call (for now the externalResources)
+     * @param bool $useConsole
+     * @param string $snippetTitle
      * @return string the HTML form code
      *
      * Specification, see http://doc.jsfiddle.net/api/post.html
      */
-    public function addJsFiddleButton($codes, $attributes)
+    public function addJsFiddleButton($codes, $externalResources, $useConsole = false, $snippetTitle = null)
     {
 
         $postURL = "https://jsfiddle.net/api/post/library/pure/"; //No Framework
 
-        $externalResources = array();
-        if (array_key_exists(self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY, $attributes)) {
-            $externalResources = explode(",", $attributes[self::EXTERNAL_RESOURCES_ATTRIBUTE_KEY]);
-        }
 
-
-        if ($this->useConsole) {
+        if ($useConsole) {
             // If their is a console.log function, add the Firebug Lite support of JsFiddle
             // Seems to work only with the Edge version of jQuery
             // $postURL .= "edge/dependencies/Lite/";
@@ -557,15 +570,14 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
         // Title and description
         global $ID;
-        $title = $attributes['name'];
         $pageTitle = tpl_pagetitle($ID, true);
-        if (!$title) {
+        if (!$snippetTitle) {
 
-            $title = "Code from " . $pageTitle;
+            $snippetTitle = "Code from " . $pageTitle;
         }
         $description = "Code from the page '" . $pageTitle . "' \n" . wl($ID, $absolute = true);
         return '<form  method="post" action="' . $postURL . '" target="_blank">' .
-            '<input type="hidden" name="title" value="' . htmlentities($title) . '">' .
+            '<input type="hidden" name="title" value="' . htmlentities($snippetTitle) . '">' .
             '<input type="hidden" name="description" value="' . htmlentities($description) . '">' .
             '<input type="hidden" name="css" value="' . htmlentities($codes['css']) . '">' .
             '<input type="hidden" name="html" value="' . htmlentities("<!-- The HTML -->" . $codes['html']) . '">' .

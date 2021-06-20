@@ -4,12 +4,10 @@
  *
  */
 
-use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
@@ -81,7 +79,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     {
         /**
          * header mode is disable to take over
-         * and replace it with {@link syntax_plugin_combo_title}
+         * and replace it with {@link syntax_plugin_combo_heading}
          */
         if ($mode == "header") {
             return false;
@@ -108,7 +106,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'stack';
     }
 
     /**
@@ -234,7 +232,8 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 $callStack->moveToEnd();
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 $callStack->insertEolIfNextCallIsNotEolOrBlock(); // a paragraph is mandatory
-                $callStack->processEolToEndStack("card-text");
+
+                $callStack->processEolToEndStack([TagAttributes::CLASS_KEY => "card-text"]);
 
                 // Insert the card body enter
                 $callStack->moveToEnd();
@@ -397,7 +396,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             /** @var Doku_Renderer_metadata $renderer */
             $state = $data[PluginUtility::STATE];
-            if ($state==DOKU_LEXER_ENTER) {
+            if ($state == DOKU_LEXER_ENTER) {
 
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);

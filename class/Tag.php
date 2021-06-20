@@ -45,14 +45,6 @@ class Tag
     const INVISIBLE_CONTENT_TAG = ["p"];
 
     /**
-     * The type of callstack
-     *   * main is the normal
-     *   * writer is when there is a temporary call stack from the writer
-     */
-    const CALLSTACK_WRITER = "writer";
-    const CALLSTACK_MAIN = "main";
-
-    /**
      * The {@link Doku_Handler::$calls} or {@link CallWriter::$calls}
      * @var
      */
@@ -132,17 +124,17 @@ class Tag
              */
             if (!empty($writerCalls)) {
                 $this->calls = &$writerCalls;
-                $this->callStackType = self::CALLSTACK_WRITER;
+                $this->callStackType = CallStack::CALLSTACK_WRITER;
             } else {
                 $this->calls = &$handler->calls;
-                $this->callStackType = self::CALLSTACK_MAIN;
+                $this->callStackType = CallStack::CALLSTACK_MAIN;
             }
         } else {
             if ($callStackType == null) {
                 LogUtility::msg("When the position is set, the callstack type should be given", LogUtility::LVL_MSG_ERROR);
             }
             $this->callStackType = $callStackType;
-            if ($callStackType == self::CALLSTACK_MAIN) {
+            if ($callStackType == CallStack::CALLSTACK_MAIN) {
                 $this->calls = &$handler->calls;
             } else {
                 $this->calls = &$writerCalls;
@@ -240,7 +232,7 @@ class Tag
             && $call->getState() == DOKU_LEXER_ENTER
             && $name != 'preformatted' // preformatted does not have any attributes
         ) {
-            $match = $call->getMatchedContent();
+            $match = $call->getCapturedContent();
             /**
              * If this is not a combo element, we got no match
              */
@@ -470,7 +462,7 @@ class Tag
                     $treeLevel = $treeLevel + 1;
                     break;
                 case DOKU_LEXER_UNMATCHED:
-                    if (empty(trim($call->getMatchedContent()))) {
+                    if (empty(trim($call->getCapturedContent()))) {
                         // An empty unmatched is not considered a sibling
                         // state = null will continue the loop
                         // we can't use a continue statement in a switch
@@ -681,7 +673,7 @@ class Tag
     {
         if ($this->tagCall != null) {
 
-            return $this->tagCall->getMatchedContent();
+            return $this->tagCall->getCapturedContent();
         } else {
             return null;
         }
@@ -739,7 +731,7 @@ class Tag
                     ) {
                         break;
                     } else {
-                        $content .= $currentCall->getMatchedContent();
+                        $content .= $currentCall->getCapturedContent();
                         $index++;
                     }
                 }
@@ -863,7 +855,7 @@ class Tag
     public function getContent()
     {
         if ($this->tagCall != null) {
-            return $this->tagCall->getMatchedContent();
+            return $this->tagCall->getCapturedContent();
         } else {
             return null;
         }

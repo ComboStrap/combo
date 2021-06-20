@@ -8,7 +8,6 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
-require_once(__DIR__ . '/../class/RasterImageLink.php');
 
 if (!defined('DOKU_INC')) die();
 
@@ -46,6 +45,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * Found at {@link \dokuwiki\Parsing\ParserMode\Media}
      */
     const MEDIA_PATTERN = "\{\{(?:[^>\}]|(?:\}[^\}]))+\}\}";
+
+    /**
+     * Enable or disable the image
+     */
+    const CONF_IMAGE_ENABLE = "imageEnable";
 
 
     function getType()
@@ -89,7 +93,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-        $enable = $this->getConf(MediaLink::CONF_IMAGE_ENABLE, 1);
+        $enable = $this->getConf(self::CONF_IMAGE_ENABLE, 1);
         if (!$enable) {
 
             // Inside a card, we need to take over and enable it
@@ -175,7 +179,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * This is not an local internal media image (a video or an url image)
                  * Dokuwiki takes over
                  */
-                $type = $attributes['type'];
+                $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
                 $src = $attributes['src'];
                 $title = $attributes['title'];
                 $align = $attributes['align'];
@@ -184,10 +188,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $cache = $attributes['cache'];
                 $linking = $attributes['linking'];
                 switch ($type) {
-                    case MediaLink::INTERNAL_MEDIA:
+                    case MediaLink::INTERNAL_MEDIA_CALL_NAME:
                         $renderer->doc .= $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
                         break;
-                    case MediaLink::EXTERNAL_MEDIA:
+                    case MediaLink::EXTERNAL_MEDIA_CALL_NAME:
                         $renderer->doc .= $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking, true);
                         break;
                     default:
@@ -217,8 +221,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     static public function registerImageMeta($attributes, $renderer)
     {
-        $type = $attributes['type'];
+        $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
         $src = $attributes['src'];
+        if($src==null){
+            $src = $attributes[DokuPath::PATH_ATTRIBUTE];
+        }
         $title = $attributes['title'];
         $align = $attributes['align'];
         $width = $attributes['width'];
@@ -227,10 +234,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $linking = $attributes['linking'];
 
         switch ($type) {
-            case MediaLink::INTERNAL_MEDIA:
+            case MediaLink::INTERNAL_MEDIA_CALL_NAME:
                 $renderer->internalmedia($src, $title, $align, $width, $height, $cache, $linking);
                 break;
-            case MediaLink::EXTERNAL_MEDIA:
+            case MediaLink::EXTERNAL_MEDIA_CALL_NAME:
                 $renderer->externalmedia($src, $title, $align, $width, $height, $cache, $linking);
                 break;
             default:

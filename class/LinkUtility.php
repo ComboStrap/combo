@@ -45,7 +45,7 @@ class LinkUtility
      * No line break allowed
      */
     const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
-    const ENTRY_PATTERN_MULTI_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
+    const ENTRY_PATTERN_MULTI_LINE = "\[\[[^\|\]]*(?=.*\]\])";
     const EXIT_PATTERN = "\]\]";
 
     /**
@@ -65,7 +65,6 @@ class LinkUtility
     const ATTRIBUTE_REF = 'ref';
     const ATTRIBUTE_NAME = 'name';
     const ATTRIBUTE_IMAGE = 'image';
-
 
 
     /**
@@ -105,13 +104,17 @@ class LinkUtility
     /**
      * @var mixed|string
      */
-    private $parameters;
+    private $queryStringToReturn;
     /**
      * @var false|string
      */
     private $fragment;
 
-    private $attributes = array();
+    /**
+     * @var TagAttributes|null
+     */
+    private $attributes;
+
     /**
      * The name of the wiki for an inter wiki link
      * @var string
@@ -136,12 +139,26 @@ class LinkUtility
     private $authorizedSchemes;
 
     /**
+     * @var string the query string as it was parsed
+     */
+    private $originalQueryString;
+
+    /**
      * Link constructor.
      * @param $ref
+     * @param TagAttributes $tagAttributes
      */
-    public function __construct($ref)
+    public function __construct($ref, &$tagAttributes = null)
     {
 
+        if ($tagAttributes == null) {
+            $tagAttributes = TagAttributes::createEmpty(\syntax_plugin_combo_link::TAG);
+        }
+        $this->attributes = &$tagAttributes;
+
+        if ($tagAttributes->hasComponentAttribute("name")) {
+            $this->name = $tagAttributes->getValueAndRemove("name");
+        }
 
         /**
          * Windows share link
@@ -228,18 +245,13 @@ class LinkUtility
         if ($position !== false) {
 
             $this->path = substr($refProcessing, 0, $position);
-            if ($this->path==""){
-                // no path, this is the requested page
-                global $ID;
-                $this->path = $ID;
-            }
             $secondPart = substr($refProcessing, $position + 1);
             $anchorPosition = strpos($secondPart, "#");
             if ($anchorPosition !== false) {
-                $this->parameters = substr($secondPart, 0, $anchorPosition);
+                $this->originalQueryString = substr($secondPart, 0, $anchorPosition);
                 $this->fragment = substr($secondPart, $anchorPosition + 1);
             } else {
-                $this->parameters = $secondPart;
+                $this->originalQueryString = $secondPart;
             }
         } else {
 
@@ -250,6 +262,38 @@ class LinkUtility
             } else {
                 $this->path = $refProcessing;
             }
+        }
+
+        /**
+         * Styling attribute
+         * may be passed via parameters
+         * for internal link
+         * We are doing it here because
+         * the query parameters are used
+         * in the creation of the URL
+         * and we don't want the styling attribute
+         * in the URL
+         */
+        $this->queryStringToReturn = $this->originalQueryString;
+        if ($this->type == self::TYPE_INTERNAL) {
+
+            $parameters = Url::queryParametersToArray($this->originalQueryString);
+
+            // we will not overwrite the parameters if this an dokuwiki
+            // action link
+            if (!isset($parameters["do"])) {
+
+                $this->queryStringToReturn = null;
+
+                foreach ($parameters as $key => $value) {
+                    // boolean attributes
+                    if (empty($value)) {
+                        $value = true;
+                    }
+                    $this->attributes->addComponentAttributeValue($key, $value);
+                }
+            }
+
         }
 
 
@@ -329,6 +373,7 @@ class LinkUtility
          */
         $this->renderer = $renderer;
 
+
         global $conf;
 
         /**
@@ -336,7 +381,7 @@ class LinkUtility
          */
         $url = $this->getUrl();
         if (!empty($url)) {
-            PluginUtility::addAttributeValue("href", $url, $this->attributes);
+            $this->attributes->addHtmlAttributeValue("href", $url);
         }
 
         /**
@@ -348,45 +393,53 @@ class LinkUtility
                 /**
                  * Target
                  */
-                $interwikiConf = $conf['target']['interwiki'];
-                if ($interwikiConf) {
-
-                    PluginUtility::addAttributeValue('target', $interwikiConf, $this->attributes);
-                    PluginUtility::addAttributeValue('rel', 'noopener', $this->attributes);
+                $interWikiConf = $conf['target']['interwiki'];
+                if (!empty($interWikiConf)) {
+                    $this->attributes->addHtmlAttributeValue('target', $interWikiConf);
+                    $this->attributes->addHtmlAttributeValue('rel', 'noopener');
                 }
-                PluginUtility::addClass2Attributes("interwiki", $this->attributes);
+                $this->attributes->addClassName("interwiki");
                 $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
-                PluginUtility::addClass2Attributes($wikiClass, $this->attributes);
+                $this->attributes->addClassName($wikiClass);
 
                 break;
             case self::TYPE_INTERNAL:
 
+                // https://www.dokuwiki.org/config:target
+                $target = $conf['target']['wiki'];
+                if(!empty($target)){
+                    $this->attributes->addHtmlAttributeValue('target', $target);
+                }
                 /**
                  * Internal Page
                  */
                 $linkedPage = $this->getInternalPage();
-                $this->attributes["data-wiki-id"] = $linkedPage->getId();
+                $this->attributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getId());
 
                 /**
                  * If this is a low quality internal page,
                  * print a shallow link for the anonymous user
+                 *
+                 * We could also use the `pointer-events:none!important ` css property
+                 * to avoid a navigation
+                 * https://getbootstrap.com/docs/5.0/utilities/interactions/#pointer-events
                  */
                 $lowLink = $this->isProtectedLink();
                 if ($lowLink) {
 
                     PageProtection::addPageProtectionSnippet();
-                    PluginUtility::addClass2Attributes(PageProtection::PROTECTED_LINK_CLASS, $this->attributes);
+                    $this->attributes->addClassName(PageProtection::PROTECTED_LINK_CLASS);
                     $protectionSourceAcronym = "";
                     if ($this->getInternalPage()->isLowQualityPage()) {
                         $protectionSourceAcronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                     } else if ($this->getInternalPage()->isLatePublication()) {
                         $protectionSourceAcronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
                     }
-                    PluginUtility::addAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym, $this->attributes);
-                    unset($this->attributes["href"]);
+                    $this->attributes->addHtmlAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym);
+                    $this->attributes->removeAttributeIfPresent("href");
                     $dataNamespace = Bootstrap::getDataNamespace();
-                    $this->attributes["data{$dataNamespace}-toggle"] = "tooltip";
-                    $this->attributes["title"] = "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")";
+                    $this->attributes->addHtmlAttributeValue("data{$dataNamespace}-toggle", "tooltip");
+                    $this->attributes->addComponentAttributeValue("title", "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")");
 
                 } else {
 
@@ -395,36 +448,43 @@ class LinkUtility
                         /**
                          * Red color
                          */
-                        PluginUtility::addClass2Attributes(self::getHtmlClassNotExist(), $this->attributes);
-                        PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
+                        $this->attributes->addClassName(self::getHtmlClassNotExist());
+                        $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
 
                     } else {
 
-                        PluginUtility::addClass2Attributes(self::getHtmlClassInternalLink(), $this->attributes);
+                        $this->attributes->addClassName(self::getHtmlClassInternalLink());
 
                     }
 
-                    $this->attributes["title"] = $linkedPage->getTitle();
+                    $this->attributes->addHtmlAttributeValue("title", $linkedPage->getTitle());
 
                 }
                 break;
             case self::TYPE_EXTERNAL:
                 if ($conf['relnofollow']) {
-                    PluginUtility::addAttributeValue("rel", 'nofollow', $this->attributes);
-                    PluginUtility::addAttributeValue("rel", 'ugc', $this->attributes);
+                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow ugc');
                 }
-                if ($conf['target']['extern']) {
-                    PluginUtility::addAttributeValue("rel", 'noopener', $this->attributes);
+                // https://www.dokuwiki.org/config:target
+                $externTarget = $conf['target']['extern'];
+                if (!empty($externTarget)) {
+                    $this->attributes->addHtmlAttributeValue('target', $externTarget);
+                    $this->attributes->addHtmlAttributeValue("rel", 'noopener');
                 }
-                PluginUtility::addClass2Attributes(self::getHtmlClassExternalLink(), $this->attributes);
+                $this->attributes->addClassName(self::getHtmlClassExternalLink());
                 break;
             case self::TYPE_WINDOWS_SHARE:
-                PluginUtility::addClass2Attributes("windows", $this->attributes);
+                // https://www.dokuwiki.org/config:target
+                $windowsTarget = $conf['target']['windows'];
+                if (!empty($windowsTarget)){
+                    $this->attributes->addHtmlAttributeValue('target', $windowsTarget);
+                }
+                $this->attributes->addClassName("windows");
                 break;
             case self::TYPE_LOCAL:
                 break;
             case self::TYPE_EMAIL:
-                PluginUtility::addClass2Attributes(self::getHtmlClassEmailLink(), $this->attributes);
+                $this->attributes->addClassName(self::getHtmlClassEmailLink());
                 break;
             default:
                 LogUtility::msg("The type (" . $this->getType() . ") is unknown", LogUtility::LVL_MSG_ERROR, \syntax_plugin_combo_link::TAG);
@@ -434,39 +494,31 @@ class LinkUtility
         /**
          * Title settings
          */
-        if (!key_exists("title", $this->attributes)) {
+        if (!$this->attributes->hasComponentAttribute("title")) {
             $title = $this->getTitle();
             if (!empty($title)) {
-                $this->attributes["title"] = $title;
+                $this->attributes->addHtmlAttributeValue("title", $title);
             }
+        }
+        /**
+         * An email URL and title
+         * may be already encoded because of the vanguard configuration
+         *
+         * The url is not treated as an attribute
+         * because the transformation function encodes the value
+         * to mitigate XSS
+         *
+         */
+        if ($this->getType() == self::TYPE_EMAIL) {
+            $emailAddress = $this->emailObfuscation($this->getPath());
+            $this->attributes->addHtmlAttributeValue("title", $emailAddress);
         }
 
         /**
          * Return
          */
         $tag = $this->getHTMLTag();
-        $returnedHTML = "<$tag";
-
-        /**
-         * An email URL and title
-         * may be already encoded because of the vanguard configuration
-         *
-         * The url is not treated as an attribute
-         * because the function array2HTMLAttributes encodes the value
-         * to mitigate XSS
-         *
-         */
-        if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->getPath());
-            $returnedHTML .= " href=\"$url\"";
-            $returnedHTML .= " title=\"$emailAddress\"";
-            unset($this->attributes["href"]);
-            unset($this->attributes["title"]);
-        }
-        if (sizeof($this->attributes) > 0) {
-            $returnedHTML .= " " . PluginUtility::array2HTMLAttributesAsString($this->attributes);
-        }
-        return $returnedHTML . ">";
+        return $this->attributes->toHtmlEnterTag($tag);
 
 
     }
@@ -516,7 +568,6 @@ class LinkUtility
     {
         return $this->type;
     }
-
 
 
     /**
@@ -613,10 +664,16 @@ class LinkUtility
     {
         if ($this->linkedPage == null) {
             if ($this->getType() == self::TYPE_INTERNAL) {
+                // if there is no path, this is the actual paeg
+                $path = $this->path;
+                if ($path == null) {
+                    global $ID;
+                    $path = DokuPath::IdToAbsolutePath($ID);
+                }
                 /**
                  * Create the linked page object
                  */
-                $this->linkedPage = new Page($this->path);
+                $this->linkedPage = new Page($path);
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
             }
@@ -731,17 +788,28 @@ class LinkUtility
     }
 
 
-    public
-    function getPath()
+    /**
+     * The path as seen in the link
+     *
+     * (In case of an internal link, the function
+     * {@link LinkUtility::getInternalPage()} is used
+     * and the path is resolved there to the actual requested page (global $ID)
+     *
+     * @return false|mixed|string
+     */
+    public function getPath()
     {
+
         return $this->path;
+
     }
 
     public
-    function getQueries()
+    function getQueryString()
     {
-        return $this->parameters;
+        return $this->queryStringToReturn;
     }
+
 
     public
     function getFragment()
@@ -756,7 +824,7 @@ class LinkUtility
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
                 $page = $this->getInternalPage();
-                $url = wl($page->getId(), $this->parameters);
+                $url = wl($page->getId(), $this->queryStringToReturn);
                 if ($this->fragment) {
                     $url .= '#' . $this->fragment;
                 }
@@ -908,7 +976,20 @@ class LinkUtility
 
     public function isRelative()
     {
-        return strpos($this->getPath(), ':') !== 0;
+        return strpos($this->path, ':') !== 0;
+    }
+
+    /**
+     * The query part parsed
+     * untouched
+     * We can pass internal attribute via the query
+     * Therefore the {@link LinkUtility::getQueryString()}
+     * may be not the original
+     */
+    public function getParsedQueryString()
+    {
+        return $this->originalQueryString;
+
     }
 
     /**

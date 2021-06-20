@@ -20,6 +20,7 @@ class Bootstrap
 
     const CONF_BOOTSTRAP_MAJOR_VERSION = "bootstrapMajorVersion";
     const BootStrapFourMajorVersion = "4";
+    const CANONICAL = "bootstrap";
 
     public static function getDataNamespace()
     {

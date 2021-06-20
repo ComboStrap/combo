@@ -14,7 +14,13 @@ require_once(__DIR__ . '/../class/Prism.php');
 
 if (!defined('DOKU_INC')) die();
 
-
+/**
+ * Class syntax_plugin_combo_code
+ *
+ * Support <a href="https://github.github.com/gfm/#fenced-code-blocks">Github code block</a>
+ *
+ * The original code markdown code block is the {@link syntax_plugin_combo_preformatted}
+ */
 class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 {
 

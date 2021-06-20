@@ -3,14 +3,19 @@
 
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
-
-class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
+/**
+ * Class syntax_plugin_combo_itext
+ * Setting text attributes on words
+ *
+ */
+class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "typo";
+    const TAG = "itext";
 
     /**
      * Syntax Type.
@@ -34,7 +39,7 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'normal';
     }
 
     /**
@@ -48,14 +53,7 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
-    }
-
-    public function accepts($mode)
-    {
-
-        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
-
+        return array('formatting', 'substition');
     }
 
 
@@ -68,15 +66,18 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
+            $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
     }
 
 
     function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+
 
     }
 
@@ -86,18 +87,13 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $attributes = PluginUtility::getTagAttributes($match);
-                if (isset($attributes["type"])) {
-                    $type = $attributes["type"];
-                    if ($type == "lead") {
-                        PluginUtility::addClass2Attributes("lead", $attributes);
-                    }
-                }
-                $html = "<p " . PluginUtility::array2HTMLAttributesAsString($attributes) . ">";
+                $attributes = TagAttributes::createFromTagMatch($match);
+
+                $callStackArray = $attributes->toCallStackArray();
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html
+                    PluginUtility::ATTRIBUTES => $callStackArray
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -105,10 +101,7 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                // Important otherwise we don't get an exit in the render
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => "</p>");
+                return array(PluginUtility::STATE => $state);
 
 
         }
@@ -134,14 +127,14 @@ class syntax_plugin_combo_typo extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("span");
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
-
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+                    $renderer->doc .= "</span>";
                     break;
             }
             return true;

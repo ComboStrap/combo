@@ -92,6 +92,12 @@ class PipelineUtility
         return str_replace($search,$replace,$value);
     }
 
+    /**
+     * @param array $commandArgs
+     * @param $value
+     * @return false|string
+     * See also: https://getbootstrap.com/docs/5.0/helpers/text-truncation/
+     */
     private static function head(array $commandArgs, $value)
     {
         $length = $commandArgs[0];

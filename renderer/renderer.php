@@ -2,8 +2,9 @@
 
 use ComboStrap\AdsUtility;
 use ComboStrap\BreadcrumbHierarchical;
-use ComboStrap\HtmlUtility;
 use ComboStrap\FsWikiUtility;
+use ComboStrap\HtmlUtility;
+use ComboStrap\PluginUtility;
 use ComboStrap\TableUtility;
 use ComboStrap\TocUtility;
 
@@ -100,17 +101,16 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
     {
 
         /**
-         * Capture the h1
+         * Save the H1 even if the heading dokuwiki is not enable
          */
-        if ($level == 1) {
+        if(!PluginUtility::getConfValue(syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE)){
             /**
              * $ACT == 'show'
-             * Otherwise we get the title of the admin page ...
+             * Otherwise we may capture the title of the admin page ...
              */
             global $ACT;
             if ($ACT == 'show') {
-                global $ID;
-                p_set_metadata($ID, array("h1" => $text));
+                syntax_plugin_combo_heading::processHeadingMetadataH1($level, $text);
             }
         }
 
@@ -145,39 +145,18 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
         $this->previousNodePosition = $nodePosition;
         $this->previousSectionTextHeader = $text;
 
+
+
         /**
-         * TODO: replace with CSS styling
-         * https://datacadamia.com/web/css/content#heading_numbering
+         * Rendering is done by the parent
+         * And should be the last one
+         * Because we delete the heading
+         * with {@link syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes()}
+         * in order to be able to add the toc and section
+         *
          */
-        $numbering = "";
-        if ($level == 2) {
-            $numbering = $nodePosition;
-        }
-        if ($level == 3) {
-            $numbering = $this->nodeParentPosition[$level - 1] . "." . $nodePosition;
-        }
-        if ($level == 4) {
-            $numbering = $this->nodeParentPosition[$level - 2] . "." . $this->nodeParentPosition[$level - 1] . "." . $nodePosition;
-        }
-        if ($level == 5) {
-            $numbering = $this->nodeParentPosition[$level - 3] . "." . $this->nodeParentPosition[$level - 2] . "." . $this->nodeParentPosition[$level - 1] . "." . $nodePosition;
-        }
-        if ($numbering <> "") {
-            $textWithLocalization = $numbering . " - " . $text;
-        } else {
-            $textWithLocalization = $text;
-        }
+        parent::header($text, $level, $pos);
 
-        // Rendering is done by the parent
-        parent::header($textWithLocalization, $level, $pos);
-
-
-        // Add the page detail after the first header
-        if ($level == 1 and $nodePosition == 1) {
-
-            $this->doc .= BreadcrumbHierarchical::render();
-
-        }
 
 
     }
@@ -206,6 +185,9 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
 
 
             if ($section['level'] == 1 and $section['position'] == 1) {
+
+                // Add the hierarchical breadcrumb detail after the first header
+                $sectionContent .= BreadcrumbHierarchical::render();
 
                 if (TocUtility::showToc($this)) {
                     $sectionContent .= TocUtility::renderToc($this);

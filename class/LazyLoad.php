@@ -45,6 +45,12 @@ class LazyLoad
     const CANONICAL = "lazy";
     const DEFAULT_COLOR = "#cbf1ea";
 
+    /**
+     * Used to select all lazy loaded
+     * resources and load them before print
+     */
+    const LAZY_CLASS = "lazy-combo";
+
 
     public static function addSnippet()
     {
@@ -133,10 +139,16 @@ class LazyLoad
          */
         $snippetId = "lazy-load-fade";
         $snippetManager->attachCssSnippetForBar($snippetId);
+
+
+
         /**
-         * The snippet depend on the image type and features
-         * and was added in the code
+         * Snippet to download the image before print
+         *
+         * The others javascript snippet to download lazy load depend on the image type
+         * and features and was therefore added in the code for svg or raster
          */
+        $snippetManager->attachJavascriptSnippetForBar("lozad-print");
 
 
     }

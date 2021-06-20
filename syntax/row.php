@@ -11,6 +11,7 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -30,7 +31,20 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "row";
-    const SNIPPET_ID = "grid";
+    const SNIPPET_ID = "row";
+
+    /**
+     * The strap template permits to
+     * change this value
+     * but because of the new grid system, it has been deprecated
+     * We therefore don't get the grid total columns value from strap
+     * @see {@link https://combostrap.com/dynamic_grid Dynamic Grid }
+     */
+    const GRID_TOTAL_COLUMNS = 12;
+
+    const TYPE_AUTO_VALUE = "auto";
+    const TYPE_NATURAL_VALUE = "natural";
+    const CANONICAL = "grid";
 
     /**
      * Syntax Type.
@@ -50,7 +64,11 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      */
     public function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        /**
+         * Only column.
+         * See {@link syntax_plugin_combo_cell::getType()}
+         */
+        return array('container');
     }
 
 
@@ -65,7 +83,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     * * 'normal' - The plugin can be used inside paragraphs
+     *  * 'normal' - The plugin can be used inside paragraphs
      *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
      *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
      *
@@ -128,18 +146,107 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = TagAttributes::createFromTagMatch($match);
+                if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)){
+                    /**
+                     * All element will be centered
+                     */
+                    $attributes->addClassName("justify-content-center");
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED:
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
+                $callStack = CallStack::createFromHandler($handler);
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                $type = $openingCall->getType();
 
+                /**
+                 * Auto width calculation ?
+                 */
+                if ($type == null || $type == syntax_plugin_combo_row::TYPE_AUTO_VALUE) {
+                    $numberOfColumns = 0;
+                    /**
+                     * If the size or the class is set, we don't
+                     * apply the automatic sizing
+                     */
+                    $hasSizeOrClass = false;
+                    while ($actualCall = $callStack->next()) {
+                        if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
+                            &&
+                            $actualCall->getState() == DOKU_LEXER_ENTER
+                        ) {
+                            $numberOfColumns++;
+                            if ($actualCall->hasAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
+                                $hasSizeOrClass = true;
+                            }
+                            if ($actualCall->hasAttribute(TagAttributes::CLASS_KEY)) {
+                                $hasSizeOrClass = true;
+                            }
+
+                        }
+                    }
+                    if (!$hasSizeOrClass && $numberOfColumns > 1) {
+                        /**
+                         * Parameters
+                         */
+                        $minimalWidth = 300;
+                        $numberOfGridColumns = self::GRID_TOTAL_COLUMNS;
+                        $breakpoints =
+                            [
+                                "xs" => 270,
+                                "sm" => 540,
+                                "md" => 720,
+                                "lg" => 960,
+                                "xl" => 1140,
+                                "xxl" => 1320
+                            ];
+                        /**
+                         * Calculation of the sizes value
+                         */
+                        $sizes = [];
+                        $previousRatio = null;
+                        foreach ($breakpoints as $breakpoint => $value) {
+                            $spaceByColumn = $value / $numberOfColumns;
+                            if ($spaceByColumn < $minimalWidth) {
+                                $spaceByColumn = $minimalWidth;
+                            }
+                            $ratio = floor($numberOfGridColumns / ($value / $spaceByColumn));
+                            if ($ratio > $numberOfGridColumns) {
+                                $ratio = $numberOfGridColumns;
+                            }
+                            // be sure that it's divisible by the number of grids columns
+                            // if for 3 columns, we get a ratio of 5, we want 4;
+                            while (($numberOfGridColumns % $ratio) != 0) {
+                                $ratio = $ratio - 1;
+                            }
+
+                            // Closing
+                            if ($ratio != $previousRatio) {
+                                $sizes[] = "$breakpoint-$ratio";
+                                $previousRatio = $ratio;
+                            } else {
+                                break;
+                            }
+                        }
+                        $sizeValue = implode(" ", $sizes);
+                        $callStack->moveToPreviousCorrespondingOpeningCall();
+                        while ($actualCall = $callStack->next()) {
+                            if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
+                                &&
+                                $actualCall->getState() == DOKU_LEXER_ENTER
+                            ) {
+                                $actualCall->addAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE, $sizeValue);
+                            }
+                        }
+                    }
+                }
                 return array(
                     PluginUtility::STATE => $state
                 );
@@ -175,11 +282,11 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $attributes->addClassName("row");
 
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
-                    if ($type == "auto") {
+                    if ($type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
                         $attributes->addClassName("row-cols-auto");
                     }
                     if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
-                        && $type == "auto") {
+                        && $type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
                         // row-cols-auto is not in 4.0
                         PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
                     }

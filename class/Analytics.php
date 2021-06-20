@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 
+use renderer_plugin_combo_analytics;
+
 class Analytics
 {
 
@@ -37,6 +39,7 @@ class Analytics
     const INTERNAL_MEDIAS_COUNT = 'internal_medias_count';
     const EXTERNAL_LINKS_COUNT = 'external_links_count';
     const HEADERS_COUNT = 'headers_count';
+    const SYNTAX_COUNT = "syntax_count";
     const QUALITY = 'quality';
     const STATISTICS = "statistics";
     const EMAILS_COUNT = "emails_count";
@@ -46,11 +49,6 @@ class Analytics
      * An array of info for errors mostly
      */
     const INFO = "info";
-    /**
-     * The format returned by the renderer
-     */
-    const RENDERER_FORMAT = "analytics";
-    const RENDERER_NAME_MODE = "combo_".self::RENDERER_FORMAT;
     const H1 = "h1";
     const LOW = "low";
     const RULES = "rules";
@@ -87,13 +85,13 @@ class Analytics
             $file = wikiFN($pageId);
             if (file_exists($file)) {
                 $content = file_get_contents($file);
-                $instructions = RenderUtility::getInstructions($content,false);
-                return p_render(self::RENDERER_NAME_MODE, $instructions, $info);
+                $instructions = RenderUtility::getInstructionsAndStripPEventually($content,false);
+                return p_render(renderer_plugin_combo_analytics::RENDERER_NAME_MODE, $instructions, $info);
             } else {
                 return false;
             }
         } else {
-            $result = p_cached_output(wikiFN($pageId, 0), self::RENDERER_NAME_MODE, $pageId);
+            $result = p_cached_output(wikiFN($pageId, 0), renderer_plugin_combo_analytics::RENDERER_NAME_MODE, $pageId);
         }
         $ID = $oldId;
         return $result;

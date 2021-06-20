@@ -86,6 +86,11 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     const SCORING = "scoring";
     const SCORE = "score";
     const HEADER_STRUCT = 'header_struct';
+    const RENDERER_NAME_MODE = "combo_" . renderer_plugin_combo_analytics::RENDERER_FORMAT;
+    /**
+     * The format returned by the renderer
+     */
+    const RENDERER_FORMAT = "analytics";
 
 
     /**
@@ -471,7 +476,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         } else {
             $lowLevel = filter_var($this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR], FILTER_VALIDATE_BOOLEAN);
         }
-        if (!$this->page->isBar()) {
+        if (!$this->page->isSlot()) {
             $this->page->setLowQualityIndicator($lowLevel);
         } else {
             $this->page->setLowQualityIndicator(false);
@@ -499,8 +504,8 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         $title = $dokuWikiMetadata['title'];
         $this->analyticsMetadata[Analytics::TITLE] = $title;
-        if ($title != @$dokuWikiMetadata['h1']) {
-            $this->analyticsMetadata[Analytics::H1] = $dokuWikiMetadata['h1'];
+        if ($title != @$dokuWikiMetadata[Analytics::H1]) {
+            $this->analyticsMetadata[Analytics::H1] = $dokuWikiMetadata[Analytics::H1];
         }
         $timestampCreation = $dokuWikiMetadata['date']['created'];
         $this->analyticsMetadata[self::DATE_CREATED] = date('Y-m-d h:i:s', $timestampCreation);
@@ -546,7 +551,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
      */
     public function getFormat()
     {
-        return Analytics::RENDERER_FORMAT;
+        return self::RENDERER_FORMAT;
     }
 
     public function internallink($id, $name = null, $search = null, $returnonly = false, $linktype = 'content')

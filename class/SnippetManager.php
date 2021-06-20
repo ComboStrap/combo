@@ -28,7 +28,7 @@ require_once(__DIR__ . '/Snippet.php');
 class SnippetManager
 {
 
-    const COMBO_CLASS_PREFIX = "combo-";
+    const COMBO_CLASS_SUFFIX = "combo";
 
     /**
      * If a snippet is critical, it should not be deferred
@@ -80,7 +80,17 @@ class SnippetManager
 
     public static function getClassFromSnippetId($tag)
     {
-        return self::COMBO_CLASS_PREFIX . $tag;
+        /**
+         * The class for the snippet is just to be able to identify them
+         *
+         * The `snippet` prefix was added to be sure that the class
+         * name will not conflict with a css class
+         * Example: if you set the class to `combo-list`
+         * and that you use it in a inline `style` tag with
+         * the same class name, the inline `style` tag is not applied
+         *
+         */
+        return "snippet-" . $tag . "-" . self::COMBO_CLASS_SUFFIX;
     }
 
 
@@ -186,8 +196,8 @@ class SnippetManager
                         /**
                          * Bug (Quick fix)
                          */
-                        if (is_string($snippet)){
-                            LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object",LogUtility::LVL_MSG_ERROR);
+                        if (is_string($snippet)) {
+                            LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object", LogUtility::LVL_MSG_ERROR);
                             $content = $snippet;
                         } else {
                             $content = $snippet->getContent();
@@ -200,28 +210,27 @@ class SnippetManager
                     }
                     break;
                 case Snippet::TYPE_CSS:
+                    /**
+                     * CSS inline in script tag
+                     * They are all critical
+                     */
                     foreach ($snippetBySnippetId as $snippetId => $snippet) {
                         /**
                          * Bug (Quick fix)
                          */
-                        if (is_string($snippet)){
-                            LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object",LogUtility::LVL_MSG_ERROR);
+                        if (is_string($snippet)) {
+                            LogUtility::msg("The snippet ($snippetId) is a string ($snippet) and not a snippet object", LogUtility::LVL_MSG_ERROR);
                             $content = $snippet;
-                            $critical = true;
                         } else {
                             /**
                              * @var Snippet $snippet
                              */
                             $content = $snippet->getContent();
-                            $critical = $snippet->getCritical();
                         }
                         $snippetArray = array(
                             "class" => self::getClassFromSnippetId($snippetId),
                             "_data" => $content
                         );
-                        if (Site::isStrapTemplate()) {
-                            $snippetArray[self::CRITICAL_ATTRIBUTE] = $critical;
-                        }
                         /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["style"][] = $snippetArray;
                     }
@@ -322,7 +331,7 @@ class SnippetManager
                 // When we edit a sidebar
                 // The sidebar and the page competes
                 $barPage = new Page($bar);
-                if (!$barPage->isBar()) {
+                if (!$barPage->isSlot()) {
                     /**
                      * For what ever reason, this happens
                      * but it works

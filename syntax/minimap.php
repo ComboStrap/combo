@@ -133,7 +133,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_SPECIAL :
 
 
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::MINIMAP_TAG_NAME);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::MINIMAP_TAG_NAME);
 
 
                     global $ID;
@@ -194,11 +194,8 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
                          */
                         // If debug mode
                         if ($attributes['debug']) {
-                            $link->setTitle($link->getTitle().' (' . $pageId . ')');
+                            $link->setTitle($link->getTitle().' (' . $pageId . '|' . $pageNum . ')');
                         }
-
-                        // Add the page number in the URL title
-                        $link->setTitle($link->getTitle() .' (' . $pageNum . ')');
 
                         // Suppress the parts in the name with the regexp defines in the 'suppress' params
                         if ($attributes['suppress']) {

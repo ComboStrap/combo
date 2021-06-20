@@ -24,6 +24,7 @@ if (!defined('DOKU_INC')) die();
  *   * disable preformatted mode via the function {@link syntax_plugin_combo_preformatted::disablePreformatted()}
  * used in other HTML super set syntax component to disable this behavior
  *
+ * It's also the original markdown specification
  *
  */
 class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin

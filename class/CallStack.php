@@ -16,6 +16,7 @@ namespace ComboStrap;
 use Doku_Handler;
 use dokuwiki\Extension\SyntaxPlugin;
 use dokuwiki\Parsing\Parser;
+use syntax_plugin_combo_media;
 
 /**
  * Class CallStack
@@ -30,7 +31,7 @@ use dokuwiki\Parsing\Parser;
  *
  * You can move on the stack with the function:
  *   * {@link CallStack::next()}
- *   * {@link CallStack::prev()}
+ *   * {@link CallStack::previous()}
  *   * `MoveTo`. example: {@link CallStack::moveToPreviousCorrespondingOpeningCall()}
  *
  *
@@ -41,6 +42,14 @@ class CallStack
     const TAG_STATE = [DOKU_LEXER_SPECIAL, DOKU_LEXER_ENTER];
 
     const CANONICAL = "support";
+
+    /**
+     * The type of callstack
+     *   * main is the normal
+     *   * writer is when there is a temporary call stack from the writer
+     */
+    const CALLSTACK_WRITER = "writer";
+    const CALLSTACK_MAIN = "main";
 
     private $handler;
 
@@ -63,6 +72,17 @@ class CallStack
      * If true, we are at the offset: end of th array + 1
      */
     private $endWasReached = false;
+    /**
+     * If true, we are at the offset: start of th array - 1
+     * You can use {@link CallStack::next()}
+     * @var bool
+     */
+    private $startWasReached = false;
+
+    /**
+     * @var string the type of callstack
+     */
+    private $callStackType;
 
     /**
      * A callstack is a pointer implementation to manipulate
@@ -79,12 +99,27 @@ class CallStack
     public function __construct(&$handler)
     {
         $this->handler = $handler;
-        $this->maxIndex = ArrayUtility::array_key_last($handler->calls);
-        $this->callStack = &$handler->calls;
+
+        /**
+         * A temporary Call stack is created in the writer
+         * for list, table, blockquote
+         */
+        $writerCalls = &$handler->getCallWriter()->calls;
+        if (!empty($writerCalls)) {
+            $this->callStack = &$writerCalls;
+            $this->callStackType = self::CALLSTACK_WRITER;
+        } else {
+            $this->callStack = &$handler->calls;
+            $this->callStackType = self::CALLSTACK_MAIN;
+        }
+
+        $this->maxIndex = ArrayUtility::array_key_last($this->callStack);
         $this->moveToEnd();
+
     }
 
-    public static function createFromMarkup($marki)
+    public
+    static function createFromMarkup($marki)
     {
 
         $modes = p_get_parsermodes();
@@ -103,7 +138,8 @@ class CallStack
     /**
      * Reset the pointer
      */
-    public function closeAndResetPointer()
+    public
+    function closeAndResetPointer()
     {
         reset($this->callStack);
     }
@@ -114,7 +150,8 @@ class CallStack
      * @param $start
      * @param $end
      */
-    public static function deleteCalls(&$calls, $start, $end)
+    public
+    static function deleteCalls(&$calls, $start, $end)
     {
         for ($i = $start; $i <= $end; $i++) {
             unset($calls[$i]);
@@ -126,7 +163,8 @@ class CallStack
      * @param integer $position
      * @param array $callStackToInsert
      */
-    public static function insertCallStackUpWards(&$calls, $position, $callStackToInsert)
+    public
+    static function insertCallStackUpWards(&$calls, $position, $callStackToInsert)
     {
 
         array_splice($calls, $position, 0, $callStackToInsert);
@@ -139,7 +177,8 @@ class CallStack
      * @param Doku_Handler $handler
      * @return CallStack
      */
-    public static function createFromHandler(\Doku_Handler &$handler)
+    public
+    static function createFromHandler(\Doku_Handler &$handler)
     {
         return new CallStack($handler);
     }
@@ -156,12 +195,13 @@ class CallStack
      * state of {@link SyntaxPlugin::handle()} to create paragraph
      * with the class given as parameter
      *
-     * @param $class - the class of the paragraph
+     * @param $attributes - the attributes in an array callstack form for the paragraph
      */
-    public function processEolToEndStack($class = "")
+    public
+    function processEolToEndStack($attributes = [])
     {
 
-        \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack($this, $class);
+        \syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack($this, $attributes);
 
     }
 
@@ -170,9 +210,14 @@ class CallStack
      * And go to the previous position
      *
      * This function can be used in a next loop
+     *
+     * @return Call the deleted call
      */
-    public function deleteActualCallAndPrevious()
+    public
+    function deleteActualCallAndPrevious()
     {
+
+        $actualCall = $this->getActualCall();
 
         $offset = $this->getActualOffset();
         array_splice($this->callStack, $offset, 1, []);
@@ -181,7 +226,7 @@ class CallStack
          * Move to the next element (array splice reset the pointer)
          * if there is a eol as, we delete it
          * otherwise we may end up with two eol
-         *  and this is an empty paragraph
+         * and this is an empty paragraph
          */
         $this->moveToOffset($offset);
         if (!$this->isPointerAtEnd()) {
@@ -189,10 +234,13 @@ class CallStack
                 array_splice($this->callStack, $offset, 1, []);
             }
         }
+
         /**
          * Move to the previous element
          */
         $this->moveToOffset($offset - 1);
+
+        return $actualCall;
 
     }
 
@@ -202,16 +250,21 @@ class CallStack
      * by reference, meaning that every update will also modify the element
      * in the stack
      */
-    public function getActualCall()
+    public
+    function getActualCall()
     {
-        if (!$this->endWasReached) {
-            $actualCallKey = key($this->callStack);
-            $actualCallArray = &$this->callStack[$actualCallKey];
-            return new Call($actualCallArray, $actualCallKey);
-        } else {
+        if ($this->endWasReached) {
             LogUtility::msg("The actual call cannot be ask because the end of the stack was reached", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return null;
         }
+        if ($this->startWasReached) {
+            LogUtility::msg("The actual call cannot be ask because the start of the stack was reached", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return null;
+        }
+        $actualCallKey = key($this->callStack);
+        $actualCallArray = &$this->callStack[$actualCallKey];
+        return new Call($actualCallArray, $actualCallKey);
+
     }
 
     /**
@@ -219,15 +272,23 @@ class CallStack
      * false if at the end
      * @return false|Call
      */
-    public function next()
+    public
+    function next()
     {
-        $next = next($this->callStack);
-        if ($next === false) {
-            $this->endWasReached = true;
-            return $next;
-        } else {
+        if ($this->startWasReached) {
+            $this->startWasReached = false;
+            reset($this->callStack);
             return $this->getActualCall();
+        } else {
+            $next = next($this->callStack);
+            if ($next === false) {
+                $this->endWasReached = true;
+                return $next;
+            } else {
+                return $this->getActualCall();
+            }
         }
+
     }
 
     /**
@@ -239,7 +300,8 @@ class CallStack
      *
      * @return bool|Call
      */
-    public function moveToPreviousCorrespondingOpeningCall()
+    public
+    function moveToPreviousCorrespondingOpeningCall()
     {
 
         if (!$this->endWasReached) {
@@ -254,9 +316,8 @@ class CallStack
             }
         }
         $level = 0;
-        while ($this->prev()) {
+        while ($actualCall = $this->previous()) {
 
-            $actualCall = $this->getActualCall();
             $state = $actualCall->getState();
             switch ($state) {
                 case DOKU_LEXER_ENTER:
@@ -278,22 +339,40 @@ class CallStack
         }
     }
 
-    public function prev()
+
+    /**
+     * @return Call|false the previous call or false if there is no more previous call
+     */
+    public
+    function previous()
     {
         if ($this->endWasReached) {
             $this->endWasReached = false;
-            end($this->callStack);
+            $return = end($this->callStack);
+            if ($return == false) {
+                // empty array (first call on the stack)
+                return false;
+            } else {
+                return $this->getActualCall();
+            }
         } else {
-            prev($this->callStack);
+            $prev = prev($this->callStack);
+            if ($prev === false) {
+                $this->startWasReached = true;
+                return $prev;
+            } else {
+                return $this->getActualCall();
+            }
         }
-        return $this->getActualCall();
+
     }
 
     /**
      * Return the first enter or special child call (ie a tag)
      * @return Call|false
      */
-    public function moveToFirstChildTag()
+    public
+    function moveToFirstChildTag()
     {
         $found = false;
         while ($this->next()) {
@@ -322,8 +401,12 @@ class CallStack
     /**
      * The end is the one after the last element
      */
-    public function moveToEnd()
+    public
+    function moveToEnd()
     {
+        if ($this->startWasReached) {
+            $this->startWasReached = false;
+        }
         end($this->callStack);
         $this->next();
     }
@@ -331,7 +414,8 @@ class CallStack
     /**
      * On the same level
      */
-    public function moveToNextSiblingTag()
+    public
+    function moveToNextSiblingTag()
     {
         $actualCall = $this->getActualCall();
         $actualState = $actualCall->getState();
@@ -368,7 +452,8 @@ class CallStack
     /**
      * @param Call $call
      */
-    public function insertBefore($call)
+    public
+    function insertBefore($call)
     {
         if ($this->endWasReached) {
 
@@ -389,12 +474,13 @@ class CallStack
      * Move pointer by offset
      * @param $offset
      */
-    private function moveToOffset($offset)
+    private
+    function moveToOffset($offset)
     {
         $this->resetPointer();
         for ($i = 0; $i < $offset; $i++) {
             $result = $this->next();
-            if ($result === false){
+            if ($result === false) {
                 break;
             }
         }
@@ -404,7 +490,8 @@ class CallStack
      * Move pointer by key
      * @param $targetKey
      */
-    private function moveToKey($targetKey)
+    private
+    function moveToKey($targetKey)
     {
         $this->resetPointer();
         for ($i = 0; $i < $targetKey; $i++) {
@@ -419,17 +506,27 @@ class CallStack
     /**
      * @param Call $call
      */
-    public function insertAfter($call)
+    public
+    function insertAfter($call)
     {
         $actualKey = key($this->callStack);
-        $offset = array_search($actualKey, array_keys($this->callStack), true);
-        array_splice($this->callStack, $offset + 1, 0, [$call->toCallArray()]);
-        // array splice reset the pointer
-        // we move it to the actual element
-        $this->moveToKey($actualKey);
+        if ($actualKey == null) {
+            if ($this->endWasReached == true) {
+                $this->callStack[] = $call->toCallArray();
+            } else {
+                LogUtility::msg("Callstack: Actual key is null, we can't insert after null");
+            }
+        } else {
+            $offset = array_search($actualKey, array_keys($this->callStack), true);
+            array_splice($this->callStack, $offset + 1, 0, [$call->toCallArray()]);
+            // array splice reset the pointer
+            // we move it to the actual element
+            $this->moveToKey($actualKey);
+        }
     }
 
-    public function getActualKey()
+    public
+    function getActualKey()
     {
         return key($this->callStack);
     }
@@ -438,7 +535,8 @@ class CallStack
      * Insert an EOL call if the next call is not an EOL
      * This is to enforce an new paragraph
      */
-    public function insertEolIfNextCallIsNotEolOrBlock()
+    public
+    function insertEolIfNextCallIsNotEolOrBlock()
     {
         if (!$this->isPointerAtEnd()) {
             $nextCall = $this->next();
@@ -448,20 +546,22 @@ class CallStack
                         Call::createNativeCall("eol")
                     );
                     // move on the eol
-                    $this->prev();
+                    $this->previous();
                 }
                 // move back
-                $this->prev();
+                $this->previous();
             }
         }
     }
 
-    private function isPointerAtEnd()
+    private
+    function isPointerAtEnd()
     {
         return $this->endWasReached;
     }
 
-    public function &getHandler()
+    public
+    function &getHandler()
     {
         return $this->handler;
     }
@@ -473,16 +573,99 @@ class CallStack
      *
      * @return false|int|string
      */
-    private function getActualOffset()
+    private
+    function getActualOffset()
     {
         $actualKey = key($this->callStack);
         return array_search($actualKey, array_keys($this->callStack), true);
     }
 
-    private function resetPointer()
+    private
+    function resetPointer()
     {
         reset($this->callStack);
-        $this->endWasReached=false;
+        $this->endWasReached = false;
     }
+
+    public
+    function moveToStart()
+    {
+        $this->resetPointer();
+        $this->previous();
+    }
+
+    /**
+     * @return Call|false the parent call or false if there is no parent
+     */
+    public function moveToParent()
+    {
+
+        /**
+         * Case when we start from the exit state element
+         * We go first to the opening tag
+         * because the algorithm is level based.
+         *
+         * When the end is reached, there is no call
+         * (this not the {@link end php end} but one further
+         */
+        if (!$this->endWasReached && !$this->startWasReached && $this->getActualCall()->getState() == DOKU_LEXER_EXIT) {
+
+            $this->moveToPreviousCorrespondingOpeningCall();
+
+        }
+
+
+        /**
+         * We are in a parent when the tree level is negative
+         */
+        $treeLevel = 0;
+        while ($actualCall = $this->previous()) {
+
+            /**
+             * Add
+             * would become a parent on its enter state
+             */
+            $actualCallState = $actualCall->getState();
+            switch ($actualCallState) {
+                case DOKU_LEXER_ENTER:
+                    $treeLevel = $treeLevel - 1;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    /**
+                     * When the tag has a sibling with an exit tag
+                     */
+                    $treeLevel = $treeLevel + 1;
+                    break;
+            }
+
+            /**
+             * The breaking statement
+             */
+            if ($treeLevel < 0) {
+                break;
+            }
+
+        }
+        return $actualCall;
+
+
+    }
+
+    /**
+     * Delete the anchor link to the image (ie the lightbox)
+     *
+     * This is used in navigation and for instance
+     * in heading
+     */
+    public function processNoLinkOnImageToEndStack()
+    {
+        while ($this->next()) {
+            $actualCall = $this->getActualCall();
+            if ($actualCall->getTagName() == syntax_plugin_combo_media::TAG) {
+                $actualCall->addAttribute(TagAttributes::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+            }
+        }
+    }
+
 
 }

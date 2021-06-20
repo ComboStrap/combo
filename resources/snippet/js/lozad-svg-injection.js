@@ -1,6 +1,6 @@
 window.addEventListener("load", function (event) {
     // lazy loads elements with default selector as '.lozad'
-    const svgObserver = lozad('.combo-lazy-svg-injection', {
+    const svgObserver = lozad('.lazy-svg-injection-combo', {
         load: function (el) {
             // Custom implementation to load the svg element
             SVGInjector(el, {
@@ -25,7 +25,7 @@ window.addEventListener("load", function (event) {
         },
         loaded: function (el) {
             // Custom implementation on a loaded element
-            el.classList.add('combo-loaded');
+            el.classList.add('loaded-combo');
         }
     });
     svgObserver.observe();

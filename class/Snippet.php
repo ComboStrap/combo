@@ -69,6 +69,11 @@ class Snippet
         }
     }
 
+    public static function createJavascriptSnippet($snippetId)
+    {
+         return new Snippet($snippetId,self::TYPE_JS);
+    }
+
 
     /**
      * @param $bool - if the snippet is critical, it would not be deferred or preloaded

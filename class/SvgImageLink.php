@@ -51,7 +51,7 @@ class SvgImageLink extends MediaLink
     public function __construct($id, $tagAttributes = null, $rev = '')
     {
         parent::__construct($id, $tagAttributes, $rev);
-        $this->getTagAttributes()->setTag(self::CANONICAL);
+        $this->getTagAttributes()->setLogicalTag(self::CANONICAL);
     }
 
 
@@ -60,6 +60,7 @@ class SvgImageLink extends MediaLink
 
 
         $lazyLoad = $this->getLazyLoad();
+
         $svgInjection = PluginUtility::getConfValue(self::CONF_SVG_INJECTION_ENABLE, 1);
         /**
          * Snippet
@@ -100,23 +101,6 @@ class SvgImageLink extends MediaLink
          */
         $this->tagAttributes->removeComponentAttributeIfPresent(TagAttributes::LINKING_KEY);
 
-        /**
-         * Class
-         * functionalClass is not added
-         * as a normal class when injected
-         * This is why, it's not added in the {@link TagAttributes}
-         */
-        $functionalClass = "";
-        if ($svgInjection && $lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg-injection");
-            $functionalClass = "combo-lazy-svg-injection";
-        } else if ($lazyLoad && !$svgInjection) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg");
-            $functionalClass = "combo-lazy-svg";
-        } else if ($svgInjection && !$lazyLoad) {
-            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
-            $functionalClass = "combo-svg-injection";
-        }
 
 
         /**
@@ -145,16 +129,38 @@ class SvgImageLink extends MediaLink
             $this->tagAttributes->addHtmlAttributeValue("alt", $this->getTitle());
         }
 
+
         /**
-         * Class into data-class for injection
+         * Class management
+         *
+         * functionalClass is the class used in Javascript
+         * that should be in the class attribute
+         * When injected, the other class should come in a `data-class` attribute
          */
+        $svgFunctionalClass = "";
+        if ($svgInjection && $lazyLoad) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg-injection");
+            $svgFunctionalClass = "lazy-svg-injection-combo";
+        } else if ($lazyLoad && !$svgInjection) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-svg");
+            $svgFunctionalClass = "lazy-svg-combo";
+        } else if ($svgInjection && !$lazyLoad) {
+            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("svg-injector");
+            $svgFunctionalClass = "svg-injection-combo";
+        }
+        if ($lazyLoad) {
+            // A class to all component lazy loaded to download them before print
+            $svgFunctionalClass .= " ".LazyLoad::LAZY_CLASS;
+        }
         if ($svgInjection) {
+            /**
+             * Class into data-class if svg injection
+             */
             if ($this->tagAttributes->hasComponentAttribute("class")) {
                 $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAndRemove("class"));
             }
         }
-        // Add the functional class
-        $this->tagAttributes->addClassName($functionalClass);
+        $this->tagAttributes->addClassName($svgFunctionalClass);
 
         /**
          * Return the image
@@ -177,7 +183,7 @@ class SvgImageLink extends MediaLink
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl($ampersand = MediaLink::URL_ENCODED_AND)
+    public function getUrl($ampersand = Url::URL_ENCODED_AND)
     {
 
         if ($this->exists()) {
@@ -197,7 +203,7 @@ class SvgImageLink extends MediaLink
             $componentAttributes = $this->tagAttributes->getComponentAttributes();
             foreach ($componentAttributes as $name => $value) {
 
-                if (!in_array($name, MediaLink::NON_URL_ATTRIBUTES)) {
+                if (!in_array(strtolower($name), MediaLink::NON_URL_ATTRIBUTES)) {
                     $newName = $name;
 
                     /**
@@ -226,7 +232,7 @@ class SvgImageLink extends MediaLink
                             break;
                     }
 
-                    if ($newName== CacheMedia::CACHE_KEY && $value== CacheMedia::CACHE_DEFAULT_VALUE){
+                    if ($newName == CacheMedia::CACHE_KEY && $value == CacheMedia::CACHE_DEFAULT_VALUE) {
                         // This is the default
                         // No need to add it
                         continue;
@@ -268,9 +274,10 @@ class SvgImageLink extends MediaLink
         if ($this->exists()) {
 
             /**
-             * This attribute should not be in the render
+             * This attributes should not be in the render
              */
             $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
+            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
 
             if (
                 $this->getSize() > $this->getMaxInlineSize()

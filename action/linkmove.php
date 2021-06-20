@@ -15,7 +15,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 {
 
     /**
-     * As explained https://www.dokuwiki.org/plugin:move
+     * As explained https://www.dokuwiki.org/plugin:move#support_for_other_plugins
      * @param Doku_Event_Handler $controller
      */
     function register(Doku_Event_Handler $controller)

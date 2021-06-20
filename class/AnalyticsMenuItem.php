@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Menu\Item\AbstractItem;
+use renderer_plugin_combo_analytics;
 
 /**
  * Class MenuItem
@@ -23,11 +24,11 @@ use dokuwiki\Menu\Item\AbstractItem;
  * https://raw.githubusercontent.com/splitbrain/dokuwiki-plugin-dw2pdf/master/MenuItem.php
  */
 class AnalyticsMenuItem extends AbstractItem {
-    const ITEM_ID = Analytics::RENDERER_NAME_MODE . "_item_id";
+    const ITEM_ID = renderer_plugin_combo_analytics::RENDERER_NAME_MODE . "_item_id";
 
 
     /** @var string do action for this plugin */
-    protected $type = 'export_'.Analytics::RENDERER_NAME_MODE;
+    protected $type = 'export_'. renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
 
 
 

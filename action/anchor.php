@@ -21,10 +21,6 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
     const ANCHOR = "anchor";
 
 
-    /**
-     * @var bool - to trace if the header output was called
-     */
-    private $headerOutputWasCalled = false;
 
     function __construct()
     {
@@ -58,7 +54,7 @@ class action_plugin_combo_anchor extends DokuWiki_Action_Plugin
                 )
             ])
         );
-        PluginUtility::getSnippetManager()->upsertJavascriptSnippetForRequest(self::ANCHOR);
+        PluginUtility::getSnippetManager()->attachJavascriptSnippetForRequest(self::ANCHOR);
 
 
     }

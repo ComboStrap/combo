@@ -20,13 +20,22 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * ie:
  *    syntax_plugin_PluginName_ComponentName
  *
- * See also: doc : http://themenectar.com/docs/salient/theme-options/header-navigation
+ * See also: doc :
+ * https://getbootstrap.com/docs/5.0/components/navbar/
+ * https://material.io/components/app-bars-top
+ *
+ * Name:
+ *  * header bar: http://themenectar.com/docs/salient/theme-options/header-navigation
+ *  * menu bar: https://en.wikipedia.org/wiki/Menu_bar
+ *  * app bar: https://material.io/components/app-bars-top
+ *  * navbar: https://getbootstrap.com/docs/5.0/examples/navbars/#
  */
-class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_menubar extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = 'navbar';
-    const COMPONENT = 'navbar';
+    const TAG = 'menubar';
+    const OLD_TAG = "navbar";
+    const TAGS = [self::TAG,self::OLD_TAG];
 
     /**
      * Do we need to add a container
@@ -104,15 +113,18 @@ class syntax_plugin_combo_navbar extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach(self::TAGS as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
     public function postConnect()
     {
-
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach(self::TAGS as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 

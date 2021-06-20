@@ -3,7 +3,6 @@
 
 use ComboStrap\HeaderUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\StringUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 

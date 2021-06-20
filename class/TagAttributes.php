@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
+use syntax_plugin_combo_cell;
 
 /**
  * An helper to create manipulate component and html attributes
@@ -61,23 +62,32 @@ class TagAttributes
         TagAttributes::TYPE_KEY, // type is the component class
         TagAttributes::LINKING_KEY, // internal to image
         CacheMedia::CACHE_KEY, // internal also
+        \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
+        syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE
     ];
 
     /**
      * The inline element
+     * We could pass the plugin object into tag attribute in place of the logical tag and check if the {@link SyntaxPlugin::getPType()} is normal
      */
-    const INLINE_LOGICAL_ELEMENTS = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
+    const INLINE_LOGICAL_ELEMENTS = [
+        SvgImageLink::CANONICAL,
+        RasterImageLink::CANONICAL,
+        \syntax_plugin_combo_link::TAG, // link button for instance
+        \syntax_plugin_combo_button::TAG
+    ];
     const SCRIPT_KEY = "script";
     const TRANSFORM = "transform";
 
     const CANONICAL = "tag";
     const DISPLAY = "display";
+    const CLASS_KEY = "class";
 
 
     /**
      * @var array attribute that were set on a component
      */
-    private $componentAttributes;
+    private $componentAttributesCaseInsensitive;
 
     /**
      * @var array the style declaration array
@@ -107,7 +117,7 @@ class TagAttributes
      * It's not an HTML tag (a div can have a flex display or a block and they don't carry this information)
      * The tag gives also context for the attributes (ie an div has no natural width while an img has)
      */
-    private $tag;
+    private $logicalTag;
 
     /**
      * An html that should be added after the enter tag
@@ -123,33 +133,50 @@ class TagAttributes
     const TEXT_HTML_MIME = "text/html";
     private $mime = TagAttributes::TEXT_HTML_MIME;
 
+
     /**
      * ComponentAttributes constructor.
      * Use the static create function to instantiate this object
-     * @param $tag - tag (the tag gives context for the attributes (ie an div has no natural width while an img has)
+     * @param $tag - tag (the tag gives context for the attributes
+     *     * an div has no natural width while an img has
+     *     * this is not always the component name / syntax name (for instance the {@link \syntax_plugin_combo_codemarkdown} is another syntax
+     * for a {@link \syntax_plugin_combo_code} and have therefore the same logical name)
      * @param array $componentAttributes
      */
     private function __construct($componentAttributes = array(), $tag = null)
     {
-        $this->tag = $tag;
-        $this->componentAttributes = $componentAttributes;
+        $this->logicalTag = $tag;
+        $this->componentAttributesCaseInsensitive = new ArrayCaseInsensitive($componentAttributes);
+
+        /**
+         * Delete empty/null values
+         * From a functional point of view, they should not exist
+         */
+        foreach ($componentAttributes as $key => $value) {
+            if ($value == null || blank($value)) {
+                unset($this->componentAttributesCaseInsensitive[$key]);
+            }
+        }
+
     }
 
     /**
      * @param $match - the {@link SyntaxPlugin::handle()} match
+     * @param array $defaultAttributes
      * @return TagAttributes
      */
-    public static function createFromTagMatch($match)
+    public static function createFromTagMatch($match, $defaultAttributes = [])
     {
-        $htmlAttributes = PluginUtility::getTagAttributes($match);
+        $inlineHtmlAttributes = PluginUtility::getTagAttributes($match);
         $tag = PluginUtility::getTag($match);
-        return self::createFromCallStackArray($htmlAttributes, $tag);
+        $mergedAttributes = PluginUtility::mergeAttributes($inlineHtmlAttributes, $defaultAttributes);
+        return self::createFromCallStackArray($mergedAttributes, $tag);
     }
 
 
     public static function createEmpty($logicalTag = "")
     {
-        if ($logicalTag!=="") {
+        if ($logicalTag !== "") {
             return new TagAttributes([], $logicalTag);
         } else {
             return new TagAttributes();
@@ -157,37 +184,19 @@ class TagAttributes
     }
 
     /**
-     * @param $renderArray - an array of key value pair
+     * @param array $renderArray - an array of key value pair
      * @param string $logicalTag - the logical tag for which this attribute will apply
      * @return TagAttributes
      */
     public static function createFromCallStackArray($renderArray, $logicalTag = null)
     {
-        $attributes = self::CallStackArrayToInternalArray($renderArray);
-        return new TagAttributes($attributes, $logicalTag);
-    }
-
-    /**
-     * Utility function to go from an html array to a tag array
-     * Used during refactoring
-     * @param array $callStackAttributes
-     * @return array
-     */
-    private static function CallStackArrayToInternalArray(array $callStackAttributes)
-    {
-
-        $attributes = array();
-        foreach ($callStackAttributes as $key => $attribute) {
-
-            /**
-             * Key are always lower
-             */
-            $lowerKey = strtolower($key);
-            $attributes[$lowerKey] = $attribute;
-
+        if (!is_array($renderArray)) {
+            LogUtility::msg("The renderArray variable passed is not an array ($renderArray)", LogUtility::LVL_MSG_ERROR);
+            $renderArray = TagAttributes::createEmpty($logicalTag);
         }
-        return $attributes;
+        return new TagAttributes($renderArray, $logicalTag);
     }
+
 
     /**
      * For CSS a unit is mandatory (not for HTML or SVG attributes)
@@ -230,13 +239,14 @@ class TagAttributes
     public function addClassName($className)
     {
 
-        $this->addComponentAttributeValue('class', $className);
+        $this->addComponentAttributeValue(self::CLASS_KEY, $className);
+        return $this;
 
     }
 
     public function getClass()
     {
-        return $this->getValue('class');
+        return $this->getValue(self::CLASS_KEY);
     }
 
     public function getStyle()
@@ -258,7 +268,7 @@ class TagAttributes
 
         $attLower = strtolower($attributeName);
         if ($this->hasComponentAttribute($attLower)) {
-            $actual = $this->componentAttributes[$attLower];
+            $actual = $this->componentAttributesCaseInsensitive[$attLower];
         }
 
         if ($attributeName === "class") {
@@ -275,12 +285,12 @@ class TagAttributes
                 $actualValues = [];
             }
             $newValues = PluginUtility::mergeAttributes($newValues, $actualValues);
-            $this->componentAttributes[$attLower] = implode(" ", $newValues);
+            $this->componentAttributesCaseInsensitive[$attLower] = implode(" ", $newValues);
         } else {
             if (!empty($actual)) {
                 LogUtility::msg("The attribute ($attLower) has already a value ($actual). Adding another value ($attributeValue) is not yet implemented. Use the set operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
-            $this->componentAttributes[$attLower] = $attributeValue;
+            $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
         }
 
 
@@ -289,7 +299,7 @@ class TagAttributes
     public function setComponentAttributeValue($attributeName, $attributeValue)
     {
         $attLower = strtolower($attributeName);
-        $this->componentAttributes[$attLower] = $attributeValue;
+        $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
     }
 
     public function addComponentAttributeValueIfNotEmpty($attributeName, $attributeValue)
@@ -301,8 +311,19 @@ class TagAttributes
 
     public function hasComponentAttribute($attributeName)
     {
-        $lowerAtt = strtolower($attributeName);
-        return isset($this->componentAttributes[$lowerAtt]);
+        $isset = isset($this->componentAttributesCaseInsensitive[$attributeName]);
+        if ($isset === false) {
+            /**
+             * Edge effect
+             * if this is a boolean value and the first value, it may be stored in the type
+             */
+            if (isset($this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY])) {
+                if ($attributeName == $this->componentAttributesCaseInsensitive[TagAttributes::TYPE_KEY]) {
+                    return true;
+                }
+            }
+        }
+        return $isset;
     }
 
     /**
@@ -338,15 +359,26 @@ class TagAttributes
             Position::processPosition($this);
 
             /**
-             * Float
+             * Block processing
+             *
+             * Float, align, spacing
              */
             FloatAttribute::processFloat($this);
+            Align::processAlignAttributes($this);
+            Spacing::processSpacingAttributes($this);
+            Opacity::processOpacityAttribute($this);
+            Background::processBackgroundAttributes($this);
+            Shadow::process($this);
 
             /**
-             * Process the attributes that have an effect on the class
+             * Process text attributes
              */
-            PluginUtility::processSpacingAttributes($this);
-            PluginUtility::processAlignAttributes($this);
+            LineSpacing::processLineSpacingAttributes($this);
+            TextAlign::processTextAlign($this);
+            Boldness::processBoldnessAttribute($this);
+            FontSize::processFontSizeAttribute($this);
+            TextColor::processTextColorAttribute($this);
+            Underline::processUnderlineAttribute($this);
 
             /**
              * Process the style attributes if any
@@ -354,15 +386,16 @@ class TagAttributes
             PluginUtility::processStyle($this);
             PluginUtility::processCollapse($this);
 
-            /**
-             * Background
-             */
-            Background::processBackgroundAttributes($this);
 
             /**
              * Skin Attribute
              */
             Skin::processSkinAttribute($this);
+
+            /**
+             * Lang
+             */
+            Lang::processLangAttribute($this);
 
             /**
              * Transform
@@ -385,7 +418,7 @@ class TagAttributes
             /**
              * copy the unknown component attributes
              */
-            foreach ($this->componentAttributes as $key => $value) {
+            foreach ($this->componentAttributesCaseInsensitive->getOriginalArray() as $key => $value) {
 
                 // Null Value, not needed
                 if ($value == null) {
@@ -463,14 +496,15 @@ class TagAttributes
      * that we have in the written document set on a component
      * @param $key
      * @param $value
+     * @return TagAttributes
      */
     public function addHtmlAttributeValue($key, $value)
     {
         if (empty($value)) {
-            LogUtility::msg("The value of the HTML attribute is empty, use the if empty function instead", LogUtility::LVL_MSG_ERROR, "support");
+            LogUtility::msg("The value of the HTML attribute is empty", LogUtility::LVL_MSG_ERROR, "support");
         }
         $this->htmlAttributes[$key] = $value;
-
+        return $this;
     }
 
 
@@ -490,7 +524,7 @@ class TagAttributes
     {
         $attributeName = strtolower($attributeName);
         if ($this->hasComponentAttribute($attributeName)) {
-            return $this->componentAttributes[$attributeName];
+            return $this->componentAttributesCaseInsensitive[$attributeName];
         } else {
             return $default;
         }
@@ -501,7 +535,7 @@ class TagAttributes
      */
     public function toInternalArray()
     {
-        return $this->componentAttributes;
+        return $this->componentAttributesCaseInsensitive;
     }
 
     /**
@@ -522,10 +556,11 @@ class TagAttributes
                  * Don't remove for instance the `type`
                  * because it may be used elsewhere
                  */
-                unset($this->componentAttributes[$attributeName]);
+                unset($this->componentAttributesCaseInsensitive[$attributeName]);
             } else {
                 LogUtility::msg("Internal: The attribute $attributeName is a reserved word and cannot be removed. Use the get function instead", LogUtility::LVL_MSG_WARNING, "support");
             }
+
         }
         return $value;
     }
@@ -538,8 +573,12 @@ class TagAttributes
     public function toCallStackArray()
     {
         $array = array();
-        foreach ($this->componentAttributes as $key => $value) {
-            if (!empty($value)) {
+        foreach ($this->componentAttributesCaseInsensitive->getOriginalArray() as $key => $value) {
+            /**
+             * blank and not empty
+             * because the width can be zero
+             */
+            if (!blank($value)) {
                 $array[$key] = StringUtility::toString($value);
             }
         }
@@ -585,7 +624,8 @@ class TagAttributes
         $tagAttributeString = "";
 
         $urlEncoding = ["href", "src", "data-src", "data-srcset"];
-        foreach ($this->toHtmlArray() as $name => $value) {
+        $htmlArray = $this->toHtmlArray();
+        foreach ($htmlArray as $name => $value) {
 
             if (!empty($value)) {
                 /**
@@ -613,7 +653,7 @@ class TagAttributes
     public function removeComponentAttributeIfPresent($attributeName)
     {
         if ($this->hasComponentAttribute($attributeName)) {
-            unset($this->componentAttributes[$attributeName]);
+            unset($this->componentAttributesCaseInsensitive[$attributeName]);
         }
 
     }
@@ -637,21 +677,28 @@ class TagAttributes
 
     public function getLogicalTag()
     {
-        return $this->tag;
+        return $this->logicalTag;
     }
 
-    public function setTag($tag)
+    public function setLogicalTag($tag)
     {
-        $this->tag = $tag;
+        $this->logicalTag = $tag;
     }
 
     public function removeComponentAttribute($attribute)
     {
         $lowerAtt = strtolower($attribute);
-        if (isset($this->componentAttributes[$lowerAtt])) {
-            unset($this->componentAttributes[$lowerAtt]);
+        if (isset($this->componentAttributesCaseInsensitive[$lowerAtt])) {
+            unset($this->componentAttributesCaseInsensitive[$lowerAtt]);
         } else {
-            LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR, "support");
+            /**
+             * Edge case, this is the first boolean attribute
+             * and may has been categorized as the type
+             */
+            if (!$this->getType() == $lowerAtt) {
+                LogUtility::msg("Internal Error: The component attribute ($attribute) is not present. Use the ifPresent function, if you don't want this message", LogUtility::LVL_MSG_ERROR);
+            }
+
         }
 
     }
@@ -689,6 +736,76 @@ class TagAttributes
     public function getType()
     {
         return $this->getValue(self::TYPE_KEY);
+    }
+
+    /**
+     * @param $attributeName
+     * @return ConditionalValue
+     */
+    public function getConditionalValueAndRemove($attributeName)
+    {
+        $value = $this->getConditionalValueAndRemove($attributeName);
+        return new ConditionalValue($value);
+
+    }
+
+    /**
+     * @param $attributeName
+     * @return false|string[] - an array of values
+     */
+    public function getValuesAndRemove($attributeName)
+    {
+
+        /**
+         * Trim
+         */
+        $trim = trim($this->getValueAndRemove($attributeName));
+
+        /**
+         * Replace all suite of space that have more than 2 characters
+         */
+        $value = preg_replace("/\s{2,}/", " ", $trim);
+        return explode(" ", $value);
+
+    }
+
+    public function setType($type)
+    {
+        $this->setComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
+    }
+
+    /**
+     * Merging will add the values, no replace or overwrite
+     * @param $callStackArray
+     */
+    public function mergeWithCallStackArray($callStackArray)
+    {
+        foreach ($callStackArray as $key => $value) {
+            if ($this->hasComponentAttribute($key)) {
+                $this->addComponentAttributeValue($key, $value);
+            } else {
+                $this->setComponentAttributeValue($key, $value);
+            }
+        }
+
+    }
+
+    /**
+     * @param $string
+     */
+    public function removeAttributeIfPresent($string)
+    {
+        $this->removeComponentAttributeIfPresent($string);
+        $this->removeHTMLAttributeIfPresent($string);
+
+    }
+
+    private function removeHTMLAttributeIfPresent($string)
+    {
+        $lowerAtt = strtolower($string);
+        if (isset($this->htmlAttributes[$lowerAtt])) {
+            unset($this->htmlAttributes[$lowerAtt]);
+        }
     }
 
 

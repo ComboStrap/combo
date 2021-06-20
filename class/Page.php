@@ -6,6 +6,7 @@ namespace ComboStrap;
 use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
+use renderer_plugin_combo_analytics;
 use RuntimeException;
 
 
@@ -14,6 +15,14 @@ use RuntimeException;
  */
 require_once(__DIR__ . '/DokuPath.php');
 
+/**
+ *
+ * Class Page
+ * @package ComboStrap
+ *
+ * This is just a wrapper around a file with the mime Dokuwiki
+ * that has a doku path (ie with the `:` separator)
+ */
 class Page extends DokuPath
 {
     const CANONICAL_PROPERTY = 'canonical';
@@ -379,15 +388,18 @@ class Page extends DokuPath
 
 
     public
-    function isBar()
+    function isSlot()
     {
         global $conf;
         $barsName = array($conf['sidebar']);
         $strapTemplateName = 'strap';
         if ($conf['template'] === $strapTemplateName) {
-            $barsName[] = $conf['tpl'][$strapTemplateName]['headerbar'];
-            $barsName[] = $conf['tpl'][$strapTemplateName]['footerbar'];
-            $barsName[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            if($loaded) {
+                $barsName[] = TplUtility::getHeaderSlotPageName();
+                $barsName[] = TplUtility::getFooterSlotPageName();
+                $barsName[] = TplUtility::getSideKickSlotPageName();
+            }
         }
         return in_array($this->getName(), $barsName);
     }
@@ -549,7 +561,7 @@ class Page extends DokuPath
     }
 
     /**
-     * @param string $mode delete the cache for the format XHTML and {@link Analytics::RENDERER_NAME_MODE}
+     * @param string $mode delete the cache for the format XHTML and {@link renderer_plugin_combo_analytics::RENDERER_NAME_MODE}
      */
     public
     function deleteCache($mode = "xhtml")
@@ -572,7 +584,7 @@ class Page extends DokuPath
     function isAnalyticsCached()
     {
 
-        $cache = new CacheRenderer($this->getId(), $this->getFileSystemPath(), Analytics::RENDERER_NAME_MODE);
+        $cache = new CacheRenderer($this->getId(), $this->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
         $cacheFile = $cache->cache;
         return file_exists($cacheFile);
     }
@@ -593,7 +605,7 @@ class Page extends DokuPath
     public
     function deleteCacheAndAskAnalyticsRefresh($reason)
     {
-        $this->deleteCache(Analytics::RENDERER_NAME_MODE);
+        $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
         $sqlite = Sqlite::getSqlite();
         if ($sqlite != null) {
 
@@ -656,7 +668,7 @@ class Page extends DokuPath
          * Refresh and cache
          * (The delete is normally not needed, just to be sure)
          */
-        $this->deleteCache(Analytics::RENDERER_NAME_MODE);
+        $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
         $analytics = Analytics::processAndGetDataAsArray($this->getId(), true);
 
         /**

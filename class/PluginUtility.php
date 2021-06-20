@@ -11,39 +11,62 @@ use dokuwiki\Extension\SyntaxPlugin;
  * and
  * all classes are added in plugin utility
  */
-require_once(__DIR__ . '/Animation.php');
-require_once(__DIR__ . '/Background.php');
+require_once('Align.php');
+require_once('Animation.php');
+require_once('ArrayCaseInsensitive.php');
+require_once('ArrayUtility.php');
+require_once('Background.php');
+require_once('Boldness.php');
+/**
+ * There is already a bootstrap file
+ * and it seems that php is loosing
+ * its mind on it and will then not load it.
+ * we give the qualified path to boostrap then
+ */
 require_once(__DIR__ . '/Bootstrap.php');
-require_once(__DIR__ . '/CacheMedia.php');
-require_once(__DIR__ . '/CacheByLogicalKey.php');
-require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
-require_once(__DIR__ . '/Call.php');
-require_once(__DIR__ . '/CallStack.php');
-require_once(__DIR__ . '/ColorUtility.php');
-require_once(__DIR__ . '/Dimension.php');
-require_once(__DIR__ . '/FloatAttribute.php');
-require_once(__DIR__ . '/FsWikiUtility.php');
-require_once(__DIR__ . '/File.php');
-require_once(__DIR__ . '/Hover.php');
-require_once(__DIR__ . '/HtmlUtility.php');
-require_once(__DIR__ . '/Icon.php');
-require_once(__DIR__ . '/MediaLink.php');
-require_once(__DIR__ . '/LogUtility.php');
-require_once(__DIR__ . '/Page.php');
-require_once(__DIR__ . '/Position.php');
-require_once(__DIR__ . '/Prism.php');
-require_once(__DIR__ . '/RenderUtility.php');
-require_once(__DIR__ . '/Resources.php');
-require_once(__DIR__ . '/Skin.php');
-require_once(__DIR__ . '/Shadow.php');
-require_once(__DIR__ . '/SnippetManager.php');
-require_once(__DIR__ . '/Sqlite.php');
-require_once(__DIR__ . '/StringUtility.php');
-require_once(__DIR__ . '/StyleUtility.php');
-require_once(__DIR__ . '/ThirdMediaLink.php');
-require_once(__DIR__ . '/TagAttributes.php');
-require_once(__DIR__ . '/XmlDocument.php');
-require_once(__DIR__ . '/XmlUtility.php');
+require_once('BreadcrumbHierarchical.php');
+require_once('CacheMedia.php');
+require_once('CacheByLogicalKey.php');
+require_once('CacheInstructionsByLogicalKey.php');
+require_once('Call.php');
+require_once('CallStack.php');
+require_once('ColorUtility.php');
+require_once('ConditionalValue.php');
+require_once('Dimension.php');
+require_once('FloatAttribute.php');
+require_once('FsWikiUtility.php');
+require_once('File.php');
+require_once('FontSize.php');
+require_once('Hover.php');
+require_once('HtmlUtility.php');
+require_once('Icon.php');
+require_once('MediaLink.php');
+require_once('Lang.php');
+require_once('LineSpacing.php');
+require_once('LogUtility.php');
+require_once('Opacity.php');
+require_once('Page.php');
+require_once('Position.php');
+require_once('Prism.php');
+require_once('RasterImageLink.php');
+require_once('RenderUtility.php');
+require_once('Resources.php');
+require_once('Skin.php');
+require_once('Shadow.php');
+require_once('Site.php');
+require_once('SnippetManager.php');
+require_once('Spacing.php');
+require_once('Sqlite.php');
+require_once('StringUtility.php');
+require_once('StyleUtility.php');
+require_once('TextAlign.php');
+require_once('TextColor.php');
+require_once('ThirdMediaLink.php');
+require_once('TagAttributes.php');
+require_once('Underline.php');
+require_once('Url.php');
+require_once('XmlDocument.php');
+require_once('XmlUtility.php');
 
 /**
  * Class url static
@@ -115,6 +138,10 @@ class PluginUtility
      * @var string
      */
     public static $PLUGIN_NAME;
+    /**
+     * @var mixed the version
+     */
+    private static $VERSION;
 
 
     /**
@@ -130,6 +157,7 @@ class PluginUtility
         global $lang;
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
         self::$URL_BASE = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
+        self::$VERSION = self::$INFO_PLUGIN['version'];
 
         PluginUtility::initSnippetManager();
 
@@ -178,6 +206,18 @@ class PluginUtility
         // (\s.*?): is a capturing group that starts with a space
         $pattern = "(?:\s.*?>|>)";
         return '<' . $tag . $pattern . '(?=.*?<\/' . $tag . '>)';
+    }
+
+    /**
+     * This pattern allows space after the tag name
+     * for an end tag
+     * As XHTML (https://www.w3.org/TR/REC-xml/#dt-etag)
+     * @param $tag
+     * @return string
+     */
+    public static function getEndTagPattern($tag)
+    {
+        return "</$tag\s*>";
     }
 
     /**
@@ -235,12 +275,25 @@ class PluginUtility
 
         $parameters = array();
 
+        // Rules
+        //  * name may be alone (ie true boolean attribute)
+        //  * a name may get a `-`
+        //  * there may be space every everywhere when the value is enclosed with a quote
+        //  * there may be no space in the value and between the equal sign when the value is not enclosed
+        //
         // /i not case sensitive
-        $attributePattern = "\\s*([-\w]+)\\s*(?:=\\s*[\'\"]{1}([^\`\"]*)[\'\"]{1}\\s*)?";
+        $attributePattern = '\s*([-\w]+)\s*(?:=(\s*[\'"]([^`"]*)[\'"]\s*|[^\s]*))?';
         $result = preg_match_all('/' . $attributePattern . '/i', $string, $matches);
         if ($result != 0) {
             foreach ($matches[1] as $key => $parameterKey) {
-                $value = $matches[2][$key];
+
+                // group 3 (ie the value between quotes)
+                $value = $matches[3][$key];
+                if ($value == "") {
+                    // check the value without quotes
+                    $value = $matches[2][$key];
+                }
+                // if there is no value, this is a boolean
                 if ($value == "") {
                     $value = true;
                 } else {
@@ -413,7 +466,7 @@ class PluginUtility
      */
     public static function render($pageContent)
     {
-        return RenderUtility::renderText2Xhtml($pageContent);
+        return RenderUtility::renderText2XhtmlAndStripPEventually($pageContent, false);
     }
 
 
@@ -439,33 +492,16 @@ class PluginUtility
 
 
         /**
-         * Text and border Color
+         * Border Color
          * For background color, see {@link TagAttributes::processBackground()}
+         * For text color, see {@link TextColor}
          */
-        $colorAttributes = ["color", ColorUtility::BORDER_COLOR];
-        foreach ($colorAttributes as $colorAttribute) {
-            if ($attributes->hasComponentAttribute($colorAttribute)) {
-                $colorValue = $attributes->getValueAndRemove($colorAttribute);
-                switch ($colorAttribute) {
-                    case "color":
-                        $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
-                        break;
-                    case ColorUtility::BORDER_COLOR:
-                        $attributes->addStyleDeclaration($colorAttribute, ColorUtility::getColorValue($colorValue));
-                        self::checkDefaultBorderColorAttributes($attributes);
-                        break;
-                }
-            }
+
+        if ($attributes->hasComponentAttribute(ColorUtility::BORDER_COLOR)) {
+            $colorValue = $attributes->getValueAndRemove(ColorUtility::BORDER_COLOR);
+            $attributes->addStyleDeclaration(ColorUtility::BORDER_COLOR, ColorUtility::getColorValue($colorValue));
+            self::checkDefaultBorderColorAttributes($attributes);
         }
-
-
-        $textAlign = "text-align";
-        if ($attributes->hasComponentAttribute($textAlign)) {
-            $textAlignValue = trim($attributes->getValueAndRemove($textAlign));
-            $attributes->addStyleDeclaration($textAlign, $textAlignValue);
-        }
-
-        Shadow::process($attributes);
 
 
     }
@@ -532,17 +568,30 @@ class PluginUtility
     {
         /** @noinspection SpellCheckingInspection */
 
-        $icon = "";
+        $xhtmlIcon = "";
         if ($withIcon) {
 
             /**
-             * The best would be
+             * We don't include it as an external resource via url
+             * because it then make a http request for every logo
+             * in the configuration page and makes it really slow
              */
-            //$icon = "<img src=\"https://combostrap.com/_media/logo.svg\" width='40px'/>";
-            $icon = "<object type=\"image/svg+xml\" data=\"https://combostrap.com/_media/logo.svg\" style=\"max-width: 16px\"></object>";
+            $path = File::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
+            $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
+            $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
+            $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "20");
+            $cache = new CacheMedia($path, $tagAttributes);
+            if (!$cache->isCacheUsable()) {
+                $xhtmlIcon = SvgDocument::createFromPath($path)
+                    ->setShouldBeOptimized(true)
+                    ->getXmlText($tagAttributes);
+                $cache->storeCache($xhtmlIcon);
+            }
+            $xhtmlIcon = file_get_contents($cache->getFile()->getFileSystemPath());
+
 
         }
-        return $icon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
+        return $xhtmlIcon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
     }
 
     /**
@@ -646,6 +695,17 @@ class PluginUtility
         if ($INFO != null) {
             $callingId = $INFO['id'];
         }
+        /**
+         * This is the case with event triggered
+         * before DokuWiki such as
+         * https://www.dokuwiki.org/devel:event:init_lang_load
+         */
+        if ($callingId == null) {
+            global $_REQUEST;
+            if (isset($_REQUEST["id"])) {
+                $callingId = $_REQUEST["id"];
+            }
+        }
         return $callingId;
     }
 
@@ -675,93 +735,6 @@ class PluginUtility
     static function addClass2Attributes($classValue, array &$attributes)
     {
         self::addAttributeValue("class", $classValue, $attributes);
-    }
-
-    /**
-     * @param TagAttributes $attributes
-     */
-    public
-    static function processAlignAttributes(&$attributes)
-    {
-        // The class shortcut
-        $align = TagAttributes::ALIGN_KEY;
-        if ($attributes->hasComponentAttribute($align)) {
-
-            $alignValue = $attributes->getValueAndRemove($align);
-
-            switch ($alignValue) {
-                case "center":
-                    $attributes->addClassName(PluginUtility::CENTER_CLASS);
-                    break;
-                case "right":
-                    $attributes->addStyleDeclaration("margin-left", "auto");
-                    $attributes->addStyleDeclaration("width", "fit-content");
-                    break;
-            }
-
-            /**
-             * For inline element,
-             * center should be a block
-             * (svg is not a block by default for instance)
-             * !
-             * this should not be the case for flex block such as a row
-             * therefore the condition
-             * !
-             */
-            if (in_array($attributes->getLogicalTag(), TagAttributes::INLINE_LOGICAL_ELEMENTS)) {
-                $attributes->addClassName("d-block");
-            }
-        }
-    }
-
-    /**
-     * Process the attributes that have an impact on the class
-     * @param TagAttributes $attributes
-     */
-    public
-    static function processSpacingAttributes(&$attributes)
-    {
-
-        // Spacing is just a class
-        $spacing = "spacing";
-        if ($attributes->hasComponentAttribute($spacing)) {
-
-            $spacingValue = $attributes->getValueAndRemove($spacing);
-
-            $spacingNames = preg_split("/\s/", $spacingValue);
-            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-            foreach ($spacingNames as $spacingClass) {
-                if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
-
-                    // The sides r and l has been renamed to e and s
-                    // https://getbootstrap.com/docs/5.0/migration/#utilities-2
-                    //
-
-                    // https://getbootstrap.com/docs/5.0/utilities/spacing/
-                    // By default, we consider tha there is no size and breakpoint
-                    $sizeAndBreakPoint = "";
-                    $propertyAndSide = $spacingClass;
-
-                    $minusCharacter = "-";
-                    $minusLocation = strpos($spacingClass, $minusCharacter);
-                    if ($minusLocation !== false) {
-                        // There is no size or break point
-                        $sizeAndBreakPoint = substr($spacingClass, $minusLocation + 1);
-                        $propertyAndSide = substr($spacingClass, 0, $minusLocation);
-                    }
-                    $propertyAndSide = str_replace("r", "e", $propertyAndSide);
-                    $propertyAndSide = str_replace("l", "s", $propertyAndSide);
-                    if ($sizeAndBreakPoint === "") {
-                        $spacingClass = $propertyAndSide;
-                    } else {
-                        $spacingClass = $propertyAndSide . $minusCharacter . $sizeAndBreakPoint;
-                    }
-
-                }
-                $attributes->addClassName($spacingClass);
-            }
-        }
-
     }
 
     /**
@@ -883,8 +856,13 @@ class PluginUtility
         $collapse = "collapse";
         if ($attributes->hasComponentAttribute($collapse)) {
             $targetId = $attributes->getValueAndRemove($collapse);
-            $attributes->addComponentAttributeValue('data-toggle', "collapse");
-            $attributes->addComponentAttributeValue('data-target', $targetId);
+            $bootstrapNamespace = "bs-";
+            if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFourMajorVersion) {
+                $bootstrapNamespace = "";
+            }
+            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}toggle", "collapse");
+            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}target", $targetId);
+
         }
     }
 
@@ -1156,24 +1134,74 @@ class PluginUtility
     /**
      * General Debug
      */
-    public static function isDebug()
+    public
+    static function isDebug()
     {
         global $conf;
         return $conf["allowdebug"] === 1;
 
     }
 
-    public static function loadStrapUtilityTemplate()
+    /**
+     * @return bool true if loaded, false otherwise
+     * Strap is loaded only if this is the same version
+     * to avoid function, class, or members that does not exist
+     */
+    public
+    static function loadStrapUtilityTemplateIfPresentAndSameVersion()
     {
-        $templateUtilitFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
-        if (file_exists($templateUtilitFile)) {
-            /** @noinspection PhpIncludeInspection */
-            require_once($templateUtilitFile);
-            return true;
+        $templateUtilityFile = __DIR__ . '/../../../tpl/strap/class/TplUtility.php';
+        if (file_exists($templateUtilityFile)) {
+            /**
+             * Check the version
+             */
+            $templateInfo = confToHash(__DIR__ . '/../../../tpl/strap/template.info.txt');
+            $templateVersion = $templateInfo['version'];
+            $comboVersion = self::$INFO_PLUGIN['version'];
+            if ($templateVersion != $comboVersion) {
+                if($comboVersion>$templateVersion){
+                    LogUtility::msg("You should upgrade <a href=\"https://www.dokuwiki.org/template:strap\">strap</a> to the latest version to get a fully functional experience. The version of Combo is ($comboVersion) while the version of Strap is ($templateVersion).");
+                } else {
+                    LogUtility::msg("You should upgrade <a href=\"https://www.dokuwiki.org/plugin:combo\">combo</a>  to the latest version to get a fully functional experience. The version of Combo is ($comboVersion) while the version of Strap is ($templateVersion).");
+                }
+                return false;
+            } else {
+                /** @noinspection PhpIncludeInspection */
+                require_once($templateUtilityFile);
+                return true;
+            }
         } else {
-            LogUtility::msg("The strap template is not installed", LogUtility::LVL_MSG_DEBUG);
+            $level = LogUtility::LVL_MSG_DEBUG;
+            if (defined('DOKU_UNITTEST')) {
+                // fail
+                $level = LogUtility::LVL_MSG_ERROR;
+            }
+            if (Site::getTemplate() != "strap") {
+                LogUtility::msg("The strap template is not installed", $level);
+            } else {
+                LogUtility::msg("The file ($templateUtilityFile) was not found", $level);
+            }
             return false;
         }
+    }
+
+
+    /**
+     *
+     * See also dev.md file
+     */
+    public static function isDevOrTest()
+    {
+        global $_SERVER;
+        if ($_SERVER["REMOTE_ADDR"] == "127.0.0.1") {
+            return true;
+        }
+        return defined('DOKU_UNITTEST');
+    }
+
+    public static function getInstructions($markiCode)
+    {
+
     }
 
 

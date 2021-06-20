@@ -15,6 +15,7 @@ namespace ComboStrap;
 
 class BreadcrumbHierarchical
 {
+    const CANONICAL =  "breadcrumb-hierarchical";
 
     /**
      * Hierarchical breadcrumbs (you are here)
@@ -83,6 +84,7 @@ class BreadcrumbHierarchical
         // close the breadcrumb
         $htmlOutput .= '</ol>' . PHP_EOL;
         $htmlOutput .= '</nav>' . PHP_EOL;
+        $htmlOutput .= "</p>" . PHP_EOL;
 
 
         return $htmlOutput;

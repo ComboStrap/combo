@@ -10,7 +10,9 @@
  *
  */
 
+use ComboStrap\ConditionalValue;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -21,14 +23,17 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  *
  * Note: The name of the class must follow this pattern ie syntax_plugin_PluginName_ComponentName
  */
-class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "column";
+    const TAG = "cell";
+
+    const WIDTH_ATTRIBUTE = TagAttributes::WIDTH_KEY;
+    const VERTICAL_ATTRIBUTE = "vertical";
 
     static function getTags()
     {
-        return [self::TAG, "col"];
+        return [self::TAG, "col", "column"];
     }
 
     /**
@@ -57,18 +62,12 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
         /**
          * header mode is disable to take over
-         * and replace it with {@link syntax_plugin_combo_title}
+         * and replace it with {@link syntax_plugin_combo_heading}
          */
         if ($mode == "header") {
             return false;
         }
 
-        /**
-         * p element are making the layout horrible
-         */
-        if ($mode == "eol") {
-            return false;
-        }
 
         return syntax_plugin_combo_preformatted::disablePreformatted($mode);
 
@@ -107,12 +106,11 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
      */
     function connectTo($mode)
     {
-        // Only inside a row
-        if ($mode == PluginUtility::getModeForComponent(syntax_plugin_combo_row::TAG)) {
-            foreach (self::getTags() as $tag) {
-                $pattern = PluginUtility::getContainerTagPattern($tag);
-                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-            }
+
+        // A cell can be anywhere
+        foreach (self::getTags() as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
 
 
@@ -147,7 +145,7 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = TagAttributes::createFromTagMatch($match)->toCallStackArray();
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes);
@@ -188,14 +186,44 @@ class syntax_plugin_combo_column extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if (array_key_exists("class", $attributes)) {
-                        $attributes["class"] .= " col";
-                    } else {
-                        $attributes["class"] .= "col";
+
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+                    $callStackArray = $data[PluginUtility::ATTRIBUTES];
+                    $attributes = TagAttributes::createFromCallStackArray($callStackArray, self::TAG);
+                    $attributes->addClassName("col");
+                    if ($attributes->hasComponentAttribute(self::VERTICAL_ATTRIBUTE)) {
+                        $value = $attributes->getValue(self::VERTICAL_ATTRIBUTE);
+                        if ($value == "center") {
+                            //$attributes->addClassName("d-inline-flex");
+                            $attributes->addClassName("align-self-center");
+                        }
                     }
-                    $inlineAttributes = PluginUtility::array2HTMLAttributesAsString($attributes);
-                    $renderer->doc .= "<div $inlineAttributes>" . DOKU_LF;
+                    if ($attributes->hasComponentAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
+                        $sizeValues = $attributes->getValuesAndRemove(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE);
+                        foreach ($sizeValues as $sizeValue) {
+                            $conditionalValue = ConditionalValue::createFrom($sizeValue);
+                            if ($conditionalValue->getBreakpoint() == "xs") {
+                                $attributes->addClassName("col-" . $conditionalValue->getValue());
+                            } else {
+                                if ($conditionalValue->getBreakpoint() != null) {
+                                    $attributes->addClassName("col-$sizeValue");
+                                } else {
+                                    /**
+                                     * No breakpoint given
+                                     * If this is a number between 1 and 12,
+                                     * we take the assumption that this is a ratio
+                                     * otherwise, this a width in CSS length
+                                     */
+                                    if ($sizeValue >= 1 && $sizeValue <= syntax_plugin_combo_row::GRID_TOTAL_COLUMNS) {
+                                        $attributes->addClassName("col-$sizeValue");
+                                    } else {
+                                        $attributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, $sizeValue);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :

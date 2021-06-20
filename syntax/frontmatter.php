@@ -61,6 +61,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         return 'baseonly';
     }
 
+    public function getPType()
+    {
+        return "normal";
+    }
+
+
     /**
      * @see Doku_Parser_Mode::getSort()
      * Higher number than the teaser-columns
@@ -108,20 +114,20 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             // strip
             //   from start `---json` + eol = 8
             //   from end   `---` + eol = 4
-            $match = substr($match, 7, -3);
+            $jsonString = substr($match, 7, -3);
 
             // Empty front matter
-            if (trim($match) == "") {
+            if (trim($jsonString) == "") {
                 $this->closeParsing();
                 return array(self::STATUS => self::PARSING_STATE_EMPTY);
             }
 
             // Otherwise you get an object ie $arrayFormat-> syntax
             $arrayFormat = true;
-            $json = json_decode($match, $arrayFormat);
+            $jsonArray = json_decode($jsonString, $arrayFormat);
 
             // Decodage problem
-            if ($json == null) {
+            if ($jsonArray == null) {
                 return array(
                     self::STATUS => self::PARSING_STATE_ERROR,
                     PluginUtility::PAYLOAD => $match
@@ -136,7 +142,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 "contributor"
             ];
             $result = array();
-            foreach ($json as $key => $value) {
+            foreach ($jsonArray as $key => $value) {
 
                 $lowerCaseKey = trim(strtolower($key));
 
@@ -195,10 +201,16 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
             }
 
-            $this->closeParsing($json);
+            $this->closeParsing($jsonArray);
 
             $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
-            $result[PluginUtility::POSITION]=[$pos,$pos + strlen($match) + 1];
+
+            /**
+             * End position is the length of the match + 1 for the newline
+             */
+            $newLine = 1;
+            $endPosition = $pos + strlen($match) + $newLine;
+            $result[PluginUtility::POSITION]=[$pos, $endPosition];
 
             return $result;
         }
@@ -241,7 +253,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     $renderer->finishSectionEdit($endPosition);
                 }
                 break;
-            case Analytics::RENDERER_FORMAT:
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
                 /** @var renderer_plugin_combo_analytics $renderer */
                 if (array_key_exists("description", $data)) {
                     $renderer->setMeta("description", $data["description"]);

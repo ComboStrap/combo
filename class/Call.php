@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
+use Psr\Log\LogLevel;
+
 
 /**
  * Class Call
@@ -42,6 +44,13 @@ class Call
          * Formatting https://www.dokuwiki.org/devel:syntax_plugins#syntax_types
          * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class
          */
+        "cdata",
+        "doublequoteclosing", // https://www.dokuwiki.org/config:typography / https://www.dokuwiki.org/wiki:syntax#text_to_html_conversions
+        "doublequoteopening",
+        "singlequoteopening",
+        "singlequoteclosing",
+        "multiplyentity",
+        "apostrophe",
         "strong",
         "emphasis",
         "emphasis_open",
@@ -64,8 +73,8 @@ class Call
         "entity", // for instance `...` are transformed in character
         "linebreak",
         "externallink",
-        MediaLink::INTERNAL_MEDIA,
-        MediaLink::EXTERNAL_MEDIA,
+        MediaLink::INTERNAL_MEDIA_CALL_NAME,
+        MediaLink::EXTERNAL_MEDIA_CALL_NAME,
         /**
          * The inline of combo
          * TODO: Should be deleted when {@link PluginUtility::renderUnmatched()} is not using the array anymore
@@ -142,22 +151,37 @@ class Call
     /**
      * Insert a dokuwiki call
      * @param $callName
+     * @param $array
+     * @param $positionInText
      * @return Call
      */
-    public static function createNativeCall($callName)
+    public static function createNativeCall($callName, $array = [], $positionInText = null)
     {
-        $positionInText = null;
         $call = [
             $callName,
-            array(),
+            $array,
             $positionInText
         ];
         return new Call($call);
     }
 
+
     /**
+     *
      * Return the tag name from a call array
-     * (much more what's called the component name)
+     *
+     * This is not the logical tag.
+     * This is much more what's called:
+     *   * the component name for a plugin
+     *   * or the handler name for dokuwiki
+     *
+     * For a plugin, this is equivalent
+     * to the {@link SyntaxPlugin::getPluginComponent()}
+     *
+     * This is not the fully qualified component name:
+     *   * with the plugin as prefix such as in {@link Call::getComponentName()}
+     *   * or with the `open` and `close` prefix such as `p_close` ...
+     *
      * @return mixed|string
      */
     public function getTagName()
@@ -262,7 +286,7 @@ class Call
     /**
      * @return mixed the matched content from the {@link DokuWiki_Syntax_Plugin::handle}
      */
-    public function getMatchedContent()
+    public function getCapturedContent()
     {
         $caller = $this->call[0];
         switch ($caller) {
@@ -272,8 +296,15 @@ class Call
                 return '[[' . $this->call[1][0] . '|' . $this->call[1][1] . ']]';
             case "eol":
                 return DOKU_LF;
+            case "header":
+            case "cdata":
+                return $this->call[1][0];
             default:
-                return null;
+                if (isset($this->call[1][0]) && is_string($this->call[1][0])) {
+                    return $this->call[1][0];
+                } else {
+                    return "";
+                }
         }
     }
 
@@ -283,7 +314,7 @@ class Call
 
         $tagName = $this->getTagName();
         switch ($tagName) {
-            case MediaLink::INTERNAL_MEDIA:
+            case MediaLink::INTERNAL_MEDIA_CALL_NAME:
                 return $this->call[1];
             default:
                 $data = $this->getPluginData();
@@ -383,9 +414,11 @@ class Call
     }
 
     /**
+     * Same as {@link Call::getTagName()}
+     * but fully qualified
      * @return string
      */
-    private function getComponentName()
+    public function getComponentName()
     {
         $mode = $this->call[0];
         if ($mode == "plugin") {
@@ -453,24 +486,38 @@ class Call
     public function getType()
     {
         if ($this->getState() == DOKU_LEXER_UNMATCHED) {
-            LogUtility::msg("The unmatched tag (" . $this->name . ") does not have any attributes. Get its parent if you want the type", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The unmatched tag ($this) does not have any attributes. Get its parent if you want the type", LogUtility::LVL_MSG_ERROR);
             return null;
         } else {
-            return $this->getAttribute("type");
+            /**
+             * don't use {@link Call::getAttribute()} to get the type
+             * as this function stack also depends on
+             * this function {@link Call::getType()}
+             * to return the value
+             * Ie: if this is a boolean attribute without specified type
+             * if the boolean value is in the type, we return it
+             */
+            return $this->call[1][1][PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY];
         }
     }
 
     /**
      * @param $key
-     * @return mixed|null
+     * @param null $default
+     * @return string|null
      */
-    public function getAttribute($key)
+    public function getAttribute($key, $default=null)
     {
         $attributes = $this->getAttributes();
         if (isset($attributes[$key])) {
             return $attributes[$key];
         } else {
-            return null;
+            // boolean attribute
+            if ($this->getType() == $key) {
+                return true;
+            } else {
+                return $default;
+            }
         }
     }
 
@@ -480,7 +527,7 @@ class Call
         if ($mode == "plugin") {
             return $this->call[1][1][PluginUtility::PAYLOAD];
         } else {
-            LogUtility::msg("You can't ask for a payload from a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING, "support");
+            LogUtility::msg("You can't ask for a payload from a non plugin call mode (" . $mode . ").", LogUtility::LVL_MSG_WARNING, "support");
             return null;
         }
     }
@@ -489,6 +536,143 @@ class Call
     {
         $this->call[1][1][PluginUtility::CONTEXT] = $value;
         return $this;
+    }
+
+    public function hasAttribute($attributeName)
+    {
+        $attributes = $this->getAttributes();
+        if (isset($attributes[$attributeName])) {
+            return true;
+        } else {
+            if ($this->getType() == $attributeName) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public function isPluginCall()
+    {
+        return $this->call[0] === "plugin";
+    }
+
+    /**
+     * @return mixed|string the position (ie key) in the array
+     */
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    public function &getCall()
+    {
+        return $this->call;
+    }
+
+    public function setState($state)
+    {
+        if ($this->call[0] == "plugin") {
+            // for dokuwiki
+            $this->call[1][2] = $state;
+            // for the combo plugin if any
+            if (isset($this->call[1][1][PluginUtility::STATE])) {
+                $this->call[1][1][PluginUtility::STATE] = $state;
+            }
+        } else {
+            LogUtility::msg("This modification of state is not yet supported for a native call");
+        }
+    }
+
+
+    /**
+     * Return the position of the first matched character in the text file
+     * @return mixed
+     */
+    public function getFirstMatchedCharacterPosition()
+    {
+
+        return $this->call[2];
+
+    }
+
+    /**
+     * Return the position of the last matched character in the text file
+     *
+     * This is the {@link Call::getFirstMatchedCharacterPosition()}
+     * plus the length of the {@link Call::getCapturedContent()}
+     * matched content
+     * @return int|mixed
+     */
+    public function getLastMatchedCharacterPosition()
+    {
+        return $this->getFirstMatchedCharacterPosition() + strlen($this->getCapturedContent());
+    }
+
+    /**
+     * @param $value string the class string to add
+     */
+    public function addClassName($value)
+    {
+        $class = $this->getAttribute("class");
+        if ($class != null) {
+            $value = "$class $value";
+        }
+        $this->addAttribute("class", $value);
+
+    }
+
+    /**
+     * @param $key
+     * @return mixed|null - the delete value of null if not found
+     */
+    public function removeAttribute($key)
+    {
+
+        $data = &$this->getPluginData();
+        if (isset($data[PluginUtility::ATTRIBUTES][$key])) {
+            $value = $data[PluginUtility::ATTRIBUTES][$key];
+            unset($data[PluginUtility::ATTRIBUTES][$key]);
+            return $value;
+        } else {
+            // boolean attribute as first attribute
+            if ($this->getType() == $key) {
+                unset($data[PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY]);
+                return true;
+            }
+            return null;
+        }
+
+    }
+
+    public function setPayload($text)
+    {
+        if ($this->isPluginCall()) {
+            $this->call[1][1][PluginUtility::PAYLOAD] = $text;
+        } else {
+            LogUtility::msg("Setting the payload for a non-native call ($this) is not yet implemented");
+        }
+    }
+
+    /**
+     * @return bool true if the call is a text call (same as dom text node)
+     */
+    public function isTextCall()
+    {
+        return (
+            $this->getState() == DOKU_LEXER_UNMATCHED ||
+            $this->getTagName() == "cdata" ||
+            $this->getTagName() == "acronym"
+        );
+    }
+
+    public function setType($type)
+    {
+        if($this->isPluginCall()){
+            $this->call[1][1][PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY]=$type;
+        } else {
+            LogUtility::msg("This is not a plugin call ($this), you can't set the type");
+        }
     }
 
 

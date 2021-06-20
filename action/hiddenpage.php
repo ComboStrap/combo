@@ -32,20 +32,13 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
          */
         $pattern = "(" . $conf['sidebar'] . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
         if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {
-            $loaded = PluginUtility::loadStrapUtilityTemplate();
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
             if ($loaded) {
-                if (defined('ComboStrap\TplUtility::CONF_FOOTER')) {
-                    $footer = tpl_getConf(TplUtility::CONF_FOOTER);
-                    $pattern .= "|" . $footer;
-                }
-                if (defined('ComboStrap\TplUtility::CONF_SIDEKICK')) {
-                    $sidekick = tpl_getConf(TplUtility::CONF_SIDEKICK);
-                    $pattern .= "|" . $sidekick;
-                }
-                if (defined('ComboStrap\TplUtility::CONF_HEADER')) {
-                    $header = tpl_getConf(TplUtility::CONF_HEADER);
-                    $pattern .= "|" . $header;
-                }
+
+                $pattern .= "|" . TplUtility::getFooterSlotPageName();
+                $pattern .= "|" . TplUtility::getSideKickSlotPageName();
+                $pattern .= "|" . TplUtility::getHeaderSlotPageName();
+
             }
         }
         $pattern .= ")";

@@ -49,7 +49,7 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
             foreach ($scripts as &$script) {
                 $pos = strpos($script['src'], 'js.php');
                 if ($pos !== false) {
-                    $script['src'] = $script['src'] . '&'.self::ACCESS_PROPERTY_KEY.'='.self::ACCESS_PROPERTY_VALUE_PUBLIC.'';
+                    $script['src'] = $script['src'] . '&' . self::ACCESS_PROPERTY_KEY . '=' . self::ACCESS_PROPERTY_VALUE_PUBLIC . '';
                 }
             }
         }
@@ -66,14 +66,21 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
     public function handle_js(Doku_Event &$event, $param)
     {
 
+        /**
+         * The directory separator is hard written
+         * in the list {@link js_out()}
+         * We then use it here also as hardcoded
+         */
+        $directorySeparatorInDokuwikiList = "/";
+
         // It was added by the TPL_METAHEADER_OUTPUT handler (ie function handle_header)
         $access = $_GET[self::ACCESS_PROPERTY_KEY];
         if ($access == self::ACCESS_PROPERTY_VALUE_PUBLIC) {
 
             // The directory path for the internal dokuwiki script
-            $dokuScriptPath = DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR;
+            $dokuScriptPath = $directorySeparatorInDokuwikiList . 'lib' . $directorySeparatorInDokuwikiList . 'scripts' . $directorySeparatorInDokuwikiList;
             // The directory path for the plugin script (we need to keep them)
-            $dokuPluginPath = DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR;
+            $dokuPluginPath = $directorySeparatorInDokuwikiList . 'lib' . $directorySeparatorInDokuwikiList . 'plugins' . $directorySeparatorInDokuwikiList;
 
             // Script that we want on the show page
             $showPageScripts =
@@ -83,7 +90,9 @@ class action_plugin_combo_js extends DokuWiki_Action_Plugin
                     2 => $dokuScriptPath . "hotkeys.js",
                     3 => $dokuScriptPath . "locktimer.js", // Use in js.php - dw_locktimer
                     4 => $dokuScriptPath . "helpers.js", // substr_replace use in qsearch.php
-                    5 => 'conf' . DIRECTORY_SEPARATOR . 'userscript.js'
+                    5 => 'conf' . $directorySeparatorInDokuwikiList . 'userscript.js',
+                    6 => $dokuScriptPath . "cookie.js", // plugin may depend on this library such as styling (lib/plugins/styling/script.js)
+                    7 => $dokuScriptPath . "jquery/jquery.cookie.js" // cookie.js depends on it
                 ];
 
             $scriptsToKeep = array();

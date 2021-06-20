@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\Page;
+use ComboStrap\Site;
 use ComboStrap\StringUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -35,12 +35,13 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
     function metaCsp($event)
     {
 
-        // meta directives
+
+        /**
+         * HTML meta directives
+         */
         $directives = [
             'block-all-mixed-content', // no http, https
         ];
-
-
 
         // Search if the CSP property is already present
         $cspKey = null;
@@ -65,12 +66,19 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
             ];
         }
 
-        // http header
-        $httpDirectives = [
-            "Content-Security-Policy: frame-ancestors 'none'", // the page cannot be used in a iframe (clickjacking),
-            "X-Frame-Options: deny" // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
-        ];
-        foreach($httpDirectives as $httpDirective){
+        /**
+         * Http header CSP directives
+         */
+        $httpHeaderReferer = $_SERVER['HTTP_REFERER'];
+        $httpDirectives = [];
+        if (strpos($httpHeaderReferer, Site::getUrl()) === false) {
+            // not same origin
+            $httpDirectives = [
+                "Content-Security-Policy: frame-ancestors 'none'", // the page cannot be used in a iframe (clickjacking),
+                "X-Frame-Options: deny" // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
+            ];
+        }
+        foreach ($httpDirectives as $httpDirective) {
             header($httpDirective);
         }
 

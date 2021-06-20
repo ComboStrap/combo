@@ -1,9 +1,9 @@
-.combo-lazy-fade {
-    animation-name: combo-lazy-fade;
+.lazy-fade-combo {
+    animation-name: lazy-fade-combo;
     animation-duration: 2s;
 }
 
-@keyframes combo-lazy-fade {
+@keyframes lazy-fade-combo {
     from {
         opacity: 0;
     }

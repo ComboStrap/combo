@@ -30,6 +30,10 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  *
  * Ter info:
  * https://jqueryui.com/accordion/
+ *
+ * See also: https://getbootstrap.com/docs/5.0/content/reboot/#summary
+ * with a pointer
+ *
  */
 class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
 {
@@ -72,7 +76,7 @@ class syntax_plugin_combo_accordion extends DokuWiki_Syntax_Plugin
     {
         /**
          * header mode is disable to take over
-         * and replace it with {@link syntax_plugin_combo_title}
+         * and replace it with {@link syntax_plugin_combo_heading}
          */
         if ($mode == "header") {
             return false;

@@ -130,10 +130,11 @@ class Site
     {
 
         /**
-         * In a dev environment,
+         * In a {@link PluginUtility::isDevOrTest()} dev environment,
          * don't set the
          * https://www.dokuwiki.org/config:baseurl
          * to be able to test the metadata / social integration
+         * via a tunnel
          */
 
         return DOKU_URL;
@@ -215,7 +216,7 @@ class Site
         $template = Site::getTemplate();
         if ($template == self::STRAP_TEMPLATE_NAME) {
             require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
-            return tpl_getConf(TplUtility::CONF_HEIGHT_FIXED_TOP_NAVBAR);
+            return TplUtility::getTopFixedHeightForMenuBar();
         } else {
             return 0;
         }
@@ -236,13 +237,25 @@ class Site
 
     public static function getAjaxUrl()
     {
-        return self::getUrl() . "/lib/exe/ajax.php";
+        return self::getUrl() . "lib/exe/ajax.php";
     }
 
     public static function getPageDirectory()
     {
         global $conf;
         return $conf['datadir'];
+    }
+
+    public static function disableHeadingSectionEditing()
+    {
+        global $conf;
+        $conf['maxseclevel']=0;
+    }
+
+    public static function setBreadCrumbOn()
+    {
+        global $conf;
+        $conf['youarehere'] = 1;
     }
 
 

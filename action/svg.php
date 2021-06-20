@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../class/CacheMedia.php');
 
 use ComboStrap\Auth;
 use ComboStrap\CacheMedia;
+use ComboStrap\DokuPath;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Resources;
@@ -92,7 +93,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
                     break;
                 default:
                     if (!empty($value)) {
-                        if (!in_array($name, MediaLink::NON_URL_ATTRIBUTES)) {
+                        if (!in_array(strtolower($name), MediaLink::NON_URL_ATTRIBUTES)) {
                             $tagAttributes->addComponentAttributeValue($name, $value);
                         } else {
                             LogUtility::msg("The attribute ($name) is not a valid fetch image URL attribute and was not added", LogUtility::LVL_MSG_WARNING, SvgImageLink::CANONICAL);
@@ -105,7 +106,8 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
 
         $id = $event->data["media"];
-        $svgImageLink = SvgImageLink::createMediaLinkFromPathId($id, $rev, $tagAttributes);
+        $pathId = DokuPath::IdToAbsolutePath($id);
+        $svgImageLink = SvgImageLink::createMediaLinkFromPathId($pathId, $rev, $tagAttributes);
         $event->data['file'] = $svgImageLink->getSvgFile();
 
 

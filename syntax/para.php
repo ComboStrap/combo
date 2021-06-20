@@ -59,6 +59,22 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
 
 
     /**
+     * The component that have a `normal` {@link \dokuwiki\Extension\SyntaxPlugin::getPType()}
+     * are wrapped in a p element by {@link Block::process()} if they are not in a component with a `block` ptype
+     *
+     * This function makes it easy for the test
+     * to do it and gives a little bit of documentation
+     * on why there is a `p` in the test
+     * @param $html
+     * @return string the html wrapped in p
+     */
+    public static function wrapInP($html)
+    {
+        return "<p>" . $html . "</p>";
+    }
+
+
+    /**
      * Syntax Type.
      *
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
@@ -174,13 +190,20 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
                 $state = $data[PluginUtility::STATE];
+
                 switch ($state) {
                     case DOKU_LEXER_ENTER:
-                        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
+                        if ($tagAttributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
+                            $class = $tagAttributes->getType();
+                            $tagAttributes->addClassName($class);
+                        }
                         $renderer->doc .= $tagAttributes->toHtmlEnterTag("p");
                         break;
                     case DOKU_LEXER_SPECIAL:
-                        $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                        $attributes = $data[PluginUtility::ATTRIBUTES];
+                        $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
                         $renderer->doc .= $tagAttributes->toHtmlEnterTag("p");
                         $renderer->doc .= "</p>";
                         break;
@@ -198,7 +221,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
                 return true;
 
 
-            case Analytics::RENDERER_FORMAT:
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
                 /**
                  * @var renderer_plugin_combo_analytics $renderer
@@ -225,14 +248,15 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      * and transformed to `p_open` and `p_close` via {@link \dokuwiki\Parsing\Handler\Block::process()}
      *
      * @param \ComboStrap\CallStack $callstack
-     * @param $class
+     * @param array $attributes - the attributes passed to the paragraph
      */
-    public static function fromEolToParagraphUntilEndOfStack(&$callstack, $class)
+    public static function fromEolToParagraphUntilEndOfStack(&$callstack, $attributes)
     {
-        /**
-         * The attributes passed to the paragraph
-         */
-        $attributes = array("class" => $class);
+
+        if (!is_array($attributes)) {
+            LogUtility::msg("The passed attributes array ($attributes) for the creation of the paragraph is not an array", LogUtility::LVL_MSG_ERROR);
+            $attributes = [];
+        }
 
         /**
          * The syntax plugin that implements the paragraph
@@ -241,21 +265,56 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
          * to create the paragraph
          */
         $paragraphComponent = \syntax_plugin_combo_para::COMPONENT;
+        $paragraphTag = \syntax_plugin_combo_para::TAG;
 
         /**
          * The running variables
          */
         $paragraphIsOpen = false; // A pointer to see if the paragraph is open
-        while ($callstack->next()) {
+        while ($actualCall = $callstack->next()) {
 
-            $actualCall = $callstack->getActualCall();
+            /**
+             * end of line is not always present
+             * because the pattern is eating it
+             * Example (list_open)
+             */
+            if ($paragraphIsOpen && $actualCall->getTagName() !== "eol") {
+                if ($actualCall->getDisplay() == Call::BlOCK_DISPLAY) {
+                    $paragraphIsOpen = false;
+                    $callstack->insertBefore(
+                        Call::createComboCall(
+                            $paragraphTag,
+                            DOKU_LEXER_EXIT,
+                            $attributes
+                        )
+                    );
+                }
+            }
+
             if ($actualCall->getTagName() === "eol") {
 
                 /**
-                 * Next Call
+                 * Next Call that is not the empty string
+                 * Because Empty string would create an empty paragraph
+                 *
+                 * Start at 1 because we may not do
+                 * a loop if we are at the end, the next call
+                 * will return false
                  */
-                $nextCall = $callstack->next();
-                $callstack->prev();
+                $i = 1;
+                while ($nextCall = $callstack->next()) {
+                    if (!(
+                        trim($nextCall->getCapturedContent()) == "" &&
+                        $nextCall->isTextCall()
+                    )) {
+                        break;
+                    }
+                    $i++;
+                }
+                while ($i > 0) { // go back
+                    $i--;
+                    $callstack->previous();
+                }
                 if ($nextCall === false) {
                     $nextDisplay = "last";
                     $nextCall = null;

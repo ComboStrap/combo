@@ -240,7 +240,7 @@ $meta[LazyLoad::CONF_LAZY_LOADING_PLACEHOLDER_COLOR] = array("string");
 /**
  * Internal media
  */
-$meta[MediaLink::CONF_IMAGE_ENABLE] = array('onoff');
+$meta[syntax_plugin_combo_media::CONF_IMAGE_ENABLE] = array('onoff');
 
 /**
  * Internal media default linking
@@ -263,3 +263,16 @@ $meta[FloatAttribute::CONF_FLOAT_DEFAULT_BREAKPOINT] = array('multichoice', '_ch
     "xl",
     "xxl"
 ));
+
+/**
+ * Outline Numbering
+ */
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_ENABLE] = array("onoff");
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL2] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL3] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL4] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL5] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE_LEVEL6] = array('multichoice', '_choices' => action_plugin_combo_outlinenumbering::CONF_COUNTER_STYLES_CHOICES);
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR] = array("string");
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX] = array("string");
+$meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX] = array("string");

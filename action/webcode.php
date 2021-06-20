@@ -13,8 +13,8 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 {
 
     const CALL_ID = "webcode";
-    const DW_PARAM = "dw";
-    const CALL_PARAM = "call";
+    const MARKI_PARAM = "marki";
+
 
     function register(Doku_Event_Handler $controller)
     {
@@ -44,7 +44,7 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
 
         global $INPUT;
-        $dw = $INPUT->str(self::DW_PARAM);
+        $marki = $INPUT->str(self::MARKI_PARAM);
         $title = $INPUT->str('title') ?: "ComboStrap WebCode - Dokuwiki Renderer";
 
 
@@ -59,7 +59,9 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
          * Main content happens before the headers
          * to set the headers right
          */
-        $mainContent = p_render('xhtml', p_get_instructions($dw), $info);
+        global $conf;
+        $conf["renderer_xhtml"] = "xhtml";
+        $mainContent = p_render('xhtml', p_get_instructions($marki), $info);
 
         /**
          * Html
@@ -76,9 +78,12 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
             /**
              * The strap header function
              */
-            PluginUtility::loadStrapUtilityTemplate();
-            TplUtility::registerHeaderHandler();
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            if($loaded) {
+                TplUtility::registerHeaderHandler();
+            }
         }
+
         /**
          * To delete the not needed headers for an export
          * such as manifest, alternate, ...
@@ -102,6 +107,11 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
 
     }
 
+    /**
+     * Dynamically called in the previous function
+     * to delete the head
+     * @param $event
+     */
     public function _delete_not_needed_headers(&$event)
     {
         $data = &$event->data;

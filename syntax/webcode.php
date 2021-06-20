@@ -439,9 +439,9 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
                         if ($useConsole) {
                             $iframeSrcValue .= '<!-- WebCode Console -->';
-                            $iframeSrcValue .= '<div><p class=\'webConsoleTitle\'>Console Output:</p>';
-                            $iframeSrcValue .= '<div id=\'webCodeConsole\'></div>';
-                            $iframeSrcValue .= '<script type=\'text/javascript\' src=\'' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '\'></script>';
+                            $iframeSrcValue .= '<div><p class="webConsoleTitle">Console Output:</p>';
+                            $iframeSrcValue .= '<div id="webCodeConsole"></div>';
+                            $iframeSrcValue .= '<script type="text/javascript" src="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '"></script>';
                             $iframeSrcValue .= '</div>';
                         }
                         // The javascript comes at the end because it may want to be applied on previous HTML element
@@ -494,6 +494,14 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
 
                     PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+
+                    /**
+                     * The iframe does not have any width
+                     * By default, we set it to 100% and it can be
+                     * constraint with the `width` attributes that will
+                     * set a a max-width
+                     */
+                    $iFrameAttributes->addStyleDeclaration("width","100%");
 
                     $iFrameHtml = $iFrameAttributes->toHtmlEnterTag("iframe") . '</iframe>';
                     $bar .= '</div>'; // close the bar

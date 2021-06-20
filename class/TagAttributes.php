@@ -629,10 +629,22 @@ class TagAttributes
 
             if (!empty($value)) {
                 /**
+                 * The condition is important
+                 * because we may pass the javascript character `\n` in a `srcdoc` for javascript
+                 * and the {@link StringUtility::toString()} will transform it as `\\n`
+                 * making it unusable
+                 */
+                if(!is_string($value)) {
+                    $stringValue = StringUtility::toString($value);
+                } else {
+                    $stringValue = $value;
+                }
+
+                /**
                  * Following the rule 2 to encode the value
                  * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
                  */
-                $stringValue = StringUtility::toString($value);
+
                 if (!in_array($name, $urlEncoding)) {
                     $stringValue = PluginUtility::htmlEncode($stringValue);
                 }

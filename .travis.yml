@@ -1,25 +1,28 @@
-language: php
-# Taken from OVH
+# General doc
 # https://www.ovh.nl/shared-hosting/persoonlijke-shared-hosting.xml
 # and https://github.com/splitbrain/dokuwiki-travis
-php:
-    ## not "7.4" because Array and string offset access syntax with curly braces is deprecated vendor/marcusschwarz/lesserphp/lessc.inc.php:761
-    - "7.3"
-    - "7.2"
-    - "7.1"
-    - "7.0"
-    - "5.6"
+# and https://www.dokuwiki.org/devel:release_process
 
-# No test on 7.0, 7.1, 7.2 on stable
+language: php
+
+branches:
+    only:
+        - main
+        - stable
+
 # https://docs.travis-ci.com/user/build-matrix/#excluding-jobs-with-env-value
 jobs:
-    exclude:
-        -   php: "7.2"
-            env: TRAVIS_BRANCH=stable
-        -   php: "7.1"
-            env: TRAVIS_BRANCH=stable
-        -   php: "7.0"
-            env: TRAVIS_BRANCH=stable
+    include:
+        -   php:
+                ## not "7.4" because Array and string offset access syntax with curly braces is deprecated vendor/marcusschwarz/lesserphp/lessc.inc.php:761
+                - "7.3"
+                - "5.6"
+            # https://config.travis-ci.com/ref/job/if/condition
+        -   if: branch =~ ^main
+            php:
+                - "7.2"
+                - "7.1"
+                - "7.0"
 
 env:
     - DOKUWIKI=stable
@@ -31,11 +34,6 @@ before_script:
 
 script:
     - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug
-
-branches:
-    only:
-        - main
-        - stable
 
 notifications:
     email:

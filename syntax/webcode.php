@@ -382,9 +382,9 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // Js, Html, Css
                         $iframeSrcValue = '<html><head>';
-                        $iframeSrcValue .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
+                        $iframeSrcValue .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>';
                         $iframeSrcValue .= '<title>Made by WebCode</title>';
-                        $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">';
+                        $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css"/>';
 
 
                         // External Resources such as css stylesheet or js
@@ -409,7 +409,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $fileExtension = $pathInfo['extension'];
                             switch ($fileExtension) {
                                 case 'css':
-                                    $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '">';
+                                    $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '"/>';
                                     break;
                                 case 'js':
                                     $iframeSrcValue .= '<script type="text/javascript" src="' . $externalResource . '"></script>';
@@ -455,7 +455,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $iframeSrcValue .= '<script type="text/babel">' . $codes['babel'] . '</script>';
                         }
                         $iframeSrcValue .= '</body></html>';
-                        $iFrameAttributes->addHtmlAttributeValue("srcdoc", htmlentities($iframeSrcValue));
+                        $iFrameAttributes->addHtmlAttributeValue("srcdoc", $iframeSrcValue);
 
                         // Code bar with button
                         $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by WebCode", false) . '</div>';

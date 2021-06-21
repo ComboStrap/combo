@@ -19,15 +19,52 @@ class Site
     const CONF_SITE_ISO_COUNTRY = "siteIsoCountry";
     const STRAP_TEMPLATE_NAME = "strap";
 
+    const SVG_LOGO_IDS = array(
+        ':wiki:logo.svg',
+        ':logo.svg'
+    );
+
+    const PNG_LOGO_IDS = array(
+        ':logo.png',
+        ':wiki:logo.png',
+        ':favicon-32×32.png',
+        ':favicon-16×16.png',
+        ':apple-touch-icon.png',
+        ':android-chrome-192x192.png'
+    );
+
+
+    /**
+     * @return string|null the html img tag or null
+     */
+    public static function getLogoImgHtmlTag($tagAttributes = null)
+    {
+        $logoIds = self::getLogoIds();
+        foreach ($logoIds as $logoId) {
+            $mediaLink = MediaLink::createMediaLinkFromPathId($logoId, null, $tagAttributes);
+            $mediaLink->setLazyLoad(false);
+            if ($mediaLink->exists()) {
+                return $mediaLink->renderMediaTag();
+            }
+        }
+        return null;
+    }
+
+    private static function getLogoIds()
+    {
+        return PluginUtility::mergeAttributes(self::PNG_LOGO_IDS,self::SVG_LOGO_IDS);
+    }
+
+
+    /**
+     * @return string|null
+     */
     public static function getLogoUrlAsSvg()
     {
-        $look = array(
-            ':wiki:logo.svg',
-            ':logo.svg'
-        );
+
 
         $url = null;
-        foreach ($look as $svgLogo) {
+        foreach (self::SVG_LOGO_IDS as $svgLogo) {
 
             $svgLogoFN = mediaFN($svgLogo);
 
@@ -41,17 +78,9 @@ class Site
 
     public static function getLogoUrlAsPng()
     {
-        $look = array(
-            ':logo.png',
-            ':wiki:logo.png',
-            ':favicon-32×32.png',
-            ':favicon-16×16.png',
-            ':apple-touch-icon.png',
-            ':android-chrome-192x192.png'
-        );
 
         $url = null;
-        foreach ($look as $svgLogo) {
+        foreach (self::PNG_LOGO_IDS as $svgLogo) {
 
             $svgLogoFN = mediaFN($svgLogo);
 

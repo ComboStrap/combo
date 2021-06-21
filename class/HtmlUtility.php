@@ -65,4 +65,14 @@ class HtmlUtility
     }
 
 
+    public static function normalize($htmlText)
+    {
+        if (empty($htmlText)) {
+            throw new \RuntimeException("The text should not be empty");
+        }
+        $xmlDoc = new XmlDocument($htmlText, XmlDocument::HTML_TYPE);
+        return $xmlDoc->getXmlTextNormalized();
+    }
+
+
 }

@@ -7,8 +7,12 @@
  * @author     Nicolas GERARD
  */
 
+use ComboStrap\Bootstrap;
 use ComboStrap\Resources;
+use ComboStrap\Site;
 use ComboStrap\Snippet;
+use ComboStrap\Spacing;
+use ComboStrap\TagAttributes;
 use dokuwiki\Form\Form;
 
 if (!defined('DOKU_INC')) die();
@@ -17,6 +21,8 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 
 class action_plugin_combo_login extends DokuWiki_Action_Plugin
 {
+
+    const FORM_SIGNIN_CLASS = "form-signin";
 
     function register(Doku_Event_Handler $controller)
     {
@@ -38,8 +44,6 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
         // $controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
 
 
-
-
     }
 
     function handle_login_html(&$event, $param)
@@ -53,7 +57,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
         $loginCss = Snippet::createCssSnippet("login");
         $content = $loginCss->getContent();
         $class = $loginCss->getClass();
-        $cssHtml =<<<EOF
+        $cssHtml = <<<EOF
 <style class="$class">
 $content
 </style>
@@ -65,14 +69,50 @@ EOF;
          * @var Doku_Form $form
          */
         $form = &$event->data;
-        $form->params["class"]="form-signin";
+        $form->params["class"] = self::FORM_SIGNIN_CLASS;
+
+        /**
+         * Logo
+         */
+        $tagAttributes = TagAttributes::createEmpty("login");
+        $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(Spacing::SPACING_ATTRIBUTE, "mb-4");
+        $logoHtmlImgTag = Site::getLogoImgHtmlTag($tagAttributes);
+
+        /**
+         * Screen reader Only class
+         * https://getbootstrap.com/docs/5.0/getting-started/accessibility/#visually-hidden-content
+         */
+        $screeReaderOnlyClass = "visually-hidden";
+        if(Bootstrap::getBootStrapMajorVersion()== Bootstrap::BootStrapFourMajorVersion){
+            $screeReaderOnlyClass = "sr-only";
+        }
+
+        /**
+         * Title
+         */
+        $formsContent = <<<EOF
+$logoHtmlImgTag
+<h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+<label for="inputUserName" class="$screeReaderOnlyClass">Username</label>
+<input type="text" id="inputUserName" class="form-control" placeholder="Username" required="" autofocus="" name="u">
+<label for="inputPassword" class="$screeReaderOnlyClass">Password</label>
+<input type="password" id="inputPassword" class="form-control" placeholder="Password" required="" name="p">
+<div class="checkbox mb-3">
+    <label><input type="checkbox" id="remember__me" name="r" value="1"> Remember me</label>
+</div>
+<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+<p class="mt-5 mb-1 text-muted">You don't have an account yet? Just get one: <a href="?do=register" title="Register" rel="nofollow" class="register">Register</a></p>
+<p class="mb-3 text-muted">Forgotten your password? Get a new one: <a href="?do=resendpwd" title="Set new password" rel="nofollow" class="resendpwd">Set new password</a></p>
+EOF;
+        $form->_content = [$formsContent];
 
 
         return true;
 
 
     }
-
 
 
 }

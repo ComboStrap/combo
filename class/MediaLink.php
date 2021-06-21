@@ -503,8 +503,12 @@ abstract class MediaLink extends DokuPath
         if (is_object($rev)) {
             LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");
         }
-        if (!($tagAttributes instanceof TagAttributes) && $tagAttributes != null) {
-            LogUtility::msg("TagAttributes is not an instance of Tag Attributes", LogUtility::LVL_MSG_ERROR, "support");
+        if ($tagAttributes == null) {
+            $tagAttributes = TagAttributes::createEmpty();
+        } else {
+            if (!($tagAttributes instanceof TagAttributes)) {
+                LogUtility::msg("TagAttributes is not an instance of Tag Attributes", LogUtility::LVL_MSG_ERROR, "support");
+            }
         }
         $dokuPath = DokuPath::createMediaPathFromPath($pathId, $rev);
         if ($dokuPath->getExtension() == "svg") {

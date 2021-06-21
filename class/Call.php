@@ -45,6 +45,7 @@ class Call
          * Comes from the {@link \dokuwiki\Parsing\ParserMode\Formatting} class
          */
         "cdata",
+        "unformatted", // ie %% or nowiki
         "doublequoteclosing", // https://www.dokuwiki.org/config:typography / https://www.dokuwiki.org/wiki:syntax#text_to_html_conversions
         "doublequoteopening",
         "singlequoteopening",

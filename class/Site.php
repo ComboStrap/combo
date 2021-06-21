@@ -215,11 +215,14 @@ class Site
     {
         $template = Site::getTemplate();
         if ($template == self::STRAP_TEMPLATE_NAME) {
-            require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
-            return TplUtility::getTopFixedHeightForMenuBar();
-        } else {
-            return 0;
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            if ($loaded) {
+                return TplUtility::getTopFixedHeightForMenuBar();
+            }
         }
+
+        return 0;
+
     }
 
     public static function getTemplate()
@@ -249,7 +252,7 @@ class Site
     public static function disableHeadingSectionEditing()
     {
         global $conf;
-        $conf['maxseclevel']=0;
+        $conf['maxseclevel'] = 0;
     }
 
     public static function setBreadCrumbOn()

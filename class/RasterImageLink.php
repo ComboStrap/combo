@@ -20,6 +20,9 @@ require_once(__DIR__ . '/PluginUtility.php');
  * Image
  * This is the class that handles the
  * raster image type of the dokuwiki {@link MediaLink}
+ *
+ * The real documentation can be found on the image page
+ * @link https://www.dokuwiki.org/images
  */
 class RasterImageLink extends MediaLink
 {
@@ -42,11 +45,11 @@ class RasterImageLink extends MediaLink
         );
 
 
-    private $imageWidth;
+    private $imageWidth = null;
     /**
      * @var int
      */
-    private $imageWeight;
+    private $imageWeight = null;
     /**
      * See {@link image_type_to_mime_type}
      * @var int
@@ -101,7 +104,9 @@ class RasterImageLink extends MediaLink
                 $height = $this->getImgTagHeightValue($localWidth);
                 if (!empty($height)) {
                     $att['h'] = $height;
+                    $this->checkWidthAndHeightRatioAndReturnTheGoodValue($localWidth, $height);
                 }
+
 
             }
 
@@ -150,6 +155,10 @@ class RasterImageLink extends MediaLink
              * Responsive image
              * https://getbootstrap.com/docs/5.0/content/images/
              * to apply max-width: 100%; and height: auto;
+             *
+             * Even if the resizing is requested by height,
+             * the height: auto on styling is needed to conserve the ratio
+             * while scaling down the screen
              */
             $this->tagAttributes->addClassName(self::RESPONSIVE_CLASS);
 
@@ -172,6 +181,9 @@ class RasterImageLink extends MediaLink
              * The logical height that the image should take on the page
              *
              * Note: The style is also set in {@link Dimension::processWidthAndHeight()}
+             *
+             * The doc is {@link https://www.dokuwiki.org/images#resizing}
+             * See the ''0x20''
              */
             $imgTagHeight = $this->getImgTagHeightValue();
             if (!empty($imgTagHeight)) {
@@ -191,7 +203,7 @@ class RasterImageLink extends MediaLink
              *
              * The max-width value is set
              */
-            $widthValue = $this->getMediaWidth();
+            $mediaWidthValue = $this->getMediaWidth();
             $srcValue = $this->getUrl();
 
             /**
@@ -211,7 +223,7 @@ class RasterImageLink extends MediaLink
              * Width is mandatory for responsive image
              * Ref https://developers.google.com/search/docs/advanced/guidelines/google-images#responsive-images
              */
-            if (!empty($widthValue)) {
+            if (!empty($mediaWidthValue)) {
 
                 /**
                  * The internal intrinsic value of the image
@@ -220,45 +232,8 @@ class RasterImageLink extends MediaLink
                 if (!empty($imgTagWidth)) {
 
                     if (!empty($imgTagHeight)) {
-
-                        /**
-                         * Check of height and width dimension
-                         * as specified here
-                         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
-                         */
-                        $targetRatio = $this->getMediaWidth() / $this->getMediaHeight();
-                        if (!(
-                            $imgTagHeight * $targetRatio >= $imgTagWidth - 0.5
-                            &&
-                            $imgTagHeight * $targetRatio <= $imgTagWidth + 0.5
-                        )) {
-                            // check the second statement
-                            if (!(
-                                $imgTagWidth / $targetRatio >= $imgTagHeight - 0.5
-                                &&
-                                $imgTagWidth / $targetRatio <= $imgTagHeight + 0.5
-                            )) {
-                                $requestedHeight = $this->getRequestedHeight();
-                                $requestedWidth = $this->getRequestedWidth();
-                                if(
-                                    !empty($requestedHeight)
-                                && !empty($requestedWidth)
-                                ){
-                                    /**
-                                     * The user has asked for a width and height
-                                     */
-                                    $imgTagWidth = round($imgTagHeight * $targetRatio);
-                                    LogUtility::msg("The width ($requestedWidth) and height ($requestedHeight) specified on the image ($this) does not follow the natural ratio as <a href=\"https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height\">required by HTML</a>. The width was then set to ($imgTagWidth).", LogUtility::LVL_MSG_INFO,self::CANONICAL);
-                                } else {
-                                    /**
-                                     * Programmatic error from the developer
-                                     */
-                                    LogUtility::msg("The width and height specified on the image ($this) does not pass the ratio test.");
-                                }
-                            }
-                        }
+                        $imgTagWidth = $this->checkWidthAndHeightRatioAndReturnTheGoodValue($imgTagWidth, $imgTagHeight);
                     }
-
                     $this->tagAttributes->addHtmlAttributeValue("width", $imgTagWidth . $htmlLengthUnit);
                 }
 
@@ -295,7 +270,7 @@ class RasterImageLink extends MediaLink
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $this->getUrl(Url::URL_ENCODED_AND,$imgTagWidth);
+                    $srcUrl = $this->getUrl(Url::URL_ENCODED_AND, $imgTagWidth);
                     $srcSet .= "$srcUrl {$imgTagWidth}w";
                     $sizes .= "{$imgTagWidth}px";
                 }
@@ -428,21 +403,20 @@ class RasterImageLink extends MediaLink
                 $imageSize = getimagesize($this->getFileSystemPath(), $imageInfo);
                 if ($imageSize === false) {
                     $this->analyzable = false;
-                    LogUtility::msg("The image ($this) could not be analyzed", LogUtility::LVL_MSG_ERROR, "image");
+                    LogUtility::msg("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 } else {
                     $this->analyzable = true;
+                    $this->imageWidth = (int)$imageSize[0];
+                    if (empty($this->imageWidth)) {
+                        $this->analyzable = false;
+                    }
+                    $this->imageWeight = (int)$imageSize[1];
+                    if (empty($this->imageWeight)) {
+                        $this->analyzable = false;
+                    }
+                    $this->imageType = (int)$imageSize[2];
+                    $this->mime = $imageSize[3];
                 }
-                $this->imageWidth = (int)$imageSize[0];
-                if (empty($this->imageWidth)) {
-                    $this->analyzable = false;
-                }
-                $this->imageWeight = (int)$imageSize[1];
-                if (empty($this->imageWeight)) {
-                    $this->analyzable = false;
-                }
-                $this->imageType = (int)$imageSize[2];
-                $this->mime = $imageSize[3];
-
             }
         }
         $this->wasAnalyzed = true;
@@ -528,7 +502,7 @@ class RasterImageLink extends MediaLink
             if (!empty($mediaWidth)) {
                 if ($requestedWidth > $mediaWidth) {
                     global $ID;
-                    if ($ID!="wiki:syntax") {
+                    if ($ID != "wiki:syntax") {
                         // There is a bug in the wiki syntax page
                         // {{wiki:dokuwiki-128.png?200x50}}
                         // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
@@ -546,40 +520,71 @@ class RasterImageLink extends MediaLink
      * Return the height that the image should take on the screen
      * for the specified size
      *
-     * @param null $localWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
+     * @param null $localRequestedWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
      * if not specified, the requested width and if not specified the intrinsic width
      * @return int the height value attribute in a img
      */
     public
-    function getImgTagHeightValue($localWidth = null)
+    function getImgTagHeightValue($localRequestedWidth = null)
     {
 
         /**
-         * Height default
+         * Cropping is not yet supported.
          */
-        $height = $this->getRequestedHeight();
-        if (empty($height)) {
-            $height = $this->getMediaHeight();
-        }
-
-        $width = $localWidth;
-        if ($width == null) {
-            $width = $this->getRequestedWidth();
-            if (empty($width)) {
-                $width = $this->getMediaWidth();
+        $requestedHeight = $this->getRequestedHeight();
+        $requestedWidth = $this->getRequestedWidth();
+        if (
+            $requestedHeight != null
+            && $requestedHeight != 0
+            && $requestedWidth != null
+            && $requestedWidth != 0
+        ) {
+            global $ID;
+            if ($ID!="wiki:syntax") {
+                /**
+                 * Cropping
+                 */
+                LogUtility::msg("The width and height has been set on the image ($this) but we don't support yet cropping. Set only the width or the height (0x250)", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
             }
         }
 
         /**
-         * Scale the height by size parameter
+         * If resize by height, the img tag height is the requested height
          */
-        if (!empty($height) &&
-            !empty($width) &&
-            !empty($this->getMediaWidth()) &&
-            $this->getMediaWidth() != 0
-        ) {
-            $height = $height * ($width / $this->getMediaWidth());
+        if ($localRequestedWidth == null) {
+            if ($requestedHeight != null) {
+                return $requestedHeight;
+            } else {
+                $localRequestedWidth = $this->getRequestedWidth();
+                if (empty($localRequestedWidth)) {
+                    $localRequestedWidth = $this->getMediaWidth();
+                }
+            }
         }
+
+        /**
+         * Computation
+         */
+        $computedHeight = $this->getRequestedHeight();
+        $targetRatio = $this->getTargetRatio();
+        if ($targetRatio !== false) {
+
+            /**
+             * Scale the height by target ratio
+             */
+            $computedHeight = $localRequestedWidth / $this->getTargetRatio();
+
+            /**
+             * Check
+             */
+            if ($requestedHeight != null) {
+                if ($requestedHeight < $computedHeight) {
+                    LogUtility::msg("The computed height cannot be greater than the requested height");
+                }
+            }
+
+        }
+
 
         /**
          * Rounding to integer
@@ -588,9 +593,9 @@ class RasterImageLink extends MediaLink
          * This is important because the security token is based on width and height
          * and therefore the fetch will failed
          *
-         * And not {@link intval} because it will make from 3.6, 3 and not 4
+         * And not directly {@link intval} because it will make from 3.6, 3 and not 4
          */
-        return round($height);
+        return intval(round($computedHeight));
 
     }
 
@@ -643,6 +648,69 @@ class RasterImageLink extends MediaLink
          */
         $retinaEnabled = PluginUtility::getConfValue(self::CONF_RETINA_SUPPORT_ENABLED, 0);
         return !$retinaEnabled;
+    }
+
+    /**
+     * @param $imgTagHeight
+     * @param $imgTagWidth
+     * @return float|mixed
+     */
+    public
+    function checkWidthAndHeightRatioAndReturnTheGoodValue($imgTagWidth, $imgTagHeight)
+    {
+        /**
+         * Check of height and width dimension
+         * as specified here
+         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+         */
+        $targetRatio = $this->getTargetRatio();
+        if (!(
+            $imgTagHeight * $targetRatio >= $imgTagWidth - 0.5
+            &&
+            $imgTagHeight * $targetRatio <= $imgTagWidth + 0.5
+        )) {
+            // check the second statement
+            if (!(
+                $imgTagWidth / $targetRatio >= $imgTagHeight - 0.5
+                &&
+                $imgTagWidth / $targetRatio <= $imgTagHeight + 0.5
+            )) {
+                $requestedHeight = $this->getRequestedHeight();
+                $requestedWidth = $this->getRequestedWidth();
+                if (
+                    !empty($requestedHeight)
+                    && !empty($requestedWidth)
+                ) {
+                    /**
+                     * The user has asked for a width and height
+                     */
+                    $imgTagWidth = round($imgTagHeight * $targetRatio);
+                    LogUtility::msg("The width ($requestedWidth) and height ($requestedHeight) specified on the image ($this) does not follow the natural ratio as <a href=\"https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height\">required by HTML</a>. The width was then set to ($imgTagWidth).", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                } else {
+                    /**
+                     * Programmatic error from the developer
+                     */
+                    $imgTagRatio = $imgTagWidth / $imgTagHeight;
+                    LogUtility::msg("Internal Error: The width ($imgTagWidth) and height ($imgTagHeight) calculated for the image ($this) does not pass the ratio test. They have a ratio of ($imgTagRatio) while the natural dimension ratio is ($targetRatio)");
+                }
+            }
+        }
+        return $imgTagWidth;
+    }
+
+    /**
+     * Target ratio as explained here
+     * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+     * @return float|int|false
+     * false if the image is not supported
+     */
+    private function getTargetRatio()
+    {
+        if ($this->getMediaHeight() == null || $this->getMediaWidth() == null) {
+            return false;
+        } else {
+            return $this->getMediaWidth() / $this->getMediaHeight();
+        }
     }
 
 

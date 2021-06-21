@@ -382,9 +382,9 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
                         // Js, Html, Css
                         $iframeSrcValue = '<html><head>';
-                        $iframeSrcValue .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
+                        $iframeSrcValue .= '<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>';
                         $iframeSrcValue .= '<title>Made by WebCode</title>';
-                        $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">';
+                        $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css"/>';
 
 
                         // External Resources such as css stylesheet or js
@@ -409,7 +409,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $fileExtension = $pathInfo['extension'];
                             switch ($fileExtension) {
                                 case 'css':
-                                    $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '">';
+                                    $iframeSrcValue .= '<link rel="stylesheet" type="text/css" href="' . $externalResource . '"/>';
                                     break;
                                 case 'js':
                                     $iframeSrcValue .= '<script type="text/javascript" src="' . $externalResource . '"></script>';
@@ -439,9 +439,9 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         $useConsole = $data[self::USE_CONSOLE_ATTRIBUTE];
                         if ($useConsole) {
                             $iframeSrcValue .= '<!-- WebCode Console -->';
-                            $iframeSrcValue .= '<div><p class=\'webConsoleTitle\'>Console Output:</p>';
-                            $iframeSrcValue .= '<div id=\'webCodeConsole\'></div>';
-                            $iframeSrcValue .= '<script type=\'text/javascript\' src=\'' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '\'></script>';
+                            $iframeSrcValue .= '<div><p class="webConsoleTitle">Console Output:</p>';
+                            $iframeSrcValue .= '<div id="webCodeConsole"></div>';
+                            $iframeSrcValue .= '<script type="text/javascript" src="' . PluginUtility::getResourceBaseUrl() . '/webcode/webcode-console.js?ver=' . self::WEB_CONSOLE_JS_VERSION . '"></script>';
                             $iframeSrcValue .= '</div>';
                         }
                         // The javascript comes at the end because it may want to be applied on previous HTML element
@@ -455,7 +455,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                             $iframeSrcValue .= '<script type="text/babel">' . $codes['babel'] . '</script>';
                         }
                         $iframeSrcValue .= '</body></html>';
-                        $iFrameAttributes->addHtmlAttributeValue("srcdoc", htmlentities($iframeSrcValue));
+                        $iFrameAttributes->addHtmlAttributeValue("srcdoc", $iframeSrcValue);
 
                         // Code bar with button
                         $bar .= '<div class="webcode-bar-item">' . PluginUtility::getUrl(self::TAG, "Rendered by WebCode", false) . '</div>';
@@ -494,6 +494,14 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
 
 
                     PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
+
+                    /**
+                     * The iframe does not have any width
+                     * By default, we set it to 100% and it can be
+                     * constraint with the `width` attributes that will
+                     * set a a max-width
+                     */
+                    $iFrameAttributes->addStyleDeclaration("width","100%");
 
                     $iFrameHtml = $iFrameAttributes->toHtmlEnterTag("iframe") . '</iframe>';
                     $bar .= '</div>'; // close the bar

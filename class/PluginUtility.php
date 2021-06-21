@@ -722,7 +722,12 @@ class PluginUtility
     public
     static function htmlEncode($text)
     {
-        return htmlspecialchars($text, ENT_QUOTES);
+        /**
+         * See https://stackoverflow.com/questions/46483/htmlentities-vs-htmlspecialchars/3614344
+         * {@link htmlentities }
+         */
+        //return htmlspecialchars($text, ENT_QUOTES);
+        return htmlentities($text);
     }
 
 

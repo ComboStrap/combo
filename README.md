@@ -26,6 +26,7 @@
   * [Native Icon Support](https://combostrap.com/icon)
   * [Native Svg Support](https://combostrap.com/svg)
   * [Theme as you wish](https://combostrap.com/stylesheet)
+  * [Best Class Performance](https://combostrap.com/performance)
 
 
 And more. Discover them at [ComboStrap](https://combostrap.com)

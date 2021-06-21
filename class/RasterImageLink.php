@@ -539,10 +539,13 @@ class RasterImageLink extends MediaLink
             && $requestedWidth != null
             && $requestedWidth != 0
         ) {
-            /**
-             * Cropping
-             */
-            LogUtility::msg("The width and height has been set on the image ($this) but we don't support yet cropping. The width and height are resized only by the target ratio.", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+            global $ID;
+            if ($ID!="wiki:syntax") {
+                /**
+                 * Cropping
+                 */
+                LogUtility::msg("The width and height has been set on the image ($this) but we don't support yet cropping. Set only the width or the height (0x250)", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+            }
         }
 
         /**

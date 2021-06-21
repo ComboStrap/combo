@@ -8,12 +8,10 @@
  */
 
 use ComboStrap\Bootstrap;
-use ComboStrap\Resources;
 use ComboStrap\Site;
 use ComboStrap\Snippet;
 use ComboStrap\Spacing;
 use ComboStrap\TagAttributes;
-use dokuwiki\Form\Form;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../class/PluginUtility.php');

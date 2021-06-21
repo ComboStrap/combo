@@ -78,19 +78,15 @@ class SnippetManager
     }
 
 
+    /**
+     * @deprecated
+     * @param $tag
+     * @return string
+     */
     public static function getClassFromSnippetId($tag)
     {
-        /**
-         * The class for the snippet is just to be able to identify them
-         *
-         * The `snippet` prefix was added to be sure that the class
-         * name will not conflict with a css class
-         * Example: if you set the class to `combo-list`
-         * and that you use it in a inline `style` tag with
-         * the same class name, the inline `style` tag is not applied
-         *
-         */
-        return "snippet-" . $tag . "-" . self::COMBO_CLASS_SUFFIX;
+        $snippet = Snippet::createUnknownSnippet($tag);
+        return $snippet->getClass();
     }
 
 
@@ -204,7 +200,7 @@ class SnippetManager
                         }
                         /** @var Snippet $snippet */
                         $dokuWikiHeadsFormatContent["script"][] = array(
-                            "class" => self::getClassFromSnippetId($snippetId),
+                            "class" => $snippet->getClass(),
                             "_data" => $content
                         );
                     }
@@ -228,7 +224,7 @@ class SnippetManager
                             $content = $snippet->getContent();
                         }
                         $snippetArray = array(
-                            "class" => self::getClassFromSnippetId($snippetId),
+                            "class" => $snippet->getClass(),
                             "_data" => $content
                         );
                         /** @var Snippet $snippet */
@@ -461,6 +457,11 @@ class SnippetManager
             $heads = new Snippet($snippetId, Snippet::TAG_TYPE);
         }
         return $heads;
+    }
+
+    public function getCssSnippetContent($string)
+    {
+
     }
 
 

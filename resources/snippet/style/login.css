@@ -1,27 +1,53 @@
 
-.form-signin {
+.form-login {
     width: 100%;
     max-width: 330px;
     padding: 15px;
     margin: auto;
 }
 
-.form-signin .checkbox {
+.form-login .checkbox {
     font-weight: 400;
 }
 
-.form-signin .form-floating:focus-within {
+.form-login .form-floating:focus-within {
     z-index: 2;
 }
 
-.form-signin input[type="text"] {
+.form-login input[type="text"] {
     margin-bottom: -1px;
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
 }
 
-.form-signin input[type="password"] {
+.form-login input[type="password"] {
     margin-bottom: 10px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+}
+
+.form-login .rememberMe {
+    margin-bottom: 1rem;
+}
+
+.form-login .logo {
+    margin-bottom: 1.5rem;
+}
+
+.form-login .register {
+    color: #6c757d;
+    margin-bottom: .25rem;
+    margin-top: 3rem;
+}
+.form-login .resendpwd {
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.form-login h1 {
+    font-size: calc(1.3rem + .6vw);
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+    font-weight: 500;
+    line-height: 1.2;
 }

@@ -8,10 +8,13 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\LogUtility;
 use ComboStrap\Site;
 use ComboStrap\Snippet;
 use ComboStrap\Spacing;
 use ComboStrap\TagAttributes;
+use dokuwiki\Menu\Item\Register;
+use dokuwiki\Menu\Item\Resendpwd;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -20,7 +23,9 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 class action_plugin_combo_login extends DokuWiki_Action_Plugin
 {
 
-    const FORM_SIGNIN_CLASS = "form-signin";
+    const CANONICAL = "login";
+    const FORM_LOGIN_CLASS = "form-" . self::CANONICAL;
+
 
     function register(Doku_Event_Handler $controller)
     {
@@ -46,6 +51,11 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
 
     function handle_login_html(&$event, $param)
     {
+        /**
+         * Global
+         */
+        global $conf;
+        global $lang;
 
         /**
          * The Login page is created via buffer
@@ -67,7 +77,53 @@ EOF;
          * @var Doku_Form $form
          */
         $form = &$event->data;
-        $form->params["class"] = self::FORM_SIGNIN_CLASS;
+        $form->params["class"] = self::FORM_LOGIN_CLASS;
+
+        /**
+         * Heading
+         */
+        $heading = "Please Sign-in";
+        if (isset($form->_content[0]["_legend"])) {
+            $heading = $form->_content[0]["_legend"];
+        }
+
+        $submitText = "Sign in";
+        $loginText = "Username";
+        $loginValue = "";
+        $passwordText = "Password";
+        $rememberText = "Remember me";
+        $rememberValue = "1";
+        foreach ($form->_content as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+            $fieldName = $field["name"];
+            if ($fieldName == null) {
+                // this is not an input field
+                if ($field["type"] == "submit") {
+                    $submitText = $field["value"];
+                }
+                continue;
+            }
+            switch ($fieldName) {
+                case "u":
+                    $loginText = $field["_text"];
+                    $loginValue = $field["value"];
+                    break;
+                case "p":
+                    $passwordText = $field["_text"];
+                    break;
+                case "r":
+                    $rememberText = $field["_text"];
+                    $rememberValue = $field["value"];
+                    break;
+                default:
+                    LogUtility::msg("The register field name($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+
+
+            }
+        }
+
 
         /**
          * Logo
@@ -75,34 +131,66 @@ EOF;
         $tagAttributes = TagAttributes::createEmpty("login");
         $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "72");
         $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(Spacing::SPACING_ATTRIBUTE, "mb-4");
+        $tagAttributes->addClassName("logo");
         $logoHtmlImgTag = Site::getLogoImgHtmlTag($tagAttributes);
 
+
         /**
-         * Screen reader Only class
-         * https://getbootstrap.com/docs/5.0/getting-started/accessibility/#visually-hidden-content
+         * Remember me
          */
-        $screeReaderOnlyClass = "visually-hidden";
-        if(Bootstrap::getBootStrapMajorVersion()== Bootstrap::BootStrapFourMajorVersion){
-            $screeReaderOnlyClass = "sr-only";
+        $rememberMeHtml = "";
+        if ($conf['rememberme']) {
+            $rememberMeHtml = <<<EOF
+<div class="checkbox rememberMe">
+    <label><input type="checkbox" id="remember__me" name="r" value="$rememberValue"> $rememberText</label>
+</div>
+EOF;
         }
 
         /**
-         * Title
+         * Register
+         */
+        $registerHtml = "";
+        if (actionOK('register')) {
+            $registerLink = (new Register())->asHtmlLink('', false);
+            $registerText = $lang['reghere'];
+            $registerHtml = <<<EOF
+<p class="register">$registerText : $registerLink</p>
+EOF;
+        }
+
+        /**
+         * Resend pwd
+         */
+        $resendPwdHtml = "";
+        if (actionOK('resendpwd')) {
+            $resendPwLink = (new Resendpwd())->asHtmlLink('', false);
+            $resentText = $lang['pwdforget'];
+            $resendPwdHtml = <<<EOF
+<p class="resendpwd">$resentText : $resendPwLink</p>
+EOF;
+        }
+
+
+        /**
+         * Based on
+         * https://getbootstrap.com/docs/4.0/examples/sign-in/
          */
         $formsContent = <<<EOF
 $logoHtmlImgTag
-<h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-<label for="inputUserName" class="$screeReaderOnlyClass">Username</label>
-<input type="text" id="inputUserName" class="form-control" placeholder="Username" required="" autofocus="" name="u">
-<label for="inputPassword" class="$screeReaderOnlyClass">Password</label>
-<input type="password" id="inputPassword" class="form-control" placeholder="Password" required="" name="p">
-<div class="checkbox mb-3">
-    <label><input type="checkbox" id="remember__me" name="r" value="1"> Remember me</label>
+<h1>$heading</h1>
+<div class="form-floating">
+    <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
+    <label for="inputUserName">$loginText</label>
 </div>
-<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-<p class="mt-5 mb-1 text-muted">You don't have an account yet? Just get one: <a href="?do=register" title="Register" rel="nofollow" class="register">Register</a></p>
-<p class="mb-3 text-muted">Forgotten your password? Get a new one: <a href="?do=resendpwd" title="Set new password" rel="nofollow" class="resendpwd">Set new password</a></p>
+<div class="form-floating">
+    <input type="password" id="inputPassword" class="form-control" placeholder="$passwordText" required="required" name="p">
+    <label for="inputPassword">$passwordText</label>
+</div>
+$rememberMeHtml
+<button class="btn btn-lg btn-primary btn-block" type="submit">$submitText</button>
+$registerHtml
+$resendPwdHtml
 EOF;
         $form->_content = [$formsContent];
 

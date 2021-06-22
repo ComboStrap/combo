@@ -384,7 +384,7 @@ class TagAttributes
              * Process the style attributes if any
              */
             PluginUtility::processStyle($this);
-            PluginUtility::processCollapse($this);
+            Toggle::processToggle($this);
 
 
             /**
@@ -634,7 +634,7 @@ class TagAttributes
                  * and the {@link StringUtility::toString()} will transform it as `\\n`
                  * making it unusable
                  */
-                if(!is_string($value)) {
+                if (!is_string($value)) {
                     $stringValue = StringUtility::toString($value);
                 } else {
                     $stringValue = $value;
@@ -818,6 +818,13 @@ class TagAttributes
         if (isset($this->htmlAttributes[$lowerAtt])) {
             unset($this->htmlAttributes[$lowerAtt]);
         }
+    }
+
+    public function getValueAndRemoveIfPresent($attribute)
+    {
+        $value = $this->getValue($attribute);
+        $this->removeAttributeIfPresent($attribute);
+        return $value;
     }
 
 

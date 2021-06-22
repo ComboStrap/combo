@@ -31,6 +31,7 @@ require_once('CacheInstructionsByLogicalKey.php');
 require_once('Call.php');
 require_once('CallStack.php');
 require_once('ColorUtility.php');
+require_once('Toggle.php');
 require_once('ConditionalValue.php');
 require_once('Dimension.php');
 require_once('FloatAttribute.php');
@@ -849,27 +850,7 @@ class PluginUtility
 
     }
 
-    /**
-     * The collapse attribute are the same
-     * for all component except a link
-     * @param TagAttributes $attributes
-     */
-    public
-    static function processCollapse(&$attributes)
-    {
 
-        $collapse = "collapse";
-        if ($attributes->hasComponentAttribute($collapse)) {
-            $targetId = $attributes->getValueAndRemove($collapse);
-            $bootstrapNamespace = "bs-";
-            if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFourMajorVersion) {
-                $bootstrapNamespace = "";
-            }
-            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}toggle", "collapse");
-            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}target", $targetId);
-
-        }
-    }
 
     /**
      * @param string $string add a command into HTML

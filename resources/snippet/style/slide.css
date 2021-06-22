@@ -11,34 +11,34 @@
 @media (max-width:576px) {
 
     .slide-sm {
-        padding: 1rem 0
+        padding: 1rem 1rem
     }
 
     .slide-md {
-        padding: 2rem 0;
+        padding: 2rem 1rem;
     }
 
     .slide-xl {
-        padding: 4rem 0;
+        padding: 4rem 1rem;
     }
 
     .slide-lg {
-        padding: 3rem 0;
+        padding: 3rem 1rem;
     }
 }
 
 @media (min-width: 576px) {
 
     .slide-sm {
-        padding: 1rem 0.25rem
+        padding: 1rem 1rem
     }
 
     .slide-md {
-        padding: 2rem 0.5rem;
+        padding: 2rem 1rem;
     }
 
     .slide-xl {
-        padding: 4rem 0.75rem;
+        padding: 4rem 1rem;
     }
 
     .slide-lg {

@@ -38,7 +38,7 @@ require_once('FsWikiUtility.php');
 require_once('File.php');
 require_once('FontSize.php');
 require_once('Hover.php');
-require_once('HtmlUtility.php');
+require_once('XhtmlUtility.php');
 require_once('Icon.php');
 require_once('MediaLink.php');
 require_once('Lang.php');

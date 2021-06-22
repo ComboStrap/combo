@@ -7,6 +7,21 @@
     text-align: initial;
 }
 
+.form-register .row {
+    margin-bottom: 1rem;
+}
+
+.form-register .logo {
+    margin-bottom: 1.5rem;
+}
+
+.form-register h1 {
+    font-size: calc(1.3rem + .6vw);
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+    font-weight: 500;
+    line-height: 1.2;
+}
 
 .form-register .form-floating:focus-within {
     z-index: 2;

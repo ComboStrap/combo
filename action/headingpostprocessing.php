@@ -250,6 +250,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
          */
         $actualHeadingParsingState = DOKU_LEXER_EXIT;
 
+
         /**
          * Outline ?
          * Update the text and open a section
@@ -259,7 +260,14 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             /**
              * Update the entering call with the text capture
              */
+            /**
+             * Check the text
+             */
+            if (empty($headingText)) {
+                LogUtility::msg("The heading text for the entry call ($headingEntryCall) is empty");
+            }
             $headingEntryCall->addAttribute(syntax_plugin_combo_heading::HEADING_TEXT_ATTRIBUTE, $headingText);
+
             $headingText = "";
 
             $callStack->insertAfter(

@@ -124,7 +124,6 @@ $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = Plu
  */
 $lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
 $lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
-$lang[syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - If checked, a link may spawn multilines (difficult to debug)";
 
 /**
  * Twitter

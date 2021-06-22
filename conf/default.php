@@ -168,7 +168,6 @@ $conf['disableDynamicQualityMonitoring'] = 0;
  */
 $conf['useDokuwikiLinkClassName'] = 0;
 $conf['disableLink'] = 0;
-$conf['enableMultiLinesLink'] = 0;
 
 /**
  * Twitter

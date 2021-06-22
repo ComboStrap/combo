@@ -138,7 +138,6 @@ $meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAM
  */
 $meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
 $meta[syntax_plugin_combo_link::CONF_DISABLE_LINK] = array('onoff');
-$meta[syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK] = array('onoff');
 
 /**
  * Twitter

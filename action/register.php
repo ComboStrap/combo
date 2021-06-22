@@ -126,8 +126,11 @@ EOF;
         $logoHtmlImgTag = Site::getLogoImgHtmlTag($tagAttributes);
 
         $title = "Register";
+        if(isset($form->_content[0]["_legend"])) {
+            $title = $form->_content[0]["_legend"];
+        }
 
-        $firstColWeight = 4;
+        $firstColWeight = 5;
         $secondColWeight = 12 - $firstColWeight;
 
 

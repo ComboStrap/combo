@@ -125,12 +125,14 @@ class XmlDocument
                 /**
                  * Bug: Even if we set that the document is an UTF-8
                  * loadHTML treat the string as being in ISO-8859-1 if without any heading
+                 * (ie <xml encoding="utf-8"..>
                  * https://stackoverflow.com/questions/8218230/php-domdocument-loadhtml-not-encoding-utf-8-correctly
-                 * We add then the XML header
                  * Otherwise French and other language are not well loaded
+                 *
+                 * We use the trick to transform UTF-8 to HTML
                  */
-                $loadInUTF8 = '<?xml encoding="utf-8" ?>';
-                $result = $this->xmlDom->loadHTML($loadInUTF8 . $text, $options);
+                $htmlEntityEncoded = mb_convert_encoding($text, 'HTML-ENTITIES', 'UTF-8');
+                $result = $this->xmlDom->loadHTML($htmlEntityEncoded, $options);
 
             }
             if ($result === false) {

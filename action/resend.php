@@ -11,18 +11,36 @@ use ComboStrap\LogUtility;
 use ComboStrap\Site;
 use ComboStrap\Snippet;
 use ComboStrap\TagAttributes;
-use dokuwiki\Menu\Item\Login;
-use dokuwiki\Menu\Item\Resendpwd;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
 
-class action_plugin_combo_login extends DokuWiki_Action_Plugin
+class action_plugin_combo_resend extends DokuWiki_Action_Plugin
 {
 
-    const CANONICAL = "login";
-    const FORM_LOGIN_CLASS = "form-" . self::CANONICAL;
+    const CANONICAL = "resend";
+    const FORM_RESEND_PWD_CLASS =  "form-" .self::CANONICAL;
+
+    /**
+     * @return string
+     */
+    public static function getResendPasswordLinkAndParagraph()
+    {
+        /**
+         * Resend pwd
+         */
+        $resendPwdHtml = "";
+        if (actionOK('resendpwd')) {
+            $resendPwLink = (new \dokuwiki\Menu\Item\Resendpwd())->asHtmlLink('', false);
+            global $lang;
+            $resentText = $lang['pwdforget'];
+            $resendPwdHtml = <<<EOF
+<p class="resendpwd">$resentText : $resendPwLink</p>
+EOF;
+        }
+        return $resendPwdHtml;
+    }
 
 
     function register(Doku_Event_Handler $controller)
@@ -31,23 +49,20 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
          * To modify the form and add class
          *
          * Deprecated object passed by the event but still in use
-         * https://www.dokuwiki.org/devel:event:html_loginform_output
+         * https://www.dokuwiki.org/devel:event:html_resendpwdform_output
          */
-        $controller->register_hook('HTML_LOGINFORM_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
+        $controller->register_hook('HTML_RESENDPWDFORM_OUTPUT', 'BEFORE', $this, 'handle_resendpwd_html', array());
 
         /**
-         * Event using the new object but only in use in
-         * the {@link https://codesearch.dokuwiki.org/xref/dokuwiki/lib/plugins/authad/action.php authad plugin}
-         * (ie login against active directory)
+         * Event using the new object not found anywhere
          *
-         * https://www.dokuwiki.org/devel:event:form_login_output
+         * https://www.dokuwiki.org/devel:event:form_resendpwd_output
          */
-        // $controller->register_hook('FORM_LOGIN_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
 
 
     }
 
-    function handle_login_html(&$event, $param)
+    function handle_resendpwd_html(&$event, $param)
     {
         /**
          * Global
@@ -60,7 +75,7 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
          * We print before the forms
          * to avoid a FOUC
          */
-        $loginCss = Snippet::createCssSnippet("login");
+        $loginCss = Snippet::createCssSnippet(self::CANONICAL);
         $content = $loginCss->getContent();
         $class = $loginCss->getClass();
         $cssHtml = <<<EOF
@@ -75,24 +90,19 @@ EOF;
          * @var Doku_Form $form
          */
         $form = &$event->data;
-        $form->params["class"] = self::FORM_LOGIN_CLASS;
-
-        $form->findElementByAttribute()
+        $form->params["class"] = self::FORM_RESEND_PWD_CLASS;
 
         /**
          * Heading
          */
-        $heading = "Please Sign-in";
+        $heading = "Set new password for";
         if (isset($form->_content[0]["_legend"])) {
             $heading = $form->_content[0]["_legend"];
         }
 
-        $submitText = "Sign in";
+        $submitText = "Set new password";
         $loginText = "Username";
         $loginValue = "";
-        $passwordText = "Password";
-        $rememberText = "Remember me";
-        $rememberValue = "1";
         foreach ($form->_content as $field) {
             if (!is_array($field)) {
                 continue;
@@ -106,16 +116,9 @@ EOF;
                 continue;
             }
             switch ($fieldName) {
-                case "u":
+                case "login":
                     $loginText = $field["_text"];
                     $loginValue = $field["value"];
-                    break;
-                case "p":
-                    $passwordText = $field["_text"];
-                    break;
-                case "r":
-                    $rememberText = $field["_text"];
-                    $rememberValue = $field["value"];
                     break;
                 default:
                     LogUtility::msg("The register field name($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -128,7 +131,7 @@ EOF;
         /**
          * Logo
          */
-        $tagAttributes = TagAttributes::createEmpty("login");
+        $tagAttributes = TagAttributes::createEmpty(self::CANONICAL);
         $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "72");
         $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, "72");
         $tagAttributes->addClassName("logo");
@@ -136,21 +139,10 @@ EOF;
 
 
         /**
-         * Remember me
+         * Register and Login HTML paragraph
          */
-        $rememberMeHtml = "";
-        if ($conf['rememberme']) {
-            $rememberMeHtml = <<<EOF
-<div class="checkbox rememberMe">
-    <label><input type="checkbox" id="remember__me" name="r" value="$rememberValue"> $rememberText</label>
-</div>
-EOF;
-        }
-
-
         $registerHtml = action_plugin_combo_register::getRegisterLinkAndParagraph();
-        $resendPwdHtml = action_plugin_combo_resend::getResendPasswordLinkAndParagraph();
-
+        $loginHtml = action_plugin_combo_login::getLoginLinkAndParagraph();
 
         /**
          * Based on
@@ -163,14 +155,9 @@ $logoHtmlImgTag
     <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
     <label for="inputUserName">$loginText</label>
 </div>
-<div class="form-floating">
-    <input type="password" id="inputPassword" class="form-control" placeholder="$passwordText" required="required" name="p">
-    <label for="inputPassword">$passwordText</label>
-</div>
-$rememberMeHtml
-<button class="btn btn-primary btn-block" type="submit">$submitText</button>
+<button class="btn btn-lg btn-primary btn-block" type="submit">$submitText</button>
+$loginHtml
 $registerHtml
-$resendPwdHtml
 EOF;
         $form->_content = [$formsContent];
 
@@ -181,20 +168,5 @@ EOF;
     }
 
 
-    /**
-     * Login
-     * @return string
-     */
-    public static function getLoginLinkAndParagraph()
-    {
-
-        $loginPwLink = (new Login())->asHtmlLink('', false);
-        global $lang;
-        $loginText = $lang['btn_login'];
-        return <<<EOF
-<p class="login">$loginText ? : $loginPwLink</p>
-EOF;
-
-    }
 }
 

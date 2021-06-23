@@ -20,6 +20,12 @@
     border-bottom-left-radius: 0;
 }
 
+.form-login button {
+    padding: .5rem 1rem;
+    font-size: 1.15rem;
+    border-radius: .3rem;
+}
+
 .form-login input[type="password"] {
     margin-bottom: 10px;
     border-top-left-radius: 0;

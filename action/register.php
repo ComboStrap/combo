@@ -24,6 +24,34 @@ class action_plugin_combo_register extends DokuWiki_Action_Plugin
     const CANONICAL = "register";
     const FORM_REGISTER_CLASS = "form-" . self::CANONICAL;
 
+    /**
+     * Return the register text and link paragraph
+     * @return string
+     */
+    public static function getRegisterLinkAndParagraph()
+    {
+
+        global $lang;
+        $registerConf = $lang['reghere'];
+        $registerHtml = "";
+        if (actionOK('register')) {
+
+            /**
+             * The register class does not allow
+             * registration if your are logged in (What ?)
+             * and send an exception
+             */
+            if (!\ComboStrap\Auth::isLoggedIn()) {
+                $registerLink = (new \dokuwiki\Menu\Item\Register())->asHtmlLink('', false);
+                $registerText = $registerConf;
+                $registerHtml = <<<EOF
+<p class="register">$registerText : $registerLink</p>
+EOF;
+            }
+        }
+        return $registerHtml;
+    }
+
 
     function register(Doku_Event_Handler $controller)
     {
@@ -133,6 +161,11 @@ EOF;
         $firstColWeight = 5;
         $secondColWeight = 12 - $firstColWeight;
 
+        /**
+         * Link in the form footer to login and resend
+         */
+        $loginHtml = action_plugin_combo_login::getLoginLinkAndParagraph();
+        $resendHtml = action_plugin_combo_resend::getResendPasswordLinkAndParagraph();
 
         /**
          * Form
@@ -191,6 +224,8 @@ EOF;
     </div>
   </div>
   <button type="submit" class="btn btn-primary" tabindex="6">$submitText</button>
+$loginHtml
+$resendHtml
 EOF;
         $form->_content = [$formsContent];
 

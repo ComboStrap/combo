@@ -20,19 +20,14 @@ class Auth
 
     /**
      * Is logged in
-     * @param $user
      * @return boolean
      */
-    public static function isLoggedIn($user = null)
+    public static function isLoggedIn()
     {
         $loggedIn = false;
-        if (!empty($user)) {
+        global $INPUT;
+        if ($INPUT->server->has('REMOTE_USER')) {
             $loggedIn = true;
-        } else {
-            global $INPUT;
-            if ($INPUT->server->has('REMOTE_USER')) {
-                $loggedIn = true;
-            }
         }
         return $loggedIn;
     }

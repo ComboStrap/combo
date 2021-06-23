@@ -49,7 +49,7 @@ class Publication
      */
     public static function isPageProtected($id, $user = '')
     {
-        if (!Auth::isLoggedIn($user)) {
+        if (!Auth::isLoggedIn()) {
             $page = new Page($id);
             if ($page->getPublishedTimestamp()) {
                 /**

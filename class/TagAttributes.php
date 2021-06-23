@@ -726,7 +726,7 @@ class TagAttributes
      */
     public function addHtmlAfterEnterTag($html)
     {
-        $this->htmlAfterEnterTag .= $html;
+        $this->htmlAfterEnterTag = $html . $this->htmlAfterEnterTag;
     }
 
     /**
@@ -838,10 +838,10 @@ class TagAttributes
         self::$counter += 1;
         $id = self::$counter;
         $logicalTag = $this->getLogicalTag();
-        if(!empty($logicalTag)) {
-           $id = $this->logicalTag . $id;
+        if (!empty($logicalTag)) {
+            $id = $this->logicalTag . $id;
         }
-        $this->setComponentAttributeValue("id",$id);
+        $this->setComponentAttributeValue("id", $id);
         return $id;
     }
 

@@ -42,4 +42,5 @@ button[class="height-toggle-combo"][aria-expanded="true"]{
     background: none;
     z-index: 20;
     border: none;
+    display: block;
 }

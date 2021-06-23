@@ -121,7 +121,7 @@ class Dimension
                         switch ($scrollMechanism) {
                             case "toggle":
                                 // https://jsfiddle.net/gerardnico/h0g6xw58/
-                                $attributes->addStyleDeclaration("overflow", "hidden");
+                                $attributes->addStyleDeclaration("overflow-y", "hidden");
                                 $attributes->addStyleDeclaration("position", "relative");
                                 $attributes->addStyleDeclaration("display", "block");
                                 // The block should collapse to this height

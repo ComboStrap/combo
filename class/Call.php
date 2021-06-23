@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
-use Psr\Log\LogLevel;
 
 
 /**
@@ -74,6 +73,7 @@ class Call
         "entity", // for instance `...` are transformed in character
         "linebreak",
         "externallink",
+        "internallink",
         MediaLink::INTERNAL_MEDIA_CALL_NAME,
         MediaLink::EXTERNAL_MEDIA_CALL_NAME,
         /**
@@ -507,7 +507,7 @@ class Call
      * @param null $default
      * @return string|null
      */
-    public function getAttribute($key, $default=null)
+    public function getAttribute($key, $default = null)
     {
         $attributes = $this->getAttributes();
         if (isset($attributes[$key])) {
@@ -669,11 +669,21 @@ class Call
 
     public function setType($type)
     {
-        if($this->isPluginCall()){
-            $this->call[1][1][PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY]=$type;
+        if ($this->isPluginCall()) {
+            $this->call[1][1][PluginUtility::ATTRIBUTES][TagAttributes::TYPE_KEY] = $type;
         } else {
             LogUtility::msg("This is not a plugin call ($this), you can't set the type");
         }
+    }
+
+    public function addCssStyle($key, $value)
+    {
+        $style = $this->getAttribute("style");
+        $cssValue = "$key:$value";
+        if ($style != null) {
+            $cssValue = "$style; $cssValue";
+        }
+        $this->addAttribute("style", $cssValue);
     }
 
 

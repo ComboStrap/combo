@@ -9,8 +9,15 @@ button.height-toggle-combo {
     padding-top: 40px;
     background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.5));
     box-sizing: border-box;
+    z-index: 20;
 }
-button.height-toggle-combo > .label {
+
+button[class="height-toggle-combo"][aria-expanded="true"]{
+    padding-top: 0;
+    background: none;
+}
+
+button.height-toggle-combo::before {
     display: inline-block;
     font-weight: 700;
     line-height: 1;
@@ -19,28 +26,13 @@ button.height-toggle-combo > .label {
     border-radius: 0.5rem;
     min-width: 1rem;
     font-size: 180%;
-}
-
-button.height-toggle-combo > .label::before {
     content: "▼︎";
     vertical-align: text-top;
 }
 
-button[class="height-toggle-combo"][aria-expanded="true"] > .label{
-    padding: 0;
+button[class="height-toggle-combo"][aria-expanded="true"]::before {
+    transform: rotate(-180deg) translate(0, -0.6rem);;
+    vertical-align: text-bottom;
 }
 
-button[class="height-toggle-combo"][aria-expanded="true"] > .label::before {
-    content: "▲︎";
-    vertical-align: text-top;
-}
 
-button[class="height-toggle-combo"][aria-expanded="true"]{
-    position: relative;
-    bottom: 0;
-    padding-top: 0;
-    background: none;
-    z-index: 20;
-    border: none;
-    display: block;
-}

@@ -4,6 +4,10 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Extension\SyntaxPlugin;
+use syntax_plugin_combo_button;
+use syntax_plugin_combo_link;
+
 class Dimension
 {
     /**
@@ -23,6 +27,7 @@ class Dimension
      * On height, if set, the design is constrained and overflow
      */
     const HEIGHT_LAYOUT_DEFAULT = self::DESIGN_LAYOUT_CONSTRAINED;
+    const SCROLL = "scroll";
 
 
     /**
@@ -126,7 +131,7 @@ class Dimension
                                 $attributes->addStyleDeclaration("display", "block");
                                 // The block should collapse to this height
                                 $attributes->addStyleDeclaration("min-height", $heightValue);
-                                if($attributes->hasComponentAttribute("id")){
+                                if ($attributes->hasComponentAttribute("id")) {
                                     $id = $attributes->getValue("id");
                                 } else {
                                     $id = $attributes->generateAndSetId();
@@ -143,15 +148,16 @@ class Dimension
                                  * The height when there is not the show class
                                  * is the original height
                                  */
-                                $css =<<<EOF
+                                $css = <<<EOF
 #$id:not(.show){
   height: $heightValue;
+  transition: height .35s ease;
 }
 EOF;
-                                PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle-show",$css);
+                                PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle-show", $css);
                                 $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
-                                $button=<<<EOF
-<button class="height-toggle-combo" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"><span class="label"></span></button>
+                                $button = <<<EOF
+<button class="height-toggle-combo" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"></button>
 EOF;
 
                                 $attributes->addHtmlAfterEnterTag($button);
@@ -175,6 +181,40 @@ EOF;
 
                     }
                 }
+            }
+
+        }
+    }
+
+    /**
+     *
+     * Toggle with a click on the collpased element
+     * if there is no control element such as button or link inside
+     *
+     * This function is used at the {@link DOKU_LEXER_EXIT} state of a {@link SyntaxPlugin::handle()}
+     *
+     * @param CallStack $callStack
+     */
+    public static function addScrollToggleOnClickIfNoControl(CallStack $callStack)
+    {
+        $callStack->moveToEnd();
+        $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+        $scrollAttribute = $openingCall->getAttribute(Dimension::SCROLL);
+        if ($scrollAttribute != null && $scrollAttribute == "toggle") {
+
+            $controlFound = false;
+            while ($actualCall = $callStack->next()) {
+                if (in_array($actualCall->getTagName(),
+                    [syntax_plugin_combo_button::TAG, syntax_plugin_combo_link::TAG, "internallink", "externallink"])) {
+                    $controlFound = true;
+                    break;
+                }
+            }
+            if (!$controlFound) {
+                $toggleOnClickId = "height-toggle-onclick";
+                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($toggleOnClickId);
+                $openingCall->addClassName("{$toggleOnClickId}-combo");
+                $openingCall->addCssStyle("cursor", "pointer");
             }
 
         }

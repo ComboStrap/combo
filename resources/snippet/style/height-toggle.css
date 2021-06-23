@@ -19,7 +19,6 @@ button.height-toggle-combo > .label {
     border-radius: 0.5rem;
     min-width: 1rem;
     font-size: 180%;
-    color: steelblue;
 }
 
 button.height-toggle-combo > .label::before {
@@ -29,7 +28,6 @@ button.height-toggle-combo > .label::before {
 
 button[class="height-toggle-combo"][aria-expanded="true"] > .label{
     padding: 0;
-    color: white;
 }
 
 button[class="height-toggle-combo"][aria-expanded="true"] > .label::before {

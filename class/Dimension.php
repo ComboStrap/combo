@@ -131,7 +131,14 @@ class Dimension
                                 } else {
                                     $id = $attributes->generateAndSetId();
                                 }
+                                /**
+                                 * Css of the button and other standard attribute
+                                 */
                                 PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle");
+                                /**
+                                 * Set the color dynamically to the color of the parent
+                                 */
+                                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("height-toggle");
                                 /**
                                  * The height when there is not the show class
                                  * is the original height

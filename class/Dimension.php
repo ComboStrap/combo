@@ -11,6 +11,19 @@ class Dimension
      */
     const NATURAL_SIZING_ELEMENT = [SvgImageLink::CANONICAL, RasterImageLink::CANONICAL];
 
+    const DESIGN_LAYOUT_CONSTRAINED = "constrained"; // fix value
+    const DESIGN_LAYOUT_FLUID = "fluid"; // adapt
+
+    /**
+     * On the width, if set, the design is fluid and will adapt to all screen
+     * with a min-width
+     */
+    const WIDTH_LAYOUT_DEFAULT = self::DESIGN_LAYOUT_FLUID;
+    /**
+     * On height, if set, the design is constrained and overflow
+     */
+    const HEIGHT_LAYOUT_DEFAULT = self::DESIGN_LAYOUT_CONSTRAINED;
+
 
     /**
      * @param TagAttributes $attributes
@@ -24,8 +37,10 @@ class Dimension
 
             if ($widthValue == "0") {
 
-                // The dimension are restricted by height
-                if($attributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
+                /**
+                 * For an image, the dimension are restricted by height
+                 */
+                if ($attributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
                     $attributes->addStyleDeclaration("width", "auto");
                 }
 
@@ -71,7 +86,7 @@ class Dimension
         $heightName = TagAttributes::HEIGHT_KEY;
         if ($attributes->hasComponentAttribute($heightName)) {
             $heightValue = trim($attributes->getValueAndRemove($heightName));
-            if($heightValue!=="") {
+            if ($heightValue !== "") {
                 $heightValue = TagAttributes::toQualifiedCssValue($heightValue);
 
                 if (in_array($attributes->getLogicalTag(), self::NATURAL_SIZING_ELEMENT)) {
@@ -80,7 +95,7 @@ class Dimension
                      * A element with a natural height is responsive, we set only the max-height
                      *
                      * By default, the image has a `height: auto` due to the img-fluid class
-                     * Making it height responsive
+                     * Making its height responsive
                      */
                     $attributes->addStyleDeclaration("max-height", $heightValue);
 
@@ -90,9 +105,68 @@ class Dimension
                      * HTML Block
                      *
                      * Without the height value, a block display will collapse
-                     * min-height and not height to not constraint the box
                      */
-                    $attributes->addStyleDeclaration("min-height", $heightValue);
+                    if (self::HEIGHT_LAYOUT_DEFAULT == self::DESIGN_LAYOUT_CONSTRAINED) {
+
+                        /**
+                         * The box is constrained in height
+                         * By default, a box is not constrained
+                         */
+                        $attributes->addStyleDeclaration("height", $heightValue);
+
+                        $scrollMechanism = $attributes->getValueAndRemoveIfPresent("scroll");
+                        if ($scrollMechanism != null) {
+                            $scrollMechanism = trim(strtolower($scrollMechanism));
+                        }
+                        switch ($scrollMechanism) {
+                            case "toggle":
+                                // https://jsfiddle.net/gerardnico/h0g6xw58/
+                                $attributes->addStyleDeclaration("overflow", "hidden");
+                                $attributes->addStyleDeclaration("position", "relative");
+                                $attributes->addStyleDeclaration("display", "block");
+                                // The block should collapse to this height
+                                $attributes->addStyleDeclaration("min-height", $heightValue);
+                                if($attributes->hasComponentAttribute("id")){
+                                    $id = $attributes->getValue("id");
+                                } else {
+                                    $id = $attributes->generateAndSetId();
+                                }
+                                PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle");
+                                /**
+                                 * The height when there is not the show class
+                                 * is the original height
+                                 */
+                                $css =<<<EOF
+#$id:not(.show){
+  height: $heightValue;
+}
+EOF;
+                                PluginUtility::getSnippetManager()->attachCssSnippetForBar("height-toggle-show",$css);
+                                $bootstrapDataNameSpace = Bootstrap::getDataNamespace();
+                                $button=<<<EOF
+<button class="height-toggle-combo" data$bootstrapDataNameSpace-toggle="collapse" data$bootstrapDataNameSpace-target="#$id" aria-expanded="false"><span class="label"></span></button>
+EOF;
+
+                                $attributes->addHtmlAfterEnterTag($button);
+
+                                break;
+                            case "lift";
+                            default:
+                                $attributes->addStyleDeclaration("overflow", "auto");
+                                break;
+
+                        }
+
+
+                    } else {
+
+                        /**
+                         * if fluid
+                         * min-height and not height to not constraint the box
+                         */
+                        $attributes->addStyleDeclaration("min-height", $heightValue);
+
+                    }
                 }
             }
 

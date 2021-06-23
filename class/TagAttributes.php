@@ -83,6 +83,12 @@ class TagAttributes
     const DISPLAY = "display";
     const CLASS_KEY = "class";
 
+    /**
+     * A global static counter
+     * to {@link TagAttributes::generateAndSetId()}
+     */
+    private static $counter = 0;
+
 
     /**
      * @var array attribute that were set on a component
@@ -825,6 +831,18 @@ class TagAttributes
         $value = $this->getValue($attribute);
         $this->removeAttributeIfPresent($attribute);
         return $value;
+    }
+
+    public function generateAndSetId()
+    {
+        self::$counter += 1;
+        $id = self::$counter;
+        $logicalTag = $this->getLogicalTag();
+        if(!empty($logicalTag)) {
+           $id = $this->logicalTag . $id;
+        }
+        $this->setComponentAttributeValue("id",$id);
+        return $id;
     }
 
 

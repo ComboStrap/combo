@@ -3,8 +3,14 @@
 
 namespace ComboStrap;
 
-
-class Url
+/**
+ * Parse a internal dokuwiki URL
+ *
+ * This class takes care of the
+ * fact that a color can have a #
+ * and of the special syntax for an image
+ */
+class DokuwikiUrl
 {
 
     /**
@@ -32,86 +38,72 @@ class Url
      */
     const URL_AND = "&";
     const ANCHOR_ATTRIBUTES = "anchor";
+    /**
+     * @var array
+     */
+    private $queryParameters;
+    /**
+     * @var false|string
+     */
+    private $path;
+    /**
+     * @var false|string
+     */
+    private $fragment;
+    /**
+     * @var false|string
+     */
+    private $queryString;
 
     /**
-     * @param $queryParameters
-     * @return array of key value (if there is no value, the returned value is null)
+     * Url constructor.
      */
-    public static function queryParametersToArray($queryParameters)
+    public function __construct($url)
     {
-        $parameters = [];
-        // explode return an array with null if the string is empty
-        if (!empty($queryParameters)) {
-            $queryParameters = StringUtility::explodeAndTrim($queryParameters, self::URL_AND);
-            foreach ($queryParameters as $parameter) {
-                $equalCharacterPosition = strpos($parameter, "=");
-                if ($equalCharacterPosition !== false) {
-                    $parameterProp = explode("=", $parameter);
-                    $key = $parameterProp[0];
-                    $value = $parameterProp[1];
-                    $parameters[$key] = $value;
-                } else {
-                    $parameters[$parameter] = null;
-                }
-            }
-        }
-        return $parameters;
-    }
-
-    /**
-     * Parse a dokuwiki URL
-     *
-     * This function takes care of the
-     * fact that a color can have a #
-     * and of the special syntax for an image
-     * @param $url
-     * @return array
-     * TODO ? return an URL object ?
-     */
-    public static function parseToArray($url)
-    {
-
-        $attributes =[];
+        $this->queryParameters = [];
 
         /**
          * Path
          */
         $questionMarkPosition = strpos($url, "?");
-        $path = $url;
-        $queryStringAndAnchor = null;
+        $this->path = $url;
+        $queryStringAndAnchorOriginal = null;
         if ($questionMarkPosition !== false) {
-            $path = substr($url, 0, $questionMarkPosition);
-            $queryStringAndAnchor = substr($url, $questionMarkPosition + 1);
+            $this->path = substr($url, 0, $questionMarkPosition);
+            $queryStringAndAnchorOriginal = substr($url, $questionMarkPosition + 1);
         } else {
             // We may have only an anchor
             $hashTagPosition = strpos($url, "#");
             if ($hashTagPosition !== false) {
-                $path = substr($url, 0, $hashTagPosition);
-                $attributes[self::ANCHOR_ATTRIBUTES] = substr($url, $hashTagPosition + 1);
+                $this->path = substr($url, 0, $hashTagPosition);
+                $this->fragment = substr($url, $hashTagPosition + 1);
             }
         }
-        $attributes[DokuPath::PATH_ATTRIBUTE] = $path;
-
-
 
         /**
          * Parsing Query string if any
          */
-        if ($queryStringAndAnchor !== null) {
+        if ($queryStringAndAnchorOriginal !== null) {
 
-            while (strlen($queryStringAndAnchor) > 0) {
+            /**
+             * The value $queryStringAndAnchorOriginal
+             * is kept to create the original queryString
+             * at the end if we found an anchor
+             */
+            $queryStringAndAnchorProcessing = $queryStringAndAnchorOriginal;
+            while (strlen($queryStringAndAnchorProcessing) > 0) {
 
                 /**
                  * Capture the token
                  * and reduce the text
                  */
-                $questionMarkPos = strpos($queryStringAndAnchor, "&");
+                $questionMarkPos = strpos($queryStringAndAnchorProcessing, "&");
                 if ($questionMarkPos !== false) {
-                    $token = substr($queryStringAndAnchor, 0, $questionMarkPos);
-                    $queryStringAndAnchor = substr($queryStringAndAnchor, $questionMarkPos + 1);
+                    $token = substr($queryStringAndAnchorProcessing, 0, $questionMarkPos);
+                    $queryStringAndAnchorProcessing = substr($queryStringAndAnchorProcessing, $questionMarkPos + 1);
                 } else {
-                    $token = $queryStringAndAnchor;
-                    $queryStringAndAnchor = "";
+                    $token = $queryStringAndAnchorProcessing;
+                    $queryStringAndAnchorProcessing = "";
                 }
 
 
@@ -120,9 +112,9 @@ class Url
                  */
                 $sizing = [];
                 if (preg_match('/^([0-9]+)(?:x([0-9]+))?/', $token, $sizing)) {
-                    $attributes[Dimension::WIDTH_KEY] = $sizing[1];
+                    $this->queryParameters[Dimension::WIDTH_KEY] = $sizing[1];
                     if (isset($sizing[2])) {
-                        $attributes[Dimension::HEIGHT_KEY] = $sizing[2];
+                        $this->queryParameters[Dimension::HEIGHT_KEY] = $sizing[2];
                     }
                     $token = substr($token, strlen($sizing[0]));
                     if ($token == "") {
@@ -137,7 +129,7 @@ class Url
                 $found = preg_match('/^(nolink|direct|linkonly|details)/i', $token, $matches);
                 if ($found) {
                     $linkingValue = $matches[1];
-                    $attributes[MediaLink::LINKING_KEY]=$linkingValue;
+                    $this->queryParameters[MediaLink::LINKING_KEY] = $linkingValue;
                     $token = substr($token, strlen($linkingValue));
                     if ($token == "") {
                         // no anchor behind we continue
@@ -151,7 +143,7 @@ class Url
                 $found = preg_match('/^(nocache)/i', $token, $matches);
                 if ($found) {
                     $cacheValue = "nocache";
-                    $attributes[CacheMedia::CACHE_KEY]=$cacheValue;
+                    $this->queryParameters[CacheMedia::CACHE_KEY] = $cacheValue;
                     $token = substr($token, strlen($cacheValue));
                     if ($token == "") {
                         // no anchor behind we continue
@@ -163,7 +155,7 @@ class Url
                  * Anchor value after a single token case
                  */
                 if (strpos($token, '#') === 0) {
-                    $attributes[self::ANCHOR_ATTRIBUTES] = substr($token, 1);
+                    $this->queryParameters[self::ANCHOR_ATTRIBUTES] = substr($token, 1);
                     continue;
                 }
 
@@ -181,12 +173,12 @@ class Url
                  * Anchor
                  */
                 if (($countHashTag = substr_count($value, "#")) >= 3) {
-                    LogUtility::msg("The value ($value) of the key ($key) for the image ($path) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::msg("The value ($value) of the key ($key) for the link ($this->path) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
                     continue;
                 }
 
                 $anchorPosition = false;
-                if ($lowerCaseKey === "color") {
+                if ($lowerCaseKey === TextColor::CSS_ATTRIBUTE) {
                     /**
                      * Special case when color has one color value as hexadecimal #
                      * and the hashtag
@@ -209,24 +201,75 @@ class Url
                     $anchorPosition = strpos($value, "#");
                 }
                 if ($anchorPosition !== false) {
-                    $attributes[self::ANCHOR_ATTRIBUTES] = substr($value, $anchorPosition + 1);
+                    $this->fragment = substr($value, $anchorPosition + 1);
                     $value = substr($value, 0, $anchorPosition);
                 }
 
                 switch ($lowerCaseKey) {
                     case "w": // used in a link w=xxx
-                        $attributes[Dimension::WIDTH_KEY] = $value;
+                        $this->queryParameters[Dimension::WIDTH_KEY] = $value;
                         break;
                     case "h": // used in a link h=xxxx
-                        $attributes[Dimension::HEIGHT_KEY] = $value;
+                        $this->queryParameters[Dimension::HEIGHT_KEY] = $value;
                         break;
                     default:
-                        $attributes[$key] = $value;
+                        $this->queryParameters[$key] = $value;
                 }
 
+            }
 
+            /**
+             * If a fragment was found,
+             * calculate the query string
+             */
+            $this->queryString = $queryStringAndAnchorOriginal;
+            if ($this->fragment != null) {
+                $this->queryString = substr($queryStringAndAnchorOriginal, 0, -strlen($this->fragment) - 1);
             }
         }
-        return $attributes;
+
+    }
+
+
+    public static function createFromRef($dokuwikiUrl)
+    {
+        return new DokuwikiUrl($dokuwikiUrl);
+    }
+
+    /**
+     * All URL token in an array
+     * @return array
+     */
+    public function toArray()
+    {
+        $attributes = [];
+        $attributes[self::ANCHOR_ATTRIBUTES] = $this->fragment;
+        $attributes[DokuPath::PATH_ATTRIBUTE] = $this->path;
+        return PluginUtility::mergeAttributes($attributes, $this->queryParameters);
+    }
+
+    public function getQueryString()
+    {
+        return $this->queryString;
+    }
+
+    public function hasQueryParameter($propertyKey)
+    {
+        return isset($this->queryParameters[$propertyKey]);
+    }
+
+    public function getQueryParameters()
+    {
+        return $this->queryParameters;
+    }
+
+    public function getFragment()
+    {
+        return $this->fragment;
+    }
+
+    public function getPath()
+    {
+        return $this->path;
     }
 }

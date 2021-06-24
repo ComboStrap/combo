@@ -23,6 +23,10 @@ require_once(__DIR__ . '/PluginUtility.php');
  *
  * The real documentation can be found on the image page
  * @link https://www.dokuwiki.org/images
+ *
+ * Doc:
+ * https://web.dev/optimize-cls/#images-without-dimensions
+ * https://web.dev/cls/
  */
 class RasterImageLink extends MediaLink
 {
@@ -85,7 +89,7 @@ class RasterImageLink extends MediaLink
      * @param null $localWidth - the asked width - use for responsive image
      * @return string|null
      */
-    public function getUrl($ampersand = Url::URL_ENCODED_AND, $localWidth = null)
+    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $localWidth = null)
     {
 
         if ($this->exists()) {
@@ -255,7 +259,7 @@ class RasterImageLink extends MediaLink
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $this->getUrl(Url::URL_ENCODED_AND, $breakpointWidthMinusMargin);
+                        $xsmUrl = $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -270,7 +274,7 @@ class RasterImageLink extends MediaLink
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $this->getUrl(Url::URL_ENCODED_AND, $imgTagWidth);
+                    $srcUrl = $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $imgTagWidth);
                     $srcSet .= "$srcUrl {$imgTagWidth}w";
                     $sizes .= "{$imgTagWidth}px";
                 }

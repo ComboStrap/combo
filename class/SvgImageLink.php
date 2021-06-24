@@ -183,7 +183,7 @@ class SvgImageLink extends MediaLink
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl($ampersand = Url::URL_ENCODED_AND)
+    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND)
     {
 
         if ($this->exists()) {

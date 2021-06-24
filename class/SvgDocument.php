@@ -247,9 +247,9 @@ class SvgDocument extends XmlDocument
                  * The default unit on attribute is pixel, no need to add it
                  * as in CSS
                  */
-                $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY, $defaultWidth);
+                $width = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY, $defaultWidth);
                 $tagAttributes->addHtmlAttributeValue("width", $width);
-                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY, $width);
+                $height = $tagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
                 $tagAttributes->addHtmlAttributeValue("height", $height);
 
                 break;

@@ -3,6 +3,7 @@
 
 require_once(__DIR__ . '/../class/CacheMedia.php');
 
+use ComboStrap\Dimension;
 use ComboStrap\Identity;
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
@@ -57,11 +58,11 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         $tagAttributes = TagAttributes::createEmpty();
         $width = $event->data['width'];
         if ($width != 0) {
-            $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, $width);
+            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
         }
         $height = $event->data['height'];
         if ($height != 0) {
-            $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, $height);
+            $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
         }
         $tagAttributes->addComponentAttributeValue(\ComboStrap\CacheMedia::CACHE_KEY, $event->data['cache']);
 

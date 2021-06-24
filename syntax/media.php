@@ -6,7 +6,6 @@ use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
-use ComboStrap\TagAttributes;
 
 
 if (!defined('DOKU_INC')) die();
@@ -129,7 +128,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                          * The image is in a link, we don't want another link
                          * to the image
                          */
-                        $attributes[TagAttributes::LINKING_KEY] = MediaLink::LINKING_NOLINK_VALUE;
+                        $attributes[MediaLink::LINKING_KEY] = MediaLink::LINKING_NOLINK_VALUE;
                     }
                 }
                 $isFirstSibling = $tag->isFirstMeaningFullSibling();
@@ -186,6 +185,12 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $width = $attributes['width'];
                 $height = $attributes['height'];
                 $cache = $attributes['cache'];
+                if ($cache == null) {
+                    // Dokuwiki needs a value
+                    // If their is no value it will output it without any value
+                    // in the query string.
+                    $cache = "cache";
+                }
                 $linking = $attributes['linking'];
                 switch ($type) {
                     case MediaLink::INTERNAL_MEDIA_CALL_NAME:
@@ -223,7 +228,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     {
         $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
         $src = $attributes['src'];
-        if($src==null){
+        if ($src == null) {
             $src = $attributes[DokuPath::PATH_ATTRIBUTE];
         }
         $title = $attributes['title'];

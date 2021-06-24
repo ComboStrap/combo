@@ -360,7 +360,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
 
                 return true;
-                break;
 
             case 'metadata':
 

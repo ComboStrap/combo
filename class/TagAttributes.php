@@ -29,7 +29,6 @@ use syntax_plugin_combo_cell;
  */
 class TagAttributes
 {
-    const ALIGN_KEY = 'align';
     /**
      * @var string the alt attribute value (known as the title for dokuwiki)
      */
@@ -37,18 +36,6 @@ class TagAttributes
 
 
     const TYPE_KEY = "type";
-    const HEIGHT_KEY = 'height';
-    /**
-     * Link value:
-     *   * 'nolink'
-     *   * 'direct': directly to the image
-     *   * 'linkonly': show only a url
-     *   * 'details': go to the details media viewer
-     *
-     * @var
-     */
-    const LINKING_KEY = 'linking';
-    const WIDTH_KEY = 'width';
     const ID_KEY = "id";
 
     /**
@@ -60,7 +47,7 @@ class TagAttributes
     const RESERVED_ATTRIBUTES = [
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
-        TagAttributes::LINKING_KEY, // internal to image
+        MediaLink::LINKING_KEY, // internal to image
         CacheMedia::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
         syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE
@@ -234,9 +221,9 @@ class TagAttributes
     {
         switch ($name) {
             case "w":
-                return TagAttributes::WIDTH_KEY;
+                return Dimension::WIDTH_KEY;
             case "h":
-                return TagAttributes::HEIGHT_KEY;
+                return Dimension::HEIGHT_KEY;
             default:
                 return $name;
         }

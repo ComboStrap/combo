@@ -11,6 +11,7 @@
  */
 
 use ComboStrap\ConditionalValue;
+use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -28,7 +29,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
 
     const TAG = "cell";
 
-    const WIDTH_ATTRIBUTE = TagAttributes::WIDTH_KEY;
+    const WIDTH_ATTRIBUTE = Dimension::WIDTH_KEY;
     const VERTICAL_ATTRIBUTE = "vertical";
 
     static function getTags()
@@ -217,7 +218,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
                                     if ($sizeValue >= 1 && $sizeValue <= syntax_plugin_combo_row::GRID_TOTAL_COLUMNS) {
                                         $attributes->addClassName("col-$sizeValue");
                                     } else {
-                                        $attributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, $sizeValue);
+                                        $attributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $sizeValue);
                                     }
                                 }
                             }

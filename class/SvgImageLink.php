@@ -99,7 +99,7 @@ class SvgImageLink extends MediaLink
         /**
          * Remove linking (not yet implemented)
          */
-        $this->tagAttributes->removeComponentAttributeIfPresent(TagAttributes::LINKING_KEY);
+        $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::LINKING_KEY);
 
 
 
@@ -216,14 +216,14 @@ class SvgImageLink extends MediaLink
                      * but you may use them outside of HTML.
                      */
                     switch ($name) {
-                        case TagAttributes::WIDTH_KEY:
+                        case Dimension::WIDTH_KEY:
                             $newName = "w";
                             /**
                              * We don't remove width because,
                              * the sizing should apply to img
                              */
                             break;
-                        case TagAttributes::HEIGHT_KEY:
+                        case Dimension::HEIGHT_KEY:
                             $newName = "h";
                             /**
                              * We don't remove height because,

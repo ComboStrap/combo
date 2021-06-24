@@ -143,7 +143,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
                     case syntax_plugin_combo_media::TAG:
                         // no link for media in heading
-                        $actualCall->addAttribute(TagAttributes::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+                        $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
                         continue 2;
 
                     default:

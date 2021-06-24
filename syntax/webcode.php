@@ -17,6 +17,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
@@ -467,7 +468,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                     /**
                      * If there is no height
                      */
-                    if (!$iFrameAttributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
+                    if (!$iFrameAttributes->hasComponentAttribute(Dimension::HEIGHT_KEY)) {
 
                         /**
                          * Adjust the height attribute

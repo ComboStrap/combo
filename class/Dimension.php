@@ -28,6 +28,8 @@ class Dimension
      */
     const HEIGHT_LAYOUT_DEFAULT = self::DESIGN_LAYOUT_CONSTRAINED;
     const SCROLL = "scroll";
+    const HEIGHT_KEY = 'height';
+    const WIDTH_KEY = 'width';
 
 
     /**
@@ -35,7 +37,7 @@ class Dimension
      */
     public static function processWidthAndHeight(&$attributes)
     {
-        $widthName = TagAttributes::WIDTH_KEY;
+        $widthName = self::WIDTH_KEY;
         if ($attributes->hasComponentAttribute($widthName)) {
 
             $widthValue = trim($attributes->getValueAndRemove($widthName));
@@ -45,7 +47,7 @@ class Dimension
                 /**
                  * For an image, the dimension are restricted by height
                  */
-                if ($attributes->hasComponentAttribute(TagAttributes::HEIGHT_KEY)) {
+                if ($attributes->hasComponentAttribute(self::HEIGHT_KEY)) {
                     $attributes->addStyleDeclaration("width", "auto");
                 }
 
@@ -88,7 +90,7 @@ class Dimension
 
         }
 
-        $heightName = TagAttributes::HEIGHT_KEY;
+        $heightName = self::HEIGHT_KEY;
         if ($attributes->hasComponentAttribute($heightName)) {
             $heightValue = trim($attributes->getValueAndRemove($heightName));
             if ($heightValue !== "") {

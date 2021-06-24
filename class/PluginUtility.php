@@ -580,7 +580,7 @@ class PluginUtility
             $path = File::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
             $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
             $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
-            $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "20");
+            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
             $cache = new CacheMedia($path, $tagAttributes);
             if (!$cache->isCacheUsable()) {
                 $xhtmlIcon = SvgDocument::createFromPath($path)

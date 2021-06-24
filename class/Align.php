@@ -13,7 +13,7 @@ class Align
     public static function processAlignAttributes(&$attributes)
     {
         // The class shortcut
-        $align = TagAttributes::ALIGN_KEY;
+        $align = MediaLink::ALIGN_KEY;
         if ($attributes->hasComponentAttribute($align)) {
 
             $alignValue = $attributes->getValueAndRemove($align);

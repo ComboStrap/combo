@@ -7,6 +7,7 @@
  * @author     Nicolas GERARD
  */
 
+use ComboStrap\Dimension;
 use ComboStrap\LogUtility;
 use ComboStrap\Site;
 use ComboStrap\Snippet;
@@ -134,8 +135,8 @@ EOF;
          * Logo
          */
         $tagAttributes = TagAttributes::createEmpty(self::CANONICAL);
-        $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
         $tagAttributes->addClassName("logo");
         $logoHtmlImgTag = Site::getLogoImgHtmlTag($tagAttributes);
 

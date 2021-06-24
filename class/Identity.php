@@ -125,8 +125,8 @@ class Identity
          * Logo
          */
         $tagAttributes = TagAttributes::createEmpty("register");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
         $tagAttributes->addClassName("logo");
         return Site::getLogoImgHtmlTag($tagAttributes);
     }

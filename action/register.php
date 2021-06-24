@@ -8,12 +8,10 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\Identity;
 use ComboStrap\LogUtility;
-use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 use ComboStrap\Snippet;
-use ComboStrap\Spacing;
-use ComboStrap\TagAttributes;
+use dokuwiki\Menu\Item\Register;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -27,9 +25,11 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
 class action_plugin_combo_register extends DokuWiki_Action_Plugin
 {
 
-    const CANONICAL = "register";
-    const FORM_REGISTER_CLASS = "form-" . self::CANONICAL;
-    const CONF_ENABLE_LOGO_ON_IDENTITY_FORMS = "enableLogoOnIdentityForms";
+    const CANONICAL = Identity::CANONICAL;
+    const TAG = "register";
+    const FORM_REGISTER_CLASS = "form-".self::TAG;
+    const CONF_ENABLE_REGISTER_PAGE = "enableRegisterPage";
+
 
     /**
      * Return the register text and link paragraph
@@ -38,8 +38,7 @@ class action_plugin_combo_register extends DokuWiki_Action_Plugin
     public static function getRegisterLinkAndParagraph()
     {
 
-        global $lang;
-        $registerConf = $lang['reghere'];
+
         $registerHtml = "";
         if (actionOK('register')) {
 
@@ -48,27 +47,17 @@ class action_plugin_combo_register extends DokuWiki_Action_Plugin
              * registration if your are logged in (What ?)
              * and send an exception
              */
-            if (!\ComboStrap\Auth::isLoggedIn()) {
-                $registerLink = (new \dokuwiki\Menu\Item\Register())->asHtmlLink('', false);
-                $registerText = $registerConf;
+            if (!Identity::isLoggedIn()) {
+                $registerLink = (new Register())->asHtmlLink('', false);
+                global $lang;
+                $tag = self::TAG;
+                $registerText = $lang['reghere'];
                 $registerHtml = <<<EOF
-<p class="register">$registerText : $registerLink</p>
+<p class="$tag">$registerText : $registerLink</p>
 EOF;
             }
         }
         return $registerHtml;
-    }
-
-    private static function getLogoHtml()
-    {
-        /**
-         * Logo
-         */
-        $tagAttributes = TagAttributes::createEmpty("register");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, "72");
-        $tagAttributes->addClassName("logo");
-        return Site::getLogoImgHtmlTag($tagAttributes);
     }
 
 
@@ -125,24 +114,7 @@ EOF;
         /**
          * Header (Logo / Title)
          */
-        if (isset($form->_content[0]["_legend"])) {
-
-            $title = $form->_content[0]["_legend"];
-            /**
-             * Logo
-             */
-            $logoHtmlImgTag = "";
-            if (PluginUtility::getConfValue(self::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)) {
-                $logoHtmlImgTag = self::getLogoHtml();
-            }
-            $headerHtml = <<<EOF
-<header class="form-register-header">
-    $logoHtmlImgTag
-    <h1>$title</h1>
-</header>
-EOF;
-            $newFormContent[] = $headerHtml;
-        }
+        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_REGISTER_CLASS);
 
 
         /**
@@ -253,7 +225,8 @@ EOF;
                     $newFormContent[] = $emailHTML;
                     break;
                 default:
-                    LogUtility::msg("The register field name($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $tag = self::TAG;
+                    LogUtility::msg("The $tag field name ($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
             }
         }

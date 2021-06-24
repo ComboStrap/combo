@@ -13,10 +13,14 @@
 namespace ComboStrap;
 
 
+use Doku_Form;
 use TestRequest;
 
-class Auth
+class Identity
 {
+
+    const CANONICAL = "identity";
+    const CONF_ENABLE_LOGO_ON_IDENTITY_FORMS = "enableLogoOnIdentityForms";
 
     /**
      * Is logged in
@@ -113,6 +117,54 @@ class Auth
     {
         global $USERINFO;
         return is_array($USERINFO) ? $USERINFO['grps'] : array();
+    }
+
+    public static function getLogoHtml()
+    {
+        /**
+         * Logo
+         */
+        $tagAttributes = TagAttributes::createEmpty("register");
+        $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "72");
+        $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, "72");
+        $tagAttributes->addClassName("logo");
+        return Site::getLogoImgHtmlTag($tagAttributes);
+    }
+
+    /**
+     * @param Doku_Form $form
+     * @param string $classPrefix
+     * @return string
+     */
+    public static function getHeaderHTML(Doku_Form $form, $classPrefix)
+    {
+        if (isset($form->_content[0]["_legend"])) {
+
+            $title = $form->_content[0]["_legend"];
+            /**
+             * Logo
+             */
+            $logoHtmlImgTag = "";
+            if (PluginUtility::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)) {
+                $logoHtmlImgTag = Identity::getLogoHtml();
+            }
+            /**
+             * Don't use `header` in place of
+             * div because this is a HTML5 tag
+             *
+             * On php 5.6, the php test library method {@link \phpQueryObject::htmlOuter()}
+             * add the below meta tag
+             * <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+             *
+             */
+            return <<<EOF
+<div class="$classPrefix-header">
+    $logoHtmlImgTag
+    <h1>$title</h1>
+</div>
+EOF;
+        }
+        return "";
     }
 
 

@@ -3,6 +3,7 @@
 use ComboStrap\AdsUtility;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
+use ComboStrap\Identity;
 use ComboStrap\MediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
@@ -275,3 +276,13 @@ $meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_STYLE
 $meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPARATOR] = array("string");
 $meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX] = array("string");
 $meta[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX] = array("string");
+
+/**
+ * Identity form
+ */
+$meta[Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS] = array("onoff");
+$meta[action_plugin_combo_register::CONF_ENABLE_REGISTER_PAGE] = array("onoff");
+$meta[action_plugin_combo_login::CONF_ENABLE_LOGIN_FORM] = array("onoff");
+$meta[action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM] = array("onoff");
+
+

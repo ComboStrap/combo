@@ -1313,7 +1313,7 @@ class Page extends DokuPath
     function isProtected($user = '')
     {
         $protected = false;
-        if (!Auth::isLoggedIn()) {
+        if (!Identity::isLoggedIn()) {
 
             /**
              * Low quality page and late publication should not

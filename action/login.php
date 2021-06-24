@@ -7,22 +7,29 @@
  * @author     Nicolas GERARD
  */
 
+use ComboStrap\Identity;
 use ComboStrap\LogUtility;
-use ComboStrap\Site;
+use ComboStrap\PluginUtility;
 use ComboStrap\Snippet;
-use ComboStrap\TagAttributes;
 use dokuwiki\Menu\Item\Login;
-use dokuwiki\Menu\Item\Resendpwd;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
-
+/**
+ * Class action_plugin_combo_login
+ *
+ * $conf['rememberme']
+ */
 class action_plugin_combo_login extends DokuWiki_Action_Plugin
 {
 
-    const CANONICAL = "login";
-    const FORM_LOGIN_CLASS = "form-" . self::CANONICAL;
+
+    const CANONICAL = Identity::CANONICAL;
+    const TAG = "login";
+    const FORM_LOGIN_CLASS = "form-" . self::TAG;
+
+    const CONF_ENABLE_LOGIN_FORM = "enableLoginForm";
 
 
     function register(Doku_Event_Handler $controller)
@@ -33,7 +40,9 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
          * Deprecated object passed by the event but still in use
          * https://www.dokuwiki.org/devel:event:html_loginform_output
          */
-        $controller->register_hook('HTML_LOGINFORM_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
+        if (PluginUtility::getConfValue(self::CONF_ENABLE_LOGIN_FORM, 1)) {
+            $controller->register_hook('HTML_LOGINFORM_OUTPUT', 'BEFORE', $this, 'handle_login_html', array());
+        }
 
         /**
          * Event using the new object but only in use in
@@ -49,18 +58,13 @@ class action_plugin_combo_login extends DokuWiki_Action_Plugin
 
     function handle_login_html(&$event, $param)
     {
-        /**
-         * Global
-         */
-        global $conf;
-        global $lang;
 
         /**
          * The Login page is created via buffer
          * We print before the forms
          * to avoid a FOUC
          */
-        $loginCss = Snippet::createCssSnippet("login");
+        $loginCss = Snippet::createCssSnippet(self::TAG);
         $content = $loginCss->getContent();
         $class = $loginCss->getClass();
         $cssHtml = <<<EOF
@@ -81,17 +85,11 @@ EOF;
         /**
          * Heading
          */
-        $heading = "Please Sign-in";
-        if (isset($form->_content[0]["_legend"])) {
-            $heading = $form->_content[0]["_legend"];
-        }
+        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_LOGIN_CLASS);
 
-        $submitText = "Sign in";
-        $loginText = "Username";
-        $loginValue = "";
-        $passwordText = "Password";
-        $rememberText = "Remember me";
-        $rememberValue = "1";
+        /**
+         * Field
+         */
         foreach ($form->_content as $field) {
             if (!is_array($field)) {
                 continue;
@@ -100,7 +98,18 @@ EOF;
             if ($fieldName == null) {
                 // this is not an input field
                 if ($field["type"] == "submit") {
-                    $submitText = $field["value"];
+                    /**
+                     * This is important to keep the submit element intact
+                     * for forms integration such as captcha
+                     * They search the submit button to insert before it
+                     */
+                    $classes = "btn btn-primary btn-block";
+                    if (isset($field["class"])) {
+                        $field["class"] = $field["class"] . " " . $classes;
+                    } else {
+                        $field["class"] = $classes;
+                    }
+                    $newFormContent[] = $field;
                 }
                 continue;
             }
@@ -108,71 +117,56 @@ EOF;
                 case "u":
                     $loginText = $field["_text"];
                     $loginValue = $field["value"];
+                    $loginHTMLField = <<<EOF
+<div class="form-floating">
+    <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
+    <label for="inputUserName">$loginText</label>
+</div>
+EOF;
+                    $newFormContent[] = $loginHTMLField;
                     break;
                 case "p":
                     $passwordText = $field["_text"];
+                    $passwordFieldHTML = <<<EOF
+<div class="form-floating">
+    <input type="password" id="inputPassword" class="form-control" placeholder="$passwordText" required="required" name="p">
+    <label for="inputPassword">$passwordText</label>
+</div>
+EOF;
+                    $newFormContent[] = $passwordFieldHTML;
                     break;
                 case "r":
                     $rememberText = $field["_text"];
                     $rememberValue = $field["value"];
+                    $rememberMeHtml = <<<EOF
+<div class="checkbox rememberMe">
+    <label><input type="checkbox" id="remember__me" name="r" value="$rememberValue"> $rememberText</label>
+</div>
+EOF;
+                    $newFormContent[] = $rememberMeHtml;
                     break;
                 default:
-                    LogUtility::msg("The register field name($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $tag = self::TAG;
+                    LogUtility::msg("The $tag field name ($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
 
             }
         }
 
 
-        /**
-         * Logo
-         */
-        $tagAttributes = TagAttributes::createEmpty("login");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(TagAttributes::HEIGHT_KEY, "72");
-        $tagAttributes->addClassName("logo");
-        $logoHtmlImgTag = Site::getLogoImgHtmlTag($tagAttributes);
-
-
-        /**
-         * Remember me
-         */
-        $rememberMeHtml = "";
-        if ($conf['rememberme']) {
-            $rememberMeHtml = <<<EOF
-<div class="checkbox rememberMe">
-    <label><input type="checkbox" id="remember__me" name="r" value="$rememberValue"> $rememberText</label>
-</div>
-EOF;
+        $registerHtml = action_plugin_combo_register::getRegisterLinkAndParagraph();
+        if(!empty($registerHtml)){
+            $newFormContent[] = $registerHtml;
+        }
+        $resendPwdHtml = action_plugin_combo_resend::getResendPasswordParagraphWithLinkToFormPage();
+        if(!empty($resendPwdHtml)){
+            $newFormContent[] = $resendPwdHtml;
         }
 
-
-        $registerHtml = action_plugin_combo_register::getRegisterLinkAndParagraph();
-        $resendPwdHtml = action_plugin_combo_resend::getResendPasswordParagraphWithLinkToFormPage();
-
-
         /**
-         * Based on
-         * https://getbootstrap.com/docs/4.0/examples/sign-in/
+         * Set the new in place of the old one
          */
-        $formsContent = <<<EOF
-$logoHtmlImgTag
-<h1>$heading</h1>
-<div class="form-floating">
-    <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
-    <label for="inputUserName">$loginText</label>
-</div>
-<div class="form-floating">
-    <input type="password" id="inputPassword" class="form-control" placeholder="$passwordText" required="required" name="p">
-    <label for="inputPassword">$passwordText</label>
-</div>
-$rememberMeHtml
-<button class="btn btn-primary btn-block" type="submit">$submitText</button>
-$registerHtml
-$resendPwdHtml
-EOF;
-        $form->_content = [$formsContent];
-
+        $form->_content = $newFormContent;
 
         return true;
 

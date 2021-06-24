@@ -3,7 +3,7 @@
 
 require_once(__DIR__ . '/../class/CacheMedia.php');
 
-use ComboStrap\Auth;
+use ComboStrap\Identity;
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
 use ComboStrap\MediaLink;
@@ -131,8 +131,8 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
      */
     public static function allowSvgIfAuthorized()
     {
-        $isadmin = Auth::isAdmin();
-        $isMember = Auth::isMember("@" . self::CONF_SVG_UPLOAD_GROUP_NAME);
+        $isadmin = Identity::isAdmin();
+        $isMember = Identity::isMember("@" . self::CONF_SVG_UPLOAD_GROUP_NAME);
 
         if ($isadmin || $isMember) {
             /**

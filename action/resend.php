@@ -11,6 +11,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\Site;
 use ComboStrap\Snippet;
 use ComboStrap\TagAttributes;
+use dokuwiki\Menu\Item\Resendpwd;
 
 if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../class/PluginUtility.php');
@@ -21,6 +22,7 @@ class action_plugin_combo_resend extends DokuWiki_Action_Plugin
 
     const CANONICAL = "resend";
     const FORM_RESEND_PWD_CLASS =  "form-" .self::CANONICAL;
+    const CONF_ENABLE_RESEND_PWD_FORM = "enableResendPwdForm";
 
     /**
      * @return string
@@ -32,7 +34,7 @@ class action_plugin_combo_resend extends DokuWiki_Action_Plugin
          */
         $resendPwdHtml = "";
         if (actionOK('resendpwd')) {
-            $resendPwLink = (new \dokuwiki\Menu\Item\Resendpwd())->asHtmlLink('', false);
+            $resendPwLink = (new Resendpwd())->asHtmlLink('', false);
             global $lang;
             $resentText = $lang['pwdforget'];
             $resendPwdHtml = <<<EOF
@@ -121,7 +123,7 @@ EOF;
                     $loginValue = $field["value"];
                     break;
                 default:
-                    LogUtility::msg("The register field name($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::msg("The register field name($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, \ComboStrap\Identity::CANONICAL);
 
 
             }

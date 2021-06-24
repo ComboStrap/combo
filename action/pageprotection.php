@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\Auth;
+use ComboStrap\Identity;
 use ComboStrap\DokuPath;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Page;
@@ -178,7 +178,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     {
 
         global $JSINFO;
-        $JSINFO[PageProtection::JS_IS_PUBLIC_NAVIGATION_INDICATOR] = !Auth::isLoggedIn();
+        $JSINFO[PageProtection::JS_IS_PUBLIC_NAVIGATION_INDICATOR] = !Identity::isLoggedIn();
 
 
     }

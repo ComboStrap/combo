@@ -18,8 +18,18 @@ class Underline
 
 
         if ($attributes->hasComponentAttribute(Underline::UNDERLINE_ATTRIBUTE)) {
-            $attributes->removeComponentAttribute(Underline::UNDERLINE_ATTRIBUTE);
-            $attributes->addClassName("text-decoration-underline");
+            $value = $attributes->removeComponentAttribute(Underline::UNDERLINE_ATTRIBUTE);
+            if (empty($value)){
+                $value = true;
+            } else {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            }
+            if ($value) {
+                $attributes->addClassName("text-decoration-underline");
+            } else {
+                $attributes->addClassName("text-decoration-none");
+            }
+
         }
 
     }

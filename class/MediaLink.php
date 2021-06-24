@@ -268,7 +268,7 @@ abstract class MediaLink extends DokuPath
         /**
          * The combo attributes array
          */
-        $parsedAttributes = DokuwikiUrl::createFromRef($url)->toArray();
+        $parsedAttributes = DokuwikiUrl::createFromUrl($url)->toArray();
         $path = $parsedAttributes[DokuPath::PATH_ATTRIBUTE];
 
         /**

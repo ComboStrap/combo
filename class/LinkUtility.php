@@ -75,6 +75,11 @@ class LinkUtility
     const TEXT_ERROR_CLASS = "text-danger";
 
     /**
+     * The known parameters for an email url
+     */
+    const EMAIL_VALID_PARAMETERS = ["subject"];
+
+    /**
      * @var mixed
      */
     private $type;
@@ -231,9 +236,7 @@ class LinkUtility
         /**
          * Url (called ref by dokuwiki)
          */
-        $this->dokuwikiUrl = DokuwikiUrl::createFromRef($refProcessing);
-
-
+        $this->dokuwikiUrl = DokuwikiUrl::createFromUrl($refProcessing);
 
 
     }
@@ -312,6 +315,27 @@ class LinkUtility
          */
         $this->renderer = $renderer;
 
+        /**
+         * Add the attribute from the URL
+         * if this is not a `do`
+         */
+        switch ($this->getType()) {
+            case self::TYPE_INTERNAL:
+                if (!$this->dokuwikiUrl->hasQueryParameter("do")) {
+                    foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
+                        $this->attributes->addComponentAttributeValue($key, $value);
+                    }
+                }
+                break;
+            case self::TYPE_EMAIL:
+                foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
+                    if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
+                        $this->attributes->addComponentAttributeValue($key, $value);
+                    }
+                }
+                break;
+        }
+
 
         global $conf;
 
@@ -346,7 +370,7 @@ class LinkUtility
 
                 // https://www.dokuwiki.org/config:target
                 $target = $conf['target']['wiki'];
-                if(!empty($target)){
+                if (!empty($target)) {
                     $this->attributes->addHtmlAttributeValue('target', $target);
                 }
                 /**
@@ -415,7 +439,7 @@ class LinkUtility
             case self::TYPE_WINDOWS_SHARE:
                 // https://www.dokuwiki.org/config:target
                 $windowsTarget = $conf['target']['windows'];
-                if (!empty($windowsTarget)){
+                if (!empty($windowsTarget)) {
                     $this->attributes->addHtmlAttributeValue('target', $windowsTarget);
                 }
                 $this->attributes->addClassName("windows");
@@ -466,7 +490,8 @@ class LinkUtility
      * Keep track of the backlinks ie meta['relation']['references']
      * @param Doku_Renderer_metadata $metaDataRenderer
      */
-    public function handleMetadata($metaDataRenderer)
+    public
+    function handleMetadata($metaDataRenderer)
     {
 
         switch ($this->getType()) {
@@ -727,13 +752,6 @@ class LinkUtility
     }
 
 
-
-
-
-
-
-
-
     private
     function getUrl()
     {
@@ -756,7 +774,7 @@ class LinkUtility
                 } else {
                     $url = wl($page->getId(), []);
                 }
-                if ($this->dokuwikiUrl->getFragment()!=null) {
+                if ($this->dokuwikiUrl->getFragment() != null) {
                     $url .= '#' . $this->dokuwikiUrl->getFragment();
                 }
                 break;
@@ -790,6 +808,16 @@ class LinkUtility
                  * {@link PluginTrait::email()
                  */
                 // common.php#obfsucate implements the $conf['mailguard']
+                $emailRef = $this->getDokuwikiUrl()->getPath();
+                $queryParameters = $this->getDokuwikiUrl()->getQueryParameters();
+                if (sizeof($queryParameters) > 0) {
+                    $emailRef .= "?";
+                    foreach ($queryParameters as $key => $value) {
+                        if (in_array($key, self::EMAIL_VALID_PARAMETERS)) {
+                            $emailRef .= "$key=$value";
+                        }
+                    }
+                }
                 $address = $this->emailObfuscation($this->ref);
                 // Encode only if visible, the hex option
                 // should not be encoded (otherwise, double up with the & characters)
@@ -816,20 +844,6 @@ class LinkUtility
         return $this->wiki;
     }
 
-    /**
-     * @return array
-     */
-    public
-    function getAttribute()
-    {
-        return $this->attributes;
-    }
-
-    public
-    function setAttributes(array &$attributes)
-    {
-        $this->attributes = &$attributes;
-    }
 
     public
     function getScheme()
@@ -840,7 +854,8 @@ class LinkUtility
     /**
      * @return bool true if the page should be protected
      */
-    private function isProtectedLink()
+    private
+    function isProtectedLink()
     {
         $protectedLink = false;
         if ($this->getType() == self::TYPE_INTERNAL) {
@@ -864,7 +879,8 @@ class LinkUtility
         return $protectedLink;
     }
 
-    public function getHTMLTag()
+    public
+    function getHTMLTag()
     {
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
@@ -875,7 +891,6 @@ class LinkUtility
                 } else {
                     return "a";
                 }
-                break;
             case self::TYPE_INTERWIKI:
                 if (!$this->wikiExists()) {
                     return "span";
@@ -888,29 +903,34 @@ class LinkUtility
 
     }
 
-    private function wikiExists()
+    private
+    function wikiExists()
     {
         $wikis = getInterwiki();
         return key_exists($this->wiki, $wikis);
     }
 
-    private function emailObfuscation($input)
+    private
+    function emailObfuscation($input)
     {
         return obfuscate($input);
     }
 
-    public function renderClosingTag()
+    public
+    function renderClosingTag()
     {
         $HTMLTag = $this->getHTMLTag();
         return "</$HTMLTag>";
     }
 
-    public function isRelative()
+    public
+    function isRelative()
     {
         return strpos($this->path, ':') !== 0;
     }
 
-    public function getDokuwikiUrl()
+    public
+    function getDokuwikiUrl()
     {
         return $this->dokuwikiUrl;
     }
@@ -920,7 +940,8 @@ class LinkUtility
      * @param $input
      * @return string|string[] Encode
      */
-    private function urlEncoded($input)
+    private
+    function urlEncoded($input)
     {
         /**
          * URL encoded
@@ -930,7 +951,8 @@ class LinkUtility
         return $input;
     }
 
-    public static function getHtmlClassInternalLink()
+    public
+    static function getHtmlClassInternalLink()
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
@@ -940,7 +962,8 @@ class LinkUtility
         }
     }
 
-    public static function getHtmlClassEmailLink()
+    public
+    static function getHtmlClassEmailLink()
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
@@ -950,7 +973,8 @@ class LinkUtility
         }
     }
 
-    public static function getHtmlClassExternalLink()
+    public
+    static function getHtmlClassExternalLink()
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
@@ -961,7 +985,8 @@ class LinkUtility
     }
 
     //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
-    public static function getHtmlClassNotExist()
+    public
+    static function getHtmlClassNotExist()
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {

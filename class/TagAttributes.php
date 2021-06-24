@@ -694,7 +694,9 @@ class TagAttributes
     {
         $lowerAtt = strtolower($attribute);
         if (isset($this->componentAttributesCaseInsensitive[$lowerAtt])) {
+            $value = $this->componentAttributesCaseInsensitive[$lowerAtt];
             unset($this->componentAttributesCaseInsensitive[$lowerAtt]);
+            return $value;
         } else {
             /**
              * Edge case, this is the first boolean attribute

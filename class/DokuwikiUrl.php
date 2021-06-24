@@ -155,7 +155,7 @@ class DokuwikiUrl
                  * Anchor value after a single token case
                  */
                 if (strpos($token, '#') === 0) {
-                    $this->queryParameters[self::ANCHOR_ATTRIBUTES] = substr($token, 1);
+                    $this->fragment = substr($token, 1);
                     continue;
                 }
 
@@ -167,17 +167,34 @@ class DokuwikiUrl
                  * Ex with media.pdf#page=31
                  */
                 list($key, $value) = explode("=", $token, 2);
-                $lowerCaseKey = strtolower($key);
 
                 /**
-                 * Anchor
+                 * Case of an anchor after a boolean attribute (ie without =)
+                 * at the end
                  */
-                if (($countHashTag = substr_count($value, "#")) >= 3) {
-                    LogUtility::msg("The value ($value) of the key ($key) for the link ($this->path) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
-                    continue;
+                $anchorPosition = strpos($key, '#');
+                if ($anchorPosition !== false) {
+                    $this->fragment = substr($key, $anchorPosition + 1);
+                    $key = substr($key, 0, $anchorPosition);
+                }
+
+                /**
+                 * Test Anchor on the value
+                 */
+                if($value!=null) {
+                    if (($countHashTag = substr_count($value, "#")) >= 3) {
+                        LogUtility::msg("The value ($value) of the key ($key) for the link ($this->path) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
+                        continue;
+                    }
+                } else {
+                    /**
+                     * Boolean attribute
+                     */
+                    $value = "true";
                 }
 
                 $anchorPosition = false;
+                $lowerCaseKey = strtolower($key);
                 if ($lowerCaseKey === TextColor::CSS_ATTRIBUTE) {
                     /**
                      * Special case when color has one color value as hexadecimal #
@@ -231,7 +248,7 @@ class DokuwikiUrl
     }
 
 
-    public static function createFromRef($dokuwikiUrl)
+    public static function createFromUrl($dokuwikiUrl)
     {
         return new DokuwikiUrl($dokuwikiUrl);
     }

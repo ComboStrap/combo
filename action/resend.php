@@ -25,7 +25,7 @@ class action_plugin_combo_resend extends DokuWiki_Action_Plugin
     /**
      * @return string
      */
-    public static function getResendPasswordLinkAndParagraph()
+    public static function getResendPasswordParagraphWithLinkToFormPage()
     {
         /**
          * Resend pwd
@@ -142,7 +142,7 @@ EOF;
          * Register and Login HTML paragraph
          */
         $registerHtml = action_plugin_combo_register::getRegisterLinkAndParagraph();
-        $loginHtml = action_plugin_combo_login::getLoginLinkAndParagraph();
+        $loginHtml = action_plugin_combo_login::getLoginParagraphWithLinkToFormPage();
 
         /**
          * Based on

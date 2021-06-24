@@ -77,7 +77,6 @@ EOF;
         $form = &$event->data;
         $form->params["class"] = self::FORM_LOGIN_CLASS;
 
-        $form->findElementByAttribute()
 
         /**
          * Heading
@@ -149,7 +148,7 @@ EOF;
 
 
         $registerHtml = action_plugin_combo_register::getRegisterLinkAndParagraph();
-        $resendPwdHtml = action_plugin_combo_resend::getResendPasswordLinkAndParagraph();
+        $resendPwdHtml = action_plugin_combo_resend::getResendPasswordParagraphWithLinkToFormPage();
 
 
         /**
@@ -185,7 +184,7 @@ EOF;
      * Login
      * @return string
      */
-    public static function getLoginLinkAndParagraph()
+    public static function getLoginParagraphWithLinkToFormPage()
     {
 
         $loginPwLink = (new Login())->asHtmlLink('', false);

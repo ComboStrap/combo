@@ -15,7 +15,7 @@ if (!defined('DOKU_INC')) {
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
 require_once(__DIR__ . '/../class/LinkUtility.php');
-require_once(__DIR__ . '/../class/HtmlUtility.php');
+require_once(__DIR__ . '/../class/XhtmlUtility.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism

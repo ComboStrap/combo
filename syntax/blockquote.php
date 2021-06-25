@@ -8,6 +8,7 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
@@ -188,7 +189,13 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
-                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+
+                /**
+                 * Check and add a scroll toggle if the
+                 * blockquote is constrained by height
+                 */
+                Dimension::addScrollToggleOnClickIfNoControl($callStack);
+
 
                 /**
                  * Pre-parsing:
@@ -197,6 +204,8 @@ class syntax_plugin_combo_blockquote extends DokuWiki_Syntax_Plugin
                  *          are adding a {@link syntax_plugin_combo_footer} which is a stack
                  *    Tweet blockquote: If a link has tweet link status, this is a tweet blockquote
                  */
+                $callStack->moveToEnd();
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $tweetUrlFound = false;
                 while ($actualCall = $callStack->next()) {
                     if ($actualCall->getTagName() == syntax_plugin_combo_cite::TAG) {

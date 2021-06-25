@@ -3,7 +3,7 @@
 use ComboStrap\AdsUtility;
 use ComboStrap\BreadcrumbHierarchical;
 use ComboStrap\FsWikiUtility;
-use ComboStrap\HtmlUtility;
+use ComboStrap\XhtmlUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TableUtility;
 use ComboStrap\TocUtility;
@@ -13,7 +13,7 @@ require_once(__DIR__ . '/../class/FsWikiUtility.php');
 require_once(__DIR__ . '/../class/TableUtility.php');
 require_once(__DIR__ . '/../class/TocUtility.php');
 require_once(__DIR__ . '/../class/AdsUtility.php');
-require_once(__DIR__ . '/../class/HtmlUtility.php');
+require_once(__DIR__ . '/../class/XhtmlUtility.php');
 require_once(__DIR__ . '/../class/BreadcrumbHierarchical.php');
 
 /**
@@ -197,7 +197,7 @@ class  renderer_plugin_combo_renderer extends Doku_Renderer_xhtml
 
             # Split by element line
             # element p, h, br, tr, li, pre (one line for pre)
-            $sectionLineCount = HtmlUtility::countLines($sectionContent);
+            $sectionLineCount = XhtmlUtility::countLines($sectionContent);
             $currentLineCountSinceLastAd += $sectionLineCount;
             $rollingLineCount += $sectionLineCount;
 

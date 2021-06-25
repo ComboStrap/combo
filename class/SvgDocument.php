@@ -247,9 +247,9 @@ class SvgDocument extends XmlDocument
                  * The default unit on attribute is pixel, no need to add it
                  * as in CSS
                  */
-                $width = $tagAttributes->getValueAndRemove(TagAttributes::WIDTH_KEY, $defaultWidth);
+                $width = $tagAttributes->getValueAndRemove(Dimension::WIDTH_KEY, $defaultWidth);
                 $tagAttributes->addHtmlAttributeValue("width", $width);
-                $height = $tagAttributes->getValueAndRemove(TagAttributes::HEIGHT_KEY, $width);
+                $height = $tagAttributes->getValueAndRemove(Dimension::HEIGHT_KEY, $width);
                 $tagAttributes->addHtmlAttributeValue("height", $height);
 
                 break;
@@ -273,10 +273,11 @@ class SvgDocument extends XmlDocument
                 }
 
                 /**
-                 * Responsive to the container
+                 * Adapt to the container
+                 * Height `auto` and not `100%` otherwise you get a layout shift
                  */
                 $tagAttributes->addStyleDeclaration("width", "100%");
-                $tagAttributes->addStyleDeclaration("height", "100%");
+                $tagAttributes->addStyleDeclaration("height", "auto");
                 break;
 
         }
@@ -335,6 +336,20 @@ class SvgDocument extends XmlDocument
     {
         $this->shouldBeOptimized = $boolean;
         return $this;
+    }
+
+    public function getMediaWidth()
+    {
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
+        $attributes = explode(" ", $viewBox);
+        return intval(round($attributes[2]));
+    }
+
+    public function getMediaHeight()
+    {
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
+        $attributes = explode(" ", $viewBox);
+        return intval(round($attributes[3]));
     }
 
 

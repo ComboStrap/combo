@@ -4,7 +4,7 @@
 require_once(__DIR__ . "/../class/Analytics.php");
 require_once(__DIR__ . "/../class/PluginUtility.php");
 require_once(__DIR__ . "/../class/LinkUtility.php");
-require_once(__DIR__ . "/../class/HtmlUtility.php");
+require_once(__DIR__ . "/../class/XhtmlUtility.php");
 
 use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;
@@ -42,7 +42,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     /**
      * Do the link component allows to be spawn on multilines
      */
-    const CONF_ENABLE_MULTI_LINES_LINK = "enableMultiLinesLink";
     const CLICKABLE_ATTRIBUTE = "clickable";
 
 
@@ -126,9 +125,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
         if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
             $pattern = LinkUtility::ENTRY_PATTERN_SINGLE_LINE;
-            if ($this->getConf(self::CONF_ENABLE_MULTI_LINES_LINK, false)) {
-                $pattern = LinkUtility::ENTRY_PATTERN_MULTI_LINE;
-            }
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
 
@@ -364,7 +360,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
 
                 return true;
-                break;
 
             case 'metadata':
 

@@ -116,7 +116,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          * return
          */
         $targetPage = new Page($ID);
-        if ($targetPage->existInFs()) {
+        if ($targetPage->exists()) {
             action_plugin_combo_urlmessage::unsetNotification();
             $targetPage->processAndPersistInDb();
             return false;
@@ -133,8 +133,8 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         /**
          * Page Id is a Canonical ?
          */
-        $targetPage = Page::createFromCanonical($ID);
-        if ($targetPage->existInFs()) {
+        $targetPage = Page::createPageFromCanonical($ID);
+        if ($targetPage->exists()) {
             $this->performIdRedirect($targetPage->getId(), self::TARGET_ORIGIN_CANONICAL);
             return;
         }
@@ -424,6 +424,11 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         $ID = $targetPageId;
         // Change the info id for the sidebar
         $INFO['id'] = $targetPageId;
+        /**
+         * otherwise there is a meta robot = noindex,follow
+         * See {@link tpl_metaheaders()}
+         */
+        $INFO['exists'] = true;
 
         // Redirection
         $this->logRedirection($sourceId, $targetPageId, $targetOriginId, self::REDIRECT_ID);

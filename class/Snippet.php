@@ -74,6 +74,21 @@ class Snippet
          return new Snippet($snippetId,self::TYPE_JS);
     }
 
+    public static function createCssSnippet($snippetId)
+    {
+        return new Snippet($snippetId,self::TYPE_CSS);
+    }
+
+    /**
+     * @deprecated You should create a snippet with a known type, this constructor was created for refactoring
+     * @param $snippetId
+     * @return Snippet
+     */
+    public static function createUnknownSnippet($snippetId)
+    {
+        return new Snippet($snippetId,"unknwon");
+    }
+
 
     /**
      * @param $bool - if the snippet is critical, it would not be deferred or preloaded
@@ -176,6 +191,22 @@ class Snippet
     public function getCritical()
     {
         return $this->critical;
+    }
+
+    public function getClass()
+    {
+        /**
+         * The class for the snippet is just to be able to identify them
+         *
+         * The `snippet` prefix was added to be sure that the class
+         * name will not conflict with a css class
+         * Example: if you set the class to `combo-list`
+         * and that you use it in a inline `style` tag with
+         * the same class name, the inline `style` tag is not applied
+         *
+         */
+        return "snippet-" . $this->snippetId . "-" . SnippetManager::COMBO_CLASS_SUFFIX;
+
     }
 
 

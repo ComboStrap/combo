@@ -1,7 +1,7 @@
 <?php
 
 use Combostrap\AnalyticsMenuItem;
-use ComboStrap\Auth;
+use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\Sqlite;
@@ -18,7 +18,6 @@ use ComboStrap\Sqlite;
  */
 
 require_once(__DIR__ . '/../class/' . 'Analytics.php');
-require_once(__DIR__ . '/../class/' . 'Auth.php');
 require_once(__DIR__ . '/../class/' . 'AnalyticsMenuItem.php');
 
 /**
@@ -94,7 +93,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     public function handle_page_tools(Doku_Event $event, $param)
     {
 
-        if (!Auth::isWriter()) {
+        if (!Identity::isWriter()) {
             return;
         }
 

@@ -3,6 +3,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TextAlign;
@@ -124,6 +125,13 @@ class syntax_plugin_combo_text extends DokuWiki_Syntax_Plugin
                 // if there is no EOL, we add one to create at minimal a paragraph
                 $callStack->insertEolIfNextCallIsNotEolOrBlock();
                 $callStack->processEolToEndStack($attributes);
+
+                /**
+                 * Check and add a scroll toggle if the
+                 * text is constrained by height
+                 */
+                Dimension::addScrollToggleOnClickIfNoControl($callStack);
+
                 return array(PluginUtility::STATE => $state);
 
 

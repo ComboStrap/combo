@@ -13,7 +13,7 @@
 namespace ComboStrap;
 
 
-require_once(__DIR__ . '/../class/Auth.php');
+require_once(__DIR__ . '/../class/Identity.php');
 
 /**
  * Class LowQualityPage

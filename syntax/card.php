@@ -6,6 +6,7 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -203,6 +204,12 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 $callStack = CallStack::createFromHandler($handler);
+
+                /**
+                 * Check and add a scroll toggle if the
+                 * card is constrained by height
+                 */
+                Dimension::addScrollToggleOnClickIfNoControl($callStack);
 
                 // Processing
                 $callStack->moveToEnd();

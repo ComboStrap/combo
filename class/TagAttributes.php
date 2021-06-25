@@ -29,7 +29,6 @@ use syntax_plugin_combo_cell;
  */
 class TagAttributes
 {
-    const ALIGN_KEY = 'align';
     /**
      * @var string the alt attribute value (known as the title for dokuwiki)
      */
@@ -37,18 +36,6 @@ class TagAttributes
 
 
     const TYPE_KEY = "type";
-    const HEIGHT_KEY = 'height';
-    /**
-     * Link value:
-     *   * 'nolink'
-     *   * 'direct': directly to the image
-     *   * 'linkonly': show only a url
-     *   * 'details': go to the details media viewer
-     *
-     * @var
-     */
-    const LINKING_KEY = 'linking';
-    const WIDTH_KEY = 'width';
     const ID_KEY = "id";
 
     /**
@@ -60,7 +47,7 @@ class TagAttributes
     const RESERVED_ATTRIBUTES = [
         self::SCRIPT_KEY, // no script attribute for security reason
         TagAttributes::TYPE_KEY, // type is the component class
-        TagAttributes::LINKING_KEY, // internal to image
+        MediaLink::LINKING_KEY, // internal to image
         CacheMedia::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
         syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE
@@ -82,6 +69,12 @@ class TagAttributes
     const CANONICAL = "tag";
     const DISPLAY = "display";
     const CLASS_KEY = "class";
+
+    /**
+     * A global static counter
+     * to {@link TagAttributes::generateAndSetId()}
+     */
+    private static $counter = 0;
 
 
     /**
@@ -228,9 +221,9 @@ class TagAttributes
     {
         switch ($name) {
             case "w":
-                return TagAttributes::WIDTH_KEY;
+                return Dimension::WIDTH_KEY;
             case "h":
-                return TagAttributes::HEIGHT_KEY;
+                return Dimension::HEIGHT_KEY;
             default:
                 return $name;
         }
@@ -384,7 +377,7 @@ class TagAttributes
              * Process the style attributes if any
              */
             PluginUtility::processStyle($this);
-            PluginUtility::processCollapse($this);
+            Toggle::processToggle($this);
 
 
             /**
@@ -634,7 +627,7 @@ class TagAttributes
                  * and the {@link StringUtility::toString()} will transform it as `\\n`
                  * making it unusable
                  */
-                if(!is_string($value)) {
+                if (!is_string($value)) {
                     $stringValue = StringUtility::toString($value);
                 } else {
                     $stringValue = $value;
@@ -701,7 +694,9 @@ class TagAttributes
     {
         $lowerAtt = strtolower($attribute);
         if (isset($this->componentAttributesCaseInsensitive[$lowerAtt])) {
+            $value = $this->componentAttributesCaseInsensitive[$lowerAtt];
             unset($this->componentAttributesCaseInsensitive[$lowerAtt]);
+            return $value;
         } else {
             /**
              * Edge case, this is the first boolean attribute
@@ -720,7 +715,7 @@ class TagAttributes
      */
     public function addHtmlAfterEnterTag($html)
     {
-        $this->htmlAfterEnterTag .= $html;
+        $this->htmlAfterEnterTag = $html . $this->htmlAfterEnterTag;
     }
 
     /**
@@ -818,6 +813,25 @@ class TagAttributes
         if (isset($this->htmlAttributes[$lowerAtt])) {
             unset($this->htmlAttributes[$lowerAtt]);
         }
+    }
+
+    public function getValueAndRemoveIfPresent($attribute)
+    {
+        $value = $this->getValue($attribute);
+        $this->removeAttributeIfPresent($attribute);
+        return $value;
+    }
+
+    public function generateAndSetId()
+    {
+        self::$counter += 1;
+        $id = self::$counter;
+        $logicalTag = $this->getLogicalTag();
+        if (!empty($logicalTag)) {
+            $id = $this->logicalTag . $id;
+        }
+        $this->setComponentAttributeValue("id", $id);
+        return $id;
     }
 
 

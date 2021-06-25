@@ -20,7 +20,7 @@ require_once(__DIR__ . '/XmlUtility.php');
  * This class is based on {@link XmlDocument}
  *
  */
-class HtmlUtility
+class XhtmlUtility
 {
 
 
@@ -41,7 +41,7 @@ class HtmlUtility
             throw new \RuntimeException("The left text should not be empty");
         }
         $loading = XmlDocument::XML_TYPE;
-        if (!$xhtml){
+        if (!$xhtml) {
             $loading = XmlDocument::HTML_TYPE;
         }
 
@@ -62,6 +62,16 @@ class HtmlUtility
     public static function countLines($text)
     {
         return count(preg_split("/<\/p>|<\/h[1-9]{1}>|<br|<\/tr>|<\/li>|<hr>|<\/pre>/", $text)) - 1;
+    }
+
+
+    public static function normalize($htmlText)
+    {
+        if (empty($htmlText)) {
+            throw new \RuntimeException("The text should not be empty");
+        }
+        $xmlDoc = new XmlDocument($htmlText, XmlDocument::HTML_TYPE);
+        return $xmlDoc->getXmlTextNormalized();
     }
 
 

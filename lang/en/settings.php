@@ -3,6 +3,7 @@
 use ComboStrap\AdsUtility;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
+use ComboStrap\Identity;
 use ComboStrap\MediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
@@ -124,7 +125,6 @@ $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = Plu
  */
 $lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
 $lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
-$lang[syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - If checked, a link may spawn multilines (difficult to debug)";
 
 /**
  * Twitter
@@ -218,4 +218,12 @@ $lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_COUNTER_SEPAR
 $lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_PREFIX] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The prefix of the outline numbering");
 $lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX] = PluginUtility::getUrl(action_plugin_combo_outlinenumbering::CANONICAL, "Outline - The suffix of the outline numbering");
 
+
+/**
+ * Identity
+ */
+$lang[Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS] = PluginUtility::getUrl(Identity::CANONICAL, "If checked, the logo is shown on the identity forms (login, register, resend)");
+$lang[action_plugin_combo_login::CONF_ENABLE_LOGIN_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If checked, the login form will be styled by Combo");
+$lang[action_plugin_combo_registration::CONF_ENABLE_REGISTER_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the register form be styled by Combo");
+$lang[action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the resend form be styled by Combo");
 ?>

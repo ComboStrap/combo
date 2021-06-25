@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\Analytics;
-use ComboStrap\Auth;
+use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Message;
 use ComboStrap\Page;
@@ -80,7 +80,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             /**
              * Quality is just for the writers
              */
-            if (!Auth::isWriter()) {
+            if (!Identity::isWriter()) {
                 return;
             }
 

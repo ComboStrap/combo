@@ -3,7 +3,9 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Background;
+use ComboStrap\CallStack;
 use ComboStrap\ColorUtility;
+use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -112,6 +114,10 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
+                $callStack = CallStack::createFromHandler($handler);
+                Dimension::addScrollToggleOnClickIfNoControl($callStack);
+
+
                 // Important otherwise we don't get an exit in the render
                 return array(
                     PluginUtility::STATE => $state
@@ -142,7 +148,7 @@ class syntax_plugin_combo_note extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TAG);
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::TAG);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
                     $attributes->addClassName("alert");
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
                     // Switch for the color

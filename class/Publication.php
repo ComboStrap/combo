@@ -16,7 +16,7 @@ namespace ComboStrap;
 use Doku_Renderer_xhtml;
 use syntax_plugin_combo_tooltip;
 
-require_once(__DIR__ . '/../class/Auth.php');
+require_once(__DIR__ . '/../class/Identity.php');
 
 /**
  *
@@ -49,7 +49,7 @@ class Publication
      */
     public static function isPageProtected($id, $user = '')
     {
-        if (!Auth::isLoggedIn($user)) {
+        if (!Identity::isLoggedIn()) {
             $page = new Page($id);
             if ($page->getPublishedTimestamp()) {
                 /**

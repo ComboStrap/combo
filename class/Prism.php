@@ -250,16 +250,32 @@ EOD;
             }
         }
 
-        $theme = $plugin->getConf(Prism::CONF_PRISM_THEME);
+
 
         /**
-         * Add prism
+         * Add prism theme
          */
+        $theme = $plugin->getConf(Prism::CONF_PRISM_THEME);
         Prism::addSnippet($theme);
 
         /**
-         * Add HTML
+         * Logical tag
          */
+        $logicalTag = $plugin->getPluginComponent();
+        if ($attributes->getLogicalTag() != null) {
+            $logicalTag = $attributes->getLogicalTag();
+        }
+        // for the https://combostrap.com/styling/userstyle
+        $attributes->setLogicalTag($logicalTag."-container");
+
+        /**
+         * The child element (code) of the `pre` element
+         * The container is the passed `attributes`
+         * We can then constrained in height ...
+         * It contains the language
+         */
+        $codeAttributes = TagAttributes::createEmpty($logicalTag);
+        $codeAttributes->setType($attributes->getType());
         $language = $attributes->getValue(TagAttributes::TYPE_KEY);
         if ($language == null) {
             // Prism does not have any default language
@@ -295,10 +311,18 @@ EOD;
         }
 
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);
-        $attributes->addClassName('language-' . $language);
+        $codeAttributes->addClassName('language-' . $language);
+        /**
+         * Code element
+         * Don't put a fucking EOL after it
+         * Otherwise it fucked up the output as the text below a code tag is printed
+         */
+        $codeHtml = $codeAttributes->toHtmlEnterTag('code');
+        $attributes->addHtmlAfterEnterTag($codeHtml);
 
 
         /**
+         * Pre Element
          * Line numbers
          */
         if ($attributes->hasComponentAttribute("line-numbers")) {
@@ -306,76 +330,52 @@ EOD;
             $attributes->addClassName('line-numbers');
         }
 
-        /**
-         * Pre element the bar
-         */
-        $preAttributes = TagAttributes::createEmpty();
-
-        /**
-         * Add the styling class
-         * https://combostrap.com/styling/userstyle
-         */
-        $logicalTag = $plugin->getPluginComponent();
-        if ($attributes->getLogicalTag() != null) {
-            $logicalTag = $attributes->getLogicalTag();
-        }
-        $preAttributes->addClassName($logicalTag . '-combo-pre');
-        $type = $attributes->getType();
-        if (!empty($type)) {
-            $preAttributes->addClassName($logicalTag . '-' . $type . '-combo-pre');
-        }
 
         // Command line
         if ($attributes->hasComponentAttribute("prompt")) {
-            $preAttributes->addClassName("command-line");
-            $preAttributes->addHtmlAttributeValue("data-prompt", $attributes->getValueAndRemove("prompt"));
+            $attributes->addClassName("command-line");
+            $attributes->addHtmlAttributeValue("data-prompt", $attributes->getValueAndRemove("prompt"));
         } else {
             switch ($language) {
                 case "bash":
-                    $preAttributes->addClassName("command-line");
-                    $preAttributes->addHtmlAttributeValue("data-prompt", $plugin->getConf(self::CONF_BASH_PROMPT));
+                    $attributes->addClassName("command-line");
+                    $attributes->addHtmlAttributeValue("data-prompt", $plugin->getConf(self::CONF_BASH_PROMPT));
                     break;
                 case "batch":
-                    $preAttributes->addClassName("command-line");
+                    $attributes->addClassName("command-line");
                     $batch = trim($plugin->getConf(self::CONF_BATCH_PROMPT));
                     if (!empty($batch)) {
                         if (!strpos($batch, -1) == ">") {
                             $batch .= ">";
                         }
                     }
-                    $preAttributes->addHtmlAttributeValue("data-prompt", $batch);
+                    $attributes->addHtmlAttributeValue("data-prompt", $batch);
                     break;
                 case "powershell":
-                    $preAttributes->addClassName("command-line");
+                    $attributes->addClassName("command-line");
                     $powerShell = trim($plugin->getConf(self::CONF_POWERSHELL_PROMPT));
                     if (!empty($powerShell)) {
                         if (!strpos($powerShell, -1) == ">") {
                             $powerShell .= ">";
                         }
                     }
-                    $preAttributes->addHtmlAttributeValue("data-prompt", $powerShell);
+                    $attributes->addHtmlAttributeValue("data-prompt", $powerShell);
                     break;
             }
         }
 
         // Download
-        $preAttributes->addHtmlAttributeValue('data-download-link', true);
+        $attributes->addHtmlAttributeValue('data-download-link', true);
         if ($attributes->hasComponentAttribute(syntax_plugin_combo_code::FILE_PATH_KEY)) {
             $fileSrc = $attributes->getValueAndRemove(syntax_plugin_combo_code::FILE_PATH_KEY);
-            $preAttributes->addHtmlAttributeValue('data-src', $fileSrc);
-            $preAttributes->addHtmlAttributeValue('data-download-link-label', "Download " . $fileSrc);
+            $attributes->addHtmlAttributeValue('data-src', $fileSrc);
+            $attributes->addHtmlAttributeValue('data-download-link-label', "Download " . $fileSrc);
         } else {
             $fileName = "file." . $language;
-            $preAttributes->addHtmlAttributeValue('data-src', $fileName);
+            $attributes->addHtmlAttributeValue('data-src', $fileName);
         }
-        $htmlCode = $preAttributes->toHtmlEnterTag("pre") . DOKU_LF;
+        $htmlCode = $attributes->toHtmlEnterTag("pre") . DOKU_LF;
 
-        /**
-         * Code element
-         * Don't put a fucking EOL after it
-         * Otherwise it fucked up the output as the text below a code tag is printed
-         */
-        $htmlCode .= $attributes->toHtmlEnterTag('code');
 
         /**
          * Return

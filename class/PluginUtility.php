@@ -32,13 +32,14 @@ require_once('Call.php');
 require_once('CallStack.php');
 require_once('ColorUtility.php');
 require_once('ConditionalValue.php');
+require_once('DokuPath.php');
 require_once('Dimension.php');
 require_once('FloatAttribute.php');
 require_once('FsWikiUtility.php');
 require_once('File.php');
 require_once('FontSize.php');
 require_once('Hover.php');
-require_once('HtmlUtility.php');
+require_once('XhtmlUtility.php');
 require_once('Icon.php');
 require_once('MediaLink.php');
 require_once('Lang.php');
@@ -63,8 +64,9 @@ require_once('TextAlign.php');
 require_once('TextColor.php');
 require_once('ThirdMediaLink.php');
 require_once('TagAttributes.php');
+require_once('Toggle.php');
 require_once('Underline.php');
-require_once('Url.php');
+require_once('DokuwikiUrl.php');
 require_once('XmlDocument.php');
 require_once('XmlUtility.php');
 
@@ -579,7 +581,7 @@ class PluginUtility
             $path = File::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
             $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
             $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
-            $tagAttributes->addComponentAttributeValue(TagAttributes::WIDTH_KEY, "20");
+            $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
             $cache = new CacheMedia($path, $tagAttributes);
             if (!$cache->isCacheUsable()) {
                 $xhtmlIcon = SvgDocument::createFromPath($path)
@@ -849,27 +851,7 @@ class PluginUtility
 
     }
 
-    /**
-     * The collapse attribute are the same
-     * for all component except a link
-     * @param TagAttributes $attributes
-     */
-    public
-    static function processCollapse(&$attributes)
-    {
 
-        $collapse = "collapse";
-        if ($attributes->hasComponentAttribute($collapse)) {
-            $targetId = $attributes->getValueAndRemove($collapse);
-            $bootstrapNamespace = "bs-";
-            if (Bootstrap::getBootStrapMajorVersion() == Bootstrap::BootStrapFourMajorVersion) {
-                $bootstrapNamespace = "";
-            }
-            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}toggle", "collapse");
-            $attributes->addComponentAttributeValue("data-{$bootstrapNamespace}target", $targetId);
-
-        }
-    }
 
     /**
      * @param string $string add a command into HTML

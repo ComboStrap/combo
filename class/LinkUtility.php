@@ -44,8 +44,7 @@ class LinkUtility
      * Get the content until | or ]
      * No line break allowed
      */
-    const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n]*\]\])";
-    const ENTRY_PATTERN_MULTI_LINE = "\[\[[^\|\]]*(?=.*\]\])";
+    const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n\[]*\]\])";
     const EXIT_PATTERN = "\]\]";
 
     /**
@@ -76,6 +75,11 @@ class LinkUtility
     const TEXT_ERROR_CLASS = "text-danger";
 
     /**
+     * The known parameters for an email url
+     */
+    const EMAIL_VALID_PARAMETERS = ["subject"];
+
+    /**
      * @var mixed
      */
     private $type;
@@ -96,19 +100,6 @@ class LinkUtility
      * @var string The value of the title attribute of an anchor
      */
     private $title;
-    /**
-     * The path part of the link
-     * @var mixed|string
-     */
-    private $path;
-    /**
-     * @var mixed|string
-     */
-    private $queryStringToReturn;
-    /**
-     * @var false|string
-     */
-    private $fragment;
 
     /**
      * @var TagAttributes|null
@@ -142,6 +133,10 @@ class LinkUtility
      * @var string the query string as it was parsed
      */
     private $originalQueryString;
+    /**
+     * @var DokuwikiUrl
+     */
+    private $dokuwikiUrl;
 
     /**
      * Link constructor.
@@ -239,62 +234,9 @@ class LinkUtility
 
 
         /**
-         *
+         * Url (called ref by dokuwiki)
          */
-        $position = strpos($refProcessing, "?");
-        if ($position !== false) {
-
-            $this->path = substr($refProcessing, 0, $position);
-            $secondPart = substr($refProcessing, $position + 1);
-            $anchorPosition = strpos($secondPart, "#");
-            if ($anchorPosition !== false) {
-                $this->originalQueryString = substr($secondPart, 0, $anchorPosition);
-                $this->fragment = substr($secondPart, $anchorPosition + 1);
-            } else {
-                $this->originalQueryString = $secondPart;
-            }
-        } else {
-
-            $anchorPosition = strpos($refProcessing, "#");
-            if ($anchorPosition !== false) {
-                $this->path = substr($refProcessing, 0, $anchorPosition);
-                $this->fragment = substr($refProcessing, $anchorPosition + 1);
-            } else {
-                $this->path = $refProcessing;
-            }
-        }
-
-        /**
-         * Styling attribute
-         * may be passed via parameters
-         * for internal link
-         * We are doing it here because
-         * the query parameters are used
-         * in the creation of the URL
-         * and we don't want the styling attribute
-         * in the URL
-         */
-        $this->queryStringToReturn = $this->originalQueryString;
-        if ($this->type == self::TYPE_INTERNAL) {
-
-            $parameters = Url::queryParametersToArray($this->originalQueryString);
-
-            // we will not overwrite the parameters if this an dokuwiki
-            // action link
-            if (!isset($parameters["do"])) {
-
-                $this->queryStringToReturn = null;
-
-                foreach ($parameters as $key => $value) {
-                    // boolean attributes
-                    if (empty($value)) {
-                        $value = true;
-                    }
-                    $this->attributes->addComponentAttributeValue($key, $value);
-                }
-            }
-
-        }
+        $this->dokuwikiUrl = DokuwikiUrl::createFromUrl($refProcessing);
 
 
     }
@@ -373,6 +315,27 @@ class LinkUtility
          */
         $this->renderer = $renderer;
 
+        /**
+         * Add the attribute from the URL
+         * if this is not a `do`
+         */
+        switch ($this->getType()) {
+            case self::TYPE_INTERNAL:
+                if (!$this->dokuwikiUrl->hasQueryParameter("do")) {
+                    foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
+                        $this->attributes->addComponentAttributeValue($key, $value);
+                    }
+                }
+                break;
+            case self::TYPE_EMAIL:
+                foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
+                    if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
+                        $this->attributes->addComponentAttributeValue($key, $value);
+                    }
+                }
+                break;
+        }
+
 
         global $conf;
 
@@ -407,7 +370,7 @@ class LinkUtility
 
                 // https://www.dokuwiki.org/config:target
                 $target = $conf['target']['wiki'];
-                if(!empty($target)){
+                if (!empty($target)) {
                     $this->attributes->addHtmlAttributeValue('target', $target);
                 }
                 /**
@@ -476,7 +439,7 @@ class LinkUtility
             case self::TYPE_WINDOWS_SHARE:
                 // https://www.dokuwiki.org/config:target
                 $windowsTarget = $conf['target']['windows'];
-                if (!empty($windowsTarget)){
+                if (!empty($windowsTarget)) {
                     $this->attributes->addHtmlAttributeValue('target', $windowsTarget);
                 }
                 $this->attributes->addClassName("windows");
@@ -510,7 +473,7 @@ class LinkUtility
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->getPath());
+            $emailAddress = $this->emailObfuscation($this->dokuwikiUrl->getPath());
             $this->attributes->addHtmlAttributeValue("title", $emailAddress);
         }
 
@@ -527,7 +490,8 @@ class LinkUtility
      * Keep track of the backlinks ie meta['relation']['references']
      * @param Doku_Renderer_metadata $metaDataRenderer
      */
-    public function handleMetadata($metaDataRenderer)
+    public
+    function handleMetadata($metaDataRenderer)
     {
 
         switch ($this->getType()) {
@@ -665,7 +629,7 @@ class LinkUtility
         if ($this->linkedPage == null) {
             if ($this->getType() == self::TYPE_INTERNAL) {
                 // if there is no path, this is the actual paeg
-                $path = $this->path;
+                $path = $this->dokuwikiUrl->getPath();
                 if ($path == null) {
                     global $ID;
                     $path = DokuPath::IdToAbsolutePath($ID);
@@ -703,7 +667,7 @@ class LinkUtility
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::render($name, $this->path);
+                    $name = TemplateUtility::render($name, $this->dokuwikiUrl->getPath());
                 }
                 if (empty($name)) {
                     $name = $this->ref;
@@ -729,7 +693,7 @@ class LinkUtility
             case self::TYPE_EMAIL:
                 if (empty($name)) {
                     global $conf;
-                    $email = $this->getPath();
+                    $email = $this->dokuwikiUrl->getPath();
                     switch ($conf['mailguard']) {
                         case 'none' :
                             $name = $email;
@@ -744,12 +708,12 @@ class LinkUtility
                 break;
             case self::TYPE_INTERWIKI:
                 if (empty($name)) {
-                    $name = $this->getPath();
+                    $name = $this->dokuwikiUrl->getPath();
                 }
                 break;
             case self::TYPE_LOCAL:
                 if (empty($name)) {
-                    $name = $this->getFragment();
+                    $name = $this->dokuwikiUrl->getFragment();
                 }
                 break;
             default:
@@ -788,35 +752,6 @@ class LinkUtility
     }
 
 
-    /**
-     * The path as seen in the link
-     *
-     * (In case of an internal link, the function
-     * {@link LinkUtility::getInternalPage()} is used
-     * and the path is resolved there to the actual requested page (global $ID)
-     *
-     * @return false|mixed|string
-     */
-    public function getPath()
-    {
-
-        return $this->path;
-
-    }
-
-    public
-    function getQueryString()
-    {
-        return $this->queryStringToReturn;
-    }
-
-
-    public
-    function getFragment()
-    {
-        return $this->fragment;
-    }
-
     private
     function getUrl()
     {
@@ -824,14 +759,28 @@ class LinkUtility
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
                 $page = $this->getInternalPage();
-                $url = wl($page->getId(), $this->queryStringToReturn);
-                if ($this->fragment) {
-                    $url .= '#' . $this->fragment;
+                /**
+                 * Styling attribute
+                 * may be passed via parameters
+                 * for internal link
+                 * We don't want the styling attribute
+                 * in the URL
+                 *
+                 * We will not overwrite the parameters if this is an dokuwiki
+                 * action link (with the `do` property)
+                 */
+                if ($this->dokuwikiUrl->hasQueryParameter("do")) {
+                    $url = wl($page->getId(), $this->dokuwikiUrl->getQueryParameters());
+                } else {
+                    $url = wl($page->getId(), []);
+                }
+                if ($this->dokuwikiUrl->getFragment() != null) {
+                    $url .= '#' . $this->dokuwikiUrl->getFragment();
                 }
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $url = $this->renderer->_resolveInterWiki($wiki, $this->getPath());
+                $url = $this->renderer->_resolveInterWiki($wiki, $this->dokuwikiUrl->getPath());
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());
@@ -859,6 +808,16 @@ class LinkUtility
                  * {@link PluginTrait::email()
                  */
                 // common.php#obfsucate implements the $conf['mailguard']
+                $emailRef = $this->getDokuwikiUrl()->getPath();
+                $queryParameters = $this->getDokuwikiUrl()->getQueryParameters();
+                if (sizeof($queryParameters) > 0) {
+                    $emailRef .= "?";
+                    foreach ($queryParameters as $key => $value) {
+                        if (in_array($key, self::EMAIL_VALID_PARAMETERS)) {
+                            $emailRef .= "$key=$value";
+                        }
+                    }
+                }
                 $address = $this->emailObfuscation($this->ref);
                 // Encode only if visible, the hex option
                 // should not be encoded (otherwise, double up with the & characters)
@@ -885,20 +844,6 @@ class LinkUtility
         return $this->wiki;
     }
 
-    /**
-     * @return array
-     */
-    public
-    function getAttribute()
-    {
-        return $this->attributes;
-    }
-
-    public
-    function setAttributes(array &$attributes)
-    {
-        $this->attributes = &$attributes;
-    }
 
     public
     function getScheme()
@@ -909,7 +854,8 @@ class LinkUtility
     /**
      * @return bool true if the page should be protected
      */
-    private function isProtectedLink()
+    private
+    function isProtectedLink()
     {
         $protectedLink = false;
         if ($this->getType() == self::TYPE_INTERNAL) {
@@ -933,7 +879,8 @@ class LinkUtility
         return $protectedLink;
     }
 
-    public function getHTMLTag()
+    public
+    function getHTMLTag()
     {
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
@@ -944,7 +891,6 @@ class LinkUtility
                 } else {
                     return "a";
                 }
-                break;
             case self::TYPE_INTERWIKI:
                 if (!$this->wikiExists()) {
                     return "span";
@@ -957,46 +903,45 @@ class LinkUtility
 
     }
 
-    private function wikiExists()
+    private
+    function wikiExists()
     {
         $wikis = getInterwiki();
         return key_exists($this->wiki, $wikis);
     }
 
-    private function emailObfuscation($input)
+    private
+    function emailObfuscation($input)
     {
         return obfuscate($input);
     }
 
-    public function renderClosingTag()
+    public
+    function renderClosingTag()
     {
         $HTMLTag = $this->getHTMLTag();
         return "</$HTMLTag>";
     }
 
-    public function isRelative()
+    public
+    function isRelative()
     {
         return strpos($this->path, ':') !== 0;
     }
 
-    /**
-     * The query part parsed
-     * untouched
-     * We can pass internal attribute via the query
-     * Therefore the {@link LinkUtility::getQueryString()}
-     * may be not the original
-     */
-    public function getParsedQueryString()
+    public
+    function getDokuwikiUrl()
     {
-        return $this->originalQueryString;
-
+        return $this->dokuwikiUrl;
     }
+
 
     /**
      * @param $input
      * @return string|string[] Encode
      */
-    private function urlEncoded($input)
+    private
+    function urlEncoded($input)
     {
         /**
          * URL encoded
@@ -1006,7 +951,8 @@ class LinkUtility
         return $input;
     }
 
-    public static function getHtmlClassInternalLink()
+    public
+    static function getHtmlClassInternalLink()
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
@@ -1016,7 +962,8 @@ class LinkUtility
         }
     }
 
-    public static function getHtmlClassEmailLink()
+    public
+    static function getHtmlClassEmailLink()
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
@@ -1026,7 +973,8 @@ class LinkUtility
         }
     }
 
-    public static function getHtmlClassExternalLink()
+    public
+    static function getHtmlClassExternalLink()
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
@@ -1037,7 +985,8 @@ class LinkUtility
     }
 
     //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
-    public static function getHtmlClassNotExist()
+    public
+    static function getHtmlClassNotExist()
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {

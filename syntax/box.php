@@ -2,6 +2,8 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -101,8 +103,12 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
-
-                // Important otherwise we don't get an exit in the render
+                /**
+                 * Check and add a scroll toggle if the
+                 * box is constrained by height
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                Dimension::addScrollToggleOnClickIfNoControl($callStack);
                 return array(
                     PluginUtility::STATE => $state
                 );
@@ -141,6 +147,7 @@ class syntax_plugin_combo_box extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT :
+
                     $renderer->doc .= '</div>';
                     break;
             }

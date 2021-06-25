@@ -1,6 +1,8 @@
 <?php
 
 
+use ComboStrap\CallStack;
+use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\Tag;
@@ -131,11 +133,14 @@ class syntax_plugin_combo_console extends DokuWiki_Syntax_Plugin
                  * Tag Attributes are passed
                  * because it's possible to not display a code with the display attributes = none
                  */
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $tagAttributes = $tag->getOpeningTag()->getAttributes();
+                $callStack = CallStack::createFromHandler($handler);
+                Dimension::addScrollToggleOnClickIfNoControl($callStack);
+
+                $callStack->moveToEnd();
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
 
 

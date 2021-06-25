@@ -119,9 +119,20 @@ class XmlDocument
                 /**
                  * Unlike loading XML, HTML does not have to be well-formed to load.
                  * While malformed HTML should load successfully, this function may generate E_WARNING errors
-                 * @deprecated as we try to be XHTML compliantXML
+                 * @deprecated as we try to be XHTML compliantXML but yeah this is not always possible
                  */
-                $result = $this->xmlDom->loadHTML($text, $options);
+
+                /**
+                 * Bug: Even if we set that the document is an UTF-8
+                 * loadHTML treat the string as being in ISO-8859-1 if without any heading
+                 * (ie <xml encoding="utf-8"..>
+                 * https://stackoverflow.com/questions/8218230/php-domdocument-loadhtml-not-encoding-utf-8-correctly
+                 * Otherwise French and other language are not well loaded
+                 *
+                 * We use the trick to transform UTF-8 to HTML
+                 */
+                $htmlEntityEncoded = mb_convert_encoding($text, 'HTML-ENTITIES', 'UTF-8');
+                $result = $this->xmlDom->loadHTML($htmlEntityEncoded, $options);
 
             }
             if ($result === false) {

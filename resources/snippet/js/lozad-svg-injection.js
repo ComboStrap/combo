@@ -2,7 +2,8 @@ window.addEventListener("load", function (event) {
     // lazy loads elements with default selector as '.lozad'
     const svgObserver = lozad('.lazy-svg-injection-combo', {
         load: function (el) {
-            // Custom implementation to load the svg element
+            // SVGInjector takes over and load the svg element
+            // in place of lozad
             SVGInjector(el, {
                     each: function (svg) {
                         // Style copy (max width)

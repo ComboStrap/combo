@@ -34,15 +34,15 @@ class Bootstrap
     public static function getBootStrapMajorVersion()
     {
         if (Site::isStrapTemplate()) {
-            require_once(__DIR__ . '/../../../tpl/strap/class/TplUtility.php');
-            $bootstrapVersion = TplUtility::getBootStrapVersion();
-            return $bootstrapVersion[0];
-
-        } else {
-
-            return PluginUtility::getConfValue(self::CONF_BOOTSTRAP_MAJOR_VERSION, self::BootStrapDefaultMajorVersion);
-
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            if ($loaded) {
+                $bootstrapVersion = TplUtility::getBootStrapVersion();
+                return $bootstrapVersion[0];
+            }
         }
+
+        return PluginUtility::getConfValue(self::CONF_BOOTSTRAP_MAJOR_VERSION, self::BootStrapDefaultMajorVersion);
+
 
     }
 }

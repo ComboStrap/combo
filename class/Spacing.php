@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 class Spacing
 {
+    const SPACING_ATTRIBUTE = "spacing";
 
     /**
      * Process the attributes that have an impact on the class
@@ -15,7 +16,7 @@ class Spacing
     {
 
         // Spacing is just a class
-        $spacing = "spacing";
+        $spacing = self::SPACING_ATTRIBUTE;
         if ($attributes->hasComponentAttribute($spacing)) {
 
             $spacingValue = $attributes->getValueAndRemove($spacing);

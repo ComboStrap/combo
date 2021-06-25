@@ -6,6 +6,7 @@ use ComboStrap\Background;
 use ComboStrap\CacheMedia;
 use ComboStrap\CallStack;
 use ComboStrap\ColorUtility;
+use ComboStrap\Dimension;
 use ComboStrap\LinkUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
@@ -180,8 +181,8 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                             $backgroundImageAttribute = [
                                 MediaLink::MEDIA_DOKUWIKI_TYPE => MediaLink::INTERNAL_MEDIA_CALL_NAME,
                                 MediaLink::PATH_ATTRIBUTE => $imageAttribute[0],
-                                TagAttributes::WIDTH_KEY => $imageAttribute[3],
-                                TagAttributes::HEIGHT_KEY => $imageAttribute[4],
+                                Dimension::WIDTH_KEY => $imageAttribute[3],
+                                Dimension::HEIGHT_KEY => $imageAttribute[4],
                                 CacheMedia::CACHE_KEY => $imageAttribute[5]
                             ];
                         }

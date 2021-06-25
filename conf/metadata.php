@@ -20,6 +20,12 @@ use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
+/**
+ * Load all class via Plugin Utility
+ */
+require_once (__DIR__.'/../class/PluginUtility.php');
+
+
 require_once(__DIR__ . '/../syntax/related.php');
 
 

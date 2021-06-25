@@ -289,4 +289,14 @@ class DokuwikiUrl
     {
         return $this->path;
     }
+
+    public function getQueryParameter($key)
+    {
+        if(isset($this->queryParameters[$key])){
+            return $this->queryParameters[$key];
+        } else {
+            return null;
+        }
+
+    }
 }

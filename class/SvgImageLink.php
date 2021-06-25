@@ -43,6 +43,11 @@ class SvgImageLink extends MediaLink
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
     /**
+     * @var SvgDocument
+     */
+    private $svgDocument;
+
+    /**
      * SvgImageLink constructor.
      * @param $id
      * @param TagAttributes $tagAttributes
@@ -76,8 +81,8 @@ class SvgImageLink extends MediaLink
                 array(
                     'script' => [
                         array(
-                            "src" => "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/dist/svg-injector.min.js",
-                            "integrity" => "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
+                            "src" => "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/svg-injector.min.js",
+                           // "integrity" => "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
                             "crossorigin" => "anonymous"
                         )
                     ]
@@ -102,7 +107,6 @@ class SvgImageLink extends MediaLink
         $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::LINKING_KEY);
 
 
-
         /**
          * Src
          */
@@ -120,6 +124,13 @@ class SvgImageLink extends MediaLink
             $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
 
         }
+
+        /**
+         * Adaptive Image
+         * It adds a `height: auto` that avoid a layout shift when
+         * using the img tag
+         */
+        $this->tagAttributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
 
 
         /**
@@ -150,17 +161,17 @@ class SvgImageLink extends MediaLink
         }
         if ($lazyLoad) {
             // A class to all component lazy loaded to download them before print
-            $svgFunctionalClass .= " ".LazyLoad::LAZY_CLASS;
-        }
-        if ($svgInjection) {
-            /**
-             * Class into data-class if svg injection
-             */
-            if ($this->tagAttributes->hasComponentAttribute("class")) {
-                $this->tagAttributes->addHtmlAttributeValue("data-class", $this->tagAttributes->getValueAndRemove("class"));
-            }
+            $svgFunctionalClass .= " " . LazyLoad::LAZY_CLASS;
         }
         $this->tagAttributes->addClassName($svgFunctionalClass);
+
+        /**
+         * Dimension are mandatory
+         * to avoid layout shift (CLS)
+         */
+        $this->tagAttributes->addHtmlAttributeValue(Dimension::WIDTH_KEY, $this->getImgTagWidthValue());
+        $this->tagAttributes->addHtmlAttributeValue(Dimension::HEIGHT_KEY, $this->getImgTagHeightValue());
+
 
         /**
          * Return the image
@@ -328,11 +339,28 @@ class SvgImageLink extends MediaLink
 
         $cache = new CacheMedia($this, $this->tagAttributes);
         if (!$cache->isCacheUsable()) {
-            $content = SvgDocument::createFromPath($this)->getXmlText($this->tagAttributes);
+            $content = $this->getSvgDocument()->getXmlText($this->tagAttributes);
             $cache->storeCache($content);
         }
         return $cache->getFile()->getFileSystemPath();
 
     }
 
+    public function getMediaWidth()
+    {
+        return $this->getSvgDocument()->getMediaWidth();
+    }
+
+    public function getMediaHeight()
+    {
+        return $this->getSvgDocument()->getMediaHeight();
+    }
+
+    private function getSvgDocument()
+    {
+        if ($this->svgDocument == null) {
+            $this->svgDocument = SvgDocument::createFromPath($this);
+        }
+        return $this->svgDocument;
+    }
 }

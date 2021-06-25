@@ -273,10 +273,11 @@ class SvgDocument extends XmlDocument
                 }
 
                 /**
-                 * Responsive to the container
+                 * Adapt to the container
+                 * Height `auto` and not `100%` otherwise you get a layout shift
                  */
                 $tagAttributes->addStyleDeclaration("width", "100%");
-                $tagAttributes->addStyleDeclaration("height", "100%");
+                $tagAttributes->addStyleDeclaration("height", "auto");
                 break;
 
         }
@@ -335,6 +336,20 @@ class SvgDocument extends XmlDocument
     {
         $this->shouldBeOptimized = $boolean;
         return $this;
+    }
+
+    public function getMediaWidth()
+    {
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
+        $attributes = explode(" ", $viewBox);
+        return intval(round($attributes[2]));
+    }
+
+    public function getMediaHeight()
+    {
+        $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
+        $attributes = explode(" ", $viewBox);
+        return intval(round($attributes[3]));
     }
 
 

@@ -81,7 +81,7 @@ class Page extends DokuPath
     /**
      * @var bool Indicator to say if this is a sidebar (or sidekick bar)
      */
-    private $isSideBar = false;
+    private $isSideSlot = false;
 
     /**
      * Page constructor.
@@ -107,7 +107,7 @@ class Page extends DokuPath
         $lastPathPart = DokuPath::getLastPart($path);
         if (in_array($lastPathPart, $sidebars)) {
 
-            $this->isSideBar = true;
+            $this->isSideSlot = true;
 
             /**
              * Find the first physical file
@@ -207,6 +207,7 @@ class Page extends DokuPath
 
     }
 
+
     /**
      * Does the page is known in the pages table
      * @return int
@@ -268,7 +269,7 @@ class Page extends DokuPath
      * @param $canonical
      * @return Page - an id of an existing page
      */
-    static function createFromCanonical($canonical)
+    static function createPageFromCanonical($canonical)
     {
 
         // Canonical
@@ -376,7 +377,7 @@ class Page extends DokuPath
 
 
         }
-
+        return $this;
     }
 
     private
@@ -395,7 +396,7 @@ class Page extends DokuPath
         $strapTemplateName = 'strap';
         if ($conf['template'] === $strapTemplateName) {
             $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if($loaded) {
+            if ($loaded) {
                 $barsName[] = TplUtility::getHeaderSlotPageName();
                 $barsName[] = TplUtility::getFooterSlotPageName();
                 $barsName[] = TplUtility::getSideKickSlotPageName();
@@ -405,10 +406,10 @@ class Page extends DokuPath
     }
 
     public
-    function isStrapSideBar()
+    function isStrapSideSlot()
     {
 
-        return $this->isSideBar && Site::isStrapTemplate();
+        return $this->isSideSlot && Site::isStrapTemplate();
 
     }
 
@@ -496,7 +497,10 @@ class Page extends DokuPath
     {
 
         /**
-         * Read / not get (get can trigger a rendering of the meta again)
+         * Read / not {@link p_get_metadata()}
+         * because it can trigger a rendering of the meta again)
+         *
+         * This is not a {@link Page::renderMetadata()}
          */
         if ($this->metadatas == null) {
             $this->metadatas = p_read_metadata($this->getId());
@@ -982,6 +986,7 @@ class Page extends DokuPath
     function upsertContent($content, $summary = "Default")
     {
         saveWikiText($this->getId(), $content, $summary);
+        return $this;
     }
 
     public
@@ -1197,7 +1202,7 @@ class Page extends DokuPath
      * Refresh the metadata (used only in test)
      */
     public
-    function refreshMetadata()
+    function renderMetadata()
     {
 
         if ($this->metadatas == null) {
@@ -1206,6 +1211,7 @@ class Page extends DokuPath
              */
             $this->metadatas = $this->getMetadatas();
         }
+
         /**
          * Read/render the metadata from the file
          * with parsing
@@ -1221,7 +1227,7 @@ class Page extends DokuPath
         /**
          * Return
          */
-        return $this->metadatas;
+        return $this;
 
     }
 
@@ -1451,7 +1457,7 @@ class Page extends DokuPath
     function render()
     {
 
-        if (!$this->isStrapSideBar()) {
+        if (!$this->isStrapSideSlot()) {
             $template = Site::getTemplate();
             LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getUrl("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
             return "";
@@ -1535,7 +1541,7 @@ class Page extends DokuPath
     function getRenderCache($outputFormat)
     {
 
-        if ($this->isStrapSideBar()) {
+        if ($this->isStrapSideSlot()) {
 
             /**
              * Logical id is the scope and part of the key
@@ -1557,7 +1563,7 @@ class Page extends DokuPath
     function getInstructionsCache()
     {
 
-        if ($this->isStrapSideBar()) {
+        if ($this->isStrapSideSlot()) {
 
             /**
              * @noinspection PhpIncompatibleReturnTypeInspection

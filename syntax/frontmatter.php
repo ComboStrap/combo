@@ -20,12 +20,11 @@
  *
  */
 
-use ComboStrap\Analytics;
 use ComboStrap\LogUtility;
-use ComboStrap\PluginUtility;
 use ComboStrap\Page;
+use ComboStrap\PluginUtility;
 
-require_once(__DIR__ . '/../class/Analytics.php');
+require_once(__DIR__ . '/../class/PluginUtility.php');
 
 if (!defined('DOKU_INC')) {
     die();
@@ -109,8 +108,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
         if ($state == DOKU_LEXER_SPECIAL) {
 
-            global $ID;
-
             // strip
             //   from start `---json` + eol = 8
             //   from end   `---` + eol = 4
@@ -118,7 +115,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
             // Empty front matter
             if (trim($jsonString) == "") {
-                $this->closeParsing();
+                $this->deleteKnownMetaThatAreNoMorePresent();
                 return array(self::STATUS => self::PARSING_STATE_EMPTY);
             }
 
@@ -126,91 +123,22 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             $arrayFormat = true;
             $jsonArray = json_decode($jsonString, $arrayFormat);
 
+            $result = [];
             // Decodage problem
             if ($jsonArray == null) {
-                return array(
-                    self::STATUS => self::PARSING_STATE_ERROR,
-                    PluginUtility::PAYLOAD => $match
-                );
+                $result[self::STATUS] = self::PARSING_STATE_ERROR;
+                $result[PluginUtility::PAYLOAD] = $match;
+            } else {
+                $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+                $result[PluginUtility::ATTRIBUTES] = $jsonArray;
             }
-
-            $notModifiableMeta = [
-                "date",
-                "user",
-                "last_change",
-                "creator",
-                "contributor"
-            ];
-            $result = array();
-            foreach ($jsonArray as $key => $value) {
-
-                $lowerCaseKey = trim(strtolower($key));
-
-                // Not modifiable metadata
-                if (in_array($lowerCaseKey, $notModifiableMeta)) {
-                    LogUtility::msg("Front Matter: The metadata ($lowerCaseKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
-                    continue;
-                }
-
-                switch ($lowerCaseKey) {
-
-                    case Page::DESCRIPTION_PROPERTY:
-                        $result["description"] = $value;
-                        /**
-                         * Overwrite also the actual description
-                         */
-                        p_set_metadata($ID, array(Page::DESCRIPTION_PROPERTY => array(
-                            "abstract" => $value,
-                            "origin" => syntax_plugin_combo_frontmatter::CANONICAL
-                        )));
-                        /**
-                         * Continue because
-                         * the description value was already stored
-                         * We don't want to override it
-                         * And continue 2 because continue == break in a switch
-                         */
-                        continue 2;
-                        break;
-
-                    /**
-                     * Pass the title to the metadata
-                     * to advertise that it's in the front-matter
-                     * for the quality rules
-                     */
-                    case Page::TITLE_PROPERTY:
-                        $result[Page::TITLE_PROPERTY] = $value;
-                        break;
-
-                    /**
-                     * Pass the low quality indicator
-                     * to advertise that it's in the front-matter
-                     */
-                    case Page::LOW_QUALITY_PAGE_INDICATOR:
-                        $result[Page::LOW_QUALITY_PAGE_INDICATOR] = $value;
-                        break;
-
-                    // Canonical should be lowercase
-                    case Page::CANONICAL_PROPERTY:
-                        $result[Page::CANONICAL_PROPERTY] = $value;
-                        $value = strtolower($value);
-                        break;
-
-                }
-                // Set the value persistently
-                p_set_metadata($ID, array($lowerCaseKey => $value));
-
-            }
-
-            $this->closeParsing($jsonArray);
-
-            $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
 
             /**
              * End position is the length of the match + 1 for the newline
              */
             $newLine = 1;
             $endPosition = $pos + strlen($match) + $newLine;
-            $result[PluginUtility::POSITION]=[$pos, $endPosition];
+            $result[PluginUtility::POSITION] = [$pos, $endPosition];
 
             return $result;
         }
@@ -245,8 +173,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 /**
                  * Section
                  */
-                list($startPosition,$endPosition) =  $data[PluginUtility::POSITION];
-                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING,1)) {
+                list($startPosition, $endPosition) = $data[PluginUtility::POSITION];
+                if (PluginUtility::getConfValue(self::CONF_ENABLE_SECTION_EDITING, 1)) {
                     $position = $startPosition;
                     $name = self::CANONICAL;
                     PluginUtility::startSection($renderer, $position, $name);
@@ -254,19 +182,86 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 }
                 break;
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:
+
+                if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
+                    return false;
+                }
+
                 /** @var renderer_plugin_combo_analytics $renderer */
-                if (array_key_exists("description", $data)) {
-                    $renderer->setMeta("description", $data["description"]);
+                $jsonArray = $data[PluginUtility::ATTRIBUTES];
+                if (array_key_exists("description", $jsonArray)) {
+                    $renderer->setMeta("description", $jsonArray["description"]);
                 }
-                if (array_key_exists(Page::CANONICAL_PROPERTY, $data)) {
-                    $renderer->setMeta(Page::CANONICAL_PROPERTY, $data[Page::CANONICAL_PROPERTY]);
+                if (array_key_exists(Page::CANONICAL_PROPERTY, $jsonArray)) {
+                    $renderer->setMeta(Page::CANONICAL_PROPERTY, $jsonArray[Page::CANONICAL_PROPERTY]);
                 }
-                if (array_key_exists(Page::TITLE_PROPERTY, $data)) {
-                    $renderer->setMeta(Page::TITLE_PROPERTY, $data[Page::TITLE_PROPERTY]);
+                if (array_key_exists(Page::TITLE_PROPERTY, $jsonArray)) {
+                    $renderer->setMeta(Page::TITLE_PROPERTY, $jsonArray[Page::TITLE_PROPERTY]);
                 }
-                if (array_key_exists(Page::LOW_QUALITY_PAGE_INDICATOR, $data)) {
-                    $renderer->setMeta(Page::LOW_QUALITY_PAGE_INDICATOR, $data[Page::LOW_QUALITY_PAGE_INDICATOR]);
+                if (array_key_exists(Page::LOW_QUALITY_PAGE_INDICATOR, $jsonArray)) {
+                    $renderer->setMeta(Page::LOW_QUALITY_PAGE_INDICATOR, $jsonArray[Page::LOW_QUALITY_PAGE_INDICATOR]);
                 }
+                break;
+            case "metadata":
+
+                if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
+                    return false;
+                }
+
+                global $ID;
+                $jsonArray = $data[PluginUtility::ATTRIBUTES];
+
+
+                $notModifiableMeta = [
+                    "date",
+                    "user",
+                    "last_change",
+                    "creator",
+                    "contributor"
+                ];
+
+                foreach ($jsonArray as $key => $value) {
+
+                    $lowerCaseKey = trim(strtolower($key));
+
+                    // Not modifiable metadata
+                    if (in_array($lowerCaseKey, $notModifiableMeta)) {
+                        LogUtility::msg("Front Matter: The metadata ($lowerCaseKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
+                        continue;
+                    }
+
+                    switch ($lowerCaseKey) {
+
+                        case Page::DESCRIPTION_PROPERTY:
+                            /**
+                             * Overwrite also the actual description
+                             */
+                            p_set_metadata($ID, array(Page::DESCRIPTION_PROPERTY => array(
+                                "abstract" => $value,
+                                "origin" => syntax_plugin_combo_frontmatter::CANONICAL
+                            )));
+                            /**
+                             * Continue because
+                             * the description value was already stored
+                             * We don't want to override it
+                             * And continue 2 because continue == break in a switch
+                             */
+                            continue 2;
+
+
+                        // Canonical should be lowercase
+                        case Page::CANONICAL_PROPERTY:
+                            $value = strtolower($value);
+                            break;
+
+                    }
+                    // Set the value persistently
+                    p_set_metadata($ID, array($lowerCaseKey => $value));
+
+                }
+
+                $this->deleteKnownMetaThatAreNoMorePresent($jsonArray);
+
                 break;
 
         }
@@ -280,7 +275,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      * @return bool
      */
     public
-    function closeParsing(array $json = array())
+    function deleteKnownMetaThatAreNoMorePresent(array $json = array())
     {
         global $ID;
 

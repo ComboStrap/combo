@@ -9,8 +9,6 @@ if (!defined('DOKU_INC')) die();
 /**
  *
  *
- *   * The name of the file should be the last name of the class
- *   * There should be only one name
  */
 class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
 {

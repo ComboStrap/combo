@@ -21,7 +21,6 @@
 
 
 use ComboStrap\Icon;
-use ComboStrap\MediaLink;
 use ComboStrap\Prism;
 
 
@@ -329,3 +328,16 @@ $conf["outlineNumberingCounterStyleLevel6"] = "decimal";
 $conf["outlineNumberingCounterSeparator"] = ".";
 $conf["outlineNumberingPrefix"] = "";
 $conf["outlineNumberingSuffix"] = " - ";
+
+/**
+ * Form
+ * {@link \ComboStrap\Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS}
+ * {@link action_plugin_combo_login::CONF_ENABLE_LOGIN_FORM }
+ * {@link action_plugin_combo_registration::CONF_ENABLE_REGISTER_FORM }
+ * {@link action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM }
+ */
+$conf["enableLogoOnIdentityForms"] = 1;
+$conf["enableLoginForm"] = 1;
+$conf["enableRegistrationForm"] = 1;
+$conf["enableResendPwdForm"] = 1;
+

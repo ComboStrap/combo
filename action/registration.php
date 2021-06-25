@@ -22,13 +22,13 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * https://www.dokuwiki.org/config:autopasswd
  * If true, there is no password field
  */
-class action_plugin_combo_register extends DokuWiki_Action_Plugin
+class action_plugin_combo_registration extends DokuWiki_Action_Plugin
 {
 
     const CANONICAL = Identity::CANONICAL;
     const TAG = "register";
     const FORM_REGISTER_CLASS = "form-".self::TAG;
-    const CONF_ENABLE_REGISTER_PAGE = "enableRegisterPage";
+    const CONF_ENABLE_REGISTER_FORM = "enableRegistrationForm";
 
 
     /**

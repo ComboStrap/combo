@@ -154,7 +154,7 @@ EOF;
         }
 
 
-        $registerHtml = action_plugin_combo_register::getRegisterLinkAndParagraph();
+        $registerHtml = action_plugin_combo_registration::getRegisterLinkAndParagraph();
         if(!empty($registerHtml)){
             $newFormContent[] = $registerHtml;
         }

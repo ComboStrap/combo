@@ -8,6 +8,7 @@
  */
 
 use ComboStrap\Dimension;
+use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Site;
 use ComboStrap\Snippet;
@@ -67,11 +68,6 @@ EOF;
 
     function handle_resendpwd_html(&$event, $param)
     {
-        /**
-         * Global
-         */
-        global $conf;
-        global $lang;
 
         /**
          * The Login page is created via buffer
@@ -93,19 +89,24 @@ EOF;
          * @var Doku_Form $form
          */
         $form = &$event->data;
-        $form->params["class"] = self::FORM_RESEND_PWD_CLASS;
+        $class = &$form->params["class"];
+        if (isset($class)) {
+            $class = $class . " " . self::FORM_RESEND_PWD_CLASS;
+        } else {
+            $class = self::FORM_RESEND_PWD_CLASS;
+        }
+        $newFormContent = [];
+
 
         /**
-         * Heading
+         * Header (Logo / Title)
          */
-        $heading = "Set new password for";
-        if (isset($form->_content[0]["_legend"])) {
-            $heading = $form->_content[0]["_legend"];
-        }
+        $newFormContent[] = Identity::getHeaderHTML($form, self::FORM_RESEND_PWD_CLASS);
 
-        $submitText = "Set new password";
-        $loginText = "Username";
-        $loginValue = "";
+        /**
+         * Form Attributes
+         *
+         */
         foreach ($form->_content as $field) {
             if (!is_array($field)) {
                 continue;
@@ -114,7 +115,18 @@ EOF;
             if ($fieldName == null) {
                 // this is not an input field
                 if ($field["type"] == "submit") {
-                    $submitText = $field["value"];
+                    /**
+                     * This is important to keep the submit element intact
+                     * for forms integration such as captcha
+                     * The search the submit button to insert before it
+                     */
+                    $classes = "btn btn-primary btn-block";
+                    if (isset($field["class"])) {
+                        $field["class"] = $field["class"] . " " . $classes;
+                    } else {
+                        $field["class"] = $classes;
+                    }
+                    $newFormContent[] = $field;
                 }
                 continue;
             }
@@ -122,6 +134,13 @@ EOF;
                 case "login":
                     $loginText = $field["_text"];
                     $loginValue = $field["value"];
+                    $loginHTML=<<<EOF
+<div class="form-floating">
+    <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
+    <label for="inputUserName">$loginText</label>
+</div>
+EOF;
+                    $newFormContent[] = $loginHTML;
                     break;
                 default:
                     LogUtility::msg("The register field name($fieldName) is unknown", LogUtility::LVL_MSG_ERROR, \ComboStrap\Identity::CANONICAL);
@@ -131,39 +150,24 @@ EOF;
         }
 
 
-        /**
-         * Logo
-         */
-        $tagAttributes = TagAttributes::createEmpty(self::CANONICAL);
-        $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "72");
-        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, "72");
-        $tagAttributes->addClassName("logo");
-        $logoHtmlImgTag = Site::getLogoImgHtmlTag($tagAttributes);
 
 
         /**
          * Register and Login HTML paragraph
          */
-        $registerHtml = action_plugin_combo_register::getRegisterLinkAndParagraph();
-        $loginHtml = action_plugin_combo_login::getLoginParagraphWithLinkToFormPage();
+        $registerHtml = action_plugin_combo_registration::getRegisterLinkAndParagraph();
+        if (!empty($registerHtml)) {
+            $newFormContent[] = $registerHtml;
+        }
+        $loginLinkToHtmlForm = action_plugin_combo_login::getLoginParagraphWithLinkToFormPage();
+        if (!empty($loginLinkToHtmlForm)) {
+            $newFormContent[] = $loginLinkToHtmlForm;
+        }
 
         /**
-         * Based on
-         * https://getbootstrap.com/docs/4.0/examples/sign-in/
+         * Update
          */
-        $formsContent = <<<EOF
-$logoHtmlImgTag
-<h1>$heading</h1>
-<div class="form-floating">
-    <input type="text" id="inputUserName" class="form-control" placeholder="$loginText" required="required" autofocus="" name="u" value="$loginValue">
-    <label for="inputUserName">$loginText</label>
-</div>
-<button class="btn btn-lg btn-primary btn-block" type="submit">$submitText</button>
-$loginHtml
-$registerHtml
-EOF;
-        $form->_content = [$formsContent];
-
+        $form->_content = $newFormContent;
 
         return true;
 

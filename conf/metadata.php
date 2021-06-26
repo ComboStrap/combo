@@ -290,5 +290,7 @@ $meta[Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS] = array("onoff");
 $meta[action_plugin_combo_registration::CONF_ENABLE_REGISTER_FORM] = array("onoff");
 $meta[action_plugin_combo_login::CONF_ENABLE_LOGIN_FORM] = array("onoff");
 $meta[action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM] = array("onoff");
+$meta[action_plugin_combo_profile::CONF_ENABLE_PROFILE_UPDATE_FORM] = array("onoff");
+$meta[action_plugin_combo_profile::CONF_ENABLE_PROFILE_DELETE_FORM] = array("onoff");
 
 

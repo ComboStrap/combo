@@ -72,6 +72,12 @@ class Identity
 
         $request->setServer('REMOTE_USER', $user);
 
+        /**
+         * The {@link getSecurityToken()} needs it
+         */
+        global $INPUT;
+        $INPUT->server->set('REMOTE_USER',$user);
+
     }
 
     /**
@@ -134,9 +140,10 @@ class Identity
     /**
      * @param Doku_Form $form
      * @param string $classPrefix
+     * @param bool $includeLogo
      * @return string
      */
-    public static function getHeaderHTML(Doku_Form $form, $classPrefix)
+    public static function getHeaderHTML(Doku_Form $form, $classPrefix, $includeLogo = true)
     {
         if (isset($form->_content[0]["_legend"])) {
 
@@ -145,7 +152,11 @@ class Identity
              * Logo
              */
             $logoHtmlImgTag = "";
-            if (PluginUtility::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)) {
+            if (
+                PluginUtility::getConfValue(Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS, 1)
+                &&
+                $includeLogo === true
+            ) {
                 $logoHtmlImgTag = Identity::getLogoHtml();
             }
             /**

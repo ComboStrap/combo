@@ -224,6 +224,9 @@ $lang[action_plugin_combo_outlinenumbering::CONF_OUTLINE_NUMBERING_SUFFIX] = Plu
  */
 $lang[Identity::CONF_ENABLE_LOGO_ON_IDENTITY_FORMS] = PluginUtility::getUrl(Identity::CANONICAL, "If checked, the logo is shown on the identity forms (login, register, resend)");
 $lang[action_plugin_combo_login::CONF_ENABLE_LOGIN_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If checked, the login form will be styled by Combo");
-$lang[action_plugin_combo_registration::CONF_ENABLE_REGISTER_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the register form be styled by Combo");
-$lang[action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the resend form be styled by Combo");
+$lang[action_plugin_combo_registration::CONF_ENABLE_REGISTER_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the register form will be styled by Combo");
+$lang[action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the resend form will be styled by Combo");
+$lang[action_plugin_combo_profile::CONF_ENABLE_PROFILE_UPDATE_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the profile update form will be styled by Combo");
+$lang[action_plugin_combo_profile::CONF_ENABLE_PROFILE_DELETE_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the profile delete form will be styled by Combo");
+
 ?>

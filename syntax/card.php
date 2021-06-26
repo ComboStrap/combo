@@ -322,6 +322,12 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER:
 
                     /**
+                     * Add the CSS
+                     */
+                    $snippetManager = PluginUtility::getSnippetManager();
+                    $snippetManager->attachCssSnippetForBar(self::TAG);
+
+                    /**
                      * Tag Attributes
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);

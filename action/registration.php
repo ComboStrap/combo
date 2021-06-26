@@ -88,15 +88,8 @@ EOF;
          * We print before the forms
          * to avoid a FOUC
          */
-        $loginCss = Snippet::createCssSnippet("register");
-        $content = $loginCss->getContent();
-        $class = $loginCss->getClass();
-        $cssHtml = <<<EOF
-<style class="$class">
-$content
-</style>
-EOF;
-        print $cssHtml;
+        print Snippet::createCssSnippet("register")
+            ->getHtmlStyleTag();
 
 
         /**

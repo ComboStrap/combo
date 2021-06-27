@@ -17,6 +17,11 @@ require_once(__DIR__ . '/../class/TemplateUtility.php');
 /**
  * Class syntax_plugin_combo_ntoc
  * Implementation of a namespace toc
+ *
+ * https://getbootstrap.com/docs/4.0/components/navs/#vertical
+ * https://getbootstrap.com/docs/4.1/components/list-group/
+ * https://getbootstrap.com/docs/4.0/components/scrollspy/#example-with-list-group
+ * https://getbootstrap.com/docs/4.0/components/scrollspy/#example-with-nested-nav
  */
 class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
 {
@@ -183,7 +188,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                                 break;
                             case self::NAMESPACE_ITEM:
                                 /**
-                                 * Pattern for a ns
+                                 * Pattern for a namespace
                                  */
                                 $nsTemplate = $actualCall->getPayload();
                                 $attributes[self::NS_TEMPLATE_KEY] = $nsTemplate;

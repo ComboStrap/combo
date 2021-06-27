@@ -120,9 +120,6 @@ class syntax_plugin_combo_badge extends DokuWiki_Syntax_Plugin
                  */
                 $tag = new Tag(self::TAG, $originalAttributes, $state, $handler);
 
-                if ($tag->isDescendantOf(syntax_plugin_combo_list::TAG)) {
-                    $tagAttributes->addStyleDeclaration("margin-left", "auto");
-                }
 
                 /**
                  * Type attributes

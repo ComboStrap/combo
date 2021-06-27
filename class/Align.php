@@ -24,7 +24,12 @@ class Align
                         $attributes->addClassName(PluginUtility::CENTER_CLASS);
                         break;
                     case "right":
-                        $attributes->addStyleDeclaration("margin-left", "auto");
+                    case "end":
+                        if (Bootstrap::getBootStrapMajorVersion()==Bootstrap::BootStrapFourMajorVersion) {
+                            $attributes->addStyleDeclaration("margin-left", "auto");
+                        } else {
+                            $attributes->addClassName("ms-auto");
+                        }
                         $attributes->addStyleDeclaration("width", "fit-content");
                         break;
                 }

@@ -1,7 +1,6 @@
 <?php
 
 
-use ComboStrap\SnippetManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\StyleUtility;
 

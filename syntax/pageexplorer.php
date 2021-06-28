@@ -1,41 +1,58 @@
 <?php
 
 
-use ComboStrap\AdsUtility;
 use ComboStrap\CallStack;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
-use ComboStrap\Tag;
 use ComboStrap\TemplateUtility;
-use ComboStrap\TitleUtility;
 
 require_once(__DIR__ . '/../class/TemplateUtility.php');
 
 
 /**
- * Class syntax_plugin_combo_ntoc
- * Implementation of a namespace toc
+ * Class syntax_plugin_combo_pageexplorer
+ * Implementation of an explorer for pages
  *
- * https://getbootstrap.com/docs/4.0/components/navs/#vertical
- * https://getbootstrap.com/docs/4.1/components/list-group/
+ *
+ *
  * https://getbootstrap.com/docs/4.0/components/scrollspy/#example-with-list-group
  * https://getbootstrap.com/docs/4.0/components/scrollspy/#example-with-nested-nav
+ *
+ *
+ *
  */
-class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = self::CANONICAL_NTOC;
+    /**
+     * Tag in Dokuwiki cannot have a `-`
+     * This is the last part of the class
+     */
+    const TAG = "pageexplorer";
 
+    /**
+     * Page canonical and tag pattern
+     */
+    const CANONICAL_PAGE_EXPLORER = "page-explorer";
+    const COMBO_TAG_PATTERNS = ["ntoc", self::CANONICAL_PAGE_EXPLORER];
 
     /**
      * Ntoc attribute
      */
     const ATTR_NAMESPACE = "ns";
-    const NAMESPACE_ITEM = "ns-item";
-    const PAGE_ITEM = "page-item";
-    const INDEX_ITEM = "index";
+    const NAMESPACE_ITEM = "namespace";
+    const NAMESPACE_OLD = "ns-item";
+    const NAMESPACES = [self::ATTR_NAMESPACE, self::NAMESPACE_ITEM, self::NAMESPACE_OLD];
+
+    const PAGE = "page";
+    const PAGE_OLD = "page-item";
+    const PAGES = [self::PAGE, self::PAGE_OLD];
+
+    const HOME = "home";
+    const HOME_OLD = "index";
+    const HOMES = [self::HOME, self::HOME_OLD];
 
     /**
      * Keys of the array passed between {@link handle} and {@link render}
@@ -44,7 +61,6 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
     const NS_TEMPLATE_KEY = 'nsTemplate';
     const INDEX_TEMPLATE_KEY = 'indexTemplate';
     const INDEX_ATTRIBUTES_KEY = 'indexAttributes';
-    const CANONICAL_NTOC = "ntoc";
 
 
     /**
@@ -102,19 +118,31 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::COMBO_TAG_PATTERNS as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
-        $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern(self::PAGE_ITEM), PluginUtility::getModeForComponent($this->getPluginComponent()));
-        $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern(self::INDEX_ITEM), PluginUtility::getModeForComponent($this->getPluginComponent()));
-        $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern(self::NAMESPACE_ITEM), PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::PAGES as $page) {
+            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($page), PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
+
+        foreach (self::HOMES as $home) {
+            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($home), PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
+
+        foreach (self::NAMESPACES as $namespace) {
+            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($namespace), PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
 
     public function postConnect()
     {
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::COMBO_TAG_PATTERNS as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
@@ -178,7 +206,8 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                     if ($actualCall->getTagName() == self::TAG && $actualCall->getState() == DOKU_LEXER_MATCHED) {
                         $tagName = PluginUtility::getTag($actualCall->getCapturedContent());
                         switch ($tagName) {
-                            case self::PAGE_ITEM:
+                            case self::PAGE:
+                            case self::PAGE_OLD:
                                 /**
                                  * Pattern for a page
                                  */
@@ -187,6 +216,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                                 $found = true;
                                 break;
                             case self::NAMESPACE_ITEM:
+                            case self::NAMESPACE_OLD:
                                 /**
                                  * Pattern for a namespace
                                  */
@@ -194,7 +224,8 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                                 $attributes[self::NS_TEMPLATE_KEY] = $nsTemplate;
                                 $found = true;
                                 break;
-                            case self::INDEX_ITEM:
+                            case self::HOME:
+                            case self::HOME_OLD:
                                 /**
                                  * Pattern for a header
                                  */
@@ -205,7 +236,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                                 $found = true;
                                 break;
                             default:
-                                LogUtility::msg("The tag ($tagName) is unknown",LogUtility::LVL_MSG_ERROR,self::TAG);
+                                LogUtility::msg("The tag ($tagName) is unknown", LogUtility::LVL_MSG_ERROR, self::TAG);
                                 break;
                         }
                         $callStack->deleteActualCallAndPrevious();
@@ -213,7 +244,7 @@ class syntax_plugin_combo_ntoc extends DokuWiki_Syntax_Plugin
                 }
 
                 if (!$found) {
-                    LogUtility::msg("There should be at minimum a `" . self::INDEX_ITEM . "`, `" . self::NAMESPACE_ITEM . "` or a `" . self::INDEX_ITEM . "` defined", LogUtility::LVL_MSG_ERROR, self::CANONICAL_NTOC);
+                    LogUtility::msg("There should be at minimum a `" . self::HOME . "`, `" . self::NAMESPACE_ITEM . "` or a `" . self::HOME . "` defined", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PAGE_EXPLORER);
                 }
 
                 /**

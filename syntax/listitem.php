@@ -5,6 +5,7 @@ use ComboStrap\SnippetManager;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\StyleUtility;
+use ComboStrap\TagAttributes;
 
 
 /**
@@ -16,7 +17,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
 
     const TAG = "listitem";
     const TAGS = array("list-item", "li");
-    const COMBO_LIST_ITEM_CLASS = "combo-list-item";
+    const SNIPPET_ID = "content-list-item";
 
     /**
      * The style added
@@ -89,7 +90,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
     /**
      * @see Doku_Parser_Mode::getSort()
      * the mode with the lowest sort number will win out
-     * Higher than {@link syntax_plugin_combo_list}
+     * Higher than {@link syntax_plugin_combo_contentlist}
      * but less than {@link syntax_plugin_combo_preformatted}
      */
     function getSort()
@@ -106,7 +107,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
          * the pattern for the li tag could also catch a list tag
          */
         $authorizedModes = array(
-            PluginUtility::getModeForComponent(syntax_plugin_combo_list::TAG),
+            PluginUtility::getModeForComponent(syntax_plugin_combo_contentlist::TAG),
             PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
         );
 
@@ -149,17 +150,12 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $attributes = PluginUtility::getTagAttributes($match);
-                PluginUtility::addClass2Attributes(self::COMBO_LIST_ITEM_CLASS, $attributes);
-                $html = '<li';
-                if (sizeof($attributes)) {
-                    $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-                }
-                $html .= '>';
+                $attributes = TagAttributes::createFromTagMatch($match);
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html);
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
+                );
 
             case DOKU_LEXER_UNMATCHED :
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
@@ -167,8 +163,8 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => '</li>');
+                    PluginUtility::STATE => $state
+                );
 
 
         }
@@ -195,14 +191,16 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    $styles = self::getStyles();
-                    $cssRule = StyleUtility::getRule($styles, "." . self::COMBO_LIST_ITEM_CLASS);
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG, $cssRule);
 
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::TAG);
+                    $tagAttributes->addClassName("list-group-item");
+                    $tagAttributes->addClassName("d-flex");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("li");
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+                    $renderer->doc .= "</li>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $render = PluginUtility::renderUnmatched($data);

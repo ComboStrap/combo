@@ -35,6 +35,9 @@ require_once(__DIR__ . '/../class/CallStack.php');
  * Full example can be found
  * in the Javascript section of tabs and navs
  * https://getbootstrap.com/docs/5.0/components/navs-tabs/#javascript-behavior
+ *
+ * Vertical Pills
+ * https://getbootstrap.com/docs/4.0/components/navs/#vertical
  */
 class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 {

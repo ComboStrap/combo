@@ -3,6 +3,7 @@
 
 use ComboStrap\PluginUtility;
 use ComboStrap\StyleUtility;
+use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../class/StyleUtility.php');
 require_once(__DIR__ . '/../class/SnippetManager.php');
@@ -11,12 +12,27 @@ require_once(__DIR__ . '/../class/SnippetManager.php');
 /**
  * Class syntax_plugin_combo_list
  * Implementation of a list
+ *
+ * Content list
+ *
+ * https://getbootstrap.com/docs/4.1/components/list-group/
+ * https://getbootstrap.com/docs/5.0/components/list-group/
+ *
+ * https://getbootstrap.com/docs/5.0/utilities/flex/#media-object
+ * https://getbootstrap.com/docs/4.0/layout/media-object/#media-list - Bootstrap media list
+ * https://github.com/material-components/material-components-web/tree/master/packages/mdc-list - mdc list
  */
-class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "list";
-    const COMBO_LIST_CLASS = "combo-list";
+    const TAG = "contentlist";
+
+    /**
+     * To allow a minus
+     */
+    const COMBO_TAG = "content-list";
+    const COMBO_TAG_OLD = "list";
+    const COMBO_TAGS = [self::COMBO_TAG,self::COMBO_TAG_OLD];
 
 
     /**
@@ -77,14 +93,18 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::COMBO_TAGS as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
     public function postConnect()
     {
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::COMBO_TAGS as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        }
 
     }
 
@@ -109,30 +129,19 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
 
-                $attributes = PluginUtility::getTagAttributes($match);
-                PluginUtility::addClass2Attributes(self::COMBO_LIST_CLASS, $attributes);
-
-                $html = '<ul';
-                if (sizeof($attributes)) {
-                    $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-                }
-                $html .= '>';
-
-
+                $attributes = TagAttributes::createFromTagMatch($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html);
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
+                );
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::COMBO_TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => '</ul>');
+                return array(PluginUtility::STATE => $state);
 
 
         }
@@ -159,17 +168,14 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    $styles = $this->getStyles();
-                    $styleRule = StyleUtility::getRule($styles, "." . self::COMBO_LIST_CLASS);
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(
-                        self::TAG,
-                        $styleRule
-                    );
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+                    //PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::COMBO_TAG);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::COMBO_TAG);
+                    $tagAttributes->addClassName("list-group");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul");
 
                     break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+                    $renderer->doc .= "</ul>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -182,21 +188,6 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
         return false;
     }
 
-    /**
-     * @return array
-     */
-    static public function getStyles()
-    {
-        $styles = array();
-        $styles['list-style-type'] = 'none';
-        $styles['padding'] = '0 0 !important'; // Padding on list is 40px left default
-        $styles['line-height'] = '1.75rem';
-        $styles['border'] = '1px solid #e5e5e5';
-        $styles['width'] = '100%';
-        $styles['display'] = 'block';
-        $styles['border-radius'] = '0.25rem';
-        return $styles;
-    }
 
 
 }

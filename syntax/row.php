@@ -26,6 +26,9 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  *
  *
  * Note: The name of the class must follow this pattern ie syntax_plugin_PluginName_ComponentName
+ *
+ *
+ * See also: https://getbootstrap.com/docs/5.0/utilities/flex/
  */
 class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 {
@@ -44,7 +47,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
     const TYPE_AUTO_VALUE = "auto";
     const TYPE_NATURAL_VALUE = "natural";
-    const CANONICAL = "grid";
+    const CANONICAL = self::GRID;
+    const GRID = "grid";
 
     /**
      * Syntax Type.
@@ -146,8 +150,15 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                $callStack = CallStack::createFromHandler($handler);
+                $context = self::GRID;
+                $parent = $callStack->moveToParent();
+                if ($parent != false && $parent->getTagName() == syntax_plugin_combo_listitem::TAG) {
+                    $context = $parent->getTagName();
+                }
+
                 $attributes = TagAttributes::createFromTagMatch($match);
-                if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)){
+                if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
                     /**
                      * All element will be centered
                      */
@@ -156,7 +167,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray(),
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED:
@@ -165,84 +177,87 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
                 $callStack = CallStack::createFromHandler($handler);
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $type = $openingCall->getType();
 
-                /**
-                 * Auto width calculation ?
-                 */
-                if ($type == null || $type == syntax_plugin_combo_row::TYPE_AUTO_VALUE) {
-                    $numberOfColumns = 0;
+                if ($openingCall->getContext() == self::GRID) {
+                    $type = $openingCall->getType();
+
                     /**
-                     * If the size or the class is set, we don't
-                     * apply the automatic sizing
+                     * Auto width calculation ?
                      */
-                    $hasSizeOrClass = false;
-                    while ($actualCall = $callStack->next()) {
-                        if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
-                            &&
-                            $actualCall->getState() == DOKU_LEXER_ENTER
-                        ) {
-                            $numberOfColumns++;
-                            if ($actualCall->hasAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
-                                $hasSizeOrClass = true;
-                            }
-                            if ($actualCall->hasAttribute(TagAttributes::CLASS_KEY)) {
-                                $hasSizeOrClass = true;
-                            }
-
-                        }
-                    }
-                    if (!$hasSizeOrClass && $numberOfColumns > 1) {
+                    if ($type == null || $type == syntax_plugin_combo_row::TYPE_AUTO_VALUE) {
+                        $numberOfColumns = 0;
                         /**
-                         * Parameters
+                         * If the size or the class is set, we don't
+                         * apply the automatic sizing
                          */
-                        $minimalWidth = 300;
-                        $numberOfGridColumns = self::GRID_TOTAL_COLUMNS;
-                        $breakpoints =
-                            [
-                                "xs" => 270,
-                                "sm" => 540,
-                                "md" => 720,
-                                "lg" => 960,
-                                "xl" => 1140,
-                                "xxl" => 1320
-                            ];
-                        /**
-                         * Calculation of the sizes value
-                         */
-                        $sizes = [];
-                        $previousRatio = null;
-                        foreach ($breakpoints as $breakpoint => $value) {
-                            $spaceByColumn = $value / $numberOfColumns;
-                            if ($spaceByColumn < $minimalWidth) {
-                                $spaceByColumn = $minimalWidth;
-                            }
-                            $ratio = floor($numberOfGridColumns / ($value / $spaceByColumn));
-                            if ($ratio > $numberOfGridColumns) {
-                                $ratio = $numberOfGridColumns;
-                            }
-                            // be sure that it's divisible by the number of grids columns
-                            // if for 3 columns, we get a ratio of 5, we want 4;
-                            while (($numberOfGridColumns % $ratio) != 0) {
-                                $ratio = $ratio - 1;
-                            }
-
-                            // Closing
-                            if ($ratio != $previousRatio) {
-                                $sizes[] = "$breakpoint-$ratio";
-                                $previousRatio = $ratio;
-                            } else {
-                                break;
-                            }
-                        }
-                        $sizeValue = implode(" ", $sizes);
-                        $callStack->moveToPreviousCorrespondingOpeningCall();
+                        $hasSizeOrClass = false;
                         while ($actualCall = $callStack->next()) {
                             if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
                                 &&
                                 $actualCall->getState() == DOKU_LEXER_ENTER
                             ) {
-                                $actualCall->addAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE, $sizeValue);
+                                $numberOfColumns++;
+                                if ($actualCall->hasAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
+                                    $hasSizeOrClass = true;
+                                }
+                                if ($actualCall->hasAttribute(TagAttributes::CLASS_KEY)) {
+                                    $hasSizeOrClass = true;
+                                }
+
+                            }
+                        }
+                        if (!$hasSizeOrClass && $numberOfColumns > 1) {
+                            /**
+                             * Parameters
+                             */
+                            $minimalWidth = 300;
+                            $numberOfGridColumns = self::GRID_TOTAL_COLUMNS;
+                            $breakpoints =
+                                [
+                                    "xs" => 270,
+                                    "sm" => 540,
+                                    "md" => 720,
+                                    "lg" => 960,
+                                    "xl" => 1140,
+                                    "xxl" => 1320
+                                ];
+                            /**
+                             * Calculation of the sizes value
+                             */
+                            $sizes = [];
+                            $previousRatio = null;
+                            foreach ($breakpoints as $breakpoint => $value) {
+                                $spaceByColumn = $value / $numberOfColumns;
+                                if ($spaceByColumn < $minimalWidth) {
+                                    $spaceByColumn = $minimalWidth;
+                                }
+                                $ratio = floor($numberOfGridColumns / ($value / $spaceByColumn));
+                                if ($ratio > $numberOfGridColumns) {
+                                    $ratio = $numberOfGridColumns;
+                                }
+                                // be sure that it's divisible by the number of grids columns
+                                // if for 3 columns, we get a ratio of 5, we want 4;
+                                while (($numberOfGridColumns % $ratio) != 0) {
+                                    $ratio = $ratio - 1;
+                                }
+
+                                // Closing
+                                if ($ratio != $previousRatio) {
+                                    $sizes[] = "$breakpoint-$ratio";
+                                    $previousRatio = $ratio;
+                                } else {
+                                    break;
+                                }
+                            }
+                            $sizeValue = implode(" ", $sizes);
+                            $callStack->moveToPreviousCorrespondingOpeningCall();
+                            while ($actualCall = $callStack->next()) {
+                                if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG
+                                    &&
+                                    $actualCall->getState() == DOKU_LEXER_ENTER
+                                ) {
+                                    $actualCall->addAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE, $sizeValue);
+                                }
                             }
                         }
                     }
@@ -279,16 +294,27 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $attributes->addClassName("row");
 
-                    $type = $attributes->getValue(TagAttributes::TYPE_KEY);
-                    if ($type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
-                        $attributes->addClassName("row-cols-auto");
-                    }
-                    if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
-                        && $type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
-                        // row-cols-auto is not in 4.0
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
+                    $context = $data[PluginUtility::CONTEXT];
+                    switch ($context) {
+                        case self::GRID:
+
+                            $attributes->addClassName("row");
+
+                            $type = $attributes->getValue(TagAttributes::TYPE_KEY);
+                            if ($type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
+                                $attributes->addClassName("row-cols-auto");
+                            }
+                            if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
+                                && $type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
+                                // row-cols-auto is not in 4.0
+                                PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
+                            }
+                            break;
+                        case syntax_plugin_combo_listitem::TAG:
+                            $attributes->addClassName("d-flex");
+                            $attributes->addClassName("w-100");
+                            break;
                     }
 
                     $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;

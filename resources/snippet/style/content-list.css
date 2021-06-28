@@ -1,0 +1,9 @@
+.content-list-combo {
+    list-style-type: none;
+    padding: 0 0 !important; /* Padding on list is 40 px left default */
+    line-height: 1.75rem;
+    border: 1px solid #e5e5e5;
+    width:100%;
+    display:block;
+    border-radius:0.25rem;
+}

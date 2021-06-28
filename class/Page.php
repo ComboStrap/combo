@@ -171,7 +171,12 @@ class Page extends DokuPath
     public
     static function createPageFromEnvironment()
     {
-        return new Page(PluginUtility::getPageId());
+        $path = PluginUtility::getPageId();
+        if ($path != null) {
+            return new Page($path);
+        } else {
+            return null;
+        }
     }
 
 
@@ -1585,6 +1590,13 @@ class Page extends DokuPath
     function deleteXhtmlCache()
     {
         $this->deleteCache("xhtml");
+    }
+
+    public function getAnchorLink()
+    {
+        $url = $this->getCanonicalUrlOrDefault();
+        $title = $this->getTitle();
+        return "<a href=\"$url\">$title</a>";
     }
 
 

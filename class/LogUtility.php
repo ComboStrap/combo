@@ -12,7 +12,7 @@
 
 namespace ComboStrap;
 
-require_once (__DIR__.'/PluginUtility.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
 class LogUtility
 {
@@ -27,7 +27,6 @@ class LogUtility
     const LVL_MSG_SUCCESS = 2; //1;
     const LVL_MSG_INFO = 1; //0;
     const LVL_MSG_DEBUG = 0; //3;
-
 
 
     /**
@@ -69,7 +68,7 @@ class LogUtility
         /**
          * Log to frontend
          */
-        self::log2FrontEnd($message, $level, $canonical);
+        self::log2FrontEnd($message, $level, $canonical, true);
 
         /**
          * Log level passed for a page (only for file used)
@@ -122,7 +121,7 @@ class LogUtility
             $fh = fopen($file, 'a');
             if ($fh) {
                 $sep = " - ";
-                fwrite($fh, date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . $sep . $id ."\n");
+                fwrite($fh, date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . $sep . $id . "\n");
                 fclose($fh);
             }
         }
@@ -133,7 +132,7 @@ class LogUtility
      * @param $message
      * @param $level
      * @param $canonical
-     * @param $withIconURL
+     * @param bool $withIconURL
      */
     public static function log2FrontEnd($message, $level, $canonical, $withIconURL = true)
     {
@@ -151,12 +150,16 @@ class LogUtility
             }
         }
         if ($print) {
-            $prefix = PluginUtility::getUrl("", PluginUtility::$PLUGIN_NAME, $withIconURL);
+            $htmlMsg = PluginUtility::getUrl("", PluginUtility::$PLUGIN_NAME, $withIconURL);
             if ($canonical != null) {
-                $prefix = PluginUtility::getUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
+                $htmlMsg = PluginUtility::getUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
             }
 
-            $htmlMsg = $prefix . " - " . $message;
+            $page = Page::createPageFromEnvironment();
+            if ($page != null) {
+                $htmlMsg .= " - " . $page->getAnchorLink();
+            }
+            $htmlMsg .= " - " . $message;
             if ($level > self::LVL_MSG_DEBUG) {
                 $dokuWikiLevel = self::LVL_TO_MSG_LEVEL[$level];
                 msg($htmlMsg, $dokuWikiLevel, '', '', MSG_USERS_ONLY);

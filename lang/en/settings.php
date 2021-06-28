@@ -64,10 +64,10 @@ $lang[Icon::CONF_ICONS_MEDIA_NAMESPACE] = PluginUtility::getUrl("icon#configurat
 $lang[Icon::CONF_DEFAULT_ICON_LIBRARY] = PluginUtility::getUrl("icon#configuration", "UI Icon Component") . ' - The default icon library from where the icon is downloaded if not specified';
 
 /**
- * Css Optimization
+ * Front end Optimization
  */
-$lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = PluginUtility::getUrl("css:optimization", "Css Optimization") . ' - If enabled, the DokuWiki Stylesheet for a public user will be minimized';
-$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getUrl("css:optimization", "Css Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
+$lang[action_plugin_combo_css::CONF_ENABLE_MINIMAL_FRONTEND_STYLESHEET] = PluginUtility::getUrl("frontend:optimization", "Frontend Optimization") . ' - If enabled, the DokuWiki Stylesheet for a public user will be minimized';
+$lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility::getUrl("frontend:optimization", "Frontend Optimization") . ' - If checked, the DokuWiki Stylesheet will not be loaded for a public user';
 
 /**
  * Metdataviewer

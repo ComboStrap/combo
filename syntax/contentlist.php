@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\StyleUtility;
 use ComboStrap\TagAttributes;
@@ -18,9 +19,13 @@ require_once(__DIR__ . '/../class/SnippetManager.php');
  * https://getbootstrap.com/docs/4.1/components/list-group/
  * https://getbootstrap.com/docs/5.0/components/list-group/
  *
+ * https://getbootstrap.com/docs/5.0/utilities/flex/
  * https://getbootstrap.com/docs/5.0/utilities/flex/#media-object
  * https://getbootstrap.com/docs/4.0/layout/media-object/#media-list - Bootstrap media list
+ *
  * https://github.com/material-components/material-components-web/tree/master/packages/mdc-list - mdc list
+ *
+ * https://getbootstrap.com/docs/5.0/utilities/flex/#media-object
  */
 class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 {
@@ -141,6 +146,17 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
+                /**
+                 * Transform all rows as contentlistitme
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                while($actualCall = $callStack->next()){
+                    if($actualCall->getTagName()==syntax_plugin_combo_row::TAG){
+                        $actualCall->setSyntaxComponentFromTag(syntax_plugin_combo_contentlistitem::TAG);
+                    }
+                }
+
                 return array(PluginUtility::STATE => $state);
 
 
@@ -168,7 +184,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    //PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::COMBO_TAG);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::COMBO_TAG);
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::COMBO_TAG);
                     $tagAttributes->addClassName("list-group");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul");

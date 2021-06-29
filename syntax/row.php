@@ -118,8 +118,10 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+
         $pattern = PluginUtility::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+
 
     }
 
@@ -150,19 +152,26 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
+                $attributes = TagAttributes::createFromTagMatch($match);
+
+                /**
+                 * Row from the grid layout (no parent)
+                 * or for a flex layout (parent)
+                 */
                 $callStack = CallStack::createFromHandler($handler);
                 $context = self::GRID;
                 $parent = $callStack->moveToParent();
-                if ($parent != false && $parent->getTagName() == syntax_plugin_combo_listitem::TAG) {
+                if ($parent != false) {
                     $context = $parent->getTagName();
-                }
+                } else {
 
-                $attributes = TagAttributes::createFromTagMatch($match);
-                if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
-                    /**
-                     * All element will be centered
-                     */
-                    $attributes->addClassName("justify-content-center");
+                    if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
+                        /**
+                         * All element will be centered in a grid
+                         */
+                        $attributes->addClassName("justify-content-center");
+                    }
+
                 }
 
                 return array(
@@ -179,6 +188,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
 
                 if ($openingCall->getContext() == self::GRID) {
+
                     $type = $openingCall->getType();
 
                     /**
@@ -263,7 +273,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     }
                 }
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    PluginUtility::CONTEXT => $openingCall->getContext()
                 );
 
 
@@ -295,6 +306,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
+                    $htmlElement = "div";
                     $context = $data[PluginUtility::CONTEXT];
                     switch ($context) {
                         case self::GRID:
@@ -311,13 +323,13 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                 PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
                             }
                             break;
-                        case syntax_plugin_combo_listitem::TAG:
+                        default:
                             $attributes->addClassName("d-flex");
                             $attributes->addClassName("w-100");
                             break;
-                    }
 
-                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
+                    }
+                    $renderer->doc .= $attributes->toHtmlEnterTag($htmlElement) . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -327,8 +339,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
-                    $renderer->doc .= '</div>' . DOKU_LF;
-
+                    $htmlElement = "div";
+                    $renderer->doc .= "</$htmlElement>" . DOKU_LF;
                     break;
             }
             return true;

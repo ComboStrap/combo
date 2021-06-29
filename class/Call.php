@@ -686,5 +686,15 @@ class Call
         $this->addAttribute("style", $cssValue);
     }
 
+    public function setSyntaxComponentFromTag($tag)
+    {
+
+        if ($this->isPluginCall()) {
+            $this->call[1][0] = PluginUtility::getComponentName($tag);
+        } else {
+            LogUtility::msg("The call ($this) is a native call and we don't support yet the modification of the component to ($tag)");
+        }
+    }
+
 
 }

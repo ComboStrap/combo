@@ -494,7 +494,7 @@ class TagAttributes
     public function addHtmlAttributeValue($key, $value)
     {
         if (empty($value)) {
-            LogUtility::msg("The value of the HTML attribute is empty", LogUtility::LVL_MSG_ERROR, "support");
+            LogUtility::msg("The value of the HTML attribute is empty for the key ($key) - Tag ($this->logicalTag)", LogUtility::LVL_MSG_ERROR);
         }
         $this->htmlAttributes[$key] = $value;
         return $this;

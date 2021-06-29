@@ -1,10 +1,7 @@
 <?php
 
 
-use ComboStrap\SnippetManager;
-use ComboStrap\FsWikiUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\StyleUtility;
 use ComboStrap\TagAttributes;
 
 
@@ -12,29 +9,12 @@ use ComboStrap\TagAttributes;
  * Class syntax_plugin_combo_list
  * Implementation of a list
  */
-class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "listitem";
-    const TAGS = array("list-item", "li");
-    const SNIPPET_ID = "content-list-item";
-
-    /**
-     * The style added
-     * @return array
-     */
-    static function getStyles()
-    {
-        $styles = array();
-        $styles['position'] = 'relative'; // Why ?
-        $styles['display'] = 'flex';
-        $styles['align-items'] = 'center';
-        $styles['justify-content'] = 'flex-start';
-        $styles['padding'] = '8px 16px'; // Padding at the left and right
-        $styles['overflow'] = 'hidden';
-        $styles['margin'] = 'auto'; // Just to be able to work in other template
-        return $styles;
-    }
+    const TAG = "contentlistitem";
+    const TAGS_OLD = array("list-item", "li");
+    const COMBO_TAG = "content-list-item";
 
 
     /**
@@ -62,7 +42,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
     function getPType()
     {
         /**
-         * No paragraph between
+         * No paragraph inside, this is a layout
          */
         return 'block';
     }
@@ -103,19 +83,12 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
     {
 
         /**
-         * This selection helps also because
-         * the pattern for the li tag could also catch a list tag
+         * This is now know as `row`
+         * This is the old tags
          */
-        $authorizedModes = array(
-            PluginUtility::getModeForComponent(syntax_plugin_combo_contentlist::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
-        );
-
-        if (in_array($mode, $authorizedModes)) {
-            foreach (self::TAGS as $tag) {
-                $pattern = PluginUtility::getContainerTagPattern($tag);
-                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-            }
+        foreach (self::TAGS_OLD as $tag) {
+            $pattern = PluginUtility::getContainerTagPattern($tag);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
 
 
@@ -123,7 +96,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
-        foreach (self::TAGS as $tag) {
+        foreach (self::TAGS_OLD as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
 
@@ -184,17 +157,21 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data)
     {
+
+        /**
+         * The normal flow is that the `row` in a content
+         * list are transformed to `content-list-item` in the {@link DOKU_LEXER_EXIT} state
+         * of {@link syntax_plugin_combo_contentlist::handle()}
+         *
+         */
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-
-
-
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::TAG);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::COMBO_TAG);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::COMBO_TAG);
                     $tagAttributes->addClassName("list-group-item");
                     $tagAttributes->addClassName("d-flex");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("li");

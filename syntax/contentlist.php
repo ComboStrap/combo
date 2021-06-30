@@ -185,18 +185,6 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                /**
-                 * Process the P to make them container friendly
-                 * Needed to make the diff between a p added
-                 * by the user via the {@link syntax_plugin_combo_para text}
-                 * and a p added automatically by Dokuwiki
-                 *
-                 */
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                // Follow the bootstrap and combo convention
-                // ie text for bs and combo as suffix
-                $class = "content-list-text-combo";
-                $callStack->processEolToEndStack(["class" => $class]);
 
                 return array(PluginUtility::STATE => $state);
 

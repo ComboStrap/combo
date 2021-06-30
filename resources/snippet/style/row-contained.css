@@ -1,14 +1,46 @@
-/* Due to the grid system, we get unwanted margin, spacing is too little on the y and there is a default color */
-.row-contained {
-    margin-left: initial;
-    margin-right: initial;
+
+/* All p are flex and 100% to be able to layout with margin */
+.row-contained p {
+    width: 100%;
+    display: flex;
 }
 
-/* Grid system add unwanted padding */
-.row-contained .cell-combo:first-child {
-    padding-left: initial;
+/* Automated p created around image and other syntax does not have any spacing */
+.row-contained p.row-contained-text-combo {
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
 }
-/* Grid system add unwanted padding */
-.row-contained .cell-combo:last-child {
-    padding-right: initial;
+
+@media (max-width: 375px) {
+
+    .row-contained .cell-combo {
+        min-width: 100%;
+        margin-bottom: 1rem;
+        justify-content: center;
+    }
+    .row-contained .cell-combo:last-child {
+        margin-bottom: 0;
+    }
+
+}
+
+@media (min-width: 376px) {
+
+    /* Due to the grid system, we get unwanted margin, spacing is too little on the y and there is a default color */
+    .row-contained {
+        margin-left: initial;
+        margin-right: initial;
+    }
+
+    /* Grid system add unwanted padding */
+    .row-contained .cell-combo:first-child {
+        padding-left: initial;
+    }
+
+    /* Grid system add unwanted padding */
+    .row-contained .cell-combo:last-child {
+        padding-right: initial;
+    }
+
 }

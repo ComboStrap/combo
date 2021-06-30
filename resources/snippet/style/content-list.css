@@ -2,18 +2,6 @@
     margin-bottom: 1rem;
 }
 
-/* All p are flex and 100% to be able to layout with margin */
-.content-list-combo p {
-    width: 100%;
-    display: flex;
-}
-
-/* Automated p created around image and other syntax does not have any spacing */
-p.content-list-text-combo {
-    margin-bottom: 0;
-    padding-left: 0;
-    padding-right: 0;
-}
 
 /* Spacing is too little on the y and there is a default color */
 .content-list-item-combo {

@@ -256,10 +256,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         ) {
                             $numberOfColumns++;
                             if ($actualCall->hasAttribute(syntax_plugin_combo_cell::WIDTH_ATTRIBUTE)) {
-//                                $width = trim(strtolower($actualCall->getAttribute(Dimension::WIDTH_KEY)));
-//                                if (!$width == "fit") {
                                 $hasSizeOrClass = true;
-//                                }
                             }
                             if ($actualCall->hasAttribute(TagAttributes::CLASS_KEY)) {
                                 $hasSizeOrClass = true;
@@ -327,7 +324,23 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     /**
                      * No link for the media image by default
                      */
+                    $callStack->moveToEnd();
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
                     $callStack->processNoLinkOnImageToEndStack();
+
+                    /**
+                     * Process the P to make them container friendly
+                     * Needed to make the diff between a p added
+                     * by the user via the {@link syntax_plugin_combo_para text}
+                     * and a p added automatically by Dokuwiki
+                     *
+                     */
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
+                    // Follow the bootstrap and combo convention
+                    // ie text for bs and combo as suffix
+                    $class = "row-contained-text-combo";
+                    $callStack->processEolToEndStack(["class" => $class]);
+
                 }
 
                 return array(

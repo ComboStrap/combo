@@ -135,6 +135,15 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $attributes = TagAttributes::createFromTagMatch($match);
+
+                if ($attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
+                    $type = trim(strtolower($attributes->getType()));
+                    if ($type == "flush") {
+                        // https://getbootstrap.com/docs/5.0/components/list-group/#flush
+                        // https://getbootstrap.com/docs/4.1/components/list-group/#flush
+                        $attributes->addClassName("list-group-flush");
+                    }
+                }
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
@@ -157,6 +166,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                         if ($actualState == DOKU_LEXER_ENTER) {
                             $actualCall->addClassName("list-group-item");
                             $actualCall->addClassName("d-flex");
+                            $actualCall->addClassName("content-list-item-combo");
                         }
                         if (in_array($actualState, [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])) {
                             $actualCall->addAttribute(syntax_plugin_combo_row::HTML_TAG_ATT, "li");

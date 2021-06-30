@@ -14,18 +14,29 @@ require_once(__DIR__ . '/../class/SnippetManager.php');
  * Class syntax_plugin_combo_list
  * Implementation of a list
  *
- * Content list
+ * Content list is a list implementation that permits to
+ * create simple and complex list such as media list
  *
+ * https://getbootstrap.com/docs/4.0/layout/media-object/#media-list - Bootstrap media list
+ * https://getbootstrap.com/docs/5.0/utilities/flex/#media-object
+ * https://github.com/material-components/material-components-web/tree/master/packages/mdc-list - mdc list
+ *
+ * It's implemented on the basis of:
+ *   * bootstrap list-group
+ *   * flex utility on the list-group-item
+ *   * with the row/cell (grid) adjusted in order to add automatically a space between col (cell)
+ *
+ * Note:
+ *   * The cell inside a row are centered vertically automatically
+ *   * The illustrative image does not get any [[ui:image#link|link]]
+ *
+ * Documentation:
  * https://getbootstrap.com/docs/4.1/components/list-group/
  * https://getbootstrap.com/docs/5.0/components/list-group/
  *
  * https://getbootstrap.com/docs/5.0/utilities/flex/
  * https://getbootstrap.com/docs/5.0/utilities/flex/#media-object
- * https://getbootstrap.com/docs/4.0/layout/media-object/#media-list - Bootstrap media list
  *
- * https://github.com/material-components/material-components-web/tree/master/packages/mdc-list - mdc list
- *
- * https://getbootstrap.com/docs/5.0/utilities/flex/#media-object
  */
 class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 {
@@ -167,6 +178,8 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                             $actualCall->addClassName("list-group-item");
                             $actualCall->addClassName("d-flex");
                             $actualCall->addClassName("content-list-item-combo");
+                            // list of row (should be centered vertically)
+                            $actualCall->addClassName("align-items-center");
                         }
                         if (in_array($actualState, [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])) {
                             $actualCall->addAttribute(syntax_plugin_combo_row::HTML_TAG_ATT, "li");
@@ -186,6 +199,12 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 // ie text for bs and combo as suffix
                 $class = "content-list-text-combo";
                 $callStack->processEolToEndStack(["class" => $class]);
+
+                /**
+                 * No link for the media image by default
+                 */
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $callStack->processNoLinkOnImageToEndStack();
 
                 return array(PluginUtility::STATE => $state);
 

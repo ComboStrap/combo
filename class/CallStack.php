@@ -195,7 +195,7 @@ class CallStack
      * state of {@link SyntaxPlugin::handle()} to create paragraph
      * with the class given as parameter
      *
-     * @param $attributes - the attributes in an array callstack form for the paragraph
+     * @param $attributes - the attributes in an callstack array form passed to the paragraph
      */
     public
     function processEolToEndStack($attributes = [])

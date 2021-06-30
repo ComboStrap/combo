@@ -51,6 +51,17 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     const GRID = "grid";
 
     /**
+     * A row can be used as a grid
+     * with the div element
+     * or as a list item
+     *
+     * By default, this is a div but a list
+     * or any other component can change that
+     */
+    const HTML_TAG_ATT = "html-tag";
+
+
+    /**
      * Syntax Type.
      *
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php
@@ -155,23 +166,21 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 $attributes = TagAttributes::createFromTagMatch($match);
 
                 /**
-                 * Row from the grid layout (no parent)
-                 * or for a flex layout (parent)
+                 * Grid or not
                  */
                 $callStack = CallStack::createFromHandler($handler);
-                $context = self::GRID;
                 $parent = $callStack->moveToParent();
-                if ($parent != false) {
-                    $context = $parent->getTagName();
+                if ($parent == false) {
+                    $context = "grid";
                 } else {
-
-                    if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
-                        /**
-                         * All element will be centered in a grid
-                         */
-                        $attributes->addClassName("justify-content-center");
-                    }
-
+                    $context = "layout";
+                }
+                $attributes->addComponentAttributeValue(self::HTML_TAG_ATT, "div");
+                if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
+                    /**
+                     * All element will be centered
+                     */
+                    $attributes->addClassName("justify-content-center");
                 }
 
                 return array(
@@ -274,7 +283,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $openingCall->getContext()
+                    PluginUtility::CONTEXT => $openingCall->getContext(),
+                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes()
                 );
 
 
@@ -306,29 +316,21 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
-                    $htmlElement = "div";
-                    $context = $data[PluginUtility::CONTEXT];
-                    switch ($context) {
-                        case self::GRID:
+                    $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT);
 
-                            $attributes->addClassName("row");
 
-                            $type = $attributes->getValue(TagAttributes::TYPE_KEY);
-                            if ($type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
-                                $attributes->addClassName("row-cols-auto");
-                            }
-                            if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
-                                && $type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
-                                // row-cols-auto is not in 4.0
-                                PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
-                            }
-                            break;
-                        default:
-                            $attributes->addClassName("d-flex");
-                            $attributes->addClassName("w-100");
-                            break;
+                    $attributes->addClassName("row");
 
+                    $type = $attributes->getValue(TagAttributes::TYPE_KEY);
+                    if ($type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
+                        $attributes->addClassName("row-cols-auto");
                     }
+                    if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
+                        && $type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
+                        // row-cols-auto is not in 4.0
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
+                    }
+
                     $renderer->doc .= $attributes->toHtmlEnterTag($htmlElement) . DOKU_LF;
                     break;
 
@@ -339,7 +341,8 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
-                    $htmlElement = "div";
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $htmlElement = $tagAttributes->getValue(self::HTML_TAG_ATT);
                     $renderer->doc .= "</$htmlElement>" . DOKU_LF;
                     break;
             }

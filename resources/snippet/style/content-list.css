@@ -1,3 +1,14 @@
 .content-list-combo {
     margin-bottom: 1rem;
 }
+
+.content-list-text-combo {
+    width: 100%;
+    display: flex;
+    margin-bottom: 0;
+}
+
+.content-list-combo p {
+    width: 100%;
+    display: flex;
+}

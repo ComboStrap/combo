@@ -37,7 +37,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
      */
     const COMBO_TAG = "content-list";
     const COMBO_TAG_OLD = "list";
-    const COMBO_TAGS = [self::COMBO_TAG,self::COMBO_TAG_OLD];
+    const COMBO_TAGS = [self::COMBO_TAG, self::COMBO_TAG_OLD];
 
 
     /**
@@ -147,15 +147,35 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_EXIT :
 
                 /**
-                 * Transform all rows as contentlistitme
+                 * Add to all row the list-group-item
                  */
                 $callStack = CallStack::createFromHandler($handler);
                 $callStack->moveToPreviousCorrespondingOpeningCall();
-                while($actualCall = $callStack->next()){
-                    if($actualCall->getTagName()==syntax_plugin_combo_row::TAG){
-                        $actualCall->setSyntaxComponentFromTag(syntax_plugin_combo_contentlistitem::TAG);
+                while ($actualCall = $callStack->next()) {
+                    if ($actualCall->getTagName() == syntax_plugin_combo_row::TAG) {
+                        $actualState = $actualCall->getState();
+                        if ($actualState == DOKU_LEXER_ENTER) {
+                            $actualCall->addClassName("list-group-item");
+                            $actualCall->addClassName("d-flex");
+                        }
+                        if (in_array($actualState, [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])) {
+                            $actualCall->addAttribute(syntax_plugin_combo_row::HTML_TAG_ATT, "li");
+                        }
                     }
                 }
+
+                /**
+                 * Process the P to make them container friendly
+                 * Needed to make the diff between a p added
+                 * by the user via the {@link syntax_plugin_combo_para text}
+                 * and a p added automatically by Dokuwiki
+                 *
+                 */
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                // Follow the bootstrap and combo convention
+                // ie text for bs and combo as suffix
+                $class = "content-list-text-combo";
+                $callStack->processEolToEndStack(["class" => $class]);
 
                 return array(PluginUtility::STATE => $state);
 
@@ -185,7 +205,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
 
                     PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::COMBO_TAG);
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],self::COMBO_TAG);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::COMBO_TAG);
                     $tagAttributes->addClassName("list-group");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul");
 
@@ -203,7 +223,6 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
         // unsupported $mode
         return false;
     }
-
 
 
 }

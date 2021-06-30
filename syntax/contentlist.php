@@ -178,8 +178,6 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                             $actualCall->addClassName("list-group-item");
                             $actualCall->addClassName("d-flex");
                             $actualCall->addClassName("content-list-item-combo");
-                            // list of row (should be centered vertically)
-                            $actualCall->addClassName("align-items-center");
                         }
                         if (in_array($actualState, [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])) {
                             $actualCall->addAttribute(syntax_plugin_combo_row::HTML_TAG_ATT, "li");
@@ -199,12 +197,6 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 // ie text for bs and combo as suffix
                 $class = "content-list-text-combo";
                 $callStack->processEolToEndStack(["class" => $class]);
-
-                /**
-                 * No link for the media image by default
-                 */
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                $callStack->processNoLinkOnImageToEndStack();
 
                 return array(PluginUtility::STATE => $state);
 

@@ -15,19 +15,9 @@ p.content-list-text-combo {
     padding-right: 0;
 }
 
-/* Due to the grid system, we get unwanted margin, spacing is too little on the y and there is a default color */
+/* Spacing is too little on the y and there is a default color */
 .content-list-item-combo {
     color: inherit;
     padding: 1rem 1rem;
-    margin-left: initial;
-    margin-right: initial;
 }
 
-/* Grid system add unwanted padding */
-.content-list-item-combo .cell-combo:first-child {
-    padding-left: initial;
-}
-/* Grid system add unwanted padding */
-.content-list-item-combo .cell-combo:last-child {
-    padding-right: initial;
-}

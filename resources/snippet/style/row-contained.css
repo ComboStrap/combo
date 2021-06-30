@@ -1,0 +1,14 @@
+/* Due to the grid system, we get unwanted margin, spacing is too little on the y and there is a default color */
+.row-contained {
+    margin-left: initial;
+    margin-right: initial;
+}
+
+/* Grid system add unwanted padding */
+.row-contained .cell-combo:first-child {
+    padding-left: initial;
+}
+/* Grid system add unwanted padding */
+.row-contained .cell-combo:last-child {
+    padding-right: initial;
+}

@@ -1,11 +1,14 @@
 <?php
 
 
+use ComboStrap\Background;
 use ComboStrap\CallStack;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\RenderUtility;
+use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
 
 require_once(__DIR__ . '/../class/TemplateUtility.php');
@@ -35,8 +38,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     /**
      * Page canonical and tag pattern
      */
-    const CANONICAL_PAGE_EXPLORER = "page-explorer";
-    const COMBO_TAG_PATTERNS = ["ntoc", self::CANONICAL_PAGE_EXPLORER];
+    const CANONICAL = "page-explorer";
+    const COMBO_TAG_PATTERNS = ["ntoc", self::CANONICAL];
 
     /**
      * Ntoc attribute
@@ -59,8 +62,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      */
     const PAGE_TEMPLATE_KEY = 'pageTemplate';
     const NS_TEMPLATE_KEY = 'nsTemplate';
-    const INDEX_TEMPLATE_KEY = 'indexTemplate';
-    const INDEX_ATTRIBUTES_KEY = 'indexAttributes';
+    const HOME_TEMPLATE_KEY = 'homeTemplate';
+
+    /**
+     * Attributes on the home node
+     */
+    const HOME_ATTRIBUTES_KEY = 'homeAttributes';
 
 
     /**
@@ -231,8 +238,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                  */
                                 $headerTemplate = $actualCall->getPayload();
                                 $headerAttributes = $actualCall->getAttributes();
-                                $attributes[self::INDEX_TEMPLATE_KEY] = $headerTemplate;
-                                $attributes[self::INDEX_ATTRIBUTES_KEY] = $headerAttributes;
+                                $attributes[self::HOME_TEMPLATE_KEY] = $headerTemplate;
+                                $attributes[self::HOME_ATTRIBUTES_KEY] = $headerAttributes;
                                 $found = true;
                                 break;
                             default:
@@ -244,7 +251,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 }
 
                 if (!$found) {
-                    LogUtility::msg("There should be at minimum a `" . self::HOME . "`, `" . self::NAMESPACE_ITEM . "` or a `" . self::HOME . "` defined", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PAGE_EXPLORER);
+                    LogUtility::msg("There should be at minimum a `" . self::HOME . "`, `" . self::NAMESPACE_ITEM . "` or a `" . self::HOME . "` defined", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }
 
                 /**
@@ -291,48 +298,53 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
+                    /**
+                     * data
+                     */
                     $attributes = $data[PluginUtility::ATTRIBUTES];
-
                     if ($attributes == null) {
-                        LogUtility::msg("Ntoc attributes are null. You may need to purge the cache. To do that, you can modify slightly your page or a configuration", LogUtility::LVL_MSG_ERROR, "ntoc");
+                        LogUtility::msg("Attributes are null. You may need to purge the cache. To do that, you can modify slightly your page or a configuration", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return false;
                     }
 
                     /**
+                     * Start
+                     */
+                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::CANONICAL);
+                    // just an alias
+                    $rowTag = syntax_plugin_combo_row::TAG;
+
+                    /**
                      * Get the data
                      */
-                    $id = FsWikiUtility::getMainPageId();
-
                     // Namespace
-                    $nameSpacePath = getNS($id);
-                    if (array_key_exists(self::ATTR_NAMESPACE, $attributes)) {
-                        $nameSpacePath = $attributes[self::ATTR_NAMESPACE];
-                        unset($attributes[self::ATTR_NAMESPACE]);
+                    if ($tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
+                        $nameSpacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
+                    } else {
+                        $page = Page::createPageFromEnvironment();
+                        $nameSpacePath = $page->getNamespace();
                     }
 
                     // Ns template
-                    $nsTemplate = $attributes[self::NS_TEMPLATE_KEY];
-                    unset($attributes[self::NS_TEMPLATE_KEY]);
+                    $nsTemplate = $tagAttributes->getValueAndRemoveIfPresent(self::NS_TEMPLATE_KEY);
 
-                    // Header template
-                    $headerTemplate = $attributes[self::INDEX_TEMPLATE_KEY];
-                    unset($attributes[self::INDEX_TEMPLATE_KEY]);
-                    $headerAttributes = $attributes[self::INDEX_ATTRIBUTES_KEY];
-                    unset($attributes[self::INDEX_ATTRIBUTES_KEY]);
+
+                    // Home template
+                    $homeTemplate = $tagAttributes->getValueAndRemoveIfPresent(self::HOME_TEMPLATE_KEY);
+                    $homeAttributes = $tagAttributes->getValueAndRemoveIfPresent(self::HOME_ATTRIBUTES_KEY, []);
+
 
                     // Page template
-                    $pageTemplate = $attributes[self::PAGE_TEMPLATE_KEY];
-                    unset($attributes[self::PAGE_TEMPLATE_KEY]);
+                    $pageTemplate = $tagAttributes->getValueAndRemoveIfPresent(self::PAGE_TEMPLATE_KEY);
 
 
                     /**
-                     * Create the list
+                     * Create the content list
                      */
-                    $list = "<list";
-                    if (sizeof($attributes) > 0) {
-                        $list .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-                    }
-                    $list .= ">";
+                    $contentListTag = syntax_plugin_combo_contentlist::MARKI_TAG;
+                    $tagAttributes->addClassName(self::CANONICAL. "-combo");
+                    $list = $tagAttributes->toMarkiEnterTag($contentListTag);
+
 
                     /**
                      * Get the index page name
@@ -344,13 +356,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                      * Header
                      */
                     $pageIndex = FsWikiUtility::getIndex($nameSpacePath);
-                    if ($pageIndex != null && $headerTemplate != null) {
-                        $tpl = TemplateUtility::render($headerTemplate, $pageIndex);
-                        if (sizeof($headerAttributes) == 0) {
-                            $headerAttributes["background-color"] = "light";
-                            PluginUtility::addStyleProperty("border-bottom", "1px solid #e5e5e5", $headerAttributes);
-                        }
-                        $list .= '<li ' . PluginUtility::array2HTMLAttributesAsString($headerAttributes) . '>' . $tpl . '</li>';
+                    if ($pageIndex != null && $homeTemplate != null) {
+                        $tpl = TemplateUtility::render($homeTemplate, $pageIndex);
+                        $homeTagAttributes = TagAttributes::createFromCallStackArray($homeAttributes);
+                        $homeTagAttributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "light");
+                        $homeTagAttributes->addStyleDeclaration("border-bottom", "1px solid #e5e5e5");
+
+                        $list .= $homeTagAttributes->toHtmlEnterTag($rowTag) . $tpl . '</' . $rowTag . '>';
                     }
                     $pageNum = 0;
 
@@ -363,7 +375,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $pageId = FsWikiUtility::getIndex($page['id']);
                                 if ($pageId != null) {
                                     $tpl = TemplateUtility::render($nsTemplate, $pageId);
-                                    $list .= '<li>' . $tpl . '</li>';
+                                    $list .= "<$rowTag>$tpl</$rowTag>";
                                 }
                             }
 
@@ -374,15 +386,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $pageId = $page['id'];
                                 if (":" . $pageId != $pageIndex && $pageId != $pageIndex) {
                                     $tpl = TemplateUtility::render($pageTemplate, $pageId);
-                                    $list .= '<li>' . $tpl . '</li>';
+                                    $list .= "<$rowTag>$tpl</$rowTag>";
                                 }
                             }
                         }
 
-
                     }
-                    $list .= "</list>";
-                    $renderer->doc .= RenderUtility::renderText2XhtmlAndStripPEventually($list) . DOKU_LF;
+                    $list .= "</$contentListTag>";
+                    $renderer->doc .= PluginUtility::render($list) . DOKU_LF;
                     break;
             }
             return true;

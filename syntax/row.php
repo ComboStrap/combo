@@ -83,6 +83,14 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     const TYPE_FIT_VALUE = "fit";
     const MINIMAL_WIDTH = 300;
 
+    /**
+     * The {@link syntax_plugin_combo_contentlist}
+     * component use row under the hood
+     * and add its own class, this attribute
+     * helps to see if the user has enter any class
+     */
+    const HAD_USER_CLASS = "hasClass";
+
 
     /**
      * Syntax Type.
@@ -208,17 +216,21 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  *   To add or not a margin-bottom,
                  *   To delete the image link or not
                  */
-                if ($parent != false) {
+                $context = self::ROOT_CONTEXT;
+                if ($parent != false
+                    && !in_array($parent->getTagName(), [syntax_plugin_combo_container::TAG, syntax_plugin_combo_cell::TAG])) {
                     $context = self::CONTAINED_CONTEXT;
-                    if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)
-                        && !$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
-                        $attributes->setType(self::TYPE_FIT_VALUE);
-                    }
+                }
 
-                } else {
-                    $context = self::ROOT_CONTEXT;
-                    if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)
-                        && !$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
+                /**
+                 * Type
+                 */
+                if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)
+                    && !$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
+
+                    if ($context == self::CONTAINED_CONTEXT) {
+                        $attributes->setType(self::TYPE_FIT_VALUE);
+                    } else {
                         $attributes->setType(self::TYPE_AUTO_VALUE);
                     }
                 }
@@ -230,6 +242,15 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 $attributes->addComponentAttributeValue(self::HTML_TAG_ATT, "div");
 
+
+                /**
+                 * User Class
+                 */
+                if ($attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)){
+                    $attributes->addComponentAttributeValue(self::HAD_USER_CLASS, true);
+                } else {
+                    $attributes->addComponentAttributeValue(self::HAD_USER_CLASS, false);
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -356,18 +377,18 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $hasText = false;
                     while ($actualCall = $callStack->next()) {
                         if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG) {
-                            switch ($actualCall->getState()){
+                            switch ($actualCall->getState()) {
                                 case DOKU_LEXER_ENTER:
-                                $actualCellOpenTag = $actualCall;
-                                $hasText = false;
-                                break;
-                             case DOKU_LEXER_EXIT:
-                                if ($hasText) {
-                                    if (isset($actualCellOpenTag) && !$actualCellOpenTag->hasAttribute(Dimension::WIDTH_KEY)) {
-                                        $actualCellOpenTag->addAttribute(Dimension::WIDTH_KEY, self::MINIMAL_WIDTH);
-                                    }
-                                };
-                                break;
+                                    $actualCellOpenTag = $actualCall;
+                                    $hasText = false;
+                                    break;
+                                case DOKU_LEXER_EXIT:
+                                    if ($hasText) {
+                                        if (isset($actualCellOpenTag) && !$actualCellOpenTag->hasAttribute(Dimension::WIDTH_KEY)) {
+                                            $actualCellOpenTag->addAttribute(Dimension::WIDTH_KEY, self::MINIMAL_WIDTH);
+                                        }
+                                    };
+                                    break;
                             }
                         } else if ($actualCall->isTextCall()) {
                             $hasText = true;
@@ -410,7 +431,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
-                    $hadComponentAttribute = $attributes->hasComponentAttribute(TagAttributes::CLASS_KEY);
+                    $hadClassAttribute = $attributes->getValueAndRemove(self::HAD_USER_CLASS);
                     $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT);
 
                     $attributes->addClassName("row");
@@ -426,7 +447,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                 $attributes->addClassName("row-cols-auto");
                                 if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion) {
                                     // row-cols-auto is not in 4.0
-                                    PluginUtility::getSnippetManager()->attachCssSnippetForBar($logicalTag);
+                                    PluginUtility::getSnippetManager()->attachCssSnippetForBar("row-cols-auto");
                                 }
                                 break;
                             case syntax_plugin_combo_row::TYPE_AUTO_VALUE:
@@ -444,7 +465,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $context = $data[PluginUtility::CONTEXT];
                     $tagClass = self::TAG . "-" . $context;
 
-                    if (!$hadComponentAttribute) {
+                    if (!$hadClassAttribute) {
                         /**
                          * when wrapping, there will be a space between the cells
                          */
@@ -455,7 +476,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                             /**
                              * All element are centered vertically and horizontally
                              */
-                            if (!$hadComponentAttribute) {
+                            if (!$hadClassAttribute) {
                                 $attributes->addClassName("justify-content-center");
                                 $attributes->addClassName("align-items-center");
                             }
@@ -472,7 +493,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                              * If their is 5 cells and the last one
                              * is going at the line, it will be centered
                              */
-                            if (!$hadComponentAttribute) {
+                            if (!$hadClassAttribute) {
                                 $attributes->addClassName("justify-content-center");
                             }
                             $attributes->addClassName($tagClass);

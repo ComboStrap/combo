@@ -255,7 +255,7 @@ class TagAttributes
     public function addComponentAttributeValue($attributeName, $attributeValue)
     {
 
-        if (empty($attributeValue)) {
+        if (empty($attributeValue) && !is_bool($attributeValue)) {
             LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead", LogUtility::LVL_MSG_WARNING, "support");
         }
 
@@ -511,7 +511,7 @@ class TagAttributes
     /**
      * @param $attributeName
      * @param null $default
-     * @return string|null a HTML value in the form 'value1 value2...'
+     * @return string|array|null a HTML value in the form 'value1 value2...'
      */
     public function getValue($attributeName, $default = null)
     {
@@ -815,9 +815,9 @@ class TagAttributes
         }
     }
 
-    public function getValueAndRemoveIfPresent($attribute)
+    public function getValueAndRemoveIfPresent($attribute, $default = null)
     {
-        $value = $this->getValue($attribute);
+        $value = $this->getValue($attribute, $default);
         $this->removeAttributeIfPresent($attribute);
         return $value;
     }
@@ -832,6 +832,30 @@ class TagAttributes
         }
         $this->setComponentAttributeValue("id", $id);
         return $id;
+    }
+
+    /**
+     *
+     * @param $markiTag
+     * @return string - the marki tag made of logical attribute
+     * There is no processing to transform it to an HTML tag
+     */
+    public function toMarkiEnterTag($markiTag)
+    {
+        $enterTag = "<" . $markiTag;
+
+        $attributeString = "";
+        foreach ($this->getComponentAttributes() as $key => $value) {
+            $attributeString .= "$key=\"$value\" ";
+        }
+        $attributeString = trim($attributeString);
+
+        if (!empty($attributeString)) {
+            $enterTag .= " " . $attributeString;
+        }
+        $enterTag .= ">";
+        return $enterTag;
+
     }
 
 

@@ -46,9 +46,9 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
     /**
      * To allow a minus
      */
-    const COMBO_TAG = "content-list";
+    const MARKI_TAG = "content-list";
     const COMBO_TAG_OLD = "list";
-    const COMBO_TAGS = [self::COMBO_TAG, self::COMBO_TAG_OLD];
+    const COMBO_TAGS = [self::MARKI_TAG, self::COMBO_TAG_OLD];
 
 
     /**
@@ -162,7 +162,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_UNMATCHED :
 
-                return PluginUtility::handleAndReturnUnmatchedData(self::COMBO_TAG, $match, $handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::MARKI_TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -213,10 +213,10 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::COMBO_TAG);
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::COMBO_TAG);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::MARKI_TAG);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
                     $tagAttributes->addClassName("list-group");
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul").DOKU_LF;
 
                     break;
                 case DOKU_LEXER_EXIT :

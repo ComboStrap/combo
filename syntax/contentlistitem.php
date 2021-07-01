@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -8,6 +9,8 @@ use ComboStrap\TagAttributes;
 /**
  * Class syntax_plugin_combo_list
  * Implementation of a list
+ *
+ * @deprecated use the {@link syntax_plugin_combo_row instead}
  */
 class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
 {
@@ -124,10 +127,11 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $attributes = TagAttributes::createFromTagMatch($match);
-
+                $tag = PluginUtility::getTag($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray(),
+                    PluginUtility::PAYLOAD=>$tag
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -170,11 +174,12 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::COMBO_TAG);
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::COMBO_TAG);
                     $tagAttributes->addClassName("list-group-item");
                     $tagAttributes->addClassName("d-flex");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("li");
+                    $tag = $data[PluginUtility::PAYLOAD];
+                    LogUtility::msg("The tag ($tag) has been deprecated for a list, please use the `row` tag instead", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_row::CANONICAL);
                     break;
                 case DOKU_LEXER_EXIT :
                     $renderer->doc .= "</li>" . DOKU_LF;

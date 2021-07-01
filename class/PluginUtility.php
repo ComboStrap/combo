@@ -691,26 +691,7 @@ class PluginUtility
     public
     static function getPageId()
     {
-        global $ID;
-        global $INFO;
-        $callingId = $ID;
-        // If the component is in a sidebar, we don't want the ID of the sidebar
-        // but the ID of the page.
-        if ($INFO != null) {
-            $callingId = $INFO['id'];
-        }
-        /**
-         * This is the case with event triggered
-         * before DokuWiki such as
-         * https://www.dokuwiki.org/devel:event:init_lang_load
-         */
-        if ($callingId == null) {
-            global $_REQUEST;
-            if (isset($_REQUEST["id"])) {
-                $callingId = $_REQUEST["id"];
-            }
-        }
-        return $callingId;
+        return FsWikiUtility::getMainPageId();
     }
 
     /**
@@ -751,6 +732,7 @@ class PluginUtility
      * @param $property
      * @param $value
      * @param array $attributes
+     * @deprecated use {@link TagAttributes::addStyleDeclaration()} instead
      */
     public
     static function addStyleProperty($property, $value, array &$attributes)

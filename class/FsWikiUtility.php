@@ -41,18 +41,31 @@ class FsWikiUtility
 
     /**
      * Return the main page id
-     * Not the sidebar
+     * (Not the sidebar)
      * @return mixed|string
      */
     public static function getMainPageId()
     {
-        global $INFO;
         global $ID;
-        $id = $ID;
+        global $INFO;
+        $callingId = $ID;
+        // If the component is in a sidebar, we don't want the ID of the sidebar
+        // but the ID of the page.
         if ($INFO != null) {
-            $id = $INFO['id'];
+            $callingId = $INFO['id'];
         }
-        return $id;
+        /**
+         * This is the case with event triggered
+         * before DokuWiki such as
+         * https://www.dokuwiki.org/devel:event:init_lang_load
+         */
+        if ($callingId == null) {
+            global $_REQUEST;
+            if (isset($_REQUEST["id"])) {
+                $callingId = $_REQUEST["id"];
+            }
+        }
+        return $callingId;
     }
 
     /**

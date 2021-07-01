@@ -1600,4 +1600,10 @@ class Page extends DokuPath
     }
 
 
+    public function getNamespace()
+    {
+        return getNS($this->getId());
+    }
+
+
 }

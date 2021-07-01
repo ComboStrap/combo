@@ -12,6 +12,8 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -77,7 +79,9 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      * We set a value
      */
     const TYPE_AUTO_VALUE = "auto";
-    const TYPE_NATURAL_VALUE = "natural";
+    const TYPE_FIT_OLD_VALUE = "natural";
+    const TYPE_FIT_VALUE = "fit";
+    const MINIMAL_WIDTH = 300;
 
 
     /**
@@ -184,8 +188,20 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 $attributes = TagAttributes::createFromTagMatch($match);
 
+
                 $callStack = CallStack::createFromHandler($handler);
                 $parent = $callStack->moveToParent();
+
+                /**
+                 * The deprecation
+                 */
+                if ($attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
+                    $value = $attributes->getType();
+                    if ($value == self::TYPE_FIT_OLD_VALUE) {
+                        $attributes->setType(self::TYPE_FIT_VALUE);
+                        LogUtility::msg("Deprecation: The type value (" . self::TYPE_FIT_OLD_VALUE . ") for the row component should be been renamed to (" . self::TYPE_FIT_VALUE . ")", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                    }
+                }
 
                 /**
                  * Context
@@ -194,20 +210,19 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 if ($parent != false) {
                     $context = self::CONTAINED_CONTEXT;
-                } else {
-                    $context = self::ROOT_CONTEXT;
-                }
-
-                /**
-                 * Type of the row
-                 */
-                if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
-
-                    if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
-                        $attributes->setType(self::TYPE_AUTO_VALUE);
+                    if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)
+                        && !$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
+                        $attributes->setType(self::TYPE_FIT_VALUE);
                     }
 
+                } else {
+                    $context = self::ROOT_CONTEXT;
+                    if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)
+                        && !$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
+                        $attributes->setType(self::TYPE_AUTO_VALUE);
+                    }
                 }
+
 
                 /**
                  * By default, div but used in a ul, it could be a li
@@ -215,15 +230,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                  */
                 $attributes->addComponentAttributeValue(self::HTML_TAG_ATT, "div");
 
-                /**
-                 * All element are centered
-                 * (root or contained context)
-                 * for a root, if their is 5 cells and the last one
-                 * is going at the line, it will be centered
-                 */
-                if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
-                    $attributes->addClassName("justify-content-center");
-                }
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -268,7 +274,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         /**
                          * Parameters
                          */
-                        $minimalWidth = 300;
+                        $minimalWidth = self::MINIMAL_WIDTH;
                         $numberOfGridColumns = self::GRID_TOTAL_COLUMNS;
                         $breakpoints =
                             [
@@ -341,6 +347,31 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $class = "row-contained-text-combo";
                     $callStack->processEolToEndStack(["class" => $class]);
 
+                    /**
+                     * If the type is fit value (ie flex auto),
+                     * we constraint the cell that have text
+                     */
+                    $callStack->moveToEnd();
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
+                    $hasText = false;
+                    while ($actualCall = $callStack->next()) {
+                        if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG) {
+
+                            if ($actualCall->getState() == DOKU_LEXER_ENTER) {
+                                $actualCellOpenTag = $actualCall;
+                                $hasText = false;
+                            } else if ($actualCall->getState() == DOKU_LEXER_EXIT) {
+                                if ($hasText) {
+                                    if (isset($actualCellOpenTag) && !$actualCellOpenTag->hasAttribute(Dimension::WIDTH_KEY)) {
+                                        $actualCellOpenTag->addAttribute(Dimension::WIDTH_KEY, self::MINIMAL_WIDTH);
+                                    }
+                                }
+                            } else if ($actualCall->isTextCall()) {
+                                $hasText = true;
+                            }
+                        }
+
+                    }
                 }
 
                 return array(
@@ -377,39 +408,79 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_ENTER :
                     $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-
+                    $hadComponentAttribute = $attributes->hasComponentAttribute(TagAttributes::CLASS_KEY);
                     $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT);
 
                     $logicalTag = self::TAG;
                     $attributes->addClassName("row");
+
+                    /**
+                     * The type is responsible
+                     * for the width and space between the cells
+                     */
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
                     if (!empty($type)) {
                         $logicalTag = self::TAG . "-" . $type;
                         switch ($type) {
-                            case syntax_plugin_combo_row::TYPE_NATURAL_VALUE:
+                            case syntax_plugin_combo_row::TYPE_FIT_VALUE:
                                 $attributes->addClassName("row-cols-auto");
-                                if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
-                                    && $type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
+                                if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion) {
                                     // row-cols-auto is not in 4.0
                                     PluginUtility::getSnippetManager()->attachCssSnippetForBar($logicalTag);
                                 }
+                                break;
+                            case syntax_plugin_combo_row::TYPE_AUTO_VALUE:
+                                /**
+                                 * The class are set on the cells, not on the row,
+                                 * nothing to do
+                                 */
                                 break;
                         }
                     }
                     $attributes->setLogicalTag($logicalTag);
 
                     /**
-                     * Add the css for grid
-                     * positioned under the root
-                     * (ie margin-bottom)
+                     * Add the css
                      */
                     $context = $data[PluginUtility::CONTEXT];
                     $tagClass = self::TAG . "-" . $context;
-                    PluginUtility::getSnippetManager()->attachCssSnippetForBar($tagClass);
-                    $attributes->addClassName($tagClass);
-                    if ($context == self::CONTAINED_CONTEXT) {
-                        $attributes->addClassName("align-items-center");
+
+                    if (!$hadComponentAttribute) {
+                        /**
+                         * when wrapping, there will be a space between the cells
+                         */
+                        $attributes->addClassName("gy-3");
                     }
+                    switch ($context) {
+                        case self::CONTAINED_CONTEXT:
+                            /**
+                             * All element are centered vertically and horizontally
+                             */
+                            if (!$hadComponentAttribute) {
+                                $attributes->addClassName("justify-content-center");
+                                $attributes->addClassName("align-items-center");
+                            }
+                            /**
+                             * p children should be flex
+                             * p generated should have no bottom-margin (because contained)
+                             */
+                            $attributes->addClassName($tagClass);
+                            PluginUtility::getSnippetManager()->attachCssSnippetForBar($tagClass);
+                            break;
+                        case self::ROOT_CONTEXT:
+                            /**
+                             * All element are centered
+                             * If their is 5 cells and the last one
+                             * is going at the line, it will be centered
+                             */
+                            if (!$hadComponentAttribute) {
+                                $attributes->addClassName("justify-content-center");
+                            }
+                            $attributes->addClassName($tagClass);
+                            PluginUtility::getSnippetManager()->attachCssSnippetForBar($tagClass);
+                            break;
+                    }
+
 
                     /**
                      * Render
@@ -436,3 +507,4 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
 
 }
+

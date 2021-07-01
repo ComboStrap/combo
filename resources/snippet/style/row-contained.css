@@ -11,36 +11,3 @@
     padding-left: 0;
     padding-right: 0;
 }
-
-@media (max-width: 375px) {
-
-    .row-contained .cell-combo {
-        min-width: 100%;
-        margin-bottom: 1rem;
-        justify-content: center;
-    }
-    .row-contained .cell-combo:last-child {
-        margin-bottom: 0;
-    }
-
-}
-
-@media (min-width: 376px) {
-
-    /* Due to the grid system, we get unwanted margin, spacing is too little on the y and there is a default color */
-    .row-contained {
-        margin-left: initial;
-        margin-right: initial;
-    }
-
-    /* Grid system add unwanted padding */
-    .row-contained .cell-combo:first-child {
-        padding-left: initial;
-    }
-
-    /* Grid system add unwanted padding */
-    .row-contained .cell-combo:last-child {
-        padding-right: initial;
-    }
-
-}

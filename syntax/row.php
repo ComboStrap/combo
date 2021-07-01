@@ -356,19 +356,21 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     $hasText = false;
                     while ($actualCall = $callStack->next()) {
                         if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG) {
-
-                            if ($actualCall->getState() == DOKU_LEXER_ENTER) {
+                            switch ($actualCall->getState()){
+                                case DOKU_LEXER_ENTER:
                                 $actualCellOpenTag = $actualCall;
                                 $hasText = false;
-                            } else if ($actualCall->getState() == DOKU_LEXER_EXIT) {
+                                break;
+                             case DOKU_LEXER_EXIT:
                                 if ($hasText) {
                                     if (isset($actualCellOpenTag) && !$actualCellOpenTag->hasAttribute(Dimension::WIDTH_KEY)) {
                                         $actualCellOpenTag->addAttribute(Dimension::WIDTH_KEY, self::MINIMAL_WIDTH);
                                     }
-                                }
-                            } else if ($actualCall->isTextCall()) {
-                                $hasText = true;
+                                };
+                                break;
                             }
+                        } else if ($actualCall->isTextCall()) {
+                            $hasText = true;
                         }
 
                     }
@@ -407,11 +409,10 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
                     $hadComponentAttribute = $attributes->hasComponentAttribute(TagAttributes::CLASS_KEY);
                     $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT);
 
-                    $logicalTag = self::TAG;
                     $attributes->addClassName("row");
 
                     /**
@@ -420,7 +421,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                      */
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
                     if (!empty($type)) {
-                        $logicalTag = self::TAG . "-" . $type;
                         switch ($type) {
                             case syntax_plugin_combo_row::TYPE_FIT_VALUE:
                                 $attributes->addClassName("row-cols-auto");
@@ -437,7 +437,6 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                                 break;
                         }
                     }
-                    $attributes->setLogicalTag($logicalTag);
 
                     /**
                      * Add the css

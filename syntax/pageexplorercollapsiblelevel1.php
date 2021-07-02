@@ -3,12 +3,10 @@
 
 use ComboStrap\Background;
 use ComboStrap\CallStack;
-use ComboStrap\DokuPath;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\RenderUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
 
@@ -16,59 +14,23 @@ require_once(__DIR__ . '/../class/TemplateUtility.php');
 
 
 /**
- * Class syntax_plugin_combo_pageexplorer
  * Implementation of an explorer for pages
  *
  *
  *
- * https://getbootstrap.com/docs/4.0/components/scrollspy/#example-with-list-group
- * https://getbootstrap.com/docs/4.0/components/scrollspy/#example-with-nested-nav
  *
  *
  *
  */
-class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorercollapsiblelevel1 extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorer";
+    const TAG = "pageexplorercollapsiblelevel1";
 
-    /**
-     * Page canonical and tag pattern
-     */
-    const CANONICAL = "page-explorer";
-    const COMBO_TAG_PATTERNS = ["ntoc", self::CANONICAL];
-
-    /**
-     * Ntoc attribute
-     */
-    const ATTR_NAMESPACE = "ns";
-    const NAMESPACE_ITEM = "namespace";
-    const NAMESPACE_OLD = "ns-item";
-    const NAMESPACES = [self::ATTR_NAMESPACE, self::NAMESPACE_ITEM, self::NAMESPACE_OLD];
-
-    const PAGE = "page";
-    const PAGE_OLD = "page-item";
-    const PAGES = [self::PAGE, self::PAGE_OLD];
-
-    const HOME = "home";
-    const HOME_OLD = "index";
-    const HOMES = [self::HOME, self::HOME_OLD];
-
-    /**
-     * Keys of the array passed between {@link handle} and {@link render}
-     */
-    const PAGE_TEMPLATE_KEY = 'pageTemplate';
-    const NS_TEMPLATE_KEY = 'nsTemplate';
-    const HOME_TEMPLATE_KEY = 'homeTemplate';
-
-    /**
-     * Attributes on the home node
-     */
-    const HOME_ATTRIBUTES_KEY = 'homeAttributes';
 
 
     /**
@@ -126,31 +88,16 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        foreach (self::COMBO_TAG_PATTERNS as $tag) {
-            $pattern = PluginUtility::getContainerTagPattern($tag);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
-
-        foreach (self::PAGES as $page) {
-            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($page), PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
-
-        foreach (self::HOMES as $home) {
-            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($home), PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
-
-        foreach (self::NAMESPACES as $namespace) {
-            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($namespace), PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
+        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
 
     }
 
 
     public function postConnect()
     {
-        foreach (self::COMBO_TAG_PATTERNS as $tag) {
-            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
+
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
 
     }
 
@@ -327,7 +274,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     }
 
                     // Ns template
-                    $namespaceTemplate = $tagAttributes->getValueAndRemoveIfPresent(self::NS_TEMPLATE_KEY);
+                    $nsTemplate = $tagAttributes->getValueAndRemoveIfPresent(self::NS_TEMPLATE_KEY);
 
 
                     // Home template
@@ -350,15 +297,15 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     /**
                      * Get the index page name
                      */
-                    $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
+                    $pages = FsWikiUtility::getChildren($nameSpacePath);
 
 
                     /**
-                     * Home
+                     * Header
                      */
-                    $currentHomePagePath = FsWikiUtility::getHomePagePath($nameSpacePath);
-                    if ($currentHomePagePath != null && $homeTemplate != null) {
-                        $tpl = TemplateUtility::render($homeTemplate, $currentHomePagePath);
+                    $pageIndex = FsWikiUtility::getHomePagePath($nameSpacePath);
+                    if ($pageIndex != null && $homeTemplate != null) {
+                        $tpl = TemplateUtility::render($homeTemplate, $pageIndex);
                         $homeTagAttributes = TagAttributes::createFromCallStackArray($homeAttributes);
                         $homeTagAttributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "light");
                         $homeTagAttributes->addStyleDeclaration("border-bottom", "1px solid #e5e5e5");
@@ -367,18 +314,15 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     }
                     $pageNum = 0;
 
-                    foreach ($pageOrNamespaces as $pageOrNamespace) {
+                    foreach ($pages as $page) {
 
-                        $pageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
+                        // If it's a directory
+                        if ($page['type'] == "d") {
 
-
-                        if ($pageOrNamespace['type'] == "d") {
-
-                            // Namespace
-                            if (!empty($namespaceTemplate)) {
-                                $subHomePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
-                                if ($subHomePagePath != null) {
-                                    $tpl = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                            if (!empty($nsTemplate)) {
+                                $pageId = FsWikiUtility::getHomePagePath($page['id']);
+                                if ($pageId != null) {
+                                    $tpl = TemplateUtility::render($nsTemplate, $pageId);
                                     $list .= "<$rowTag>$tpl</$rowTag>";
                                 }
                             }
@@ -387,8 +331,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                             if (!empty($pageTemplate)) {
                                 $pageNum++;
-                                if ($pageOrNamespacePath != $currentHomePagePath) {
-                                    $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
+                                $pageId = $page['id'];
+                                if (":" . $pageId != $pageIndex && $pageId != $pageIndex) {
+                                    $tpl = TemplateUtility::render($pageTemplate, $pageId);
                                     $list .= "<$rowTag>$tpl</$rowTag>";
                                 }
                             }

@@ -16,7 +16,7 @@ namespace ComboStrap;
 class TemplateUtility
 {
 
-    static function render($pageTemplate, $pageId)
+    static function render($pageTemplate, $pagePath)
     {
 
         /**
@@ -30,7 +30,7 @@ class TemplateUtility
          * and therefore not visible
          * We render at least the id
          */
-        $page = new Page($pageId);
+        $page = Page::createPagePathFromPath($pagePath);
         $h1Title = $page->getH1NotEmpty();
         $pageTitle = $page->getTitleNotEmpty();
 
@@ -38,10 +38,15 @@ class TemplateUtility
         $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
         $h1Title = str_replace('"', "'", $h1Title);
         $tpl = str_replace("\$h1", $h1Title, $tpl);
-        return str_replace("\$id", $pageId, $tpl);
+        return str_replace("\$id", $pagePath, $tpl);
 
     }
 
+    /**
+     * @param $pageId
+     * @return array|mixed|null
+     * @deprecated 2021-07-02 see {@link Page::getH1()}
+     */
     public static function getPageH1($pageId)
     {
         $h1 = p_get_metadata(cleanID($pageId), Analytics::H1, METADATA_DONT_RENDER);
@@ -59,6 +64,7 @@ class TemplateUtility
      *
      * @param $pageId
      * @return array|mixed|null
+     * @deprecated 2021-07-02 see {@link Page::getTitle()}
      */
     public static function getPageTitle($pageId)
     {

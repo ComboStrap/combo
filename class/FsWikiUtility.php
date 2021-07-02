@@ -110,25 +110,27 @@ class FsWikiUtility
     /**
      * Return the page index of a namespace of null if it does not exist
      * ie the index.html
-     * @param $id
+     * @param $namespaceId
      * @return string|null
      */
-    public static function getIndex($id)
+    public static function getHomePagePath($namespaceId)
     {
         global $conf;
 
-        $id = $id . ":";
+        if ($namespaceId != ":") {
+            $namespaceId = $namespaceId . ":";
+        }
 
         $startPageName = $conf['start'];
-        if (page_exists($id . $startPageName)) {
+        if (page_exists($namespaceId . $startPageName)) {
             // start page inside namespace
-            return $id . $startPageName;
-        } elseif (page_exists($id . noNS(cleanID($id)))) {
+            return $namespaceId . $startPageName;
+        } elseif (page_exists($namespaceId . noNS(cleanID($namespaceId)))) {
             // page named like the NS inside the NS
-            return $id . noNS(cleanID($id));
-        } elseif (page_exists($id)) {
+            return $namespaceId . noNS(cleanID($namespaceId));
+        } elseif (page_exists($namespaceId)) {
             // page like namespace exists
-            return substr($id, 0, -1);
+            return substr($namespaceId, 0, -1);
         } else {
             return null;
         }

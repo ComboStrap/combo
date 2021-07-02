@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\StyleUtility;
@@ -174,14 +175,22 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 while ($actualCall = $callStack->next()) {
                     if ($actualCall->getTagName() == syntax_plugin_combo_row::TAG) {
                         $actualState = $actualCall->getState();
-                        if ($actualState == DOKU_LEXER_ENTER) {
-                            $actualCall->addClassName("list-group-item");
-                            $actualCall->addClassName("d-flex");
-                            $actualCall->addClassName("content-list-item-combo");
+                        switch ($actualState) {
+                            case DOKU_LEXER_ENTER:
+                                $callStack->insertBefore(Call::createComboCall(
+                                    syntax_plugin_combo_contentlistitem::TAG,
+                                    DOKU_LEXER_ENTER
+                                ));
+                                break;
+                            case DOKU_LEXER_EXIT:
+                                $callStack->insertAfter(Call::createComboCall(
+                                    syntax_plugin_combo_contentlistitem::TAG,
+                                    DOKU_LEXER_EXIT
+                                ));
+                                $callStack->next();
+                                break;
                         }
-                        if (in_array($actualState, [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])) {
-                            $actualCall->addAttribute(syntax_plugin_combo_row::HTML_TAG_ATT, "li");
-                        }
+
                     }
                 }
 
@@ -216,7 +225,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                     PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::MARKI_TAG);
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
                     $tagAttributes->addClassName("list-group");
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul").DOKU_LF;
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul") . DOKU_LF;
 
                     break;
                 case DOKU_LEXER_EXIT :

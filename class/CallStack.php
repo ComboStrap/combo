@@ -504,6 +504,9 @@ class CallStack
     }
 
     /**
+     * Insert After. The pointer stays at the current state.
+     * If you don't need to process the call that you just
+     * inserted, you may want to call {@link CallStack::next()}
      * @param Call $call
      */
     public

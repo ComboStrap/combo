@@ -178,8 +178,6 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
                     $tagAttributes->addClassName("list-group-item");
                     $tagAttributes->addClassName("d-flex");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("li");
-                    $tag = $data[PluginUtility::PAYLOAD];
-                    LogUtility::msg("The tag ($tag) has been deprecated for a list, please use the `row` tag instead", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_row::CANONICAL);
                     break;
                 case DOKU_LEXER_EXIT :
                     $renderer->doc .= "</li>" . DOKU_LF;

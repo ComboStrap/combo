@@ -468,6 +468,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     if (!$hadClassAttribute) {
                         /**
                          * when wrapping, there will be a space between the cells
+                         * on the y axis
                          */
                         $attributes->addClassName("gy-3");
                     }

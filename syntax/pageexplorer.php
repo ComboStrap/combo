@@ -312,7 +312,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                      */
                     $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::CANONICAL);
                     // just an alias
-                    $rowTag = syntax_plugin_combo_row::TAG;
+                    $rowTag = syntax_plugin_combo_contentlistitem::MARKI_TAG;
 
                     /**
                      * Get the data

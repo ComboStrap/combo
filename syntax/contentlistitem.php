@@ -1,7 +1,6 @@
 <?php
 
 
-use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -10,14 +9,16 @@ use ComboStrap\TagAttributes;
  * Class syntax_plugin_combo_list
  * Implementation of a list
  *
- * @deprecated use the {@link syntax_plugin_combo_row instead}
+ * This component is not not public
+ *
  */
 class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
 {
 
     const TAG = "contentlistitem";
-    const TAGS_OLD = array("list-item", "li");
-    const COMBO_TAG = "content-list-item";
+    const MARKI_TAG = "content-list-item";
+    const ALL_TAGS = array(self::MARKI_TAG, "list-item", "li");
+
 
 
     /**
@@ -89,7 +90,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
          * This is now know as `row`
          * This is the old tags
          */
-        foreach (self::TAGS_OLD as $tag) {
+        foreach (self::ALL_TAGS as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
@@ -99,7 +100,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
 
     public function postConnect()
     {
-        foreach (self::TAGS_OLD as $tag) {
+        foreach (self::ALL_TAGS as $tag) {
             $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
         }
 
@@ -174,7 +175,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::COMBO_TAG);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
                     $tagAttributes->addClassName("list-group-item");
                     $tagAttributes->addClassName("d-flex");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("li");

@@ -173,6 +173,10 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 while ($actualCall = $callStack->next()) {
+                    if($actualCall->getTagName()==syntax_plugin_combo_contentlistitem::TAG){
+                        // List item were added by the user
+                        break;
+                    }
                     if ($actualCall->getTagName() == syntax_plugin_combo_row::TAG) {
                         $actualState = $actualCall->getState();
                         switch ($actualState) {

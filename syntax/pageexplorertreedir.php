@@ -22,14 +22,14 @@ require_once(__DIR__ . '/../class/TemplateUtility.php');
  *
  *
  */
-class syntax_plugin_combo_pageexplorercollapsiblelevel1 extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorertreedir extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorercollapsiblelevel1";
+    const TAG = "pageexplorertreedir";
 
 
 

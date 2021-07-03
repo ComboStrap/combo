@@ -670,5 +670,14 @@ class CallStack
         }
     }
 
+    /**
+     * Append instructions to the callstack (ie at the end)
+     * @param $instructions
+     */
+    public function appendInstructions($instructions)
+    {
+        array_splice($this->callStack, count($this->callStack), 0, $instructions);
+    }
+
 
 }

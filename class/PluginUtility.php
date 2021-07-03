@@ -1172,7 +1172,7 @@ class PluginUtility
 
     public static function getInstructions($markiCode)
     {
-
+        return p_get_instructions($markiCode);
     }
 
 

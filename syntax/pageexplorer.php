@@ -69,6 +69,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * Attributes on the home node
      */
     const HOME_ATTRIBUTES_KEY = 'homeAttributes';
+    const LIST_TYPE = "list";
+    const TYPE_TREE = "tree";
 
 
     /**
@@ -175,7 +177,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
+                $default = [TagAttributes::TYPE_KEY => self::LIST_TYPE];
                 $attributes = PluginUtility::getTagAttributes($match);
+                $attributes = PluginUtility::mergeAttributes($attributes, $default);
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes);
@@ -198,10 +202,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
 
-                /**
-                 * The attributes to send to the render
-                 */
-                $attributes = array();
 
                 /**
                  * Get the opening tag
@@ -220,7 +220,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                  * Pattern for a page
                                  */
                                 $pageTemplate = $actualCall->getPayload();
-                                $attributes[self::PAGE_TEMPLATE_KEY] = $pageTemplate;
+
                                 $found = true;
                                 break;
                             case self::NAMESPACE_ITEM:
@@ -228,8 +228,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 /**
                                  * Pattern for a namespace
                                  */
-                                $nsTemplate = $actualCall->getPayload();
-                                $attributes[self::NS_TEMPLATE_KEY] = $nsTemplate;
+                                $namespaceTemplate = $actualCall->getPayload();
                                 $found = true;
                                 break;
                             case self::HOME:
@@ -237,10 +236,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 /**
                                  * Pattern for a header
                                  */
-                                $headerTemplate = $actualCall->getPayload();
-                                $headerAttributes = $actualCall->getAttributes();
-                                $attributes[self::HOME_TEMPLATE_KEY] = $headerTemplate;
-                                $attributes[self::HOME_ATTRIBUTES_KEY] = $headerAttributes;
+                                $homeTemplate = $actualCall->getPayload();
+                                $homeAttributes = $actualCall->getAttributes();
                                 $found = true;
                                 break;
                             default:
@@ -256,15 +253,116 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 }
 
                 /**
-                 * Get the attributes
+                 * Start
                  */
-                $openingTagAttributes = $openingTag->getAttributes();
-                $attributes = PluginUtility::mergeAttributes($openingTagAttributes, $attributes);
+                // just an alias
+                $rowTag = syntax_plugin_combo_contentlistitem::MARKI_TAG;
 
+                /**
+                 * Get the data
+                 */
+                // Namespace
+                $tagAttributes = TagAttributes::createFromCallStackArray($openingTag->getAttributes(), self::CANONICAL);
+                if ($tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
+                    $nameSpacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
+                } else {
+                    $page = Page::createPageFromEnvironment();
+                    $nameSpacePath = $page->getNamespace();
+                }
+
+
+                $type = $tagAttributes->getType();
+                switch ($type) {
+                    default:
+                    case self::LIST_TYPE:
+
+
+                        /**
+                         * Create the enter content list tag
+                         */
+                        $contentListTag = syntax_plugin_combo_contentlist::MARKI_TAG;
+                        $tagAttributes->addClassName(self::CANONICAL . "-combo");
+                        $list = $tagAttributes->toMarkiEnterTag($contentListTag);
+
+
+                        /**
+                         * Get the index page name
+                         */
+                        $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
+
+
+                        /**
+                         * Home
+                         */
+                        $currentHomePagePath = FsWikiUtility::getHomePagePath($nameSpacePath);
+                        if ($currentHomePagePath != null && $homeTemplate != null) {
+                            $tpl = TemplateUtility::render($homeTemplate, $currentHomePagePath);
+                            $homeTagAttributes = TagAttributes::createFromCallStackArray($homeAttributes);
+                            $homeTagAttributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "light");
+                            $homeTagAttributes->addStyleDeclaration("border-bottom", "1px solid #e5e5e5");
+
+                            $list .= $homeTagAttributes->toHtmlEnterTag($rowTag) . $tpl . '</' . $rowTag . '>';
+                        }
+                        $pageNum = 0;
+
+                        foreach ($pageOrNamespaces as $pageOrNamespace) {
+
+                            $pageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
+
+
+                            if ($pageOrNamespace['type'] == "d") {
+
+                                // Namespace
+                                if (!empty($namespaceTemplate)) {
+                                    $subHomePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
+                                    if ($subHomePagePath != null) {
+                                        $tpl = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                                        $list .= "<$rowTag>$tpl</$rowTag>";
+                                    }
+                                }
+
+                            } else {
+
+                                if (!empty($pageTemplate)) {
+                                    $pageNum++;
+                                    if ($pageOrNamespacePath != $currentHomePagePath) {
+                                        $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
+                                        $list .= "<$rowTag>$tpl</$rowTag>";
+                                    }
+                                }
+                            }
+
+                        }
+                        $list .= "</$contentListTag>";
+                        break;
+                    case self::TYPE_TREE:
+
+
+
+                        /**
+                         * Get the index page name
+                         */
+                        $namespaces = FsWikiUtility::getChildrenNamespace($nameSpacePath);
+                        foreach($namespaces as $namespace) {
+                            $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreedir::TAG;
+                            $list = "<$pageExplorerTreeTag>";
+                            $subHomePagePath = FsWikiUtility::getHomePagePath($namespace);
+                            if ($subHomePagePath != null) {
+                                if (isset($namespaceTemplate)) {
+                                    $list .= TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                                } else {
+                                    $list .= $subHomePagePath;
+                                }
+                            }
+                            $list .= "</$pageExplorerTreeTag>";
+                        }
+                        break;
+
+                }
+                $callStack->appendInstructions(PluginUtility::getInstructions($list));
 
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -308,95 +406,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         return false;
                     }
 
-                    /**
-                     * Start
-                     */
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::CANONICAL);
-                    // just an alias
-                    $rowTag = syntax_plugin_combo_contentlistitem::MARKI_TAG;
 
-                    /**
-                     * Get the data
-                     */
-                    // Namespace
-                    if ($tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
-                        $nameSpacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
-                    } else {
-                        $page = Page::createPageFromEnvironment();
-                        $nameSpacePath = $page->getNamespace();
-                    }
-
-                    // Ns template
-                    $namespaceTemplate = $tagAttributes->getValueAndRemoveIfPresent(self::NS_TEMPLATE_KEY);
-
-
-                    // Home template
-                    $homeTemplate = $tagAttributes->getValueAndRemoveIfPresent(self::HOME_TEMPLATE_KEY);
-                    $homeAttributes = $tagAttributes->getValueAndRemoveIfPresent(self::HOME_ATTRIBUTES_KEY, []);
-
-
-                    // Page template
-                    $pageTemplate = $tagAttributes->getValueAndRemoveIfPresent(self::PAGE_TEMPLATE_KEY);
-
-
-                    /**
-                     * Create the content list
-                     */
-                    $contentListTag = syntax_plugin_combo_contentlist::MARKI_TAG;
-                    $tagAttributes->addClassName(self::CANONICAL. "-combo");
-                    $list = $tagAttributes->toMarkiEnterTag($contentListTag);
-
-
-                    /**
-                     * Get the index page name
-                     */
-                    $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
-
-
-                    /**
-                     * Home
-                     */
-                    $currentHomePagePath = FsWikiUtility::getHomePagePath($nameSpacePath);
-                    if ($currentHomePagePath != null && $homeTemplate != null) {
-                        $tpl = TemplateUtility::render($homeTemplate, $currentHomePagePath);
-                        $homeTagAttributes = TagAttributes::createFromCallStackArray($homeAttributes);
-                        $homeTagAttributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "light");
-                        $homeTagAttributes->addStyleDeclaration("border-bottom", "1px solid #e5e5e5");
-
-                        $list .= $homeTagAttributes->toHtmlEnterTag($rowTag) . $tpl . '</' . $rowTag . '>';
-                    }
-                    $pageNum = 0;
-
-                    foreach ($pageOrNamespaces as $pageOrNamespace) {
-
-                        $pageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
-
-
-                        if ($pageOrNamespace['type'] == "d") {
-
-                            // Namespace
-                            if (!empty($namespaceTemplate)) {
-                                $subHomePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
-                                if ($subHomePagePath != null) {
-                                    $tpl = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
-                                    $list .= "<$rowTag>$tpl</$rowTag>";
-                                }
-                            }
-
-                        } else {
-
-                            if (!empty($pageTemplate)) {
-                                $pageNum++;
-                                if ($pageOrNamespacePath != $currentHomePagePath) {
-                                    $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
-                                    $list .= "<$rowTag>$tpl</$rowTag>";
-                                }
-                            }
-                        }
-
-                    }
-                    $list .= "</$contentListTag>";
-                    $renderer->doc .= PluginUtility::render($list) . DOKU_LF;
                     break;
             }
             return true;

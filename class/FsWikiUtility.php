@@ -101,7 +101,7 @@ class FsWikiUtility
             'search_universal', // The recursive function (callback)
             $search_opts, // The options given to the recursive function
             $ns, // The current directory
-            $lvl = 1 // Only one level in the tree
+            1 // Only one level in the tree
         );
 
         return $data;
@@ -134,6 +134,28 @@ class FsWikiUtility
         } else {
             return null;
         }
+    }
+
+    public static function getChildrenNamespace($nameSpacePath)
+    {
+        require_once(__DIR__ . '/../../../../inc/search.php');
+        global $conf;
+
+        $data = array();
+
+        // Options of the callback function search_universal
+        // in the search.php file
+        $search_opts = array();
+        // search_universal is a function in inc/search.php that accepts the $search_opts parameters
+        search_namespaces($data, // The returned data
+            $conf['datadir'], // The root
+            $nameSpacePath, // The directory to search
+            'd',
+            1, // Only one level in the tree
+            $search_opts
+        );
+
+        return $data;
     }
 
 }

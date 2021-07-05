@@ -2,6 +2,7 @@
 
 
 use ComboStrap\Background;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\FsWikiUtility;
@@ -344,25 +345,36 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                         }
                         $marki .= "</$contentListTag>";
+                        /**
+                         * If the namespace has no children
+                         */
+                        if (!empty($marki)) {
+                            $instructions = PluginUtility::getInstructionsWithoutRoot($marki);
+                            $callStack->appendInstructions($instructions);
+                        }
                         break;
                     case self::TYPE_TREE:
 
                         /**
                          * Printing the tree
+                         *
+                         * (Move to the end is not really needed, but yeah)
                          */
-                        self::treeProcessSubNamespace($marki, $nameSpacePath, $namespaceTemplate, $pageTemplate);
+                        $callStack->moveToEnd();
+                        $namespaceTemplateInstructions = [];
+                        if ($namespaceTemplate != null) {
+                            $namespaceTemplateInstructions = PluginUtility::getInstructionsWithoutRoot(trim($namespaceTemplate));
+                        }
+                        $pageTemplateInstructions = [];
+                        if ($pageTemplate != null) {
+                            $pageTemplateInstructions = PluginUtility::getInstructionsWithoutRoot(trim($pageTemplate));
+                        }
+                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $namespaceTemplateInstructions, $pageTemplateInstructions);
 
                         break;
 
                 }
 
-                /**
-                 * If the namespace has no children
-                 */
-                if(!empty($marki)) {
-                    $instructions = PluginUtility::getInstructionsWithoutRoot($marki);
-                    $callStack->appendInstructions($instructions);
-                }
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -444,12 +456,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
     /**
      * Process the
-     * @param $marki - the markup
+     * @param CallStack $callStack - the callstack
      * @param string $nameSpacePath
-     * @param $namespaceTemplate
-     * @param null $pageTemplate
+     * @param array $namespaceTemplateInstructions
+     * @param array $pageTemplateInstructions
      */
-    public function treeProcessSubNamespace(&$marki, $nameSpacePath, $namespaceTemplate = null, $pageTemplate = null)
+    public function treeProcessSubNamespace(&$callStack, $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [])
     {
 
 
@@ -469,43 +481,64 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                 $subHomePagePath = FsWikiUtility::getHomePagePath($actualPageOrNamespacePath);
                 if ($subHomePagePath != null) {
-                    if ($namespaceTemplate != null) {
-                        $buttonContent = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                    if (sizeof($namespaceTemplateInstructions) > 0) {
+                        // Translate TODO
                     } else {
-                        $buttonContent = $subHomePagePath;
+                        $namespaceTemplateInstructions = [Call::createNativeCall("cdata", [$subHomePagePath])->toCallArray()];
                     }
                 } else {
-                    $buttonContent = $actualPageOrNamespacePath;
+                    $namespaceTemplateInstructions = [Call::createNativeCall("cdata", [$actualPageOrNamespacePath])->toCallArray()];
                 }
+
                 $this->namespaceCounter++;
                 $targetIdAtt = syntax_plugin_combo_pageexplorertreenamespacebutton::TARGET_ID_ATT;
                 $id = PluginUtility::toHtmlId("page-explorer-{$actualPageOrNamespacePath}-{$this->namespaceCounter}-combo");
 
-                $marki .= <<<EOF
-<$pageExplorerTreeTag>
-  <$pageExplorerTreeButtonTag $targetIdAtt="$id">
-    $buttonContent
-  </$pageExplorerTreeButtonTag>
-  <$pageExplorerTreeListTag id="$id">
-EOF;
+                $callStack->appendCallAtTheEnd(
+                    Call::createComboCall($pageExplorerTreeTag, DOKU_LEXER_ENTER)
+                );
+                $callStack->appendCallAtTheEnd(
+                    Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_ENTER, [$targetIdAtt => $id])
+                );
+                $callStack->appendInstructions($namespaceTemplateInstructions);
+                $callStack->appendCallAtTheEnd(
+                    Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_EXIT)
+                );
+                $callStack->appendCallAtTheEnd(
+                    Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_ENTER, [TagAttributes::ID_KEY => "$id"])
+                );
+
+//                $hallo = <<<EOF
+//<$pageExplorerTreeTag>
+//  <$pageExplorerTreeButtonTag $targetIdAtt="$id">
+//    $buttonInstructions
+//  </$pageExplorerTreeButtonTag>
+//  <$pageExplorerTreeListTag id="$id">
+//EOF;
                 /**
                  * Recursion
                  */
-                self::treeProcessSubNamespace($marki, $actualPageOrNamespacePath, $namespaceTemplate, $pageTemplate);
+                self::treeProcessSubNamespace($callStack, $actualPageOrNamespacePath, $namespaceTemplateInstructions, $pageTemplateInstructions);
 
                 /**
                  * Closing
                  */
-                $marki .= <<<EOF
- </$pageExplorerTreeListTag>
-</$pageExplorerTreeTag>
-EOF;
+                $callStack->appendCallAtTheEnd(
+                    Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_EXIT)
+                );
+                $callStack->appendCallAtTheEnd(
+                    Call::createComboCall($pageExplorerTreeTag, DOKU_LEXER_EXIT)
+                );
+//                $callStack .= <<<EOF
+// </$pageExplorerTreeListTag>
+//</$pageExplorerTreeTag>
+//EOF;
 
             } else {
                 /**
                  * Page
                  */
-                $marki .= self::treeProcessLeaf($actualPageOrNamespacePath, $pageTemplate);
+                self::treeProcessLeaf($callStack, $actualPageOrNamespacePath, $pageTemplateInstructions);
             }
 
         }
@@ -513,19 +546,33 @@ EOF;
 
     }
 
-    private static function treeProcessLeaf($pageOrNamespacePath, $pageTemplate = null)
+    /**
+     * @param CallStack $callStack
+     * @param $pageOrNamespacePath
+     * @param array $pageTemplateInstructions
+     */
+    private static function treeProcessLeaf(&$callStack, $pageOrNamespacePath, $pageTemplateInstructions = [])
     {
         $leafTag = syntax_plugin_combo_pageexplorertreeleaf::TAG;
-        if ($pageTemplate != null) {
-            $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
+        if (sizeof($pageTemplateInstructions) > 0) {
+            // todo
+            // $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
         } else {
-            $tpl = $pageOrNamespacePath;
+            //$tpl = $pageOrNamespacePath;
+            $pageTemplateInstructions = [Call::createNativeCall("cdata", [$pageOrNamespacePath])->toCallArray()];
         }
-        return <<<EOF
-<$leafTag>
-$tpl
-</$leafTag>
-EOF;
+        $callStack->appendCallAtTheEnd(
+            Call::createComboCall($leafTag, DOKU_LEXER_ENTER)
+        );
+        $callStack->appendInstructions($pageTemplateInstructions);
+        $callStack->appendCallAtTheEnd(
+            Call::createComboCall($leafTag, DOKU_LEXER_EXIT)
+        );
+//        return <<<EOF
+//<$leafTag>
+//$tpl
+//</$leafTag>
+//EOF;
 
 
     }

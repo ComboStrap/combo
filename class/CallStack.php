@@ -679,6 +679,14 @@ class CallStack
         array_splice($this->callStack, count($this->callStack), 0, $instructions);
     }
 
+    /**
+     * @param Call $call
+     */
+    public function appendCallAtTheEnd($call)
+    {
+        $this->callStack[] = $call->toCallArray();
+    }
+
     public function moveToPreviousSiblingTag()
     {
         if(!$this->endWasReached) {

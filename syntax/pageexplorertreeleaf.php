@@ -1,34 +1,28 @@
 <?php
 
 
-use ComboStrap\Background;
-use ComboStrap\CallStack;
-use ComboStrap\FsWikiUtility;
-use ComboStrap\LogUtility;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\TagAttributes;
-use ComboStrap\TemplateUtility;
 
 require_once(__DIR__ . '/../class/TemplateUtility.php');
 
 
 /**
- * Implementation of the parent tree node in the collapsible menu
+ * Implementation of the leaf tree node in the collapsible menu
  *
  * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
  *
  *
  *
  */
-class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorertreeleaf extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorertreenamespace";
+    const TAG = "pageexplorertreeleaf";
+
 
 
     /**
@@ -130,14 +124,6 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
                 // We should not ever come here but a user does not not known that
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
-            case DOKU_LEXER_MATCHED :
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
-                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
-                    PluginUtility::TAG => PluginUtility::getTag($match)
-                );
 
             case DOKU_LEXER_EXIT :
 
@@ -170,31 +156,13 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    // The attributes are used in the exit
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $enterTagAttributes = $tagAttributes->toHTMLAttributeString();
-                    $renderer->doc .= <<<EOF
-<li $enterTagAttributes>
-<button class="btn btn-toggle align-items-center rounded" data-bs-toggle="collapse" data-bs-target="#home-collapse" aria-expanded="true">
-Home
-</button>
-<div class="collapse show" id="home-collapse" style="">
-    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-EOF;
-
+                    $renderer->doc .= "<li>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
-
                 case DOKU_LEXER_EXIT :
-
-
-                    $renderer->doc .=<<<EOF
-           </ul>
-    </div>
-</li>
-EOF;
+                    $renderer->doc .= "</li>" . DOKU_LF;
                     break;
             }
             return true;

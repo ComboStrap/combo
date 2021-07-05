@@ -155,10 +155,24 @@ class LogUtility
                 $htmlMsg = PluginUtility::getUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
             }
 
-            $page = Page::createPageFromEnvironment();
-            if ($page != null) {
-                $htmlMsg .= " - " . $page->getAnchorLink();
+            /**
+             * Adding page - context information
+             * We are not creating the page
+             * direction from {@link Page::createPageFromEnvironment()}
+             * because it throws an error message when the environment
+             * is not good, creating a recursive call.
+             */
+            $id = PluginUtility::getPageId();
+            if ($id!=null) {
+                $page = Page::createPageFromId($id);
+                if ($page != null) {
+                    $htmlMsg .= " - " . $page->getAnchorLink();
+                }
             }
+
+            /**
+             *
+             */
             $htmlMsg .= " - " . $message;
             if ($level > self::LVL_MSG_DEBUG) {
                 $dokuWikiLevel = self::LVL_TO_MSG_LEVEL[$level];

@@ -72,12 +72,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const LIST_TYPE = "list";
     const TYPE_TREE = "tree";
 
-    private static function treeProcessLeaf($pageOrNamespacePath, $pageTemplate)
-    {
-        return "";
-
-    }
-
 
     /**
      * Syntax Type.
@@ -361,7 +355,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $callStack->appendInstructions(PluginUtility::getInstructions($marki));
 
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
 
 
@@ -388,7 +383,23 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    // The attributes are used in the exit
+
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $type = $tagAttributes->getType();
+                    switch ($type) {
+                        case self::TYPE_TREE:
+                            $tagAttributes->addClassName("list-unstyled");
+                            $tagAttributes->addClassName("ps-0");
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul") . DOKU_LF;
+                            break;
+                        case self::LIST_TYPE:
+                            /**
+                             * The {@link syntax_plugin_combo_contentlist} syntax
+                             * output the HTML
+                             */
+                            break;
+                    }
+
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -396,13 +407,19 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
-                    /**
-                     * data
-                     */
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    if ($attributes == null) {
-                        LogUtility::msg("Attributes are null. You may need to purge the cache. To do that, you can modify slightly your page or a configuration", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return false;
+
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $type = $tagAttributes->getType();
+                    switch ($type) {
+                        case self::TYPE_TREE:
+                            $renderer->doc .= "</ul>" . DOKU_LF;
+                            break;
+                        case self::LIST_TYPE:
+                            /**
+                             * The {@link syntax_plugin_combo_contentlist} syntax
+                             * output the HTML
+                             */
+                            break;
                     }
 
 
@@ -421,13 +438,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param string $nameSpacePath
      * @param $namespaceTemplate
      */
-    public function treeProcessSubNamespace(&$marki, $nameSpacePath, $namespaceTemplate = null)
+    public function treeProcessSubNamespace(&$marki, $nameSpacePath, $namespaceTemplate = null, $pageTemplate = null)
     {
         $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
 
         foreach ($pageOrNamespaces as $pageOrNamespace) {
 
-            $pageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
+            $actualPageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
 
             /**
              * Namespace
@@ -435,7 +452,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             if ($pageOrNamespace['type'] == "d") {
                 $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreenamespace::TAG;
                 $marki .= "<$pageExplorerTreeTag>";
-                $subHomePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
+                $subHomePagePath = FsWikiUtility::getHomePagePath($actualPageOrNamespacePath);
                 if ($subHomePagePath != null) {
                     if ($namespaceTemplate == null) {
                         $marki .= TemplateUtility::render($namespaceTemplate, $subHomePagePath);
@@ -443,18 +460,33 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $marki .= $subHomePagePath;
                     }
                 }
-                self::treeProcessSubNamespace($marki, $pageOrNamespacePath, $namespaceTemplate);
+                self::treeProcessSubNamespace($marki, $actualPageOrNamespacePath, $namespaceTemplate, $pageTemplate);
                 $marki .= "</$pageExplorerTreeTag>";
             } else {
                 /**
                  * Page
                  */
-                $marki .= self::treeProcessLeaf($pageOrNamespacePath, "");
+                $marki .= self::treeProcessLeaf($actualPageOrNamespacePath, $pageTemplate);
             }
 
         }
     }
 
+    private static function treeProcessLeaf($pageOrNamespacePath, $pageTemplate = null)
+    {
+        $leafTag = syntax_plugin_combo_pageexplorertreeleaf::TAG;
+        if ($pageTemplate != null) {
+            $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
+        } else {
+            $tpl = $pageOrNamespacePath;
+        }
+        return <<<EOF
+<$leafTag>
+$tpl
+</$leafTag>
+EOF;
 
+
+    }
 }
 

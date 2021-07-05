@@ -30,7 +30,7 @@ class TemplateUtility
          * and therefore not visible
          * We render at least the id
          */
-        $page = Page::createPagePathFromPath($pagePath);
+        $page = Page::createPageFromPath($pagePath);
         $h1Title = $page->getH1NotEmpty();
         $pageTitle = $page->getTitleNotEmpty();
 

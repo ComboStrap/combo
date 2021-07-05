@@ -175,6 +175,7 @@ class Page extends DokuPath
         if ($path != null) {
             return new Page($path);
         } else {
+            LogUtility::msg("We were unable to determine the page from the variables environment",LogUtility::LVL_MSG_ERROR);
             return null;
         }
     }
@@ -265,9 +266,13 @@ class Page extends DokuPath
 
     }
 
-    static function createPagePathFromPath($pathId)
+    static function createPageFromPath($pathId)
     {
         return new Page($pathId);
+    }
+    static function createPageFromId($id)
+    {
+        return new Page(DokuPath::IdToAbsolutePath($id));
     }
 
     /**
@@ -287,7 +292,7 @@ class Page extends DokuPath
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            return self::createPagePathFromPath($id)->setCanonical($canonical);
+            return self::createPageFromPath($id)->setCanonical($canonical);
         }
 
 
@@ -303,11 +308,11 @@ class Page extends DokuPath
         foreach ($res2arr as $row) {
             $id = $row['ID'];
 
-            return self::createPagePathFromPath($id)
+            return self::createPageFromPath($id)
                 ->setCanonical($canonical);
         }
 
-        return self::createPagePathFromPath($canonical);
+        return self::createPageFromPath($canonical);
 
     }
 

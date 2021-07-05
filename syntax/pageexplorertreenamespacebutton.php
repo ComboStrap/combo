@@ -1,45 +1,35 @@
 <?php
 
 
-use ComboStrap\Background;
-use ComboStrap\CallStack;
-use ComboStrap\FsWikiUtility;
-use ComboStrap\LogUtility;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\TemplateUtility;
 
 require_once(__DIR__ . '/../class/TemplateUtility.php');
 
 
 /**
- * Implementation of the parent tree node in the collapsible menu
- *
+ * Implementation of the button of the parent tree node in the collapsible menu
+ * Ie the button
  * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
  *
  *
  *
  */
-class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorertreenamespace";
-    const NS_ATT = "ns";
+    const TAG = "pageexplorertreenamespacebutton";
 
     /**
-     * A counter/index that keeps
-     * the order of the tree node
-     * to create a unique id
-     * in order to be able to collapse
-     * the good HTML node
-     * @var int
+     * The target id of the collapse
      */
-    private $counter = 0;
+    const TARGET_ID_ATT = "target-id";
+
+
 
 
     /**
@@ -141,14 +131,6 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
                 // We should not ever come here but a user does not not known that
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
-            case DOKU_LEXER_MATCHED :
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
-                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
-                    PluginUtility::TAG => PluginUtility::getTag($match)
-                );
 
             case DOKU_LEXER_EXIT :
 
@@ -181,16 +163,13 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    // The attributes are used in the exit
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $ns = $tagAttributes->getValueAndRemoveIfPresent(self::NS_ATT);
-                    $this->counter++;
-                    $id = PluginUtility::toHtmlId("page-explorer-{$ns}-{$this->counter}-combo");
-                    $enterTagAttributes = $tagAttributes->toHTMLAttributeString();
-                    $renderer->doc .= <<<EOF
-<li $enterTagAttributes>
-EOF;
-
+                    $targetId = $tagAttributes->getValueAndRemoveIfPresent(self::TARGET_ID_ATT);
+                    $tagAttributes->addHtmlAttributeValue("data-bs-target", "#$targetId");
+                    $tagAttributes->addHtmlAttributeValue("data-bs-toggle", "collapse");
+                    $tagAttributes->addHtmlAttributeValue("aria-expanded", "true");
+                    $tagAttributes->addClassName("btn btn-toggle-combo align-items-center rounded");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("button");
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -198,10 +177,8 @@ EOF;
 
                 case DOKU_LEXER_EXIT :
 
-
-                    $renderer->doc .=<<<EOF
-
-</li>
+                    $renderer->doc .= <<<EOF
+</button>
 EOF;
                     break;
             }

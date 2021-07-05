@@ -1,45 +1,29 @@
 <?php
 
 
-use ComboStrap\Background;
 use ComboStrap\CallStack;
-use ComboStrap\FsWikiUtility;
-use ComboStrap\LogUtility;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\TemplateUtility;
 
 require_once(__DIR__ . '/../class/TemplateUtility.php');
 
 
 /**
- * Implementation of the parent tree node in the collapsible menu
- *
+ * Implementation of the list block of
+ * Ie the button
  * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
  *
  *
  *
  */
-class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorertreenamespace";
-    const NS_ATT = "ns";
-
-    /**
-     * A counter/index that keeps
-     * the order of the tree node
-     * to create a unique id
-     * in order to be able to collapse
-     * the good HTML node
-     * @var int
-     */
-    private $counter = 0;
+    const TAG = "pageexplorertreenamespacelist";
 
 
     /**
@@ -132,9 +116,20 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
 
             case DOKU_LEXER_ENTER :
                 $attributes = PluginUtility::getTagAttributes($match);
+
+                /**
+                 * Got the id generated at the {@link syntax_plugin_combo_pageexplorertreenamespacebutton}
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $sibling = $callStack->moveToPreviousSiblingTag();
+                $id = $sibling->getAttribute(TagAttributes::ID_KEY);
+                $attributes[TagAttributes::ID_KEY] = $id;
+
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes);
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
             case DOKU_LEXER_UNMATCHED :
 
@@ -144,10 +139,7 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
             case DOKU_LEXER_MATCHED :
 
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
-                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
-                    PluginUtility::TAG => PluginUtility::getTag($match)
+                    PluginUtility::STATE => $state
                 );
 
             case DOKU_LEXER_EXIT :
@@ -183,12 +175,11 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
                 case DOKU_LEXER_ENTER :
                     // The attributes are used in the exit
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $ns = $tagAttributes->getValueAndRemoveIfPresent(self::NS_ATT);
-                    $this->counter++;
-                    $id = PluginUtility::toHtmlId("page-explorer-{$ns}-{$this->counter}-combo");
-                    $enterTagAttributes = $tagAttributes->toHTMLAttributeString();
+                    $tagAttributes->addClassName("collapse show");
+                    $attributesHTMLString = $tagAttributes->toHTMLAttributeString();
                     $renderer->doc .= <<<EOF
-<li $enterTagAttributes>
+<div $attributesHTMLString>
+    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
 EOF;
 
                     break;
@@ -198,10 +189,9 @@ EOF;
 
                 case DOKU_LEXER_EXIT :
 
-
-                    $renderer->doc .=<<<EOF
-
-</li>
+                    $renderer->doc .= <<<EOF
+    </ul>
+</div>
 EOF;
                     break;
             }

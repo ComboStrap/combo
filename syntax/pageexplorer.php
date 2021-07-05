@@ -72,6 +72,16 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const LIST_TYPE = "list";
     const TYPE_TREE = "tree";
 
+    /**
+     * A counter/index that keeps
+     * the order of the namespace tree node
+     * to create a unique id
+     * in order to be able to collapse
+     * the good HTML node
+     * @var string $namespaceCounter
+     */
+    private $namespaceCounter = 0;
+
 
     /**
      * Syntax Type.
@@ -437,11 +447,17 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param $marki - the markup
      * @param string $nameSpacePath
      * @param $namespaceTemplate
+     * @param null $pageTemplate
      */
     public function treeProcessSubNamespace(&$marki, $nameSpacePath, $namespaceTemplate = null, $pageTemplate = null)
     {
-        $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
 
+
+        $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreenamespace::TAG;
+        $pageExplorerTreeButtonTag = syntax_plugin_combo_pageexplorertreenamespacebutton::TAG;
+        $pageExplorerTreeListTag = syntax_plugin_combo_pageexplorertreenamespacelist::TAG;
+
+        $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
         foreach ($pageOrNamespaces as $pageOrNamespace) {
 
             $actualPageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
@@ -450,18 +466,37 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
              * Namespace
              */
             if ($pageOrNamespace['type'] == "d") {
-                $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreenamespace::TAG;
-                $marki .= "<$pageExplorerTreeTag>";
+
                 $subHomePagePath = FsWikiUtility::getHomePagePath($actualPageOrNamespacePath);
-                if ($subHomePagePath != null) {
-                    if ($namespaceTemplate == null) {
-                        $marki .= TemplateUtility::render($namespaceTemplate, $subHomePagePath);
-                    } else {
-                        $marki .= $subHomePagePath;
-                    }
+                if ($subHomePagePath != null && $namespaceTemplate != null) {
+                    $buttonContent = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                } else {
+                    $buttonContent = $subHomePagePath;
                 }
+                $this->namespaceCounter++;
+                $targetIdAtt = syntax_plugin_combo_pageexplorertreenamespacebutton::TARGET_ID_ATT;
+                $id = PluginUtility::toHtmlId("page-explorer-{$actualPageOrNamespacePath}-{$this->namespaceCounter}-combo");
+
+                $marki .= <<<EOF
+<$pageExplorerTreeTag>
+  <$pageExplorerTreeButtonTag $targetIdAtt="$id">
+    $buttonContent
+  </$pageExplorerTreeButtonTag>
+  <$pageExplorerTreeListTag id="$id">
+EOF;
+                /**
+                 * Recursion
+                 */
                 self::treeProcessSubNamespace($marki, $actualPageOrNamespacePath, $namespaceTemplate, $pageTemplate);
-                $marki .= "</$pageExplorerTreeTag>";
+
+                /**
+                 * Closing
+                 */
+                $marki .= <<<EOF
+ </$pageExplorerTreeListTag>
+</$pageExplorerTreeTag>
+EOF;
+
             } else {
                 /**
                  * Page
@@ -470,6 +505,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             }
 
         }
+
+
     }
 
     private static function treeProcessLeaf($pageOrNamespacePath, $pageTemplate = null)

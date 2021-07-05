@@ -679,5 +679,41 @@ class CallStack
         array_splice($this->callStack, count($this->callStack), 0, $instructions);
     }
 
+    public function moveToPreviousSiblingTag()
+    {
+        if(!$this->endWasReached) {
+            $actualCall = $this->getActualCall();
+            $actualState = $actualCall->getState();
+            if (!in_array($actualState, CallStack::TAG_STATE)) {
+                LogUtility::msg("A previous sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
+                return false;
+            }
+        }
+        $level = 0;
+        while ($this->previous()) {
+
+            $actualCall = $this->getActualCall();
+            $state = $actualCall->getState();
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                case DOKU_LEXER_SPECIAL:
+                    $level++;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $level--;
+                    break;
+            }
+
+            if ($level == 0 && in_array($state, self::TAG_STATE)) {
+                break;
+            }
+        }
+        if ($level == 0 && !$this->startWasReached) {
+            return $this->getActualCall();
+        } else {
+            return false;
+        }
+    }
+
 
 }

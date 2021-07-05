@@ -31,16 +31,6 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
     const TAG = "pageexplorertreenamespace";
     const NS_ATT = "ns";
 
-    /**
-     * A counter/index that keeps
-     * the order of the tree node
-     * to create a unique id
-     * in order to be able to collapse
-     * the good HTML node
-     * @var int
-     */
-    private $counter = 0;
-
 
     /**
      * Syntax Type.
@@ -51,7 +41,7 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -66,7 +56,7 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
      */
     function getPType()
     {
-        return 'block';
+        return 'normal';
     }
 
     /**
@@ -80,7 +70,7 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('formatting');
     }
 
     function getSort()
@@ -183,9 +173,6 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
                 case DOKU_LEXER_ENTER :
                     // The attributes are used in the exit
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $ns = $tagAttributes->getValueAndRemoveIfPresent(self::NS_ATT);
-                    $this->counter++;
-                    $id = PluginUtility::toHtmlId("page-explorer-{$ns}-{$this->counter}-combo");
                     $enterTagAttributes = $tagAttributes->toHTMLAttributeString();
                     $renderer->doc .= <<<EOF
 <li $enterTagAttributes>
@@ -199,7 +186,7 @@ EOF;
                 case DOKU_LEXER_EXIT :
 
 
-                    $renderer->doc .=<<<EOF
+                    $renderer->doc .= <<<EOF
 
 </li>
 EOF;

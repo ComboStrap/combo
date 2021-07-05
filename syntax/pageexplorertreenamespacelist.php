@@ -35,7 +35,7 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -50,7 +50,7 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
      */
     function getPType()
     {
-        return 'block';
+        return 'normal';
     }
 
     /**
@@ -64,7 +64,7 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('formatting');
     }
 
     function getSort()
@@ -116,16 +116,6 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
 
             case DOKU_LEXER_ENTER :
                 $attributes = PluginUtility::getTagAttributes($match);
-
-                /**
-                 * Got the id generated at the {@link syntax_plugin_combo_pageexplorertreenamespacebutton}
-                 */
-                $callStack = CallStack::createFromHandler($handler);
-                $sibling = $callStack->moveToPreviousSiblingTag();
-                $id = $sibling->getAttribute(TagAttributes::ID_KEY);
-                $attributes[TagAttributes::ID_KEY] = $id;
-
-
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes
@@ -175,7 +165,7 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
                 case DOKU_LEXER_ENTER :
                     // The attributes are used in the exit
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $tagAttributes->addClassName("collapse show");
+                    $tagAttributes->addClassName("collapse");
                     $attributesHTMLString = $tagAttributes->toHTMLAttributeString();
                     $renderer->doc .= <<<EOF
 <div $attributesHTMLString>

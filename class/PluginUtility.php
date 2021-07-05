@@ -1175,6 +1175,11 @@ class PluginUtility
         return p_get_instructions($markiCode);
     }
 
+    public static function getInstructionsWithoutRoot($markiCode)
+    {
+        return RenderUtility::getInstructionsAndStripPEventually($markiCode);
+    }
+
     /**
      * Transform a text into a valid HTML id
      * @param $string

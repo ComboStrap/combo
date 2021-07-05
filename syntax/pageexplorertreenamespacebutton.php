@@ -41,7 +41,7 @@ class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Synta
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -56,7 +56,7 @@ class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Synta
      */
     function getPType()
     {
-        return 'block';
+        return 'normal';
     }
 
     /**

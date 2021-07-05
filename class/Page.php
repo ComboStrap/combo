@@ -175,7 +175,7 @@ class Page extends DokuPath
         if ($path != null) {
             return new Page($path);
         } else {
-            LogUtility::msg("We were unable to determine the page from the variables environment",LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
             return null;
         }
     }
@@ -270,6 +270,7 @@ class Page extends DokuPath
     {
         return new Page($pathId);
     }
+
     static function createPageFromId($id)
     {
         return new Page(DokuPath::IdToAbsolutePath($id));
@@ -1605,9 +1606,17 @@ class Page extends DokuPath
     }
 
 
-    public function getNamespace()
+    public function getNamespacePath()
     {
-        return getNS($this->getId());
+        $ns = getNS($this->getId());
+        /**
+         * False means root namespace
+         */
+        if ($ns == false) {
+            return ":";
+        } else {
+            return ":$ns";
+        }
     }
 
 

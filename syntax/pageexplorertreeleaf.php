@@ -34,7 +34,7 @@ class syntax_plugin_combo_pageexplorertreeleaf extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -49,7 +49,7 @@ class syntax_plugin_combo_pageexplorertreeleaf extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'normal';
     }
 
     /**
@@ -63,7 +63,7 @@ class syntax_plugin_combo_pageexplorertreeleaf extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('formatting', 'substition');
     }
 
     function getSort()

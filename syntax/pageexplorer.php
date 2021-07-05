@@ -58,17 +58,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const HOME_OLD = "index";
     const HOMES = [self::HOME, self::HOME_OLD];
 
-    /**
-     * Keys of the array passed between {@link handle} and {@link render}
-     */
-    const PAGE_TEMPLATE_KEY = 'pageTemplate';
-    const NS_TEMPLATE_KEY = 'nsTemplate';
-    const HOME_TEMPLATE_KEY = 'homeTemplate';
 
     /**
      * Attributes on the home node
      */
-    const HOME_ATTRIBUTES_KEY = 'homeAttributes';
     const LIST_TYPE = "list";
     const TYPE_TREE = "tree";
 
@@ -280,7 +273,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     $nameSpacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
                 } else {
                     $page = Page::createPageFromEnvironment();
-                    $nameSpacePath = $page->getNamespace();
+                    $nameSpacePath = $page->getNamespacePath();
                 }
 
 
@@ -357,12 +350,19 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         /**
                          * Printing the tree
                          */
-                        self::treeProcessSubNamespace($marki, $nameSpacePath, $namespaceTemplate);
+                        self::treeProcessSubNamespace($marki, $nameSpacePath, $namespaceTemplate, $pageTemplate);
 
                         break;
 
                 }
-                $callStack->appendInstructions(PluginUtility::getInstructions($marki));
+
+                /**
+                 * If the namespace has no children
+                 */
+                if(!empty($marki)) {
+                    $instructions = PluginUtility::getInstructionsWithoutRoot($marki);
+                    $callStack->appendInstructions($instructions);
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -468,10 +468,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             if ($pageOrNamespace['type'] == "d") {
 
                 $subHomePagePath = FsWikiUtility::getHomePagePath($actualPageOrNamespacePath);
-                if ($subHomePagePath != null && $namespaceTemplate != null) {
-                    $buttonContent = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                if ($subHomePagePath != null) {
+                    if ($namespaceTemplate != null) {
+                        $buttonContent = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                    } else {
+                        $buttonContent = $subHomePagePath;
+                    }
                 } else {
-                    $buttonContent = $subHomePagePath;
+                    $buttonContent = $actualPageOrNamespacePath;
                 }
                 $this->namespaceCounter++;
                 $targetIdAtt = syntax_plugin_combo_pageexplorertreenamespacebutton::TARGET_ID_ATT;

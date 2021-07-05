@@ -72,17 +72,21 @@ class FsWikiUtility
      * Return all pages and/of sub-namespaces (subdirectory) of a namespace (ie directory)
      * Adapted from feed.php
      *
-     * @param string $id The container of the pages
+     * @param string $path The container of the pages
      * @return array An array of the pages for the namespace
      */
-    static function getChildren($id)
+    static function getChildren($path)
     {
         require_once(__DIR__ . '/../../../../inc/search.php');
         global $conf;
 
-        $ns = ':' . cleanID($id);
-        // ns as a path
-        $ns = utf8_encodeFN(str_replace(':', '/', $ns));
+
+        /**
+         * To a relative file system path
+         */
+        $dokuPath = DokuPath::createPagePathFromPath($path);
+        $relativeFileSystemPath = $dokuPath->getId();
+
 
         $data = array();
 
@@ -93,14 +97,15 @@ class FsWikiUtility
             'pagesonly' => true,
             'listfiles' => true,
             'listdirs' => true,
-            'firsthead' => true
+            'skipacl' => true
+            //'firsthead' => true
         );
         // search_universal is a function in inc/search.php that accepts the $search_opts parameters
         search($data, // The returned data
             $conf['datadir'], // The root
             'search_universal', // The recursive function (callback)
             $search_opts, // The options given to the recursive function
-            $ns, // The current directory
+            $relativeFileSystemPath, // The id
             1 // Only one level in the tree
         );
 

@@ -14,22 +14,21 @@ require_once(__DIR__ . '/../class/TemplateUtility.php');
 
 
 /**
- * Implementation of an explorer for pages
+ * Implementation of the parent tree node in the collapsible menu
  *
- *
- *
+ * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
  *
  *
  *
  */
-class syntax_plugin_combo_pageexplorertreedir extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorertreedir";
+    const TAG = "pageexplorertreenamespace";
 
 
 

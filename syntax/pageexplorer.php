@@ -72,6 +72,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const LIST_TYPE = "list";
     const TYPE_TREE = "tree";
 
+    private static function treeProcessLeaf($pageOrNamespacePath, $pageTemplate)
+    {
+        return "";
+
+    }
+
 
     /**
      * Syntax Type.
@@ -204,10 +210,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Get the opening tag
+                 * Get the templates
                  */
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-
+                $namespaceTemplate = null;
+                $pageTemplate = null;
+                $homeTemplate = null;
+                $homeAttributes = [];
                 $found = false;
                 while ($callStack->next()) {
                     $actualCall = $callStack->getActualCall();
@@ -271,6 +280,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 }
 
 
+                /**
+                 * Creating the markup
+                 */
+                $marki = "";
                 $type = $tagAttributes->getType();
                 switch ($type) {
                     default:
@@ -282,7 +295,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          */
                         $contentListTag = syntax_plugin_combo_contentlist::MARKI_TAG;
                         $tagAttributes->addClassName(self::CANONICAL . "-combo");
-                        $list = $tagAttributes->toMarkiEnterTag($contentListTag);
+                        $marki = $tagAttributes->toMarkiEnterTag($contentListTag);
 
 
                         /**
@@ -301,7 +314,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             $homeTagAttributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "light");
                             $homeTagAttributes->addStyleDeclaration("border-bottom", "1px solid #e5e5e5");
 
-                            $list .= $homeTagAttributes->toHtmlEnterTag($rowTag) . $tpl . '</' . $rowTag . '>';
+                            $marki .= $homeTagAttributes->toHtmlEnterTag($rowTag) . $tpl . '</' . $rowTag . '>';
                         }
                         $pageNum = 0;
 
@@ -317,7 +330,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $subHomePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
                                     if ($subHomePagePath != null) {
                                         $tpl = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
-                                        $list .= "<$rowTag>$tpl</$rowTag>";
+                                        $marki .= "<$rowTag>$tpl</$rowTag>";
                                     }
                                 }
 
@@ -327,39 +340,25 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $pageNum++;
                                     if ($pageOrNamespacePath != $currentHomePagePath) {
                                         $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
-                                        $list .= "<$rowTag>$tpl</$rowTag>";
+                                        $marki .= "<$rowTag>$tpl</$rowTag>";
                                     }
                                 }
                             }
 
                         }
-                        $list .= "</$contentListTag>";
+                        $marki .= "</$contentListTag>";
                         break;
                     case self::TYPE_TREE:
 
-
-
                         /**
-                         * Get the index page name
+                         * Printing the tree
                          */
-                        $namespaces = FsWikiUtility::getChildrenNamespace($nameSpacePath);
-                        foreach($namespaces as $namespace) {
-                            $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreedir::TAG;
-                            $list = "<$pageExplorerTreeTag>";
-                            $subHomePagePath = FsWikiUtility::getHomePagePath($namespace);
-                            if ($subHomePagePath != null) {
-                                if (isset($namespaceTemplate)) {
-                                    $list .= TemplateUtility::render($namespaceTemplate, $subHomePagePath);
-                                } else {
-                                    $list .= $subHomePagePath;
-                                }
-                            }
-                            $list .= "</$pageExplorerTreeTag>";
-                        }
+                        self::treeProcessSubNamespace($marki, $nameSpacePath, $namespaceTemplate);
+
                         break;
 
                 }
-                $callStack->appendInstructions(PluginUtility::getInstructions($list));
+                $callStack->appendInstructions(PluginUtility::getInstructions($marki));
 
                 return array(
                     PluginUtility::STATE => $state
@@ -414,6 +413,46 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
         // unsupported $mode
         return false;
+    }
+
+    /**
+     * Process the
+     * @param $marki - the markup
+     * @param string $nameSpacePath
+     * @param $namespaceTemplate
+     */
+    public function treeProcessSubNamespace(&$marki, $nameSpacePath, $namespaceTemplate = null)
+    {
+        $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
+
+        foreach ($pageOrNamespaces as $pageOrNamespace) {
+
+            $pageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
+
+            /**
+             * Namespace
+             */
+            if ($pageOrNamespace['type'] == "d") {
+                $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreenamespace::TAG;
+                $marki .= "<$pageExplorerTreeTag>";
+                $subHomePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
+                if ($subHomePagePath != null) {
+                    if ($namespaceTemplate == null) {
+                        $marki .= TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                    } else {
+                        $marki .= $subHomePagePath;
+                    }
+                }
+                self::treeProcessSubNamespace($marki, $pageOrNamespacePath, $namespaceTemplate);
+                $marki .= "</$pageExplorerTreeTag>";
+            } else {
+                /**
+                 * Page
+                 */
+                $marki .= self::treeProcessLeaf($pageOrNamespacePath, "");
+            }
+
+        }
     }
 
 

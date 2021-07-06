@@ -702,21 +702,33 @@ class Call
      */
     public function render(Page $page)
     {
-        switch ($this->getTagName()) {
-            case "eol":
-                break;
-            default:
-                switch ($this->getState()){
-                    case DOKU_LEXER_UNMATCHED:
-                        if($this->isPluginCall()){
-                            $payload = trim($this->getPayload());
-                            if (!empty($payload)) {
-                                $this->setPayload( TemplateUtility::renderFromPage($payload, $page));
-                            }
-                        }
-                        break;
+        $state = $this->getState();
+        if ( $state == DOKU_LEXER_UNMATCHED) {
+            if ($this->isPluginCall()) {
+                $payload = trim($this->getPayload());
+                if (!empty($payload)) {
+                    $this->setPayload(TemplateUtility::renderFromPage($payload, $page));
                 }
-
+            }
+        } else {
+            $tagName = $this->getTagName();
+            switch ($tagName) {
+                case "eol":
+                    break;
+                case \syntax_plugin_combo_pipeline::TAG:
+                    $script = TemplateUtility::renderFromPage($this->getCapturedContent(), $page);
+                    $string = PipelineUtility::execute($script);
+                    $this->setPayload($string);
+                    break;
+                case \syntax_plugin_combo_link::TAG:
+                    switch ($this->getState()) {
+                        case DOKU_LEXER_ENTER:
+                            $ref = $this->getAttribute("ref");
+                            $this->addAttribute("ref", TemplateUtility::renderFromPage($ref, $page));
+                            break;
+                    }
+                    break;
+            }
         }
         return $this;
 

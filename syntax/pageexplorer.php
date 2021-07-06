@@ -459,7 +459,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreesubnamespace::TAG;
+        $pageExplorerSubNamespaceTag = syntax_plugin_combo_pageexplorertreesubnamespace::TAG;
         $pageExplorerTreeButtonTag = syntax_plugin_combo_pageexplorernamespace::TAG;
         $pageExplorerTreeListTag = syntax_plugin_combo_pageexplorertreesubnamespacelist::TAG;
 
@@ -500,7 +500,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  *    <$pageExplorerTreeListTag id="$id">
                  */
                 $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerTreeTag, DOKU_LEXER_ENTER)
+                    Call::createComboCall($pageExplorerSubNamespaceTag, DOKU_LEXER_ENTER)
                 );
                 $callStack->appendCallAtTheEnd(
                     Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_ENTER, [$targetIdAtt => $id])
@@ -530,7 +530,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_EXIT)
                 );
                 $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerTreeTag, DOKU_LEXER_EXIT)
+                    Call::createComboCall($pageExplorerSubNamespaceTag, DOKU_LEXER_EXIT)
                 );
 
 

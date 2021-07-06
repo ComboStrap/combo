@@ -93,13 +93,15 @@ class TemplateUtility
      * Replace placeholder
      * @param Call[] $namespaceTemplateInstructions
      * @param $pagePath
+     * @return array
      */
     public static function processInstructions(array $namespaceTemplateInstructions, $pagePath)
     {
         $page = Page::createPageFromPath($pagePath);
         $instructions = [];
         foreach($namespaceTemplateInstructions as $call){
-            $instructions[] = $call->render($page)->toCallArray();
+            $newCall = clone $call;
+            $instructions[] = $newCall->render($page)->toCallArray();
         }
         return $instructions;
 
@@ -112,7 +114,7 @@ class TemplateUtility
         /**
          * The title/h1 should never be null
          * otherwise a template link such as [[$id|$title]] will return a link without an description
-         * and therefore not visible
+         * and therefore will be not visible
          * We render at least the id
          */
         $h1Title = $page->getH1NotEmpty();

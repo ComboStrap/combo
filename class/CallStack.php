@@ -689,7 +689,7 @@ class CallStack
 
     public function moveToPreviousSiblingTag()
     {
-        if(!$this->endWasReached) {
+        if (!$this->endWasReached) {
             $actualCall = $this->getActualCall();
             $actualState = $actualCall->getState();
             if (!in_array($actualState, CallStack::TAG_STATE)) {
@@ -737,16 +737,12 @@ class CallStack
     {
         $key = $call->getKey();
         $offset = array_search($key, array_keys($this->callStack), true);
-        if ($offset!==false){
+        if ($offset !== false) {
             /**
              * We delete from the next
-             * That's why we don't use {@link array_splice()}
-             * because it delete also the give offset
+             * {@link array_splice()} delete also the given offset
              */
-            $this->moveToOffset($offset);
-            while($actualCall = $this->next()){
-                unset($this->callStack[$actualCall->getKey()]);
-            }
+            array_splice($this->callStack, $offset + 1);
         } else {
             LogUtility::msg("The call ($call) could not be found in the callStack. We couldn't therefore delete the calls after");
         }

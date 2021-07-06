@@ -696,5 +696,31 @@ class Call
         }
     }
 
+    /**
+     * @param Page $page
+     * @return Call
+     */
+    public function render(Page $page)
+    {
+        switch ($this->getTagName()) {
+            case "eol":
+                break;
+            default:
+                switch ($this->getState()){
+                    case DOKU_LEXER_UNMATCHED:
+                        if($this->isPluginCall()){
+                            $payload = trim($this->getPayload());
+                            if (!empty($payload)) {
+                                $this->setPayload( TemplateUtility::renderFromPage($payload, $page));
+                            }
+                        }
+                        break;
+                }
+
+        }
+        return $this;
+
+    }
+
 
 }

@@ -190,12 +190,27 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * {@link syntax_plugin_combo_pageexplorernamehome}
                  */
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                /**
+                 * @var Call[] $namespaceInstructions
+                 * @var array $namespaceAttributes
+                 */
                 $namespaceInstructions = [];
                 $namespaceAttributes = [];
+                /**
+                 * @var Call[] $pageInstructions
+                 * @var array $pageAttributes
+                 */
                 $pageInstructions = [];
                 $pageAttributes = [];
+                /**
+                 * @var Call[] $homeInstructions
+                 * @var array $homeAttributes
+                 */
                 $homeInstructions = [];
                 $homeAttributes = [];
+                /**
+                 * @var Call[] $actualInstructionsStack
+                 */
                 $actualInstructionsStack = [];
                 while ($callStack->next()) {
                     $actualCall = $callStack->getActualCall();
@@ -213,7 +228,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $homeAttributes = $actualCall->getAttributes();
                                     continue 3;
                                 default:
-                                    $actualInstructionsStack[] = $actualCall->toCallArray();
+                                    $actualInstructionsStack[] = $actualCall;
                                     continue 3;
                             }
                         case DOKU_LEXER_EXIT:
@@ -231,12 +246,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 default:
-                                    $actualInstructionsStack[] = $actualCall->toCallArray();
+                                    $actualInstructionsStack[] = $actualCall;
                                     continue 3;
 
                             }
                         default:
-                            $actualInstructionsStack[] = $actualCall->toCallArray();
+                            $actualInstructionsStack[] = $actualCall;
                             break;
 
                     }
@@ -462,11 +477,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 if ($subHomePagePath != null) {
                     if (sizeof($namespaceTemplateInstructions) > 0) {
                         // Translate TODO
+                        $actualNamespaceInstructions = TemplateUtility::processInstructions($namespaceTemplateInstructions, $subHomePagePath);
                     } else {
-                        $namespaceTemplateInstructions = [Call::createNativeCall("cdata", [$subHomePagePath])->toCallArray()];
+                        $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$subHomePagePath])->toCallArray()];
                     }
                 } else {
-                    $namespaceTemplateInstructions = [Call::createNativeCall("cdata", [$actualPageOrNamespacePath])->toCallArray()];
+                    $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$actualPageOrNamespacePath])->toCallArray()];
                 }
 
                 $this->namespaceCounter++;
@@ -489,7 +505,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $callStack->appendCallAtTheEnd(
                     Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_ENTER, [$targetIdAtt => $id])
                 );
-                $callStack->appendInstructions($namespaceTemplateInstructions);
+                $callStack->appendInstructions($actualNamespaceInstructions);
                 $callStack->appendCallAtTheEnd(
                     Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_EXIT)
                 );
@@ -539,24 +555,24 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     {
         $leafTag = syntax_plugin_combo_pageexplorerpage::TAG;
         if (sizeof($pageTemplateInstructions) > 0) {
-            // todo
-            // $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
+            $actualPageInstructions = TemplateUtility::processInstructions($pageTemplateInstructions, $pageOrNamespacePath);
         } else {
-            //$tpl = $pageOrNamespacePath;
-            $pageTemplateInstructions = [Call::createNativeCall("cdata", [$pageOrNamespacePath])->toCallArray()];
+            $actualPageInstructions = [Call::createNativeCall("cdata", [$pageOrNamespacePath])->toCallArray()];
         }
+
+        /**
+         * In callstack instructions
+         * <$leafTag>
+         *   $instructions
+         * </$leafTag>
+         */
         $callStack->appendCallAtTheEnd(
             Call::createComboCall($leafTag, DOKU_LEXER_ENTER)
         );
-        $callStack->appendInstructions($pageTemplateInstructions);
+        $callStack->appendInstructions($actualPageInstructions);
         $callStack->appendCallAtTheEnd(
             Call::createComboCall($leafTag, DOKU_LEXER_EXIT)
         );
-//        return <<<EOF
-//<$leafTag>
-//$tpl
-//</$leafTag>
-//EOF;
 
 
     }

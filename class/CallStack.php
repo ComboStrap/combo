@@ -738,7 +738,17 @@ class CallStack
         $key = $call->getKey();
         $offset = array_search($key, array_keys($this->callStack), true);
         if ($offset!==false){
-            array_splice($this->callStack, $offset+1);
+            /**
+             * We delete from the next
+             * That's why we don't use {@link array_splice()}
+             * because it delete also the give offset
+             */
+            $this->moveToOffset($offset);
+            while($actualCall = $this->next()){
+                unset($this->callStack[$actualCall->getKey()]);
+            }
+        } else {
+            LogUtility::msg("The call ($call) could not be found in the callStack. We couldn't therefore delete the calls after");
         }
 
     }

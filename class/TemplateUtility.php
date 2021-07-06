@@ -19,26 +19,11 @@ class TemplateUtility
     static function render($pageTemplate, $pagePath)
     {
 
-        /**
-         * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
-         * @see {@link \syntax_plugin_combo_pipeline}
-         */
 
-        /**
-         * The title/h1 should never be null
-         * otherwise a template link such as [[$id|$title]] will return a link without an description
-         * and therefore not visible
-         * We render at least the id
-         */
         $page = Page::createPageFromPath($pagePath);
-        $h1Title = $page->getH1NotEmpty();
-        $pageTitle = $page->getTitleNotEmpty();
 
-        $pageTitle = str_replace('"', "'", $pageTitle);
-        $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
-        $h1Title = str_replace('"', "'", $h1Title);
-        $tpl = str_replace("\$h1", $h1Title, $tpl);
-        return str_replace("\$id", $pagePath, $tpl);
+
+        return self::renderFromPage($pageTemplate,$page);
 
     }
 
@@ -102,6 +87,51 @@ class TemplateUtility
 
         }
         return $name;
+    }
+
+    /**
+     * Replace placeholder
+     * @param Call[] $namespaceTemplateInstructions
+     * @param $pagePath
+     */
+    public static function processInstructions(array $namespaceTemplateInstructions, $pagePath)
+    {
+        $page = Page::createPageFromPath($pagePath);
+        $instructions = [];
+        foreach($namespaceTemplateInstructions as $call){
+            $instructions[] = $call->render($page)->toCallArray();
+        }
+        return $instructions;
+
+    }
+
+    public static function renderFromPage($pageTemplate, Page $page)
+    {
+
+
+        /**
+         * The title/h1 should never be null
+         * otherwise a template link such as [[$id|$title]] will return a link without an description
+         * and therefore not visible
+         * We render at least the id
+         */
+        $h1Title = $page->getH1NotEmpty();
+        $pageTitle = $page->getTitleNotEmpty();
+
+
+        /**
+         * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
+         * @see {@link \syntax_plugin_combo_pipeline}
+         */
+        $pageTitle = str_replace('"', "'", $pageTitle);
+
+        /**
+         * Other processing
+         */
+        $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
+        $h1Title = str_replace('"', "'", $h1Title);
+        $tpl = str_replace("\$h1", $h1Title, $tpl);
+        return str_replace("\$id", $page->getId(), $tpl);
     }
 
 

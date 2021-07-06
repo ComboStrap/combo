@@ -213,7 +213,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $homeAttributes = $actualCall->getAttributes();
                                     continue 3;
                                 default:
-                                    $actualInstructionsStack[] = $actualCall;
+                                    $actualInstructionsStack[] = $actualCall->toCallArray();
                                     continue 3;
                             }
                         case DOKU_LEXER_EXIT:
@@ -231,12 +231,12 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 default:
-                                    $actualInstructionsStack[] = $actualCall;
+                                    $actualInstructionsStack[] = $actualCall->toCallArray();
                                     continue 3;
 
                             }
                         default:
-                            $actualInstructionsStack[] = $actualCall;
+                            $actualInstructionsStack[] = $actualCall->toCallArray();
                             break;
 
                     }
@@ -348,15 +348,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * (Move to the end is not really needed, but yeah)
                          */
                         $callStack->moveToEnd();
-                        $namespaceInstructions = [];
-                        if ($namespaceInstructions != null) {
-                            $namespaceInstructions = PluginUtility::getInstructionsWithoutRoot(trim($namespaceInstructions));
-                        }
-                        $pageTemplateInstructions = [];
-                        if ($pageInstructions != null) {
-                            $pageTemplateInstructions = PluginUtility::getInstructionsWithoutRoot(trim($pageInstructions));
-                        }
-                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $namespaceInstructions, $pageTemplateInstructions);
+                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $namespaceInstructions, $pageInstructions);
 
                         break;
 
@@ -454,7 +446,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
         $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreesubnamespace::TAG;
         $pageExplorerTreeButtonTag = syntax_plugin_combo_pageexplorernamespace::TAG;
-        $pageExplorerTreeListTag = syntax_plugin_combo_pageexplorertreenamespacelist::TAG;
+        $pageExplorerTreeListTag = syntax_plugin_combo_pageexplorertreesubnamespacelist::TAG;
 
         $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
         foreach ($pageOrNamespaces as $pageOrNamespace) {
@@ -481,6 +473,16 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $targetIdAtt = syntax_plugin_combo_pageexplorernamespace::TARGET_ID_ATT;
                 $id = PluginUtility::toHtmlId("page-explorer-{$actualPageOrNamespacePath}-{$this->namespaceCounter}-combo");
 
+                /**
+                 * Entering: Creating in instructions form
+                 * the same as in markup form
+                 *
+                 * <$pageExplorerTreeTag>
+                 *    <$pageExplorerTreeButtonTag $targetIdAtt="$id">
+                 *      $buttonInstructions
+                 *    </$pageExplorerTreeButtonTag>
+                 *    <$pageExplorerTreeListTag id="$id">
+                 */
                 $callStack->appendCallAtTheEnd(
                     Call::createComboCall($pageExplorerTreeTag, DOKU_LEXER_ENTER)
                 );
@@ -495,20 +497,18 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_ENTER, [TagAttributes::ID_KEY => "$id"])
                 );
 
-//                $hallo = <<<EOF
-//<$pageExplorerTreeTag>
-//  <$pageExplorerTreeButtonTag $targetIdAtt="$id">
-//    $buttonInstructions
-//  </$pageExplorerTreeButtonTag>
-//  <$pageExplorerTreeListTag id="$id">
-//EOF;
+
                 /**
                  * Recursion
                  */
                 self::treeProcessSubNamespace($callStack, $actualPageOrNamespacePath, $namespaceTemplateInstructions, $pageTemplateInstructions);
 
                 /**
-                 * Closing
+                 * Closing: Creating in instructions form
+                 * the same as in markup form
+                 *
+                 *   </$pageExplorerTreeListTag>
+                 * </$pageExplorerTreeTag>
                  */
                 $callStack->appendCallAtTheEnd(
                     Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_EXIT)
@@ -516,10 +516,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $callStack->appendCallAtTheEnd(
                     Call::createComboCall($pageExplorerTreeTag, DOKU_LEXER_EXIT)
                 );
-//                $callStack .= <<<EOF
-// </$pageExplorerTreeListTag>
-//</$pageExplorerTreeTag>
-//EOF;
+
 
             } else {
                 /**
@@ -540,7 +537,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      */
     private static function treeProcessLeaf(&$callStack, $pageOrNamespacePath, $pageTemplateInstructions = [])
     {
-        $leafTag = syntax_plugin_combo_pageexplorertreeleaf::TAG;
+        $leafTag = syntax_plugin_combo_pageexplorerpage::TAG;
         if (sizeof($pageTemplateInstructions) > 0) {
             // todo
             // $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);

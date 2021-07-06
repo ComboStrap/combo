@@ -738,7 +738,7 @@ class CallStack
         $key = $call->getKey();
         $offset = array_search($key, array_keys($this->callStack), true);
         if ($offset!==false){
-            array_splice($this->callStack, $offset);
+            array_splice($this->callStack, $offset+1);
         }
 
     }

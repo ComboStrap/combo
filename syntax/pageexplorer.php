@@ -400,13 +400,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
 
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CANONICAL);
                     $type = $tagAttributes->getType();
                     switch ($type) {
                         case self::TYPE_TREE:
-                            $tagAttributes->addClassName("list-unstyled");
-                            $tagAttributes->addClassName("ps-0");
-                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("ul") . DOKU_LF;
+                            $renderer->doc .= $tagAttributes->toHtmlEnterTag("nav") . DOKU_LF;
+                            $renderer->doc .= "<ul>" . DOKU_LF;
+                            PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::CANONICAL."-".$type);
                             break;
                         case self::LIST_TYPE:
                             /**
@@ -429,6 +429,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     switch ($type) {
                         case self::TYPE_TREE:
                             $renderer->doc .= "</ul>" . DOKU_LF;
+                            $renderer->doc .= "</nav>" . DOKU_LF;
                             break;
                         case self::LIST_TYPE:
                             /**

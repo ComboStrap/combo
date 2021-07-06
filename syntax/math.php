@@ -85,7 +85,7 @@ class syntax_plugin_combo_math extends DokuWiki_Syntax_Plugin
         foreach (self::getTags() as $element) {
 
             $pattern = PluginUtility::getLeafContainerTagPattern($element);
-            $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
         }
 

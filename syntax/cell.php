@@ -111,7 +111,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
         // A cell can be anywhere
         foreach (self::getTags() as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
 
@@ -121,7 +121,7 @@ class syntax_plugin_combo_cell extends DokuWiki_Syntax_Plugin
     {
 
         foreach (self::getTags() as $tag) {
-            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }

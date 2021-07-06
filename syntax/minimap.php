@@ -26,7 +26,7 @@ class syntax_plugin_combo_minimap extends DokuWiki_Syntax_Plugin
     function connectTo($aMode)
     {
         $pattern = '<' . self::MINIMAP_TAG_NAME . '[^>]*>';
-        $this->Lexer->addSpecialPattern($pattern, $aMode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addSpecialPattern($pattern, $aMode, PluginUtility::getModeFromTag($this->getPluginComponent()));
     }
 
     function getSort()

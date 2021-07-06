@@ -4,31 +4,27 @@
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
-require_once(__DIR__ . '/../class/TemplateUtility.php');
 
 
 /**
- * Implementation of the button of the parent tree node in the collapsible menu
- * Ie the button
- * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
+ * Implementation of the parent tree node in the collapsible menu
  *
+ * the `li` that wraps:
+ *   * the {@link syntax_plugin_combo_pageexplorernamespace} (button)
+ *   * and the sub {@link syntax_plugin_combo_pageexplorerpage pages list}
+ *
+ * See: http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
  *
  *
  */
-class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorertreesubnamespace extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorertreenamespacebutton";
-
-    /**
-     * The target id of the collapse
-     */
-    const TARGET_ID_ATT = "target-id";
-
+    const TAG = "pageexplorertreesubnamespace";
 
 
 
@@ -70,7 +66,7 @@ class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Synta
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('formatting');
     }
 
     function getSort()
@@ -78,17 +74,15 @@ class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Synta
         return 201;
     }
 
-    public function accepts($mode)
-    {
-        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
-    }
-
 
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        /**
+         * none: Created dynamically at the {@link DOKU_LEXER_END}
+         * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+         * to create/generate the tree
+         */
 
     }
 
@@ -96,7 +90,11 @@ class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Synta
     public function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        /**
+         * none: Created dynamically at the {@link DOKU_LEXER_END}
+         * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+         * to create/generate the tree
+         */
 
     }
 
@@ -131,6 +129,14 @@ class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Synta
                 // We should not ever come here but a user does not not known that
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
+            case DOKU_LEXER_MATCHED :
+
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
+                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
+                    PluginUtility::TAG => PluginUtility::getTag($match)
+                );
 
             case DOKU_LEXER_EXIT :
 
@@ -163,13 +169,13 @@ class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Synta
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
+                    // The attributes are used in the exit
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $targetId = $tagAttributes->getValueAndRemoveIfPresent(self::TARGET_ID_ATT);
-                    $tagAttributes->addHtmlAttributeValue("data-bs-target", "#$targetId");
-                    $tagAttributes->addHtmlAttributeValue("data-bs-toggle", "collapse");
-                    $tagAttributes->addHtmlAttributeValue("aria-expanded", "true");
-                    $tagAttributes->addClassName("btn btn-toggle-combo align-items-center rounded");
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("button");
+                    $enterTagAttributes = $tagAttributes->toHTMLAttributeString();
+                    $renderer->doc .= <<<EOF
+<li $enterTagAttributes>
+EOF;
+
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -177,8 +183,10 @@ class syntax_plugin_combo_pageexplorertreenamespacebutton extends DokuWiki_Synta
 
                 case DOKU_LEXER_EXIT :
 
+
                     $renderer->doc .= <<<EOF
-</button>
+
+</li>
 EOF;
                     break;
             }

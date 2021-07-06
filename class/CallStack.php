@@ -723,5 +723,25 @@ class CallStack
         }
     }
 
+    /**
+     * Delete all calls after the passed call
+     *
+     * It's used in syntax generator that:
+     *   * capture the children callstack at the end,
+     *   * delete it
+     *   * and use it to generate more calls.
+     *
+     * @param Call $call
+     */
+    public function deleteAllCallsAfter(Call $call)
+    {
+        $key = $call->getKey();
+        $offset = array_search($key, array_keys($this->callStack), true);
+        if ($offset!==false){
+            array_splice($this->callStack, $offset);
+        }
+
+    }
+
 
 }

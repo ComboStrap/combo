@@ -90,7 +90,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
 
         if ($this->getConf(self::CONF_CODE_ENABLE)) {
             $pattern = PluginUtility::getContainerTagPattern(self::CODE_TAG);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
 
@@ -100,7 +100,7 @@ class syntax_plugin_combo_code extends DokuWiki_Syntax_Plugin
     function postConnect()
     {
         if ($this->getConf(self::CONF_CODE_ENABLE)) {
-            $this->Lexer->addExitPattern('</' . self::CODE_TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . self::CODE_TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
 

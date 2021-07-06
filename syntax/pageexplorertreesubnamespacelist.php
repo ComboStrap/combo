@@ -1,27 +1,26 @@
 <?php
-/**
- * Copyright (c) 2020. ComboStrap, Inc. and its affiliates. All Rights Reserved.
- *
- * This source code is licensed under the GPL license found in the
- * COPYING  file in the root directory of this source tree.
- *
- * @license  GPL 3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
- * @author   ComboStrap <support@combostrap.com>
- *
- */
+
 
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
-if (!defined('DOKU_INC')) die();
 
 /**
- * Class syntax_plugin_combo_tov
+ * In a tree menu, implementation of the list of leaf item (page, sub-namespace) that the button collapse
+ *
+ * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
+ *
+ * ie the container (div ul) that wraps the list of {@link syntax_plugin_combo_pageexplorerpage pages list}
  *
  */
-class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorertreesubnamespacelist extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "toc";
+    /**
+     * Tag in Dokuwiki cannot have a `-`
+     * This is the last part of the class
+     */
+    const TAG = "pageexplorertreesubnamespacelist";
 
 
     /**
@@ -39,8 +38,8 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
     /**
      * How Dokuwiki will add P element
      *
-     *  * 'normal' - The plugin can be used inside paragraphs (inline)
-     *  * 'block'  - Open paragraphs need to be closed before plugin output - block should not be inside paragraphs
+     *  * 'normal' - The plugin can be used inside paragraphs (inline or inside)
+     *  * 'block'  - Open paragraphs need to be closed before plugin output (box) - block should not be inside paragraphs
      *  * 'stack'  - Special case. Plugin wraps other paragraphs. - Stacks can contain paragraphs
      *
      * @see DokuWiki_Syntax_Plugin::getPType()
@@ -48,7 +47,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'substition';
+        return 'normal';
     }
 
     /**
@@ -62,7 +61,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array();
+        return array('formatting');
     }
 
     function getSort()
@@ -70,21 +69,35 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
         return 201;
     }
 
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+    }
+
 
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        /**
+         * none: Created dynamically at the {@link DOKU_LEXER_END}
+         * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+         * to create/generate the tree
+         */
 
     }
 
-    function postConnect()
+
+    public function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        /**
+         * none: Created dynamically at the {@link DOKU_LEXER_END}
+         * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+         * to create/generate the tree
+         */
 
     }
+
 
     /**
      *
@@ -96,6 +109,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
      * @return array|bool
+     * @throws Exception
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
@@ -106,15 +120,28 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER :
                 $attributes = PluginUtility::getTagAttributes($match);
-                return array($state, $attributes);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+
+                // We should not ever come here but a user does not not known that
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+
+            case DOKU_LEXER_MATCHED :
+
+                return array(
+                    PluginUtility::STATE => $state
+                );
 
             case DOKU_LEXER_EXIT :
 
-                // Important otherwise we don't get an exit in the render
-                return array($state, '');
+
+                return array(
+                    PluginUtility::STATE => $state,
+                );
 
 
         }
@@ -140,17 +167,26 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
+                    // The attributes are used in the exit
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $tagAttributes->addClassName("collapse");
+                    $attributesHTMLString = $tagAttributes->toHTMLAttributeString();
+                    $renderer->doc .= <<<EOF
+<div $attributesHTMLString>
+    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+EOF;
 
-
-                    $renderer->doc = "toc";
                     break;
-
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= '';
+
+                    $renderer->doc .= <<<EOF
+    </ul>
+</div>
+EOF;
                     break;
             }
             return true;
@@ -159,6 +195,7 @@ class syntax_plugin_combo_toc extends DokuWiki_Syntax_Plugin
         // unsupported $mode
         return false;
     }
+
 
 }
 

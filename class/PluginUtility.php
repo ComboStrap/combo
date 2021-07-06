@@ -190,7 +190,7 @@ class PluginUtility
      * A mode is just a name for a class
      * Example: $Parser->addMode('listblock',new Doku_Parser_Mode_ListBlock());
      */
-    public static function getModeForComponent($tag)
+    public static function getModeFromTag($tag)
     {
         return "plugin_" . self::getComponentName($tag);
     }

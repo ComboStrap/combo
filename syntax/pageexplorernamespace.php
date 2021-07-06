@@ -1,29 +1,45 @@
 <?php
 
 
-use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
-require_once(__DIR__ . '/../class/TemplateUtility.php');
-
 
 /**
- * Implementation of the list block of
- * Ie the button
- * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
+ * Implementation of the namespace
+ *   * ie the button (in a collapsible menu) http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
+ *   * or the directory in a list menu
  *
- *
+ * This syntax is not a classic syntax plugin
+ * The instructions are captured at the {@link DOKU_LEXER_END}
+ * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+ * to create/generate the namespaces
  *
  */
-class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorernamespace extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorertreenamespacelist";
+    const TAG = "pageexplorernamespace";
+
+    /**
+     * Markup tag
+     */
+    const NAMESPACE_SHORT_TAG = "ns";
+    const NAMESPACE_TAG = "namespace";
+    const NAMESPACE_OLD_TAG = "ns-item";
+    const NAMESPACE_TAGS = [self::NAMESPACE_SHORT_TAG, self::NAMESPACE_TAG, self::NAMESPACE_OLD_TAG];
+
+    /**
+     * Collapsible Menu
+     * (The target id of the collapse)
+     */
+    const TARGET_ID_ATT = "target-id";
+
+
 
 
     /**
@@ -64,7 +80,7 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
      */
     function getAllowedTypes()
     {
-        return array('formatting');
+        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
     function getSort()
@@ -80,17 +96,21 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
 
     function connectTo($mode)
     {
-
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_pageexplorer::TAG)) {
+            foreach (self::NAMESPACE_TAGS as $tag) {
+                $pattern = PluginUtility::getContainerTagPattern($tag);
+                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            }
+        }
 
     }
 
 
     public function postConnect()
     {
-
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::NAMESPACE_TAGS as $tag) {
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
 
     }
 
@@ -118,19 +138,13 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
                 $attributes = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
-                );
+                    PluginUtility::ATTRIBUTES => $attributes);
 
             case DOKU_LEXER_UNMATCHED :
 
                 // We should not ever come here but a user does not not known that
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
-            case DOKU_LEXER_MATCHED :
-
-                return array(
-                    PluginUtility::STATE => $state
-                );
 
             case DOKU_LEXER_EXIT :
 
@@ -163,15 +177,13 @@ class syntax_plugin_combo_pageexplorertreenamespacelist extends DokuWiki_Syntax_
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    // The attributes are used in the exit
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $tagAttributes->addClassName("collapse");
-                    $attributesHTMLString = $tagAttributes->toHTMLAttributeString();
-                    $renderer->doc .= <<<EOF
-<div $attributesHTMLString>
-    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-EOF;
-
+                    $targetId = $tagAttributes->getValueAndRemoveIfPresent(self::TARGET_ID_ATT);
+                    $tagAttributes->addHtmlAttributeValue("data-bs-target", "#$targetId");
+                    $tagAttributes->addHtmlAttributeValue("data-bs-toggle", "collapse");
+                    $tagAttributes->addHtmlAttributeValue("aria-expanded", "true");
+                    $tagAttributes->addClassName("btn btn-toggle-combo align-items-center rounded");
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("button");
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
@@ -180,8 +192,7 @@ EOF;
                 case DOKU_LEXER_EXIT :
 
                     $renderer->doc .= <<<EOF
-    </ul>
-</div>
+</button>
 EOF;
                     break;
             }

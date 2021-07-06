@@ -89,9 +89,9 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        if ($mode = PluginUtility::getModeForComponent(syntax_plugin_combo_tabs::TAG)) {
+        if ($mode = PluginUtility::getModeFromTag(syntax_plugin_combo_tabs::TAG)) {
             $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }
@@ -99,7 +99,7 @@ class syntax_plugin_combo_tab extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 

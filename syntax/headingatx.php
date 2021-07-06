@@ -73,7 +73,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
     {
 
         $pattern = '\r??\n\s*#{1,6}\s?(?=.*' . self::EXIT_PATTERN . ')';
-        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 

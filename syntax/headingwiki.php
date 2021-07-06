@@ -79,14 +79,14 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
     public function connectTo($mode)
     {
         if ($this->enableWikiHeading($mode)) {
-            $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern(self::ENTRY_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 
     public function postConnect()
     {
 
-        $this->Lexer->addExitPattern(self::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern(self::EXIT_PATTERN, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 

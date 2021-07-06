@@ -152,9 +152,9 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
          */
         $show = in_array($mode,
             [
-                PluginUtility::getModeForComponent(syntax_plugin_combo_tabs::TAG),
-                PluginUtility::getModeForComponent(syntax_plugin_combo_accordion::TAG),
-                PluginUtility::getModeForComponent(syntax_plugin_combo_tabpanels::TAG)
+                PluginUtility::getModeFromTag(syntax_plugin_combo_tabs::TAG),
+                PluginUtility::getModeFromTag(syntax_plugin_combo_accordion::TAG),
+                PluginUtility::getModeFromTag(syntax_plugin_combo_tabpanels::TAG)
             ]);
 
         /**
@@ -174,7 +174,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
         if ($show) {
             foreach (self::getTags() as $tag) {
                 $pattern = PluginUtility::getContainerTagPattern($tag);
-                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
             }
         }
 
@@ -184,7 +184,7 @@ class syntax_plugin_combo_panel extends DokuWiki_Syntax_Plugin
     {
 
         foreach (self::getTags() as $tag) {
-            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }

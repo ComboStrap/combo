@@ -92,7 +92,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
          */
         foreach (self::ALL_TAGS as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
 
@@ -101,7 +101,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
         foreach (self::ALL_TAGS as $tag) {
-            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }

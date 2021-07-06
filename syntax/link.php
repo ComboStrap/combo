@@ -125,7 +125,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
         if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
             $pattern = LinkUtility::ENTRY_PATTERN_SINGLE_LINE;
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }
@@ -133,7 +133,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
         if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
-            $this->Lexer->addExitPattern(LinkUtility::EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern(LinkUtility::EXIT_PATTERN, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 

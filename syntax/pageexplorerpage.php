@@ -3,26 +3,35 @@
 
 use ComboStrap\PluginUtility;
 
-require_once(__DIR__ . '/../class/TemplateUtility.php');
-
 
 /**
- * Implementation of the leaf tree node in the collapsible menu
+ * Implementation of the page item
+ *   - a page in the list menu
+ *   - a leaf tree node in the collapsible menu (http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html)
  *
- * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
+ * This syntax is not a classic syntax plugin
  *
+ * The instructions are captured at the {@link DOKU_LEXER_END}
+ * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+ * to create/generate the list of pages
  *
  *
  */
-class syntax_plugin_combo_pageexplorertreeleaf extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorerpage extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorertreeleaf";
+    const TAG = "pageexplorerpage";
 
+    /**
+     * The pattern
+     */
+    const MARKI_PAGE_TAG = "page";
+    const MARKI_PAGE_OLD_TAG = "page-item";
+    const MARKI_PAGE_TAGS = [self::MARKI_PAGE_TAG, self::MARKI_PAGE_OLD_TAG];
 
 
     /**
@@ -79,17 +88,21 @@ class syntax_plugin_combo_pageexplorertreeleaf extends DokuWiki_Syntax_Plugin
 
     function connectTo($mode)
     {
-
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_pageexplorer::TAG)) {
+            foreach (self::MARKI_PAGE_TAGS as $page) {
+                $pattern = PluginUtility::getContainerTagPattern($page);
+                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            }
+        }
 
     }
 
 
     public function postConnect()
     {
-
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::MARKI_PAGE_TAGS as $page) {
+            $this->Lexer->addExitPattern('</' . $page . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
 
     }
 
@@ -117,7 +130,8 @@ class syntax_plugin_combo_pageexplorertreeleaf extends DokuWiki_Syntax_Plugin
                 $attributes = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes);
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
             case DOKU_LEXER_UNMATCHED :
 

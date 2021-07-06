@@ -420,7 +420,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          * Heading tag
          */
         foreach (self::TAGS as $tag) {
-            $this->Lexer->addEntryPattern(PluginUtility::getContainerTagPattern($tag), $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern(PluginUtility::getContainerTagPattern($tag), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }
@@ -428,7 +428,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
         foreach (self::TAGS as $tag) {
-            $this->Lexer->addExitPattern(PluginUtility::getEndTagPattern($tag), PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern(PluginUtility::getEndTagPattern($tag), PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 

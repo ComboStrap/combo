@@ -1,35 +1,37 @@
 <?php
 
 
-use ComboStrap\Background;
-use ComboStrap\CallStack;
-use ComboStrap\FsWikiUtility;
-use ComboStrap\LogUtility;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\TagAttributes;
-use ComboStrap\TemplateUtility;
 
-require_once(__DIR__ . '/../class/TemplateUtility.php');
 
 
 /**
- * Implementation of the parent tree node in the collapsible menu
+ * Implementation of the home
+ *   - the header in the list menu
+ *   - the first leaf after a namespace tree node in the collapsible menu (http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html)
  *
- * http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
- *
+ * This syntax is not a classic syntax plugin
+ * The instructions are captured at the {@link DOKU_LEXER_END}
+ * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+ * to create/generate the home
  *
  *
  */
-class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorerhome extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Tag in Dokuwiki cannot have a `-`
      * This is the last part of the class
      */
-    const TAG = "pageexplorertreenamespace";
-    const NS_ATT = "ns";
+    const TAG = "pageexplorerhome";
+
+    /**
+     * The pattern
+     */
+    const HOME_TAG = "home";
+    const HOME_OLD_TAG = "index";
+    const HOMES_TAG = [self::HOME_TAG, self::HOME_OLD_TAG];
 
 
     /**
@@ -70,7 +72,7 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
      */
     function getAllowedTypes()
     {
-        return array('formatting');
+        return array('formatting', 'substition');
     }
 
     function getSort()
@@ -86,17 +88,21 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
 
     function connectTo($mode)
     {
-
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_pageexplorer::TAG)) {
+            foreach (self::HOMES_TAG as $homeTag) {
+                $pattern = PluginUtility::getContainerTagPattern($homeTag);
+                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            }
+        }
 
     }
 
 
     public function postConnect()
     {
-
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        foreach (self::HOMES_TAG as $homeTag) {
+            $this->Lexer->addExitPattern('</' . $homeTag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        }
 
     }
 
@@ -124,21 +130,14 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
                 $attributes = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes);
+                    PluginUtility::ATTRIBUTES => $attributes
+                );
 
             case DOKU_LEXER_UNMATCHED :
 
                 // We should not ever come here but a user does not not known that
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
-            case DOKU_LEXER_MATCHED :
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
-                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
-                    PluginUtility::TAG => PluginUtility::getTag($match)
-                );
 
             case DOKU_LEXER_EXIT :
 
@@ -171,25 +170,13 @@ class syntax_plugin_combo_pageexplorertreenamespace extends DokuWiki_Syntax_Plug
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    // The attributes are used in the exit
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $enterTagAttributes = $tagAttributes->toHTMLAttributeString();
-                    $renderer->doc .= <<<EOF
-<li $enterTagAttributes>
-EOF;
-
+                    $renderer->doc .= "<li>" . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
-
                 case DOKU_LEXER_EXIT :
-
-
-                    $renderer->doc .= <<<EOF
-
-</li>
-EOF;
+                    $renderer->doc .= "</li>" . DOKU_LF;
                     break;
             }
             return true;

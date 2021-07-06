@@ -9,11 +9,10 @@ use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\RenderUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
 
-require_once(__DIR__ . '/../class/TemplateUtility.php');
+require_once(__DIR__ . '/../class/PluginUtility.php');
 
 
 /**
@@ -44,20 +43,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const COMBO_TAG_PATTERNS = ["ntoc", self::CANONICAL];
 
     /**
-     * Ntoc attribute
+     * Component attribute
      */
     const ATTR_NAMESPACE = "ns";
-    const NAMESPACE_ITEM = "namespace";
-    const NAMESPACE_OLD = "ns-item";
-    const NAMESPACES = [self::ATTR_NAMESPACE, self::NAMESPACE_ITEM, self::NAMESPACE_OLD];
-
-    const PAGE = "page";
-    const PAGE_OLD = "page-item";
-    const PAGES = [self::PAGE, self::PAGE_OLD];
-
-    const HOME = "home";
-    const HOME_OLD = "index";
-    const HOMES = [self::HOME, self::HOME_OLD];
 
 
     /**
@@ -134,19 +122,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
         foreach (self::COMBO_TAG_PATTERNS as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
-
-        foreach (self::PAGES as $page) {
-            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($page), PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
-
-        foreach (self::HOMES as $home) {
-            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($home), PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
-
-        foreach (self::NAMESPACES as $namespace) {
-            $this->Lexer->addPattern(PluginUtility::getLeafContainerTagPattern($namespace), PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }
@@ -155,7 +131,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
         foreach (self::COMBO_TAG_PATTERNS as $tag) {
-            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }
@@ -208,56 +184,68 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Get the templates
+                 * Capture the instructions for
+                 * {@link syntax_plugin_combo_pageexplorerpage}
+                 * {@link syntax_plugin_combo_pageexplorernamespace}
+                 * {@link syntax_plugin_combo_pageexplorernamehome}
                  */
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $namespaceTemplate = null;
-                $pageTemplate = null;
-                $homeTemplate = null;
+                $namespaceInstructions = [];
+                $namespaceAttributes = [];
+                $pageInstructions = [];
+                $pageAttributes = [];
+                $homeInstructions = [];
                 $homeAttributes = [];
-                $found = false;
+                $actualInstructionsStack = [];
                 while ($callStack->next()) {
                     $actualCall = $callStack->getActualCall();
-                    if ($actualCall->getTagName() == self::TAG && $actualCall->getState() == DOKU_LEXER_MATCHED) {
-                        $tagName = PluginUtility::getTag($actualCall->getCapturedContent());
-                        switch ($tagName) {
-                            case self::PAGE:
-                            case self::PAGE_OLD:
-                                /**
-                                 * Pattern for a page
-                                 */
-                                $pageTemplate = $actualCall->getPayload();
+                    $tagName = $actualCall->getTagName();
+                    switch ($actualCall->getState()) {
+                        case DOKU_LEXER_ENTER:
+                            switch ($tagName) {
+                                case syntax_plugin_combo_pageexplorerpage::TAG:
+                                    $pageAttributes = $actualCall->getAttributes();
+                                    continue 3;
+                                case syntax_plugin_combo_pageexplorernamespace::TAG:
+                                    $namespaceAttributes = $actualCall->getAttributes();
+                                    continue 3;
+                                case syntax_plugin_combo_pageexplorerhome::TAG:
+                                    $homeAttributes = $actualCall->getAttributes();
+                                    continue 3;
+                                default:
+                                    $actualInstructionsStack[] = $actualCall;
+                                    continue 3;
+                            }
+                        case DOKU_LEXER_EXIT:
+                            switch ($tagName) {
+                                case syntax_plugin_combo_pageexplorerpage::TAG:
+                                    $pageInstructions = $actualInstructionsStack;
+                                    $actualInstructionsStack = [];
+                                    continue 3;
+                                case syntax_plugin_combo_pageexplorernamespace::TAG:
+                                    $namespaceInstructions = $actualInstructionsStack;
+                                    $actualInstructionsStack = [];
+                                    continue 3;
+                                case syntax_plugin_combo_pageexplorerhome::TAG:
+                                    $homeInstructions = $actualInstructionsStack;
+                                    $actualInstructionsStack = [];
+                                    continue 3;
+                                default:
+                                    $actualInstructionsStack[] = $actualCall;
+                                    continue 3;
 
-                                $found = true;
-                                break;
-                            case self::NAMESPACE_ITEM:
-                            case self::NAMESPACE_OLD:
-                                /**
-                                 * Pattern for a namespace
-                                 */
-                                $namespaceTemplate = $actualCall->getPayload();
-                                $found = true;
-                                break;
-                            case self::HOME:
-                            case self::HOME_OLD:
-                                /**
-                                 * Pattern for a header
-                                 */
-                                $homeTemplate = $actualCall->getPayload();
-                                $homeAttributes = $actualCall->getAttributes();
-                                $found = true;
-                                break;
-                            default:
-                                LogUtility::msg("The tag ($tagName) is unknown", LogUtility::LVL_MSG_ERROR, self::TAG);
-                                break;
-                        }
-                        $callStack->deleteActualCallAndPrevious();
+                            }
+                        default:
+                            $actualInstructionsStack[] = $actualCall;
+                            break;
+
                     }
                 }
+                /**
+                 * Remove all callstack from the opening tag
+                 */
+                $callStack->deleteAllCallsAfter($openingTag);
 
-                if (!$found) {
-                    LogUtility::msg("There should be at minimum a `" . self::HOME . "`, `" . self::NAMESPACE_ITEM . "` or a `" . self::HOME . "` defined", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                }
 
                 /**
                  * Start
@@ -279,9 +267,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Creating the markup
+                 * Creating the callstack
                  */
-                $marki = "";
                 $type = $tagAttributes->getType();
                 switch ($type) {
                     default:
@@ -306,8 +293,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * Home
                          */
                         $currentHomePagePath = FsWikiUtility::getHomePagePath($nameSpacePath);
-                        if ($currentHomePagePath != null && $homeTemplate != null) {
-                            $tpl = TemplateUtility::render($homeTemplate, $currentHomePagePath);
+                        if ($currentHomePagePath != null && sizeof($homeInstructions) > 0) {
+                            $tpl = TemplateUtility::render($homeInstructions, $currentHomePagePath);
                             $homeTagAttributes = TagAttributes::createFromCallStackArray($homeAttributes);
                             $homeTagAttributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "light");
                             $homeTagAttributes->addStyleDeclaration("border-bottom", "1px solid #e5e5e5");
@@ -324,20 +311,20 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             if ($pageOrNamespace['type'] == "d") {
 
                                 // Namespace
-                                if (!empty($namespaceTemplate)) {
+                                if (!empty($namespaceInstructions)) {
                                     $subHomePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
                                     if ($subHomePagePath != null) {
-                                        $tpl = TemplateUtility::render($namespaceTemplate, $subHomePagePath);
+                                        $tpl = TemplateUtility::render($namespaceInstructions, $subHomePagePath);
                                         $marki .= "<$rowTag>$tpl</$rowTag>";
                                     }
                                 }
 
                             } else {
 
-                                if (!empty($pageTemplate)) {
+                                if (!empty($pageInstructions)) {
                                     $pageNum++;
                                     if ($pageOrNamespacePath != $currentHomePagePath) {
-                                        $tpl = TemplateUtility::render($pageTemplate, $pageOrNamespacePath);
+                                        $tpl = TemplateUtility::render($pageInstructions, $pageOrNamespacePath);
                                         $marki .= "<$rowTag>$tpl</$rowTag>";
                                     }
                                 }
@@ -361,15 +348,15 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * (Move to the end is not really needed, but yeah)
                          */
                         $callStack->moveToEnd();
-                        $namespaceTemplateInstructions = [];
-                        if ($namespaceTemplate != null) {
-                            $namespaceTemplateInstructions = PluginUtility::getInstructionsWithoutRoot(trim($namespaceTemplate));
+                        $namespaceInstructions = [];
+                        if ($namespaceInstructions != null) {
+                            $namespaceInstructions = PluginUtility::getInstructionsWithoutRoot(trim($namespaceInstructions));
                         }
                         $pageTemplateInstructions = [];
-                        if ($pageTemplate != null) {
-                            $pageTemplateInstructions = PluginUtility::getInstructionsWithoutRoot(trim($pageTemplate));
+                        if ($pageInstructions != null) {
+                            $pageTemplateInstructions = PluginUtility::getInstructionsWithoutRoot(trim($pageInstructions));
                         }
-                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $namespaceTemplateInstructions, $pageTemplateInstructions);
+                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $namespaceInstructions, $pageTemplateInstructions);
 
                         break;
 
@@ -465,8 +452,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreenamespace::TAG;
-        $pageExplorerTreeButtonTag = syntax_plugin_combo_pageexplorertreenamespacebutton::TAG;
+        $pageExplorerTreeTag = syntax_plugin_combo_pageexplorertreesubnamespace::TAG;
+        $pageExplorerTreeButtonTag = syntax_plugin_combo_pageexplorernamespace::TAG;
         $pageExplorerTreeListTag = syntax_plugin_combo_pageexplorertreenamespacelist::TAG;
 
         $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
@@ -491,7 +478,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 }
 
                 $this->namespaceCounter++;
-                $targetIdAtt = syntax_plugin_combo_pageexplorertreenamespacebutton::TARGET_ID_ATT;
+                $targetIdAtt = syntax_plugin_combo_pageexplorernamespace::TARGET_ID_ATT;
                 $id = PluginUtility::toHtmlId("page-explorer-{$actualPageOrNamespacePath}-{$this->namespaceCounter}-combo");
 
                 $callStack->appendCallAtTheEnd(

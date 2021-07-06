@@ -168,12 +168,13 @@ class syntax_plugin_combo_pageexplorertreesubnamespacelist extends DokuWiki_Synt
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     // The attributes are used in the exit
-                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $logicalTag = syntax_plugin_combo_pageexplorer::CANONICAL."-".syntax_plugin_combo_pageexplorer::TYPE_TREE."-subnamespacelist";
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES],$logicalTag);
                     $tagAttributes->addClassName("collapse");
                     $attributesHTMLString = $tagAttributes->toHTMLAttributeString();
                     $renderer->doc .= <<<EOF
 <div $attributesHTMLString>
-    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+    <ul>
 EOF;
 
                     break;

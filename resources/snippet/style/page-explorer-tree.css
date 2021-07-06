@@ -5,13 +5,28 @@
     padding-top: .25rem!important;
 }
 
-.page-explorer-tree-combo > ul {
-    padding-left: 0;
+.page-explorer-tree-combo ul {
     list-style: none;
 }
 
-.page-explorer-tree-combo > ul > li {
-    margin-bottom: .25rem!important;
+.page-explorer-tree-combo > ul {
+    padding-left: 0;
+}
+
+
+.page-explorer-tree-combo img, .page-explorer-tree-combo svg {
+    vertical-align: bottom;
+}
+
+/* Give space when the mouse is over the link */
+.page-explorer-tree-page-combo  a {
+    padding: .1875rem .5rem;
+    margin-top: .125rem;
+    margin-left: 1.25rem;
+    color: rgba(0, 0, 0, 0.65);
+    text-decoration: none;
+    align-items: center!important;
+    display: inline-flex!important;
 }
 
 
@@ -24,9 +39,6 @@
 }
 
 .page-explorer-tree-combo a {
-    padding: .1875rem .5rem;
-    margin-top: .125rem;
-    margin-left: 1.25rem;
     color: rgba(0, 0, 0, 0.65);
     text-decoration: none
 }

@@ -300,14 +300,21 @@ class RasterImageLink extends MediaLink
                     if (!empty($srcSet)) {
 
                         /**
-                         * Src is always set, this is the default
-                         * src attribute is served to browsers that do not take the srcset attribute into account.
-                         * When lazy loading, we set the srcset to a transparent image to not download the image in the src
+                         * !!!!! DON'T FOLLOW THIS ADVICE !!!!!!!!!
                          * https://github.com/aFarkas/lazysizes/#modern-transparent-srcset-pattern
+                         * The transparent image has a fix dimension aspect ratio of 1x1 making
+                         * a bad reserved space for the image
+                         * We use a svg instead
                          */
                         $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
-                        $this->tagAttributes->addHtmlAttributeValue("srcset", LazyLoad::TRANSPARENT_GIF);
-                        $this->tagAttributes->addHtmlAttributeValue("sizes", $sizes);
+                        $this->tagAttributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($imgTagWidth,$imgTagHeight)." {$imgTagWidth}w");
+                        /**
+                         * We use `data-sizes` and not `sizes`
+                         * because `sizes` without `srcset`
+                         * shows the broken image symbol
+                         * Javascript changes them at the same time
+                         */
+                        $this->tagAttributes->addHtmlAttributeValue("data-sizes", $sizes);
                         $this->tagAttributes->addHtmlAttributeValue("data-srcset", $srcSet);
 
                     } else {
@@ -340,7 +347,7 @@ class RasterImageLink extends MediaLink
                 if ($lazyLoad) {
 
                     LazyLoad::addPlaceholderBackground($this->tagAttributes);
-                    $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::TRANSPARENT_GIF);
+                    $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder());
                     $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
 
                 }
@@ -440,8 +447,6 @@ class RasterImageLink extends MediaLink
     }
 
 
-
-
     public function getRequestedHeight()
     {
         $requestedHeight = parent::getRequestedHeight();
@@ -479,8 +484,6 @@ class RasterImageLink extends MediaLink
         }
         return $requestedWidth;
     }
-
-
 
 
     public
@@ -533,10 +536,6 @@ class RasterImageLink extends MediaLink
         $retinaEnabled = PluginUtility::getConfValue(self::CONF_RETINA_SUPPORT_ENABLED, 0);
         return !$retinaEnabled;
     }
-
-
-
-
 
 
 }

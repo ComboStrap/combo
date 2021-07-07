@@ -6,7 +6,6 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -36,6 +35,13 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
      */
     const SYNTAX_TAG_COLUMNS = "card-columns";
     const SYNTAX_TAG_TEASER = 'teaser-columns';
+
+    /**
+     * Same as commercial
+     * https://isotope.metafizzy.co/
+     *
+     */
+    const MASONRY = "masonry";
 
     /**
      * @param $renderer
@@ -234,8 +240,12 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                     $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
                     switch ($bootstrapVersion) {
                         case 5:
+                            // No support for 5, we use Bs with their example
                             // https://getbootstrap.com/docs/5.0/examples/masonry/
-                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::TAG,
+                            // https://masonry.desandro.com/layout.html#responsive-layouts
+                            // https://masonry.desandro.com/extras.html#bootstrap
+                            // https://masonry.desandro.com/#initialize-with-vanilla-javascript
+                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::MASONRY,
                                 array(
                                     "script" => [
                                         array(
@@ -247,7 +257,9 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                                     ]
                                 )
                             );
-                            $renderer->doc .= '<div class="row" data-masonry="{&quot;percentPosition&quot;: true }" >';
+                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::MASONRY);
+                            $masonryClass = self::MASONRY;
+                            $renderer->doc .= "<div class=\"row $masonryClass\">";
                             break;
                         default:
                             $renderer->doc .= '<div class="card-columns">' . DOKU_LF;

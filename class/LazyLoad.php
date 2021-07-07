@@ -38,10 +38,8 @@ class LazyLoad
      */
     const LAZY_SIDE_ID = "lazy-sizes";
     const LOZAD_ID = "lozad";
-    /**
-     * Base64 transparent gif
-     */
-    const TRANSPARENT_GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
+
     const CANONICAL = "lazy";
     const DEFAULT_COLOR = "#cbf1ea";
 
@@ -141,7 +139,6 @@ class LazyLoad
         $snippetManager->attachCssSnippetForBar($snippetId);
 
 
-
         /**
          * Snippet to download the image before print
          *
@@ -174,5 +171,44 @@ class LazyLoad
     public static function getPlaceholderColor()
     {
         return PluginUtility::getConfValue(self::CONF_LAZY_LOADING_PLACEHOLDER_COLOR, self::DEFAULT_COLOR);
+    }
+
+    /**
+     * The placeholder is not mandatory
+     * but if present, it should have the same intrinsic ratio of the image
+     *
+     * This function is documenting this fact.
+     *
+     * @param null $imgTagWidth
+     * @param null $imgTagHeight
+     * @return string
+     *
+
+     *
+     * Src is always set, this is the default
+     * src attribute is served to browsers that do not take the srcset attribute into account.
+     * When lazy loading, we set the srcset to a transparent image to not download the image in the src
+     *
+     */
+
+    public static function getPlaceholder($imgTagWidth = null, $imgTagHeight = null)
+    {
+        if ($imgTagWidth != null) {
+            $svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 $imgTagWidth $imgTagHeight'></svg>";
+            /**
+             * We encode it to be able to
+             * use it in a `srcset` attribute that does not
+             * want any space in the image definition
+             */
+            $svgBase64 = base64_encode($svg);
+            $image = "data:image/svg+xml;base64,$svgBase64";
+        } else {
+            /**
+             * Base64 transparent gif
+             * 1x1 image, it will produce a square
+             */
+            $image = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+        }
+        return $image;
     }
 }

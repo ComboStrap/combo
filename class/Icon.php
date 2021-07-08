@@ -180,7 +180,7 @@ class Icon
 
                     // (ie no icon file found at ($downloadUrl)
                     $urlLibrary = self::ICON_LIBRARY_WEBSITE_URLS[$library];
-                    LogUtility::msg("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon ($iconName).", LogUtility::LVL_MSG_ERROR, self::NAME);
+                    LogUtility::msg("The library (<a href=\"$urlLibrary\">$library</a>) does not have a icon (<a href=\"$downloadUrl\">$iconName</a>).", LogUtility::LVL_MSG_ERROR, self::NAME);
 
                 }
 

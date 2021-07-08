@@ -133,7 +133,9 @@ class TemplateUtility
         $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
         $h1Title = str_replace('"', "'", $h1Title);
         $tpl = str_replace("\$h1", $h1Title, $tpl);
-        return str_replace("\$id", $page->getId(), $tpl);
+        $tpl = str_replace("\$id", $page->getId(), $tpl);
+        return  str_replace("\$path", $page->getAbsolutePath(), $tpl);
+
     }
 
 

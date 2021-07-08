@@ -85,7 +85,7 @@ class FsWikiUtility
          * To a relative file system path
          */
         $dokuPath = DokuPath::createPagePathFromPath($path);
-        $relativeFileSystemPath = str_replace(":","/",$dokuPath->getId());
+        $relativeFileSystemPath = str_replace(":", "/", $dokuPath->getId());
 
 
         $data = array();
@@ -115,27 +115,27 @@ class FsWikiUtility
     /**
      * Return the page index of a namespace of null if it does not exist
      * ie the index.html
-     * @param $namespaceId
+     * @param $namespacePath
      * @return string|null
      */
-    public static function getHomePagePath($namespaceId)
+    public static function getHomePagePath($namespacePath)
     {
         global $conf;
 
-        if ($namespaceId != ":") {
-            $namespaceId = $namespaceId . ":";
+        if ($namespacePath != ":") {
+            $namespacePath = $namespacePath . ":";
         }
 
         $startPageName = $conf['start'];
-        if (page_exists($namespaceId . $startPageName)) {
+        if (page_exists($namespacePath . $startPageName)) {
             // start page inside namespace
-            return $namespaceId . $startPageName;
-        } elseif (page_exists($namespaceId . noNS(cleanID($namespaceId)))) {
+            return $namespacePath . $startPageName;
+        } elseif (page_exists($namespacePath . noNS(cleanID($namespacePath)))) {
             // page named like the NS inside the NS
-            return $namespaceId . noNS(cleanID($namespaceId));
-        } elseif (page_exists($namespaceId)) {
+            return $namespacePath . noNS(cleanID($namespacePath));
+        } elseif (page_exists($namespacePath)) {
             // page like namespace exists
-            return substr($namespaceId, 0, -1);
+            return substr($namespacePath, 0, -1);
         } else {
             return null;
         }
@@ -161,6 +161,27 @@ class FsWikiUtility
         );
 
         return $data;
+    }
+
+    /**
+     * @param $namespacePath
+     * @return string|null the page path of the parent or null if it does not exist
+     */
+    public static function getParentPagePath($namespacePath)
+    {
+        /**
+         * A namespace path does not have a `:` at the end
+         * only for the root
+         */
+        $pos = strrpos($namespacePath, ':');
+        if ($pos !== false) {
+            $parentNamespacePath = substr($namespacePath, 0, $pos);
+            return self::getHomePagePath($parentNamespacePath);
+        } else {
+            return null;
+        }
+
+
     }
 
 }

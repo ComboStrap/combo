@@ -209,6 +209,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $homeInstructions = [];
                 $homeAttributes = [];
                 /**
+                 * The instructions for the parent item in a page explorer list
+                 * if any
+                 * @var Call[] $parentInstructions
+                 * @var array $parentAttributes
+                 */
+                $parentInstructions = [];
+                $parentAttributes = [];
+                /**
                  * @var Call[] $actualInstructionsStack
                  */
                 $actualInstructionsStack = [];
@@ -227,6 +235,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 case syntax_plugin_combo_pageexplorerhome::TAG:
                                     $homeAttributes = $actualCall->getAttributes();
                                     continue 3;
+                                case syntax_plugin_combo_pageexplorerparent::TAG:
+                                    $parentAttributes = $actualCall->getAttributes();
+                                    continue 3;
                                 default:
                                     $actualInstructionsStack[] = $actualCall;
                                     continue 3;
@@ -243,6 +254,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     continue 3;
                                 case syntax_plugin_combo_pageexplorerhome::TAG:
                                     $homeInstructions = $actualInstructionsStack;
+                                    $actualInstructionsStack = [];
+                                    continue 3;
+                                case syntax_plugin_combo_pageexplorerparent::TAG:
+                                    $parentInstructions = $actualInstructionsStack;
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 default:
@@ -310,12 +325,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
 
                         /**
-                         * Get the index page name
-                         */
-                        $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
-
-
-                        /**
                          * Home
                          */
                         $currentHomePagePath = FsWikiUtility::getHomePagePath($nameSpacePath);
@@ -349,8 +358,41 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 )
                             );
                         }
-                        $pageNum = 0;
 
+                        /**
+                         * Parent ?
+                         */
+                        $parentPagePath = FsWikiUtility::getParentPagePath($nameSpacePath);
+                        if ($parentPagePath != null && sizeof($parentInstructions) > 0) {
+                            /**
+                             * Enter parent tag
+                             */
+                            $callStack->appendCallAtTheEnd(
+                                Call::createComboCall($contentListItemTag,
+                                    DOKU_LEXER_ENTER,
+                                    $parentAttributes
+                                )
+                            );
+                            /**
+                             * Content
+                             */
+                            $callStack->appendInstructions(TemplateUtility::processInstructions($parentInstructions, $parentPagePath));
+                            /**
+                             * End parent tag
+                             */
+                            $callStack->appendCallAtTheEnd(
+                                Call::createComboCall($contentListItemTag,
+                                    DOKU_LEXER_EXIT,
+                                    $parentAttributes
+                                )
+                            );
+                        }
+
+                        /**
+                         * Pages
+                         */
+                        $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
+                        $pageNum = 0;
                         foreach ($pageOrNamespaces as $pageOrNamespace) {
 
                             $pageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);

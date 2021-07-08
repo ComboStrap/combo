@@ -169,8 +169,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
                     $media = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                     if ($media->isImage()) {
-                        $renderer->doc .= $media->renderMediaTagWithLink();
-                        return true;
+                        /**
+                         * We don't support crop
+                         */
+                        if (!($media->getRequestedWidth() != null && $media->getRequestedHeight() != null)) {
+                            $renderer->doc .= $media->renderMediaTagWithLink();
+                            return true;
+                        }
                     }
                 }
 

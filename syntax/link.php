@@ -304,7 +304,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                                 break;
                             case syntax_plugin_combo_badge::TAG:
                             case syntax_plugin_combo_cite::TAG:
-                            case syntax_plugin_combo_contentlistitem::TAG:
+                            case syntax_plugin_combo_contentlistitem::DOKU_TAG:
                             case syntax_plugin_combo_preformatted::TAG:
                                 $htmlLink = $link->renderOpenTag($renderer);
                                 break;

@@ -15,7 +15,7 @@ use ComboStrap\TagAttributes;
 class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "contentlistitem";
+    const DOKU_TAG = "contentlistitem";
     const MARKI_TAG = "content-list-item";
     const ALL_TAGS = array(self::MARKI_TAG, "list-item", "li");
 
@@ -136,7 +136,7 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::DOKU_TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 

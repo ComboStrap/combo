@@ -42,7 +42,7 @@ require_once(__DIR__ . '/../class/SnippetManager.php');
 class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "contentlist";
+    const DOKU_TAG = "contentlist";
 
     /**
      * To allow a minus
@@ -173,7 +173,7 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $callStack->moveToPreviousCorrespondingOpeningCall();
                 while ($actualCall = $callStack->next()) {
-                    if($actualCall->getTagName()==syntax_plugin_combo_contentlistitem::TAG){
+                    if($actualCall->getTagName()==syntax_plugin_combo_contentlistitem::DOKU_TAG){
                         // List item were added by the user
                         break;
                     }
@@ -182,13 +182,13 @@ class syntax_plugin_combo_contentlist extends DokuWiki_Syntax_Plugin
                         switch ($actualState) {
                             case DOKU_LEXER_ENTER:
                                 $callStack->insertBefore(Call::createComboCall(
-                                    syntax_plugin_combo_contentlistitem::TAG,
+                                    syntax_plugin_combo_contentlistitem::DOKU_TAG,
                                     DOKU_LEXER_ENTER
                                 ));
                                 break;
                             case DOKU_LEXER_EXIT:
                                 $callStack->insertAfter(Call::createComboCall(
-                                    syntax_plugin_combo_contentlistitem::TAG,
+                                    syntax_plugin_combo_contentlistitem::DOKU_TAG,
                                     DOKU_LEXER_EXIT
                                 ));
                                 $callStack->next();

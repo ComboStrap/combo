@@ -263,15 +263,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Start
+                 * Get the Namespace
                  */
-                // just an alias
-                $rowTag = syntax_plugin_combo_contentlistitem::MARKI_TAG;
-
-                /**
-                 * Get the data
-                 */
-                // Namespace
                 $tagAttributes = TagAttributes::createFromCallStackArray($openingTag->getAttributes(), self::CANONICAL);
                 if ($tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
                     $nameSpacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
@@ -289,13 +282,24 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     default:
                     case self::LIST_TYPE:
 
+                        /**
+                         * Shortcut
+                         */
+                        $contentListTag = syntax_plugin_combo_contentlist::DOKU_TAG;
+                        $contentListItemTag = syntax_plugin_combo_contentlistitem::DOKU_TAG;
 
                         /**
                          * Create the enter content list tag
                          */
-                        $contentListTag = syntax_plugin_combo_contentlist::MARKI_TAG;
                         $tagAttributes->addClassName(self::CANONICAL . "-combo");
-                        $marki = $tagAttributes->toMarkiEnterTag($contentListTag);
+                        $tagAttributes->removeAttributeIfPresent(TagAttributes::TYPE_KEY);
+                        $callStack->appendCallAtTheEnd(
+                            Call::createComboCall(
+                                $contentListTag,
+                                DOKU_LEXER_ENTER,
+                                $tagAttributes->toCallStackArray()
+                            )
+                        );
 
 
                         /**
@@ -309,12 +313,34 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          */
                         $currentHomePagePath = FsWikiUtility::getHomePagePath($nameSpacePath);
                         if ($currentHomePagePath != null && sizeof($homeInstructions) > 0) {
-                            $tpl = TemplateUtility::render($homeInstructions, $currentHomePagePath);
-                            $homeTagAttributes = TagAttributes::createFromCallStackArray($homeAttributes);
-                            $homeTagAttributes->addComponentAttributeValue(Background::BACKGROUND_COLOR, "light");
-                            $homeTagAttributes->addStyleDeclaration("border-bottom", "1px solid #e5e5e5");
 
-                            $marki .= $homeTagAttributes->toHtmlEnterTag($rowTag) . $tpl . '</' . $rowTag . '>';
+                            /**
+                             * Enter tag
+                             */
+                            if (sizeof($homeAttributes) == 0) {
+                                $homeAttributes = [
+                                    "style" => "border-bottom:1px solid #e5e5e5",
+                                    Background::BACKGROUND_COLOR => "light"
+                                ];
+                            }
+                            $callStack->appendCallAtTheEnd(
+                                Call::createComboCall($contentListItemTag,
+                                    DOKU_LEXER_ENTER,
+                                    $homeAttributes
+                                )
+                            );
+                            /**
+                             * Content
+                             */
+                            $callStack->appendInstructions(TemplateUtility::processInstructions($homeInstructions, $currentHomePagePath));
+                            /**
+                             * End home tag
+                             */
+                            $callStack->appendCallAtTheEnd(
+                                Call::createComboCall($contentListItemTag,
+                                    DOKU_LEXER_EXIT
+                                )
+                            );
                         }
                         $pageNum = 0;
 
@@ -327,10 +353,30 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                                 // Namespace
                                 if (!empty($namespaceInstructions)) {
-                                    $subHomePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
-                                    if ($subHomePagePath != null) {
-                                        $tpl = TemplateUtility::render($namespaceInstructions, $subHomePagePath);
-                                        $marki .= "<$rowTag>$tpl</$rowTag>";
+                                    $subNamepsacePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
+                                    if ($subNamepsacePagePath != null) {
+                                        /**
+                                         * SubNamespace Enter tag
+                                         */
+                                        $callStack->appendCallAtTheEnd(
+                                            Call::createComboCall($contentListItemTag,
+                                                DOKU_LEXER_ENTER,
+                                                $namespaceAttributes
+                                            )
+                                        );
+                                        /**
+                                         * SubNamespace Content
+                                         */
+                                        $callStack->appendInstructions(TemplateUtility::processInstructions($namespaceInstructions, $subNamepsacePagePath));
+                                        /**
+                                         * SubNamespace Exit tag
+                                         */
+                                        $callStack->appendCallAtTheEnd(
+                                            Call::createComboCall($contentListItemTag,
+                                                DOKU_LEXER_EXIT,
+                                                $namespaceAttributes
+                                            )
+                                        );
                                     }
                                 }
 
@@ -339,21 +385,45 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 if (!empty($pageInstructions)) {
                                     $pageNum++;
                                     if ($pageOrNamespacePath != $currentHomePagePath) {
-                                        $tpl = TemplateUtility::render($pageInstructions, $pageOrNamespacePath);
-                                        $marki .= "<$rowTag>$tpl</$rowTag>";
+
+                                        /**
+                                         * Page Enter tag
+                                         */
+                                        $callStack->appendCallAtTheEnd(
+                                            Call::createComboCall($contentListItemTag,
+                                                DOKU_LEXER_ENTER,
+                                                $pageAttributes
+                                            )
+                                        );
+                                        /**
+                                         * Page Content
+                                         */
+                                        $callStack->appendInstructions(TemplateUtility::processInstructions($pageInstructions, $pageOrNamespacePath));
+                                        /**
+                                         * Page Exit tag
+                                         */
+                                        $callStack->appendCallAtTheEnd(
+                                            Call::createComboCall($contentListItemTag,
+                                                DOKU_LEXER_EXIT,
+                                                $pageAttributes
+                                            )
+                                        );
                                     }
                                 }
                             }
 
                         }
-                        $marki .= "</$contentListTag>";
+
                         /**
-                         * If the namespace has no children
+                         * End container tag
                          */
-                        if (!empty($marki)) {
-                            $instructions = PluginUtility::getInstructionsWithoutRoot($marki);
-                            $callStack->appendInstructions($instructions);
-                        }
+                        $callStack->appendCallAtTheEnd(
+                            Call::createComboCall($contentListTag,
+                                DOKU_LEXER_EXIT
+                            )
+                        );
+
+
                         break;
                     case self::TYPE_TREE:
 
@@ -406,7 +476,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         case self::TYPE_TREE:
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("nav") . DOKU_LF;
                             $renderer->doc .= "<ul>" . DOKU_LF;
-                            PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::CANONICAL."-".$type);
+                            PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::CANONICAL . "-" . $type);
                             break;
                         case self::LIST_TYPE:
                             /**

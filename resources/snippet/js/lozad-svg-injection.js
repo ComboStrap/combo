@@ -4,6 +4,7 @@ window.addEventListener("load", function (event) {
         load: function (el) {
             // SVGInjector takes over and load the svg element
             // in place of lozad
+            debugger;
             SVGInjector(el, {
                     each: function (svg) {
                         // Style copy (max width)

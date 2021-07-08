@@ -172,7 +172,16 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                         /**
                          * We don't support crop
                          */
-                        if (!($media->getRequestedWidth() != null && $media->getRequestedHeight() != null)) {
+                        $crop = false;
+                        if ($media->getRequestedWidth() != null && $media->getRequestedHeight() != null) {
+                            /**
+                             * Width of 0 = resizing by height (supported)
+                             */
+                            if ($media->getRequestedWidth() != "0") {
+                                $crop = true;
+                            }
+                        }
+                        if (!$crop) {
                             $renderer->doc .= $media->renderMediaTagWithLink();
                             return true;
                         }
@@ -211,7 +220,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
                 return true;
 
-            case "metadata":
+            case
+            "metadata":
 
                 /**
                  * Keep track of the metadata

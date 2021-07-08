@@ -149,7 +149,11 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
      */
     static function getHeadingType($parent)
     {
-        if ($parent != false && $parent->getComponentName() != "section_open") {
+        /**
+         * When the parent is empty, a section_open or webcode
+         * this is a outline
+         */
+        if ($parent != false && $parent->getComponentName() != "section_open" && $parent->getTagName() != syntax_plugin_combo_webcode::TAG) {
             return self::TYPE_TITLE;
         } else {
             return self::TYPE_OUTLINE;

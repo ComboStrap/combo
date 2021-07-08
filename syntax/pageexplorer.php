@@ -197,10 +197,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $namespaceInstructions = [];
                 $namespaceAttributes = [];
                 /**
-                 * @var Call[] $pageInstructions
+                 * @var Call[] $templatePageInstructions
                  * @var array $pageAttributes
                  */
-                $pageInstructions = [];
+                $templatePageInstructions = [];
                 $pageAttributes = [];
                 /**
                  * @var Call[] $homeInstructions
@@ -234,7 +234,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         case DOKU_LEXER_EXIT:
                             switch ($tagName) {
                                 case syntax_plugin_combo_pageexplorerpage::TAG:
-                                    $pageInstructions = $actualInstructionsStack;
+                                    $templatePageInstructions = $actualInstructionsStack;
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 case syntax_plugin_combo_pageexplorernamespace::TAG:
@@ -382,7 +382,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                             } else {
 
-                                if (!empty($pageInstructions)) {
+                                if (!empty($templatePageInstructions)) {
                                     $pageNum++;
                                     if ($pageOrNamespacePath != $currentHomePagePath) {
 
@@ -398,7 +398,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         /**
                                          * Page Content
                                          */
-                                        $callStack->appendInstructions(TemplateUtility::processInstructions($pageInstructions, $pageOrNamespacePath));
+                                        $pageInstructions = TemplateUtility::processInstructions($templatePageInstructions, $pageOrNamespacePath);
+                                        $callStack->appendInstructions($pageInstructions);
                                         /**
                                          * Page Exit tag
                                          */
@@ -433,7 +434,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * (Move to the end is not really needed, but yeah)
                          */
                         $callStack->moveToEnd();
-                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $namespaceInstructions, $pageInstructions);
+                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $namespaceInstructions, $templatePageInstructions);
 
                         break;
 

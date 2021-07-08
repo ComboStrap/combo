@@ -716,7 +716,8 @@ class Call
                 case "eol":
                     break;
                 case \syntax_plugin_combo_pipeline::TAG:
-                    $script = TemplateUtility::renderFromPage($this->getCapturedContent(), $page);
+                    $pageTemplate = PluginUtility::getTagContent($this->getCapturedContent());
+                    $script = TemplateUtility::renderFromPage($pageTemplate, $page);
                     $string = PipelineUtility::execute($script);
                     $this->setPayload($string);
                     break;

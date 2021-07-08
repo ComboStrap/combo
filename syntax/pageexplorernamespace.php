@@ -181,7 +181,7 @@ class syntax_plugin_combo_pageexplorernamespace extends DokuWiki_Syntax_Plugin
                     $targetId = $tagAttributes->getValueAndRemoveIfPresent(self::TARGET_ID_ATT);
                     $tagAttributes->addHtmlAttributeValue("data-bs-target", "#$targetId");
                     $tagAttributes->addHtmlAttributeValue("data-bs-toggle", "collapse");
-                    $tagAttributes->addHtmlAttributeValue("aria-expanded", "true");
+                    $tagAttributes->addHtmlAttributeValue("aria-expanded", "false");
                     $tagAttributes->addClassName("btn btn-toggle-combo align-items-center rounded");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("button");
                     break;

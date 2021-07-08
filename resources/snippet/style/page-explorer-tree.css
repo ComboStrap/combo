@@ -3,15 +3,20 @@
     font-weight: 600;
     padding-bottom: 1rem;
     padding-top: .25rem;
-    padding-left: 1rem;
+    padding-left: 1px;
 }
 
 .page-explorer-tree-combo ul {
     list-style: none;
+    padding-left: 1rem;
 }
 
 .page-explorer-tree-combo > ul {
     padding-left: 0;
+}
+
+.page-explorer-tree-combo li {
+    margin-bottom: .25rem;
 }
 
 
@@ -23,11 +28,11 @@
 .page-explorer-tree-page-combo  a {
     padding: .1875rem .5rem;
     margin-top: .125rem;
-    margin-left: 1.25rem;
     color: rgba(0, 0, 0, 0.65);
     text-decoration: none;
     align-items: center;
     display: inline-flex;
+    font-weight: 400;
 }
 
 
@@ -49,7 +54,8 @@
     font-weight: 600;
     color: rgba(0, 0, 0, 0.65);
     background-color: transparent;
-    border: 0
+    border: 0;
+    display: inline-flex;
 }
 
 .page-explorer-tree-combo .btn:hover, .page-explorer-tree-combo .btn:focus {

@@ -177,7 +177,6 @@ class syntax_plugin_combo_contentlistitem extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::MARKI_TAG);
                     $tagAttributes->addClassName("list-group-item");
-                    $tagAttributes->addClassName("d-flex");
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("li");
                     break;
                 case DOKU_LEXER_EXIT :

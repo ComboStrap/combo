@@ -7,5 +7,10 @@
 .content-list-item-combo {
     color: inherit;
     padding: 1rem 1rem;
+    display: flex;
 }
+
+
+
+
 

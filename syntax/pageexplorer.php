@@ -289,9 +289,16 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $contentListItemTag = syntax_plugin_combo_contentlistitem::DOKU_TAG;
 
                         /**
+                         * Css
+                         */
+                        $pageExplorerListPrefix = self::CANONICAL . "-$type";
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($pageExplorerListPrefix);
+
+                        /**
                          * Create the enter content list tag
                          */
                         $tagAttributes->addClassName(self::CANONICAL . "-combo");
+                        $tagAttributes->addClassName($pageExplorerListPrefix . "-combo");
                         $tagAttributes->removeAttributeIfPresent(TagAttributes::TYPE_KEY);
                         $callStack->appendCallAtTheEnd(
                             Call::createComboCall(
@@ -353,8 +360,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                                 // Namespace
                                 if (!empty($namespaceInstructions)) {
-                                    $subNamepsacePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
-                                    if ($subNamepsacePagePath != null) {
+                                    $subNamespacePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
+                                    if ($subNamespacePagePath != null) {
                                         /**
                                          * SubNamespace Enter tag
                                          */
@@ -367,7 +374,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         /**
                                          * SubNamespace Content
                                          */
-                                        $callStack->appendInstructions(TemplateUtility::processInstructions($namespaceInstructions, $subNamepsacePagePath));
+                                        $callStack->appendInstructions(TemplateUtility::processInstructions($namespaceInstructions, $subNamespacePagePath));
                                         /**
                                          * SubNamespace Exit tag
                                          */
@@ -385,7 +392,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 if (!empty($templatePageInstructions)) {
                                     $pageNum++;
                                     if ($pageOrNamespacePath != $currentHomePagePath) {
-
                                         /**
                                          * Page Enter tag
                                          */

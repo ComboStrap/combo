@@ -4,16 +4,18 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hr
 
 // must be run within Dokuwiki
-use ComboStrap\HeaderUtility;
-use ComboStrap\TitleUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\StringUtility;
-use ComboStrap\Tag;
+use ComboStrap\TitleUtility;
 
 
 if (!defined('DOKU_INC')) die();
 
-
+/**
+ * Class syntax_plugin_combo_hr
+ * [[https://www.w3.org/TR/2011/WD-html5-author-20110809/the-hr-element.html|W3c reference]]
+ * [[https://www.digitala11y.com/separator-role/|Separator role]]
+ * [[https://material.io/components/dividers|Divider]]
+ */
 class syntax_plugin_combo_hr extends DokuWiki_Syntax_Plugin
 {
 

@@ -1273,12 +1273,33 @@ class Page extends DokuPath
         return $lang;
     }
 
+    /**
+     * Adapted from {@link FsWikiUtility::getHomePagePath()}
+     * @return bool
+     */
     public
     function isHomePage()
     {
         global $conf;
-        return $this->getId() == $conf['start'];
+        $startPageName = $conf['start'];
+        if ($this->getName() == $startPageName) {
+            return true;
+        } else {
+            $namespaceName = noNS(cleanID($this->getNamespacePath()));
+            if ($namespaceName == $this->getName()) {
+                /**
+                 * page named like the NS inside the NS
+                 * ie ns:ns
+                 */
+                $startPage = Page::createPageFromPath($this->getNamespacePath() . ":" . $startPageName);
+                if (!$startPage->exists()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
+
 
     public
     function getMetadata($key)
@@ -1606,6 +1627,10 @@ class Page extends DokuPath
     }
 
 
+    /**
+     * Without the `:` at the end
+     * @return string
+     */
     public function getNamespacePath()
     {
         $ns = getNS($this->getId());

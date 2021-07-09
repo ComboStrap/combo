@@ -191,10 +191,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  */
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 /**
-                 * @var Call[] $namespaceInstructions
+                 * @var Call[] $templateNamespaceInstructions
                  * @var array $namespaceAttributes
                  */
-                $namespaceInstructions = [];
+                $templateNamespaceInstructions = [];
                 $namespaceAttributes = [];
                 /**
                  * @var Call[] $templatePageInstructions
@@ -203,10 +203,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $templatePageInstructions = [];
                 $pageAttributes = [];
                 /**
-                 * @var Call[] $homeInstructions
+                 * @var Call[] $templateHomeInstructions
                  * @var array $homeAttributes
                  */
-                $homeInstructions = [];
+                $templateHomeInstructions = [];
                 $homeAttributes = [];
                 /**
                  * The instructions for the parent item in a page explorer list
@@ -249,11 +249,11 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 case syntax_plugin_combo_pageexplorernamespace::TAG:
-                                    $namespaceInstructions = $actualInstructionsStack;
+                                    $templateNamespaceInstructions = $actualInstructionsStack;
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 case syntax_plugin_combo_pageexplorerhome::TAG:
-                                    $homeInstructions = $actualInstructionsStack;
+                                    $templateHomeInstructions = $actualInstructionsStack;
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 case syntax_plugin_combo_pageexplorerparent::TAG:
@@ -328,7 +328,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * Home
                          */
                         $currentHomePagePath = FsWikiUtility::getHomePagePath($nameSpacePath);
-                        if ($currentHomePagePath != null && sizeof($homeInstructions) > 0) {
+                        if ($currentHomePagePath != null && sizeof($templateHomeInstructions) > 0) {
 
                             /**
                              * Enter tag
@@ -348,7 +348,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Content
                              */
-                            $callStack->appendInstructions(TemplateUtility::processInstructions($homeInstructions, $currentHomePagePath));
+                            $callStack->appendInstructions(TemplateUtility::processInstructions($templateHomeInstructions, $currentHomePagePath));
                             /**
                              * End home tag
                              */
@@ -401,7 +401,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             if ($pageOrNamespace['type'] == "d") {
 
                                 // Namespace
-                                if (!empty($namespaceInstructions)) {
+                                if (!empty($templateNamespaceInstructions)) {
                                     $subNamespacePagePath = FsWikiUtility::getHomePagePath($pageOrNamespacePath);
                                     if ($subNamespacePagePath != null) {
                                         /**
@@ -416,7 +416,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         /**
                                          * SubNamespace Content
                                          */
-                                        $callStack->appendInstructions(TemplateUtility::processInstructions($namespaceInstructions, $subNamespacePagePath));
+                                        $callStack->appendInstructions(TemplateUtility::processInstructions($templateNamespaceInstructions, $subNamespacePagePath));
                                         /**
                                          * SubNamespace Exit tag
                                          */
@@ -482,7 +482,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * (Move to the end is not really needed, but yeah)
                          */
                         $callStack->moveToEnd();
-                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $namespaceInstructions, $templatePageInstructions);
+                        self::treeProcessSubNamespace($callStack, $nameSpacePath, $templateNamespaceInstructions, $templatePageInstructions, $templateHomeInstructions);
 
                         break;
 
@@ -575,13 +575,19 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param array $namespaceTemplateInstructions
      * @param array $pageTemplateInstructions
      */
-    public function treeProcessSubNamespace(&$callStack, $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [])
+    public function treeProcessSubNamespace(&$callStack, $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [], $homeTemplateInstructions = [])
     {
 
 
         $pageExplorerSubNamespaceTag = syntax_plugin_combo_pageexplorertreesubnamespace::TAG;
         $pageExplorerTreeButtonTag = syntax_plugin_combo_pageexplorernamespace::TAG;
         $pageExplorerTreeListTag = syntax_plugin_combo_pageexplorertreesubnamespacelist::TAG;
+
+        /**
+         * Processing variable
+         */
+        $homePage = null; // the home page of the traversed namespace
+        $nonHomePages = []; // the other pages of the traversed namespace
 
         $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
         foreach ($pageOrNamespaces as $pageOrNamespace) {
@@ -637,7 +643,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 /**
                  * Recursion
                  */
-                self::treeProcessSubNamespace($callStack, $actualPageOrNamespacePath, $namespaceTemplateInstructions, $pageTemplateInstructions);
+                self::treeProcessSubNamespace($callStack, $actualPageOrNamespacePath, $namespaceTemplateInstructions, $pageTemplateInstructions, $homeTemplateInstructions);
 
                 /**
                  * Closing: Creating in instructions form
@@ -658,9 +664,29 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 /**
                  * Page
                  */
-                self::treeProcessLeaf($callStack, $actualPageOrNamespacePath, $pageTemplateInstructions);
+                $page = Page::createPageFromPath($actualPageOrNamespacePath);
+                if ($page->isHomePage()) {
+                    $homePage = $page;
+                } else {
+                    $nonHomePages[] = $page;
+                }
+
             }
 
+        }
+
+        /**
+         * First the home page
+         */
+        if ($homePage != null) {
+            self::treeProcessLeaf($callStack, $homePage->getAbsolutePath(), $homeTemplateInstructions);
+        }
+
+        /**
+         * Then the other pages
+         */
+        foreach ($nonHomePages as $page){
+            self::treeProcessLeaf($callStack, $page->getAbsolutePath(), $pageTemplateInstructions);
         }
 
 

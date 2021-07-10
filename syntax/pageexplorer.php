@@ -348,7 +348,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Content
                              */
-                            $callStack->appendInstructions(TemplateUtility::processInstructions($templateHomeInstructions, $currentHomePagePath));
+                            $callStack->appendInstructions(TemplateUtility::renderFromInstructions($templateHomeInstructions, $currentHomePagePath));
                             /**
                              * End home tag
                              */
@@ -376,7 +376,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Content
                              */
-                            $callStack->appendInstructions(TemplateUtility::processInstructions($parentInstructions, $parentPagePath));
+                            $callStack->appendInstructions(TemplateUtility::renderFromInstructions($parentInstructions, $parentPagePath));
                             /**
                              * End parent tag
                              */
@@ -416,7 +416,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         /**
                                          * SubNamespace Content
                                          */
-                                        $callStack->appendInstructions(TemplateUtility::processInstructions($templateNamespaceInstructions, $subNamespacePagePath));
+                                        $callStack->appendInstructions(TemplateUtility::renderFromInstructions($templateNamespaceInstructions, $subNamespacePagePath));
                                         /**
                                          * SubNamespace Exit tag
                                          */
@@ -446,7 +446,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         /**
                                          * Page Content
                                          */
-                                        $pageInstructions = TemplateUtility::processInstructions($templatePageInstructions, $pageOrNamespacePath);
+                                        $pageInstructions = TemplateUtility::renderFromInstructions($templatePageInstructions, $pageOrNamespacePath);
                                         $callStack->appendInstructions($pageInstructions);
                                         /**
                                          * Page Exit tag
@@ -603,7 +603,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 if ($subHomePagePath != null) {
                     if (sizeof($namespaceTemplateInstructions) > 0) {
                         // Translate TODO
-                        $actualNamespaceInstructions = TemplateUtility::processInstructions($namespaceTemplateInstructions, $subHomePagePath);
+                        $actualNamespaceInstructions = TemplateUtility::renderFromInstructions($namespaceTemplateInstructions, $subHomePagePath);
                     } else {
                         $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$subHomePagePath])->toCallArray()];
                     }
@@ -701,7 +701,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     {
         $leafTag = syntax_plugin_combo_pageexplorerpage::TAG;
         if (sizeof($pageTemplateInstructions) > 0) {
-            $actualPageInstructions = TemplateUtility::processInstructions($pageTemplateInstructions, $pageOrNamespacePath);
+            $actualPageInstructions = TemplateUtility::renderFromInstructions($pageTemplateInstructions, $pageOrNamespacePath);
         } else {
             $actualPageInstructions = [Call::createNativeCall("cdata", [$pageOrNamespacePath])->toCallArray()];
         }

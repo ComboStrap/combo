@@ -13,17 +13,24 @@
 namespace ComboStrap;
 
 
+/**
+ * Class TemplateUtility
+ * @package ComboStrap
+ * See also {@link Template template engine} - not finished
+ */
 class TemplateUtility
 {
 
-    static function render($pageTemplate, $pagePath)
+    const VARIABLE_PREFIX = "$";
+
+    static function renderFromString($pageTemplate, $pagePath)
     {
 
 
         $page = Page::createPageFromPath($pagePath);
 
 
-        return self::renderFromPage($pageTemplate,$page);
+        return self::renderForPage($pageTemplate, $page);
 
     }
 
@@ -35,7 +42,7 @@ class TemplateUtility
     public static function getPageH1($pageId)
     {
         $h1 = p_get_metadata(cleanID($pageId), Analytics::H1, METADATA_DONT_RENDER);
-        if (empty($h1)){
+        if (empty($h1)) {
             return self::getPageTitle($pageId);
         } else {
             return $h1;
@@ -95,11 +102,11 @@ class TemplateUtility
      * @param $pagePath
      * @return array
      */
-    public static function processInstructions(array $namespaceTemplateInstructions, $pagePath)
+    public static function renderFromInstructions(array $namespaceTemplateInstructions, $pagePath)
     {
         $page = Page::createPageFromPath($pagePath);
         $instructions = [];
-        foreach($namespaceTemplateInstructions as $call){
+        foreach ($namespaceTemplateInstructions as $call) {
             $newCall = clone $call;
             $instructions[] = $newCall->render($page)->toCallArray();
         }
@@ -107,34 +114,44 @@ class TemplateUtility
 
     }
 
-    public static function renderFromPage($pageTemplate, Page $page)
+    public static function renderForPage($pageTemplate, Page $page)
     {
 
 
         /**
+         * Template
+         */
+        $template = Template::create($pageTemplate);
+
+        /**
          * The title/h1 should never be null
-         * otherwise a template link such as [[$id|$title]] will return a link without an description
+         * otherwise a template link such as [[$path|$title]] will return a link without an description
          * and therefore will be not visible
          * We render at least the id
          */
-        $h1Title = $page->getH1NotEmpty();
-        $pageTitle = $page->getTitleNotEmpty();
-
-
+        $h1 = $page->getH1NotEmpty();
+        $template->set("h1", $h1);
+        $title = $page->getTitleNotEmpty();
         /**
          * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
          * @see {@link \syntax_plugin_combo_pipeline}
          */
-        $pageTitle = str_replace('"', "'", $pageTitle);
+        $title = str_replace('"', "'", $title);
+        $template->set("title", $title);
+        $template->set("id", $page->getId());
+        $template->set("path", $page->getAbsolutePath());
+        $template->set("description", $page->getDescriptionOrElseDokuWiki());
 
         /**
-         * Other processing
+         * Override / add the user variable
          */
-        $tpl = str_replace("\$title", $pageTitle, $pageTemplate);
-        $h1Title = str_replace('"', "'", $h1Title);
-        $tpl = str_replace("\$h1", $h1Title, $tpl);
-        $tpl = str_replace("\$id", $page->getId(), $tpl);
-        return  str_replace("\$path", $page->getAbsolutePath(), $tpl);
+        foreach ($page->getPersistentMetadatas() as $metaKey => $metaValue) {
+
+            $template->set($metaKey, $metaValue);
+
+        }
+
+        return $template->render();
 
     }
 

@@ -57,6 +57,7 @@ class LinkUtility
     const TYPE_EMAIL = 'email';
     const TYPE_LOCAL = 'local';
     const TYPE_INTERNAL = 'internal';
+    const TYPE_INTERNAL_TEMPLATE = 'internal_template';
 
     /**
      * The key of the array for the handle cache
@@ -228,7 +229,14 @@ class LinkUtility
          * Internal then
          */
         if ($this->type == null) {
-            $this->type = self::TYPE_INTERNAL;
+            /**
+             * It can be a link with a ref template
+             */
+            if (substr($ref, 0, 1) === TemplateUtility::VARIABLE_PREFIX) {
+                $this->type = self::TYPE_INTERNAL_TEMPLATE;
+            } else {
+                $this->type = self::TYPE_INTERNAL;
+            }
             $this->ref = $ref;
         }
 
@@ -517,6 +525,9 @@ class LinkUtility
             case self::TYPE_WINDOWS_SHARE:
                 $metaDataRenderer->windowssharelink($this->ref, $this->name);
                 break;
+            case self::TYPE_INTERNAL_TEMPLATE:
+                // No backlinks for link template
+                break;
             default:
                 LogUtility::msg("The link ({$this->ref}) with the type " . $this->type . " was not processed into the metadata");
         }
@@ -667,7 +678,7 @@ class LinkUtility
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::render($name, $this->dokuwikiUrl->getPath());
+                    $name = TemplateUtility::renderFromString($name, $this->dokuwikiUrl->getPath());
                 }
                 if (empty($name)) {
                     $name = $this->ref;

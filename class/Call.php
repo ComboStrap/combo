@@ -707,7 +707,7 @@ class Call
             if ($this->isPluginCall()) {
                 $payload = trim($this->getPayload());
                 if (!empty($payload)) {
-                    $this->setPayload(TemplateUtility::renderFromPage($payload, $page));
+                    $this->setPayload(TemplateUtility::renderForPage($payload, $page));
                 }
             }
         } else {
@@ -717,7 +717,7 @@ class Call
                     break;
                 case \syntax_plugin_combo_pipeline::TAG:
                     $pageTemplate = PluginUtility::getTagContent($this->getCapturedContent());
-                    $script = TemplateUtility::renderFromPage($pageTemplate, $page);
+                    $script = TemplateUtility::renderForPage($pageTemplate, $page);
                     $string = PipelineUtility::execute($script);
                     $this->setPayload($string);
                     break;
@@ -725,7 +725,7 @@ class Call
                     switch ($this->getState()) {
                         case DOKU_LEXER_ENTER:
                             $ref = $this->getAttribute("ref");
-                            $this->addAttribute("ref", TemplateUtility::renderFromPage($ref, $page));
+                            $this->addAttribute("ref", TemplateUtility::renderForPage($ref, $page));
                             break;
                     }
                     break;

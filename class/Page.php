@@ -1141,6 +1141,12 @@ class Page extends DokuPath
         }
     }
 
+    public
+    function getPersistentMetadatas()
+    {
+        return $this->getMetadatas()['persistent'];
+    }
+
     /**
      * The modified date is the last modficaction date
      * the first time, this is the creation date

@@ -63,6 +63,8 @@ require_once('Spacing.php');
 require_once('Sqlite.php');
 require_once('StringUtility.php');
 require_once('StyleUtility.php');
+require_once('Template.php');
+require_once('TemplateUtility.php');
 require_once('TextAlign.php');
 require_once('TextColor.php');
 require_once('ThirdMediaLink.php');

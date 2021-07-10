@@ -246,7 +246,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 /**
                  * User Class
                  */
-                if ($attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)){
+                if ($attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
                     $attributes->addComponentAttributeValue(self::HAD_USER_CLASS, true);
                 } else {
                     $attributes->addComponentAttributeValue(self::HAD_USER_CLASS, false);
@@ -347,7 +347,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-                if ($openingCall->getContext() == self::CONTAINED_CONTEXT) {
+                if ($openingCall->getContext() == self::CONTAINED_CONTEXT || $openingCall->getType() == self::TYPE_FIT_VALUE) {
                     /**
                      * No link for the media image by default
                      */

@@ -25,21 +25,19 @@ class CacheInstructionsByLogicalKey extends CacheByLogicalKey
     /**
      * BarCache constructor.
      *
-     *
-     *
-     * @param $logicalPagePath - logical id
+     * @param $logicalLogicalPagePath - logical id
      * @param $file - file used
      */
-    public function __construct($logicalPagePath, $file)
+    public function __construct($logicalLogicalPagePath, $file)
     {
-        $this->logicalPagePath = $logicalPagePath;
+        $this->logicalPagePath = $logicalLogicalPagePath;
         $this->file = $file;
         $this->mode = "i";
 
         /**
          * Same than
          */
-        $cacheKey = $logicalPagePath . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+        $cacheKey = $logicalLogicalPagePath . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
         parent::__construct($cacheKey, $file, $this->mode);
 
     }

@@ -48,23 +48,35 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
     public $mode;
 
     /**
+     * To be compatible with
+     * {@link action_plugin_move_rewrite::handle_cache()} line 88
+     * that expect the $page with the id
+     */
+    public $page;
+
+    /**
      * BarCache constructor.
      *
      *
      *
-     * @param $pagePath - logical absolute path
+     * @param $logicalPagePath - logical absolute path
      * @param $file - file used
      * @param string $mode
      */
-    public function __construct($pagePath, $file, $mode)
+    public function __construct($logicalPagePath, $file, $mode)
     {
-        $this->logicalPagePath = $pagePath;
+
+        $this->logicalPagePath = $logicalPagePath;
         $this->file = $file;
         $this->mode = $mode;
 
-        $cacheKey = $pagePath . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+        $cacheKey = $logicalPagePath . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
         $this->setEvent('PARSER_CACHE_USE');
         $ext = '.' . $mode;
+
+
+        $this->page = substr($logicalPagePath,1);
+
         parent::__construct($cacheKey, $ext);
 
     }

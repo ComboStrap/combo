@@ -18,7 +18,7 @@ use dokuwiki\Cache\CacheInstructions;
  */
 class CacheInstructionsByLogicalKey extends CacheByLogicalKey
 {
-    public $page;
+    public $logicalPagePath;
     public $file;
     public $mode;
 
@@ -27,19 +27,19 @@ class CacheInstructionsByLogicalKey extends CacheByLogicalKey
      *
      *
      *
-     * @param $logicalId - logical id
+     * @param $logicalPagePath - logical id
      * @param $file - file used
      */
-    public function __construct($logicalId, $file)
+    public function __construct($logicalPagePath, $file)
     {
-        $this->page = $logicalId;
+        $this->logicalPagePath = $logicalPagePath;
         $this->file = $file;
         $this->mode = "i";
 
         /**
          * Same than
          */
-        $cacheKey = $logicalId . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+        $cacheKey = $logicalPagePath . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
         parent::__construct($cacheKey, $file, $this->mode);
 
     }

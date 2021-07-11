@@ -51,6 +51,8 @@ class Page extends DokuPath
     const BLOG_TYPE = "blog";
     const DESCRIPTION_PROPERTY = "description";
     const TYPE_PROPERTY = "type";
+    const SCOPE_VALUE_CURRENT = "current";
+    const SCOPE_KEY = "scope";
 
 
     private $canonical;
@@ -71,17 +73,16 @@ class Page extends DokuPath
 
 
     /**
-     * @var string the logical id is used with bars
-     * If a bar is asked in the namespace, the logical id is `:ns:bar`
-     * This is used to store the output of the cache
-     * If this is not a bar the logical id is the {@link DokuPath::getId()}
-     */
-    private $logicalId = null;
-
-    /**
      * @var bool Indicator to say if this is a sidebar (or sidekick bar)
      */
     private $isSideSlot = false;
+
+    /**
+     * The id requested (ie the main page)
+     * The page may be a slot
+     * @var string
+     */
+    private $requestedId;
 
     /**
      * Page constructor.
@@ -121,33 +122,75 @@ class Page extends DokuPath
                 $path = DokuPath::SEPARATOR . $id;
             }
 
-            /**
-             * Set the logical id
-             * When no $ID is set (for instance, test),
-             * the logical id is the id
-             */
-            global $ID;
-            if ($ID != null) {
-                $actualNamespace = getNS($ID);
-                $this->logicalId = $lastPathPart;
-                resolve_pageid($actualNamespace, $this->logicalId, $exists);
-            }
-
         }
 
+        global $ID;
+        $this->requestedId = $ID;
 
         parent::__construct($path, DokuPath::PAGE_TYPE);
 
     }
 
-    public
-    function getLogicalId()
+    /**
+     * @var string the logical id is used with slots.
+     *
+     * A slot may exist in several node of the file system tree
+     * but they can be rendered for a page in a lowest level
+     * listing the page of the current namespace
+     *
+     * The slot is physically stored in one place but is equivalent
+     * physically to the same slot in all sub-node.
+     *
+     * This logical id does take into account this aspect.
+     *
+     * This is used also to store the HTML output in the cache
+     * If this is not a slot the logical id is the {@link DokuPath::getId()}
+     */
+    public function getLogicalId()
     {
-        if ($this->logicalId == null) {
-            return $this->getId();
+        /**
+         * Delete the first separator
+         */
+        return substr($this->getLogicalPath(), 1);
+    }
+
+    public function getLogicalPath()
+    {
+
+        /**
+         * Set the logical id
+         * When no $ID is set (for instance, test),
+         * the logical id is the id
+         *
+         * The logical id depends on the namespace attribute of the {@link \syntax_plugin_combo_pageexplorer}
+         * stored in the `scope` metadata.
+         */
+        $scopePath = $this->getMetadata(self::SCOPE_KEY);
+        if ($scopePath == null) {
+
+            return $this->getPath();
+
         } else {
-            return $this->logicalId;
+            if ($scopePath == self::SCOPE_VALUE_CURRENT) {
+
+                /**
+                 * The logical id is the slot name
+                 * inside the current (ie actual namespace)
+                 */
+                $actualNamespace = getNS($this->requestedId);
+                $logicalId = $this->getName();
+                resolve_pageid($actualNamespace, $logicalId, $exists);
+                return DokuPath::SEPARATOR . $logicalId;
+
+            } else {
+                /**
+                 * The logical id is fixed
+                 * Logically, it should be the same than the {@link Page::getId() id}
+                 */
+                return $scopePath . DokuPath::SEPARATOR . $this->getName();
+            }
         }
+
     }
 
 
@@ -528,8 +571,8 @@ class Page extends DokuPath
     function getInternalLinksFromMeta()
     {
         $metadata = $this->getMetadatas();
-        if (key_exists('current', $metadata)) {
-            $current = $metadata['current'];
+        if (key_exists(self::SCOPE_VALUE_CURRENT, $metadata)) {
+            $current = $metadata[self::SCOPE_VALUE_CURRENT];
             if (key_exists('relation', $current)) {
                 $relation = $current['relation'];
                 if (is_array($relation)) {
@@ -1166,7 +1209,7 @@ class Page extends DokuPath
     private
     function getCurrentMetadata($key)
     {
-        $key = $this->getMetadatas()['current'][$key];
+        $key = $this->getMetadatas()[self::SCOPE_VALUE_CURRENT][$key];
         return ($key ? $key : null);
     }
 
@@ -1504,7 +1547,7 @@ class Page extends DokuPath
 
         /**
          * When running a bar rendering
-         * The global ID should become the id of bar
+         * The global ID should become the id of the slot
          * (needed for parsing)
          * The $ID is restored at the end of the function
          */
@@ -1584,7 +1627,7 @@ class Page extends DokuPath
             /**
              * Logical id is the scope and part of the key
              */
-            return new CacheByLogicalKey($this->getLogicalId(), $this->getFileSystemPath(), $outputFormat);
+            return new CacheByLogicalKey($this->getLogicalPath(), $this->getFileSystemPath(), $outputFormat);
 
         } else {
 
@@ -1609,7 +1652,7 @@ class Page extends DokuPath
              * because we can't overide the constructor of {@link CacheInstructions}
              * but they should used the same interface (ie manipulate array data)
              */
-            return new CacheInstructionsByLogicalKey($this->getLogicalId(), $this->getFileSystemPath());
+            return new CacheInstructionsByLogicalKey($this->getLogicalPath(), $this->getFileSystemPath());
 
         } else {
 

@@ -1,7 +1,6 @@
 <?php
 
 use ComboStrap\Page;
-use ComboStrap\TplUtility;
 
 if (!defined('DOKU_INC')) die();
 
@@ -9,7 +8,7 @@ if (!defined('DOKU_INC')) die();
  *
  *
  * To delete sidebar (cache) cache when a page was modified in a namespace
- * https://combostrap.com/sidebars
+ * https://combostrap.com/sideslots
  */
 class action_plugin_combo_sidebarscachebursting extends DokuWiki_Action_Plugin
 {

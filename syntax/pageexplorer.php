@@ -64,6 +64,21 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      */
     private $namespaceCounter = 0;
 
+    /**
+     * @param $namespacePath
+     * @return string the last part with a uppercase letter and where underscore became a space
+     */
+    private static function toNamespaceName($namespacePath)
+    {
+        $sepPosition = strrpos($namespacePath, DokuPath::SEPARATOR);
+        if ($sepPosition !== false) {
+            $namespaceName = ucfirst(trim(str_replace("_", " ", substr($namespacePath, $sepPosition + 1))));
+        } else {
+            $namespaceName = $namespacePath;
+        }
+        return $namespaceName;
+    }
+
 
     /**
      * Syntax Type.
@@ -283,9 +298,21 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromCallStackArray($openingTag->getAttributes(), self::CANONICAL);
                 if ($tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
                     $nameSpacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
+                    $scope = $nameSpacePath;
                 } else {
                     $page = Page::createPageFromEnvironment();
                     $nameSpacePath = $page->getNamespacePath();
+                    $scope = Page::SCOPE_VALUE_CURRENT;
+                }
+
+                /**
+                 * Side slots cache management
+                 * https://combostrap.com/sideslots
+                 * https://www.dokuwiki.org/devel:metadata#functions_to_get_and_set_metadata
+                 */
+                $page = Page::createPageFromEnvironment();
+                if ($page->isStrapSideSlot()) {
+                    p_set_metadata($page->getId(), [Page::SCOPE_KEY => $scope]);
                 }
 
 
@@ -608,7 +635,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$subHomePagePath])->toCallArray()];
                     }
                 } else {
-                    $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$actualPageOrNamespacePath])->toCallArray()];
+                    $namespaceName = self::toNamespaceName($actualPageOrNamespacePath);
+                    $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$namespaceName])->toCallArray()];
                 }
 
                 $this->namespaceCounter++;
@@ -685,7 +713,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         /**
          * Then the other pages
          */
-        foreach ($nonHomePages as $page){
+        foreach ($nonHomePages as $page) {
             self::treeProcessLeaf($callStack, $page->getAbsolutePath(), $pageTemplateInstructions);
         }
 

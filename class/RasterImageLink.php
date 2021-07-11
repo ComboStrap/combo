@@ -307,7 +307,7 @@ class RasterImageLink extends MediaLink
                          * We use a svg instead
                          */
                         $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
-                        $this->tagAttributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($imgTagWidth,$imgTagHeight)." {$imgTagWidth}w");
+                        $this->tagAttributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($imgTagWidth,$imgTagHeight));
                         /**
                          * We use `data-sizes` and not `sizes`
                          * because `sizes` without `srcset`

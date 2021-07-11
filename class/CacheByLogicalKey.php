@@ -43,7 +43,7 @@ namespace ComboStrap;
  */
 class CacheByLogicalKey extends \dokuwiki\Cache\Cache
 {
-    public $page;
+    public $logicalPagePath;
     public $file;
     public $mode;
 
@@ -52,17 +52,17 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
      *
      *
      *
-     * @param $page - logical id
+     * @param $pagePath - logical absolute path
      * @param $file - file used
      * @param string $mode
      */
-    public function __construct($page, $file, $mode)
+    public function __construct($pagePath, $file, $mode)
     {
-        $this->page = $page;
+        $this->logicalPagePath = $pagePath;
         $this->file = $file;
         $this->mode = $mode;
 
-        $cacheKey = $page . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+        $cacheKey = $pagePath . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
         $this->setEvent('PARSER_CACHE_USE');
         $ext = '.' . $mode;
         parent::__construct($cacheKey, $ext);

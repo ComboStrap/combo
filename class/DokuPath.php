@@ -253,7 +253,11 @@ class DokuPath extends File
     public
     static function AbsolutePathToId($absolutePath)
     {
-        return substr($absolutePath, 1);
+        if($absolutePath!=":") {
+            return substr($absolutePath, 1);
+        } else {
+            return "";
+        }
     }
 
 

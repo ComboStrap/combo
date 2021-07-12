@@ -197,11 +197,17 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * Set the wiki-id of the namespace
                  * (Needed by javascript)
                  */
-                $tagAttributes->addComponentAttributeValue(TagAttributes::WIKI_ID, DokuPath::AbsolutePathToId($namespacePath));
-
+                $namespaceId = DokuPath::AbsolutePathToId($namespacePath);
+                if ($namespaceId == "") {
+                    // root namespace id is the empty string
+                    $tagAttributes->addEmptyComponentAttributeValue(TagAttributes::WIKI_ID);
+                } else {
+                    $tagAttributes->addComponentAttributeValue(TagAttributes::WIKI_ID, $namespaceId);
+                }
+                $callStackArray = $tagAttributes->toCallStackArray();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $callStackArray
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -319,8 +325,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 /**
                  * Get the Namespace
                  */
-                $tagAttributes = TagAttributes::createFromCallStackArray($openingTag->getAttributes(), self::CANONICAL);
-                $nameSpacePath = DokuPath::IdToAbsolutePath($tagAttributes->getValue(TagAttributes::WIKI_ID));
+                $openingTagAttributes = $openingTag->getAttributes();
+                $tagAttributes = TagAttributes::createFromCallStackArray($openingTagAttributes, self::CANONICAL);
+                $wikiId = $tagAttributes->getValue(TagAttributes::WIKI_ID);
+                $nameSpacePath = DokuPath::IdToAbsolutePath($wikiId);
 
                 /**
                  * Side slots cache management
@@ -360,6 +368,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $tagAttributes->addClassName(self::CANONICAL . "-combo");
                         $tagAttributes->addClassName($pageExplorerListPrefix . "-combo");
                         $tagAttributes->removeAttributeIfPresent(TagAttributes::TYPE_KEY);
+                        $tagAttributes->removeAttributeIfPresent(TagAttributes::WIKI_ID);
                         $callStack->appendCallAtTheEnd(
                             Call::createComboCall(
                                 $contentListTag,
@@ -574,7 +583,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              * to the actual page
                              */
                             $namespaceId = $tagAttributes->getValueAndRemove(TagAttributes::WIKI_ID);
-                            if(!empty($namespaceId)) { // not root
+                            if (!empty($namespaceId)) { // not root
                                 $tagAttributes->addHtmlAttributeValue("data-wiki-id", $namespaceId);
                             } else {
                                 $tagAttributes->addEmptyHtmlAttributeValue("data-wiki-id");

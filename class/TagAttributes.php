@@ -143,11 +143,11 @@ class TagAttributes
         $this->componentAttributesCaseInsensitive = new ArrayCaseInsensitive($componentAttributes);
 
         /**
-         * Delete empty/null values
-         * From a functional point of view, they should not exist
+         * Delete null values
+         * Empty string, 0 may exist
          */
         foreach ($componentAttributes as $key => $value) {
-            if ($value == null || blank($value)) {
+            if (is_null($value)) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
             }
         }
@@ -426,7 +426,7 @@ class TagAttributes
             foreach ($originalArray as $key => $value) {
 
                 // Null Value, not needed
-                if ($value == null) {
+                if (is_null($value)) {
                     continue;
                 }
 
@@ -592,17 +592,18 @@ class TagAttributes
     public function toCallStackArray()
     {
         $array = array();
-        foreach ($this->componentAttributesCaseInsensitive->getOriginalArray() as $key => $value) {
+        $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
+        foreach ($originalArray as $key => $value) {
             /**
-             * blank and not empty
-             * because the width can be zero
+             * Only null value are not passed
+             * width can be zero, wiki-id can be the empty string (ie root namespace)
              */
-            if (!blank($value)) {
+            if (!is_null($value)) {
                 $array[$key] = StringUtility::toString($value);
             }
         }
         $style = $this->getStyle();
-        if (!empty($style)) {
+        if ($style != null) {
             $array["style"] = $style;
         }
         return $array;
@@ -897,6 +898,11 @@ class TagAttributes
         $this->htmlAttributes[$key] = '';
         return $this;
 
+    }
+
+    public function addEmptyComponentAttributeValue($attribute)
+    {
+        $this->componentAttributesCaseInsensitive[$attribute] = "";
     }
 
 

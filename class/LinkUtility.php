@@ -639,10 +639,13 @@ class LinkUtility
     {
         if ($this->linkedPage == null) {
             if ($this->getType() == self::TYPE_INTERNAL) {
-                // if there is no path, this is the actual paeg
+                // if there is no path, this is the actual page
                 $path = $this->dokuwikiUrl->getPath();
                 if ($path == null) {
                     global $ID;
+                    if ($ID == null) {
+                        LogUtility::msg("The path is not specified in the reference. The global ID should then be specified to get the target of the link");
+                    }
                     $path = DokuPath::IdToAbsolutePath($ID);
                 }
                 /**

@@ -244,16 +244,21 @@ class DokuPath extends File
      */
     public static function IdToAbsolutePath($id)
     {
+        if (is_null($id)) {
+            LogUtility::msg("The id passed should not be null");
+        }
         return DokuPath::SEPARATOR . $id;
     }
 
-    public static function AbsolutePathToId($absolutePath)
+    public
+    static function AbsolutePathToId($absolutePath)
     {
         return substr($absolutePath, 1);
     }
 
 
-    public function getName()
+    public
+    function getName()
     {
         /**
          * See also {@link noNSorNS}
@@ -262,7 +267,8 @@ class DokuPath extends File
         return $names[sizeOf($names) - 1];
     }
 
-    public function getNames()
+    public
+    function getNames()
     {
         return preg_split("/" . self::SEPARATOR . "/", $this->getId());
     }
@@ -270,7 +276,8 @@ class DokuPath extends File
     /**
      * @return bool true if this id represents a page
      */
-    public function isPage()
+    public
+    function isPage()
     {
 
         if (
@@ -286,7 +293,8 @@ class DokuPath extends File
     }
 
 
-    public function isGlob()
+    public
+    function isGlob()
     {
         /**
          * {@link search_universal} triggers ACL check
@@ -296,7 +304,8 @@ class DokuPath extends File
         return StringUtility::endWiths($this->getId(), ":*");
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->getId();
     }
@@ -309,7 +318,8 @@ class DokuPath extends File
      * And most of the function that are not links related
      * use this format
      */
-    public function getId()
+    public
+    function getId()
     {
 
         if ($this->getScheme() == self::LOCAL_SCHEME) {
@@ -321,14 +331,16 @@ class DokuPath extends File
 
     }
 
-    public function getPath()
+    public
+    function getPath()
     {
 
         return $this->path;
 
     }
 
-    public function getScheme()
+    public
+    function getScheme()
     {
 
         return $this->scheme;
@@ -346,7 +358,8 @@ class DokuPath extends File
      *
      * @return string|null
      */
-    public function getRevision()
+    public
+    function getRevision()
     {
         return $this->rev;
     }
@@ -364,7 +377,8 @@ class DokuPath extends File
      * and is absolute (index, ...)
      *
      */
-    public function getAbsolutePath()
+    public
+    function getAbsolutePath()
     {
         if ($this->getScheme() == self::LOCAL_SCHEME) {
             return $this->absoluteIdWithSeparator;
@@ -380,7 +394,8 @@ class DokuPath extends File
      *   * backlinks for page
      *   * page with media for media
      */
-    public function getRelatedPages()
+    public
+    function getRelatedPages()
     {
         $absoluteId = $this->getId();
         if ($this->finalType == self::MEDIA_TYPE) {
@@ -390,7 +405,8 @@ class DokuPath extends File
         }
     }
 
-    public function isPathIdAbsolute()
+    public
+    function isPathIdAbsolute()
     {
         return strpos($this->path, self::SEPARATOR) === 0;
     }
@@ -400,7 +416,8 @@ class DokuPath extends File
      * (ie $conf[basedir])
      * @return string
      */
-    public function toRelativeFileSystemPath()
+    public
+    function toRelativeFileSystemPath()
     {
         $relativeSystemPath = ".";
         if (!empty($this->getId())) {

@@ -178,6 +178,8 @@ class syntax_plugin_combo_pageexplorernamespace extends DokuWiki_Syntax_Plugin
             switch ($state) {
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $wikiId = $tagAttributes->getValueAndRemoveIfPresent(TagAttributes::WIKI_ID);
+                    $tagAttributes->addHtmlAttributeValue("data-wiki-id", $wikiId);
                     $targetId = $tagAttributes->getValueAndRemoveIfPresent(self::TARGET_ID_ATT);
                     $tagAttributes->addHtmlAttributeValue("data-bs-target", "#$targetId");
                     $tagAttributes->addHtmlAttributeValue("data-bs-toggle", "collapse");

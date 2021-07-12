@@ -89,8 +89,7 @@ class syntax_plugin_combo_headingatx extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
 
                 // Determine the type
-                $parent = $callStack->moveToParent();
-                $context = syntax_plugin_combo_heading::getContext($parent);
+                $context = syntax_plugin_combo_heading::getContext($callStack);
 
                 /**
                  * The context is needed:

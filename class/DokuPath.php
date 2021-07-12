@@ -247,6 +247,7 @@ class DokuPath extends File
         return DokuPath::SEPARATOR . $id;
     }
 
+
     public function getName()
     {
         /**

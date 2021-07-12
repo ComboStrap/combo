@@ -115,8 +115,7 @@ class syntax_plugin_combo_headingwiki extends DokuWiki_Syntax_Plugin
                 $attributes[syntax_plugin_combo_heading::LEVEL] = $this->getLevelFromMatch($match);
                 $callStack = CallStack::createFromHandler($handler);
 
-                $parentTag = $callStack->moveToParent();
-                $context = syntax_plugin_combo_heading::getContext($parentTag);
+                $context = syntax_plugin_combo_heading::getContext($callStack);
 
                 return array(
                     PluginUtility::STATE => $state,

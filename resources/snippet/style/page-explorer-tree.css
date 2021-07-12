@@ -25,7 +25,7 @@
 }
 
 /* Give space when the mouse is over the link */
-.page-explorer-tree-page-combo  a {
+.page-explorer-tree-page-combo a {
     padding: .1875rem .5rem;
     margin-top: .125rem;
     color: rgba(0, 0, 0, 0.65);
@@ -56,6 +56,7 @@
     background-color: transparent;
     border: 0;
     display: inline-flex;
+    text-align: left;
 }
 
 .page-explorer-tree-combo .btn:hover, .page-explorer-tree-combo .btn:focus {

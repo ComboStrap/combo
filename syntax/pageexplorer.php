@@ -197,7 +197,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
 
-
                 /**
                  * Capture the instructions for
                  * {@link syntax_plugin_combo_pageexplorerpage}
@@ -547,12 +546,23 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
 
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CANONICAL);
+                    $namespace = Page::createPageFromPath($tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE));
+                    $tagAttributes->addHtmlAttributeValue("data-wiki-id", $namespace->getId());
                     $type = $tagAttributes->getType();
                     switch ($type) {
                         case self::TYPE_TREE:
+                            $snippetId = self::CANONICAL . "-" . $type;
+                            /**
+                             * Open the tree until the current page
+                             * and make it active
+                             */
+                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($snippetId);
+                            /**
+                             * Styling
+                             */
+                            PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetId);
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag("nav") . DOKU_LF;
                             $renderer->doc .= "<ul>" . DOKU_LF;
-                            PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::CANONICAL . "-" . $type);
                             break;
                         case self::LIST_TYPE:
                             /**
@@ -619,7 +629,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
         foreach ($pageOrNamespaces as $pageOrNamespace) {
 
-            $actualPageOrNamespacePath = DokuPath::IdToAbsolutePath($pageOrNamespace['id']);
+            $actualNamespaceId = $pageOrNamespace['id'];
+            $actualPageOrNamespacePath = DokuPath::IdToAbsolutePath($actualNamespaceId);
 
             /**
              * Namespace
@@ -641,7 +652,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
                 $this->namespaceCounter++;
                 $targetIdAtt = syntax_plugin_combo_pageexplorernamespace::TARGET_ID_ATT;
-                $id = PluginUtility::toHtmlId("page-explorer-{$actualPageOrNamespacePath}-{$this->namespaceCounter}-combo");
+                $id = PluginUtility::toHtmlId("page-explorer-{$actualNamespaceId}-{$this->namespaceCounter}-combo");
 
                 /**
                  * Entering: Creating in instructions form
@@ -652,12 +663,16 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  *      $buttonInstructions
                  *    </$pageExplorerTreeButtonTag>
                  *    <$pageExplorerTreeListTag id="$id">
+                 *    ...
                  */
                 $callStack->appendCallAtTheEnd(
                     Call::createComboCall($pageExplorerSubNamespaceTag, DOKU_LEXER_ENTER)
                 );
                 $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_ENTER, [$targetIdAtt => $id])
+                    Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_ENTER, [
+                        $targetIdAtt => $id,
+                        TagAttributes::WIKI_ID => $actualNamespaceId
+                    ])
                 );
                 $callStack->appendInstructions($actualNamespaceInstructions);
                 $callStack->appendCallAtTheEnd(

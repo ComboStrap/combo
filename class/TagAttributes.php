@@ -69,6 +69,7 @@ class TagAttributes
     const CANONICAL = "tag";
     const DISPLAY = "display";
     const CLASS_KEY = "class";
+    const WIKI_ID = "wiki-id";
 
     /**
      * A global static counter

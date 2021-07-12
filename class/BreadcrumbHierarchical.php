@@ -15,7 +15,7 @@ namespace ComboStrap;
 
 class BreadcrumbHierarchical
 {
-    const CANONICAL =  "breadcrumb-hierarchical";
+    const CANONICAL = "breadcrumb-hierarchical";
 
     /**
      * Hierarchical breadcrumbs (you are here)
@@ -61,13 +61,20 @@ class BreadcrumbHierarchical
 
             // Print the parts without the last one ($count -1)
             $pagePart = "";
+            $currentParts = [];
             for ($i = 0; $i < $countPart - 1; $i++) {
 
-                $pagePart .= $idParts[$i] . ':';
+                $currentPart = $idParts[$i];
+                $currentParts[] = $currentPart;
 
-                // We pass the value to the page variable
-                // because the resolve part will change it
-                $page = $pagePart;
+                /**
+                 * We pass the value to the page variable
+                 * because the resolve part will change it
+                 *
+                 * resolve will also resolve to the home page
+                 */
+
+                $page = implode(DokuPath::SEPARATOR,$currentParts).":";
                 $exist = null;
                 resolve_pageid(getNS($ID), $page, $exist, "", true);
 
@@ -75,7 +82,12 @@ class BreadcrumbHierarchical
                 $linkContent = $pageTitle;
                 $htmlOutput .= '<li class="breadcrumb-item">';
                 // html_wikilink because the page has the form pagename: and not pagename:pagename
-                $htmlOutput .= tpl_link(wl($page), $linkContent, 'title="' . $pageTitle . '"', $return = true);
+                if ($exist) {
+                    $htmlOutput .= tpl_link(wl($page), $linkContent, 'title="' . $pageTitle . '"', $return = true);
+                } else {
+                    $htmlOutput .= ucfirst($currentPart);
+                }
+
                 $htmlOutput .= '</li>' . PHP_EOL;
 
             }

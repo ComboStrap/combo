@@ -245,7 +245,17 @@ class TagAttributes
 
     public function getStyle()
     {
-        return PluginUtility::array2InlineStyle($this->styleDeclaration);
+        if (sizeof($this->styleDeclaration) != 0) {
+            return PluginUtility::array2InlineStyle($this->styleDeclaration);
+        } else {
+            /**
+             * null is needed to see if the attribute was set or not
+             * because an attribute may have the empty string
+             * Example: the wiki id of the root namespace
+             */
+            return null;
+        }
+
     }
 
     /**
@@ -412,7 +422,8 @@ class TagAttributes
             /**
              * copy the unknown component attributes
              */
-            foreach ($this->componentAttributesCaseInsensitive->getOriginalArray() as $key => $value) {
+            $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
+            foreach ($originalArray as $key => $value) {
 
                 // Null Value, not needed
                 if ($value == null) {
@@ -470,9 +481,23 @@ class TagAttributes
                 }
             }
             foreach ($tempHtmlArray as $name => $value) {
-                if (!empty($value)) {
+
+                if (!is_null($value)) {
+                    /**
+                     *
+                     * Don't add a filter on the empty values
+                     *
+                     * The value of an HTML attribute may be empty
+                     * Example the wiki id of the root namespace
+                     *
+                     * By default, {@link TagAttributes::addHtmlAttributeValue()}
+                     * will not accept any value, it must be implicitly said with the
+                     * {@link TagAttributes::addHtmlAttributeValue()}
+                     *
+                     */
                     $sortedArray[$name] = $value;
                 }
+
             }
             $this->finalHtmlArray = $sortedArray;
 
@@ -495,7 +520,7 @@ class TagAttributes
     public function addHtmlAttributeValue($key, $value)
     {
         if (empty($value)) {
-            LogUtility::msg("The value of the HTML attribute is empty for the key ($key) - Tag ($this->logicalTag)", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The value of the HTML attribute is empty for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
         }
         $this->htmlAttributes[$key] = $value;
         return $this;
@@ -621,7 +646,11 @@ class TagAttributes
         $htmlArray = $this->toHtmlArray();
         foreach ($htmlArray as $name => $value) {
 
-            if (!empty($value)) {
+            /**
+             * Empty value are authorized
+             * null are just not set
+             */
+            if (!is_null($value)) {
                 /**
                  * The condition is important
                  * because we may pass the javascript character `\n` in a `srcdoc` for javascript
@@ -856,6 +885,17 @@ class TagAttributes
         }
         $enterTag .= ">";
         return $enterTag;
+
+    }
+
+    /**
+     * @param string $key add an html attribute with the empty string
+     */
+    public function addEmptyHtmlAttributeValue($key)
+    {
+
+        $this->htmlAttributes[$key] = '';
+        return $this;
 
     }
 

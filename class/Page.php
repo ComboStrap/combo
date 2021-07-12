@@ -51,6 +51,16 @@ class Page extends DokuPath
     const BLOG_TYPE = "blog";
     const DESCRIPTION_PROPERTY = "description";
     const TYPE_PROPERTY = "type";
+
+    /**
+     * The scope of a side slot page
+     * ie
+     *   * a namespace path
+     *   * or current, for the namespace of the current requested page
+     * If the scope is:
+     *   * current, the cache will create a logical page for each namespace
+     *   * a namespace path, the cache will be only on this path
+     */
     const SCOPE_VALUE_CURRENT = "current";
     const SCOPE_KEY = "scope";
 

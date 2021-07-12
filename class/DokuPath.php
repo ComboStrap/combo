@@ -247,6 +247,11 @@ class DokuPath extends File
         return DokuPath::SEPARATOR . $id;
     }
 
+    public static function AbsolutePathToId($absolutePath)
+    {
+        return substr($absolutePath, 1);
+    }
+
 
     public function getName()
     {
@@ -398,7 +403,7 @@ class DokuPath extends File
     public function toRelativeFileSystemPath()
     {
         $relativeSystemPath = ".";
-        if(!empty($this->getId())){
+        if (!empty($this->getId())) {
             $relativeSystemPath .= "/" . utf8_encodeFN(str_replace(':', '/', $this->getId()));
         }
         return $relativeSystemPath;

@@ -43,7 +43,11 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     const COMBO_TAG_PATTERNS = ["ntoc", self::CANONICAL];
 
     /**
-     * Component attribute
+     * Namespace attribute
+     * that contains scope information
+     * (ie
+     *   * a namespace path
+     *   * or current, for the namespace of the current requested page
      */
     const ATTR_NAMESPACE = "ns";
 
@@ -172,12 +176,33 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $default = [TagAttributes::TYPE_KEY => self::LIST_TYPE];
-                $attributes = PluginUtility::getTagAttributes($match);
-                $attributes = PluginUtility::mergeAttributes($attributes, $default);
+
+                $default = [
+                    TagAttributes::TYPE_KEY => self::LIST_TYPE,
+                    self::ATTR_NAMESPACE => Page::SCOPE_VALUE_CURRENT
+                ];
+                $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
+
+                /**
+                 * nameSpacePath determination
+                 */
+                $namespacePath = $tagAttributes->getValue(self::ATTR_NAMESPACE);
+                if ($namespacePath == Page::SCOPE_VALUE_CURRENT) {
+                    $page = Page::createPageFromEnvironment();
+                    $namespacePath = $page->getNamespacePath();
+                }
+
+
+                /**
+                 * Set the wiki-id of the namespace
+                 * (Needed by javascript)
+                 */
+                $tagAttributes->addComponentAttributeValue(TagAttributes::WIKI_ID, DokuPath::AbsolutePathToId($namespacePath));
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes);
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                );
 
             case DOKU_LEXER_UNMATCHED :
 
@@ -295,14 +320,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * Get the Namespace
                  */
                 $tagAttributes = TagAttributes::createFromCallStackArray($openingTag->getAttributes(), self::CANONICAL);
-                if ($tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
-                    $nameSpacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
-                    $scope = $nameSpacePath;
-                } else {
-                    $page = Page::createPageFromEnvironment();
-                    $nameSpacePath = $page->getNamespacePath();
-                    $scope = Page::SCOPE_VALUE_CURRENT;
-                }
+                $nameSpacePath = DokuPath::IdToAbsolutePath($tagAttributes->getValue(TagAttributes::WIKI_ID));
 
                 /**
                  * Side slots cache management
@@ -310,6 +328,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * https://www.dokuwiki.org/devel:metadata#functions_to_get_and_set_metadata
                  */
                 $page = Page::createPageFromEnvironment();
+                $scope = $tagAttributes->getValueAndRemoveIfPresent(self::ATTR_NAMESPACE);
                 if ($page->isStrapSideSlot()) {
                     p_set_metadata($page->getId(), [Page::SCOPE_KEY => $scope]);
                 }
@@ -546,11 +565,25 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
 
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::CANONICAL);
-                    $namespace = Page::createPageFromPath($tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE));
-                    $tagAttributes->addHtmlAttributeValue("data-wiki-id", $namespace->getId());
                     $type = $tagAttributes->getType();
                     switch ($type) {
                         case self::TYPE_TREE:
+                            /**
+                             * data-wiki-id, needed for the
+                             * javascript that open the tree
+                             * to the actual page
+                             */
+                            $namespaceId = $tagAttributes->getValueAndRemove(TagAttributes::WIKI_ID);
+                            if(!empty($namespaceId)) { // not root
+                                $tagAttributes->addHtmlAttributeValue("data-wiki-id", $namespaceId);
+                            } else {
+                                $tagAttributes->addEmptyHtmlAttributeValue("data-wiki-id");
+                            }
+                            /**
+                             * No ns
+                             */
+                            $tagAttributes->removeAttributeIfPresent(self::ATTR_NAMESPACE);
+
                             $snippetId = self::CANONICAL . "-" . $type;
                             /**
                              * Open the tree until the current page

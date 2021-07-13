@@ -82,7 +82,7 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
          */
         $this->page = $pageObject->getId();
 
-        parent::__construct($this->getCacheKey(), $this->ext);
+        parent::__construct($this->getCacheKey(), $this->getExt());
 
     }
 

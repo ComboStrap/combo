@@ -175,31 +175,26 @@ class Page extends DokuPath
          * The logical id depends on the namespace attribute of the {@link \syntax_plugin_combo_pageexplorer}
          * stored in the `scope` metadata.
          */
-        $scopePath = $this->getMetadata(self::SCOPE_KEY);
-        if ($scopePath == null) {
+        $scopePath = $this->getScope();
+        if ($scopePath == self::SCOPE_VALUE_CURRENT) {
 
-            return $this->getPath();
+            /**
+             * The logical id is the slot name
+             * inside the current (ie actual namespace)
+             */
+            $actualNamespace = getNS($this->requestedId);
+            $logicalId = $this->getName();
+            resolve_pageid($actualNamespace, $logicalId, $exists);
+            return DokuPath::SEPARATOR . $logicalId;
 
         } else {
-            if ($scopePath == self::SCOPE_VALUE_CURRENT) {
-
-                /**
-                 * The logical id is the slot name
-                 * inside the current (ie actual namespace)
-                 */
-                $actualNamespace = getNS($this->requestedId);
-                $logicalId = $this->getName();
-                resolve_pageid($actualNamespace, $logicalId, $exists);
-                return DokuPath::SEPARATOR . $logicalId;
-
-            } else {
-                /**
-                 * The logical id is fixed
-                 * Logically, it should be the same than the {@link Page::getId() id}
-                 */
-                return $scopePath . DokuPath::SEPARATOR . $this->getName();
-            }
+            /**
+             * The logical id is fixed
+             * Logically, it should be the same than the {@link Page::getId() id}
+             */
+            return $scopePath . DokuPath::SEPARATOR . $this->getName();
         }
+
 
     }
 
@@ -1361,13 +1356,17 @@ class Page extends DokuPath
 
 
     public
-    function getMetadata($key)
+    function getMetadata($key, $default = null)
     {
         $persistentMetadata = $this->getPersistentMetadata($key);
         if (empty($persistentMetadata)) {
             $persistentMetadata = $this->getCurrentMetadata($key);
         }
-        return $persistentMetadata;
+        if ($persistentMetadata == null) {
+            return $default;
+        } else {
+            return $persistentMetadata;
+        }
     }
 
     public
@@ -1563,9 +1562,6 @@ class Page extends DokuPath
          */
         $logicalId = $this->getLogicalId();
         $scope = $this->getScope();
-        if ($scope == null) {
-            $scope = "undefined";
-        }
         $debugInfo = "Logical Id ($logicalId) - Scope ($scope)";
         global $ID;
         $keep = $ID;
@@ -1712,7 +1708,7 @@ class Page extends DokuPath
 
     private function getScope()
     {
-        return $this->getMetadata(Page::SCOPE_KEY);
+        return  $this->getMetadata(self::SCOPE_KEY, self::SCOPE_VALUE_CURRENT);
     }
 
 

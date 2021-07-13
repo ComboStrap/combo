@@ -684,7 +684,7 @@ class LinkUtility
                     $name = TemplateUtility::renderFromString($name, $this->dokuwikiUrl->getPath());
                 }
                 if (empty($name)) {
-                    $name = $this->ref;
+                    $name = $this->getInternalPage()->getName();
                     if (useHeading('content')) {
                         $page = $this->getInternalPage();
                         $h1 = $page->getH1();

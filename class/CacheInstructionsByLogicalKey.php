@@ -18,27 +18,21 @@ use dokuwiki\Cache\CacheInstructions;
  */
 class CacheInstructionsByLogicalKey extends CacheByLogicalKey
 {
-    public $logicalPagePath;
-    public $file;
+    public $pageObject;
+
     public $mode;
 
     /**
      * BarCache constructor.
      *
-     * @param $logicalLogicalPagePath - logical id
-     * @param $file - file used
+     * @param $pageObject - logical id
      */
-    public function __construct($logicalLogicalPagePath, $file)
+    public function __construct($pageObject)
     {
-        $this->logicalPagePath = $logicalLogicalPagePath;
-        $this->file = $file;
+        $this->pageObject = $pageObject;
         $this->mode = "i";
 
-        /**
-         * Same than
-         */
-        $cacheKey = $logicalLogicalPagePath . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
-        parent::__construct($cacheKey, $file, $this->mode);
+        parent::__construct($pageObject, $this->mode);
 
     }
 
@@ -50,7 +44,7 @@ class CacheInstructionsByLogicalKey extends CacheByLogicalKey
      */
     public function retrieveCache($clean = true)
     {
-        $contents = io_readFile($this->cache, false);
+        $contents = io_readFile($this->getCacheFile(), false);
         return !empty($contents) ? unserialize($contents) : array();
     }
 
@@ -66,7 +60,7 @@ class CacheInstructionsByLogicalKey extends CacheByLogicalKey
             return false;
         }
 
-        return io_saveFile($this->cache, serialize($instructions));
+        return io_saveFile($this->getCacheFile(), serialize($instructions));
     }
 
 

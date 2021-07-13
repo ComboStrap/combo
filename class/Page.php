@@ -1561,9 +1561,15 @@ class Page extends DokuPath
          * (needed for parsing)
          * The $ID is restored at the end of the function
          */
+        $logicalId = $this->getLogicalId();
+        $scope = $this->getScope();
+        if ($scope == null) {
+            $scope = "undefined";
+        }
+        $debugInfo = "Logical Id ($logicalId) - Scope ($scope)";
         global $ID;
         $keep = $ID;
-        $ID = $this->getLogicalId();
+        $ID = $logicalId;
 
 
         /**
@@ -1579,8 +1585,9 @@ class Page extends DokuPath
         $renderCache = $this->getRenderCache($format);
         if ($renderCache->useCache()) {
             $xhtml = $renderCache->retrieveCache(false);
-            if ($conf['allowdebug'] && $format == 'xhtml') {
-                $xhtml .= "\n<!-- bar cachefile {$renderCache->cache} used -->\n";
+            if (
+                ($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
+                $xhtml = "\n<!-- $debugInfo - bar cachefile {$renderCache->cache} used -->\n" . $xhtml;
             }
         } else {
 
@@ -1604,13 +1611,13 @@ class Page extends DokuPath
              */
             $xhtml = p_render($format, $instructions, $info);
             if ($info['cache'] && $renderCache->storeCache($xhtml)) {
-                if ($conf['allowdebug'] && $format == 'xhtml') {
-                    $xhtml .= "\n<!-- no bar cachefile used, but created {$renderCache->cache} -->\n";
+                if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
+                    $xhtml = "\n<!-- $debugInfo - no bar cachefile used, but created {$renderCache->cache} -->\n" . $xhtml;
                 }
             } else {
                 $renderCache->removeCache();   //   try to delete cachefile
-                if ($conf['allowdebug'] && $format == 'xhtml') {
-                    $xhtml .= "\n<!-- no bar cachefile used, caching forbidden -->\n";
+                if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
+                    $xhtml = "\n<!-- $debugInfo - no bar cachefile used, caching forbidden -->\n" . $xhtml;
                 }
             }
         }
@@ -1635,9 +1642,9 @@ class Page extends DokuPath
         if ($this->isStrapSideSlot()) {
 
             /**
-             * Logical id is the scope and part of the key
+             * Logical cache based on scope (ie logical id) is the scope and part of the key
              */
-            return new CacheByLogicalKey($this->getLogicalPath(), $this->getFileSystemPath(), $outputFormat);
+            return new CacheByLogicalKey($this, $outputFormat);
 
         } else {
 
@@ -1662,7 +1669,7 @@ class Page extends DokuPath
              * because we can't overide the constructor of {@link CacheInstructions}
              * but they should used the same interface (ie manipulate array data)
              */
-            return new CacheInstructionsByLogicalKey($this->getLogicalPath(), $this->getFileSystemPath());
+            return new CacheInstructionsByLogicalKey($this);
 
         } else {
 
@@ -1701,6 +1708,11 @@ class Page extends DokuPath
         } else {
             return ":$ns";
         }
+    }
+
+    private function getScope()
+    {
+        return $this->getMetadata(Page::SCOPE_KEY);
     }
 
 

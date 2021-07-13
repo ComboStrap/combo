@@ -905,5 +905,15 @@ class TagAttributes
         $this->componentAttributesCaseInsensitive[$attribute] = "";
     }
 
+    /**
+     * @param $attribute
+     * @return mixed
+     */
+    public function getBooleanValueAndRemove($attribute)
+    {
+        $value = $this->getValueAndRemove($attribute);
+        return filter_var(    $value, FILTER_VALIDATE_BOOLEAN);
+    }
+
 
 }

@@ -207,7 +207,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             break;
                     }
                 } else {
-                    $namespacePath = $tagAttributes->getValue(self::ATTR_NAMESPACE);
+                    $namespacePath = $tagAttributes->getValueAndRemove(self::ATTR_NAMESPACE);
                     $scope = $namespacePath;
                 }
 

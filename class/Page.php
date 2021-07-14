@@ -1525,10 +1525,8 @@ class Page extends DokuPath
     {
 
         $renderCache = $this->getRenderCache("xhtml");
-        /**
-         * $cache->cache is the file
-         */
-        return file_exists($renderCache->cache);
+        return $renderCache->exists();
+
     }
 
     public
@@ -1562,11 +1560,9 @@ class Page extends DokuPath
          */
         $logicalId = $this->getLogicalId();
         $scope = $this->getScope();
-        $debugInfo = "Logical Id ($logicalId) - Scope ($scope)";
         global $ID;
         $keep = $ID;
         $ID = $logicalId;
-
 
         /**
          * The code below is adapted from {@link p_cached_output()}
@@ -1581,9 +1577,8 @@ class Page extends DokuPath
         $renderCache = $this->getRenderCache($format);
         if ($renderCache->useCache()) {
             $xhtml = $renderCache->retrieveCache(false);
-            if (
-                ($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                $xhtml = "\n<!-- $debugInfo - bar cachefile {$renderCache->cache} used -->\n" . $xhtml;
+            if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
+                $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$renderCache->cache}\" />" . $xhtml;
             }
         } else {
 
@@ -1598,9 +1593,19 @@ class Page extends DokuPath
                 // no cache - do some work
                 $instructions = p_get_instructions($this->getContent());
                 if (!$instructionsCache->storeCache($instructions)) {
-                    msg('Unable to save cache file. Hint: disk full; file permissions; safe_mode setting.', -1);
+                    $message = 'Unable to save cache file. Hint: disk full; file permissions; safe_mode setting ?';
+                    msg($message, -1);
+                    // close restore ID
+                    $ID = $keep;
+                    return "<div class=\"text-warning\">$message</div>";
                 }
             }
+
+            /**
+             * Due to the parsing, they may have changed
+             */
+            $logicalId = $this->getLogicalId();
+            $scope = $this->getScope();
 
             /**
              * Render
@@ -1608,12 +1613,12 @@ class Page extends DokuPath
             $xhtml = p_render($format, $instructions, $info);
             if ($info['cache'] && $renderCache->storeCache($xhtml)) {
                 if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                    $xhtml = "\n<!-- $debugInfo - no bar cachefile used, but created {$renderCache->cache} -->\n" . $xhtml;
+                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$renderCache->cache}\" />" . $xhtml;
                 }
             } else {
                 $renderCache->removeCache();   //   try to delete cachefile
                 if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                    $xhtml = "\n<!-- $debugInfo - no bar cachefile used, caching forbidden -->\n" . $xhtml;
+                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\" />" . $xhtml;
                 }
             }
         }
@@ -1706,9 +1711,18 @@ class Page extends DokuPath
         }
     }
 
-    private function getScope()
+    public function getScope()
     {
-        return  $this->getMetadata(self::SCOPE_KEY, self::SCOPE_VALUE_CURRENT);
+        return $this->getMetadata(self::SCOPE_KEY, self::SCOPE_VALUE_CURRENT);
+    }
+
+    /**
+     * Return the id of the div HTML
+     * element that is added for cache debugging
+     */
+    public function getCacheHtmlId()
+    {
+        return "cache-" . str_replace(":", "-",$this->getId());
     }
 
 

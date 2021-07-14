@@ -76,7 +76,6 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
 
         $this->setEvent('PARSER_CACHE_USE');
 
-
         /**
          * Needed by the move plugin
          */
@@ -141,7 +140,12 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
 
     private function getExt()
     {
-        return  '.' . $this->mode;
+        return '.' . $this->mode;
+    }
+
+    public function exists()
+    {
+        return file_exists($this->getCacheFile());
     }
 
 

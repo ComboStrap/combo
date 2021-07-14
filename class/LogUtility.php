@@ -158,7 +158,7 @@ class LogUtility
             /**
              * Adding page - context information
              * We are not creating the page
-             * direction from {@link Page::createPageFromEnvironment()}
+             * direction from {@link Page::createRequestedPageFromEnvironment()}
              * because it throws an error message when the environment
              * is not good, creating a recursive call.
              */

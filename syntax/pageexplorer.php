@@ -178,45 +178,46 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER :
 
                 $default = [
-                    TagAttributes::TYPE_KEY => self::LIST_TYPE,
-                    self::ATTR_NAMESPACE => Page::SCOPE_VALUE_CURRENT
+                    TagAttributes::TYPE_KEY => self::LIST_TYPE
                 ];
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
+
+                $type = $tagAttributes->getType();
+                $page = Page::createPageFromCurrentId();
 
                 /**
                  * nameSpacePath determination
                  */
-                $namespacePath = $tagAttributes->getValue(self::ATTR_NAMESPACE);
-                if ($namespacePath == Page::SCOPE_VALUE_CURRENT) {
-                    $page = Page::createPageFromEnvironment();
-                    $namespacePath = $page->getNamespacePath();
+                if(!$tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)){
+                    switch($type){
+                        case self::LIST_TYPE:
+                            $page = Page::createRequestedPageFromEnvironment();
+                            $namespacePath = $page->getNamespacePath();
+                            break;
+                        case self::TYPE_TREE:
+                            $namespacePath = $page->getNamespacePath();
+                            break;
+                        default:
+                            // Should never happens but yeah
+                            LogUtility::msg("The type of the page explorer ($type) is unknown");
+                            $namespacePath = $page->getNamespacePath();
+                            break;
+                    }
                 } else {
-                    /**
-                     * Side slots cache management
-                     * https://combostrap.com/sideslots
-                     *
-                     * The render run with the logical id
-                     * which is by default equal to current
-                     * To set the metadata, we need to get the physical id back
-                     */
-                    global $INFO;
-                    if (isset($INFO[Page::PHYSICAL_ID_ATT])) {
-                        $physicalId = $INFO[Page::PHYSICAL_ID_ATT];
-                    } else {
-                        global $ID;
-                        $physicalId = $ID;
-                    }
-                    $page = Page::createPageFromId($physicalId);
-                    if ($page->isStrapSideSlot()) {
-                        p_set_metadata($page->getId(), [Page::SCOPE_KEY => $namespacePath]);
-                        /**
-                         * Needed in the process later
-                         * when setting the snippet for the page
-                         */
-                        $ID =  $page->getId();
-                    }
+                    $namespacePath = $tagAttributes->getValue(self::ATTR_NAMESPACE);
                 }
 
+                /**
+                 * Set the namespace location of the cache for this run
+                 * if this is a sidebar
+                 *
+                 * Side slots cache management
+                 * https://combostrap.com/sideslots
+                 *
+                 */
+                if ($page->isStrapSideSlot()) {
+                    p_set_metadata($page->getId(), [Page::SCOPE_KEY => $namespacePath]);
+                }
 
                 /**
                  * Set the wiki-id of the namespace

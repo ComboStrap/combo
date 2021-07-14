@@ -6,6 +6,7 @@ namespace ComboStrap;
 use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
+use dokuwiki\Extension\SyntaxPlugin;
 use renderer_plugin_combo_analytics;
 use RuntimeException;
 
@@ -53,17 +54,19 @@ class Page extends DokuPath
     const TYPE_PROPERTY = "type";
 
     /**
-     * The scope of a side slot page
-     * ie
-     *   * a namespace path
-     *   * or current, for the namespace of the current requested page
-     * If the scope is:
-     *   * current, the cache will create a logical page for each namespace
-     *   * a namespace path, the cache will be only on this path
+     * The scope is the namespace used to store the cache
+     *
+     * It can be set by a component via the {@link p_set_metadata()}
+     * in a {@link SyntaxPlugin::handle()} function
+     *
+     * This is mostly used on side slots to
+     * have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane}
+     * for different namespace (ie there is one cache by namespace)
+     *
      */
-    const SCOPE_VALUE_CURRENT = "current";
     const SCOPE_KEY = "scope";
-    const PHYSICAL_ID_ATT = "physical_id";
+
+    const CURRENT_METADATA = "current";
 
 
     private $canonical;
@@ -142,6 +145,12 @@ class Page extends DokuPath
 
     }
 
+    public static function createPageFromCurrentId()
+    {
+        global $ID;
+        return self::createPageFromId($ID);
+    }
+
     /**
      * @var string the logical id is used with slots.
      *
@@ -177,25 +186,8 @@ class Page extends DokuPath
          * stored in the `scope` metadata.
          */
         $scopePath = $this->getScope();
-        if ($scopePath == self::SCOPE_VALUE_CURRENT) {
+        if ($scopePath !== null) {
 
-            /**
-             * The logical id is the slot name
-             * inside the current (ie actual namespace)
-             */
-            if ($this->requestedId != null) {
-                $actualNamespace = getNS($this->requestedId);
-                $logicalId = $this->getName();
-                resolve_pageid($actualNamespace, $logicalId, $exists);
-                return DokuPath::SEPARATOR . $logicalId;
-            } else {
-                /**
-                 * Not in a request
-                 */
-                return $this->getPath();
-            }
-
-        } else {
             /**
              * The logical id is fixed
              * Logically, it should be the same than the {@link Page::getId() id}
@@ -205,6 +197,10 @@ class Page extends DokuPath
             } else {
                 return DokuPath::SEPARATOR . $this->getName();
             }
+
+        } else {
+
+            return $this->getPath();
 
         }
 
@@ -230,7 +226,7 @@ class Page extends DokuPath
     }
 
     public
-    static function createPageFromEnvironment()
+    static function createRequestedPageFromEnvironment()
     {
         $path = PluginUtility::getPageId();
         if ($path != null) {
@@ -589,8 +585,8 @@ class Page extends DokuPath
     function getInternalLinksFromMeta()
     {
         $metadata = $this->getMetadatas();
-        if (key_exists(self::SCOPE_VALUE_CURRENT, $metadata)) {
-            $current = $metadata[self::SCOPE_VALUE_CURRENT];
+        if (key_exists(self::CURRENT_METADATA, $metadata)) {
+            $current = $metadata[self::CURRENT_METADATA];
             if (key_exists('relation', $current)) {
                 $relation = $current['relation'];
                 if (is_array($relation)) {
@@ -1227,7 +1223,7 @@ class Page extends DokuPath
     private
     function getCurrentMetadata($key)
     {
-        $key = $this->getMetadatas()[self::SCOPE_VALUE_CURRENT][$key];
+        $key = $this->getMetadatas()[self::CURRENT_METADATA][$key];
         return ($key ? $key : null);
     }
 
@@ -1566,28 +1562,14 @@ class Page extends DokuPath
 
 
         /**
-         * When running a bar rendering
-         * The global ID should become the id of the slot
-         * (needed for parsing)
-         * The $ID is restored at the end of the function
-         */
-        $logicalId = $this->getLogicalId();
-        $scope = $this->getScope();
-        /**
-         * The physical id
-         */
-        global $INFO;
-        $INFO[self::PHYSICAL_ID_ATT] = $this->getId();
-
-        /**
-         * Global ID is the ID of HTTP request
+         * Global ID is the ID of the HTTP request
          * (ie the page id)
          * We change it for the run
          * And restore it at the end
          */
         global $ID;
         $keep = $ID;
-        $ID = $logicalId;
+        $ID = $this->getId();
 
         /**
          * The code below is adapted from {@link p_cached_output()}
@@ -1603,6 +1585,8 @@ class Page extends DokuPath
         if ($renderCache->useCache()) {
             $xhtml = $renderCache->retrieveCache(false);
             if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
+                $logicalId = $this->getLogicalId();
+                $scope = $this->getScope();
                 $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
             }
         } else {
@@ -1627,7 +1611,8 @@ class Page extends DokuPath
             }
 
             /**
-             * Due to the parsing, they may have changed
+             * Due to the instructions parsing, they may have been changed
+             * by a component
              */
             $logicalId = $this->getLogicalId();
             $scope = $this->getScope();
@@ -1746,7 +1731,7 @@ class Page extends DokuPath
         if (isset(p_read_metadata($this->getId())["persistent"]["scope"])) {
             return p_read_metadata($this->getId())["persistent"]["scope"];
         } else {
-            return self::SCOPE_VALUE_CURRENT;
+            return null;
         }
     }
 

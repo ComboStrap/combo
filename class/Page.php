@@ -1758,7 +1758,7 @@ class Page extends DokuPath
     {
         $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
         p_save_metadata($this->getId(), $meta);
-        return this;
+        return $this;
     }
 
 

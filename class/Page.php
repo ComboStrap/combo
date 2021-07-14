@@ -182,10 +182,17 @@ class Page extends DokuPath
              * The logical id is the slot name
              * inside the current (ie actual namespace)
              */
-            $actualNamespace = getNS($this->requestedId);
-            $logicalId = $this->getName();
-            resolve_pageid($actualNamespace, $logicalId, $exists);
-            return DokuPath::SEPARATOR . $logicalId;
+            if ($this->requestedId != null) {
+                $actualNamespace = getNS($this->requestedId);
+                $logicalId = $this->getName();
+                resolve_pageid($actualNamespace, $logicalId, $exists);
+                return DokuPath::SEPARATOR . $logicalId;
+            } else {
+                /**
+                 * Not in a request
+                 */
+                return $this->getPath();
+            }
 
         } else {
             /**
@@ -1525,7 +1532,7 @@ class Page extends DokuPath
     {
 
         $renderCache = $this->getRenderCache("xhtml");
-        return $renderCache->exists();
+        return file_exists($renderCache->cache);
 
     }
 
@@ -1722,7 +1729,7 @@ class Page extends DokuPath
      */
     public function getCacheHtmlId()
     {
-        return "cache-" . str_replace(":", "-",$this->getId());
+        return "cache-" . str_replace(":", "-", $this->getId());
     }
 
 

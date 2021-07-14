@@ -143,10 +143,7 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
         return '.' . $this->mode;
     }
 
-    public function exists()
-    {
-        return file_exists($this->getCacheFile());
-    }
+
 
 
 }

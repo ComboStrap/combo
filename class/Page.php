@@ -63,8 +63,15 @@ class Page extends DokuPath
      * have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane}
      * for different namespace (ie there is one cache by namespace)
      *
+     * The special value current means the namespace of the requested page
      */
     const SCOPE_KEY = "scope";
+    /**
+     * The special scope value current means the namespace of the requested page
+     * The real scope value is then calculated before retrieving the cache
+     */
+    const SCOPE_CURRENT_VALUE = "current";
+
 
     const CURRENT_METADATA = "current";
 
@@ -188,15 +195,17 @@ class Page extends DokuPath
         $scopePath = $this->getScope();
         if ($scopePath !== null) {
 
-            /**
-             * The logical id is fixed
-             * Logically, it should be the same than the {@link Page::getId() id}
-             */
+            if ($scopePath == Page::SCOPE_CURRENT_VALUE) {
+                $requestPage = Page::createRequestedPageFromEnvironment();
+                $scopePath = $requestPage->getNamespacePath();
+            }
+
             if ($scopePath !== ":") {
                 return $scopePath . DokuPath::SEPARATOR . $this->getName();
             } else {
                 return DokuPath::SEPARATOR . $this->getName();
             }
+
 
         } else {
 
@@ -1728,8 +1737,8 @@ class Page extends DokuPath
          * during a run, we then read the metadata file
          * each time
          */
-        if (isset(p_read_metadata($this->getId())["persistent"]["scope"])) {
-            return p_read_metadata($this->getId())["persistent"]["scope"];
+        if (isset(p_read_metadata($this->getId())["persistent"][Page::SCOPE_KEY])) {
+            return p_read_metadata($this->getId())["persistent"][Page::SCOPE_KEY];
         } else {
             return null;
         }

@@ -183,7 +183,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
 
                 $type = $tagAttributes->getType();
-                $page = Page::createPageFromCurrentId();
+                $renderedPage = Page::createPageFromCurrentId();
 
                 /**
                  * nameSpacePath determination
@@ -191,20 +191,24 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 if(!$tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)){
                     switch($type){
                         case self::LIST_TYPE:
-                            $page = Page::createRequestedPageFromEnvironment();
-                            $namespacePath = $page->getNamespacePath();
+                            $requestedPage = Page::createRequestedPageFromEnvironment();
+                            $namespacePath = $requestedPage->getNamespacePath();
+                            $scope = Page::SCOPE_CURRENT_VALUE;
                             break;
                         case self::TYPE_TREE:
-                            $namespacePath = $page->getNamespacePath();
+                            $namespacePath = $renderedPage->getNamespacePath();
+                            $scope = $namespacePath;
                             break;
                         default:
                             // Should never happens but yeah
                             LogUtility::msg("The type of the page explorer ($type) is unknown");
-                            $namespacePath = $page->getNamespacePath();
+                            $namespacePath = $renderedPage->getNamespacePath();
+                            $scope = $namespacePath;
                             break;
                     }
                 } else {
                     $namespacePath = $tagAttributes->getValue(self::ATTR_NAMESPACE);
+                    $scope = $namespacePath;
                 }
 
                 /**
@@ -215,8 +219,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * https://combostrap.com/sideslots
                  *
                  */
-                if ($page->isStrapSideSlot()) {
-                    p_set_metadata($page->getId(), [Page::SCOPE_KEY => $namespacePath]);
+                if ($renderedPage->isStrapSideSlot()) {
+                    p_set_metadata($renderedPage->getId(), [Page::SCOPE_KEY => $scope]);
                 }
 
                 /**

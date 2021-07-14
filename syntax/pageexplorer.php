@@ -190,6 +190,31 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 if ($namespacePath == Page::SCOPE_VALUE_CURRENT) {
                     $page = Page::createPageFromEnvironment();
                     $namespacePath = $page->getNamespacePath();
+                } else {
+                    /**
+                     * Side slots cache management
+                     * https://combostrap.com/sideslots
+                     *
+                     * The render run with the logical id
+                     * which is by default equal to current
+                     * To set the metadata, we need to get the physical id back
+                     */
+                    global $INFO;
+                    if (isset($INFO[Page::PHYSICAL_ID_ATT])) {
+                        $physicalId = $INFO[Page::PHYSICAL_ID_ATT];
+                    } else {
+                        global $ID;
+                        $physicalId = $ID;
+                    }
+                    $page = Page::createPageFromId($physicalId);
+                    if ($page->isStrapSideSlot()) {
+                        p_set_metadata($page->getId(), [Page::SCOPE_KEY => $namespacePath]);
+                        /**
+                         * Needed in the process later
+                         * when setting the snippet for the page
+                         */
+                        $ID =  $page->getId();
+                    }
                 }
 
 
@@ -329,17 +354,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromCallStackArray($openingTagAttributes, self::CANONICAL);
                 $wikiId = $tagAttributes->getValue(TagAttributes::WIKI_ID);
                 $nameSpacePath = DokuPath::IdToAbsolutePath($wikiId);
-
-                /**
-                 * Side slots cache management
-                 * https://combostrap.com/sideslots
-                 * https://www.dokuwiki.org/devel:metadata#functions_to_get_and_set_metadata
-                 */
-                $page = Page::createPageFromEnvironment();
-                $scope = $tagAttributes->getValueAndRemoveIfPresent(self::ATTR_NAMESPACE);
-                if ($page->isStrapSideSlot()) {
-                    p_set_metadata($page->getId(), [Page::SCOPE_KEY => $scope]);
-                }
 
 
                 /**
@@ -654,7 +668,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param array $namespaceTemplateInstructions
      * @param array $pageTemplateInstructions
      */
-    public function treeProcessSubNamespace(&$callStack, $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [], $homeTemplateInstructions = [])
+    public
+    function treeProcessSubNamespace(&$callStack, $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [], $homeTemplateInstructions = [])
     {
 
 
@@ -782,7 +797,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param $pageOrNamespacePath
      * @param array $pageTemplateInstructions
      */
-    private static function treeProcessLeaf(&$callStack, $pageOrNamespacePath, $pageTemplateInstructions = [])
+    private
+    static function treeProcessLeaf(&$callStack, $pageOrNamespacePath, $pageTemplateInstructions = [])
     {
         $leafTag = syntax_plugin_combo_pageexplorerpage::TAG;
         if (sizeof($pageTemplateInstructions) > 0) {

@@ -63,6 +63,7 @@ class Page extends DokuPath
      */
     const SCOPE_VALUE_CURRENT = "current";
     const SCOPE_KEY = "scope";
+    const PHYSICAL_ID_ATT = "physical_id";
 
 
     private $canonical;
@@ -199,7 +200,12 @@ class Page extends DokuPath
              * The logical id is fixed
              * Logically, it should be the same than the {@link Page::getId() id}
              */
-            return $scopePath . DokuPath::SEPARATOR . $this->getName();
+            if ($scopePath !== ":") {
+                return $scopePath . DokuPath::SEPARATOR . $this->getName();
+            } else {
+                return DokuPath::SEPARATOR . $this->getName();
+            }
+
         }
 
 
@@ -1567,6 +1573,18 @@ class Page extends DokuPath
          */
         $logicalId = $this->getLogicalId();
         $scope = $this->getScope();
+        /**
+         * The physical id
+         */
+        global $INFO;
+        $INFO[self::PHYSICAL_ID_ATT] = $this->getId();
+
+        /**
+         * Global ID is the ID of HTTP request
+         * (ie the page id)
+         * We change it for the run
+         * And restore it at the end
+         */
         global $ID;
         $keep = $ID;
         $ID = $logicalId;
@@ -1585,7 +1603,7 @@ class Page extends DokuPath
         if ($renderCache->useCache()) {
             $xhtml = $renderCache->retrieveCache(false);
             if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$renderCache->cache}\" />" . $xhtml;
+                $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
             }
         } else {
 
@@ -1620,12 +1638,12 @@ class Page extends DokuPath
             $xhtml = p_render($format, $instructions, $info);
             if ($info['cache'] && $renderCache->storeCache($xhtml)) {
                 if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$renderCache->cache}\" />" . $xhtml;
+                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
                 }
             } else {
                 $renderCache->removeCache();   //   try to delete cachefile
                 if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\" />" . $xhtml;
+                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\"></div>" . $xhtml;
                 }
             }
         }
@@ -1720,7 +1738,16 @@ class Page extends DokuPath
 
     public function getScope()
     {
-        return $this->getMetadata(self::SCOPE_KEY, self::SCOPE_VALUE_CURRENT);
+        /**
+         * The scope may change
+         * during a run, we then read the metadata file
+         * each time
+         */
+        if (isset(p_read_metadata($this->getId())["persistent"]["scope"])) {
+            return p_read_metadata($this->getId())["persistent"]["scope"];
+        } else {
+            return self::SCOPE_VALUE_CURRENT;
+        }
     }
 
     /**

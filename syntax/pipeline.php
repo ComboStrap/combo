@@ -1,6 +1,5 @@
 <?php
 
-use ComboStrap\LogUtility;
 use ComboStrap\PipelineUtility;
 use ComboStrap\PluginUtility;
 

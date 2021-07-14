@@ -29,3 +29,5 @@ syntax/navbar.php
 syntax/listitem.php
 syntax/list.php
 syntax/ntoc.php
+syntax/slice.php
+syntax/tabpanel.php

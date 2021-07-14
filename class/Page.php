@@ -74,6 +74,7 @@ class Page extends DokuPath
 
 
     const CURRENT_METADATA = "current";
+    const PERSISTENT_METADATA = "persistent";
 
 
     private $canonical;
@@ -1751,6 +1752,13 @@ class Page extends DokuPath
     public function getCacheHtmlId()
     {
         return "cache-" . str_replace(":", "-", $this->getId());
+    }
+
+    public function deleteMetadatas()
+    {
+        $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
+        p_save_metadata($this->getId(), $meta);
+        return this;
     }
 
 

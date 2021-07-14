@@ -1,23 +1,31 @@
 <?php
 
 
-use ComboStrap\SnippetManager;
 use ComboStrap\PluginUtility;
-use ComboStrap\StyleUtility;
+use ComboStrap\TagAttributes;
 
-require_once(__DIR__ . '/../class/StyleUtility.php');
-require_once(__DIR__ . '/../class/SnippetManager.php');
 
 
 /**
- * Class syntax_plugin_combo_list
- * Implementation of a list
+ * Implementation of the parent tree node in the collapsible menu
+ *
+ * the `li` that wraps:
+ *   * the {@link syntax_plugin_combo_pageexplorernamespace} (button)
+ *   * and the sub {@link syntax_plugin_combo_pageexplorerpage pages list}
+ *
+ * See: http://localhost:63342/bootstrap-5.0.1-examples/sidebars/index.html
+ *
+ *
  */
-class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorertreesubnamespace extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "list";
-    const COMBO_LIST_CLASS = "combo-list";
+    /**
+     * Tag in Dokuwiki cannot have a `-`
+     * This is the last part of the class
+     */
+    const TAG = "pageexplorertreesubnamespace";
+
 
 
     /**
@@ -29,7 +37,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -44,7 +52,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        return 'normal';
     }
 
     /**
@@ -58,34 +66,35 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('formatting');
     }
-
-    public function accepts($mode)
-    {
-
-        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
-
-    }
-
 
     function getSort()
     {
-        return 15;
+        return 201;
     }
 
 
     function connectTo($mode)
     {
 
-        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        /**
+         * none: Created dynamically at the {@link DOKU_LEXER_END}
+         * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+         * to create/generate the tree
+         */
 
     }
 
+
     public function postConnect()
     {
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+
+        /**
+         * none: Created dynamically at the {@link DOKU_LEXER_END}
+         * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+         * to create/generate the tree
+         */
 
     }
 
@@ -100,6 +109,7 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
      * @return array|bool
+     * @throws Exception
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
@@ -109,31 +119,31 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-
                 $attributes = PluginUtility::getTagAttributes($match);
-                PluginUtility::addClass2Attributes(self::COMBO_LIST_CLASS, $attributes);
-
-                $html = '<ul';
-                if (sizeof($attributes)) {
-                    $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-                }
-                $html .= '>';
-
-
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html);
+                    PluginUtility::ATTRIBUTES => $attributes);
 
             case DOKU_LEXER_UNMATCHED :
 
+                // We should not ever come here but a user does not not known that
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
-            case DOKU_LEXER_EXIT :
+            case DOKU_LEXER_MATCHED :
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => '</ul>');
+                    PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
+                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
+                    PluginUtility::TAG => PluginUtility::getTag($match)
+                );
+
+            case DOKU_LEXER_EXIT :
+
+
+                return array(
+                    PluginUtility::STATE => $state,
+                );
 
 
         }
@@ -159,21 +169,25 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
+                    // The attributes are used in the exit
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $enterTagAttributes = $tagAttributes->toHTMLAttributeString();
+                    $renderer->doc .= <<<EOF
+<li $enterTagAttributes>
+EOF;
 
-                    $styles = $this->getStyles();
-                    $styleRule = StyleUtility::getRule($styles, "." . self::COMBO_LIST_CLASS);
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(
-                        self::TAG,
-                        $styleRule
-                    );
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
-
-                    break;
-                case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
                     break;
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
+                    break;
+
+                case DOKU_LEXER_EXIT :
+
+
+                    $renderer->doc .= <<<EOF
+
+</li>
+EOF;
                     break;
             }
             return true;
@@ -181,22 +195,6 @@ class syntax_plugin_combo_list extends DokuWiki_Syntax_Plugin
 
         // unsupported $mode
         return false;
-    }
-
-    /**
-     * @return array
-     */
-    static public function getStyles()
-    {
-        $styles = array();
-        $styles['list-style-type'] = 'none';
-        $styles['padding'] = '0 0 !important'; // Padding on list is 40px left default
-        $styles['line-height'] = '1.75rem';
-        $styles['border'] = '1px solid #e5e5e5';
-        $styles['width'] = '100%';
-        $styles['display'] = 'block';
-        $styles['border-radius'] = '0.25rem';
-        return $styles;
     }
 
 

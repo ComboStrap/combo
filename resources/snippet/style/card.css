@@ -1,38 +1,7 @@
-/*
- * Not sure what it's used for ?
- backup from 2021/08/03
- */
-
-.card .card-body h4.card-title {
-    margin-left: unset;
-    padding-top: unset;
-    margin-top: unset;
-    margin-bottom: .75rem;
-}
-
+.card-combo { margin-bottom: 1rem; }
 /** Bootstrap has a margin bottom that is not welcome in a card **/
-.card > table {
-    margin-bottom: 0;
-}
+.card-combo > table { margin-bottom: 0; }
 
-/** No because ui/li is also used for menu such as tabs if there is a list in the card,
+/** No card-combo ui/li styling because it is also used for menu such as tabs if there is a list in the card,
  * there should be a more specific selection
  */
-/*.card ul {*/
-/*    padding-left: 1em;*/
-/*    list-style-type: none;*/
-/*}*/
-
-/*.card ul {*/
-/*    padding-left: 0em;*/
-/*    list-style-type: none;*/
-/*}*/
-
-
-/*.card ul li:before {*/
-/*    content: "- ";*/
-/*}*/
-
-/*.card ul div {*/
-/*    display: inline;*/
-/*}*/

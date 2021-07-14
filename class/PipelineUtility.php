@@ -27,37 +27,38 @@ class PipelineUtility
      * @param $input
      * @return string
      */
-    static public function execute($input){
+    static public function execute($input)
+    {
 
         /**
          * Get the value
          */
-        $firstQuoteChar = strpos($input,'"');
-        $input = substr($input,$firstQuoteChar+1);
-        $secondQuoteChar = strpos($input,'"');
-        $value = substr($input,0,$secondQuoteChar);
-        $input = substr($input,$secondQuoteChar+1);
+        $firstQuoteChar = strpos($input, '"');
+        $input = substr($input, $firstQuoteChar + 1);
+        $secondQuoteChar = strpos($input, '"');
+        $value = substr($input, 0, $secondQuoteChar);
+        $input = substr($input, $secondQuoteChar + 1);
 
         /**
          * Go to the first | and delete it from the input
          */
-        $pipeChar = strpos($input,'|');
-        $input = substr($input,$pipeChar+1);
+        $pipeChar = strpos($input, '|');
+        $input = substr($input, $pipeChar + 1);
 
         /**
          * Get the command and applies them
          */
-        $commands = preg_split("/\|/",$input);
-        foreach ($commands as $command){
+        $commands = preg_split("/\|/", $input);
+        foreach ($commands as $command) {
             $command = trim($command, " )");
             $leftParenthesis = strpos($command, "(");
             $commandName = substr($command, 0, $leftParenthesis);
-            $signature = substr($command, $leftParenthesis+1);
-            $commandArgs = preg_split("/,/",$signature);
+            $signature = substr($command, $leftParenthesis + 1);
+            $commandArgs = preg_split("/,/", $signature);
             $commandArgs = array_map(
                 'trim',
                 $commandArgs,
-                array_fill(0,sizeof($commandArgs),"\"")
+                array_fill(0, sizeof($commandArgs), "\"")
             );
             $commandName = trim($commandName);
             if (!empty($commandName)) {
@@ -77,6 +78,12 @@ class PipelineUtility
                     case "lconcat":
                         $value = self::concat($commandArgs, $value, "left");
                         break;
+                    case "cut":
+                        $value = self::cut($commandArgs, $value);
+                        break;
+                    case "trim":
+                        $value = trim($value);
+                        break;
                     default:
                         LogUtility::msg("command ($commandName) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
                 }
@@ -89,7 +96,7 @@ class PipelineUtility
     {
         $search = $commandArgs[0];
         $replace = $commandArgs[1];
-        return str_replace($search,$replace,$value);
+        return str_replace($search, $replace, $value);
     }
 
     /**
@@ -101,19 +108,19 @@ class PipelineUtility
     private static function head(array $commandArgs, $value)
     {
         $length = $commandArgs[0];
-        return substr($value,0,$length);
+        return substr($value, 0, $length);
     }
 
-    private static function concat(array $commandArgs, $value,$side)
+    private static function concat(array $commandArgs, $value, $side)
     {
         $string = $commandArgs[0];
-        switch ($side){
+        switch ($side) {
             case "left":
-                return $string .$value ;
+                return $string . $value;
             case "right":
                 return $value . $string;
             default:
-                LogUtility::msg("The side value ($side) is unknown",LogUtility::LVL_MSG_ERROR,"pipeline");
+                LogUtility::msg("The side value ($side) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
         }
 
 
@@ -122,7 +129,23 @@ class PipelineUtility
     private static function tail(array $commandArgs, $value)
     {
         $length = $commandArgs[0];
-        return substr($value,strlen($value)-$length);
+        return substr($value, strlen($value) - $length);
+    }
+
+    private static function cut(array $commandArgs, $value)
+    {
+        $pattern = $commandArgs[0];
+        $result = preg_split("/$pattern/i", $value);
+        if ($result !== false) {
+            $part = $commandArgs[1] - 1;
+            if (isset($result[$part])) {
+                return $result[$part];
+            } else {
+                return $value;
+            }
+        } else {
+            return "An error occurred: could not split with the pattern `$pattern`, the value `$value`.";
+        }
     }
 
 }

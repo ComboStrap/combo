@@ -136,7 +136,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     {
 
         $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -144,7 +144,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
     // This where the addPattern and addExitPattern are defined
     public function postConnect()
     {
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
     }
 
 
@@ -548,7 +548,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
         // We pass then the resources only if their is one resources
         // Otherwise we pass them as a script element in the HTML.
         if (count($externalResources) <= 1) {
-            $externalResourcesInput = '<input type="hidden" name="resources" value="' . implode(",", $externalResources) . '">';
+            $externalResourcesInput = '<input type="hidden" name="resources" value="' . implode(",", $externalResources) . '"/>';
         } else {
             $codes['html'] .= "\n\n\n\n\n<!-- The resources -->\n";
             $codes['html'] .= "<!-- They have been added here because their order is not guarantee through the API. -->\n";
@@ -586,13 +586,13 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
         }
         $description = "Code from the page '" . $pageTitle . "' \n" . wl($ID, $absolute = true);
         return '<form  method="post" action="' . $postURL . '" target="_blank">' .
-            '<input type="hidden" name="title" value="' . htmlentities($snippetTitle) . '">' .
-            '<input type="hidden" name="description" value="' . htmlentities($description) . '">' .
-            '<input type="hidden" name="css" value="' . htmlentities($codes['css']) . '">' .
-            '<input type="hidden" name="html" value="' . htmlentities("<!-- The HTML -->" . $codes['html']) . '">' .
-            '<input type="hidden" name="js" value="' . htmlentities($jsCode) . '">' .
-            '<input type="hidden" name="panel_js" value="' . htmlentities($jsPanel) . '">' .
-            '<input type="hidden" name="wrap" value="b">' .  //javascript no wrap in body
+            '<input type="hidden" name="title" value="' . htmlentities($snippetTitle) . '"/>' .
+            '<input type="hidden" name="description" value="' . htmlentities($description) . '"/>' .
+            '<input type="hidden" name="css" value="' . htmlentities($codes['css']) . '"/>' .
+            '<input type="hidden" name="html" value="' . htmlentities("<!-- The HTML -->" . $codes['html']) . '"/>' .
+            '<input type="hidden" name="js" value="' . htmlentities($jsCode) . '"/>' .
+            '<input type="hidden" name="panel_js" value="' . htmlentities($jsPanel) . '"/>' .
+            '<input type="hidden" name="wrap" value="b"/>' .  //javascript no wrap in body
             $externalResourcesInput .
             '<button>Try the code</button>' .
             '</form>';

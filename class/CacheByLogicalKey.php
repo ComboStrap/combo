@@ -43,29 +43,45 @@ namespace ComboStrap;
  */
 class CacheByLogicalKey extends \dokuwiki\Cache\Cache
 {
-    public $page;
+
     public $file;
     public $mode;
+
+    /**
+     * To be compatible with
+     * {@link action_plugin_move_rewrite::handle_cache()} line 88
+     * that expect the $page with the id
+     */
+    public $page;
+
+    /**
+     * @var Page $pageObject The page object
+     */
+    private $pageObject;
 
     /**
      * BarCache constructor.
      *
      *
      *
-     * @param $page - logical id
-     * @param $file - file used
+     * @param Page $pageObject - the page
      * @param string $mode
      */
-    public function __construct($page, $file, $mode)
+    public function __construct($pageObject, $mode)
     {
-        $this->page = $page;
-        $this->file = $file;
+
+        $this->pageObject = $pageObject;
         $this->mode = $mode;
 
-        $cacheKey = $page . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+
         $this->setEvent('PARSER_CACHE_USE');
-        $ext = '.' . $mode;
-        parent::__construct($cacheKey, $ext);
+
+        /**
+         * Needed by the move plugin
+         */
+        $this->page = $pageObject->getId();
+
+        parent::__construct($this->getCacheKey(), $this->getExt());
 
     }
 
@@ -80,7 +96,7 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
         /**
          * The original file
          */
-        $files[] = $this->file;
+        $files[] = $this->pageObject->getFileSystemPath();
 
         /**
          * Update the dependency
@@ -90,6 +106,44 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
         parent::addDependencies();
 
     }
+
+    public function storeCache($data)
+    {
+
+        /**
+         * The logical id depends on the
+         * scope that can be set when the page is parsed
+         * (ie therefore after that the cache object is created
+         * if the cache does not exist)
+         *
+         * The logic is get the cache, if it does not exist
+         * parse it, then store the cache. If the cache does not exist,
+         * the logical id is not yet known
+         *
+         * We change the cache location file
+         * before storing
+         */
+        $this->cache = $this->getCacheFile();
+        return io_saveFile($this->cache, $data);
+
+    }
+
+    private function getCacheKey()
+    {
+        return $this->pageObject->getLogicalId() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
+    }
+
+    protected function getCacheFile()
+    {
+        return getCacheName($this->getCacheKey(), $this->getExt());
+    }
+
+    private function getExt()
+    {
+        return '.' . $this->mode;
+    }
+
+
 
 
 }

@@ -26,3 +26,6 @@ syntax/title.php
 syntax/typo.php
 syntax/column.php
 syntax/navbar.php
+syntax/listitem.php
+syntax/list.php
+syntax/ntoc.php

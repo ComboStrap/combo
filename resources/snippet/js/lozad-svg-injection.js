@@ -2,6 +2,13 @@ window.addEventListener("load", function (event) {
     // lazy loads elements with default selector as '.lozad'
     const svgObserver = lozad('.lazy-svg-injection-combo', {
         load: function (el) {
+            // SvgInjector leaves a src blank
+            // creating a broken image
+            // we cache the image and display it again after
+            let displayValue = el.style.getPropertyValue('display');
+            let displayPriority = el.style.getPropertyPriority('display');
+            // important is important because other css styling rule may also use it
+            el.style.setProperty('display', 'none', 'important');
             // SVGInjector takes over and load the svg element
             // in place of lozad
             SVGInjector(el, {
@@ -19,6 +26,12 @@ window.addEventListener("load", function (event) {
                                     dataSet.class.split(" ").forEach(e => svg.classList.add(e));
                                 }
                             }
+                        }
+                        // remove the none display or set the old value back
+                        if (displayValue === "") {
+                            svg.style.removeProperty("display");
+                        } else {
+                            svg.style.setProperty("display", displayValue, displayPriority);
                         }
                     },
                 }

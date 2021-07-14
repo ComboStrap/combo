@@ -113,11 +113,11 @@ class SvgImageLink extends MediaLink
         $srcValue = $this->getUrl();
         if ($lazyLoad) {
 
-            $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
-
             /**
              * Note: Responsive image srcset is not needed for svg
              */
+            $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
+            $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder($this->getImgTagWidthValue(), $this->getImgTagHeightValue()));
 
         } else {
 

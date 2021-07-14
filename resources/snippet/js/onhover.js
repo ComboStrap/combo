@@ -1,13 +1,17 @@
 window.addEventListener("load", function () {
 
     let inOutOnHover = function (event) {
-        const $element = jQuery(event.currentTarget);
-        let dataHoverClass = $element.attr("data-hover-class");
-        $element.toggleClass(dataHoverClass);
+        const element = event.currentTarget;
+        let dataHoverClass = element.getAttribute("data-hover-class");
+        if (element.classList.contains(dataHoverClass)){
+            element.classList.remove(dataHoverClass);
+        } else {
+            element.classList.add(dataHoverClass);
+        }
     };
 
     /**
-     * Bind hover class to a toogle element
+     * Bind hover class to a toggle element
      * @param event
      * https://api.jquery.com/hover/
      */

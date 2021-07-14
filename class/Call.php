@@ -686,5 +686,54 @@ class Call
         $this->addAttribute("style", $cssValue);
     }
 
+    public function setSyntaxComponentFromTag($tag)
+    {
+
+        if ($this->isPluginCall()) {
+            $this->call[1][0] = PluginUtility::getComponentName($tag);
+        } else {
+            LogUtility::msg("The call ($this) is a native call and we don't support yet the modification of the component to ($tag)");
+        }
+    }
+
+    /**
+     * @param Page $page
+     * @return Call
+     */
+    public function render(Page $page)
+    {
+        $state = $this->getState();
+        if ( $state == DOKU_LEXER_UNMATCHED) {
+            if ($this->isPluginCall()) {
+                $payload = trim($this->getPayload());
+                if (!empty($payload)) {
+                    $this->setPayload(TemplateUtility::renderForPage($payload, $page));
+                }
+            }
+        } else {
+            $tagName = $this->getTagName();
+            switch ($tagName) {
+                case "eol":
+                    break;
+                case \syntax_plugin_combo_pipeline::TAG:
+                    $pageTemplate = PluginUtility::getTagContent($this->getCapturedContent());
+                    $script = TemplateUtility::renderForPage($pageTemplate, $page);
+                    $string = PipelineUtility::execute($script);
+                    $this->setPayload($string);
+                    break;
+                case \syntax_plugin_combo_link::TAG:
+                    switch ($this->getState()) {
+                        case DOKU_LEXER_ENTER:
+                            $ref = $this->getAttribute("ref");
+                            $this->addAttribute("ref", TemplateUtility::renderForPage($ref, $page));
+                            break;
+                    }
+                    break;
+            }
+        }
+        return $this;
+
+    }
+
 
 }

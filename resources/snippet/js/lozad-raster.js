@@ -4,6 +4,9 @@ window.addEventListener("load", function (event) {
         load: function (el) {
             el.classList.add('lazy-fade-combo')
             if (el.hasAttribute("data-srcset")) {
+                if (el.hasAttribute("data-sizes")) {
+                    el.sizes = el.dataset.sizes;
+                }
                 el.srcset = el.dataset.srcset;
             }
             if (el.hasAttribute("data-src")) {
@@ -13,6 +16,14 @@ window.addEventListener("load", function (event) {
         loaded: function (el) {
             // Custom implementation on a loaded element
             el.classList.add('loaded-combo');
+            // Masonry (Not really needed because the placeholder has the good aspect ratio)
+            // but who knows
+            if(window.Masonry) {
+                document.querySelectorAll('.masonry').forEach(element=>{
+                    let masonry = Masonry.data(element);
+                    masonry.layout();
+                })
+            }
         }
     });
     observer.observe();

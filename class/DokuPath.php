@@ -27,7 +27,7 @@ class DokuPath extends File
 
     /**
      * @var string the absolute id with the root separator
-     * See {@link $absoluteIdWithoutSeparator} for the absolute id without root separator for the index
+     * See {@link $absolutePathWithoutRootSeparator} for the absolute id without root separator for the index
      */
     private $absoluteIdWithSeparator;
 
@@ -42,9 +42,9 @@ class DokuPath extends File
 
     /**
      * @var string a value with an absolute id without the root
-     * used in the index
+     * used in the index (ie the id)
      */
-    private $absoluteIdWithoutSeparator;
+    private $absolutePathWithoutRootSeparator;
 
     /**
      * @var string the path scheme one constant that starts with SCHEME
@@ -63,7 +63,7 @@ class DokuPath extends File
      * otherwise the cascading init will not work
      *
      * @param string $path - the logical dokuwiki path (may be relative or not)
-     * @param string $type - the type (media or page)
+     * @param string $type - the type (media, page)
      * @param string $rev - the revision (mtime)
      */
     protected function __construct($path, $type, $rev = null)
@@ -126,26 +126,49 @@ class DokuPath extends File
              * Resolution clean the id {@link cleanID()}
              */
             global $ID;
-            $this->absoluteIdWithoutSeparator = $this->path;
-            if ($this->finalType == self::MEDIA_TYPE) {
-                resolve_mediaid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
-            } else {
-                resolve_pageid(getNS($ID), $this->absoluteIdWithoutSeparator, $exists);
+            $this->absolutePathWithoutRootSeparator = $this->path;
+
+            $isNamespace = false;
+            if (mb_substr($this->path, -1) == self::SEPARATOR) {
+                $isNamespace = true;
             }
-            $this->absoluteIdWithSeparator = self::SEPARATOR . $this->absoluteIdWithoutSeparator;
 
-
-            if ($type == self::MEDIA_TYPE) {
-                if (!empty($rev)) {
-                    $filePath = mediaFN($this->absoluteIdWithoutSeparator, $rev);
+            if (!$isNamespace) {
+                /**
+                 * File (Page or media)
+                 */
+                if ($this->finalType == self::MEDIA_TYPE) {
+                    resolve_mediaid(getNS($ID), $this->absolutePathWithoutRootSeparator, $exists);
                 } else {
-                    $filePath = mediaFN($this->absoluteIdWithoutSeparator);
+                    resolve_pageid(getNS($ID), $this->absolutePathWithoutRootSeparator, $exists);
+                }
+                $this->absoluteIdWithSeparator = self::SEPARATOR . $this->absolutePathWithoutRootSeparator;
+
+
+                if ($type == self::MEDIA_TYPE) {
+                    if (!empty($rev)) {
+                        $filePath = mediaFN($this->absolutePathWithoutRootSeparator, $rev);
+                    } else {
+                        $filePath = mediaFN($this->absolutePathWithoutRootSeparator);
+                    }
+                } else {
+                    if (!empty($rev)) {
+                        $filePath = wikiFN($this->absolutePathWithoutRootSeparator, $rev);
+                    } else {
+                        $filePath = wikiFN($this->absolutePathWithoutRootSeparator);
+                    }
                 }
             } else {
-                if (!empty($rev)) {
-                    $filePath = wikiFN($this->absoluteIdWithoutSeparator, $rev);
+                /**
+                 * Namespace
+                 */
+                $this->absolutePathWithoutRootSeparator = resolve_id(getNS($ID), $this->absolutePathWithoutRootSeparator, true);
+
+                global $conf;
+                if ($type == self::MEDIA_TYPE) {
+                    $filePath = $conf['mediadir'] . '/' . utf8_encodeFN($this->absolutePathWithoutRootSeparator);
                 } else {
-                    $filePath = wikiFN($this->absoluteIdWithoutSeparator);
+                    $filePath = $conf['datadir'] . '/' . utf8_encodeFN($this->absolutePathWithoutRootSeparator);
                 }
             }
         }
@@ -221,10 +244,25 @@ class DokuPath extends File
      */
     public static function IdToAbsolutePath($id)
     {
+        if (is_null($id)) {
+            LogUtility::msg("The id passed should not be null");
+        }
         return DokuPath::SEPARATOR . $id;
     }
 
-    public function getName()
+    public
+    static function AbsolutePathToId($absolutePath)
+    {
+        if($absolutePath!=":") {
+            return substr($absolutePath, 1);
+        } else {
+            return "";
+        }
+    }
+
+
+    public
+    function getName()
     {
         /**
          * See also {@link noNSorNS}
@@ -233,7 +271,8 @@ class DokuPath extends File
         return $names[sizeOf($names) - 1];
     }
 
-    public function getNames()
+    public
+    function getNames()
     {
         return preg_split("/" . self::SEPARATOR . "/", $this->getId());
     }
@@ -241,7 +280,8 @@ class DokuPath extends File
     /**
      * @return bool true if this id represents a page
      */
-    public function isPage()
+    public
+    function isPage()
     {
 
         if (
@@ -257,7 +297,8 @@ class DokuPath extends File
     }
 
 
-    public function isGlob()
+    public
+    function isGlob()
     {
         /**
          * {@link search_universal} triggers ACL check
@@ -267,7 +308,8 @@ class DokuPath extends File
         return StringUtility::endWiths($this->getId(), ":*");
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->getId();
     }
@@ -280,11 +322,12 @@ class DokuPath extends File
      * And most of the function that are not links related
      * use this format
      */
-    public function getId()
+    public
+    function getId()
     {
 
         if ($this->getScheme() == self::LOCAL_SCHEME) {
-            return $this->absoluteIdWithoutSeparator;
+            return $this->absolutePathWithoutRootSeparator;
         } else {
             // the url (it's stored as id in the metadata)
             return $this->path;
@@ -292,14 +335,16 @@ class DokuPath extends File
 
     }
 
-    public function getPath()
+    public
+    function getPath()
     {
 
         return $this->path;
 
     }
 
-    public function getScheme()
+    public
+    function getScheme()
     {
 
         return $this->scheme;
@@ -317,7 +362,8 @@ class DokuPath extends File
      *
      * @return string|null
      */
-    public function getRevision()
+    public
+    function getRevision()
     {
         return $this->rev;
     }
@@ -335,7 +381,8 @@ class DokuPath extends File
      * and is absolute (index, ...)
      *
      */
-    public function getAbsolutePath()
+    public
+    function getAbsolutePath()
     {
         if ($this->getScheme() == self::LOCAL_SCHEME) {
             return $this->absoluteIdWithSeparator;
@@ -351,7 +398,8 @@ class DokuPath extends File
      *   * backlinks for page
      *   * page with media for media
      */
-    public function getRelatedPages()
+    public
+    function getRelatedPages()
     {
         $absoluteId = $this->getId();
         if ($this->finalType == self::MEDIA_TYPE) {
@@ -361,9 +409,26 @@ class DokuPath extends File
         }
     }
 
-    public function isPathIdAbsolute()
+    public
+    function isPathIdAbsolute()
     {
         return strpos($this->path, self::SEPARATOR) === 0;
+    }
+
+    /**
+     * Return the path relative to the base directory
+     * (ie $conf[basedir])
+     * @return string
+     */
+    public
+    function toRelativeFileSystemPath()
+    {
+        $relativeSystemPath = ".";
+        if (!empty($this->getId())) {
+            $relativeSystemPath .= "/" . utf8_encodeFN(str_replace(':', '/', $this->getId()));
+        }
+        return $relativeSystemPath;
+
     }
 
 }

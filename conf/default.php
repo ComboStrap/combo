@@ -335,9 +335,13 @@ $conf["outlineNumberingSuffix"] = " - ";
  * {@link action_plugin_combo_login::CONF_ENABLE_LOGIN_FORM }
  * {@link action_plugin_combo_registration::CONF_ENABLE_REGISTER_FORM }
  * {@link action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM }
+ * {@link action_plugin_combo_profile::CONF_ENABLE_PROFILE_UPDATE_FORM }
+ * {@link action_plugin_combo_profile::CONF_ENABLE_PROFILE_DELETE_FORM }
  */
 $conf["enableLogoOnIdentityForms"] = 1;
 $conf["enableLoginForm"] = 1;
 $conf["enableRegistrationForm"] = 1;
 $conf["enableResendPwdForm"] = 1;
+$conf["enableProfileUpdateForm"] = 1;
+$conf["enableProfileDeleteForm"] = 1;
 

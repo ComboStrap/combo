@@ -85,15 +85,16 @@ class CacheMedia
          * to {@link CacheMedia::setMaxAgeInSec()}
          */
         switch ($cacheParameter) {
-            case "cache":
-                $cacheParameter = -1;
-                break;
             case "nocache":
                 $cacheParameter = 0;
                 break;
             case "recache":
                 global $conf;
                 $cacheParameter = $conf['cachetime'];
+                break;
+            case "cache":
+            default:
+                $cacheParameter = -1;
                 break;
         }
         $this->setMaxAgeInSec($cacheParameter);

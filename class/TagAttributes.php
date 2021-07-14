@@ -69,6 +69,7 @@ class TagAttributes
     const CANONICAL = "tag";
     const DISPLAY = "display";
     const CLASS_KEY = "class";
+    const WIKI_ID = "wiki-id";
 
     /**
      * A global static counter
@@ -142,11 +143,11 @@ class TagAttributes
         $this->componentAttributesCaseInsensitive = new ArrayCaseInsensitive($componentAttributes);
 
         /**
-         * Delete empty/null values
-         * From a functional point of view, they should not exist
+         * Delete null values
+         * Empty string, 0 may exist
          */
         foreach ($componentAttributes as $key => $value) {
-            if ($value == null || blank($value)) {
+            if (is_null($value)) {
                 unset($this->componentAttributesCaseInsensitive[$key]);
             }
         }
@@ -244,7 +245,17 @@ class TagAttributes
 
     public function getStyle()
     {
-        return PluginUtility::array2InlineStyle($this->styleDeclaration);
+        if (sizeof($this->styleDeclaration) != 0) {
+            return PluginUtility::array2InlineStyle($this->styleDeclaration);
+        } else {
+            /**
+             * null is needed to see if the attribute was set or not
+             * because an attribute may have the empty string
+             * Example: the wiki id of the root namespace
+             */
+            return null;
+        }
+
     }
 
     /**
@@ -255,7 +266,7 @@ class TagAttributes
     public function addComponentAttributeValue($attributeName, $attributeValue)
     {
 
-        if (empty($attributeValue)) {
+        if (empty($attributeValue) && !is_bool($attributeValue)) {
             LogUtility::msg("The value of the attribute ($attributeName) is empty. Use the nonEmpty function instead", LogUtility::LVL_MSG_WARNING, "support");
         }
 
@@ -411,10 +422,11 @@ class TagAttributes
             /**
              * copy the unknown component attributes
              */
-            foreach ($this->componentAttributesCaseInsensitive->getOriginalArray() as $key => $value) {
+            $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
+            foreach ($originalArray as $key => $value) {
 
                 // Null Value, not needed
-                if ($value == null) {
+                if (is_null($value)) {
                     continue;
                 }
 
@@ -469,9 +481,23 @@ class TagAttributes
                 }
             }
             foreach ($tempHtmlArray as $name => $value) {
-                if (!empty($value)) {
+
+                if (!is_null($value)) {
+                    /**
+                     *
+                     * Don't add a filter on the empty values
+                     *
+                     * The value of an HTML attribute may be empty
+                     * Example the wiki id of the root namespace
+                     *
+                     * By default, {@link TagAttributes::addHtmlAttributeValue()}
+                     * will not accept any value, it must be implicitly said with the
+                     * {@link TagAttributes::addHtmlAttributeValue()}
+                     *
+                     */
                     $sortedArray[$name] = $value;
                 }
+
             }
             $this->finalHtmlArray = $sortedArray;
 
@@ -494,7 +520,7 @@ class TagAttributes
     public function addHtmlAttributeValue($key, $value)
     {
         if (empty($value)) {
-            LogUtility::msg("The value of the HTML attribute is empty", LogUtility::LVL_MSG_ERROR, "support");
+            LogUtility::msg("The value of the HTML attribute is empty for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
         }
         $this->htmlAttributes[$key] = $value;
         return $this;
@@ -511,7 +537,7 @@ class TagAttributes
     /**
      * @param $attributeName
      * @param null $default
-     * @return string|null a HTML value in the form 'value1 value2...'
+     * @return string|array|null a HTML value in the form 'value1 value2...'
      */
     public function getValue($attributeName, $default = null)
     {
@@ -566,17 +592,18 @@ class TagAttributes
     public function toCallStackArray()
     {
         $array = array();
-        foreach ($this->componentAttributesCaseInsensitive->getOriginalArray() as $key => $value) {
+        $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
+        foreach ($originalArray as $key => $value) {
             /**
-             * blank and not empty
-             * because the width can be zero
+             * Only null value are not passed
+             * width can be zero, wiki-id can be the empty string (ie root namespace)
              */
-            if (!blank($value)) {
+            if (!is_null($value)) {
                 $array[$key] = StringUtility::toString($value);
             }
         }
         $style = $this->getStyle();
-        if (!empty($style)) {
+        if ($style != null) {
             $array["style"] = $style;
         }
         return $array;
@@ -620,7 +647,11 @@ class TagAttributes
         $htmlArray = $this->toHtmlArray();
         foreach ($htmlArray as $name => $value) {
 
-            if (!empty($value)) {
+            /**
+             * Empty value are authorized
+             * null are just not set
+             */
+            if (!is_null($value)) {
                 /**
                  * The condition is important
                  * because we may pass the javascript character `\n` in a `srcdoc` for javascript
@@ -815,9 +846,9 @@ class TagAttributes
         }
     }
 
-    public function getValueAndRemoveIfPresent($attribute)
+    public function getValueAndRemoveIfPresent($attribute, $default = null)
     {
-        $value = $this->getValue($attribute);
+        $value = $this->getValue($attribute, $default);
         $this->removeAttributeIfPresent($attribute);
         return $value;
     }
@@ -832,6 +863,56 @@ class TagAttributes
         }
         $this->setComponentAttributeValue("id", $id);
         return $id;
+    }
+
+    /**
+     *
+     * @param $markiTag
+     * @return string - the marki tag made of logical attribute
+     * There is no processing to transform it to an HTML tag
+     */
+    public function toMarkiEnterTag($markiTag)
+    {
+        $enterTag = "<" . $markiTag;
+
+        $attributeString = "";
+        foreach ($this->getComponentAttributes() as $key => $value) {
+            $attributeString .= "$key=\"$value\" ";
+        }
+        $attributeString = trim($attributeString);
+
+        if (!empty($attributeString)) {
+            $enterTag .= " " . $attributeString;
+        }
+        $enterTag .= ">";
+        return $enterTag;
+
+    }
+
+    /**
+     * @param string $key add an html attribute with the empty string
+     */
+    public function addEmptyHtmlAttributeValue($key)
+    {
+
+        $this->htmlAttributes[$key] = '';
+        return $this;
+
+    }
+
+    public function addEmptyComponentAttributeValue($attribute)
+    {
+        $this->componentAttributesCaseInsensitive[$attribute] = "";
+    }
+
+    /**
+     * @param $attribute
+     * @return mixed
+     */
+    public function getBooleanValueAndRemove($attribute)
+    {
+        $value = $this->getValueAndRemove($attribute);
+        return filter_var(    $value, FILTER_VALIDATE_BOOLEAN);
     }
 
 

@@ -104,7 +104,7 @@ class syntax_plugin_combo_navbarcollapse extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
         // Only inside a navbar
-        if ($mode == PluginUtility::getModeForComponent(syntax_plugin_combo_menubar::TAG)) {
+        if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_menubar::TAG)) {
             $pattern = PluginUtility::getContainerTagPattern(self::TAG);
             $this->Lexer->addEntryPattern($pattern, $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
         }

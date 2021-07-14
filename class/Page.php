@@ -6,6 +6,7 @@ namespace ComboStrap;
 use action_plugin_combo_qualitymessage;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
+use dokuwiki\Extension\SyntaxPlugin;
 use renderer_plugin_combo_analytics;
 use RuntimeException;
 
@@ -52,6 +53,29 @@ class Page extends DokuPath
     const DESCRIPTION_PROPERTY = "description";
     const TYPE_PROPERTY = "type";
 
+    /**
+     * The scope is the namespace used to store the cache
+     *
+     * It can be set by a component via the {@link p_set_metadata()}
+     * in a {@link SyntaxPlugin::handle()} function
+     *
+     * This is mostly used on side slots to
+     * have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane}
+     * for different namespace (ie there is one cache by namespace)
+     *
+     * The special value current means the namespace of the requested page
+     */
+    const SCOPE_KEY = "scope";
+    /**
+     * The special scope value current means the namespace of the requested page
+     * The real scope value is then calculated before retrieving the cache
+     */
+    const SCOPE_CURRENT_VALUE = "current";
+
+
+    const CURRENT_METADATA = "current";
+    const PERSISTENT_METADATA = "persistent";
+
 
     private $canonical;
 
@@ -71,17 +95,16 @@ class Page extends DokuPath
 
 
     /**
-     * @var string the logical id is used with bars
-     * If a bar is asked in the namespace, the logical id is `:ns:bar`
-     * This is used to store the output of the cache
-     * If this is not a bar the logical id is the {@link DokuPath::getId()}
-     */
-    private $logicalId = null;
-
-    /**
      * @var bool Indicator to say if this is a sidebar (or sidekick bar)
      */
     private $isSideSlot = false;
+
+    /**
+     * The id requested (ie the main page)
+     * The page may be a slot
+     * @var string
+     */
+    private $requestedId;
 
     /**
      * Page constructor.
@@ -121,33 +144,77 @@ class Page extends DokuPath
                 $path = DokuPath::SEPARATOR . $id;
             }
 
-            /**
-             * Set the logical id
-             * When no $ID is set (for instance, test),
-             * the logical id is the id
-             */
-            global $ID;
-            if ($ID != null) {
-                $actualNamespace = getNS($ID);
-                $this->logicalId = $lastPathPart;
-                resolve_pageid($actualNamespace, $this->logicalId, $exists);
-            }
-
         }
 
+        global $ID;
+        $this->requestedId = $ID;
 
         parent::__construct($path, DokuPath::PAGE_TYPE);
 
     }
 
-    public
-    function getLogicalId()
+    public static function createPageFromCurrentId()
     {
-        if ($this->logicalId == null) {
-            return $this->getId();
+        global $ID;
+        return self::createPageFromId($ID);
+    }
+
+    /**
+     * @var string the logical id is used with slots.
+     *
+     * A slot may exist in several node of the file system tree
+     * but they can be rendered for a page in a lowest level
+     * listing the page of the current namespace
+     *
+     * The slot is physically stored in one place but is equivalent
+     * physically to the same slot in all sub-node.
+     *
+     * This logical id does take into account this aspect.
+     *
+     * This is used also to store the HTML output in the cache
+     * If this is not a slot the logical id is the {@link DokuPath::getId()}
+     */
+    public function getLogicalId()
+    {
+        /**
+         * Delete the first separator
+         */
+        return substr($this->getLogicalPath(), 1);
+    }
+
+    public function getLogicalPath()
+    {
+
+        /**
+         * Set the logical id
+         * When no $ID is set (for instance, test),
+         * the logical id is the id
+         *
+         * The logical id depends on the namespace attribute of the {@link \syntax_plugin_combo_pageexplorer}
+         * stored in the `scope` metadata.
+         */
+        $scopePath = $this->getScope();
+        if ($scopePath !== null) {
+
+            if ($scopePath == Page::SCOPE_CURRENT_VALUE) {
+                $requestPage = Page::createRequestedPageFromEnvironment();
+                $scopePath = $requestPage->getNamespacePath();
+            }
+
+            if ($scopePath !== ":") {
+                return $scopePath . DokuPath::SEPARATOR . $this->getName();
+            } else {
+                return DokuPath::SEPARATOR . $this->getName();
+            }
+
+
         } else {
-            return $this->logicalId;
+
+            return $this->getPath();
+
         }
+
+
     }
 
 
@@ -169,9 +236,15 @@ class Page extends DokuPath
     }
 
     public
-    static function createPageFromEnvironment()
+    static function createRequestedPageFromEnvironment()
     {
-        return new Page(PluginUtility::getPageId());
+        $path = PluginUtility::getPageId();
+        if ($path != null) {
+            return new Page($path);
+        } else {
+            LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
+            return null;
+        }
     }
 
 
@@ -260,9 +333,14 @@ class Page extends DokuPath
 
     }
 
-    static function createPagePathFromPath($pathId)
+    static function createPageFromPath($pathId)
     {
         return new Page($pathId);
+    }
+
+    static function createPageFromId($id)
+    {
+        return new Page(DokuPath::IdToAbsolutePath($id));
     }
 
     /**
@@ -282,7 +360,7 @@ class Page extends DokuPath
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            return self::createPagePathFromPath($id)->setCanonical($canonical);
+            return self::createPageFromPath($id)->setCanonical($canonical);
         }
 
 
@@ -298,11 +376,11 @@ class Page extends DokuPath
         foreach ($res2arr as $row) {
             $id = $row['ID'];
 
-            return self::createPagePathFromPath($id)
+            return self::createPageFromPath($id)
                 ->setCanonical($canonical);
         }
 
-        return self::createPagePathFromPath($canonical);
+        return self::createPageFromPath($canonical);
 
     }
 
@@ -517,8 +595,8 @@ class Page extends DokuPath
     function getInternalLinksFromMeta()
     {
         $metadata = $this->getMetadatas();
-        if (key_exists('current', $metadata)) {
-            $current = $metadata['current'];
+        if (key_exists(self::CURRENT_METADATA, $metadata)) {
+            $current = $metadata[self::CURRENT_METADATA];
             if (key_exists('relation', $current)) {
                 $relation = $current['relation'];
                 if (is_array($relation)) {
@@ -1130,6 +1208,12 @@ class Page extends DokuPath
         }
     }
 
+    public
+    function getPersistentMetadatas()
+    {
+        return $this->getMetadatas()['persistent'];
+    }
+
     /**
      * The modified date is the last modficaction date
      * the first time, this is the creation date
@@ -1149,7 +1233,7 @@ class Page extends DokuPath
     private
     function getCurrentMetadata($key)
     {
-        $key = $this->getMetadatas()['current'][$key];
+        $key = $this->getMetadatas()[self::CURRENT_METADATA][$key];
         return ($key ? $key : null);
     }
 
@@ -1262,21 +1346,46 @@ class Page extends DokuPath
         return $lang;
     }
 
+    /**
+     * Adapted from {@link FsWikiUtility::getHomePagePath()}
+     * @return bool
+     */
     public
     function isHomePage()
     {
         global $conf;
-        return $this->getId() == $conf['start'];
+        $startPageName = $conf['start'];
+        if ($this->getName() == $startPageName) {
+            return true;
+        } else {
+            $namespaceName = noNS(cleanID($this->getNamespacePath()));
+            if ($namespaceName == $this->getName()) {
+                /**
+                 * page named like the NS inside the NS
+                 * ie ns:ns
+                 */
+                $startPage = Page::createPageFromPath($this->getNamespacePath() . ":" . $startPageName);
+                if (!$startPage->exists()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
+
     public
-    function getMetadata($key)
+    function getMetadata($key, $default = null)
     {
         $persistentMetadata = $this->getPersistentMetadata($key);
         if (empty($persistentMetadata)) {
             $persistentMetadata = $this->getCurrentMetadata($key);
         }
-        return $persistentMetadata;
+        if ($persistentMetadata == null) {
+            return $default;
+        } else {
+            return $persistentMetadata;
+        }
     }
 
     public
@@ -1435,10 +1544,8 @@ class Page extends DokuPath
     {
 
         $renderCache = $this->getRenderCache("xhtml");
-        /**
-         * $cache->cache is the file
-         */
         return file_exists($renderCache->cache);
+
     }
 
     public
@@ -1465,15 +1572,14 @@ class Page extends DokuPath
 
 
         /**
-         * When running a bar rendering
-         * The global ID should become the id of bar
-         * (needed for parsing)
-         * The $ID is restored at the end of the function
+         * Global ID is the ID of the HTTP request
+         * (ie the page id)
+         * We change it for the run
+         * And restore it at the end
          */
         global $ID;
         $keep = $ID;
-        $ID = $this->getLogicalId();
-
+        $ID = $this->getId();
 
         /**
          * The code below is adapted from {@link p_cached_output()}
@@ -1488,8 +1594,10 @@ class Page extends DokuPath
         $renderCache = $this->getRenderCache($format);
         if ($renderCache->useCache()) {
             $xhtml = $renderCache->retrieveCache(false);
-            if ($conf['allowdebug'] && $format == 'xhtml') {
-                $xhtml .= "\n<!-- bar cachefile {$renderCache->cache} used -->\n";
+            if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
+                $logicalId = $this->getLogicalId();
+                $scope = $this->getScope();
+                $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
             }
         } else {
 
@@ -1504,22 +1612,33 @@ class Page extends DokuPath
                 // no cache - do some work
                 $instructions = p_get_instructions($this->getContent());
                 if (!$instructionsCache->storeCache($instructions)) {
-                    msg('Unable to save cache file. Hint: disk full; file permissions; safe_mode setting.', -1);
+                    $message = 'Unable to save cache file. Hint: disk full; file permissions; safe_mode setting ?';
+                    msg($message, -1);
+                    // close restore ID
+                    $ID = $keep;
+                    return "<div class=\"text-warning\">$message</div>";
                 }
             }
+
+            /**
+             * Due to the instructions parsing, they may have been changed
+             * by a component
+             */
+            $logicalId = $this->getLogicalId();
+            $scope = $this->getScope();
 
             /**
              * Render
              */
             $xhtml = p_render($format, $instructions, $info);
             if ($info['cache'] && $renderCache->storeCache($xhtml)) {
-                if ($conf['allowdebug'] && $format == 'xhtml') {
-                    $xhtml .= "\n<!-- no bar cachefile used, but created {$renderCache->cache} -->\n";
+                if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
+                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
                 }
             } else {
                 $renderCache->removeCache();   //   try to delete cachefile
-                if ($conf['allowdebug'] && $format == 'xhtml') {
-                    $xhtml .= "\n<!-- no bar cachefile used, caching forbidden -->\n";
+                if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
+                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\"></div>" . $xhtml;
                 }
             }
         }
@@ -1544,9 +1663,9 @@ class Page extends DokuPath
         if ($this->isStrapSideSlot()) {
 
             /**
-             * Logical id is the scope and part of the key
+             * Logical cache based on scope (ie logical id) is the scope and part of the key
              */
-            return new CacheByLogicalKey($this->getLogicalId(), $this->getFileSystemPath(), $outputFormat);
+            return new CacheByLogicalKey($this, $outputFormat);
 
         } else {
 
@@ -1571,7 +1690,7 @@ class Page extends DokuPath
              * because we can't overide the constructor of {@link CacheInstructions}
              * but they should used the same interface (ie manipulate array data)
              */
-            return new CacheInstructionsByLogicalKey($this->getLogicalId(), $this->getFileSystemPath());
+            return new CacheInstructionsByLogicalKey($this);
 
         } else {
 
@@ -1585,6 +1704,61 @@ class Page extends DokuPath
     function deleteXhtmlCache()
     {
         $this->deleteCache("xhtml");
+    }
+
+    public function getAnchorLink()
+    {
+        $url = $this->getCanonicalUrlOrDefault();
+        $title = $this->getTitle();
+        return "<a href=\"$url\">$title</a>";
+    }
+
+
+    /**
+     * Without the `:` at the end
+     * @return string
+     */
+    public function getNamespacePath()
+    {
+        $ns = getNS($this->getId());
+        /**
+         * False means root namespace
+         */
+        if ($ns == false) {
+            return ":";
+        } else {
+            return ":$ns";
+        }
+    }
+
+    public function getScope()
+    {
+        /**
+         * The scope may change
+         * during a run, we then read the metadata file
+         * each time
+         */
+        if (isset(p_read_metadata($this->getId())["persistent"][Page::SCOPE_KEY])) {
+            return p_read_metadata($this->getId())["persistent"][Page::SCOPE_KEY];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Return the id of the div HTML
+     * element that is added for cache debugging
+     */
+    public function getCacheHtmlId()
+    {
+        return "cache-" . str_replace(":", "-", $this->getId());
+    }
+
+    public function deleteMetadatas()
+    {
+        $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
+        p_save_metadata($this->getId(), $meta);
+        return $this;
     }
 
 

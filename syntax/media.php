@@ -97,13 +97,13 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
             // Inside a card, we need to take over and enable it
             $modes = [
-                PluginUtility::getModeForComponent(syntax_plugin_combo_card::TAG),
+                PluginUtility::getModeFromTag(syntax_plugin_combo_card::TAG),
             ];
             $enable = in_array($mode, $modes);
         }
 
         if ($enable) {
-            $this->Lexer->addSpecialPattern(self::MEDIA_PATTERN, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(self::MEDIA_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 
@@ -169,8 +169,22 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
                     $media = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                     if ($media->isImage()) {
-                        $renderer->doc .= $media->renderMediaTagWithLink();
-                        return true;
+                        /**
+                         * We don't support crop
+                         */
+                        $crop = false;
+                        if ($media->getRequestedWidth() != null && $media->getRequestedHeight() != null) {
+                            /**
+                             * Width of 0 = resizing by height (supported)
+                             */
+                            if ($media->getRequestedWidth() != "0") {
+                                $crop = true;
+                            }
+                        }
+                        if (!$crop) {
+                            $renderer->doc .= $media->renderMediaTagWithLink();
+                            return true;
+                        }
                     }
                 }
 
@@ -206,7 +220,8 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
                 return true;
 
-            case "metadata":
+            case
+            "metadata":
 
                 /**
                  * Keep track of the metadata

@@ -91,15 +91,15 @@ class syntax_plugin_combo_navbargroup extends DokuWiki_Syntax_Plugin
          * Only inside a navbar or collapse element
          */
         $authorizedMode = [
-            PluginUtility::getModeForComponent(syntax_plugin_combo_navbarcollapse::COMPONENT),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_menubar::TAG)
+            PluginUtility::getModeFromTag(syntax_plugin_combo_navbarcollapse::COMPONENT),
+            PluginUtility::getModeFromTag(syntax_plugin_combo_menubar::TAG)
         ];
 
 
         if (in_array($mode, $authorizedMode)) {
 
             $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
         }
 

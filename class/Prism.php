@@ -374,7 +374,11 @@ EOD;
             $fileName = "file." . $language;
             $attributes->addHtmlAttributeValue('data-src', $fileName);
         }
-        $htmlCode = $attributes->toHtmlEnterTag("pre") . DOKU_LF;
+        /**
+         * No end of line after the pre, please, otherwise we get a new line
+         * in the code output
+         */
+        $htmlCode = $attributes->toHtmlEnterTag("pre");
 
 
         /**

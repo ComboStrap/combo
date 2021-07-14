@@ -110,9 +110,9 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
 
         foreach ($this->getTags() as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
             $emptyPattern = PluginUtility::getEmptyTagPattern($tag);
-            $this->Lexer->addSpecialPattern($emptyPattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern($emptyPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
 
@@ -123,7 +123,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
     {
 
         foreach ($this->getTags() as $tag) {
-            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }

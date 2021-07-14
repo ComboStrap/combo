@@ -70,7 +70,7 @@ class syntax_plugin_combo_pipeline extends DokuWiki_Syntax_Plugin
     {
 
         $pattern = PluginUtility::getLeafContainerTagPattern(self::TAG);
-        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }

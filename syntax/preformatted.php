@@ -103,10 +103,10 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
              */
             $patterns = array('\n  (?![\*\-])', '\n\t(?![\*\-])');
             foreach ($patterns as $pattern) {
-                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
             }
-            $this->Lexer->addPattern('\n  ', PluginUtility::getModeForComponent($this->getPluginComponent()));
-            $this->Lexer->addPattern('\n\t', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addPattern('\n  ', PluginUtility::getModeFromTag($this->getPluginComponent()));
+            $this->Lexer->addPattern('\n\t', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
         }
 
@@ -118,7 +118,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
         /**
          * From {@link \dokuwiki\Parsing\ParserMode\Preformatted}
          */
-        $this->Lexer->addExitPattern('\n', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('\n', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -240,7 +240,7 @@ class syntax_plugin_combo_preformatted extends DokuWiki_Syntax_Plugin
         if (
             $mode == 'preformatted'
             ||
-            $mode == PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
+            $mode == PluginUtility::getModeFromTag(syntax_plugin_combo_preformatted::TAG)
         ) {
             return false;
         } else {

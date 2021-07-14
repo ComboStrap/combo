@@ -35,6 +35,9 @@ require_once(__DIR__ . '/../class/CallStack.php');
  * Full example can be found
  * in the Javascript section of tabs and navs
  * https://getbootstrap.com/docs/5.0/components/navs-tabs/#javascript-behavior
+ *
+ * Vertical Pills
+ * https://getbootstrap.com/docs/4.0/components/navs/#vertical
  */
 class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
 {
@@ -344,14 +347,14 @@ class syntax_plugin_combo_tabs extends DokuWiki_Syntax_Plugin
     {
 
         $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
     public function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 

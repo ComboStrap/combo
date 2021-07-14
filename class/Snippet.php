@@ -209,5 +209,20 @@ class Snippet
 
     }
 
+    /**
+     * @return string the HTML of the tag (works for now only with CSS content)
+     */
+    public function getHtmlStyleTag()
+    {
+        $content = $this->getContent();
+        $class = $this->getClass();
+        return <<<EOF
+<style class="$class">
+$content
+</style>
+EOF;
+
+    }
+
 
 }

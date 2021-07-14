@@ -80,7 +80,7 @@ class syntax_plugin_combo_backgrounds extends DokuWiki_Syntax_Plugin
     {
 
         $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -88,7 +88,7 @@ class syntax_plugin_combo_backgrounds extends DokuWiki_Syntax_Plugin
     function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }

@@ -49,6 +49,7 @@ require_once('LineSpacing.php');
 require_once('LogUtility.php');
 require_once('Opacity.php');
 require_once('Page.php');
+require_once('PipelineUtility.php');
 require_once('Position.php');
 require_once('Prism.php');
 require_once('RasterImageLink.php');
@@ -62,6 +63,8 @@ require_once('Spacing.php');
 require_once('Sqlite.php');
 require_once('StringUtility.php');
 require_once('StyleUtility.php');
+require_once('Template.php');
+require_once('TemplateUtility.php');
 require_once('TextAlign.php');
 require_once('TextColor.php');
 require_once('ThirdMediaLink.php');
@@ -190,7 +193,7 @@ class PluginUtility
      * A mode is just a name for a class
      * Example: $Parser->addMode('listblock',new Doku_Parser_Mode_ListBlock());
      */
-    public static function getModeForComponent($tag)
+    public static function getModeFromTag($tag)
     {
         return "plugin_" . self::getComponentName($tag);
     }
@@ -691,26 +694,7 @@ class PluginUtility
     public
     static function getPageId()
     {
-        global $ID;
-        global $INFO;
-        $callingId = $ID;
-        // If the component is in a sidebar, we don't want the ID of the sidebar
-        // but the ID of the page.
-        if ($INFO != null) {
-            $callingId = $INFO['id'];
-        }
-        /**
-         * This is the case with event triggered
-         * before DokuWiki such as
-         * https://www.dokuwiki.org/devel:event:init_lang_load
-         */
-        if ($callingId == null) {
-            global $_REQUEST;
-            if (isset($_REQUEST["id"])) {
-                $callingId = $_REQUEST["id"];
-            }
-        }
-        return $callingId;
+        return FsWikiUtility::getMainPageId();
     }
 
     /**
@@ -751,6 +735,7 @@ class PluginUtility
      * @param $property
      * @param $value
      * @param array $attributes
+     * @deprecated use {@link TagAttributes::addStyleDeclaration()} instead
      */
     public
     static function addStyleProperty($property, $value, array &$attributes)
@@ -1190,7 +1175,29 @@ class PluginUtility
 
     public static function getInstructions($markiCode)
     {
+        return p_get_instructions($markiCode);
+    }
 
+    public static function getInstructionsWithoutRoot($markiCode)
+    {
+        return RenderUtility::getInstructionsAndStripPEventually($markiCode);
+    }
+
+    /**
+     * Transform a text into a valid HTML id
+     * @param $string
+     * @return string
+     */
+    public static function toHtmlId($string)
+    {
+        /**
+         * sectionId calls cleanID
+         * cleanID delete all things before a ':'
+         * we do then the replace before to not
+         * lost a minus '-' separator
+         */
+        $string = str_replace(array(':','.'),'',$string);
+        return sectionID($string,$check);
     }
 
 

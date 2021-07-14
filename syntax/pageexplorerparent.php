@@ -1,39 +1,33 @@
 <?php
 
 
-use ComboStrap\SnippetManager;
-use ComboStrap\FsWikiUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\StyleUtility;
+use ComboStrap\TagAttributes;
 
 
 /**
- * Class syntax_plugin_combo_list
- * Implementation of a list
+ * Implementation of the parent namespace
+ * This is the content of the parent item in page explorer list component.
+ *
+ * This syntax is not a classic syntax plugin
+ * The instructions are captured at the {@link DOKU_LEXER_END}
+ * state of {@link syntax_plugin_combo_pageexplorer::handle()}
+ * to create/generate the namespaces
+ *
  */
-class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageexplorerparent extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = "listitem";
-    const TAGS = array("list-item", "li");
-    const COMBO_LIST_ITEM_CLASS = "combo-list-item";
+    /**
+     * Tag in Dokuwiki cannot have a `-`
+     * This is the last part of the class
+     */
+    const TAG = "pageexplorerparent";
 
     /**
-     * The style added
-     * @return array
+     * Markup tag
      */
-    static function getStyles()
-    {
-        $styles = array();
-        $styles['position'] = 'relative'; // Why ?
-        $styles['display'] = 'flex';
-        $styles['align-items'] = 'center';
-        $styles['justify-content'] = 'flex-start';
-        $styles['padding'] = '8px 16px'; // Padding at the left and right
-        $styles['overflow'] = 'hidden';
-        $styles['margin'] = 'auto'; // Just to be able to work in other template
-        return $styles;
-    }
+    const MARKI_TAG = "parent";
 
 
     /**
@@ -45,7 +39,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -60,17 +54,8 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        /**
-         * No paragraph between
-         */
-        return 'block';
+        return 'normal';
     }
-
-    public function accepts($mode)
-    {
-        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
-    }
-
 
     /**
      * @return array
@@ -86,45 +71,34 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
         return array('container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
-    /**
-     * @see Doku_Parser_Mode::getSort()
-     * the mode with the lowest sort number will win out
-     * Higher than {@link syntax_plugin_combo_list}
-     * but less than {@link syntax_plugin_combo_preformatted}
-     */
     function getSort()
     {
-        return 18;
+        return 201;
+    }
+
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
 
     function connectTo($mode)
     {
+        if ($mode == PluginUtility::getModeFromTag(syntax_plugin_combo_pageexplorer::TAG)) {
 
-        /**
-         * This selection helps also because
-         * the pattern for the li tag could also catch a list tag
-         */
-        $authorizedModes = array(
-            PluginUtility::getModeForComponent(syntax_plugin_combo_list::TAG),
-            PluginUtility::getModeForComponent(syntax_plugin_combo_preformatted::TAG)
-        );
+            $pattern = PluginUtility::getContainerTagPattern(self::MARKI_TAG);
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
-        if (in_array($mode, $authorizedModes)) {
-            foreach (self::TAGS as $tag) {
-                $pattern = PluginUtility::getContainerTagPattern($tag);
-                $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
-            }
         }
-
 
     }
 
+
     public function postConnect()
     {
-        foreach (self::TAGS as $tag) {
-            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
-        }
+
+        $this->Lexer->addExitPattern('</' . self::MARKI_TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+
 
     }
 
@@ -139,6 +113,7 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
      * @param int $pos - byte position in the original source file
      * @param Doku_Handler $handler
      * @return array|bool
+     * @throws Exception
      * @see DokuWiki_Syntax_Plugin::handle()
      *
      */
@@ -148,27 +123,23 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-
                 $attributes = PluginUtility::getTagAttributes($match);
-                PluginUtility::addClass2Attributes(self::COMBO_LIST_ITEM_CLASS, $attributes);
-                $html = '<li';
-                if (sizeof($attributes)) {
-                    $html .= ' ' . PluginUtility::array2HTMLAttributesAsString($attributes);
-                }
-                $html .= '>';
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::PAYLOAD => $html);
+                    PluginUtility::ATTRIBUTES => $attributes);
 
             case DOKU_LEXER_UNMATCHED :
+
+                // We should not ever come here but a user does not not known that
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
+
 
             case DOKU_LEXER_EXIT :
 
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => '</li>');
+                );
 
 
         }
@@ -194,21 +165,20 @@ class syntax_plugin_combo_listitem extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-
-                    $styles = self::getStyles();
-                    $cssRule = StyleUtility::getRule($styles, "." . self::COMBO_LIST_ITEM_CLASS);
-                    PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::TAG, $cssRule);
-
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
-                    break;
                 case DOKU_LEXER_EXIT :
-                    $renderer->doc .= $data[PluginUtility::PAYLOAD] . DOKU_LF;
+                    /**
+                     * parent is just an entry
+                     * to capture the content and
+                     * create a {@link syntax_plugin_combo_pageexplorerpage}
+                     * as first item below the header
+                     * The rendering occurs then at {@link syntax_plugin_combo_pageexplorerpage}
+                     */
                     break;
                 case DOKU_LEXER_UNMATCHED :
-                    $render = PluginUtility::renderUnmatched($data);
-                    if (!empty($render)) {
-                        $renderer->doc .= "<span>" . $render . '</span>';
-                    }
+                    /**
+                     * Unmatched things still should be rendered
+                     */
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
             }
             return true;

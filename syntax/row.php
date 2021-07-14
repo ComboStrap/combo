@@ -12,6 +12,8 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
+use ComboStrap\Dimension;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -26,6 +28,9 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  *
  *
  * Note: The name of the class must follow this pattern ie syntax_plugin_PluginName_ComponentName
+ *
+ *
+ * See also: https://getbootstrap.com/docs/5.0/utilities/flex/
  */
 class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 {
@@ -42,9 +47,50 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
      */
     const GRID_TOTAL_COLUMNS = 12;
 
+
+    const CANONICAL = self::GRID;
+    const GRID = "grid";
+
+    /**
+     * A row can be used as a grid
+     * with the div element
+     * or as a list item
+     *
+     * By default, this is a div but a list
+     * or any other component can change that
+     */
+    const HTML_TAG_ATT = "html-tag";
+
+    /**
+     * Meant to be a children of a component
+     * Vertically centered and no padding on the first cell and last cell
+     *
+     * Used in @link syntax_plugin_combo_contentlist} or
+     * within a card for instance
+     *
+     * This value is not yet public or in the documentation
+     */
+    const CONTAINED_CONTEXT = "contained";
+    const ROOT_CONTEXT = "root";
+
+    /**
+     * Used when the grid is not contained
+     * and is just below the root
+     * We set a value
+     */
     const TYPE_AUTO_VALUE = "auto";
-    const TYPE_NATURAL_VALUE = "natural";
-    const CANONICAL = "grid";
+    const TYPE_FIT_OLD_VALUE = "natural";
+    const TYPE_FIT_VALUE = "fit";
+    const MINIMAL_WIDTH = 300;
+
+    /**
+     * The {@link syntax_plugin_combo_contentlist}
+     * component use row under the hood
+     * and add its own class, this attribute
+     * helps to see if the user has enter any class
+     */
+    const HAD_USER_CLASS = "hasClass";
+
 
     /**
      * Syntax Type.
@@ -114,15 +160,17 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
+
         $pattern = PluginUtility::getContainerTagPattern(self::TAG);
-        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
 
     }
 
     public function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -147,16 +195,67 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_ENTER:
 
                 $attributes = TagAttributes::createFromTagMatch($match);
-                if (!$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)){
-                    /**
-                     * All element will be centered
-                     */
-                    $attributes->addClassName("justify-content-center");
+
+
+                $callStack = CallStack::createFromHandler($handler);
+                $parent = $callStack->moveToParent();
+
+                /**
+                 * The deprecation
+                 */
+                if ($attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)) {
+                    $value = $attributes->getType();
+                    if ($value == self::TYPE_FIT_OLD_VALUE) {
+                        $attributes->setType(self::TYPE_FIT_VALUE);
+                        LogUtility::msg("Deprecation: The type value (" . self::TYPE_FIT_OLD_VALUE . ") for the row component should be been renamed to (" . self::TYPE_FIT_VALUE . ")", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                    }
+                }
+
+                /**
+                 * Context
+                 *   To add or not a margin-bottom,
+                 *   To delete the image link or not
+                 */
+                $context = self::ROOT_CONTEXT;
+                if ($parent != false
+                    && !in_array($parent->getTagName(), [syntax_plugin_combo_container::TAG, syntax_plugin_combo_cell::TAG])) {
+                    $context = self::CONTAINED_CONTEXT;
+                }
+
+                /**
+                 * Type
+                 */
+                if (!$attributes->hasComponentAttribute(TagAttributes::TYPE_KEY)
+                    && !$attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
+
+                    if ($context == self::CONTAINED_CONTEXT) {
+                        $attributes->setType(self::TYPE_FIT_VALUE);
+                    } else {
+                        $attributes->setType(self::TYPE_AUTO_VALUE);
+                    }
+                }
+
+
+                /**
+                 * By default, div but used in a ul, it could be a li
+                 * This is modified in the callstack by the other component
+                 */
+                $attributes->addComponentAttributeValue(self::HTML_TAG_ATT, "div");
+
+
+                /**
+                 * User Class
+                 */
+                if ($attributes->hasComponentAttribute(TagAttributes::CLASS_KEY)) {
+                    $attributes->addComponentAttributeValue(self::HAD_USER_CLASS, true);
+                } else {
+                    $attributes->addComponentAttributeValue(self::HAD_USER_CLASS, false);
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray(),
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED:
@@ -168,9 +267,9 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                 $type = $openingCall->getType();
 
                 /**
-                 * Auto width calculation ?
+                 * Auto width calculation
                  */
-                if ($type == null || $type == syntax_plugin_combo_row::TYPE_AUTO_VALUE) {
+                if ($type == syntax_plugin_combo_row::TYPE_AUTO_VALUE) {
                     $numberOfColumns = 0;
                     /**
                      * If the size or the class is set, we don't
@@ -196,7 +295,7 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         /**
                          * Parameters
                          */
-                        $minimalWidth = 300;
+                        $minimalWidth = self::MINIMAL_WIDTH;
                         $numberOfGridColumns = self::GRID_TOTAL_COLUMNS;
                         $breakpoints =
                             [
@@ -247,8 +346,61 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
                         }
                     }
                 }
+
+                if ($openingCall->getContext() == self::CONTAINED_CONTEXT || $openingCall->getType() == self::TYPE_FIT_VALUE) {
+                    /**
+                     * No link for the media image by default
+                     */
+                    $callStack->moveToEnd();
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
+                    $callStack->processNoLinkOnImageToEndStack();
+
+                    /**
+                     * Process the P to make them container friendly
+                     * Needed to make the diff between a p added
+                     * by the user via the {@link syntax_plugin_combo_para text}
+                     * and a p added automatically by Dokuwiki
+                     *
+                     */
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
+                    // Follow the bootstrap and combo convention
+                    // ie text for bs and combo as suffix
+                    $class = "row-contained-text-combo";
+                    $callStack->processEolToEndStack(["class" => $class]);
+
+                    /**
+                     * If the type is fit value (ie flex auto),
+                     * we constraint the cell that have text
+                     */
+                    $callStack->moveToEnd();
+                    $callStack->moveToPreviousCorrespondingOpeningCall();
+                    $hasText = false;
+                    while ($actualCall = $callStack->next()) {
+                        if ($actualCall->getTagName() == syntax_plugin_combo_cell::TAG) {
+                            switch ($actualCall->getState()) {
+                                case DOKU_LEXER_ENTER:
+                                    $actualCellOpenTag = $actualCall;
+                                    $hasText = false;
+                                    break;
+                                case DOKU_LEXER_EXIT:
+                                    if ($hasText) {
+                                        if (isset($actualCellOpenTag) && !$actualCellOpenTag->hasAttribute(Dimension::WIDTH_KEY)) {
+                                            $actualCellOpenTag->addAttribute(Dimension::WIDTH_KEY, self::MINIMAL_WIDTH);
+                                        }
+                                    };
+                                    break;
+                            }
+                        } else if ($actualCall->isTextCall()) {
+                            $hasText = true;
+                        }
+
+                    }
+                }
+
                 return array(
-                    PluginUtility::STATE => $state
+                    PluginUtility::STATE => $state,
+                    PluginUtility::CONTEXT => $openingCall->getContext(),
+                    PluginUtility::ATTRIBUTES => $openingCall->getAttributes()
                 );
 
 
@@ -278,20 +430,83 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+                    $hadClassAttribute = $attributes->getBooleanValueAndRemove(self::HAD_USER_CLASS);
+                    $htmlElement = $attributes->getValueAndRemove(self::HTML_TAG_ATT);
+
                     $attributes->addClassName("row");
 
+                    /**
+                     * The type is responsible
+                     * for the width and space between the cells
+                     */
                     $type = $attributes->getValue(TagAttributes::TYPE_KEY);
-                    if ($type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
-                        $attributes->addClassName("row-cols-auto");
-                    }
-                    if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion
-                        && $type == syntax_plugin_combo_row::TYPE_NATURAL_VALUE) {
-                        // row-cols-auto is not in 4.0
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_ID);
+                    if (!empty($type)) {
+                        switch ($type) {
+                            case syntax_plugin_combo_row::TYPE_FIT_VALUE:
+                                $attributes->addClassName("row-cols-auto");
+                                if (Bootstrap::getBootStrapMajorVersion() != Bootstrap::BootStrapFiveMajorVersion) {
+                                    // row-cols-auto is not in 4.0
+                                    PluginUtility::getSnippetManager()->attachCssSnippetForBar("row-cols-auto");
+                                }
+                                break;
+                            case syntax_plugin_combo_row::TYPE_AUTO_VALUE:
+                                /**
+                                 * The class are set on the cells, not on the row,
+                                 * nothing to do
+                                 */
+                                break;
+                        }
                     }
 
-                    $renderer->doc .= $attributes->toHtmlEnterTag("div") . DOKU_LF;
+                    /**
+                     * Add the css
+                     */
+                    $context = $data[PluginUtility::CONTEXT];
+                    $tagClass = self::TAG . "-" . $context;
+
+                    if (!$hadClassAttribute) {
+                        /**
+                         * when wrapping, there will be a space between the cells
+                         * on the y axis
+                         */
+                        $attributes->addClassName("gy-3");
+                    }
+                    switch ($context) {
+                        case self::CONTAINED_CONTEXT:
+                            /**
+                             * All element are centered vertically and horizontally
+                             */
+                            if (!$hadClassAttribute) {
+                                $attributes->addClassName("justify-content-center");
+                                $attributes->addClassName("align-items-center");
+                            }
+                            /**
+                             * p children should be flex
+                             * p generated should have no bottom-margin (because contained)
+                             */
+                            $attributes->addClassName($tagClass);
+                            PluginUtility::getSnippetManager()->attachCssSnippetForBar($tagClass);
+                            break;
+                        case self::ROOT_CONTEXT:
+                            /**
+                             * All element are centered
+                             * If their is 5 cells and the last one
+                             * is going at the line, it will be centered
+                             */
+                            if (!$hadClassAttribute) {
+                                $attributes->addClassName("justify-content-center");
+                            }
+                            $attributes->addClassName($tagClass);
+                            PluginUtility::getSnippetManager()->attachCssSnippetForBar($tagClass);
+                            break;
+                    }
+
+
+                    /**
+                     * Render
+                     */
+                    $renderer->doc .= $attributes->toHtmlEnterTag($htmlElement) . DOKU_LF;
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -301,8 +516,9 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
                 case DOKU_LEXER_EXIT :
 
-                    $renderer->doc .= '</div>' . DOKU_LF;
-
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                    $htmlElement = $tagAttributes->getValue(self::HTML_TAG_ATT);
+                    $renderer->doc .= "</$htmlElement>" . DOKU_LF;
                     break;
             }
             return true;
@@ -312,3 +528,4 @@ class syntax_plugin_combo_row extends DokuWiki_Syntax_Plugin
 
 
 }
+

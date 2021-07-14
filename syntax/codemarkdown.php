@@ -101,7 +101,7 @@ class syntax_plugin_combo_codemarkdown extends DokuWiki_Syntax_Plugin
         //  * a look ahead to see if we have the exit pattern
         // https://github.github.com/gfm/#fenced-code-blocks
         $gitHubMarkdownPattern = "^\s*(?:\`|~){3}\w*\s*$(?=.*?" . self::MARKDOWN_EXIT_PATTERN . ")";
-        $this->Lexer->addEntryPattern($gitHubMarkdownPattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addEntryPattern($gitHubMarkdownPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }
@@ -111,7 +111,7 @@ class syntax_plugin_combo_codemarkdown extends DokuWiki_Syntax_Plugin
     {
 
 
-        $this->Lexer->addExitPattern(self::MARKDOWN_EXIT_PATTERN, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addExitPattern(self::MARKDOWN_EXIT_PATTERN, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }

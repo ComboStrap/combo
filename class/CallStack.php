@@ -195,7 +195,7 @@ class CallStack
      * state of {@link SyntaxPlugin::handle()} to create paragraph
      * with the class given as parameter
      *
-     * @param $attributes - the attributes in an array callstack form for the paragraph
+     * @param $attributes - the attributes in an callstack array form passed to the paragraph
      */
     public
     function processEolToEndStack($attributes = [])
@@ -504,6 +504,9 @@ class CallStack
     }
 
     /**
+     * Insert After. The pointer stays at the current state.
+     * If you don't need to process the call that you just
+     * inserted, you may want to call {@link CallStack::next()}
      * @param Call $call
      */
     public
@@ -665,6 +668,85 @@ class CallStack
                 $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
             }
         }
+    }
+
+    /**
+     * Append instructions to the callstack (ie at the end)
+     * @param $instructions
+     */
+    public function appendInstructions($instructions)
+    {
+        array_splice($this->callStack, count($this->callStack), 0, $instructions);
+    }
+
+    /**
+     * @param Call $call
+     */
+    public function appendCallAtTheEnd($call)
+    {
+        $this->callStack[] = $call->toCallArray();
+    }
+
+    public function moveToPreviousSiblingTag()
+    {
+        if (!$this->endWasReached) {
+            $actualCall = $this->getActualCall();
+            $actualState = $actualCall->getState();
+            if (!in_array($actualState, CallStack::TAG_STATE)) {
+                LogUtility::msg("A previous sibling can be asked only from a tag call. The state is " . $actualState, LogUtility::LVL_MSG_ERROR, "support");
+                return false;
+            }
+        }
+        $level = 0;
+        while ($this->previous()) {
+
+            $actualCall = $this->getActualCall();
+            $state = $actualCall->getState();
+            switch ($state) {
+                case DOKU_LEXER_ENTER:
+                case DOKU_LEXER_SPECIAL:
+                    $level++;
+                    break;
+                case DOKU_LEXER_EXIT:
+                    $level--;
+                    break;
+            }
+
+            if ($level == 0 && in_array($state, self::TAG_STATE)) {
+                break;
+            }
+        }
+        if ($level == 0 && !$this->startWasReached) {
+            return $this->getActualCall();
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Delete all calls after the passed call
+     *
+     * It's used in syntax generator that:
+     *   * capture the children callstack at the end,
+     *   * delete it
+     *   * and use it to generate more calls.
+     *
+     * @param Call $call
+     */
+    public function deleteAllCallsAfter(Call $call)
+    {
+        $key = $call->getKey();
+        $offset = array_search($key, array_keys($this->callStack), true);
+        if ($offset !== false) {
+            /**
+             * We delete from the next
+             * {@link array_splice()} delete also the given offset
+             */
+            array_splice($this->callStack, $offset + 1);
+        } else {
+            LogUtility::msg("The call ($call) could not be found in the callStack. We couldn't therefore delete the calls after");
+        }
+
     }
 
 

@@ -94,7 +94,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
 
 
         $pattern = PluginUtility::getEmptyTagPattern(self::TAG);
-        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }
@@ -124,7 +124,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 // Get the parameters
                 $attributes = TagAttributes::createFromTagMatch($match);
                 $tag = new Tag(self::TAG, $attributes, $state, $handler);
-                if ($tag->isDescendantOf(syntax_plugin_combo_list::TAG)) {
+                if ($tag->isDescendantOf(syntax_plugin_combo_contentlist::MARKI_TAG)) {
                     $attributes->addComponentAttributeValue( "spacing","mr-2");
                 }
                 return array(

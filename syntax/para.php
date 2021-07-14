@@ -6,8 +6,8 @@ require_once(__DIR__ . "/../class/PluginUtility.php");
 require_once(__DIR__ . "/../class/LinkUtility.php");
 require_once(__DIR__ . "/../class/XhtmlUtility.php");
 
-use ComboStrap\Analytics;
 use ComboStrap\Call;
+use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -247,7 +247,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      * Info: The `eol` call are temporary created with {@link \dokuwiki\Parsing\ParserMode\Eol}
      * and transformed to `p_open` and `p_close` via {@link \dokuwiki\Parsing\Handler\Block::process()}
      *
-     * @param \ComboStrap\CallStack $callstack
+     * @param CallStack $callstack
      * @param array $attributes - the attributes passed to the paragraph
      */
     public static function fromEolToParagraphUntilEndOfStack(&$callstack, $attributes)

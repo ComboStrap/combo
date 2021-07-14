@@ -131,7 +131,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
         foreach (self::getTags() as $tag) {
             $pattern = PluginUtility::getContainerTagPattern($tag);
-            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
 
@@ -141,7 +141,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     {
 
         foreach (self::getTags() as $tag) {
-            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern('</' . $tag . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
 
@@ -320,6 +320,12 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER:
+
+                    /**
+                     * Add the CSS
+                     */
+                    $snippetManager = PluginUtility::getSnippetManager();
+                    $snippetManager->attachCssSnippetForBar(self::TAG);
 
                     /**
                      * Tag Attributes

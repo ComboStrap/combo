@@ -143,26 +143,32 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         }
     }
 
-    /**
-     * @param Call|bool $parent
-     * @return string the type of heading
-     */
-    static function getHeadingType($parent)
-    {
-        if ($parent != false && $parent->getComponentName() != "section_open") {
-            return self::TYPE_TITLE;
-        } else {
-            return self::TYPE_OUTLINE;
-        }
-    }
 
     /**
-     * @param $parent Call|false
+     * @param CallStack $callStack
      * @return string
      */
-    public static function getContext($parent)
+    public static function getContext($callStack)
     {
-        $headingType = syntax_plugin_combo_heading::getHeadingType($parent);
+
+        /**
+         * If the heading is inside a component,
+         * it's a title heading, otherwise it's a outline heading
+         * (Except for {@link syntax_plugin_combo_webcode} that can wrap outline heading)
+         *
+         * When the parent is empty, a section_open (ie another outline heading)
+         * this is a outline
+         */
+        $parent = $callStack->moveToParent();
+        if ($parent!=false && $parent->getTagName() == syntax_plugin_combo_webcode::TAG){
+            $parent = $callStack->moveToParent();
+        }
+        if ($parent != false && $parent->getComponentName() != "section_open") {
+            $headingType = self::TYPE_TITLE;
+        } else {
+            $headingType = self::TYPE_OUTLINE;
+        }
+
         switch ($headingType) {
             case syntax_plugin_combo_heading::TYPE_TITLE:
 
@@ -420,7 +426,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
          * Heading tag
          */
         foreach (self::TAGS as $tag) {
-            $this->Lexer->addEntryPattern(PluginUtility::getContainerTagPattern($tag), $mode, PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addEntryPattern(PluginUtility::getContainerTagPattern($tag), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
 
     }
@@ -428,7 +434,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     public function postConnect()
     {
         foreach (self::TAGS as $tag) {
-            $this->Lexer->addExitPattern(PluginUtility::getEndTagPattern($tag), PluginUtility::getModeForComponent($this->getPluginComponent()));
+            $this->Lexer->addExitPattern(PluginUtility::getEndTagPattern($tag), PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 
@@ -482,8 +488,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                  * Context determination
                  */
                 $callStack = CallStack::createFromHandler($handler);
-                $parent = $callStack->moveToParent();
-                $context = self::getContext($parent);
+                $context = self::getContext($callStack);
 
                 return array(
                     PluginUtility::STATE => $state,

@@ -2,8 +2,6 @@
 
 
 use ComboStrap\Bootstrap;
-use ComboStrap\Site;
-use ComboStrap\SnippetManager;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
@@ -12,6 +10,10 @@ if (!defined('DOKU_INC')) die();
 /**
  * Class syntax_plugin_combo_tooltip
  * Implementation of a tooltip
+ *
+ * https://material.io/components/tooltips
+ * [[https://getbootstrap.com/docs/4.0/components/tooltips/|Tooltip Boostrap version 4]]
+ * [[https://getbootstrap.com/docs/5.0/components/tooltips/|Tooltip Boostrap version 5]]
  */
 class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 {

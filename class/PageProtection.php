@@ -36,6 +36,7 @@ class PageProtection
      */
     const CONF_VALUE_ACL = "acl";
     const CONF_VALUE_HIDDEN = "hidden";
+    const CONF_VALUE_NO_ROBOT = "no-robot";
 
 
     /**

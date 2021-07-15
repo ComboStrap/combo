@@ -8,6 +8,9 @@ use ComboStrap\TplUtility;
 /**
  * Class action_plugin_combo_hidden
  * Hide page
+ *
+ *
+ * More on the official [[doku>config:hidepages|DokuWiki documentation]]
  */
 class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
 {

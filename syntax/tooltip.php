@@ -26,9 +26,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      */
     public static function addToolTipSnippetIfNeeded()
     {
-        $namespace = Bootstrap::getDataNamespace();
-        $script = "window.addEventListener('load', function () { jQuery('[data{$namespace}-toggle=\"tooltip\"]').tooltip() })";
-        PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::TAG, $script);
+        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::TAG);
     }
 
 

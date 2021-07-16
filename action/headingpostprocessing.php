@@ -6,7 +6,6 @@ use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
-use ComboStrap\TagAttributes;
 
 class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {

@@ -50,7 +50,8 @@ class TagAttributes
         MediaLink::LINKING_KEY, // internal to image
         CacheMedia::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
-        syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE
+        syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE,
+        self::OPEN_TAG
     ];
 
     /**
@@ -323,7 +324,10 @@ class TagAttributes
     public function setComponentAttributeValue($attributeName, $attributeValue)
     {
         $attLower = strtolower($attributeName);
-        $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
+        $actualValue = $this->getValue($attributeName);
+        if ($actualValue === null || $actualValue !== TagAttributes::UN_SET) {
+            $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
+        }
     }
 
     public function addComponentAttributeValueIfNotEmpty($attributeName, $attributeValue)
@@ -672,6 +676,14 @@ class TagAttributes
              * null are just not set
              */
             if (!is_null($value)) {
+
+                /**
+                 * Unset attribute should not be added
+                 */
+                if ($value == TagAttributes::UN_SET) {
+                    continue;
+                }
+
                 /**
                  * The condition is important
                  * because we may pass the javascript character `\n` in a `srcdoc` for javascript
@@ -722,11 +734,23 @@ class TagAttributes
         if (!empty($attributeString)) {
             $enterTag .= " " . $attributeString;
         }
-        $enterTag .= ">";
+        /**
+         * Is it an open tag ?
+         */
+        if (!$this->getValue(self::OPEN_TAG, false)) {
 
-        if (!empty($this->htmlAfterEnterTag)) {
-            $enterTag .= DOKU_LF . $this->htmlAfterEnterTag;
+            $enterTag .= ">";
+
+            /**
+             * Do we have html after the tag is closed
+             */
+            if (!empty($this->htmlAfterEnterTag)) {
+                $enterTag .= DOKU_LF . $this->htmlAfterEnterTag;
+            }
+
         }
+
+
         return $enterTag;
 
     }
@@ -932,7 +956,7 @@ class TagAttributes
     public function getBooleanValueAndRemove($attribute)
     {
         $value = $this->getValueAndRemove($attribute);
-        return filter_var(    $value, FILTER_VALIDATE_BOOLEAN);
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
 

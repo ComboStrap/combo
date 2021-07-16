@@ -36,6 +36,17 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
     const TEXT_ATTRIBUTE = "text";
     const POSITION_ATTRIBUTE = "position";
 
+    /**
+     * An attribute that hold the
+     * information that a tooltip was found
+     */
+    const TOOLTIP_FOUND = "tooltipFound";
+
+    /**
+     * @var string
+     */
+    private $docCapture;
+
 
     /**
      * tooltip is used also in page protection
@@ -55,7 +66,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'formatting';
+        return 'container';
     }
 
     /**
@@ -70,7 +81,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'stack';
     }
 
     /**
@@ -134,8 +145,33 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                  * are applied to the aprent
                  */
                 if (!$tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)) {
+
+                    /**
+                     * Advertise that we got a tooltip
+                     * to start the {@link action_plugin_combo_tooltippostprocessing postprocessing}
+                     * or not
+                     */
+                    $handler->setStatus(self::TOOLTIP_FOUND, true);
+
+                    /**
+                     * Callstack manipulation
+                     */
                     $callStack = CallStack::createFromHandler($handler);
+
+                    // Delete the eol if any
+                    $previous = $callStack->previous();
+                    if ($previous !== false) {
+                        if ($previous->getTagName() == "eol") {
+                            $callStack->deleteActualCallAndPrevious();
+                            $callStack->next();
+                        }
+                    }
+
+                    /**
+                     * Parent
+                     */
                     $parent = $callStack->moveToParent();
+
                     /**
                      * Do not close the tag
                      */
@@ -226,7 +262,9 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                          * (The new syntax just add the attributes to the previous element
                          */
                         $tagAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
-                        $renderer->doc .= " {$tagAttributes->toHTMLAttributeString()} title=\"";
+                        $renderer->doc = rtrim($renderer->doc) . " {$tagAttributes->toHTMLAttributeString()} title=\"";
+                        $this->docCapture = $renderer->doc;
+                        $renderer->doc = "";
                     }
 
                     break;
@@ -244,8 +282,17 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                         }
 
                     } else {
-                        // Close the title
-                        $renderer->doc .= "\">";
+                        /**
+                         * We get the doc created since the enter
+                         * We replace the " by ' to be able to add it in the title attribute
+                         */
+                        $renderer->doc = PluginUtility::htmlEncode(preg_replace("/\r|\n/", "", $renderer->doc));
+
+                        /**
+                         * We recreate the whole document
+                         */
+                        $renderer->doc = $this->docCapture . $renderer->doc . "\">";
+                        $this->docCapture = null;
                     }
                     break;
 

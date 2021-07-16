@@ -1,0 +1,6 @@
+.tooltip-inner {
+    text-align:unset;
+}
+.tooltip-inner>p:last-child {
+    margin-bottom: 0.25rem
+}

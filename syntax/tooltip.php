@@ -2,6 +2,7 @@
 
 
 use ComboStrap\Bootstrap;
+use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
@@ -126,11 +127,28 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
-                $attributes = PluginUtility::getTagAttributes($match);
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
+
+                /**
+                 * New Syntax, the tooltip attribute
+                 * are applied to the aprent
+                 */
+                if (!$tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)) {
+                    $callStack = CallStack::createFromHandler($handler);
+                    $parent = $callStack->moveToParent();
+                    /**
+                     * Do not close the tag
+                     */
+                    $parent->addAttribute(TagAttributes::OPEN_TAG, true);
+                    /**
+                     * Do not output the title
+                     */
+                    $parent->addAttribute(TagAttributes::TITLE_KEY, TagAttributes::UN_SET);
+                }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -138,11 +156,12 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
-                $tag = new Tag(self::TAG, array(), $state, $handler);
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tag->getOpeningTag()->getAttributes()
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
 
 
@@ -172,28 +191,43 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                 case DOKU_LEXER_ENTER :
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
-                    if($tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)){
-                        $tagAttributes->addHtmlAttributeValue("title",$tagAttributes->getValueAndRemove(self::TEXT_ATTRIBUTE));
-                    }
-                    $tagAttributes->addClassName("d-inline-block");
+                    /**
+                     * Snippet
+                     */
+                    self::addToolTipSnippetIfNeeded();
 
                     /**
-                     * You should only add tooltips to HTML elements
-                     * that are traditionally keyboard-focusable and interactive (such as links or form controls).
-                     *
+                     * Tooltip
                      */
+                    $dataAttributeNamespace = Bootstrap::getDataNamespace();
+                    $tagAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
 
-                    if (isset($attributes[self::TEXT_ATTRIBUTE])) {
-                        $position = "top";
-                        if (isset($attributes[self::POSITION_ATTRIBUTE])) {
-                            $position = $attributes[self::POSITION_ATTRIBUTE];
-                        }
+                    /**
+                     * Position
+                     */
+                    $position = $tagAttributes->getValueAndRemove(self::POSITION_ATTRIBUTE, "top");
+                    $tagAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "${position}");
 
 
-                        $focusable = "tabindex=\"0\"";
-                        $dataAttributeNamespace = Bootstrap::getDataNamespace();
-                        $renderer->doc .= "<span class=\"d-inline-block\" $focusable data{$dataAttributeNamespace}-toggle=\"tooltip\" data{$dataAttributeNamespace}-placement=\"${position}\" title=\"" . $attributes[self::TEXT_ATTRIBUTE] . "\">" . DOKU_LF;
-                    };
+                    /**
+                     * Old tooltip syntax
+                     */
+                    if ($tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)) {
+                        $tagAttributes->addHtmlAttributeValue("title", $tagAttributes->getValueAndRemove(self::TEXT_ATTRIBUTE));
+                        $tagAttributes->addClassName("d-inline-block");
+
+                        // Arbitrary HTML elements (such as <span>s) can be made focusable by adding the tabindex="0" attribute
+                        $tagAttributes->addHtmlAttributeValue("tabindex", "0");
+
+                        $renderer->doc .= $tagAttributes->toHtmlEnterTag("span");
+                    } else {
+                        /**
+                         * New Syntax
+                         * (The new syntax just add the attributes to the previous element
+                         */
+                        $tagAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
+                        $renderer->doc .= " {$tagAttributes->toHTMLAttributeString()} title=\"";
+                    }
 
                     break;
 
@@ -207,9 +241,11 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                         $text = $data[PluginUtility::ATTRIBUTES][self::TEXT_ATTRIBUTE];
                         if (!empty($text)) {
                             $renderer->doc .= "</span>";
-                            self::addToolTipSnippetIfNeeded();
                         }
 
+                    } else {
+                        // Close the title
+                        $renderer->doc .= "\">";
                     }
                     break;
 

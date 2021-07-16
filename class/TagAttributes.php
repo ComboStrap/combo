@@ -72,6 +72,26 @@ class TagAttributes
     const WIKI_ID = "wiki-id";
 
     /**
+     * The open tag attributes
+     * permit to not close the tag in {@link TagAttributes::toHtmlEnterTag()}
+     *
+     * It's used for instance by the {@link \syntax_plugin_combo_tooltip}
+     * to advertise that it will add attribute and close it
+     */
+    const OPEN_TAG = "open-tag";
+
+    /**
+     * If an attribute has this value,
+     * it will not be added to the output (ie {@link TagAttributes::toHtmlEnterTag()})
+     * Child element can unset attribute this way
+     * in order to write their own
+     *
+     * This is used by the {@link \syntax_plugin_combo_tooltip}
+     * to advertise that the title attribute should not be set
+     */
+    const UN_SET = "unset";
+
+    /**
      * A global static counter
      * to {@link TagAttributes::generateAndSetId()}
      */
@@ -519,8 +539,8 @@ class TagAttributes
      */
     public function addHtmlAttributeValue($key, $value)
     {
-        if (empty($value)) {
-            LogUtility::msg("The value of the HTML attribute is empty for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
+        if (blank($value)) {
+            LogUtility::msg("The value of the HTML attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
         }
         $this->htmlAttributes[$key] = $value;
         return $this;

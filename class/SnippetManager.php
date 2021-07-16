@@ -79,7 +79,7 @@ class SnippetManager
 
 
     /**
-     * @deprecated
+     * @deprecated create a {@link Snippet} instead and use the {@link Snippet::getClass()} function instead
      * @param $tag
      * @return string
      */

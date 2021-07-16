@@ -373,14 +373,10 @@ class TagAttributes
              * they may have already encoded value)
              * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
              */
-            $urlEncoding = ["href", "src", "data-src", "data-srcset"];
+
             $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
-            foreach ($originalArray as $name => $value) {
-                if (!in_array($name, $urlEncoding)) {
-                    $value = PluginUtility::htmlEncode($value);
-                }
-                $this->componentAttributesCaseInsensitive[PluginUtility::htmlEncode($name)]=$value;
-            }
+            $this->escapeComponentAttribute($originalArray);
+
 
             /**
              * Width and height
@@ -957,18 +953,23 @@ class TagAttributes
 
     /**
      * @param $attribute
+     * @param null $default
      * @return mixed
      */
-    public function getBooleanValueAndRemove($attribute)
+    public function getBooleanValueAndRemove($attribute, $default = null)
     {
         $value = $this->getValueAndRemove($attribute);
-        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        if ($value == null) {
+            return $default;
+        } else {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
     }
 
     public function hasAttribute($attribute)
     {
         $hasAttribute = $this->hasComponentAttribute($attribute);
-        if ($hasAttribute===true){
+        if ($hasAttribute === true) {
             return true;
         } else {
             return $this->hasHtmlAttribute($attribute);
@@ -978,6 +979,26 @@ class TagAttributes
     private function hasHtmlAttribute($attribute)
     {
         return isset($this->htmlAttributes[$attribute]);
+    }
+
+    private function escapeComponentAttribute(array $arrayToEscape, $subKey = null)
+    {
+        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
+        foreach ($arrayToEscape as $name => $value) {
+            $encodedName = PluginUtility::htmlEncode($name);
+            if (is_array($value)) {
+                $this->escapeComponentAttribute($value, $encodedName);
+            } else {
+                if (!in_array($name, $urlEncoding)) {
+                    $value = PluginUtility::htmlEncode($value);
+                }
+                if ($subKey == null) {
+                    $this->componentAttributesCaseInsensitive[$encodedName] = $value;
+                } else {
+                    $this->componentAttributesCaseInsensitive[$subKey][$encodedName] = $value;
+                }
+            }
+        }
     }
 
 

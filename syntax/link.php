@@ -29,7 +29,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     const COMPONENT = 'combo_link';
 
     /**
-     * Disable the link
+     * Disable the link component
      */
     const CONF_DISABLE_LINK = "disableLink";
 

@@ -74,12 +74,26 @@ class LinkUtility
      * but this configuration permits to turn it back
      */
     const CONF_USE_DOKUWIKI_CLASS_NAME = "useDokuwikiLinkClassName";
+    /**
+     * This configuration will set for all internal link
+     * the {@link LinkUtility::PREVIEW_ATTRIBUTE} preview attribute
+     */
+    const CONF_PREVIEW_LINK = "previewLink";
+    const CONF_PREVIEW_LINK_DEFAULT = 0;
+
+
     const TEXT_ERROR_CLASS = "text-danger";
 
     /**
      * The known parameters for an email url
      */
     const EMAIL_VALID_PARAMETERS = ["subject"];
+
+    /**
+     * If set, it will show a page preview
+     */
+    const PREVIEW_ATTRIBUTE = "preview";
+
 
     /**
      * @var mixed
@@ -430,8 +444,9 @@ class LinkUtility
                         /**
                          * Auto tooltip
                          */
-                        if ($this->attributes->hasComponentAttribute(syntax_plugin_combo_tooltip::TAG)){
-                            $this->attributes->removeComponentAttribute(syntax_plugin_combo_tooltip::TAG);
+                        $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
+                        $preview = $this->attributes->getBooleanValueAndRemove(self::PREVIEW_ATTRIBUTE, $previewConfig);
+                        if ($preview){
 
                             syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
 
@@ -443,13 +458,13 @@ class LinkUtility
                             $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
                             $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
                             $html=<<<EOF
-<h3>{$linkedPage->getH1NotEmpty()}</h3>
+<h3>{$linkedPage->getPageNameNotEmpty()}</h3>
 <p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
 EOF;
                             $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($html));
 
                         } else {
-                            $this->attributes->addHtmlAttributeValue("title", $linkedPage->getTitle());
+                            $this->attributes->addHtmlAttributeValue("title", $linkedPage->getDescriptionOrElseDokuWiki());
                         }
 
                         $this->attributes->addClassName(self::getHtmlClassInternalLink());

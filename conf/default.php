@@ -162,11 +162,12 @@ $conf['disableDynamicQualityMonitoring'] = 0;
 /**
  * Link
  * Class in link {@link \ComboStrap\LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME}
+ * Preview on link {@link \ComboStrap\LinkUtility::CONF_PREVIEW_LINK}
  * Enable {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
- * MultiLines {@link syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK}
  */
 $conf['useDokuwikiLinkClassName'] = 0;
 $conf['disableLink'] = 0;
+$conf['previewLink'] = 0;
 
 /**
  * Twitter

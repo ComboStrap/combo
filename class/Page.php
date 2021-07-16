@@ -50,6 +50,7 @@ class Page extends DokuPath
     const ORGANIZATION_TYPE = "organization";
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
+    const NAME_PROPERTY = "name";
     const DESCRIPTION_PROPERTY = "description";
     const TYPE_PROPERTY = "type";
 
@@ -75,6 +76,7 @@ class Page extends DokuPath
 
     const CURRENT_METADATA = "current";
     const PERSISTENT_METADATA = "persistent";
+
 
 
     private $canonical;
@@ -1759,6 +1761,16 @@ class Page extends DokuPath
         $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
         p_save_metadata($this->getId(), $meta);
         return $this;
+    }
+
+    public function getPageNameNotEmpty()
+    {
+        $name = p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+        if (!blank($name)) {
+            return PluginUtility::htmlEncode($name);
+        } else {
+            return $this->getName();
+        }
     }
 
 

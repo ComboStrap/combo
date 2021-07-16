@@ -157,10 +157,10 @@ class Background
                     }
 
                     $media = MediaLink::createFromCallStackArray($backgroundImageValue);
-                    $url = $media->getUrl(DokuwikiUrl::URL_AND,$media->getRequestedWidth());
+                    $url = $media->getUrl(DokuwikiUrl::URL_AND, $media->getRequestedWidth());
                     if ($url !== false) {
 
-                        $backgroundImageStyleValue = "url(" . $url . ")";
+                        $backgroundImageStyleValue = "url(" . PluginUtility::htmlEncode($url) . ")";
 
 
                     } else {

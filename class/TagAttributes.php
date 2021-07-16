@@ -367,6 +367,20 @@ class TagAttributes
 
             $this->componentToHtmlAttributeProcessingWasDone = true;
 
+            /**
+             * Following the rule 2 to encode the unknown value
+             * We encode the component attribute (ie not the HTML attribute because
+             * they may have already encoded value)
+             * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
+             */
+            $urlEncoding = ["href", "src", "data-src", "data-srcset"];
+            $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
+            foreach ($originalArray as $name => $value) {
+                if (!in_array($name, $urlEncoding)) {
+                    $value = PluginUtility::htmlEncode($value);
+                }
+                $this->componentAttributesCaseInsensitive[PluginUtility::htmlEncode($name)]=$value;
+            }
 
             /**
              * Width and height
@@ -667,7 +681,6 @@ class TagAttributes
 
         $tagAttributeString = "";
 
-        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
         $htmlArray = $this->toHtmlArray();
         foreach ($htmlArray as $name => $value) {
 
@@ -696,15 +709,8 @@ class TagAttributes
                     $stringValue = $value;
                 }
 
-                /**
-                 * Following the rule 2 to encode the value
-                 * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
-                 */
 
-                if (!in_array($name, $urlEncoding)) {
-                    $stringValue = PluginUtility::htmlEncode($stringValue);
-                }
-                $tagAttributeString .= PluginUtility::htmlEncode($name) . '="' . $stringValue . '" ';
+                $tagAttributeString .= $name . '="' . $stringValue . '" ';
             }
 
         }
@@ -957,6 +963,21 @@ class TagAttributes
     {
         $value = $this->getValueAndRemove($attribute);
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public function hasAttribute($attribute)
+    {
+        $hasAttribute = $this->hasComponentAttribute($attribute);
+        if ($hasAttribute===true){
+            return true;
+        } else {
+            return $this->hasHtmlAttribute($attribute);
+        }
+    }
+
+    private function hasHtmlAttribute($attribute)
+    {
+        return isset($this->htmlAttributes[$attribute]);
     }
 
 

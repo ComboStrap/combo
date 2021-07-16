@@ -16,6 +16,7 @@ namespace ComboStrap;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
+use syntax_plugin_combo_tooltip;
 
 require_once(__DIR__ . '/../../combo/class/' . 'TemplateUtility.php');
 require_once(__DIR__ . '/../../combo/class/' . 'Publication.php');
@@ -355,6 +356,7 @@ class LinkUtility
             $this->attributes->addHtmlAttributeValue("href", $url);
         }
 
+
         /**
          * Processing by type
          */
@@ -386,6 +388,7 @@ class LinkUtility
                  */
                 $linkedPage = $this->getInternalPage();
                 $this->attributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getId());
+
 
                 /**
                  * If this is a low quality internal page,
@@ -424,11 +427,36 @@ class LinkUtility
 
                     } else {
 
+                        /**
+                         * Auto tooltip
+                         */
+                        if ($this->attributes->hasComponentAttribute(syntax_plugin_combo_tooltip::TAG)){
+                            $this->attributes->removeComponentAttribute(syntax_plugin_combo_tooltip::TAG);
+
+                            syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
+
+                            /**
+                             * Tooltip
+                             */
+                            $dataAttributeNamespace = Bootstrap::getDataNamespace();
+                            $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
+                            $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
+                            $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
+                            $html=<<<EOF
+<h3>{$linkedPage->getH1NotEmpty()}</h3>
+<p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
+EOF;
+                            $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($html));
+
+                        } else {
+                            $this->attributes->addHtmlAttributeValue("title", $linkedPage->getTitle());
+                        }
+
                         $this->attributes->addClassName(self::getHtmlClassInternalLink());
 
                     }
 
-                    $this->attributes->addHtmlAttributeValue("title", $linkedPage->getTitle());
+
 
                 }
                 break;
@@ -465,7 +493,7 @@ class LinkUtility
         /**
          * Title settings
          */
-        if (!$this->attributes->hasComponentAttribute("title")) {
+        if (!$this->attributes->hasAttribute("title")) {
             $title = $this->getTitle();
             if (!empty($title)) {
                 $this->attributes->addHtmlAttributeValue("title", $title);

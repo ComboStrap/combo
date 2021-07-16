@@ -4,12 +4,25 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
+use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 
 /**
  * Class syntax_plugin_combo_tooltip
  * Implementation of a tooltip
+ *
+ * A tooltip is implemented as a super title attribute
+ * on a HTML element such as a link or a button
+ *
+ * The implementation pass the information that there is
+ * a tooltip on the container which makes the output of {@link TagAttributes::toHtmlEnterTag()}
+ * to print all attributes until the title and not closing.
+ *
+ * Bootstrap generate the <a href="https://getbootstrap.com/docs/5.0/components/tooltips/#markup">markup tooltip</a>
+ * on the fly. It's possible to generate a bootstrap markup like and use popper directly
+ * but this is far more difficult
+ *
  *
  * https://material.io/components/tooltips
  * [[https://getbootstrap.com/docs/4.0/components/tooltips/|Tooltip Boostrap version 4]]
@@ -41,7 +54,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'container';
+        return 'formatting';
     }
 
     /**
@@ -121,7 +134,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                 );
 
             case DOKU_LEXER_UNMATCHED :
-                return PluginUtility::handleAndReturnUnmatchedData(self::TAG,$match,$handler);
+                return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
             case DOKU_LEXER_EXIT :
 
@@ -156,11 +169,19 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             switch ($state) {
 
-                case DOKU_LEXER_UNMATCHED:
-                    $renderer->doc .= PluginUtility::renderUnmatched($data);
-                    break;
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+
+                    if($tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)){
+                        $tagAttributes->addHtmlAttributeValue("title",$tagAttributes->getValueAndRemove(self::TEXT_ATTRIBUTE));
+                    }
+                    $tagAttributes->addClassName("d-inline-block");
+
+                    /**
+                     * You should only add tooltips to HTML elements
+                     * that are traditionally keyboard-focusable and interactive (such as links or form controls).
+                     *
+                     */
 
                     if (isset($attributes[self::TEXT_ATTRIBUTE])) {
                         $position = "top";
@@ -168,10 +189,16 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                             $position = $attributes[self::POSITION_ATTRIBUTE];
                         }
 
+
+                        $focusable = "tabindex=\"0\"";
                         $dataAttributeNamespace = Bootstrap::getDataNamespace();
-                        $renderer->doc .= "<span class=\"d-inline-block\" tabindex=\"0\" data{$dataAttributeNamespace}-toggle=\"tooltip\" data{$dataAttributeNamespace}-placement=\"${position}\" title=\"" . $attributes[self::TEXT_ATTRIBUTE] . "\">" . DOKU_LF;
+                        $renderer->doc .= "<span class=\"d-inline-block\" $focusable data{$dataAttributeNamespace}-toggle=\"tooltip\" data{$dataAttributeNamespace}-placement=\"${position}\" title=\"" . $attributes[self::TEXT_ATTRIBUTE] . "\">" . DOKU_LF;
                     };
 
+                    break;
+
+                case DOKU_LEXER_UNMATCHED:
+                    $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
 
                 case DOKU_LEXER_EXIT:

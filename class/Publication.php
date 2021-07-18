@@ -36,7 +36,7 @@ class Publication
      * Late publication protection
      */
     const LATE_PUBLICATION_PROTECTION_ACRONYM = "lpp";
-    const CONF_LATE_PUBLICATION_PROTECTION = "latePublicationProtectionMode";
+    const CONF_LATE_PUBLICATION_PROTECTION_MODE = "latePublicationProtectionMode";
     const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
 
 
@@ -44,23 +44,15 @@ class Publication
      * If the page
      * no authorization
      * @param $id
-     * @param $user
      * @return bool
      */
-    public static function isPageProtected($id, $user = '')
+    public static function isPageProtected($id)
     {
         if (!Identity::isLoggedIn()) {
             $page = new Page($id);
             if ($page->getPublishedTimestamp()) {
-                /**
-                 * Low quality page should not
-                 * be public and readable for the search engine
-                 */
                 return true;
             } else {
-                /**
-                 * Do not cache high quality page
-                 */
                 return false;
             }
         } else {

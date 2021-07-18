@@ -27,7 +27,7 @@ class LowQualityPage
     const CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE = "lowQualityPageProtectionEnable";
 
     /**
-     * @deprecated used {@link PageProtection::CONF_MODE} instead
+     *
      */
     const CONF_LOW_QUALITY_PAGE_PROTECTION_MODE = "lowQualityPageProtectionMode";
 

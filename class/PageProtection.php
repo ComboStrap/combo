@@ -26,10 +26,6 @@ class PageProtection
 
     const NAME = "page-protection";
 
-    /**
-     * Conf that gets one of the two values
-     */
-    const CONF_PAGE_PROTECTION_MODE = "pageProtectionMode";
 
     /**
      * The possible values
@@ -72,7 +68,7 @@ class PageProtection
     color:#a829dc
 }
 EOF;
-        PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::NAME, $style);
+        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::NAME, $style);
 
 
         $js = <<<EOF
@@ -87,7 +83,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
 })
 EOF;
-        PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::NAME, $js);
+        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::NAME, $js);
 
 
     }

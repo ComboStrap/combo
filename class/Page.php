@@ -1420,42 +1420,6 @@ class Page extends DokuPath
         return $publishedDate;
     }
 
-    /**
-     * If low page rank or late publication and not logged in,
-     * no authorization
-     * @param $user
-     * @return bool if the page should be protected
-     */
-    public
-    function isProtected($user = '')
-    {
-        $protected = false;
-        if (!Identity::isLoggedIn()) {
-
-            /**
-             * Low quality page and late publication should not
-             * be public and readable for the search engine
-             */
-
-            if ($this->isLowQualityPage()) {
-                $lowQualityPageEnabled = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
-                if ($lowQualityPageEnabled == 1) {
-                    $protected = true;
-                }
-            }
-
-            if ($this->isLatePublication()) {
-
-                $latePublicationEnabled = PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
-                if ($latePublicationEnabled == 1) {
-                    $protected = true;
-                }
-
-            }
-        }
-        return $protected;
-
-    }
 
     public
     function isLatePublication()

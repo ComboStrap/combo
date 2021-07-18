@@ -3,9 +3,11 @@
 
 use ComboStrap\Identity;
 use ComboStrap\DokuPath;
+use ComboStrap\LatePublication;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Page;
 use ComboStrap\PageProtection;
+use ComboStrap\Publication;
 use ComboStrap\StringUtility;
 
 require_once(__DIR__ . '/../class/LowQualityPage.php');
@@ -23,21 +25,20 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     {
 
 
-        $securityConf = $this->getConf(PageProtection::CONF_PAGE_PROTECTION_MODE);
-        if (empty($securityConf)) {
-            $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
-        }
-        if ($securityConf == PageProtection::CONF_VALUE_HIDDEN) {
-            /**
-             * https://www.dokuwiki.org/devel:event:pageutils_id_hidepage
-             */
-            $controller->register_hook('PAGEUTILS_ID_HIDEPAGE', 'BEFORE', $this, 'handleHiddenCheck', array());
-        } else {
-            /**
-             * https://www.dokuwiki.org/devel:event:auth_acl_check
-             */
-            $controller->register_hook('AUTH_ACL_CHECK', 'AFTER', $this, 'handleAclCheck', array());
-        }
+        /**
+         * https://www.dokuwiki.org/devel:event:pageutils_id_hidepage
+         */
+        $controller->register_hook('PAGEUTILS_ID_HIDEPAGE', 'BEFORE', $this, 'handleHiddenCheck', array());
+
+        /**
+         * https://www.dokuwiki.org/devel:event:auth_acl_check
+         */
+        $controller->register_hook('AUTH_ACL_CHECK', 'AFTER', $this, 'handleAclCheck', array());
+
+        /**
+         * https://www.dokuwiki.org/devel:event:sitemap_generate
+         */
+        $controller->register_hook('SITEMAP_GENERATE', 'AFTER', $this, 'handleSiteMapGenerate', array());
 
         /**
          * https://www.dokuwiki.org/devel:event:search_query_pagelookup
@@ -48,6 +49,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
          * https://www.dokuwiki.org/devel:event:search_query_fullpage
          */
         $controller->register_hook('SEARCH_QUERY_FULLPAGE', 'AFTER', $this, 'handleSearchFullPage', array());
+
         /**
          * https://www.dokuwiki.org/devel:event:feed_data_process
          */
@@ -62,34 +64,67 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     }
 
     /**
-     * Set a low page has hidden
+     * Set page has hidden
      * @param $event
      * @param $param
      */
     function handleHiddenCheck(&$event, $param)
     {
 
+        /**
+         * Only for public
+         */
+        if (Identity::isLoggedIn()) {
+            return;
+        }
+
         $id = $event->data['id'];
         $page = new Page($id);
 
-        if ($page->isProtected()) {
-            $event->data['hidden'] = true;
+        if ($page->isLowQualityPage()) {
+            if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
+                $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
+                if ($securityConf == PageProtection::CONF_VALUE_HIDDEN) {
+                    $event->data['hidden'] = true;
+                    return;
+                }
+            }
+        }
+        if ($page->isLatePublication()) {
+            if ($this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
+                $securityConf = $this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE);
+                if ($securityConf == PageProtection::CONF_VALUE_HIDDEN) {
+                    $event->data['hidden'] = true;
+                    return;
+                }
+            }
         }
 
     }
 
     /**
-     * Make the authorization to NONE for low page
+     *
+     * https://www.dokuwiki.org/devel:event:auth_acl_check
      * @param $event
      * @param $param
      */
     function handleAclCheck(&$event, $param)
     {
+        /**
+         * Only for public
+         *
+         * Note: user is also
+         * to be found at
+         * $user = $event->data['user'];
+         */
+        if (Identity::isLoggedIn()) {
+            return;
+        }
 
         /**
          * Are we on a page script
          */
-        $imageScript = ["/lib/exe/mediamanager.php","/lib/exe/detail.php"];
+        $imageScript = ["/lib/exe/mediamanager.php", "/lib/exe/detail.php"];
         if (in_array($_SERVER['SCRIPT_NAME'], $imageScript)) {
             // id may be null or end with a star
             // this is not a image
@@ -100,16 +135,39 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
 
         $dokuPath = DokuPath::createUnknownFromId($id);
         if ($dokuPath->isPage()) {
+
             /**
              * It should be only a page
              * https://www.dokuwiki.org/devel:event:auth_acl_check
              */
-            $user = $event->data['user'];
             $page = new Page($id);
-            if ($page->isProtected($user)) {
-                $event->result = AUTH_NONE;
+
+            if ($page->isLowQualityPage()) {
+                if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
+                    $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
+                    if ($securityConf == PageProtection::CONF_VALUE_ACL) {
+                        $event->result = AUTH_NONE;
+                        return;
+                    }
+                }
             }
+            if ($page->isLatePublication()) {
+                if ($this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
+                    $securityConf = $this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
+                    if ($securityConf == PageProtection::CONF_VALUE_ACL) {
+                        $event->result = AUTH_NONE;
+                        return;
+                    }
+                }
+            }
+
         }
+
+    }
+
+    function handleSiteMapGenerate(&$event, $param){
+
+
 
     }
 
@@ -166,8 +224,19 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         if (is_array($result)) {
             foreach (array_keys($result) as $idx) {
                 $page = new Page($idx);
-                if ($page->isProtected()) {
-                    unset($result[$idx]);
+                if ($page->isLowQualityPage()) {
+                    $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
+                    if (in_array($securityConf, [PageProtection::CONF_VALUE_ACL, PageProtection::CONF_VALUE_HIDDEN])) {
+                        $event->result = AUTH_NONE;
+                        return;
+                    }
+                }
+                if ($page->isLatePublication()) {
+                    $securityConf = $this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE);
+                    if (in_array($securityConf, [PageProtection::CONF_VALUE_ACL, PageProtection::CONF_VALUE_HIDDEN])) {
+                        $event->result = AUTH_NONE;
+                        return;
+                    }
                 }
             }
         }

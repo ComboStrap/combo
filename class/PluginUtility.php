@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 
 /**
@@ -190,6 +191,7 @@ class PluginUtility
     }
 
     /**
+     * Return a mode from a tag (ie from a {@link Plugin::getPluginComponent()}
      * @param $tag
      * @return string
      *

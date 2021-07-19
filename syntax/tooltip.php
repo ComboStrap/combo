@@ -2,6 +2,7 @@
 
 
 use ComboStrap\Bootstrap;
+use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -187,19 +188,31 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                 while ($actualCall = $callStack->previous()) {
                     if ($actualCall->getState() == DOKU_LEXER_ENTER) {
                         $parent = $actualCall;
+                        $context = $parent->getTagName();
+
                         /**
-                         * Do not close the tag
+                         * If this is an svg icon, the title attribute is not existing on a svg
+                         * the icon should be wrapped up in a span (ie {@link syntax_plugin_combo_itext})
                          */
-                        $parent->addAttribute(TagAttributes::OPEN_TAG, true);
-                        /**
-                         * Do not output the title
-                         */
-                        $parent->addAttribute(TagAttributes::TITLE_KEY, TagAttributes::UN_SET);
+                        if ($parent->getTagName() == syntax_plugin_combo_icon::TAG) {
+                            $parent->setContext(self::TAG);
+                        } else {
+
+                            /**
+                             * Do not close the tag
+                             */
+                            $parent->addAttribute(TagAttributes::OPEN_TAG, true);
+                            /**
+                             * Do not output the title
+                             */
+                            $parent->addAttribute(TagAttributes::TITLE_KEY, TagAttributes::UN_SET);
+
+                        }
 
                         return array(
                             PluginUtility::STATE => $state,
                             PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                            PluginUtility::CONTEXT => $parent->getTagName()
+                            PluginUtility::CONTEXT => $context
 
                         );
                     } else {
@@ -209,7 +222,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                         } else {
                             // sibling ?
                             // In a link, we would get the separator
-                            if($actualCall->getState()!=DOKU_LEXER_UNMATCHED) {
+                            if ($actualCall->getState() != DOKU_LEXER_UNMATCHED) {
                                 $sibling = $actualCall;
                                 break;
                             }

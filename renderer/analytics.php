@@ -533,12 +533,15 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * doku.php?id=somepage&do=export_combo_analysis
          *
          * Set the header temporarily for the export.php file
+         *
+         * The mode in the export is
          */
+        $mode = "combo_" . $this->getPluginComponent();
         p_set_metadata(
             $ID,
-            array("format" => array("combo_" . $this->getPluginComponent() => array("Content-Type" => 'application/json'))),
+            array("format" => array($mode => array("Content-Type" => 'application/json'))),
             false,
-            false // Persistence is not needed, this is just in case this is an export
+            true // Persistence is needed because there is a cache
         );
         $json_encoded = json_encode($finalStats, JSON_PRETTY_PRINT);
 

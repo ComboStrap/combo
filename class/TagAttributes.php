@@ -51,12 +51,15 @@ class TagAttributes
         CacheMedia::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
         syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE,
-        self::OPEN_TAG
+        self::OPEN_TAG,
+        self::HTML_BEFORE,
+        self::HTML_AFTER,
     ];
 
     /**
      * The inline element
-     * We could pass the plugin object into tag attribute in place of the logical tag and check if the {@link SyntaxPlugin::getPType()} is normal
+     * We could pass the plugin object into tag attribute in place of the logical tag
+     * and check if the {@link SyntaxPlugin::getPType()} is normal
      */
     const INLINE_LOGICAL_ELEMENTS = [
         SvgImageLink::CANONICAL,
@@ -91,6 +94,15 @@ class TagAttributes
      * to advertise that the title attribute should not be set
      */
     const UN_SET = "unset";
+
+    /**
+     * When wrapping an element
+     * A tag may get HTML before and after
+     * Uses for instance to wrap a svg in span
+     * when adding a {@link \syntax_plugin_combo_tooltip}
+     */
+    const HTML_BEFORE = "htmlBefore";
+    const HTML_AFTER = "htmlAfter";
 
     /**
      * A global static counter

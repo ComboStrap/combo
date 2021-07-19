@@ -42,12 +42,6 @@ class PageProtection
      */
     const JS_IS_PUBLIC_NAVIGATION_INDICATOR = "page_protection_is_public_navigation";
 
-    /**
-     * The class of the span
-     * element created in place of the link
-     * See {@link LinkUtility::renderOpenTag()}
-     */
-    const PROTECTED_LINK_CLASS = "combo-page-protection";
 
 
     /**

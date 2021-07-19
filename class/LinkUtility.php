@@ -389,6 +389,10 @@ class LinkUtility
                 $this->attributes->addClassName("interwiki");
                 $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
                 $this->attributes->addClassName($wikiClass);
+                if (!$this->wikiExists()) {
+                    $this->attributes->addClassName(self::getHtmlClassNotExist());
+                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
+                }
 
                 break;
             case self::TYPE_INTERNAL:
@@ -442,7 +446,7 @@ EOF;
                      * (It has a higher priority than preview and
                      * the code comes then after)
                      */
-                    if($linkedPage->isLowQualityPage()) {
+                    if ($linkedPage->isLowQualityPage()) {
                         /**
                          * Add a class to style it differently
                          */
@@ -994,28 +998,14 @@ EOF;
         return $protectedLink;
     }
 
+    /**
+     * @return string
+     * @deprecated a link is a HTML anchor element (ie a), no more link with span
+     */
     public
     function getHTMLTag()
     {
-        switch ($this->getType()) {
-            case self::TYPE_INTERNAL:
-                // We could also have used a <a> with `rel="nofollow"`
-                // The span element is then modified as link by javascript if the user is not anonymous
-                if ($this->isProtectedLink()) {
-                    return "span";
-                } else {
-                    return "a";
-                }
-            case self::TYPE_INTERWIKI:
-                if (!$this->wikiExists()) {
-                    return "span";
-                } else {
-                    return "a";
-                }
-            default:
-                return "a";
-        }
-
+        return "a";
     }
 
     private

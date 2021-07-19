@@ -49,13 +49,10 @@ class PageProtection
      */
     const PROTECTED_LINK_CLASS = "combo-page-protection";
 
-    /**
-     * An html attribute to get the source of the protection
-     */
-    const HTML_DATA_ATTRIBUTES = "data-page-protection";
 
     /**
      * Add the HTML snippet
+     * @deprecated
      */
     public static function addPageProtectionSnippet()
     {

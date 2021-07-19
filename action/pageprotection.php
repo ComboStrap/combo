@@ -79,7 +79,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         }
 
         $id = $event->data['id'];
-        if ($id==null){
+        if ($id == null) {
             /**
              * Happens in test when rendering
              * with instructions only
@@ -89,22 +89,16 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $page = new Page($id);
 
         if ($page->isLowQualityPage()) {
-            if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
-                $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
-                if ($securityConf == PageProtection::CONF_VALUE_HIDDEN) {
-                    $event->data['hidden'] = true;
-                    return;
-                }
+            if (LowQualityPage::getLowQualityProtectionMode() == PageProtection::CONF_VALUE_HIDDEN) {
+                $event->data['hidden'] = true;
+                return;
             }
         }
         if ($page->isLatePublication()) {
-            if ($this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
-                $securityConf = $this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE);
-                if ($securityConf == PageProtection::CONF_VALUE_HIDDEN) {
-                    $event->data['hidden'] = true;
-                    return;
-                }
+            if (Publication::getLatePublicationProtectionMode() == PageProtection::CONF_VALUE_HIDDEN) {
+                $event->data['hidden'] = true;
             }
+
         }
 
     }
@@ -172,8 +166,8 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
 
     }
 
-    function handleSiteMapGenerate(&$event, $param){
-
+    function handleSiteMapGenerate(&$event, $param)
+    {
 
 
     }

@@ -93,6 +93,7 @@ class LinkUtility
      * If set, it will show a page preview
      */
     const PREVIEW_ATTRIBUTE = "preview";
+    const PREVIEW_TOOLTIP = "preview";
 
 
     /**
@@ -404,76 +405,134 @@ class LinkUtility
                 $this->attributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getId());
 
 
-                /**
-                 * If this is a low quality internal page,
-                 * print a shallow link for the anonymous user
-                 *
-                 * We could also use the `pointer-events:none!important ` css property
-                 * to avoid a navigation
-                 * https://getbootstrap.com/docs/5.0/utilities/interactions/#pointer-events
-                 */
-                $lowLink = $this->isProtectedLink();
-                if ($lowLink) {
+                if (!$linkedPage->exists()) {
 
-                    PageProtection::addPageProtectionSnippet();
-                    $this->attributes->addClassName(PageProtection::PROTECTED_LINK_CLASS);
-                    $protectionSourceAcronym = "";
-                    if ($this->getInternalPage()->isLowQualityPage()) {
-                        $protectionSourceAcronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
-                    } else if ($this->getInternalPage()->isLatePublication()) {
-                        $protectionSourceAcronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
-                    }
-                    $this->attributes->addHtmlAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym);
-                    $this->attributes->removeAttributeIfPresent("href");
-                    $dataNamespace = Bootstrap::getDataNamespace();
-                    $this->attributes->addHtmlAttributeValue("data{$dataNamespace}-toggle", "tooltip");
-                    $this->attributes->addComponentAttributeValue("title", "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")");
+                    /**
+                     * Red color
+                     */
+                    $this->attributes->addClassName(self::getHtmlClassNotExist());
+                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
 
                 } else {
 
-                    if (!$linkedPage->exists()) {
+                    /**
+                     * Link Creation
+                     * Do we need to set the title or the tooltip
+                     * Processing variables
+                     */
+                    $tooltipAdded = false;
+                    $tooltipHtml = "";
+                    $acronym = "";
 
-                        /**
-                         * Red color
-                         */
-                        $this->attributes->addClassName(self::getHtmlClassNotExist());
-                        $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
-
-                    } else {
-
-                        /**
-                         * Auto tooltip
-                         */
-                        $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
-                        $preview = $this->attributes->getBooleanValueAndRemove(self::PREVIEW_ATTRIBUTE, $previewConfig);
-                        if ($preview){
-
-                            syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-
-                            /**
-                             * Tooltip
-                             */
-                            $dataAttributeNamespace = Bootstrap::getDataNamespace();
-                            $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
-                            $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
-                            $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
-                            $html=<<<EOF
+                    /**
+                     * Preview tooltip
+                     */
+                    $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
+                    $preview = $this->attributes->getBooleanValueAndRemove(self::PREVIEW_ATTRIBUTE, $previewConfig);
+                    if ($preview) {
+                        $tooltipAdded = true;
+                        $tooltipHtml = <<<EOF
 <h3>{$linkedPage->getPageNameNotEmpty()}</h3>
 <p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
 EOF;
-                            $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($html));
+                    }
 
-                        } else {
-                            $this->attributes->addHtmlAttributeValue("title", $linkedPage->getDescriptionOrElseDokuWiki());
+                    /**
+                     * Low quality Page
+                     * (It has a higher priority than preview and
+                     * the code comes then after)
+                     */
+                    if($linkedPage->isLowQualityPage()) {
+                        /**
+                         * Add a class to style it differently
+                         */
+                        $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
+
+                        if (LowQualityPage::isProtected($linkedPage)) {
+
+
+                            $linkType = LowQualityPage::getLowQualityLinkType();
+                            $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
+                            switch ($linkType) {
+                                case LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING:
+                                    $tooltipAdded = true;
+                                    $tooltipHtml = <<<EOF
+<h3>Warning: Low Quality Page</h3>
+<p>This page has been detected as being of low quality. ($acronym)</p>
+EOF;
+                                    break;
+                                case LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN:
+                                    /**
+                                     * Not clickable
+                                     * https://getbootstrap.com/docs/5.0/utilities/interactions/#pointer-events
+                                     */
+                                    $this->attributes->addStyleDeclaration("pointer-events", "none");
+                                    $tooltipAdded = true;
+                                    $tooltipHtml = <<<EOF
+<h3>Login Required</h3>
+<p>To follow this link ({$linkedPage}), you need to log in ($acronym).</p>
+EOF;
+                                    break;
+                            }
                         }
+                    }
 
-                        $this->attributes->addClassName(self::getHtmlClassInternalLink());
+                    /**
+                     * Late publication has a higher priority than
+                     * the late publication and the is therefore after
+                     * (In case this a low quality page late published)
+                     */
+                    if ($linkedPage->isLatePublication()) {
+                        /**
+                         * Add a class to style it differently if needed
+                         */
+                        $this->attributes->addClassName(Publication::LATE_PUBLICATION_CLASS_NAME . "-combo");
+                        if (Publication::isProtected($linkedPage)) {
+
+                            /**
+                             * Not clickable
+                             * https://getbootstrap.com/docs/5.0/utilities/interactions/#pointer-events
+                             */
+                            $this->attributes->addStyleDeclaration("pointer-events", "none");
+                            $acronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
+                            $tooltipAdded = true;
+                            $tooltipHtml = <<<EOF
+<h3>Login Required</h3>
+<p>To follow this link ({$linkedPage}), you need to log in ($acronym).</p>
+EOF;
+                        }
+                    }
+
+                    /**
+                     * Title (ie tooltip vs title html attribute)
+                     */
+                    if ($tooltipAdded) {
+
+                        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
+
+                        /**
+                         * Tooltip
+                         */
+                        $dataAttributeNamespace = Bootstrap::getDataNamespace();
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
+                        $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($tooltipHtml));
+
+                    } else {
+
+                        $description = $linkedPage->getDescriptionOrElseDokuWiki();
+                        if (!empty($acronym)) {
+                            $description = $description . " ($acronym)";
+                        }
+                        $this->attributes->addHtmlAttributeValue("title", $description);
 
                     }
 
-
+                    $this->attributes->addClassName(self::getHtmlClassInternalLink());
 
                 }
+
                 break;
             case self::TYPE_EXTERNAL:
                 if ($conf['relnofollow']) {
@@ -916,17 +975,16 @@ EOF;
     {
         $protectedLink = false;
         if ($this->getType() == self::TYPE_INTERNAL) {
-            global $conf;
 
             // Low Quality Page protection
-            $lqppEnable = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE];
+            $lqppEnable = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
             if ($lqppEnable == 1
                 && $this->getInternalPage()->isLowQualityPage()) {
                 $protectedLink = true;
             }
 
             if ($protectedLink === false) {
-                $latePublicationProtectionEnabled = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE];
+                $latePublicationProtectionEnabled = PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
                 if ($latePublicationProtectionEnabled == 1
                     && $this->getInternalPage()->isLatePublication()) {
                     $protectedLink = true;

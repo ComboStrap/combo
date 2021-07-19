@@ -38,32 +38,31 @@ class Publication
     const LATE_PUBLICATION_PROTECTION_ACRONYM = "lpp";
     const CONF_LATE_PUBLICATION_PROTECTION_MODE = "latePublicationProtectionMode";
     const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
+    const LATE_PUBLICATION_CLASS_NAME = "late-publication";
 
 
-    /**
-     * If the page
-     * no authorization
-     * @param $id
-     * @return bool
-     */
-    public static function isPageProtected($id)
+    public static function getLatePublicationProtectionMode()
     {
-        if (!Identity::isLoggedIn()) {
-            $page = new Page($id);
-            if ($page->getPublishedTimestamp()) {
-                return true;
-            } else {
-                return false;
-            }
+
+        if (PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
+            return PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE);
         } else {
-            /**
-             * Logged in, no exclusion
-             */
             return false;
         }
 
     }
 
+    public static function isProtected(Page $linkedPage)
+    {
+        if (!Identity::isLoggedIn()) {
+            if (PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
+                if ($linkedPage->isLatePublication()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
 
 }

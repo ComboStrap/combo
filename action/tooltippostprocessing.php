@@ -56,6 +56,7 @@ class action_plugin_combo_tooltippostprocessing extends DokuWiki_Action_Plugin
             $callStack = CallStack::createFromHandler($handler);
             $callStack->moveToStart();
 
+            $closingPWasDeleted = false;
             while ($actualCall = $callStack->next()) {
 
                 if ($actualCall->getTagName() == syntax_plugin_combo_tooltip::TAG) {
@@ -65,15 +66,25 @@ class action_plugin_combo_tooltippostprocessing extends DokuWiki_Action_Plugin
                             if ($previous !== false) {
                                 if ($previous->getTagName() == "p" && $previous->getState() == DOKU_LEXER_EXIT) {
                                     $callStack->deleteActualCallAndPrevious();
+                                    $closingPWasDeleted = true;
                                 }
                             }
                             $callStack->next();
                             break;
                         case DOKU_LEXER_EXIT:
+                            /**
+                             * When the tooltip is in a inline tag
+                             * such as a {@link syntax_plugin_combo_itext}
+                             * there is no p to delete
+                             */
+                            if (!$closingPWasDeleted){
+                                break;
+                            }
                             $next = $callStack->next();
                             if ($next !== false) {
                                 if ($next->getTagName() == "p" && $next->getState() == DOKU_LEXER_ENTER) {
                                     $callStack->deleteActualCallAndPrevious();
+                                    $closingPWasDeleted = false;
                                 }
                             }
                             break;

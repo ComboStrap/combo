@@ -31,5 +31,8 @@ class LowQualityPage
      */
     const CONF_LOW_QUALITY_PAGE_PROTECTION_MODE = "lowQualityPageProtectionMode";
 
+    const CONF_LOW_QUALITY_PAGE_LINK_TYPE = "lowQualityPageLinkType";
+    const LOW_QUALITY_PAGE_LINK_NORMAL = "normal";
+    const LOW_QUALITY_PAGE_LINK_INFO = "info";
 
 }

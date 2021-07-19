@@ -3,8 +3,8 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
+use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
@@ -43,6 +43,11 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
     const TOOLTIP_FOUND = "tooltipFound";
 
     /**
+     * Class added to the parent
+     */
+    const CANONICAL = "tooltip";
+
+    /**
      * @var string
      */
     private $docCapture;
@@ -67,7 +72,10 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'container';
+        /**
+         * You could add a tooltip to a {@link syntax_plugin_combo_itext}
+         */
+        return 'formatting';
     }
 
     /**
@@ -82,7 +90,7 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'stack';
+        return 'normal';
     }
 
     /**
@@ -142,51 +150,83 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
 
                 /**
-                 * New Syntax, the tooltip attribute
-                 * are applied to the aprent
+                 * Old Syntax
                  */
-                if (!$tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)) {
-
-                    /**
-                     * Advertise that we got a tooltip
-                     * to start the {@link action_plugin_combo_tooltippostprocessing postprocessing}
-                     * or not
-                     */
-                    $handler->setStatus(self::TOOLTIP_FOUND, true);
-
-                    /**
-                     * Callstack manipulation
-                     */
-                    $callStack = CallStack::createFromHandler($handler);
-
-                    // Delete the eol if any
-                    $previous = $callStack->previous();
-                    if ($previous !== false) {
-                        if ($previous->getTagName() == "eol") {
-                            $callStack->deleteActualCallAndPrevious();
-                            $callStack->next();
-                        }
-                    }
-
-                    /**
-                     * Parent
-                     */
-                    $parent = $callStack->moveToParent();
-
-                    /**
-                     * Do not close the tag
-                     */
-                    $parent->addAttribute(TagAttributes::OPEN_TAG, true);
-                    /**
-                     * Do not output the title
-                     */
-                    $parent->addAttribute(TagAttributes::TITLE_KEY, TagAttributes::UN_SET);
+                if ($tagAttributes->hasComponentAttribute(self::TEXT_ATTRIBUTE)) {
+                    return array(
+                        PluginUtility::STATE => $state,
+                        PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                    );
                 }
 
+
+                /**
+                 * New Syntax, the tooltip attribute
+                 * are applied to the parent and is seen as an advanced attribute
+                 */
+
+                /**
+                 * Advertise that we got a tooltip
+                 * to start the {@link action_plugin_combo_tooltippostprocessing postprocessing}
+                 * or not
+                 */
+                $handler->setStatus(self::TOOLTIP_FOUND, true);
+
+                /**
+                 * Callstack manipulation
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+
+                /**
+                 * Processing
+                 * We should have one parent
+                 * and no Sibling
+                 */
+                $parent = false;
+                $sibling = false;
+                while ($actualCall = $callStack->previous()) {
+                    if ($actualCall->getState() == DOKU_LEXER_ENTER) {
+                        $parent = $actualCall;
+                        /**
+                         * Do not close the tag
+                         */
+                        $parent->addAttribute(TagAttributes::OPEN_TAG, true);
+                        /**
+                         * Do not output the title
+                         */
+                        $parent->addAttribute(TagAttributes::TITLE_KEY, TagAttributes::UN_SET);
+                        return array(
+                            PluginUtility::STATE => $state,
+                            PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                        );
+                    } else {
+                        if ($actualCall->getTagName() == "eol") {
+                            $callStack->deleteActualCallAndPrevious();
+                            $callStack->next();
+                        } else {
+                            // sibling
+                            $sibling = $actualCall;
+                            break;
+                        }
+                    }
+                }
+
+
+                /**
+                 * Error
+                 */
+                $errorMessage = "";
+                if ($parent == false) {
+                    $errorMessage = "A tooltip has no parent and this is mandatory";
+                }
+                if ($sibling != false) {
+                    $errorMessage .= "A tooltip should be just below its parent. We found a tooltip next to the other sibling component ($sibling) and this will not work";
+                }
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                    PluginUtility::ERROR_MESSAGE => $errorMessage
                 );
+
 
             case DOKU_LEXER_UNMATCHED :
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
@@ -226,6 +266,11 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
             switch ($state) {
 
                 case DOKU_LEXER_ENTER :
+                    if (isset($data[PluginUtility::ERROR_MESSAGE])) {
+                        LogUtility::msg($data[PluginUtility::ERROR_MESSAGE], LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return false;
+                    }
+
                     $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
 
                     /**
@@ -275,6 +320,11 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT:
+
+                    if (isset($data[PluginUtility::ERROR_MESSAGE])) {
+                        return false;
+                    }
+
                     if (isset($data[PluginUtility::ATTRIBUTES][self::TEXT_ATTRIBUTE])) {
 
                         $text = $data[PluginUtility::ATTRIBUTES][self::TEXT_ATTRIBUTE];

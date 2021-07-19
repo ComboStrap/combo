@@ -52,9 +52,10 @@ class Position
                 /**
                  * If top bar
                  */
-                $topSpacing = Site::getTopSpacing();
                 $jsSnippet = <<<EOF
-var stickyElements = Sticksy.initializeAll('.$stickyClass',{topSpacing: $topSpacing})
+let fixedNavbar = document.querySelector(".navbar.fixed-top");
+let topSpacing = fixedNavbar.offsetHeight;
+var stickyElements = Sticksy.initializeAll('.$stickyClass',{topSpacing: topSpacing})
 EOF;
                 $snippetManager
                     ->attachJavascriptSnippetForBar(self::STICKY)

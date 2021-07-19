@@ -240,20 +240,6 @@ class Site
         $conf['useheading'] = 0;
     }
 
-    public static function getTopSpacing()
-    {
-        $template = Site::getTemplate();
-        if ($template == self::STRAP_TEMPLATE_NAME) {
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if ($loaded) {
-                return TplUtility::getTopFixedHeightForMenuBar();
-            }
-        }
-
-        return 0;
-
-    }
-
     public static function getTemplate()
     {
         global $conf;

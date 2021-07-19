@@ -195,9 +195,12 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                          * Do not output the title
                          */
                         $parent->addAttribute(TagAttributes::TITLE_KEY, TagAttributes::UN_SET);
+
                         return array(
                             PluginUtility::STATE => $state,
-                            PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                            PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
+                            PluginUtility::CONTEXT => $parent->getTagName()
+
                         );
                     } else {
                         if ($actualCall->getTagName() == "eol") {
@@ -305,9 +308,20 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                     } else {
                         /**
                          * New Syntax
-                         * (The new syntax just add the attributes to the previous element
+                         * (The new syntax add the attributes to the previous element
                          */
                         $tagAttributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
+
+                        /**
+                         * Keyboard user and assistive technology users
+                         * If not button or link (ie span), add tabindex to make the element focusable
+                         * in order to see the tooltip
+                         * Not sure, if this is a good idea
+                         */
+                        if (!in_array($data[PluginUtility::CONTEXT], [syntax_plugin_combo_link::TAG, syntax_plugin_combo_button::TAG])) {
+                            $tagAttributes->addHtmlAttributeValue("tabindex", "0");
+                        }
+
                         $renderer->doc = rtrim($renderer->doc) . " {$tagAttributes->toHTMLAttributeString()} title=\"";
                         $this->docCapture = $renderer->doc;
                         $renderer->doc = "";

@@ -48,6 +48,17 @@ class action_plugin_combo_tooltippostprocessing extends DokuWiki_Action_Plugin
     {
         /**
          * @var Doku_Handler $handler
+         *
+         * Due to the {@link \dokuwiki\Parsing\Handler\Block::process() block processing}
+         *
+         * When a tooltip is for a block, in the tooltip, in the content (ie title) we may get the following
+         *
+         * </p><h3>Title<h3><p>Hallo
+         *
+         * We transform it
+         *
+         * <h3>Title<h3><p>Hallo</p>
+         *
          */
         $handler = $event->data;
         $status = $handler->getStatus(syntax_plugin_combo_tooltip::TOOLTIP_FOUND);
@@ -56,38 +67,35 @@ class action_plugin_combo_tooltippostprocessing extends DokuWiki_Action_Plugin
             $callStack = CallStack::createFromHandler($handler);
             $callStack->moveToStart();
 
-            $closingPWasDeleted = false;
+            $inTooltip = false;
+            $inTooltipPassedPElement = false;
+            $closedPCall = null;
             while ($actualCall = $callStack->next()) {
 
                 if ($actualCall->getTagName() == syntax_plugin_combo_tooltip::TAG) {
                     switch ($actualCall->getState()) {
                         case DOKU_LEXER_ENTER:
-                            $previous = $callStack->previous();
-                            if ($previous !== false) {
-                                if ($previous->getTagName() == "p" && $previous->getState() == DOKU_LEXER_EXIT) {
-                                    $callStack->deleteActualCallAndPrevious();
-                                    $closingPWasDeleted = true;
-                                }
-                            }
-                            $callStack->next();
-                            break;
+                            $inTooltip = true;
+                            continue 2;
                         case DOKU_LEXER_EXIT:
-                            /**
-                             * When the tooltip is in a inline tag
-                             * such as a {@link syntax_plugin_combo_itext}
-                             * there is no p to delete
-                             */
-                            if (!$closingPWasDeleted){
-                                break;
+                            if ($closedPCall != null) {
+                                $callStack->insertBefore($closedPCall);
                             }
-                            $next = $callStack->next();
-                            if ($next !== false) {
-                                if ($next->getTagName() == "p" && $next->getState() == DOKU_LEXER_ENTER) {
-                                    $callStack->deleteActualCallAndPrevious();
-                                    $closingPWasDeleted = false;
-                                }
+                            $inTooltip = false;
+                            $inTooltipPassedPElement = false;
+                            $closedPCall = null;
+                            continue 2;
+                    }
+                }
+                if ($inTooltip) {
+                    if (!(in_array($actualCall->getTagName(), ["cdata", "p"]))) {
+                        $inTooltipPassedPElement = true;
+                    } else {
+                        if (!$inTooltipPassedPElement) {
+                            if ($actualCall->getTagName() == "p" && $actualCall->getState() == DOKU_LEXER_EXIT) {
+                                $closedPCall = $callStack->deleteActualCallAndPrevious();
                             }
-                            break;
+                        }
                     }
                 }
 

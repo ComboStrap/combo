@@ -207,9 +207,12 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                             $callStack->deleteActualCallAndPrevious();
                             $callStack->next();
                         } else {
-                            // sibling
-                            $sibling = $actualCall;
-                            break;
+                            // sibling ?
+                            // In a link, we would get the separator
+                            if($actualCall->getState()!=DOKU_LEXER_UNMATCHED) {
+                                $sibling = $actualCall;
+                                break;
+                            }
                         }
                     }
                 }
@@ -218,12 +221,13 @@ class syntax_plugin_combo_tooltip extends DokuWiki_Syntax_Plugin
                 /**
                  * Error
                  */
-                $errorMessage = "";
+                $errorMessage = "Error: ";
                 if ($parent == false) {
-                    $errorMessage = "A tooltip has no parent and this is mandatory";
-                }
-                if ($sibling != false) {
-                    $errorMessage .= "A tooltip should be just below its parent. We found a tooltip next to the other sibling component ($sibling) and this will not work";
+                    $errorMessage .= "A tooltip was found without parent and this is mandatory.";
+                } else {
+                    if ($sibling != false) {
+                        $errorMessage .= "A tooltip should be just below its parent. We found a tooltip next to the other sibling component ($sibling) and this will not work";
+                    }
                 }
                 return array(
                     PluginUtility::STATE => $state,

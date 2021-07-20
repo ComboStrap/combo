@@ -38,7 +38,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         /**
          * https://www.dokuwiki.org/devel:event:sitemap_generate
          */
-        $controller->register_hook('SITEMAP_GENERATE', 'AFTER', $this, 'handleSiteMapGenerate', array());
+        $controller->register_hook('SITEMAP_GENERATE', 'BEFORE', $this, 'handleSiteMapGenerate', array());
 
         /**
          * https://www.dokuwiki.org/devel:event:search_query_pagelookup
@@ -174,7 +174,21 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
 
     function handleSiteMapGenerate(&$event, $param)
     {
+        $pageItems = $event->data["items"];
+        foreach ($pageItems as $key => $pageItem) {
+            $url = $pageItem->url;
+            $dokuPath = DokuPath::createFromUrl($url);
+            $page = Page::createPageFromId($dokuPath->getId());
+            if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
 
+                unset($event->data["items"][$key]);
+                continue;
+
+            }
+            if ($page->isLatePublication() && Publication::isLatePublicationProtectionEnabled()) {
+                unset($event->data["items"][$key]);
+            }
+        }
 
     }
 
@@ -297,7 +311,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
             $protected = true;
         }
-        if($page->isLatePublication() && Publication::isLatePublicationProtectionEnabled()){
+        if ($page->isLatePublication() && Publication::isLatePublicationProtectionEnabled()) {
             $protected = true;
         }
         if ($protected) {

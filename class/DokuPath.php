@@ -181,7 +181,7 @@ class DokuPath extends File
      * @param $pathId
      * @return DokuPath
      */
-    public static function createPagePathFromPath($pathId)
+    public static function createDokuPathFromPath($pathId)
     {
         return new DokuPath($pathId, DokuPath::PAGE_TYPE);
     }
@@ -215,7 +215,7 @@ class DokuPath extends File
             $urlPath = parse_url($url, PHP_URL_PATH);
             $id = substr(str_replace("/", ":", $urlPath), 1);
         }
-        return self::createUnknownFromId($id);
+        return self::createDokuPathFromPath(":$id");
     }
 
     /**

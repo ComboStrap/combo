@@ -157,6 +157,7 @@ $lang[Site::CONF_SITE_ISO_COUNTRY] = PluginUtility::getUrl("country", "Country")
  * Late publication
  */
 $lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::getUrl(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM, "Late Publication") . " - Page with a published date in the future will be protected from search engine and the public";
+$lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = PluginUtility::getUrl(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM, "Late Publication") . " - The mode of protection for a late published page";
 
 /**
  * Default page type

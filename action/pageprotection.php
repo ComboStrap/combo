@@ -334,11 +334,22 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         }
 
         $protected = false;
+        $follow = "nofollow";
         if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
             $protected = true;
+            if(LowQualityPage::getLowQualityProtectionMode()==PageProtection::CONF_VALUE_ACL){
+                $follow = "nofollow";
+            } else {
+                $follow = "follow";
+            }
         }
         if ($page->isLatePublication() && Publication::isLatePublicationProtectionEnabled()) {
             $protected = true;
+            if(Publication::getLatePublicationProtectionMode()==PageProtection::CONF_VALUE_ACL){
+                $follow = "nofollow";
+            } else {
+                $follow = "follow";
+            }
         }
         if ($protected) {
             foreach ($event->data['meta'] as $key => $meta) {
@@ -347,7 +358,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
                      * We may have several properties
                      */
                     if ($meta["name"] == "robots") {
-                        $event->data['meta'][$key]["content"] = "noindex,follow";
+                        $event->data['meta'][$key]["content"] = "noindex,$follow";
                     }
                 }
             }

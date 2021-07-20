@@ -204,8 +204,10 @@ $conf['siteIsoCountry'] = "";
 /**
  *
  * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE}
+ * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE}
  */
 $conf['latePublicationProtectionEnable'] = 1;
+$conf["latePublicationProtectionMode"] = "acl";
 
 /**
  * Default page type

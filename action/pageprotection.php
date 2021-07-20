@@ -53,7 +53,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         /**
          * https://www.dokuwiki.org/devel:event:feed_data_process
          */
-        $controller->register_hook('FEED_DATA_PROCESS', 'AFTER', $this, 'handleRssFeed', array());
+        $controller->register_hook('FEED_DATA_PROCESS', 'BEFORE', $this, 'handleRssFeed', array());
 
         /**
          * Add logged in indicator for Javascript
@@ -224,14 +224,40 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
      */
     function handleRssFeed(&$event, $param)
     {
-        $this->excludePageFromSearch($event);
+        $isLowQualityProtectionEnabled = LowQualityPage::isProtectionEnabled();
+        $isLatePublicationProtectionEnabled = Publication::isLatePublicationProtectionEnabled();
+        if (!$isLatePublicationProtectionEnabled && !$isLowQualityProtectionEnabled){
+            return;
+        }
+
+        $pagesToBeAdded = &$event->data["data"];
+        foreach ($pagesToBeAdded as $key => $data){
+
+            $page =  Page::createPageFromId($data["id"]);
+
+            if ($page->isLowQualityPage() && $isLowQualityProtectionEnabled) {
+                $protectionMode = LowQualityPage::getLowQualityProtectionMode();
+                if($protectionMode!=PageProtection::CONF_VALUE_ROBOT){
+                    unset($pagesToBeAdded[$key]);
+                }
+            }
+
+            if ($page->isLatePublication() && $isLatePublicationProtectionEnabled) {
+                $protectionMode = Publication::getLatePublicationProtectionMode();
+                if($protectionMode!=PageProtection::CONF_VALUE_ROBOT){
+                    unset($pagesToBeAdded[$key]);
+                }
+            }
+        }
+
     }
 
     /**
      * @param $event
+     * @param array $protectionModes
      */
     private
-    function excludePageFromSearch(&$event)
+    function excludePageFromSearch(&$event, $protectionModes = [PageProtection::CONF_VALUE_ACL, PageProtection::CONF_VALUE_HIDDEN])
     {
 
         $result = $event->result;
@@ -247,7 +273,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
                 $page = new Page($idx);
                 if ($page->isLowQualityPage()) {
                     $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
-                    if (in_array($securityConf, [PageProtection::CONF_VALUE_ACL, PageProtection::CONF_VALUE_HIDDEN])) {
+                    if (in_array($securityConf, $protectionModes)) {
                         $event->result = AUTH_NONE;
                         return;
                     }

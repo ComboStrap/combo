@@ -120,9 +120,9 @@ $meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = array('multichoic
     PageProtection::CONF_VALUE_HIDDEN
 ));
 $meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE] = array('multichoice', '_choices' => array(
-    LowQualityPage::LOW_QUALITY_PAGE_LINK_NORMAL,
-    LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING,
-    LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN,
+    PageProtection::PAGE_PROTECTION_LINK_NORMAL,
+    PageProtection::PAGE_PROTECTION_LINK_WARNING,
+    PageProtection::PAGE_PROTECTION_LINK_LOGIN,
 ));
 
 /**

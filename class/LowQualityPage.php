@@ -32,9 +32,6 @@ class LowQualityPage
     const CONF_LOW_QUALITY_PAGE_PROTECTION_MODE = "lowQualityPageProtectionMode";
 
     const CONF_LOW_QUALITY_PAGE_LINK_TYPE = "lowQualityPageLinkType";
-    const LOW_QUALITY_PAGE_LINK_NORMAL = "normal";
-    const LOW_QUALITY_PAGE_LINK_WARNING = "warning";
-    const LOW_QUALITY_PAGE_LINK_LOGIN = "login";
     const CLASS_NAME = "low-quality-page";
 
     public static function getLowQualityProtectionMode()
@@ -61,7 +58,7 @@ class LowQualityPage
     public static function getLowQualityLinkType()
     {
 
-        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE, LowQualityPage::LOW_QUALITY_PAGE_LINK_NORMAL);
+        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE, PageProtection::PAGE_PROTECTION_LINK_NORMAL);
 
     }
 

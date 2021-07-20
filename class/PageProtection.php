@@ -20,12 +20,15 @@ use syntax_plugin_combo_tooltip;
  * public agent such as low quality page or late publication
  *
  * @package ComboStrap
+ *
+ * The test are in two separate classes {@link \LowQualityPageTest}
+ * and {@link \PublicationTest}
  */
 class PageProtection
 {
 
     const NAME = "page-protection";
-
+    const ACRONYM = "pp";
 
     /**
      * The possible values
@@ -36,38 +39,22 @@ class PageProtection
     const CONF_VALUE_FEED = "feed";
 
 
+    const PAGE_PROTECTION_LINK_WARNING = "warning";
+    const PAGE_PROTECTION_LINK_NORMAL = "normal";
+    const PAGE_PROTECTION_LINK_LOGIN = "login";
+
+
     /**
-     * Add the HTML snippet
-     * @deprecated
+     * Add the Javascript snippet
+     * We have created only one because a page
+     * may be of low quality and with a late publication.
+     * To resolve conflict between the two protections, the parameters are the same
+     * and the late publication takes precedence on low quality page
      */
     public static function addPageProtectionSnippet()
     {
         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-        $protectedLinkClass = self::PROTECTED_LINK_CLASS;
-        $jsIsPublicNavigationIndicator = Identity::JS_NAVIGATION_INDICATOR;
-        $jsClass = self::PROTECTED_LINK_CLASS;
-        $style = <<<EOF
-.{$protectedLinkClass} {
-    color:#a829dc
-}
-EOF;
-        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::NAME, $style);
-
-
-        $js = <<<EOF
-window.addEventListener('DOMContentLoaded', function () {
-
-    if (JSINFO["{$jsIsPublicNavigationIndicator}"]===false){
-        jQuery("span.{$jsClass}").each(function() {
-                let actualClass = jQuery(this).attr("class");
-                jQuery(this).replaceWith( "<a class=\""+actualClass+"\" href=\""+DOKU_BASE+jQuery(this).attr("data-wiki-id")+"\">"+jQuery(this).text()+"</a>" )
-        })
+        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::NAME);
     }
 
-})
-EOF;
-        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::NAME, $js);
-
-
-    }
 }

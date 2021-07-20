@@ -438,7 +438,6 @@ class LinkUtility
                     $preview = $this->attributes->getBooleanValueAndRemove(self::PREVIEW_ATTRIBUTE, $previewConfig);
                     if ($preview) {
                         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-                        $tooltipAdded = true;
                         $tooltipHtml = <<<EOF
 <h3>{$linkedPage->getPageNameNotEmpty()}</h3>
 <p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
@@ -455,6 +454,7 @@ EOF;
                      * (It has a higher priority than preview and
                      * the code comes then after)
                      */
+                    $pageProtectionAcronym = strtolower(PageProtection::ACRONYM);
                     if ($linkedPage->isLowQualityPage()) {
 
                         /**
@@ -462,9 +462,9 @@ EOF;
                          * (the acronym is added to the description, later)
                          */
                         $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
-                        $lowerCaseAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
+                        $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
                         $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
-                        $snippetLowQualityPageId = $lowerCaseAcronym;
+                        $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
                         PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetLowQualityPageId);
                         /**
                          * Note The protection does occur on Javascript level, not on the HTML
@@ -474,15 +474,14 @@ EOF;
                         if (LowQualityPage::isProtectionEnabled()) {
 
                             $linkType = LowQualityPage::getLowQualityLinkType();
-
-                            $this->attributes->addHtmlAttributeValue("data-$lowerCaseAcronym-link", $linkType);
+                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", $linkType);
+                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLowQualityAcronym);
 
                             /**
                              * Low Quality Page protection javascript is only for warning or login link
                              */
-                            if (in_array($linkType, [LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING, LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN])) {
-                                syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-                                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($snippetLowQualityPageId);
+                            if (in_array($linkType, [PageProtection::PAGE_PROTECTION_LINK_WARNING, PageProtection::PAGE_PROTECTION_LINK_LOGIN])) {
+                                PageProtection::addPageProtectionSnippet();
                             }
 
                         }
@@ -500,10 +499,10 @@ EOF;
                         $this->attributes->addClassName(Publication::LATE_PUBLICATION_CLASS_NAME . "-combo");
                         if (Publication::isLatePublicationProtectionEnabled()) {
                             $acronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
-                            $snippetId = strtolower(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM);
-                            $this->attributes->addHtmlAttributeValue("data-$snippetId-link", "login");
-                            syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($snippetId);
+                            $lowerCaseLatePublicationAcronym = strtolower(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM);
+                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", PageProtection::PAGE_PROTECTION_LINK_LOGIN);
+                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLatePublicationAcronym);
+                            PageProtection::addPageProtectionSnippet();
                         }
 
                     }

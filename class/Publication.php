@@ -39,6 +39,7 @@ class Publication
     const CONF_LATE_PUBLICATION_PROTECTION_MODE = "latePublicationProtectionMode";
     const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
     const LATE_PUBLICATION_CLASS_NAME = "late-publication";
+    const CANONICAL = "published";
 
 
     public static function getLatePublicationProtectionMode()

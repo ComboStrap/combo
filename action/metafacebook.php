@@ -107,8 +107,8 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
         if ($ogType == Page::ARTICLE_TYPE) {
             // https://ogp.me/#type_article
-            $facebookMeta["article:published_time"] = date("c", $page->getPublishedElseCreationTimeStamp());
-            $facebookMeta["article:modified_time"] = date("c", $page->getModifiedTimestamp());
+            $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
+            $facebookMeta["article:modified_time"] = $page->getModifiedTime()->format(DATE_ISO8601);
         }
 
         /**

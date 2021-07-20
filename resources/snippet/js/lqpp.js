@@ -1,7 +1,7 @@
 window.addEventListener("DOMContentLoaded", function () {
     let navigation = JSINFO["navigation"];
-    let acronym = 'lqpp';
-    document.querySelectorAll('[data-lqpp-link="warning"], [data-lqpp-link="login"]').forEach(element => {
+    let acronym = "lqpp";
+    document.querySelectorAll(`[data-${acronym}-link="warning"], [data-${acronym}-link="login"]`).forEach(element => {
         let tooltipHtml = "";
         let linkType = element.dataset.lqppLink;
         let showTooltip = false;
@@ -37,7 +37,7 @@ window.addEventListener("DOMContentLoaded", function () {
             new bootstrap.Tooltip(element, {
                 html: true,
                 placement: "top",
-                customClass: "lqpp"
+                customClass: acronym
             });
         }
     });

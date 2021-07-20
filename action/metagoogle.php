@@ -159,8 +159,8 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     "@type" => $schemaType,
                     'url' => $page->getCanonicalUrlOrDefault(),
                     "headline" => $page->getTitleNotEmpty(),
-                    self::DATE_PUBLISHED_KEY => date('c', $page->getPublishedElseCreationTimeStamp()),
-                    self::DATE_MODIFIED_KEY => date('c', $page->getModifiedTimestamp()),
+                    self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(DATE_ISO8601),
+                    self::DATE_MODIFIED_KEY => $page->getModifiedTime()->format(DATE_ISO8601),
                 );
 
                 /**

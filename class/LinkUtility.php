@@ -420,12 +420,15 @@ class LinkUtility
                 } else {
 
                     /**
+                     * Internal Link Class
+                     */
+                    $this->attributes->addClassName(self::getHtmlClassInternalLink());
+
+                    /**
                      * Link Creation
                      * Do we need to set the title or the tooltip
                      * Processing variables
                      */
-                    $tooltipAdded = false;
-                    $tooltipHtml = "";
                     $acronym = "";
 
                     /**
@@ -434,11 +437,17 @@ class LinkUtility
                     $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
                     $preview = $this->attributes->getBooleanValueAndRemove(self::PREVIEW_ATTRIBUTE, $previewConfig);
                     if ($preview) {
+                        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
                         $tooltipAdded = true;
                         $tooltipHtml = <<<EOF
 <h3>{$linkedPage->getPageNameNotEmpty()}</h3>
 <p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
 EOF;
+                        $dataAttributeNamespace = Bootstrap::getDataNamespace();
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
+                        $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($tooltipHtml));
                     }
 
                     /**
@@ -455,8 +464,8 @@ EOF;
                         $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                         $lowerCaseAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
                         $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
-                        $snippetId = $lowerCaseAcronym;
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetId);
+                        $snippetLowQualityPageId = $lowerCaseAcronym;
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetLowQualityPageId);
                         /**
                          * Note The protection does occur on Javascript level, not on the HTML
                          * because the created page is valid for a anonymous or logged-in user
@@ -466,14 +475,14 @@ EOF;
 
                             $linkType = LowQualityPage::getLowQualityLinkType();
 
-                            $this->attributes->addHtmlAttributeValue("data-$lowerCaseAcronym-link",$linkType);
+                            $this->attributes->addHtmlAttributeValue("data-$lowerCaseAcronym-link", $linkType);
 
                             /**
                              * Low Quality Page protection javascript is only for warning or login link
                              */
-                            if(in_array($linkType,[LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING,LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN])){
+                            if (in_array($linkType, [LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING, LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN])) {
                                 syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-                                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
+                                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($snippetLowQualityPageId);
                             }
 
                         }
@@ -490,41 +499,22 @@ EOF;
                          */
                         $this->attributes->addClassName(Publication::LATE_PUBLICATION_CLASS_NAME . "-combo");
                         if (Publication::isLatePublicationProtectionEnabled()) {
-
-                            /**
-                             * Not clickable
-                             * https://getbootstrap.com/docs/5.0/utilities/interactions/#pointer-events
-                             */
-                            $this->attributes->addStyleDeclaration("pointer-events", "none");
                             $acronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
-                            $tooltipAdded = true;
-                            $tooltipHtml = <<<EOF
-<h3>Login Required</h3>
-<p>To follow this link ({$linkedPage}), you need to log in ($acronym).</p>
-EOF;
+                            $snippetId = strtolower(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM);
+                            $this->attributes->addHtmlAttributeValue("data-$snippetId-link", "login");
+                            syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
+                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar($snippetId);
                         }
+
                     }
 
                     /**
                      * Title (ie tooltip vs title html attribute)
                      */
-                    if ($tooltipAdded) {
-
-                        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-
-                        /**
-                         * Tooltip
-                         */
-                        $dataAttributeNamespace = Bootstrap::getDataNamespace();
-                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
-                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
-                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
-                        $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($tooltipHtml));
-
-                    } else {
+                    if (!$this->attributes->hasAttribute("title")) {
 
                         $description = $linkedPage->getDescriptionOrElseDokuWiki();
-                        if(empty($description)){
+                        if (empty($description)) {
                             // Rare case
                             $description = $linkedPage->getH1NotEmpty();
                         }
@@ -535,7 +525,7 @@ EOF;
 
                     }
 
-                    $this->attributes->addClassName(self::getHtmlClassInternalLink());
+
 
                 }
 

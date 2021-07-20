@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_qualitymessage;
+use DateTime;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Extension\SyntaxPlugin;
@@ -76,7 +77,6 @@ class Page extends DokuPath
 
     const CURRENT_METADATA = "current";
     const PERSISTENT_METADATA = "persistent";
-
 
 
     private $canonical;
@@ -1217,16 +1217,16 @@ class Page extends DokuPath
     }
 
     /**
-     * The modified date is the last modficaction date
+     * The modified date is the last modification date
      * the first time, this is the creation date
-     * @return false|string|null
+     * @return string|null
      */
     public
     function getModifiedDateString()
     {
-        $modified = $this->getModifiedTimestamp();
+        $modified = $this->getModifiedTime();
         if (!empty($modified)) {
-            return date(DATE_W3C, $modified);
+            return $modified->format(DATE_W3C);
         } else {
             return null;
         }
@@ -1242,13 +1242,19 @@ class Page extends DokuPath
     /**
      * Get the create date of page
      *
-     * @return int
+     * @return DateTime
      */
     public
-    function getCreatedTimestamp()
+    function getCreatedTime()
     {
-        $created = $this->getPersistentMetadata('date')['created'];
-        return ($created ? $created : null);;
+        $createdMeta = $this->getPersistentMetadata('date')['created'];
+        if(empty($createdMeta)){
+            return null;
+        } else {
+            $datetime = new DateTime();
+            $datetime->setTimestamp($createdMeta);
+            return $datetime;
+        }
     }
 
     /**
@@ -1257,26 +1263,32 @@ class Page extends DokuPath
      * The modified date is the last modification date
      * the first time, this is the creation date
      *
-     * @return int
+     * @return DateTime
      */
     public
-    function getModifiedTimestamp()
+    function getModifiedTime()
     {
         $modified = $this->getCurrentMetadata('date')['modified'];
-        return ($modified ? $modified : null);
+        if(empty($modified)){
+            return null;
+        } else {
+            $datetime = new DateTime();
+            $datetime->setTimestamp($modified);
+            return $datetime;
+        }
     }
 
     /**
      * Creation date can not be null
-     * @return false|string
+     * @return null|string
      */
     public
     function getCreatedDateString()
     {
 
-        $created = $this->getCreatedTimestamp();
+        $created = $this->getCreatedTime();
         if (!empty($created)) {
-            return date(DATE_W3C, $created);
+            return $created->format(DATE_W3C);
         } else {
             // Not created
             return null;
@@ -1391,31 +1403,35 @@ class Page extends DokuPath
     }
 
     public
-    function getPublishedTimestamp()
+    function getPublishedTime()
     {
         $persistentMetadata = $this->getPersistentMetadata(Publication::META_KEY_PUBLISHED);
-        if (!empty($persistentMetadata)) {
-            $timestamp = strtotime($persistentMetadata);
-            if ($timestamp === false) {
-                LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, "published");
-            } else {
-                return date("U", $timestamp);
-            }
-        } else {
+        if (empty($persistentMetadata)) {
             return null;
         }
-
+        // Ms level parsing
+        $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
+        if ($dateTime === false) {
+            // Day level
+            $dateTime = DateTime::createFromFormat("Y-m-d", $persistentMetadata);
+            if ($dateTime === false) {
+                LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, Publication::CANONICAL);
+                return null;
+            }
+        }
+        return $dateTime;
     }
 
+
     /**
-     * @return false|int|string|null
+     * @return DateTime
      */
     public
-    function getPublishedElseCreationTimeStamp()
+    function getPublishedElseCreationTime()
     {
-        $publishedDate = $this->getPublishedTimestamp();
+        $publishedDate = $this->getPublishedTime();
         if (empty($publishedDate)) {
-            $publishedDate = $this->getCreatedTimestamp();
+            $publishedDate = $this->getCreatedTime();
         }
         return $publishedDate;
     }
@@ -1424,7 +1440,7 @@ class Page extends DokuPath
     public
     function isLatePublication()
     {
-        return $this->getPublishedElseCreationTimeStamp() > time();
+        return $this->getPublishedElseCreationTime() > new DateTime('now');
     }
 
     public
@@ -1672,7 +1688,8 @@ class Page extends DokuPath
         $this->deleteCache("xhtml");
     }
 
-    public function getAnchorLink()
+    public
+    function getAnchorLink()
     {
         $url = $this->getCanonicalUrlOrDefault();
         $title = $this->getTitle();
@@ -1684,7 +1701,8 @@ class Page extends DokuPath
      * Without the `:` at the end
      * @return string
      */
-    public function getNamespacePath()
+    public
+    function getNamespacePath()
     {
         $ns = getNS($this->getId());
         /**
@@ -1697,7 +1715,8 @@ class Page extends DokuPath
         }
     }
 
-    public function getScope()
+    public
+    function getScope()
     {
         /**
          * The scope may change
@@ -1715,19 +1734,22 @@ class Page extends DokuPath
      * Return the id of the div HTML
      * element that is added for cache debugging
      */
-    public function getCacheHtmlId()
+    public
+    function getCacheHtmlId()
     {
         return "cache-" . str_replace(":", "-", $this->getId());
     }
 
-    public function deleteMetadatas()
+    public
+    function deleteMetadatas()
     {
         $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
         p_save_metadata($this->getId(), $meta);
         return $this;
     }
 
-    public function getPageNameNotEmpty()
+    public
+    function getPageNameNotEmpty()
     {
         $name = p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
         if (!blank($name)) {

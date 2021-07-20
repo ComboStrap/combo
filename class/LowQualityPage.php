@@ -48,16 +48,16 @@ class LowQualityPage
         }
     }
 
-    public static function isProtected(Page $linkedPage)
+    /**
+     * The protection does not occur on the HTML
+     * because the created page is valid for a anonymous or logged-in user
+     * @return mixed|null
+     */
+    public static function isProtectionEnabled()
     {
-        if (!Identity::isLoggedIn()) {
-            if (PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
-                if ($linkedPage->isLowQualityPage()) {
-                    return true;
-                }
-            }
-        }
-        return false;
+
+        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true);
+
     }
 
     public static function getLowQualityLinkType()

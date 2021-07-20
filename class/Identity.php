@@ -21,6 +21,14 @@ class Identity
 
     const CANONICAL = "identity";
     const CONF_ENABLE_LOGO_ON_IDENTITY_FORMS = "enableLogoOnIdentityForms";
+    const JS_NAVIGATION_ANONYMOUS_VALUE = "anonymous";
+    const JS_NAVIGATION_SIGNED_VALUE = "signed";
+    /**
+     * A javascript indicator
+     * to know if the user is logged in or not
+     * (ie public or not)
+     */
+    const JS_NAVIGATION_INDICATOR = "navigation";
 
     /**
      * Is logged in

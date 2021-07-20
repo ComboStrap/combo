@@ -244,11 +244,20 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
 
     }
 
+    /**
+     * @noinspection SpellCheckingInspection
+     * Adding an information to know if the user is signed or not
+     */
     function handleAnonymousJsIndicator(&$event, $param)
     {
 
         global $JSINFO;
-        $JSINFO[PageProtection::JS_IS_PUBLIC_NAVIGATION_INDICATOR] = !Identity::isLoggedIn();
+        if (!Identity::isLoggedIn()){
+            $navigation = Identity::JS_NAVIGATION_ANONYMOUS_VALUE;
+        } else {
+            $navigation = Identity::JS_NAVIGATION_SIGNED_VALUE;
+        }
+        $JSINFO[Identity::JS_NAVIGATION_INDICATOR] = $navigation;
 
 
     }

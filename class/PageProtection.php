@@ -36,15 +36,6 @@ class PageProtection
 
 
     /**
-     * A javascript indicator
-     * to know if the user is logged in or not
-     * (ie public or not)
-     */
-    const JS_IS_PUBLIC_NAVIGATION_INDICATOR = "page_protection_is_public_navigation";
-
-
-
-    /**
      * Add the HTML snippet
      * @deprecated
      */
@@ -52,7 +43,7 @@ class PageProtection
     {
         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
         $protectedLinkClass = self::PROTECTED_LINK_CLASS;
-        $jsIsPublicNavigationIndicator = self::JS_IS_PUBLIC_NAVIGATION_INDICATOR;
+        $jsIsPublicNavigationIndicator = Identity::JS_NAVIGATION_INDICATOR;
         $jsClass = self::PROTECTED_LINK_CLASS;
         $style = <<<EOF
 .{$protectedLinkClass} {

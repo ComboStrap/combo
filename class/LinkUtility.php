@@ -447,37 +447,30 @@ EOF;
                      * the code comes then after)
                      */
                     if ($linkedPage->isLowQualityPage()) {
+
                         /**
                          * Add a class to style it differently
                          */
                         $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
 
-                        if (LowQualityPage::isProtected($linkedPage)) {
-
+                        /**
+                         * Note The protection does occur on Javascript level, not on the HTML
+                         * because the created page is valid for a anonymous or logged-in user
+                         * Javascript is controlling
+                         */
+                        if (LowQualityPage::isProtectionEnabled()) {
 
                             $linkType = LowQualityPage::getLowQualityLinkType();
-                            $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
-                            switch ($linkType) {
-                                case LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING:
-                                    $tooltipAdded = true;
-                                    $tooltipHtml = <<<EOF
-<h3>Warning: Low Quality Page</h3>
-<p>This page has been detected as being of low quality. ($acronym)</p>
-EOF;
-                                    break;
-                                case LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN:
-                                    /**
-                                     * Not clickable
-                                     * https://getbootstrap.com/docs/5.0/utilities/interactions/#pointer-events
-                                     */
-                                    $this->attributes->addStyleDeclaration("pointer-events", "none");
-                                    $tooltipAdded = true;
-                                    $tooltipHtml = <<<EOF
-<h3>Login Required</h3>
-<p>To follow this link ({$linkedPage}), you need to log in ($acronym).</p>
-EOF;
-                                    break;
+                            /**
+                             * Low Quality Page protection is only for warning or login link
+                             */
+                            if(in_array($linkType,[LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING,LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN])){
+                                $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
+                                $this->attributes->addHtmlAttributeValue("data-$acronym-link",$linkType);
+                                syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
+                                PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
                             }
+
                         }
                     }
 

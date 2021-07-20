@@ -3,27 +3,42 @@ window.addEventListener("DOMContentLoaded", function () {
     let acronym = 'lqpp';
     document.querySelectorAll('[data-lqpp-link="warning"], [data-lqpp-link="login"]').forEach(element => {
         let tooltipHtml = "";
-        let pageId = element.dataset.wikiId;
         let linkType = element.dataset.lqppLink;
+        let showTooltip = false;
         switch (linkType) {
             case "warning":
-                tooltipHtml = `<h3>Warning: Low Quality Page</h3>
-<p>This page has been detected as being of low quality. (${acronym})</p>`;
+                showTooltip = true;
+                tooltipHtml = `<h4>Warning: Low Quality Page</h4>
+<p>This page has been detected as being of low quality.</p>`;
+                if (element.hasAttribute("title")){
+                    tooltipHtml += "<p>Description: "+element.getAttribute("title")+"</p>";
+                }
                 break
             case "login":
                 if (navigation === "anonymous") {
-                    element.style.setProperty("pointer-events", "none"); // not clickable
-                    tooltipHtml = `<h3>Login Required</h3>
-<p>This page has been detected as being of low quality. To follow this link (${pageId}), you need to log in (${acronym}).</p>`;
+                    showTooltip = true;
+                    element.addEventListener('click',function(event){
+                        // not pointer-events: none because we need to show a tooltip
+                        event.preventDefault();
+                    });
+                    tooltipHtml = `<h4>Login Required</h4>
+<p>This page has been detected as being of low quality. To follow this link, you need to log in.</p>`;
                 }
                 break;
 
         }
-        new bootstrap.Tooltip(element, {
-            "html": true,
-            "placement": "top",
-            "title": tooltipHtml,
-            "customClass": "lqpp"
-        });
+        if (showTooltip) {
+            // An element may already have a tooltip
+            let tooltip = bootstrap.Tooltip.getInstance(element);
+            if (tooltip != null) {
+                tooltip.dispose();
+            }
+            element.setAttribute("title", tooltipHtml);
+            new bootstrap.Tooltip(element, {
+                html: true,
+                placement: "top",
+                customClass: "lqpp"
+            });
+        }
     });
 });

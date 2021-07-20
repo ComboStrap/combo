@@ -450,7 +450,9 @@ EOF;
 
                         /**
                          * Add a class to style it differently
+                         * (the acronym is added to the description, later)
                          */
+                        $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                         $lowerCaseAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
                         $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
                         $snippetId = $lowerCaseAcronym;
@@ -467,16 +469,11 @@ EOF;
                             $this->attributes->addHtmlAttributeValue("data-$lowerCaseAcronym-link",$linkType);
 
                             /**
-                             * Low Quality Page protection is only for warning or login link
+                             * Low Quality Page protection javascript is only for warning or login link
                              */
                             if(in_array($linkType,[LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING,LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN])){
                                 syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
                                 PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
-                            } else {
-                                /**
-                                 * For a normal link, the acronym is added to the description
-                                 */
-                                $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                             }
 
                         }

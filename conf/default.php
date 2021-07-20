@@ -121,10 +121,14 @@ $conf['batchPrompt'] = 'C:\\';
 $conf['powershellPrompt'] = 'PS C:\\';
 
 /**
- * SEO module
+ * Low Quality Page Protection
  * See {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE}
+ * See {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE}
+ * See {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE}
  */
 $conf['lowQualityPageProtectionEnable'] = 0;
+$conf['lowQualityPageProtectionMode'] = "robot";
+$conf['lowQualityPageLinkType'] = "normal";
 
 /**
  * Page Protection Mode {@link \ComboStrap\PageProtection::CONF_PAGE_PROTECTION_MODE}

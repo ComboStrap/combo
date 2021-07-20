@@ -113,7 +113,9 @@ $meta[syntax_plugin_combo_file::CONF_FILE_ENABLE] = array('onoff');
  */
 require_once(__DIR__ . '/../class/LowQualityPage.php');
 $meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = array('onoff');
-$meta[PageProtection::CONF_PAGE_PROTECTION_MODE] = array('multichoice', '_choices' => array(
+$meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = array('multichoice', '_choices' => array(
+    PageProtection::CONF_VALUE_ROBOT,
+    PageProtection::CONF_VALUE_FEED,
     PageProtection::CONF_VALUE_ACL,
     PageProtection::CONF_VALUE_HIDDEN
 ));

@@ -451,8 +451,10 @@ EOF;
                         /**
                          * Add a class to style it differently
                          */
+                        $lowerCaseAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
                         $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
-
+                        $snippetId = $lowerCaseAcronym;
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetId);
                         /**
                          * Note The protection does occur on Javascript level, not on the HTML
                          * because the created page is valid for a anonymous or logged-in user
@@ -461,14 +463,20 @@ EOF;
                         if (LowQualityPage::isProtectionEnabled()) {
 
                             $linkType = LowQualityPage::getLowQualityLinkType();
+
+                            $this->attributes->addHtmlAttributeValue("data-$lowerCaseAcronym-link",$linkType);
+
                             /**
                              * Low Quality Page protection is only for warning or login link
                              */
                             if(in_array($linkType,[LowQualityPage::LOW_QUALITY_PAGE_LINK_WARNING,LowQualityPage::LOW_QUALITY_PAGE_LINK_LOGIN])){
-                                $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
-                                $this->attributes->addHtmlAttributeValue("data-$acronym-link",$linkType);
                                 syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
                                 PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
+                            } else {
+                                /**
+                                 * For a normal link, the acronym is added to the description
+                                 */
+                                $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
                             }
 
                         }

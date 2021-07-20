@@ -489,7 +489,7 @@ EOF;
                          * Add a class to style it differently if needed
                          */
                         $this->attributes->addClassName(Publication::LATE_PUBLICATION_CLASS_NAME . "-combo");
-                        if (Publication::isLatePublicationProtectionEnabled($linkedPage)) {
+                        if (Publication::isLatePublicationProtectionEnabled()) {
 
                             /**
                              * Not clickable
@@ -524,6 +524,10 @@ EOF;
                     } else {
 
                         $description = $linkedPage->getDescriptionOrElseDokuWiki();
+                        if(empty($description)){
+                            // Rare case
+                            $description = $linkedPage->getH1NotEmpty();
+                        }
                         if (!empty($acronym)) {
                             $description = $description . " ($acronym)";
                         }

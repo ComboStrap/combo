@@ -13,9 +13,7 @@
 namespace ComboStrap;
 
 
-use dokuwiki\Action\Plugin;
-
-require_once(__DIR__ . '/../class/Identity.php');
+require_once('PluginUtility.php');
 
 /**
  * Class LowQualityPage

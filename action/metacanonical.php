@@ -28,6 +28,9 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
 
     public function register(Doku_Event_Handler $controller)
     {
+        /**
+         * https://www.dokuwiki.org/devel:event:tpl_metaheader_output
+         */
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'metaCanonicalProcessing', array());
     }
 

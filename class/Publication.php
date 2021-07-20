@@ -52,16 +52,9 @@ class Publication
 
     }
 
-    public static function isProtected(Page $linkedPage)
+    public static function isLatePublicationProtectionEnabled()
     {
-        if (!Identity::isLoggedIn()) {
-            if (PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
-                if ($linkedPage->isLatePublication()) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true);
     }
 
 

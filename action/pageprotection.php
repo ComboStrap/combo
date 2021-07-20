@@ -56,9 +56,15 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $controller->register_hook('FEED_DATA_PROCESS', 'AFTER', $this, 'handleRssFeed', array());
 
         /**
-         * Add logged in
+         * Add logged in indicator for Javascript
          */
         $controller->register_hook('DOKUWIKI_STARTED', 'AFTER', $this, 'handleAnonymousJsIndicator');
+
+        /**
+         * Robots meta
+         * https://www.dokuwiki.org/devel:event:tpl_metaheader_output
+         */
+        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'handleRobotsMeta', array());
 
 
     }
@@ -252,7 +258,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     {
 
         global $JSINFO;
-        if (!Identity::isLoggedIn()){
+        if (!Identity::isLoggedIn()) {
             $navigation = Identity::JS_NAVIGATION_ANONYMOUS_VALUE;
         } else {
             $navigation = Identity::JS_NAVIGATION_SIGNED_VALUE;
@@ -260,6 +266,52 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $JSINFO[Identity::JS_NAVIGATION_INDICATOR] = $navigation;
 
 
+    }
+
+    /**
+     * Handle the meta robots
+     * https://www.dokuwiki.org/devel:event:tpl_metaheader_output
+     * @param $event
+     * @param $param
+     */
+    function handleRobotsMeta(&$event, $param)
+    {
+
+        global $ID;
+        if (empty($ID)) {
+            // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
+            // $ID is null
+            return;
+        }
+
+        $page = new Page($ID);
+
+        /**
+         * No management for slot page
+         */
+        if ($page->isSlot()) {
+            return;
+        }
+
+        $protected = false;
+        if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
+            $protected = true;
+        }
+        if($page->isLatePublication() && Publication::isLatePublicationProtectionEnabled()){
+            $protected = true;
+        }
+        if ($protected) {
+            foreach ($event->data['meta'] as $key => $meta) {
+                if (array_key_exists("name", $meta)) {
+                    /**
+                     * We may have several properties
+                     */
+                    if ($meta["name"] == "robots") {
+                        $event->data['meta'][$key]["content"] = "noindex,follow";
+                    }
+                }
+            }
+        }
     }
 
 }

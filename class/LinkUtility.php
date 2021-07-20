@@ -489,7 +489,7 @@ EOF;
                          * Add a class to style it differently if needed
                          */
                         $this->attributes->addClassName(Publication::LATE_PUBLICATION_CLASS_NAME . "-combo");
-                        if (Publication::isProtected($linkedPage)) {
+                        if (Publication::isLatePublicationProtectionEnabled($linkedPage)) {
 
                             /**
                              * Not clickable

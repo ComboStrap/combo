@@ -445,7 +445,7 @@ abstract class MediaLink extends DokuPath
          * src is a path (not an id)
          */
         $array = array(
-            DokuPath::PATH_ATTRIBUTE => $this->getId()
+            DokuPath::PATH_ATTRIBUTE => $this->getPath()
         );
 
 

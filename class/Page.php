@@ -414,6 +414,15 @@ class Page extends DokuPath
 
                 } else {
                     LogUtility::msg("The page ($this) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
+                    /**
+                     * Check if the error may come from the auto-canonical
+                     * (Never ever save generated data)
+                     */
+                    $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
+                    if ($canonicalLastNamesCount > 0) {
+                        $this->unsetMetadata(Page::CANONICAL_PROPERTY);
+                        Page::createPageFromId($idInDb)->unsetMetadata(Page::CANONICAL_PROPERTY);
+                    }
                 }
                 $this->persistPageAlias($canonical, $idInDb);
             }
@@ -524,7 +533,26 @@ class Page extends DokuPath
                 /**
                  * Takes the last names part
                  */
-                $names = $this->getNames();
+                $namesOriginal = $this->getNames();
+                /**
+                 * Delete the identical names at the end
+                 * To resolve this problem
+                 * The page (viz:viz) and the page (data:viz:viz) have the same canonical.
+                 * The page (viz:viz) will get the canonical viz
+                 * The page (data:viz) will get the canonical  data:viz
+                 */
+                $i = sizeof($namesOriginal) - 1;
+                $names = $namesOriginal;
+                while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
+                    unset($names[$i]);
+                    $i--;
+                    if ($i <= 0) {
+                        break;
+                    }
+                }
+                /**
+                 * Minimal length check
+                 */
                 $namesLength = sizeof($names);
                 if ($namesLength > $canonicalLastNamesCount) {
                     $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
@@ -1248,7 +1276,7 @@ class Page extends DokuPath
     function getCreatedTime()
     {
         $createdMeta = $this->getPersistentMetadata('date')['created'];
-        if(empty($createdMeta)){
+        if (empty($createdMeta)) {
             return null;
         } else {
             $datetime = new DateTime();
@@ -1269,7 +1297,7 @@ class Page extends DokuPath
     function getModifiedTime()
     {
         $modified = $this->getCurrentMetadata('date')['modified'];
-        if(empty($modified)){
+        if (empty($modified)) {
             return null;
         } else {
             $datetime = new DateTime();
@@ -1757,6 +1785,19 @@ class Page extends DokuPath
         } else {
             return $this->getName();
         }
+    }
+
+    /**
+     * @param $property
+     */
+    private function unsetMetadata($property)
+    {
+        $meta = p_read_metadata($this->getId());
+        if (isset($meta['persistent'][$property])) {
+            unset($meta['persistent'][$property]);
+        }
+        p_save_metadata($this->getId(), $meta);
+
     }
 
 

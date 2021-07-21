@@ -194,14 +194,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     }
 
                 }
-
-                $link = new LinkUtility($tagAttributes->getValue(LinkUtility::ATTRIBUTE_REF));
-                $linkTag = $link->getHtmlTag();
+                $callStackAttributes = $tagAttributes->toCallStackArray();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
-                    PluginUtility::CONTEXT => $parentName,
-                    self::LINK_TAG => $linkTag
+                    PluginUtility::ATTRIBUTES => $callStackAttributes,
+                    PluginUtility::CONTEXT => $parentName
                 );
             case DOKU_LEXER_UNMATCHED:
 
@@ -222,7 +219,6 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $openingAttributes = $openingTag->getAttributes();
-                $linkTag = $openingTag->getPluginData()[self::LINK_TAG];
                 $openingPosition = $openingTag->getKey();
 
                 $callStack->moveToEnd();
@@ -245,8 +241,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingAttributes,
                     PluginUtility::PAYLOAD => $linkName,
-                    PluginUtility::CONTEXT => $openingTag->getContext(),
-                    self::LINK_TAG => $linkTag
+                    PluginUtility::CONTEXT => $openingTag->getContext()
                 );
         }
         return true;
@@ -338,11 +333,10 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
                         // if there is no link name defined, we get the name as ref in the payload
                         // otherwise null string
-                        $renderer->doc .= $data[PluginUtility::PAYLOAD];;
+                        $renderer->doc .= $data[PluginUtility::PAYLOAD];
 
                         // Close the link
-                        $linkTag = $data[self::LINK_TAG];
-                        $renderer->doc .= "</$linkTag>";
+                        $renderer->doc .= "</a>";
 
                         // Close the html wrapper element
                         $context = $data[PluginUtility::CONTEXT];

@@ -655,7 +655,8 @@ class TagAttributes
         return $array;
     }
 
-    public function getComponentAttributeValue($attributeName, $default = null)
+    public
+    function getComponentAttributeValue($attributeName, $default = null)
     {
         $lowerAttribute = strtolower($attributeName);
         $value = $default;
@@ -665,18 +666,21 @@ class TagAttributes
         return $value;
     }
 
-    public function addStyleDeclaration($property, $value)
+    public
+    function addStyleDeclaration($property, $value)
     {
         ArrayUtility::addIfNotSet($this->styleDeclaration, $property, $value);
     }
 
 
-    public function hasStyleDeclaration($styleDeclaration)
+    public
+    function hasStyleDeclaration($styleDeclaration)
     {
         return isset($this->styleDeclaration[$styleDeclaration]);
     }
 
-    public function getAndRemoveStyleDeclaration($styleDeclaration)
+    public
+    function getAndRemoveStyleDeclaration($styleDeclaration)
     {
         $styleValue = $this->styleDeclaration[$styleDeclaration];
         unset($this->styleDeclaration[$styleDeclaration]);
@@ -684,7 +688,8 @@ class TagAttributes
     }
 
 
-    public function toHTMLAttributeString()
+    public
+    function toHTMLAttributeString()
     {
 
         $tagAttributeString = "";
@@ -727,12 +732,14 @@ class TagAttributes
 
     }
 
-    public function getComponentAttributes()
+    public
+    function getComponentAttributes()
     {
         return $this->toCallStackArray();
     }
 
-    public function removeComponentAttributeIfPresent($attributeName)
+    public
+    function removeComponentAttributeIfPresent($attributeName)
     {
         if ($this->hasComponentAttribute($attributeName)) {
             unset($this->componentAttributesCaseInsensitive[$attributeName]);
@@ -740,7 +747,8 @@ class TagAttributes
 
     }
 
-    public function toHtmlEnterTag($htmlTag)
+    public
+    function toHtmlEnterTag($htmlTag)
     {
 
         $enterTag = "<" . $htmlTag;
@@ -769,17 +777,20 @@ class TagAttributes
 
     }
 
-    public function getLogicalTag()
+    public
+    function getLogicalTag()
     {
         return $this->logicalTag;
     }
 
-    public function setLogicalTag($tag)
+    public
+    function setLogicalTag($tag)
     {
         $this->logicalTag = $tag;
     }
 
-    public function removeComponentAttribute($attribute)
+    public
+    function removeComponentAttribute($attribute)
     {
         $lowerAtt = strtolower($attribute);
         if (isset($this->componentAttributesCaseInsensitive[$lowerAtt])) {
@@ -802,7 +813,8 @@ class TagAttributes
     /**
      * @param $html - an html that should be closed and added after the enter tag
      */
-    public function addHtmlAfterEnterTag($html)
+    public
+    function addHtmlAfterEnterTag($html)
     {
         $this->htmlAfterEnterTag = $html . $this->htmlAfterEnterTag;
     }
@@ -816,7 +828,8 @@ class TagAttributes
      * or as included in HTML page
      * @param $mime
      */
-    public function setMime($mime)
+    public
+    function setMime($mime)
     {
         $this->mime = $mime;
     }
@@ -824,12 +837,14 @@ class TagAttributes
     /**
      * @return string - the mime of the request
      */
-    public function getMime()
+    public
+    function getMime()
     {
         return $this->mime;
     }
 
-    public function getType()
+    public
+    function getType()
     {
         return $this->getValue(self::TYPE_KEY);
     }
@@ -838,7 +853,8 @@ class TagAttributes
      * @param $attributeName
      * @return ConditionalValue
      */
-    public function getConditionalValueAndRemove($attributeName)
+    public
+    function getConditionalValueAndRemove($attributeName)
     {
         $value = $this->getConditionalValueAndRemove($attributeName);
         return new ConditionalValue($value);
@@ -849,7 +865,8 @@ class TagAttributes
      * @param $attributeName
      * @return false|string[] - an array of values
      */
-    public function getValuesAndRemove($attributeName)
+    public
+    function getValuesAndRemove($attributeName)
     {
 
         /**
@@ -865,7 +882,8 @@ class TagAttributes
 
     }
 
-    public function setType($type)
+    public
+    function setType($type)
     {
         $this->setComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
     }
@@ -874,7 +892,8 @@ class TagAttributes
      * Merging will add the values, no replace or overwrite
      * @param $callStackArray
      */
-    public function mergeWithCallStackArray($callStackArray)
+    public
+    function mergeWithCallStackArray($callStackArray)
     {
         foreach ($callStackArray as $key => $value) {
             if ($this->hasComponentAttribute($key)) {
@@ -889,14 +908,16 @@ class TagAttributes
     /**
      * @param $string
      */
-    public function removeAttributeIfPresent($string)
+    public
+    function removeAttributeIfPresent($string)
     {
         $this->removeComponentAttributeIfPresent($string);
         $this->removeHTMLAttributeIfPresent($string);
 
     }
 
-    private function removeHTMLAttributeIfPresent($string)
+    private
+    function removeHTMLAttributeIfPresent($string)
     {
         $lowerAtt = strtolower($string);
         if (isset($this->htmlAttributes[$lowerAtt])) {
@@ -904,14 +925,16 @@ class TagAttributes
         }
     }
 
-    public function getValueAndRemoveIfPresent($attribute, $default = null)
+    public
+    function getValueAndRemoveIfPresent($attribute, $default = null)
     {
         $value = $this->getValue($attribute, $default);
         $this->removeAttributeIfPresent($attribute);
         return $value;
     }
 
-    public function generateAndSetId()
+    public
+    function generateAndSetId()
     {
         self::$counter += 1;
         $id = self::$counter;
@@ -929,7 +952,8 @@ class TagAttributes
      * @return string - the marki tag made of logical attribute
      * There is no processing to transform it to an HTML tag
      */
-    public function toMarkiEnterTag($markiTag)
+    public
+    function toMarkiEnterTag($markiTag)
     {
         $enterTag = "<" . $markiTag;
 
@@ -950,7 +974,8 @@ class TagAttributes
     /**
      * @param string $key add an html attribute with the empty string
      */
-    public function addEmptyHtmlAttributeValue($key)
+    public
+    function addEmptyHtmlAttributeValue($key)
     {
 
         $this->htmlAttributes[$key] = '';
@@ -958,7 +983,8 @@ class TagAttributes
 
     }
 
-    public function addEmptyComponentAttributeValue($attribute)
+    public
+    function addEmptyComponentAttributeValue($attribute)
     {
         $this->componentAttributesCaseInsensitive[$attribute] = "";
     }
@@ -968,7 +994,8 @@ class TagAttributes
      * @param null $default
      * @return mixed
      */
-    public function getBooleanValueAndRemove($attribute, $default = null)
+    public
+    function getBooleanValueAndRemove($attribute, $default = null)
     {
         $value = $this->getValueAndRemove($attribute);
         if ($value == null) {
@@ -978,7 +1005,8 @@ class TagAttributes
         }
     }
 
-    public function hasAttribute($attribute)
+    public
+    function hasAttribute($attribute)
     {
         $hasAttribute = $this->hasComponentAttribute($attribute);
         if ($hasAttribute === true) {
@@ -988,12 +1016,14 @@ class TagAttributes
         }
     }
 
-    private function hasHtmlAttribute($attribute)
+    private
+    function hasHtmlAttribute($attribute)
     {
         return isset($this->htmlAttributes[$attribute]);
     }
 
-    private function escapeComponentAttribute(array $arrayToEscape, $subKey = null)
+    private
+    function escapeComponentAttribute(array $arrayToEscape, $subKey = null)
     {
         $urlEncoding = ["href", "src", "data-src", "data-srcset"];
         foreach ($arrayToEscape as $name => $value) {

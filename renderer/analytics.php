@@ -116,8 +116,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function document_start()
     {
         $this->reset();
-        global $ID;
-        $this->page = new Page($ID);
+        $this->page = Page::createPageFromCurrentId();
 
     }
 

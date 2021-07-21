@@ -97,6 +97,9 @@ class DokuPath extends File
 
         } else {
 
+            if(substr($qualifiedPath,0,1)!=DokuPath::PATH_SEPARATOR){
+                LogUtility::msg("The path given ($qualifiedPath) is not qualified", LogUtility::LVL_MSG_ERROR);
+            }
             $this->scheme = self::LOCAL_SCHEME;
 
         }
@@ -180,7 +183,7 @@ class DokuPath extends File
         return new DokuPath($qualifiedPath, DokuPath::PAGE_TYPE);
     }
 
-    public static function createMediaPathFromPath($pathOrId, $rev = '')
+    public static function createMediaPathFromQualifiedPath($pathOrId, $rev = '')
     {
         return new DokuPath($pathOrId, DokuPath::MEDIA_TYPE, $rev);
     }
@@ -252,6 +255,11 @@ class DokuPath extends File
         } else {
             return "";
         }
+    }
+
+    public static function createMediaPathFromId($id)
+    {
+        return self::createMediaPathFromQualifiedPath(DokuPath::PATH_SEPARATOR.$id);
     }
 
 

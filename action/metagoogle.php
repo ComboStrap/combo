@@ -62,8 +62,8 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             // case on "/lib/exe/mediamanager.php"
             return;
         }
-        $page = new Page($ID);
-        if (!$page->existInFs()) {
+        $page = Page::createPageFromId($ID);
+        if (!$page->exists()) {
             return;
         }
 

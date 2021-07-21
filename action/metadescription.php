@@ -38,7 +38,7 @@ class action_plugin_combo_metadescription extends DokuWiki_Action_Plugin
          * Description
          * https://www.dokuwiki.org/devel:metadata
          */
-        $page = new Page($ID);
+        $page = Page::createPageFromId($ID);
 
         $description = $page->getDescriptionOrElseDokuWiki();
         if (empty($description)) {

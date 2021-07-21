@@ -732,20 +732,8 @@ EOF;
             if ($this->getType() == self::TYPE_INTERNAL) {
                 // if there is no path, this is the actual page
                 $pathOrId = $this->dokuwikiUrl->getPathOrId();
-                global $ID;
-                $qualifiedId = $pathOrId;
-                resolve_pageid(getNS($ID), $qualifiedId, $exists);
-                /**
-                 * Root correction
-                 * yeah no root functionality in the {@link resolve_pageid resolution}
-                 * meaning that we get an empty string
-                 * they correct it in the link creation {@link wl()}
-                 */
-                if ($qualifiedId === '') {
-                    global $conf;
-                    $qualifiedId = $conf['start'];
-                }
-                $this->linkedPage = Page::createPageFromQualifiedPath(DokuPath::PATH_SEPARATOR . $qualifiedId);
+
+                $this->linkedPage = Page::createPageFromNonQualifiedPath($pathOrId);
 
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");

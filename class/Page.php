@@ -166,6 +166,25 @@ class Page extends DokuPath
         return new Page(DokuPath::PATH_SEPARATOR . $id);
     }
 
+    public static function createPageFromNonQualifiedPath($pathOrId)
+    {
+        global $ID;
+        $qualifiedId = $pathOrId;
+        resolve_pageid(getNS($ID), $qualifiedId, $exists);
+        /**
+         * Root correction
+         * yeah no root functionality in the {@link resolve_pageid resolution}
+         * meaning that we get an empty string
+         * they correct it in the link creation {@link wl()}
+         */
+        if ($qualifiedId === '') {
+            global $conf;
+            $qualifiedId = $conf['start'];
+        }
+        return Page::createPageFromId($qualifiedId);
+
+    }
+
 
     /**
      * @var string the logical id is used with slots.
@@ -863,7 +882,7 @@ class Page extends DokuPath
     {
         $backlinks = array();
         foreach (ft_backlinks($this->getId()) as $backlinkId) {
-            $backlinks[] = new Page($backlinkId);
+            $backlinks[] = Page::createPageFromId($backlinkId);
         }
         return $backlinks;
     }
@@ -1141,7 +1160,7 @@ class Page extends DokuPath
                 if (!media_isexternal($firstImageId)) {
                     $pathId = DokuPath::PATH_SEPARATOR . $firstImageId;
                 }
-                return MediaLink::createMediaLinkFromPathId($pathId);
+                return MediaLink::createMediaLinkFromNonQualifiedPath($pathId);
             }
         }
         return null;
@@ -1168,10 +1187,10 @@ class Page extends DokuPath
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = MediaLink::createMediaLinkFromPathId($imageIdFromMeta);
+                    $images[] = MediaLink::createMediaLinkFromNonQualifiedPath($imageIdFromMeta);
                 }
             } else {
-                $images = array(MediaLink::createMediaLinkFromPathId($imageMeta));
+                $images = array(MediaLink::createMediaLinkFromNonQualifiedPath($imageMeta));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
@@ -1407,7 +1426,7 @@ class Page extends DokuPath
                  * page named like the NS inside the NS
                  * ie ns:ns
                  */
-                $startPage = Page::createPageFromId( DokuPath::absolutePathToId($this->getNamespacePath()) . DokuPath::PATH_SEPARATOR . $startPageName);
+                $startPage = Page::createPageFromId(DokuPath::absolutePathToId($this->getNamespacePath()) . DokuPath::PATH_SEPARATOR . $startPageName);
                 if (!$startPage->exists()) {
                     return true;
                 }

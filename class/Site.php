@@ -41,7 +41,7 @@ class Site
     {
         $logoIds = self::getLogoIds();
         foreach ($logoIds as $logoId) {
-            $mediaLink = MediaLink::createMediaLinkFromPathId($logoId, null, $tagAttributes);
+            $mediaLink = MediaLink::createMediaLinkFromNonQualifiedPath($logoId, null, $tagAttributes);
             $mediaLink->setLazyLoad(false);
             if ($mediaLink->exists()) {
                 return $mediaLink->renderMediaTag();

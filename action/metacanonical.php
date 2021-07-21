@@ -50,7 +50,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
             return;
         }
 
-        $page = new Page($ID);
+        $page = Page::createPageFromId($ID);
 
         /**
          * No canonical for slot page

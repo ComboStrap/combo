@@ -132,15 +132,9 @@ abstract class MediaLink extends DokuPath
      * If private, the parent attributes are null
      *
      */
-    protected function __construct($ref, $tagAttributes = null, $rev = null)
+    protected function __construct($qualifiedPath, $tagAttributes = null, $rev = null)
     {
-        /**
-         * Resolutation
-         */
-        global $ID;
-        $qualifiedId = $ref;
-        resolve_mediaid(getNS($ID), $qualifiedId, $exists);
-        $qualifiedPath = DokuPath::PATH_SEPARATOR . $qualifiedId;
+
         parent::__construct($qualifiedPath, DokuPath::MEDIA_TYPE, $rev);
 
         if ($tagAttributes == null) {
@@ -175,7 +169,7 @@ abstract class MediaLink extends DokuPath
         $tagAttributes->addComponentAttributeValue(CacheMedia::CACHE_KEY, $cache);
         $tagAttributes->addComponentAttributeValue(self::LINKING_KEY, $linking);
 
-        return self::createMediaLinkFromPathId($id, $tagAttributes);
+        return self::createMediaLinkFromNonQualifiedPath($id, $tagAttributes);
 
     }
 
@@ -212,7 +206,8 @@ abstract class MediaLink extends DokuPath
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
-        return self::createMediaLinkFromPathId($path, $rev, $tagAttributes);
+
+        return self::createMediaLinkFromNonQualifiedPath($path, $rev, $tagAttributes);
 
     }
 
@@ -355,13 +350,13 @@ abstract class MediaLink extends DokuPath
 
 
     /**
-     * @param $pathId
+     * @param $nonQualifiedPath
      * @param TagAttributes $tagAttributes
      * @param string $rev
      * @return MediaLink
      */
     public
-    static function createMediaLinkFromPathId($pathId, $rev = null, $tagAttributes = null)
+    static function createMediaLinkFromNonQualifiedPath($nonQualifiedPath, $rev = null, $tagAttributes = null)
     {
         if (is_object($rev)) {
             LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");
@@ -373,7 +368,22 @@ abstract class MediaLink extends DokuPath
                 LogUtility::msg("TagAttributes is not an instance of Tag Attributes", LogUtility::LVL_MSG_ERROR, "support");
             }
         }
-        $dokuPath = DokuPath::createMediaPathFromPath($pathId, $rev);
+
+        /**
+         * Resolution
+         */
+        $qualifiedPath = $nonQualifiedPath;
+        if(!media_isexternal($qualifiedPath)) {
+            global $ID;
+            $qualifiedId = $nonQualifiedPath;
+            resolve_mediaid(getNS($ID), $qualifiedId, $exists);
+            $qualifiedPath = DokuPath::PATH_SEPARATOR . $qualifiedId;
+        }
+
+        /**
+         * Processing
+         */
+        $dokuPath = DokuPath::createMediaPathFromQualifiedPath($qualifiedPath, $rev);
         if ($dokuPath->getExtension() == "svg") {
             /**
              * The mime type is set when uploading, not when
@@ -390,19 +400,19 @@ abstract class MediaLink extends DokuPath
             if (substr($mime, 6) == "svg+xml") {
                 // The require is here because Svg Image Link is child of Internal Media Link (extends)
                 require_once(__DIR__ . '/SvgImageLink.php');
-                $internalMedia = new SvgImageLink($pathId, $tagAttributes, $rev);
+                $internalMedia = new SvgImageLink($qualifiedPath, $tagAttributes, $rev);
             } else {
                 // The require is here because Raster Image Link is child of Internal Media Link (extends)
                 require_once(__DIR__ . '/RasterImageLink.php');
-                $internalMedia = new RasterImageLink($pathId, $tagAttributes);
+                $internalMedia = new RasterImageLink($qualifiedPath, $tagAttributes);
             }
         } else {
             if ($mime == false) {
-                LogUtility::msg("The mime type of the media ($pathId) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
-                $internalMedia = new RasterImageLink($pathId, $tagAttributes);
+                LogUtility::msg("The mime type of the media ($nonQualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
+                $internalMedia = new RasterImageLink($qualifiedPath, $tagAttributes);
             } else {
-                LogUtility::msg("The type ($mime) of media ($pathId) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                $internalMedia = new ThirdMediaLink($pathId, $tagAttributes);
+                LogUtility::msg("The type ($mime) of media ($nonQualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
+                $internalMedia = new ThirdMediaLink($qualifiedPath, $tagAttributes);
             }
         }
 

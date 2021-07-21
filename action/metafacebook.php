@@ -63,7 +63,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
 
-        $page = new Page($ID);
+        $page = Page::createPageFromId($ID);
         if (!$page->exists()) {
             return;
         }
@@ -118,7 +118,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = MediaLink::createMediaLinkFromPathId($defaultFacebookImage);
+                $image = MediaLink::createMediaLinkFromNonQualifiedPath($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {

@@ -92,7 +92,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
              */
             return;
         }
-        $page = new Page($id);
+        $page = Page::createPageFromId($id);
 
         if ($page->isLowQualityPage()) {
             if (LowQualityPage::getLowQualityProtectionMode() == PageProtection::CONF_VALUE_HIDDEN) {
@@ -147,7 +147,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
              * It should be only a page
              * https://www.dokuwiki.org/devel:event:auth_acl_check
              */
-            $page = new Page($id);
+            $page = Page::createPageFromId($id);
 
             if ($page->isLowQualityPage()) {
                 if ($this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
@@ -178,7 +178,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         foreach ($pageItems as $key => $pageItem) {
             $url = $pageItem->url;
             $dokuPath = DokuPath::createFromUrl($url);
-            $page = Page::createPageFromQualifiedPath($dokuPath->getId());
+            $page = Page::createPageFromId($dokuPath->getId());
             if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
 
                 unset($event->data["items"][$key]);
@@ -226,25 +226,25 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     {
         $isLowQualityProtectionEnabled = LowQualityPage::isProtectionEnabled();
         $isLatePublicationProtectionEnabled = Publication::isLatePublicationProtectionEnabled();
-        if (!$isLatePublicationProtectionEnabled && !$isLowQualityProtectionEnabled){
+        if (!$isLatePublicationProtectionEnabled && !$isLowQualityProtectionEnabled) {
             return;
         }
 
         $pagesToBeAdded = &$event->data["data"];
-        foreach ($pagesToBeAdded as $key => $data){
+        foreach ($pagesToBeAdded as $key => $data) {
 
-            $page =  Page::createPageFromQualifiedPath($data["id"]);
+            $page = Page::createPageFromId($data["id"]);
 
             if ($page->isLowQualityPage() && $isLowQualityProtectionEnabled) {
                 $protectionMode = LowQualityPage::getLowQualityProtectionMode();
-                if($protectionMode!=PageProtection::CONF_VALUE_ROBOT){
+                if ($protectionMode != PageProtection::CONF_VALUE_ROBOT) {
                     unset($pagesToBeAdded[$key]);
                 }
             }
 
             if ($page->isLatePublication() && $isLatePublicationProtectionEnabled) {
                 $protectionMode = Publication::getLatePublicationProtectionMode();
-                if($protectionMode!=PageProtection::CONF_VALUE_ROBOT){
+                if ($protectionMode != PageProtection::CONF_VALUE_ROBOT) {
                     unset($pagesToBeAdded[$key]);
                 }
             }
@@ -270,7 +270,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
          */
         if (is_array($result)) {
             foreach (array_keys($result) as $idx) {
-                $page = new Page($idx);
+                $page = Page::createPageFromId($idx);
                 if ($page->isLowQualityPage()) {
                     $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
                     if (in_array($securityConf, $protectionModes)) {
@@ -324,7 +324,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
             return;
         }
 
-        $page = new Page($ID);
+        $page = Page::createPageFromId($ID);
 
         /**
          * No management for slot page
@@ -337,7 +337,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $follow = "nofollow";
         if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
             $protected = true;
-            if(LowQualityPage::getLowQualityProtectionMode()==PageProtection::CONF_VALUE_ACL){
+            if (LowQualityPage::getLowQualityProtectionMode() == PageProtection::CONF_VALUE_ACL) {
                 $follow = "nofollow";
             } else {
                 $follow = "follow";
@@ -345,7 +345,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         }
         if ($page->isLatePublication() && Publication::isLatePublicationProtectionEnabled()) {
             $protected = true;
-            if(Publication::getLatePublicationProtectionMode()==PageProtection::CONF_VALUE_ACL){
+            if (Publication::getLatePublicationProtectionMode() == PageProtection::CONF_VALUE_ACL) {
                 $follow = "nofollow";
             } else {
                 $follow = "follow";

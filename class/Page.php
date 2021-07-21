@@ -110,10 +110,10 @@ class Page extends DokuPath
 
     /**
      * Page constructor.
-     * @param $qualifiedPath - the qualified path (may be not relative)
+     * @param $absolutePath - the qualified path (may be not relative)
      *
      */
-    public function __construct($qualifiedPath)
+    public function __construct($absolutePath)
     {
 
         /**
@@ -129,7 +129,7 @@ class Page extends DokuPath
         if ($conf['template'] === $strapTemplateName) {
             $sidebars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
         }
-        $lastPathPart = DokuPath::getLastPart($qualifiedPath);
+        $lastPathPart = DokuPath::getLastPart($absolutePath);
         if (in_array($lastPathPart, $sidebars)) {
 
             $this->isSideSlot = true;
@@ -141,9 +141,9 @@ class Page extends DokuPath
              * with the {@link \action_plugin_combo_pageprotection}
              */
             $useAcl = false;
-            $id = page_findnearest($qualifiedPath, $useAcl);
+            $id = page_findnearest($absolutePath, $useAcl);
             if ($id !== false) {
-                $qualifiedPath = DokuPath::PATH_SEPARATOR . $id;
+                $absolutePath = DokuPath::PATH_SEPARATOR . $id;
             }
 
         }
@@ -151,7 +151,7 @@ class Page extends DokuPath
         global $ID;
         $this->requestedId = $ID;
 
-        parent::__construct($qualifiedPath, DokuPath::PAGE_TYPE);
+        parent::__construct($absolutePath, DokuPath::PAGE_TYPE);
 
     }
 

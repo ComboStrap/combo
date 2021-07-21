@@ -132,10 +132,10 @@ abstract class MediaLink extends DokuPath
      * If private, the parent attributes are null
      *
      */
-    protected function __construct($qualifiedPath, $tagAttributes = null, $rev = null)
+    protected function __construct($absolutePath, $tagAttributes = null, $rev = null)
     {
 
-        parent::__construct($qualifiedPath, DokuPath::MEDIA_TYPE, $rev);
+        parent::__construct($absolutePath, DokuPath::MEDIA_TYPE, $rev);
 
         if ($tagAttributes == null) {
             $this->tagAttributes = TagAttributes::createEmpty();

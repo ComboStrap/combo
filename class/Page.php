@@ -110,10 +110,10 @@ class Page extends DokuPath
 
     /**
      * Page constructor.
-     * @param $path - the path id of a page (it may be relative to the requested page)
+     * @param $qualifiedPath - the qualified path (may be not relative)
      *
      */
-    public function __construct($path)
+    public function __construct($qualifiedPath)
     {
 
         /**
@@ -129,7 +129,7 @@ class Page extends DokuPath
         if ($conf['template'] === $strapTemplateName) {
             $sidebars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
         }
-        $lastPathPart = DokuPath::getLastPart($path);
+        $lastPathPart = DokuPath::getLastPart($qualifiedPath);
         if (in_array($lastPathPart, $sidebars)) {
 
             $this->isSideSlot = true;
@@ -141,9 +141,9 @@ class Page extends DokuPath
              * with the {@link \action_plugin_combo_pageprotection}
              */
             $useAcl = false;
-            $id = page_findnearest($path, $useAcl);
+            $id = page_findnearest($qualifiedPath, $useAcl);
             if ($id !== false) {
-                $path = DokuPath::SEPARATOR . $id;
+                $qualifiedPath = DokuPath::PATH_SEPARATOR . $id;
             }
 
         }
@@ -151,7 +151,7 @@ class Page extends DokuPath
         global $ID;
         $this->requestedId = $ID;
 
-        parent::__construct($path, DokuPath::PAGE_TYPE);
+        parent::__construct($qualifiedPath, DokuPath::PAGE_TYPE);
 
     }
 
@@ -161,16 +161,11 @@ class Page extends DokuPath
         return self::createPageFromId($ID);
     }
 
-    /**
-     * The {@link LinkUtility} and therefore {@link DokuwikiUrl}
-     * accepts a path or an id (ie an absolute path without the root)
-     * and that's fucked up
-     * @param $idOrPath
-     */
-    public static function createFromIdOrPath($idOrPath)
+    public static function createPageFromId($id)
     {
-
+        return new Page(DokuPath::PATH_SEPARATOR . $id);
     }
+
 
     /**
      * @var string the logical id is used with slots.
@@ -215,15 +210,15 @@ class Page extends DokuPath
             }
 
             if ($scopePath !== ":") {
-                return $scopePath . DokuPath::SEPARATOR . $this->getName();
+                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getName();
             } else {
-                return DokuPath::SEPARATOR . $this->getName();
+                return DokuPath::PATH_SEPARATOR . $this->getName();
             }
 
 
         } else {
 
-            return $this->getPath();
+            return $this->getId();
 
         }
 
@@ -346,14 +341,10 @@ class Page extends DokuPath
 
     }
 
-    static function createPageFromPath($pathId)
-    {
-        return new Page($pathId);
-    }
 
-    static function createPageFromId($id)
+    static function createPageFromQualifiedPath($qualifiedPath)
     {
-        return new Page(DokuPath::IdToAbsolutePath($id));
+        return new Page($qualifiedPath);
     }
 
     /**
@@ -373,7 +364,7 @@ class Page extends DokuPath
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            return self::createPageFromPath($id)->setCanonical($canonical);
+            return self::createPageFromId($id)->setCanonical($canonical);
         }
 
 
@@ -388,12 +379,11 @@ class Page extends DokuPath
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-
-            return self::createPageFromPath($id)
+            return self::createPageFromId($id)
                 ->setCanonical($canonical);
         }
 
-        return self::createPageFromPath($canonical);
+        return self::createPageFromId($canonical);
 
     }
 
@@ -432,7 +422,7 @@ class Page extends DokuPath
                     $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
                     if ($canonicalLastNamesCount > 0) {
                         $this->unsetMetadata(Page::CANONICAL_PROPERTY);
-                        Page::createPageFromId($idInDb)->unsetMetadata(Page::CANONICAL_PROPERTY);
+                        Page::createPageFromQualifiedPath($idInDb)->unsetMetadata(Page::CANONICAL_PROPERTY);
                     }
                 }
                 $this->persistPageAlias($canonical, $idInDb);
@@ -1149,7 +1139,7 @@ class Page extends DokuPath
                 // We transform them to a path id
                 $pathId = $firstImageId;
                 if (!media_isexternal($firstImageId)) {
-                    $pathId = DokuPath::SEPARATOR . $firstImageId;
+                    $pathId = DokuPath::PATH_SEPARATOR . $firstImageId;
                 }
                 return MediaLink::createMediaLinkFromPathId($pathId);
             }
@@ -1417,7 +1407,7 @@ class Page extends DokuPath
                  * page named like the NS inside the NS
                  * ie ns:ns
                  */
-                $startPage = Page::createPageFromPath($this->getNamespacePath() . ":" . $startPageName);
+                $startPage = Page::createPageFromId( DokuPath::absolutePathToId($this->getNamespacePath()) . DokuPath::PATH_SEPARATOR . $startPageName);
                 if (!$startPage->exists()) {
                     return true;
                 }
@@ -1753,6 +1743,7 @@ class Page extends DokuPath
             return ":$ns";
         }
     }
+
 
     public
     function getScope()

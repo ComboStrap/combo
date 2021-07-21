@@ -9,12 +9,12 @@ class DokuPath extends File
     const MEDIA_TYPE = "media";
     const PAGE_TYPE = "page";
     const UNKNOWN_TYPE = "unknown";
-    const SEPARATOR = ":";
+    const PATH_SEPARATOR = ":";
 
     // https://www.dokuwiki.org/config:useslash
     const SEPARATOR_SLASH = "/";
 
-    const SEPARATORS = [self::SEPARATOR, self::SEPARATOR_SLASH];
+    const SEPARATORS = [self::PATH_SEPARATOR, self::SEPARATOR_SLASH];
     const LOCAL_SCHEME = 'local'; // knwon also as internal media
     const INTERWIKI_SCHEME = 'interwiki';
     const INTERNET_SCHEME = "internet";
@@ -23,13 +23,13 @@ class DokuPath extends File
     /**
      * @var string the path id passed to function (cleaned)
      */
-    private $path;
+    private $id;
 
     /**
      * @var string the absolute id with the root separator
-     * See {@link $absolutePathWithoutRootSeparator} for the absolute id without root separator for the index
+     * See {@link $id} for the absolute id without root separator for the index
      */
-    private $absoluteIdWithSeparator;
+    private $qualifiedPath;
 
     /**
      * @var string
@@ -44,7 +44,7 @@ class DokuPath extends File
      * @var string a value with an absolute id without the root
      * used in the index (ie the id)
      */
-    private $absolutePathWithoutRootSeparator;
+    private $qualifiedId;
 
     /**
      * @var string the path scheme one constant that starts with SCHEME
@@ -59,28 +59,39 @@ class DokuPath extends File
     /**
      * DokuPath constructor.
      *
+     * An attempt to get all file system in one class
+     *
      * protected and not private
      * otherwise the cascading init will not work
      *
-     * @param string $path - the logical dokuwiki path (may be relative or not)
+     * @param string $qualifiedPath - the dokuwiki qualified path (may not be relative but may be a namespace)
      * @param string $type - the type (media, page)
      * @param string $rev - the revision (mtime)
+     *
+     * Thee path should be a qualified path because in Dokuwiki, a link to a {@link Page}
+     * that ends with the {@link DokuPath::PATH_SEPARATOR} points to a start page
+     * and not to a namespace. The qualification occurs in the transformation
+     * from ref to page.
+     *   For a page: in {@link LinkUtility::getInternalPage()}
+     *   For a media: in the {@link MediaLink} constructor
+     * Because this class is mostly the file representation, it should be able to
+     * represents also a namespace
      */
-    protected function __construct($path, $type, $rev = null)
+    protected function __construct($qualifiedPath, $type, $rev = null)
     {
 
-        if (empty($path)) {
+        if (empty($qualifiedPath)) {
             LogUtility::msg("A null path was given", LogUtility::LVL_MSG_WARNING);
         }
-        $this->path = $path;
+        $this->qualifiedPath = $qualifiedPath;
 
 
         // Check whether this is a local or remote image or interwiki
-        if (media_isexternal($path)) {
+        if (media_isexternal($qualifiedPath)) {
 
             $this->scheme = self::INTERNET_SCHEME;
 
-        } else if (link_isinterwiki($path)) {
+        } else if (link_isinterwiki($qualifiedPath)) {
 
             $this->scheme = self::INTERWIKI_SCHEME;
 
@@ -88,11 +99,6 @@ class DokuPath extends File
 
             $this->scheme = self::LOCAL_SCHEME;
 
-            // https://www.dokuwiki.org/config:useslash
-            global $conf;
-            if ($conf['useslash']) {
-                $path = str_replace(self::SEPARATOR_SLASH, self::SEPARATOR, $path);
-            }
         }
 
 
@@ -105,7 +111,7 @@ class DokuPath extends File
          * If this is the case, this is a media
          */
         if ($type == self::UNKNOWN_TYPE) {
-            $lastPosition = StringUtility::lastIndexOf($path, ".");
+            $lastPosition = StringUtility::lastIndexOf($qualifiedPath, ".");
             if ($lastPosition === FALSE) {
                 $type = self::PAGE_TYPE;
             } else {
@@ -118,57 +124,45 @@ class DokuPath extends File
         /**
          * File path
          */
-        $filePath = $this->path;
+        $filePath = $this->qualifiedPath;
         if ($this->scheme == self::LOCAL_SCHEME) {
-            /**
-             * Absolute id cleaned for the index
-             * See the $page argument of {@link resolve_pageid}
-             * Resolution clean the id {@link cleanID()}
-             */
-            global $ID;
-            $this->absolutePathWithoutRootSeparator = $this->path;
 
-            $isNamespace = false;
-            if (mb_substr($this->path, -1) == self::SEPARATOR) {
-                $isNamespace = true;
+            $this->id = DokuPath::absolutePathToId($this->qualifiedPath);
+            $isNamespacePath = false;
+            if (mb_substr($this->qualifiedPath, -1) == self::PATH_SEPARATOR) {
+                $isNamespacePath = true;
             }
 
-            if (!$isNamespace) {
-                /**
-                 * File (Page or media)
-                 */
-                if ($this->finalType == self::MEDIA_TYPE) {
-                    resolve_mediaid(getNS($ID), $this->absolutePathWithoutRootSeparator, $exists);
-                } else {
-                    resolve_pageid(getNS($ID), $this->absolutePathWithoutRootSeparator, $exists);
-                }
-                $this->absoluteIdWithSeparator = self::SEPARATOR . $this->absolutePathWithoutRootSeparator;
+            global $ID;
 
+            if (!$isNamespacePath) {
 
                 if ($type == self::MEDIA_TYPE) {
                     if (!empty($rev)) {
-                        $filePath = mediaFN($this->absolutePathWithoutRootSeparator, $rev);
+                        $filePath = mediaFN($this->id, $rev);
                     } else {
-                        $filePath = mediaFN($this->absolutePathWithoutRootSeparator);
+                        $filePath = mediaFN($this->id);
                     }
                 } else {
                     if (!empty($rev)) {
-                        $filePath = wikiFN($this->absolutePathWithoutRootSeparator, $rev);
+                        $filePath = wikiFN($this->id, $rev);
                     } else {
-                        $filePath = wikiFN($this->absolutePathWithoutRootSeparator);
+                        $filePath = wikiFN($this->id);
                     }
                 }
             } else {
                 /**
                  * Namespace
+                 * (Fucked up is fucked up)
+                 * We qualify for the namespace here
+                 * because there is no link or media for a namespace
                  */
-                $this->absolutePathWithoutRootSeparator = resolve_id(getNS($ID), $this->absolutePathWithoutRootSeparator, true);
-
+                $this->id = resolve_id(getNS($ID), $this->id, true);
                 global $conf;
                 if ($type == self::MEDIA_TYPE) {
-                    $filePath = $conf['mediadir'] . '/' . utf8_encodeFN($this->absolutePathWithoutRootSeparator);
+                    $filePath = $conf['mediadir'] . '/' . utf8_encodeFN($this->id);
                 } else {
-                    $filePath = $conf['datadir'] . '/' . utf8_encodeFN($this->absolutePathWithoutRootSeparator);
+                    $filePath = $conf['datadir'] . '/' . utf8_encodeFN($this->id);
                 }
             }
         }
@@ -178,22 +172,22 @@ class DokuPath extends File
 
     /**
      *
-     * @param $pathId
+     * @param $qualifiedPath
      * @return DokuPath
      */
-    public static function createDokuPathFromPath($pathId)
+    public static function createPagePathFromPath($qualifiedPath)
     {
-        return new DokuPath($pathId, DokuPath::PAGE_TYPE);
+        return new DokuPath($qualifiedPath, DokuPath::PAGE_TYPE);
     }
 
-    public static function createMediaPathFromPath($path, $rev = '')
+    public static function createMediaPathFromPath($pathOrId, $rev = '')
     {
-        return new DokuPath($path, DokuPath::MEDIA_TYPE, $rev);
+        return new DokuPath($pathOrId, DokuPath::MEDIA_TYPE, $rev);
     }
 
     public static function createUnknownFromId($id)
     {
-        return new DokuPath(DokuPath::SEPARATOR . $id, DokuPath::UNKNOWN_TYPE);
+        return new DokuPath(DokuPath::PATH_SEPARATOR . $id, DokuPath::UNKNOWN_TYPE);
     }
 
     /**
@@ -215,7 +209,7 @@ class DokuPath extends File
             $urlPath = parse_url($url, PHP_URL_PATH);
             $id = substr(str_replace("/", ":", $urlPath), 1);
         }
-        return self::createDokuPathFromPath(":$id");
+        return self::createPagePathFromPath(":$id");
     }
 
     /**
@@ -225,7 +219,7 @@ class DokuPath extends File
      */
     public static function getLastPart($pathId)
     {
-        $endSeparatorLocation = StringUtility::lastIndexOf($pathId, DokuPath::SEPARATOR);
+        $endSeparatorLocation = StringUtility::lastIndexOf($pathId, DokuPath::PATH_SEPARATOR);
         if ($endSeparatorLocation === false) {
             $endSeparatorLocation = StringUtility::lastIndexOf($pathId, DokuPath::SEPARATOR_SLASH);
         }
@@ -247,13 +241,13 @@ class DokuPath extends File
         if (is_null($id)) {
             LogUtility::msg("The id passed should not be null");
         }
-        return DokuPath::SEPARATOR . $id;
+        return DokuPath::PATH_SEPARATOR . $id;
     }
 
     public
-    static function AbsolutePathToId($absolutePath)
+    static function absolutePathToId($absolutePath)
     {
-        if($absolutePath!=":") {
+        if ($absolutePath != ":") {
             return substr($absolutePath, 1);
         } else {
             return "";
@@ -274,7 +268,7 @@ class DokuPath extends File
     public
     function getNames()
     {
-        return preg_split("/" . self::SEPARATOR . "/", $this->getId());
+        return preg_split("/" . self::PATH_SEPARATOR . "/", $this->getId());
     }
 
     /**
@@ -327,10 +321,10 @@ class DokuPath extends File
     {
 
         if ($this->getScheme() == self::LOCAL_SCHEME) {
-            return $this->absolutePathWithoutRootSeparator;
+            return $this->id;
         } else {
             // the url (it's stored as id in the metadata)
-            return $this->path;
+            return $this->getPath();
         }
 
     }
@@ -339,7 +333,7 @@ class DokuPath extends File
     function getPath()
     {
 
-        return $this->path;
+        return $this->qualifiedPath;
 
     }
 
@@ -385,10 +379,10 @@ class DokuPath extends File
     function getAbsolutePath()
     {
         if ($this->getScheme() == self::LOCAL_SCHEME) {
-            return $this->absoluteIdWithSeparator;
+            return $this->id;
         } else {
             // otherwise (url) return the path id
-            return $this->path;
+            return $this->id;
         }
 
     }
@@ -409,11 +403,6 @@ class DokuPath extends File
         }
     }
 
-    public
-    function isPathIdAbsolute()
-    {
-        return strpos($this->path, self::SEPARATOR) === 0;
-    }
 
     /**
      * Return the path relative to the base directory

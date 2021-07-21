@@ -49,13 +49,13 @@ class SvgImageLink extends MediaLink
 
     /**
      * SvgImageLink constructor.
-     * @param $id
+     * @param $ref
      * @param TagAttributes $tagAttributes
      * @param string $rev
      */
-    public function __construct($id, $tagAttributes = null, $rev = '')
+    public function __construct($ref, $tagAttributes = null, $rev = '')
     {
-        parent::__construct($id, $tagAttributes, $rev);
+        parent::__construct($ref, $tagAttributes, $rev);
         $this->getTagAttributes()->setLogicalTag(self::CANONICAL);
     }
 

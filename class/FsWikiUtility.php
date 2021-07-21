@@ -84,7 +84,7 @@ class FsWikiUtility
         /**
          * To a relative file system path
          */
-        $dokuPath = DokuPath::createDokuPathFromPath($path);
+        $dokuPath = DokuPath::createPagePathFromPath($path);
         $relativeFileSystemPath = str_replace(":", "/", $dokuPath->getId());
 
 

@@ -515,7 +515,7 @@ EOF;
                         /**
                          * If this is not a link into the same page
                          */
-                        if (!empty($this->getDokuwikiUrl()->getPath())) {
+                        if (!empty($this->getDokuwikiUrl()->getPathOrId())) {
                             $description = $linkedPage->getDescriptionOrElseDokuWiki();
                             if (empty($description)) {
                                 // Rare case
@@ -573,7 +573,7 @@ EOF;
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->dokuwikiUrl->getPath());
+            $emailAddress = $this->emailObfuscation($this->dokuwikiUrl->getPathOrId());
             $this->attributes->addHtmlAttributeValue("title", $emailAddress);
         }
 
@@ -731,18 +731,22 @@ EOF;
         if ($this->linkedPage == null) {
             if ($this->getType() == self::TYPE_INTERNAL) {
                 // if there is no path, this is the actual page
-                $path = $this->dokuwikiUrl->getPath();
-                if ($path == null) {
-                    global $ID;
-                    if ($ID == null) {
-                        LogUtility::msg("The path is not specified in the reference. The global ID should then be specified to get the target of the link");
-                    }
-                    $path = DokuPath::IdToAbsolutePath($ID);
-                }
+                $pathOrId = $this->dokuwikiUrl->getPathOrId();
+                global $ID;
+                $qualifiedId = $pathOrId;
+                resolve_pageid(getNS($ID), $qualifiedId, $exists);
                 /**
-                 * Create the linked page object
+                 * Root correction
+                 * yeah no root functionality in the {@link resolve_pageid resolution}
+                 * meaning that we get an empty string
+                 * they correct it in the link creation {@link wl()}
                  */
-                $this->linkedPage = Page::createFromIdOrPath($path);
+                if ($qualifiedId === '') {
+                    global $conf;
+                    $qualifiedId = $conf['start'];
+                }
+                $this->linkedPage = Page::createPageFromQualifiedPath(DokuPath::PATH_SEPARATOR . $qualifiedId);
+
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
             }
@@ -772,7 +776,7 @@ EOF;
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::renderFromString($name, $this->dokuwikiUrl->getPath());
+                    $name = TemplateUtility::renderFromString($name, $this->dokuwikiUrl->getPathOrId());
                 }
                 if (empty($name)) {
                     $name = $this->getInternalPage()->getName();
@@ -798,7 +802,7 @@ EOF;
             case self::TYPE_EMAIL:
                 if (empty($name)) {
                     global $conf;
-                    $email = $this->dokuwikiUrl->getPath();
+                    $email = $this->dokuwikiUrl->getPathOrId();
                     switch ($conf['mailguard']) {
                         case 'none' :
                             $name = $email;
@@ -813,7 +817,7 @@ EOF;
                 break;
             case self::TYPE_INTERWIKI:
                 if (empty($name)) {
-                    $name = $this->dokuwikiUrl->getPath();
+                    $name = $this->dokuwikiUrl->getPathOrId();
                 }
                 break;
             case self::TYPE_LOCAL:
@@ -836,7 +840,6 @@ EOF;
     {
         $this->title = $title;
     }
-
 
 
     private
@@ -867,7 +870,7 @@ EOF;
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $url = $this->renderer->_resolveInterWiki($wiki, $this->dokuwikiUrl->getPath());
+                $url = $this->renderer->_resolveInterWiki($wiki, $this->dokuwikiUrl->getPathOrId());
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());
@@ -895,7 +898,7 @@ EOF;
                  * {@link PluginTrait::email()
                  */
                 // common.php#obfsucate implements the $conf['mailguard']
-                $emailRef = $this->getDokuwikiUrl()->getPath();
+                $emailRef = $this->getDokuwikiUrl()->getPathOrId();
                 $queryParameters = $this->getDokuwikiUrl()->getQueryParameters();
                 if (sizeof($queryParameters) > 0) {
                     $emailRef .= "?";

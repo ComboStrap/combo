@@ -74,7 +74,7 @@ class BreadcrumbHierarchical
                  * resolve will also resolve to the home page
                  */
 
-                $page = implode(DokuPath::SEPARATOR,$currentParts).":";
+                $page = implode(DokuPath::PATH_SEPARATOR,$currentParts).":";
                 $exist = null;
                 resolve_pageid(getNS($ID), $page, $exist, "", true);
 

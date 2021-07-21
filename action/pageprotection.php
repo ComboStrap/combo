@@ -178,7 +178,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         foreach ($pageItems as $key => $pageItem) {
             $url = $pageItem->url;
             $dokuPath = DokuPath::createFromUrl($url);
-            $page = Page::createPageFromId($dokuPath->getId());
+            $page = Page::createPageFromQualifiedPath($dokuPath->getId());
             if ($page->isLowQualityPage() && LowQualityPage::isProtectionEnabled()) {
 
                 unset($event->data["items"][$key]);
@@ -233,7 +233,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $pagesToBeAdded = &$event->data["data"];
         foreach ($pagesToBeAdded as $key => $data){
 
-            $page =  Page::createPageFromId($data["id"]);
+            $page =  Page::createPageFromQualifiedPath($data["id"]);
 
             if ($page->isLowQualityPage() && $isLowQualityProtectionEnabled) {
                 $protectionMode = LowQualityPage::getLowQualityProtectionMode();

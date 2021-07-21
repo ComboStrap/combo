@@ -21,11 +21,11 @@ class File
 
     /**
      * File constructor.
-     * @param $path
+     * @param $qualifiedPath
      */
-    protected function __construct($path)
+    protected function __construct($qualifiedPath)
     {
-        $this->path = $path;
+        $this->path = $qualifiedPath;
     }
 
     /**

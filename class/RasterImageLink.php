@@ -73,12 +73,12 @@ class RasterImageLink extends MediaLink
 
     /**
      * RasterImageLink constructor.
-     * @param $id
+     * @param $ref
      * @param TagAttributes $tagAttributes
      */
-    public function __construct($id, $tagAttributes = null)
+    public function __construct($ref, $tagAttributes = null)
     {
-        parent::__construct($id, $tagAttributes);
+        parent::__construct($ref, $tagAttributes);
         $this->getTagAttributes()->setLogicalTag(self::CANONICAL);
 
     }

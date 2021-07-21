@@ -88,7 +88,7 @@ class Icon
         $iconPath = $iconNameAttribute;
         if ($hasPoint !== false) {
             // The root was not mandatory
-            $iconPath = DokuPath::SEPARATOR . $iconNameAttribute;
+            $iconPath = DokuPath::PATH_SEPARATOR . $iconNameAttribute;
         }
         /**
          * If the name have an extension, it's a file from the media directory

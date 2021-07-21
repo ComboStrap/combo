@@ -45,7 +45,7 @@ class DokuwikiUrl
     /**
      * @var false|string
      */
-    private $path;
+    private $pathOrId;
     /**
      * @var false|string
      */
@@ -66,16 +66,16 @@ class DokuwikiUrl
          * Path
          */
         $questionMarkPosition = strpos($url, "?");
-        $this->path = $url;
+        $this->pathOrId = $url;
         $queryStringAndAnchorOriginal = null;
         if ($questionMarkPosition !== false) {
-            $this->path = substr($url, 0, $questionMarkPosition);
+            $this->pathOrId = substr($url, 0, $questionMarkPosition);
             $queryStringAndAnchorOriginal = substr($url, $questionMarkPosition + 1);
         } else {
             // We may have only an anchor
             $hashTagPosition = strpos($url, "#");
             if ($hashTagPosition !== false) {
-                $this->path = substr($url, 0, $hashTagPosition);
+                $this->pathOrId = substr($url, 0, $hashTagPosition);
                 $this->fragment = substr($url, $hashTagPosition + 1);
             }
         }
@@ -183,7 +183,7 @@ class DokuwikiUrl
                  */
                 if($value!=null) {
                     if (($countHashTag = substr_count($value, "#")) >= 3) {
-                        LogUtility::msg("The value ($value) of the key ($key) for the link ($this->path) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
+                        LogUtility::msg("The value ($value) of the key ($key) for the link ($this->pathOrId) has $countHashTag `#` characters and the maximum supported is 2.", LogUtility::LVL_MSG_ERROR);
                         continue;
                     }
                 } else {
@@ -261,7 +261,7 @@ class DokuwikiUrl
     {
         $attributes = [];
         $attributes[self::ANCHOR_ATTRIBUTES] = $this->fragment;
-        $attributes[DokuPath::PATH_ATTRIBUTE] = $this->path;
+        $attributes[DokuPath::PATH_ATTRIBUTE] = $this->pathOrId;
         return PluginUtility::mergeAttributes($attributes, $this->queryParameters);
     }
 
@@ -285,9 +285,13 @@ class DokuwikiUrl
         return $this->fragment;
     }
 
-    public function getPath()
+    /**
+     * In Dokuwiki, a path may also be in the form of an id (ie without root separator)
+     * @return false|string
+     */
+    public function getPathOrId()
     {
-        return $this->path;
+        return $this->pathOrId;
     }
 
     public function getQueryParameter($key)

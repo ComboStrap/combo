@@ -164,7 +164,7 @@ class LogUtility
              */
             $id = PluginUtility::getPageId();
             if ($id!=null) {
-                $page = Page::createPageFromId($id);
+                $page = Page::createPageFromQualifiedPath($id);
                 if ($page != null) {
                     $htmlMsg .= " - " . $page->getAnchorLink();
                 }

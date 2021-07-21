@@ -123,7 +123,7 @@ abstract class MediaLink extends DokuPath
 
     /**
      * Image constructor.
-     * @param $id
+     * @param $ref
      * @param TagAttributes $tagAttributes
      * @param string $rev - mtime
      *
@@ -132,11 +132,16 @@ abstract class MediaLink extends DokuPath
      * If private, the parent attributes are null
      *
      */
-    protected function __construct($id, $tagAttributes = null, $rev = null)
+    protected function __construct($ref, $tagAttributes = null, $rev = null)
     {
-
-
-        parent::__construct($id, DokuPath::MEDIA_TYPE, $rev);
+        /**
+         * Resolutation
+         */
+        global $ID;
+        $qualifiedId = $ref;
+        resolve_mediaid(getNS($ID), $qualifiedId, $exists);
+        $qualifiedPath = DokuPath::PATH_SEPARATOR . $qualifiedId;
+        parent::__construct($qualifiedPath, DokuPath::MEDIA_TYPE, $rev);
 
         if ($tagAttributes == null) {
             $this->tagAttributes = TagAttributes::createEmpty();
@@ -227,7 +232,6 @@ abstract class MediaLink extends DokuPath
          */
 
 
-
         /**
          *   * Delete the opening and closing character
          *   * create the url and description
@@ -275,8 +279,6 @@ abstract class MediaLink extends DokuPath
         } else {
             $mediaType = MediaLink::INTERNAL_MEDIA_CALL_NAME;
         }
-
-
 
 
         /**
@@ -433,7 +435,7 @@ abstract class MediaLink extends DokuPath
          * src is a path (not an id)
          */
         $array = array(
-            DokuPath::PATH_ATTRIBUTE => $this->getPath()
+            DokuPath::PATH_ATTRIBUTE => $this->getId()
         );
 
 
@@ -692,7 +694,7 @@ abstract class MediaLink extends DokuPath
             && $requestedWidth != 0
         ) {
             global $ID;
-            if ($ID!="wiki:syntax") {
+            if ($ID != "wiki:syntax") {
                 /**
                  * Cropping
                  */

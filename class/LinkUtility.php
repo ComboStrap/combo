@@ -42,8 +42,11 @@ class LinkUtility
      * [[path:page|title]]
      * are valid
      *
-     * Get the content until | or ]
-     * No line break allowed
+     * Get the content until one of this character is found:
+     *   * |
+     *   * or ]]
+     *   * or \n (No line break allowed, too much difficult to debug)
+     *   * and not [ (for two links on the same line)
      */
     const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n\[]*\]\])";
     const EXIT_PATTERN = "\]\]";
@@ -94,6 +97,14 @@ class LinkUtility
      */
     const PREVIEW_ATTRIBUTE = "preview";
     const PREVIEW_TOOLTIP = "preview";
+
+    /**
+     * Highlight Key
+     * Adding this property to the internal query will highlight the words
+     *
+     * See {@link html_hilight}
+     */
+    const SEARCH_HIGHLIGHT_QUERY_PROPERTY = "s";
 
 
     /**
@@ -347,7 +358,9 @@ class LinkUtility
             case self::TYPE_INTERNAL:
                 if (!$this->dokuwikiUrl->hasQueryParameter("do")) {
                     foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
-                        $this->attributes->addComponentAttributeValue($key, $value);
+                        if ($key != self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
+                            $this->attributes->addComponentAttributeValue($key, $value);
+                        }
                     }
                 }
                 break;
@@ -851,6 +864,27 @@ EOF;
                     $url = wl($page->getId(), $this->dokuwikiUrl->getQueryParameters());
                 } else {
                     $url = wl($page->getId(), []);
+                    /**
+                     * The search term
+                     * Code adapted found at {@link Doku_Renderer_xhtml::internallink()}
+                     * We can't use the previous {@link wl function}
+                     * because it encode too much
+                     */
+                    $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
+                    if ($searchTerms != null) {
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar("search");
+                        if (is_array($searchTerms)) {
+
+                            $searchTerms = array_map('rawurlencode', $searchTerms);
+                            /**
+                             * Multiple s[] is the way to create an array
+                             */
+                            $url .= '&amp;s[]=' . join('&amp;s[]=', $searchTerms);
+
+                        } else {
+                            $url .= '&amp;s=' . rawurlencode($searchTerms);
+                        }
+                    }
                 }
                 if ($this->dokuwikiUrl->getFragment() != null) {
                     $url .= '#' . $this->dokuwikiUrl->getFragment();

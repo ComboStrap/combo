@@ -230,7 +230,23 @@ class DokuwikiUrl
                         $this->queryParameters[Dimension::HEIGHT_KEY] = $value;
                         break;
                     default:
-                        $this->queryParameters[$key] = $value;
+                        /**
+                         * Multiple parameter can be set to form an array
+                         *
+                         * Example: s=word1&s=word2
+                         *
+                         */
+                        if (isset($this->queryParameters[$key])){
+                            $actualValue = $this->queryParameters[$key];
+                            if(is_array($actualValue)){
+                                $actualValue[]=$value;
+                                $this->queryParameters[$key] = $actualValue;
+                            } else {
+                                $this->queryParameters[$key] = [$actualValue, $value];
+                            }
+                        } else {
+                            $this->queryParameters[$key] = $value;
+                        }
                 }
 
             }

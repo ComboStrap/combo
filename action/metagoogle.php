@@ -154,14 +154,22 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
                 // Date should be https://en.wikipedia.org/wiki/ISO_8601
 
+
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => $schemaType,
                     'url' => $page->getCanonicalUrlOrDefault(),
                     "headline" => $page->getTitleNotEmpty(),
-                    self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(DATE_ISO8601),
-                    self::DATE_MODIFIED_KEY => $page->getModifiedTime()->format(DATE_ISO8601),
+                    self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(DATE_ISO8601)
                 );
+
+                /**
+                 * Modified Time
+                 */
+                $modifiedTime = $page->getModifiedTime();
+                if ($modifiedTime != null) {
+                    $ldJson[self::DATE_MODIFIED_KEY] = $modifiedTime->format(DATE_ISO8601);
+                };
 
                 /**
                  * Publisher info

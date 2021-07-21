@@ -78,7 +78,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         } else {
             $id = $ID;
         }
-        $page = new Page($id);
+        $page = Page::createPageFromId($id);
         if ($page->shouldAnalyticsProcessOccurs()) {
             $page->processAnalytics();
         }

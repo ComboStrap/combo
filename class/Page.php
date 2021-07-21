@@ -141,7 +141,7 @@ class Page extends DokuPath
              * with the {@link \action_plugin_combo_pageprotection}
              */
             $useAcl = false;
-            $id = page_findnearest($absolutePath, $useAcl);
+            $id = page_findnearest($lastPathPart, $useAcl);
             if ($id !== false) {
                 $absolutePath = DokuPath::PATH_SEPARATOR . $id;
             }
@@ -237,7 +237,7 @@ class Page extends DokuPath
 
         } else {
 
-            return $this->getId();
+            return $this->getAbsolutePath();
 
         }
 
@@ -265,9 +265,9 @@ class Page extends DokuPath
     public
     static function createRequestedPageFromEnvironment()
     {
-        $path = PluginUtility::getPageId();
-        if ($path != null) {
-            return new Page($path);
+        $pageId = PluginUtility::getPageId();
+        if ($pageId != null) {
+            return Page::createPageFromId($pageId);
         } else {
             LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
             return null;

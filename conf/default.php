@@ -130,13 +130,6 @@ $conf['lowQualityPageProtectionEnable'] = 0;
 $conf['lowQualityPageProtectionMode'] = "robot";
 $conf['lowQualityPageLinkType'] = "normal";
 
-/**
- * Page Protection Mode {@link \ComboStrap\PageProtection::CONF_PAGE_PROTECTION_MODE}
- * Empty to be able to see if the value was set
- * to override the old conf value {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE}
- *
- */
-$conf['pageProtectionMode'] = "";
 
 /**
  * Preformatted mode disable

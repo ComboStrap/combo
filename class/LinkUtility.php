@@ -512,24 +512,28 @@ EOF;
                      */
                     if (!$this->attributes->hasAttribute("title")) {
 
-                        $description = $linkedPage->getDescriptionOrElseDokuWiki();
-                        if (empty($description)) {
-                            // Rare case
-                            $description = $linkedPage->getH1NotEmpty();
+                        /**
+                         * If this is not a link into the same page
+                         */
+                        if (!empty($this->getDokuwikiUrl()->getPath())) {
+                            $description = $linkedPage->getDescriptionOrElseDokuWiki();
+                            if (empty($description)) {
+                                // Rare case
+                                $description = $linkedPage->getH1NotEmpty();
+                            }
+                            if (!empty($acronym)) {
+                                $description = $description . " ($acronym)";
+                            }
+                            $this->attributes->addHtmlAttributeValue("title", $description);
                         }
-                        if (!empty($acronym)) {
-                            $description = $description . " ($acronym)";
-                        }
-                        $this->attributes->addHtmlAttributeValue("title", $description);
 
                     }
-
-
 
                 }
 
                 break;
-            case self::TYPE_EXTERNAL:
+            case
+            self::TYPE_EXTERNAL:
                 if ($conf['relnofollow']) {
                     $this->attributes->addHtmlAttributeValue("rel", 'nofollow ugc');
                 }
@@ -560,15 +564,6 @@ EOF;
         }
 
         /**
-         * Title settings
-         */
-        if (!$this->attributes->hasAttribute("title")) {
-            $title = $this->getTitle();
-            if (!empty($title)) {
-                $this->attributes->addHtmlAttributeValue("title", $title);
-            }
-        }
-        /**
          * An email URL and title
          * may be already encoded because of the vanguard configuration
          *
@@ -585,8 +580,7 @@ EOF;
         /**
          * Return
          */
-        $tag = $this->getHTMLTag();
-        return $this->attributes->toHtmlEnterTag($tag);
+        return $this->attributes->toHtmlEnterTag("a");
 
 
     }
@@ -748,7 +742,7 @@ EOF;
                 /**
                  * Create the linked page object
                  */
-                $this->linkedPage = new Page($path);
+                $this->linkedPage = Page::createFromIdOrPath($path);
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
             }
@@ -843,24 +837,6 @@ EOF;
         $this->title = $title;
     }
 
-    /**
-     * @return string the title of the link
-     */
-    public
-    function getTitle()
-    {
-        if (empty($this->title)) {
-            switch ($this->type) {
-                case self::TYPE_INTERNAL:
-                    $this->title = $this->getInternalPage()->getTitle();
-                    break;
-                case self::TYPE_EXTERNAL:
-                    // null, stay empty
-                    break;
-            }
-        }
-        return $this->title;
-    }
 
 
     private
@@ -1080,7 +1056,7 @@ EOF;
         }
     }
 
-    //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
+//FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
     public
     static function getHtmlClassNotExist()
     {

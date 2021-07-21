@@ -162,6 +162,17 @@ class Page extends DokuPath
     }
 
     /**
+     * The {@link LinkUtility} and therefore {@link DokuwikiUrl}
+     * accepts a path or an id (ie an absolute path without the root)
+     * and that's fucked up
+     * @param $idOrPath
+     */
+    public static function createFromIdOrPath($idOrPath)
+    {
+
+    }
+
+    /**
      * @var string the logical id is used with slots.
      *
      * A slot may exist in several node of the file system tree

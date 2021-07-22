@@ -135,7 +135,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         }
         $refreshCounter = 0;
         foreach ($rows as $row) {
-            $page = new Page($row['ID']);
+            $page = Page::createPageFromId($row['ID']);
             $page->processAnalytics();
             $refreshCounter++;
             if ($refreshCounter >= $maxRefresh) {

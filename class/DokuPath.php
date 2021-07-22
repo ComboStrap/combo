@@ -99,6 +99,7 @@ class DokuPath extends File
 
             if (substr($absolutePath, 0, 1) != DokuPath::PATH_SEPARATOR) {
                 LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
+                $this->absolutePath = ":" . $absolutePath;
             }
             $this->scheme = self::LOCAL_SCHEME;
 
@@ -264,7 +265,7 @@ class DokuPath extends File
 
     public static function createPagePathFromId($id)
     {
-        return new DokuPath(DokuPath::PATH_SEPARATOR.$id, self::PAGE_TYPE);
+        return new DokuPath(DokuPath::PATH_SEPARATOR . $id, self::PAGE_TYPE);
     }
 
 

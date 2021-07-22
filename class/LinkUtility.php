@@ -537,7 +537,7 @@ EOF;
                             if (!empty($acronym)) {
                                 $description = $description . " ($acronym)";
                             }
-                            $this->attributes->addHtmlAttributeValue("title", $description);
+                            $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($description));
                         }
 
                     }

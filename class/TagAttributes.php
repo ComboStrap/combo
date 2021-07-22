@@ -706,7 +706,7 @@ class TagAttributes
                 /**
                  * Unset attribute should not be added
                  */
-                if ($value == TagAttributes::UN_SET) {
+                if ($value === TagAttributes::UN_SET) {
                     continue;
                 }
 

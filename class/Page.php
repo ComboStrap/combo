@@ -991,7 +991,7 @@ class Page extends DokuPath
 
         $heading = p_get_metadata($this->getId(), Analytics::H1, METADATA_RENDER_USING_SIMPLE_CACHE);
         if (!blank($heading)) {
-            return PluginUtility::htmlEncode($heading);
+            return $heading;
         } else {
             return null;
         }
@@ -1008,7 +1008,7 @@ class Page extends DokuPath
         $id = $this->getId();
         $title = p_get_metadata($id, Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
         if (!blank($title)) {
-            return PluginUtility::htmlEncode($title);
+            return $title;
         } else {
             return $id;
         }
@@ -1802,7 +1802,7 @@ class Page extends DokuPath
     {
         $name = p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
         if (!blank($name)) {
-            return PluginUtility::htmlEncode($name);
+            return $name;
         } else {
             return $this->getName();
         }

@@ -23,11 +23,11 @@ class TemplateUtility
 
     const VARIABLE_PREFIX = "$";
 
-    static function renderFromString($pageTemplate, $pagePath)
+    static function renderFromString($pageTemplate, $pageId)
     {
 
 
-        $page = Page::createPageFromQualifiedPath($pagePath);
+        $page = Page::createPageFromId($pageId);
 
 
         return self::renderForPage($pageTemplate, $page);

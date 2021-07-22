@@ -160,7 +160,7 @@ class Background
                     $url = $media->getUrl(DokuwikiUrl::URL_AND, $media->getRequestedWidth());
                     if ($url !== false) {
 
-                        $backgroundImageStyleValue = "url(" . PluginUtility::htmlEncode($url) . ")";
+                        $backgroundImageStyleValue = "url(" . $url . ")";
 
 
                     } else {

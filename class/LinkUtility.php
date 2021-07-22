@@ -459,7 +459,7 @@ EOF;
                         $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
                         $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
                         $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
-                        $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($tooltipHtml));
+                        $this->attributes->addHtmlAttributeValue("title", $tooltipHtml);
                     }
 
                     /**
@@ -537,7 +537,7 @@ EOF;
                             if (!empty($acronym)) {
                                 $description = $description . " ($acronym)";
                             }
-                            $this->attributes->addHtmlAttributeValue("title", PluginUtility::htmlEncode($description));
+                            $this->attributes->addHtmlAttributeValue("title", $description);
                         }
 
                     }

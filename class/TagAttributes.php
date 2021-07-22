@@ -461,6 +461,12 @@ class TagAttributes
             StyleUtility::addStylingClass($this);
 
             /**
+             * Add the style has html attribute
+             * before processing
+             */
+            $this->addHtmlAttributeValueIfNotEmpty("style", $this->getStyle());
+
+            /**
              * Create a non-sorted temporary html attributes array
              */
             $tempHtmlArray = $this->htmlAttributes;
@@ -487,8 +493,7 @@ class TagAttributes
                 }
 
             }
-            // Copy the style
-            $tempHtmlArray["style"] = $this->getStyle();
+
 
             /**
              * Sort by attribute
@@ -568,7 +573,14 @@ class TagAttributes
         if (blank($value)) {
             LogUtility::msg("The value of the HTML attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
         }
-        $this->htmlAttributes[$key] = $value;
+        /**
+         * We encode all HTML attribute
+         * because `Unescaped '<' not allowed in attributes values`
+         *
+         * htmlencode the value `true` as `1`,
+         * We transform it first as string, then
+         */
+        $this->htmlAttributes[$key] = PluginUtility::htmlEncode(StringUtility::toString($value));
         return $this;
     }
 
@@ -1022,12 +1034,31 @@ class TagAttributes
         return isset($this->htmlAttributes[$attribute]);
     }
 
+    /**
+     * Component attribute are entered by the user and should be encoded
+     * @param array $arrayToEscape
+     * @param null $subKey
+     */
     private
     function escapeComponentAttribute(array $arrayToEscape, $subKey = null)
     {
         $urlEncoding = ["href", "src", "data-src", "data-srcset"];
         foreach ($arrayToEscape as $name => $value) {
+
             $encodedName = PluginUtility::htmlEncode($name);
+
+            /**
+             * Boolean does not need to be encoded
+             */
+            if (is_bool($value)) {
+                if ($subKey == null) {
+                    $this->componentAttributesCaseInsensitive[$encodedName] = $value;
+                } else {
+                    $this->componentAttributesCaseInsensitive[$subKey][$encodedName] = $value;
+                }
+                continue;
+            }
+
             if (is_array($value)) {
                 $this->escapeComponentAttribute($value, $encodedName);
             } else {

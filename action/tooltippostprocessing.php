@@ -1,11 +1,9 @@
 <?php
 
 
-use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\LogUtility;
-use ComboStrap\MediaLink;
-use ComboStrap\PluginUtility;
+
+require_once(__DIR__ . '/../class/PluginUtility.php');
 
 /**
  * Because of the automatic processing of p paragraph via {@link \dokuwiki\Parsing\Handler\Block::process()}

@@ -7,7 +7,6 @@
  * @author     Nicolas GERARD
  */
 
-use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
 
 if (!defined('DOKU_INC')) die();

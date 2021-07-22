@@ -283,9 +283,10 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
          * Publish
          */
         if (!empty($ldJson)) {
+            $jsonEncode = json_encode($ldJson, JSON_PRETTY_PRINT);
             $event->data["script"][] = array(
                 "type" => "application/ld+json",
-                "_data" => json_encode($ldJson, JSON_PRETTY_PRINT),
+                "_data" => $jsonEncode,
             );
         }
     }

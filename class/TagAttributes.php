@@ -577,10 +577,18 @@ class TagAttributes
          * We encode all HTML attribute
          * because `Unescaped '<' not allowed in attributes values`
          *
-         * htmlencode the value `true` as `1`,
-         * We transform it first as string, then
+         * except for url that have another encoding
+         * (ie only the query parameters value should be encoded)
          */
-        $this->htmlAttributes[$key] = PluginUtility::htmlEncode(StringUtility::toString($value));
+        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
+        if (!in_array($key, $urlEncoding)) {
+            /**
+             * htmlencode the value `true` as `1`,
+             * We transform it first as string, then
+             */
+            $value = PluginUtility::htmlEncode(StringUtility::toString($value));
+        }
+        $this->htmlAttributes[$key] = $value;
         return $this;
     }
 
@@ -1042,7 +1050,7 @@ class TagAttributes
     private
     function escapeComponentAttribute(array $arrayToEscape, $subKey = null)
     {
-        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
+
         foreach ($arrayToEscape as $name => $value) {
 
             $encodedName = PluginUtility::htmlEncode($name);
@@ -1062,9 +1070,8 @@ class TagAttributes
             if (is_array($value)) {
                 $this->escapeComponentAttribute($value, $encodedName);
             } else {
-                if (!in_array($name, $urlEncoding)) {
-                    $value = PluginUtility::htmlEncode($value);
-                }
+
+                $value = PluginUtility::htmlEncode($value);
                 if ($subKey == null) {
                     $this->componentAttributesCaseInsensitive[$encodedName] = $value;
                 } else {

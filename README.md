@@ -17,6 +17,7 @@
   * [Blazing Fast Performance (Lazy loading, responsive image)](https://combostrap.com/performance)
   * [Animation (hover, visible)](https://combostrap.com/animation)
   * [Ads](https://combostrap.com/ads)
+  * [Link with tooltip preview](https://combostrap.com/link)
   * [Page Analytics](https://combostrap.com/analytics)
   * [Page Quality Control](https://combostrap.com/quality)
   * [URL Management](https://combostrap.com/url/manager)

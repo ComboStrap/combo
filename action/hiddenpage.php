@@ -8,6 +8,9 @@ use ComboStrap\TplUtility;
 /**
  * Class action_plugin_combo_hidden
  * Hide page
+ *
+ *
+ * More on the official [[doku>config:hidepages|DokuWiki documentation]]
  */
 class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
 {
@@ -28,7 +31,7 @@ class action_plugin_combo_hiddenpage extends DokuWiki_Action_Plugin
         global $conf;
 
         /**
-         * Caching the strap bars and private namespace
+         * Caching the slot and private namespace
          */
         $pattern = "(" . $conf['sidebar'] . "|" . PluginUtility::COMBOSTRAP_NAMESPACE_NAME;
         if ($conf['template'] == PluginUtility::TEMPLATE_STRAP_NAME) {

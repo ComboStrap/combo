@@ -4,6 +4,7 @@
  *
  */
 
+use ComboStrap\CallStack;
 use ComboStrap\Icon;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
@@ -54,7 +55,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
     public function getAllowedTypes()
     {
         // You can't put anything in a icon
-        return array();
+        return array('formatting');
     }
 
     /**
@@ -93,10 +94,21 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getEmptyTagPattern(self::TAG);
-        $this->Lexer->addSpecialPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $specialPattern = PluginUtility::getEmptyTagPattern(self::TAG);
+        $this->Lexer->addSpecialPattern($specialPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
+        /**
+         * The content is used to add a {@link syntax_plugin_combo_tooltip}
+         */
+        $entryPattern = PluginUtility::getContainerTagPattern(self::TAG);
+        $this->Lexer->addEntryPattern($entryPattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
+    }
+
+    public function postConnect()
+    {
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
     }
 
 
@@ -120,16 +132,21 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_SPECIAL:
-
+            case DOKU_LEXER_ENTER:
                 // Get the parameters
-                $attributes = TagAttributes::createFromTagMatch($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler);
-                if ($tag->isDescendantOf(syntax_plugin_combo_contentlist::MARKI_TAG)) {
-                    $attributes->addComponentAttributeValue( "spacing","mr-2");
-                }
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes->toCallStackArray());
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                );
+            case DOKU_LEXER_EXIT:
+                $callStack = CallStack::createFromHandler($handler);
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES=>$openingCall->getAttributes(),
+                    PluginUtility::CONTEXT=>$openingCall->getContext()
+                );
 
 
         }
@@ -157,9 +174,40 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                 {
                     /** @var Doku_Renderer_xhtml $renderer */
                     $state = $data[PluginUtility::STATE];
-                    if ($state === DOKU_LEXER_SPECIAL) {
-                        $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                        $renderer->doc .= Icon::renderIconByAttributes($tagAttribute);
+                    switch ($state) {
+
+
+                        case DOKU_LEXER_SPECIAL:
+                            $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                            $renderer->doc .= Icon::renderIconByAttributes($tagAttribute);
+                            break;
+                        case DOKU_LEXER_ENTER:
+                            /**
+                             * If there is a tooltip, we need
+                             * to start with a span to wrap the svg with it
+                             */
+                            if ($data[PluginUtility::CONTEXT] == syntax_plugin_combo_tooltip::TAG) {
+                                /**
+                                 * The inline block is to make the span take the whole space
+                                 * of the image (ie dimension)
+                                 */
+                                $renderer->doc .= "<span class=\"d-inline-block\"";
+                            }
+                            break;
+                        case DOKU_LEXER_EXIT:
+                            /**
+                             * Print the icon
+                             */
+                            $tagAttribute = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                            $renderer->doc .= Icon::renderIconByAttributes($tagAttribute);
+                            /**
+                             * Close the span if we are in a tooltip context
+                             */
+                            if ($data[PluginUtility::CONTEXT] == syntax_plugin_combo_tooltip::TAG) {
+                                $renderer->doc .= "</span>";
+                            }
+
+                            break;
                     }
 
                 }

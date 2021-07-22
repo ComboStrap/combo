@@ -4,6 +4,7 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_qualitymessage;
+use DateTime;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Extension\SyntaxPlugin;
@@ -50,6 +51,7 @@ class Page extends DokuPath
     const ORGANIZATION_TYPE = "organization";
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
+    const NAME_PROPERTY = "name";
     const DESCRIPTION_PROPERTY = "description";
     const TYPE_PROPERTY = "type";
 
@@ -108,10 +110,10 @@ class Page extends DokuPath
 
     /**
      * Page constructor.
-     * @param $path - the path id of a page (it may be relative to the requested page)
+     * @param $absolutePath - the qualified path (may be not relative)
      *
      */
-    public function __construct($path)
+    public function __construct($absolutePath)
     {
 
         /**
@@ -127,7 +129,7 @@ class Page extends DokuPath
         if ($conf['template'] === $strapTemplateName) {
             $sidebars[] = $conf['tpl'][$strapTemplateName]['sidekickbar'];
         }
-        $lastPathPart = DokuPath::getLastPart($path);
+        $lastPathPart = DokuPath::getLastPart($absolutePath);
         if (in_array($lastPathPart, $sidebars)) {
 
             $this->isSideSlot = true;
@@ -139,9 +141,9 @@ class Page extends DokuPath
              * with the {@link \action_plugin_combo_pageprotection}
              */
             $useAcl = false;
-            $id = page_findnearest($path, $useAcl);
+            $id = page_findnearest($lastPathPart, $useAcl);
             if ($id !== false) {
-                $path = DokuPath::SEPARATOR . $id;
+                $absolutePath = DokuPath::PATH_SEPARATOR . $id;
             }
 
         }
@@ -149,7 +151,7 @@ class Page extends DokuPath
         global $ID;
         $this->requestedId = $ID;
 
-        parent::__construct($path, DokuPath::PAGE_TYPE);
+        parent::__construct($absolutePath, DokuPath::PAGE_TYPE);
 
     }
 
@@ -158,6 +160,31 @@ class Page extends DokuPath
         global $ID;
         return self::createPageFromId($ID);
     }
+
+    public static function createPageFromId($id)
+    {
+        return new Page(DokuPath::PATH_SEPARATOR . $id);
+    }
+
+    public static function createPageFromNonQualifiedPath($pathOrId)
+    {
+        global $ID;
+        $qualifiedId = $pathOrId;
+        resolve_pageid(getNS($ID), $qualifiedId, $exists);
+        /**
+         * Root correction
+         * yeah no root functionality in the {@link resolve_pageid resolution}
+         * meaning that we get an empty string
+         * they correct it in the link creation {@link wl()}
+         */
+        if ($qualifiedId === '') {
+            global $conf;
+            $qualifiedId = $conf['start'];
+        }
+        return Page::createPageFromId($qualifiedId);
+
+    }
+
 
     /**
      * @var string the logical id is used with slots.
@@ -202,15 +229,15 @@ class Page extends DokuPath
             }
 
             if ($scopePath !== ":") {
-                return $scopePath . DokuPath::SEPARATOR . $this->getName();
+                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getName();
             } else {
-                return DokuPath::SEPARATOR . $this->getName();
+                return DokuPath::PATH_SEPARATOR . $this->getName();
             }
 
 
         } else {
 
-            return $this->getPath();
+            return $this->getAbsolutePath();
 
         }
 
@@ -238,9 +265,9 @@ class Page extends DokuPath
     public
     static function createRequestedPageFromEnvironment()
     {
-        $path = PluginUtility::getPageId();
-        if ($path != null) {
-            return new Page($path);
+        $pageId = PluginUtility::getPageId();
+        if ($pageId != null) {
+            return Page::createPageFromId($pageId);
         } else {
             LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
             return null;
@@ -333,14 +360,10 @@ class Page extends DokuPath
 
     }
 
-    static function createPageFromPath($pathId)
-    {
-        return new Page($pathId);
-    }
 
-    static function createPageFromId($id)
+    static function createPageFromQualifiedPath($qualifiedPath)
     {
-        return new Page(DokuPath::IdToAbsolutePath($id));
+        return new Page($qualifiedPath);
     }
 
     /**
@@ -360,7 +383,7 @@ class Page extends DokuPath
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-            return self::createPageFromPath($id)->setCanonical($canonical);
+            return self::createPageFromId($id)->setCanonical($canonical);
         }
 
 
@@ -375,12 +398,11 @@ class Page extends DokuPath
         $sqlite->res_close($res);
         foreach ($res2arr as $row) {
             $id = $row['ID'];
-
-            return self::createPageFromPath($id)
+            return self::createPageFromId($id)
                 ->setCanonical($canonical);
         }
 
-        return self::createPageFromPath($canonical);
+        return self::createPageFromId($canonical);
 
     }
 
@@ -412,6 +434,15 @@ class Page extends DokuPath
 
                 } else {
                     LogUtility::msg("The page ($this) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
+                    /**
+                     * Check if the error may come from the auto-canonical
+                     * (Never ever save generated data)
+                     */
+                    $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
+                    if ($canonicalLastNamesCount > 0) {
+                        $this->unsetMetadata(Page::CANONICAL_PROPERTY);
+                        Page::createPageFromQualifiedPath($idInDb)->unsetMetadata(Page::CANONICAL_PROPERTY);
+                    }
                 }
                 $this->persistPageAlias($canonical, $idInDb);
             }
@@ -522,7 +553,26 @@ class Page extends DokuPath
                 /**
                  * Takes the last names part
                  */
-                $names = $this->getNames();
+                $namesOriginal = $this->getNames();
+                /**
+                 * Delete the identical names at the end
+                 * To resolve this problem
+                 * The page (viz:viz) and the page (data:viz:viz) have the same canonical.
+                 * The page (viz:viz) will get the canonical viz
+                 * The page (data:viz) will get the canonical  data:viz
+                 */
+                $i = sizeof($namesOriginal) - 1;
+                $names = $namesOriginal;
+                while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
+                    unset($names[$i]);
+                    $i--;
+                    if ($i <= 0) {
+                        break;
+                    }
+                }
+                /**
+                 * Minimal length check
+                 */
                 $namesLength = sizeof($names);
                 if ($namesLength > $canonicalLastNamesCount) {
                     $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
@@ -832,7 +882,7 @@ class Page extends DokuPath
     {
         $backlinks = array();
         foreach (ft_backlinks($this->getId()) as $backlinkId) {
-            $backlinks[] = new Page($backlinkId);
+            $backlinks[] = Page::createPageFromId($backlinkId);
         }
         return $backlinks;
     }
@@ -941,7 +991,7 @@ class Page extends DokuPath
 
         $heading = p_get_metadata($this->getId(), Analytics::H1, METADATA_RENDER_USING_SIMPLE_CACHE);
         if (!blank($heading)) {
-            return PluginUtility::htmlEncode($heading);
+            return $heading;
         } else {
             return null;
         }
@@ -958,7 +1008,7 @@ class Page extends DokuPath
         $id = $this->getId();
         $title = p_get_metadata($id, Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
         if (!blank($title)) {
-            return PluginUtility::htmlEncode($title);
+            return $title;
         } else {
             return $id;
         }
@@ -1108,9 +1158,9 @@ class Page extends DokuPath
                 // We transform them to a path id
                 $pathId = $firstImageId;
                 if (!media_isexternal($firstImageId)) {
-                    $pathId = DokuPath::SEPARATOR . $firstImageId;
+                    $pathId = DokuPath::PATH_SEPARATOR . $firstImageId;
                 }
-                return MediaLink::createMediaLinkFromPathId($pathId);
+                return MediaLink::createMediaLinkFromNonQualifiedPath($pathId);
             }
         }
         return null;
@@ -1137,10 +1187,10 @@ class Page extends DokuPath
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = MediaLink::createMediaLinkFromPathId($imageIdFromMeta);
+                    $images[] = MediaLink::createMediaLinkFromNonQualifiedPath($imageIdFromMeta);
                 }
             } else {
-                $images = array(MediaLink::createMediaLinkFromPathId($imageMeta));
+                $images = array(MediaLink::createMediaLinkFromNonQualifiedPath($imageMeta));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
@@ -1215,16 +1265,16 @@ class Page extends DokuPath
     }
 
     /**
-     * The modified date is the last modficaction date
+     * The modified date is the last modification date
      * the first time, this is the creation date
-     * @return false|string|null
+     * @return string|null
      */
     public
     function getModifiedDateString()
     {
-        $modified = $this->getModifiedTimestamp();
+        $modified = $this->getModifiedTime();
         if (!empty($modified)) {
-            return date(DATE_W3C, $modified);
+            return $modified->format(DATE_W3C);
         } else {
             return null;
         }
@@ -1240,13 +1290,19 @@ class Page extends DokuPath
     /**
      * Get the create date of page
      *
-     * @return int
+     * @return DateTime
      */
     public
-    function getCreatedTimestamp()
+    function getCreatedTime()
     {
-        $created = $this->getPersistentMetadata('date')['created'];
-        return ($created ? $created : null);;
+        $createdMeta = $this->getPersistentMetadata('date')['created'];
+        if (empty($createdMeta)) {
+            return null;
+        } else {
+            $datetime = new DateTime();
+            $datetime->setTimestamp($createdMeta);
+            return $datetime;
+        }
     }
 
     /**
@@ -1255,26 +1311,32 @@ class Page extends DokuPath
      * The modified date is the last modification date
      * the first time, this is the creation date
      *
-     * @return int
+     * @return DateTime
      */
     public
-    function getModifiedTimestamp()
+    function getModifiedTime()
     {
         $modified = $this->getCurrentMetadata('date')['modified'];
-        return ($modified ? $modified : null);
+        if (empty($modified)) {
+            return null;
+        } else {
+            $datetime = new DateTime();
+            $datetime->setTimestamp($modified);
+            return $datetime;
+        }
     }
 
     /**
      * Creation date can not be null
-     * @return false|string
+     * @return null|string
      */
     public
     function getCreatedDateString()
     {
 
-        $created = $this->getCreatedTimestamp();
+        $created = $this->getCreatedTime();
         if (!empty($created)) {
-            return date(DATE_W3C, $created);
+            return $created->format(DATE_W3C);
         } else {
             // Not created
             return null;
@@ -1364,7 +1426,7 @@ class Page extends DokuPath
                  * page named like the NS inside the NS
                  * ie ns:ns
                  */
-                $startPage = Page::createPageFromPath($this->getNamespacePath() . ":" . $startPageName);
+                $startPage = Page::createPageFromId(DokuPath::absolutePathToId($this->getNamespacePath()) . DokuPath::PATH_SEPARATOR . $startPageName);
                 if (!$startPage->exists()) {
                     return true;
                 }
@@ -1389,76 +1451,44 @@ class Page extends DokuPath
     }
 
     public
-    function getPublishedTimestamp()
+    function getPublishedTime()
     {
         $persistentMetadata = $this->getPersistentMetadata(Publication::META_KEY_PUBLISHED);
-        if (!empty($persistentMetadata)) {
-            $timestamp = strtotime($persistentMetadata);
-            if ($timestamp === false) {
-                LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, "published");
-            } else {
-                return date("U", $timestamp);
-            }
-        } else {
+        if (empty($persistentMetadata)) {
             return null;
         }
-
+        // Ms level parsing
+        $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
+        if ($dateTime === false) {
+            // Day level
+            $dateTime = DateTime::createFromFormat("Y-m-d", $persistentMetadata);
+            if ($dateTime === false) {
+                LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, Publication::CANONICAL);
+                return null;
+            }
+        }
+        return $dateTime;
     }
 
+
     /**
-     * @return false|int|string|null
+     * @return DateTime
      */
     public
-    function getPublishedElseCreationTimeStamp()
+    function getPublishedElseCreationTime()
     {
-        $publishedDate = $this->getPublishedTimestamp();
+        $publishedDate = $this->getPublishedTime();
         if (empty($publishedDate)) {
-            $publishedDate = $this->getCreatedTimestamp();
+            $publishedDate = $this->getCreatedTime();
         }
         return $publishedDate;
     }
 
-    /**
-     * If low page rank or late publication and not logged in,
-     * no authorization
-     * @param $user
-     * @return bool if the page should be protected
-     */
-    public
-    function isProtected($user = '')
-    {
-        $protected = false;
-        if (!Identity::isLoggedIn()) {
-
-            /**
-             * Low quality page and late publication should not
-             * be public and readable for the search engine
-             */
-
-            if ($this->isLowQualityPage()) {
-                $lowQualityPageEnabled = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
-                if ($lowQualityPageEnabled == 1) {
-                    $protected = true;
-                }
-            }
-
-            if ($this->isLatePublication()) {
-
-                $latePublicationEnabled = PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
-                if ($latePublicationEnabled == 1) {
-                    $protected = true;
-                }
-
-            }
-        }
-        return $protected;
-
-    }
 
     public
     function isLatePublication()
     {
-        return $this->getPublishedElseCreationTimeStamp() > time();
+        return $this->getPublishedElseCreationTime() > new DateTime('now');
     }
 
     public
@@ -1706,7 +1736,8 @@ class Page extends DokuPath
         $this->deleteCache("xhtml");
     }
 
-    public function getAnchorLink()
+    public
+    function getAnchorLink()
     {
         $url = $this->getCanonicalUrlOrDefault();
         $title = $this->getTitle();
@@ -1718,7 +1749,8 @@ class Page extends DokuPath
      * Without the `:` at the end
      * @return string
      */
-    public function getNamespacePath()
+    public
+    function getNamespacePath()
     {
         $ns = getNS($this->getId());
         /**
@@ -1731,7 +1763,9 @@ class Page extends DokuPath
         }
     }
 
-    public function getScope()
+
+    public
+    function getScope()
     {
         /**
          * The scope may change
@@ -1749,16 +1783,42 @@ class Page extends DokuPath
      * Return the id of the div HTML
      * element that is added for cache debugging
      */
-    public function getCacheHtmlId()
+    public
+    function getCacheHtmlId()
     {
         return "cache-" . str_replace(":", "-", $this->getId());
     }
 
-    public function deleteMetadatas()
+    public
+    function deleteMetadatas()
     {
         $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
         p_save_metadata($this->getId(), $meta);
         return $this;
+    }
+
+    public
+    function getPageNameNotEmpty()
+    {
+        $name = p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+        if (!blank($name)) {
+            return $name;
+        } else {
+            return $this->getName();
+        }
+    }
+
+    /**
+     * @param $property
+     */
+    private function unsetMetadata($property)
+    {
+        $meta = p_read_metadata($this->getId());
+        if (isset($meta['persistent'][$property])) {
+            unset($meta['persistent'][$property]);
+        }
+        p_save_metadata($this->getId(), $meta);
+
     }
 
 

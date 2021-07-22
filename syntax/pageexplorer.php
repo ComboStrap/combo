@@ -74,7 +74,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      */
     private static function toNamespaceName($namespacePath)
     {
-        $sepPosition = strrpos($namespacePath, DokuPath::SEPARATOR);
+        $sepPosition = strrpos($namespacePath, DokuPath::PATH_SEPARATOR);
         if ($sepPosition !== false) {
             $namespaceName = ucfirst(trim(str_replace("_", " ", substr($namespacePath, $sepPosition + 1))));
         } else {
@@ -227,7 +227,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * Set the wiki-id of the namespace
                  * (Needed by javascript)
                  */
-                $namespaceId = DokuPath::AbsolutePathToId($namespacePath);
+                $namespaceId = DokuPath::absolutePathToId($namespacePath);
                 if ($namespaceId == "") {
                     // root namespace id is the empty string
                     $tagAttributes->addEmptyComponentAttributeValue(TagAttributes::WIKI_ID);
@@ -769,7 +769,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 /**
                  * Page
                  */
-                $page = Page::createPageFromPath($actualPageOrNamespacePath);
+                $page = Page::createPageFromQualifiedPath($actualPageOrNamespacePath);
                 if ($page->isHomePage()) {
                     $homePage = $page;
                 } else {

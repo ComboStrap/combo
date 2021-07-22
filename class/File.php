@@ -21,11 +21,11 @@ class File
 
     /**
      * File constructor.
-     * @param $path
+     * @param $absolutePath
      */
-    protected function __construct($path)
+    protected function __construct($absolutePath)
     {
-        $this->path = $path;
+        $this->path = $absolutePath;
     }
 
     /**

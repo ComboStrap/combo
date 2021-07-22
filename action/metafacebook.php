@@ -63,7 +63,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
 
-        $page = new Page($ID);
+        $page = Page::createPageFromId($ID);
         if (!$page->exists()) {
             return;
         }
@@ -107,8 +107,11 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
         if ($ogType == Page::ARTICLE_TYPE) {
             // https://ogp.me/#type_article
-            $facebookMeta["article:published_time"] = date("c", $page->getPublishedElseCreationTimeStamp());
-            $facebookMeta["article:modified_time"] = date("c", $page->getModifiedTimestamp());
+            $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
+            $modifiedTime = $page->getModifiedTime();
+            if($modifiedTime!=null) {
+                $facebookMeta["article:modified_time"] = $modifiedTime->format(DATE_ISO8601);
+            }
         }
 
         /**
@@ -118,7 +121,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = MediaLink::createMediaLinkFromPathId($defaultFacebookImage);
+                $image = MediaLink::createMediaLinkFromNonQualifiedPath($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {

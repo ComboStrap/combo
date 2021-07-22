@@ -13,7 +13,7 @@
 namespace ComboStrap;
 
 
-require_once(__DIR__ . '/../class/Identity.php');
+require_once('PluginUtility.php');
 
 /**
  * Class LowQualityPage
@@ -27,9 +27,39 @@ class LowQualityPage
     const CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE = "lowQualityPageProtectionEnable";
 
     /**
-     * @deprecated used {@link PageProtection::CONF_MODE} instead
+     *
      */
     const CONF_LOW_QUALITY_PAGE_PROTECTION_MODE = "lowQualityPageProtectionMode";
 
+    const CONF_LOW_QUALITY_PAGE_LINK_TYPE = "lowQualityPageLinkType";
+    const CLASS_NAME = "low-quality-page";
+
+    public static function getLowQualityProtectionMode()
+    {
+        if (PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true)) {
+            return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * The protection does not occur on the HTML
+     * because the created page is valid for a anonymous or logged-in user
+     * @return mixed|null
+     */
+    public static function isProtectionEnabled()
+    {
+
+        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE, true);
+
+    }
+
+    public static function getLowQualityLinkType()
+    {
+
+        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE, PageProtection::PAGE_PROTECTION_LINK_NORMAL);
+
+    }
 
 }

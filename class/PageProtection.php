@@ -20,74 +20,41 @@ use syntax_plugin_combo_tooltip;
  * public agent such as low quality page or late publication
  *
  * @package ComboStrap
+ *
+ * The test are in two separate classes {@link \LowQualityPageTest}
+ * and {@link \PublicationTest}
  */
 class PageProtection
 {
 
     const NAME = "page-protection";
-
-    /**
-     * Conf that gets one of the two values
-     */
-    const CONF_PAGE_PROTECTION_MODE = "pageProtectionMode";
+    const ACRONYM = "pp";
 
     /**
      * The possible values
      */
     const CONF_VALUE_ACL = "acl";
     const CONF_VALUE_HIDDEN = "hidden";
+    const CONF_VALUE_ROBOT = "robot";
+    const CONF_VALUE_FEED = "feed";
+
+
+    const PAGE_PROTECTION_LINK_WARNING = "warning";
+    const PAGE_PROTECTION_LINK_NORMAL = "normal";
+    const PAGE_PROTECTION_LINK_LOGIN = "login";
 
 
     /**
-     * A javascript indicator
-     * to know if the user is logged in or not
-     * (ie public or not)
-     */
-    const JS_IS_PUBLIC_NAVIGATION_INDICATOR = "page_protection_is_public_navigation";
-
-    /**
-     * The class of the span
-     * element created in place of the link
-     * See {@link LinkUtility::renderOpenTag()}
-     */
-    const PROTECTED_LINK_CLASS = "combo-page-protection";
-
-    /**
-     * An html attribute to get the source of the protection
-     */
-    const HTML_DATA_ATTRIBUTES = "data-page-protection";
-
-    /**
-     * Add the HTML snippet
+     * Add the Javascript snippet
+     * We have created only one because a page
+     * may be of low quality and with a late publication.
+     * To resolve conflict between the two protections, the parameters are the same
+     * and the late publication takes precedence on low quality page
      */
     public static function addPageProtectionSnippet()
     {
         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
-        $protectedLinkClass = self::PROTECTED_LINK_CLASS;
-        $jsIsPublicNavigationIndicator = self::JS_IS_PUBLIC_NAVIGATION_INDICATOR;
-        $jsClass = self::PROTECTED_LINK_CLASS;
-        $style = <<<EOF
-.{$protectedLinkClass} {
-    color:#a829dc
-}
-EOF;
-        PluginUtility::getSnippetManager()->upsertCssSnippetForBar(self::NAME, $style);
-
-
-        $js = <<<EOF
-window.addEventListener('DOMContentLoaded', function () {
-
-    if (JSINFO["{$jsIsPublicNavigationIndicator}"]===false){
-        jQuery("span.{$jsClass}").each(function() {
-                let actualClass = jQuery(this).attr("class");
-                jQuery(this).replaceWith( "<a class=\""+actualClass+"\" href=\""+DOKU_BASE+jQuery(this).attr("data-wiki-id")+"\">"+jQuery(this).text()+"</a>" )
-        })
+        PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::NAME);
     }
 
-})
-EOF;
-        PluginUtility::getSnippetManager()->upsertJavascriptForBar(self::NAME, $js);
-
-
-    }
 }

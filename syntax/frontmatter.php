@@ -62,7 +62,14 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
     public function getPType()
     {
-        return "normal";
+        /**
+         * This element create a section
+         * element that is a div
+         * that should not be in paragraph
+         *
+         * We make it a block
+         */
+        return "block";
     }
 
 

@@ -92,7 +92,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         }
 
 
-        $page = new Page($ID);
+        $page = Page::createPageFromId($ID);
 
         if(!$page->exists()){
             return;
@@ -148,7 +148,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (empty($twitterImages)) {
             $defaultImageIdConf = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE));
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = MediaLink::createMediaLinkFromPathId($defaultImageIdConf);
+                $twitterImage = MediaLink::createMediaLinkFromNonQualifiedPath($defaultImageIdConf);
                 if ($twitterImage->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {

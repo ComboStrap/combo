@@ -47,7 +47,7 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
         $cspKey = null;
         foreach ($event->data['meta'] as $key => $meta) {
             if (isset($meta["http-equiv"])) {
-                if ($meta["http-equiv"] == "Content-Security-Policy") {
+                if ($meta["http-equiv"] == "content-security-policy") {
                     $cspKey = $key;
                 }
             }
@@ -56,12 +56,12 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
             $actualDirectives = StringUtility::explodeAndTrim($event->data['meta'][$cspKey]["content"], ",");
             $directives = array_merge($actualDirectives, $directives);
             $event->data['meta'][$cspKey] = [
-                "http-equiv" => "Content-Security-Policy",
+                "http-equiv" => "content-security-policy",
                 "content" => join(", ", $directives)
             ];
         } else {
             $event->data['meta'][] = [
-                "http-equiv" => "Content-Security-Policy",
+                "http-equiv" => "content-security-policy",
                 "content" => join(",", $directives)
             ];
         }
@@ -74,7 +74,7 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
         if (strpos($httpHeaderReferer, Site::getUrl()) === false) {
             // not same origin
             $httpDirectives = [
-                "Content-Security-Policy: frame-ancestors 'none'", // the page cannot be used in a iframe (clickjacking),
+                "content-security-policy: frame-ancestors 'none'", // the page cannot be used in a iframe (clickjacking),
                 "X-Frame-Options: deny" // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
             ];
         }

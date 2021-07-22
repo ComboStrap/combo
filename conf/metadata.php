@@ -113,9 +113,16 @@ $meta[syntax_plugin_combo_file::CONF_FILE_ENABLE] = array('onoff');
  */
 require_once(__DIR__ . '/../class/LowQualityPage.php');
 $meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = array('onoff');
-$meta[PageProtection::CONF_PAGE_PROTECTION_MODE] = array('multichoice', '_choices' => array(
+$meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = array('multichoice', '_choices' => array(
+    PageProtection::CONF_VALUE_ROBOT,
+    PageProtection::CONF_VALUE_FEED,
     PageProtection::CONF_VALUE_ACL,
     PageProtection::CONF_VALUE_HIDDEN
+));
+$meta[LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE] = array('multichoice', '_choices' => array(
+    PageProtection::PAGE_PROTECTION_LINK_NORMAL,
+    PageProtection::PAGE_PROTECTION_LINK_WARNING,
+    PageProtection::PAGE_PROTECTION_LINK_LOGIN,
 ));
 
 /**
@@ -144,6 +151,7 @@ $meta[action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAM
  * Link
  */
 $meta[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = array('onoff');
+$meta[LinkUtility::CONF_PREVIEW_LINK] = array('onoff');
 $meta[syntax_plugin_combo_link::CONF_DISABLE_LINK] = array('onoff');
 
 /**
@@ -178,6 +186,12 @@ $meta[Site::CONF_SITE_ISO_COUNTRY] = array("string");
  * Late publication protection
  */
 $meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
+$meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = array('multichoice', '_choices' => array(
+    PageProtection::CONF_VALUE_ROBOT,
+    PageProtection::CONF_VALUE_FEED,
+    PageProtection::CONF_VALUE_ACL,
+    PageProtection::CONF_VALUE_HIDDEN
+));
 
 /**
  * Default Page Type

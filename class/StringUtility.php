@@ -55,6 +55,15 @@ class StringUtility
 
     public static function toString($value)
     {
+        /**
+         * No transformation if it's a string
+         * var_export below is not idempotent
+         * ie \ would become \\
+         */
+        if(is_string($value)){
+            return $value;
+        }
+
         $string = var_export($value, true);
 
         // An array value gets command in var_export

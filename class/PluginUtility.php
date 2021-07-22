@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
 
 /**
@@ -47,11 +48,13 @@ require_once('MediaLink.php');
 require_once('Lang.php');
 require_once('LineSpacing.php');
 require_once('LogUtility.php');
+require_once('LowQualityPage.php');
 require_once('Opacity.php');
 require_once('Page.php');
 require_once('PipelineUtility.php');
 require_once('Position.php');
 require_once('Prism.php');
+require_once('Publication.php');
 require_once('RasterImageLink.php');
 require_once('RenderUtility.php');
 require_once('Resources.php');
@@ -112,6 +115,7 @@ class PluginUtility
 
 
     const EDIT_SECTION_TARGET = 'section';
+    const ERROR_MESSAGE = "errorAtt";
 
     /**
      * The URL base of the documentation
@@ -187,6 +191,7 @@ class PluginUtility
     }
 
     /**
+     * Return a mode from a tag (ie from a {@link Plugin::getPluginComponent()}
      * @param $tag
      * @return string
      *

@@ -41,7 +41,7 @@ class Site
     {
         $logoIds = self::getLogoIds();
         foreach ($logoIds as $logoId) {
-            $mediaLink = MediaLink::createMediaLinkFromPathId($logoId, null, $tagAttributes);
+            $mediaLink = MediaLink::createMediaLinkFromNonQualifiedPath($logoId, null, $tagAttributes);
             $mediaLink->setLazyLoad(false);
             if ($mediaLink->exists()) {
                 return $mediaLink->renderMediaTag();
@@ -238,20 +238,6 @@ class Site
         // https://www.dokuwiki.org/config:useheading
         global $conf;
         $conf['useheading'] = 0;
-    }
-
-    public static function getTopSpacing()
-    {
-        $template = Site::getTemplate();
-        if ($template == self::STRAP_TEMPLATE_NAME) {
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if ($loaded) {
-                return TplUtility::getTopFixedHeightForMenuBar();
-            }
-        }
-
-        return 0;
-
     }
 
     public static function getTemplate()

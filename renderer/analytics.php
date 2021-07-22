@@ -116,8 +116,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function document_start()
     {
         $this->reset();
-        global $ID;
-        $this->page = new Page($ID);
+        $this->page = Page::createPageFromCurrentId();
 
     }
 
@@ -470,8 +469,12 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         if (empty($this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR])) {
             $lowLevel = false;
-            if (sizeof($mandatoryRulesBroken) > 0) {
+            $brokenRulesCount = sizeof($mandatoryRulesBroken);
+            if ($brokenRulesCount > 0) {
                 $lowLevel = true;
+                $quality["message"] = "$brokenRulesCount mandatory rules broken.";
+            } else {
+                $quality["message"] = "No mandatory rules broken";
             }
         } else {
             $lowLevel = filter_var($this->analyticsMetadata[Page::LOW_QUALITY_PAGE_INDICATOR], FILTER_VALIDATE_BOOLEAN);
@@ -533,12 +536,15 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * doku.php?id=somepage&do=export_combo_analysis
          *
          * Set the header temporarily for the export.php file
+         *
+         * The mode in the export is
          */
+        $mode = "combo_" . $this->getPluginComponent();
         p_set_metadata(
             $ID,
-            array("format" => array("combo_" . $this->getPluginComponent() => array("Content-Type" => 'application/json'))),
+            array("format" => array($mode => array("Content-Type" => 'application/json'))),
             false,
-            false // Persistence is not needed, this is just in case this is an export
+            true // Persistence is needed because there is a cache
         );
         $json_encoded = json_encode($finalStats, JSON_PRETTY_PRINT);
 

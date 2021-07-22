@@ -121,18 +121,15 @@ $conf['batchPrompt'] = 'C:\\';
 $conf['powershellPrompt'] = 'PS C:\\';
 
 /**
- * SEO module
+ * Low Quality Page Protection
  * See {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE}
+ * See {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE}
+ * See {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE}
  */
 $conf['lowQualityPageProtectionEnable'] = 0;
+$conf['lowQualityPageProtectionMode'] = "robot";
+$conf['lowQualityPageLinkType'] = "normal";
 
-/**
- * Page Protection Mode {@link \ComboStrap\PageProtection::CONF_PAGE_PROTECTION_MODE}
- * Empty to be able to see if the value was set
- * to override the old conf value {@link \ComboStrap\LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE}
- *
- */
-$conf['pageProtectionMode'] = "";
 
 /**
  * Preformatted mode disable
@@ -162,11 +159,12 @@ $conf['disableDynamicQualityMonitoring'] = 0;
 /**
  * Link
  * Class in link {@link \ComboStrap\LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME}
+ * Preview on link {@link \ComboStrap\LinkUtility::CONF_PREVIEW_LINK}
  * Enable {@link syntax_plugin_combo_link::CONF_DISABLE_LINK}
- * MultiLines {@link syntax_plugin_combo_link::CONF_ENABLE_MULTI_LINES_LINK}
  */
 $conf['useDokuwikiLinkClassName'] = 0;
 $conf['disableLink'] = 0;
+$conf['previewLink'] = 0;
 
 /**
  * Twitter
@@ -199,8 +197,10 @@ $conf['siteIsoCountry'] = "";
 /**
  *
  * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE}
+ * See {@link \ComboStrap\Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE}
  */
 $conf['latePublicationProtectionEnable'] = 1;
+$conf["latePublicationProtectionMode"] = "acl";
 
 /**
  * Default page type

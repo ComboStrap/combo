@@ -40,7 +40,7 @@ class BreadcrumbHierarchical
         if (!$conf['youarehere']) return "";
 
         // print intermediate namespace links
-        $htmlOutput = '<p class="branch rplus">' . PHP_EOL;
+        $htmlOutput = '<div class="branch rplus">' . PHP_EOL;
 
         // Breadcrumb head
         $htmlOutput .= '<nav aria-label="breadcrumb">' . PHP_EOL;
@@ -74,7 +74,7 @@ class BreadcrumbHierarchical
                  * resolve will also resolve to the home page
                  */
 
-                $page = implode(DokuPath::SEPARATOR,$currentParts).":";
+                $page = implode(DokuPath::PATH_SEPARATOR,$currentParts).":";
                 $exist = null;
                 resolve_pageid(getNS($ID), $page, $exist, "", true);
 
@@ -96,7 +96,7 @@ class BreadcrumbHierarchical
         // close the breadcrumb
         $htmlOutput .= '</ol>' . PHP_EOL;
         $htmlOutput .= '</nav>' . PHP_EOL;
-        $htmlOutput .= "</p>" . PHP_EOL;
+        $htmlOutput .= "</div>" . PHP_EOL;
 
 
         return $htmlOutput;

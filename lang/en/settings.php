@@ -107,7 +107,8 @@ $lang[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRIN
  */
 $lang[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = PluginUtility::getUrl("low_quality_page", "Mandatory Quality rules") . ' - The mandatory quality rules are the rules that should pass to consider the quality of a page as not `low`';
 $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = PluginUtility::getUrl("lqpp", "Low quality page protection") . " - If enabled, a low quality page will no more be discoverable by search engine or anonymous user.";
-$lang[PageProtection::CONF_PAGE_PROTECTION_MODE] = PluginUtility::getUrl("page:protection", "Page protection mode") . " - Choose the protection mode for low quality page and late publication. Hidden (but still accessible) vs Acl (User should log in)";
+$lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = PluginUtility::getUrl("lqpp", "Low quality page protection") . " - Choose the protection mode for low quality page.";
+$lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE] = PluginUtility::getUrl("lqpp", "Low quality page protection") . " - Choose the link created to a low quality page.";
 
 /**
  * Autofrontmatter
@@ -125,6 +126,7 @@ $lang[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = Plu
  */
 $lang[syntax_plugin_combo_link::CONF_DISABLE_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Disable the ComboStrap link component";
 $lang[LinkUtility::CONF_USE_DOKUWIKI_CLASS_NAME] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Use the DokuWiki class type for links (Bootstrap conflict if enabled)";
+$lang[LinkUtility::CONF_PREVIEW_LINK] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "Link") . " - Add a page preview on all internal links when a user is hovering";
 
 /**
  * Twitter
@@ -154,7 +156,8 @@ $lang[Site::CONF_SITE_ISO_COUNTRY] = PluginUtility::getUrl("country", "Country")
 /**
  * Late publication
  */
-$lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::getUrl("published", "Late Publication") . " - Page with a published date in the future will be protected from search engine and the public";
+$lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::getUrl(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM, "Late Publication") . " - Page with a published date in the future will be protected from search engine and the public";
+$lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = PluginUtility::getUrl(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM, "Late Publication") . " - The mode of protection for a late published page";
 
 /**
  * Default page type

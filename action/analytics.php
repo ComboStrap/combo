@@ -78,7 +78,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         } else {
             $id = $ID;
         }
-        $page = new Page($id);
+        $page = Page::createPageFromId($id);
         if ($page->shouldAnalyticsProcessOccurs()) {
             $page->processAnalytics();
         }
@@ -135,7 +135,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         }
         $refreshCounter = 0;
         foreach ($rows as $row) {
-            $page = new Page($row['ID']);
+            $page = Page::createPageFromId($row['ID']);
             $page->processAnalytics();
             $refreshCounter++;
             if ($refreshCounter >= $maxRefresh) {
@@ -155,7 +155,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     {
 
         $pageId = $event->data['page'];
-        $page = new Page($pageId);
+        $page = Page::createPageFromId($pageId);
         $links = $page->getInternalLinksFromMeta();
         if ($links !== null) {
             $this->linksBeforeByPage[$pageId] = $links;
@@ -203,7 +203,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
              * We don't update the analytics
              * because we want speed
              */
-            $addedPage = new Page($changedLink);
+            $addedPage = Page::createPageFromId($changedLink);
             $reason = "The backlink {$changedLink} from the page {$pageId} was {$status}";
             $addedPage->deleteCacheAndAskAnalyticsRefresh($reason);
 

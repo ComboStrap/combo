@@ -50,12 +50,16 @@ class TagAttributes
         MediaLink::LINKING_KEY, // internal to image
         CacheMedia::CACHE_KEY, // internal also
         \syntax_plugin_combo_webcode::RENDERING_MODE_ATTRIBUTE,
-        syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE
+        syntax_plugin_combo_cell::VERTICAL_ATTRIBUTE,
+        self::OPEN_TAG,
+        self::HTML_BEFORE,
+        self::HTML_AFTER
     ];
 
     /**
      * The inline element
-     * We could pass the plugin object into tag attribute in place of the logical tag and check if the {@link SyntaxPlugin::getPType()} is normal
+     * We could pass the plugin object into tag attribute in place of the logical tag
+     * and check if the {@link SyntaxPlugin::getPType()} is normal
      */
     const INLINE_LOGICAL_ELEMENTS = [
         SvgImageLink::CANONICAL,
@@ -70,6 +74,35 @@ class TagAttributes
     const DISPLAY = "display";
     const CLASS_KEY = "class";
     const WIKI_ID = "wiki-id";
+
+    /**
+     * The open tag attributes
+     * permit to not close the tag in {@link TagAttributes::toHtmlEnterTag()}
+     *
+     * It's used for instance by the {@link \syntax_plugin_combo_tooltip}
+     * to advertise that it will add attribute and close it
+     */
+    const OPEN_TAG = "open-tag";
+
+    /**
+     * If an attribute has this value,
+     * it will not be added to the output (ie {@link TagAttributes::toHtmlEnterTag()})
+     * Child element can unset attribute this way
+     * in order to write their own
+     *
+     * This is used by the {@link \syntax_plugin_combo_tooltip}
+     * to advertise that the title attribute should not be set
+     */
+    const UN_SET = "unset";
+
+    /**
+     * When wrapping an element
+     * A tag may get HTML before and after
+     * Uses for instance to wrap a svg in span
+     * when adding a {@link \syntax_plugin_combo_tooltip}
+     */
+    const HTML_BEFORE = "htmlBefore";
+    const HTML_AFTER = "htmlAfter";
 
     /**
      * A global static counter
@@ -303,7 +336,10 @@ class TagAttributes
     public function setComponentAttributeValue($attributeName, $attributeValue)
     {
         $attLower = strtolower($attributeName);
-        $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
+        $actualValue = $this->getValue($attributeName);
+        if ($actualValue === null || $actualValue !== TagAttributes::UN_SET) {
+            $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
+        }
     }
 
     public function addComponentAttributeValueIfNotEmpty($attributeName, $attributeValue)
@@ -342,6 +378,16 @@ class TagAttributes
         if (!$this->componentToHtmlAttributeProcessingWasDone) {
 
             $this->componentToHtmlAttributeProcessingWasDone = true;
+
+            /**
+             * Following the rule 2 to encode the unknown value
+             * We encode the component attribute (ie not the HTML attribute because
+             * they may have already encoded value)
+             * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
+             */
+
+            $originalArray = $this->componentAttributesCaseInsensitive->getOriginalArray();
+            $this->escapeComponentAttribute($originalArray);
 
 
             /**
@@ -415,6 +461,12 @@ class TagAttributes
             StyleUtility::addStylingClass($this);
 
             /**
+             * Add the style has html attribute
+             * before processing
+             */
+            $this->addHtmlAttributeValueIfNotEmpty("style", $this->getStyle());
+
+            /**
              * Create a non-sorted temporary html attributes array
              */
             $tempHtmlArray = $this->htmlAttributes;
@@ -441,8 +493,7 @@ class TagAttributes
                 }
 
             }
-            // Copy the style
-            $tempHtmlArray["style"] = $this->getStyle();
+
 
             /**
              * Sort by attribute
@@ -519,8 +570,23 @@ class TagAttributes
      */
     public function addHtmlAttributeValue($key, $value)
     {
-        if (empty($value)) {
-            LogUtility::msg("The value of the HTML attribute is empty for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
+        if (blank($value)) {
+            LogUtility::msg("The value of the HTML attribute is blank for the key ($key) - Tag ($this->logicalTag). Use the empty function if the value can be empty", LogUtility::LVL_MSG_ERROR);
+        }
+        /**
+         * We encode all HTML attribute
+         * because `Unescaped '<' not allowed in attributes values`
+         *
+         * except for url that have another encoding
+         * (ie only the query parameters value should be encoded)
+         */
+        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
+        if (!in_array($key, $urlEncoding)) {
+            /**
+             * htmlencode the value `true` as `1`,
+             * We transform it first as string, then
+             */
+            $value = PluginUtility::htmlEncode(StringUtility::toString($value));
         }
         $this->htmlAttributes[$key] = $value;
         return $this;
@@ -609,7 +675,8 @@ class TagAttributes
         return $array;
     }
 
-    public function getComponentAttributeValue($attributeName, $default = null)
+    public
+    function getComponentAttributeValue($attributeName, $default = null)
     {
         $lowerAttribute = strtolower($attributeName);
         $value = $default;
@@ -619,18 +686,21 @@ class TagAttributes
         return $value;
     }
 
-    public function addStyleDeclaration($property, $value)
+    public
+    function addStyleDeclaration($property, $value)
     {
         ArrayUtility::addIfNotSet($this->styleDeclaration, $property, $value);
     }
 
 
-    public function hasStyleDeclaration($styleDeclaration)
+    public
+    function hasStyleDeclaration($styleDeclaration)
     {
         return isset($this->styleDeclaration[$styleDeclaration]);
     }
 
-    public function getAndRemoveStyleDeclaration($styleDeclaration)
+    public
+    function getAndRemoveStyleDeclaration($styleDeclaration)
     {
         $styleValue = $this->styleDeclaration[$styleDeclaration];
         unset($this->styleDeclaration[$styleDeclaration]);
@@ -638,12 +708,12 @@ class TagAttributes
     }
 
 
-    public function toHTMLAttributeString()
+    public
+    function toHTMLAttributeString()
     {
 
         $tagAttributeString = "";
 
-        $urlEncoding = ["href", "src", "data-src", "data-srcset"];
         $htmlArray = $this->toHtmlArray();
         foreach ($htmlArray as $name => $value) {
 
@@ -652,6 +722,14 @@ class TagAttributes
              * null are just not set
              */
             if (!is_null($value)) {
+
+                /**
+                 * Unset attribute should not be added
+                 */
+                if ($value === TagAttributes::UN_SET) {
+                    continue;
+                }
+
                 /**
                  * The condition is important
                  * because we may pass the javascript character `\n` in a `srcdoc` for javascript
@@ -664,15 +742,8 @@ class TagAttributes
                     $stringValue = $value;
                 }
 
-                /**
-                 * Following the rule 2 to encode the value
-                 * https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#rule-2-attribute-encode-before-inserting-untrusted-data-into-html-common-attributes
-                 */
 
-                if (!in_array($name, $urlEncoding)) {
-                    $stringValue = PluginUtility::htmlEncode($stringValue);
-                }
-                $tagAttributeString .= PluginUtility::htmlEncode($name) . '="' . $stringValue . '" ';
+                $tagAttributeString .= $name . '="' . $stringValue . '" ';
             }
 
         }
@@ -681,12 +752,14 @@ class TagAttributes
 
     }
 
-    public function getComponentAttributes()
+    public
+    function getComponentAttributes()
     {
         return $this->toCallStackArray();
     }
 
-    public function removeComponentAttributeIfPresent($attributeName)
+    public
+    function removeComponentAttributeIfPresent($attributeName)
     {
         if ($this->hasComponentAttribute($attributeName)) {
             unset($this->componentAttributesCaseInsensitive[$attributeName]);
@@ -694,7 +767,8 @@ class TagAttributes
 
     }
 
-    public function toHtmlEnterTag($htmlTag)
+    public
+    function toHtmlEnterTag($htmlTag)
     {
 
         $enterTag = "<" . $htmlTag;
@@ -702,26 +776,41 @@ class TagAttributes
         if (!empty($attributeString)) {
             $enterTag .= " " . $attributeString;
         }
-        $enterTag .= ">";
+        /**
+         * Is it an open tag ?
+         */
+        if (!$this->getValue(self::OPEN_TAG, false)) {
 
-        if (!empty($this->htmlAfterEnterTag)) {
-            $enterTag .= DOKU_LF . $this->htmlAfterEnterTag;
+            $enterTag .= ">";
+
+            /**
+             * Do we have html after the tag is closed
+             */
+            if (!empty($this->htmlAfterEnterTag)) {
+                $enterTag .= DOKU_LF . $this->htmlAfterEnterTag;
+            }
+
         }
+
+
         return $enterTag;
 
     }
 
-    public function getLogicalTag()
+    public
+    function getLogicalTag()
     {
         return $this->logicalTag;
     }
 
-    public function setLogicalTag($tag)
+    public
+    function setLogicalTag($tag)
     {
         $this->logicalTag = $tag;
     }
 
-    public function removeComponentAttribute($attribute)
+    public
+    function removeComponentAttribute($attribute)
     {
         $lowerAtt = strtolower($attribute);
         if (isset($this->componentAttributesCaseInsensitive[$lowerAtt])) {
@@ -744,7 +833,8 @@ class TagAttributes
     /**
      * @param $html - an html that should be closed and added after the enter tag
      */
-    public function addHtmlAfterEnterTag($html)
+    public
+    function addHtmlAfterEnterTag($html)
     {
         $this->htmlAfterEnterTag = $html . $this->htmlAfterEnterTag;
     }
@@ -758,7 +848,8 @@ class TagAttributes
      * or as included in HTML page
      * @param $mime
      */
-    public function setMime($mime)
+    public
+    function setMime($mime)
     {
         $this->mime = $mime;
     }
@@ -766,12 +857,14 @@ class TagAttributes
     /**
      * @return string - the mime of the request
      */
-    public function getMime()
+    public
+    function getMime()
     {
         return $this->mime;
     }
 
-    public function getType()
+    public
+    function getType()
     {
         return $this->getValue(self::TYPE_KEY);
     }
@@ -780,7 +873,8 @@ class TagAttributes
      * @param $attributeName
      * @return ConditionalValue
      */
-    public function getConditionalValueAndRemove($attributeName)
+    public
+    function getConditionalValueAndRemove($attributeName)
     {
         $value = $this->getConditionalValueAndRemove($attributeName);
         return new ConditionalValue($value);
@@ -791,7 +885,8 @@ class TagAttributes
      * @param $attributeName
      * @return false|string[] - an array of values
      */
-    public function getValuesAndRemove($attributeName)
+    public
+    function getValuesAndRemove($attributeName)
     {
 
         /**
@@ -807,7 +902,8 @@ class TagAttributes
 
     }
 
-    public function setType($type)
+    public
+    function setType($type)
     {
         $this->setComponentAttributeValue(TagAttributes::TYPE_KEY, $type);
     }
@@ -816,7 +912,8 @@ class TagAttributes
      * Merging will add the values, no replace or overwrite
      * @param $callStackArray
      */
-    public function mergeWithCallStackArray($callStackArray)
+    public
+    function mergeWithCallStackArray($callStackArray)
     {
         foreach ($callStackArray as $key => $value) {
             if ($this->hasComponentAttribute($key)) {
@@ -831,14 +928,16 @@ class TagAttributes
     /**
      * @param $string
      */
-    public function removeAttributeIfPresent($string)
+    public
+    function removeAttributeIfPresent($string)
     {
         $this->removeComponentAttributeIfPresent($string);
         $this->removeHTMLAttributeIfPresent($string);
 
     }
 
-    private function removeHTMLAttributeIfPresent($string)
+    private
+    function removeHTMLAttributeIfPresent($string)
     {
         $lowerAtt = strtolower($string);
         if (isset($this->htmlAttributes[$lowerAtt])) {
@@ -846,14 +945,16 @@ class TagAttributes
         }
     }
 
-    public function getValueAndRemoveIfPresent($attribute, $default = null)
+    public
+    function getValueAndRemoveIfPresent($attribute, $default = null)
     {
         $value = $this->getValue($attribute, $default);
         $this->removeAttributeIfPresent($attribute);
         return $value;
     }
 
-    public function generateAndSetId()
+    public
+    function generateAndSetId()
     {
         self::$counter += 1;
         $id = self::$counter;
@@ -871,7 +972,8 @@ class TagAttributes
      * @return string - the marki tag made of logical attribute
      * There is no processing to transform it to an HTML tag
      */
-    public function toMarkiEnterTag($markiTag)
+    public
+    function toMarkiEnterTag($markiTag)
     {
         $enterTag = "<" . $markiTag;
 
@@ -892,7 +994,8 @@ class TagAttributes
     /**
      * @param string $key add an html attribute with the empty string
      */
-    public function addEmptyHtmlAttributeValue($key)
+    public
+    function addEmptyHtmlAttributeValue($key)
     {
 
         $this->htmlAttributes[$key] = '';
@@ -900,19 +1003,82 @@ class TagAttributes
 
     }
 
-    public function addEmptyComponentAttributeValue($attribute)
+    public
+    function addEmptyComponentAttributeValue($attribute)
     {
         $this->componentAttributesCaseInsensitive[$attribute] = "";
     }
 
     /**
      * @param $attribute
+     * @param null $default
      * @return mixed
      */
-    public function getBooleanValueAndRemove($attribute)
+    public
+    function getBooleanValueAndRemove($attribute, $default = null)
     {
         $value = $this->getValueAndRemove($attribute);
-        return filter_var(    $value, FILTER_VALIDATE_BOOLEAN);
+        if ($value == null) {
+            return $default;
+        } else {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+    }
+
+    public
+    function hasAttribute($attribute)
+    {
+        $hasAttribute = $this->hasComponentAttribute($attribute);
+        if ($hasAttribute === true) {
+            return true;
+        } else {
+            return $this->hasHtmlAttribute($attribute);
+        }
+    }
+
+    private
+    function hasHtmlAttribute($attribute)
+    {
+        return isset($this->htmlAttributes[$attribute]);
+    }
+
+    /**
+     * Component attribute are entered by the user and should be encoded
+     * @param array $arrayToEscape
+     * @param null $subKey
+     */
+    private
+    function escapeComponentAttribute(array $arrayToEscape, $subKey = null)
+    {
+
+        foreach ($arrayToEscape as $name => $value) {
+
+            $encodedName = PluginUtility::htmlEncode($name);
+
+            /**
+             * Boolean does not need to be encoded
+             */
+            if (is_bool($value)) {
+                if ($subKey == null) {
+                    $this->componentAttributesCaseInsensitive[$encodedName] = $value;
+                } else {
+                    $this->componentAttributesCaseInsensitive[$subKey][$encodedName] = $value;
+                }
+                continue;
+            }
+
+            if (is_array($value)) {
+                $this->escapeComponentAttribute($value, $encodedName);
+            } else {
+
+                $value = PluginUtility::htmlEncode($value);
+                if ($subKey == null) {
+                    $this->componentAttributesCaseInsensitive[$encodedName] = $value;
+                } else {
+                    $this->componentAttributesCaseInsensitive[$subKey][$encodedName] = $value;
+                }
+            }
+        }
     }
 
 

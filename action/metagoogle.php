@@ -62,8 +62,8 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             // case on "/lib/exe/mediamanager.php"
             return;
         }
-        $page = new Page($ID);
-        if (!$page->existInFs()) {
+        $page = Page::createPageFromId($ID);
+        if (!$page->exists()) {
             return;
         }
 
@@ -154,14 +154,22 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
                 // Date should be https://en.wikipedia.org/wiki/ISO_8601
 
+
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => $schemaType,
                     'url' => $page->getCanonicalUrlOrDefault(),
                     "headline" => $page->getTitleNotEmpty(),
-                    self::DATE_PUBLISHED_KEY => date('c', $page->getPublishedElseCreationTimeStamp()),
-                    self::DATE_MODIFIED_KEY => date('c', $page->getModifiedTimestamp()),
+                    self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(DATE_ISO8601)
                 );
+
+                /**
+                 * Modified Time
+                 */
+                $modifiedTime = $page->getModifiedTime();
+                if ($modifiedTime != null) {
+                    $ldJson[self::DATE_MODIFIED_KEY] = $modifiedTime->format(DATE_ISO8601);
+                };
 
                 /**
                  * Publisher info
@@ -275,9 +283,10 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
          * Publish
          */
         if (!empty($ldJson)) {
+            $jsonEncode = json_encode($ldJson, JSON_PRETTY_PRINT);
             $event->data["script"][] = array(
                 "type" => "application/ld+json",
-                "_data" => json_encode($ldJson, JSON_PRETTY_PRINT),
+                "_data" => $jsonEncode,
             );
         }
     }

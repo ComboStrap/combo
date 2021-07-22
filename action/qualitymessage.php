@@ -99,7 +99,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
      */
     static public function createQualityNote($pageId, $plugin)
     {
-        $page = new Page($pageId);
+        $page = Page::createPageFromId($pageId);
 
         if ($page->isSlot()) {
             return null;
@@ -109,7 +109,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             return null;
         }
 
-        if ($page->existInFs()) {
+        if ($page->exists()) {
             $analytics = $page->getAnalyticsFromFs();
             $rules = $analytics[Analytics::QUALITY][Analytics::RULES];
 

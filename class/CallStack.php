@@ -451,6 +451,7 @@ class CallStack
 
     /**
      * @param Call $call
+     * @return Call the inserted call
      */
     public
     function insertBefore($call)
@@ -468,6 +469,7 @@ class CallStack
             $this->moveToOffset($offset + 1);
 
         }
+        return $call;
     }
 
     /**

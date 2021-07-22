@@ -16,6 +16,7 @@ namespace ComboStrap;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
+use syntax_plugin_combo_tooltip;
 
 require_once(__DIR__ . '/../../combo/class/' . 'TemplateUtility.php');
 require_once(__DIR__ . '/../../combo/class/' . 'Publication.php');
@@ -41,8 +42,11 @@ class LinkUtility
      * [[path:page|title]]
      * are valid
      *
-     * Get the content until | or ]
-     * No line break allowed
+     * Get the content until one of this character is found:
+     *   * |
+     *   * or ]]
+     *   * or \n (No line break allowed, too much difficult to debug)
+     *   * and not [ (for two links on the same line)
      */
     const ENTRY_PATTERN_SINGLE_LINE = "\[\[[^\|\]]*(?=[^\n\[]*\]\])";
     const EXIT_PATTERN = "\]\]";
@@ -73,12 +77,35 @@ class LinkUtility
      * but this configuration permits to turn it back
      */
     const CONF_USE_DOKUWIKI_CLASS_NAME = "useDokuwikiLinkClassName";
+    /**
+     * This configuration will set for all internal link
+     * the {@link LinkUtility::PREVIEW_ATTRIBUTE} preview attribute
+     */
+    const CONF_PREVIEW_LINK = "previewLink";
+    const CONF_PREVIEW_LINK_DEFAULT = 0;
+
+
     const TEXT_ERROR_CLASS = "text-danger";
 
     /**
      * The known parameters for an email url
      */
     const EMAIL_VALID_PARAMETERS = ["subject"];
+
+    /**
+     * If set, it will show a page preview
+     */
+    const PREVIEW_ATTRIBUTE = "preview";
+    const PREVIEW_TOOLTIP = "preview";
+
+    /**
+     * Highlight Key
+     * Adding this property to the internal query will highlight the words
+     *
+     * See {@link html_hilight}
+     */
+    const SEARCH_HIGHLIGHT_QUERY_PROPERTY = "s";
+
 
     /**
      * @var mixed
@@ -331,7 +358,9 @@ class LinkUtility
             case self::TYPE_INTERNAL:
                 if (!$this->dokuwikiUrl->hasQueryParameter("do")) {
                     foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
-                        $this->attributes->addComponentAttributeValue($key, $value);
+                        if ($key != self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
+                            $this->attributes->addComponentAttributeValue($key, $value);
+                        }
                     }
                 }
                 break;
@@ -355,6 +384,7 @@ class LinkUtility
             $this->attributes->addHtmlAttributeValue("href", $url);
         }
 
+
         /**
          * Processing by type
          */
@@ -372,6 +402,10 @@ class LinkUtility
                 $this->attributes->addClassName("interwiki");
                 $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
                 $this->attributes->addClassName($wikiClass);
+                if (!$this->wikiExists()) {
+                    $this->attributes->addClassName(self::getHtmlClassNotExist());
+                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
+                }
 
                 break;
             case self::TYPE_INTERNAL:
@@ -387,52 +421,132 @@ class LinkUtility
                 $linkedPage = $this->getInternalPage();
                 $this->attributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getId());
 
-                /**
-                 * If this is a low quality internal page,
-                 * print a shallow link for the anonymous user
-                 *
-                 * We could also use the `pointer-events:none!important ` css property
-                 * to avoid a navigation
-                 * https://getbootstrap.com/docs/5.0/utilities/interactions/#pointer-events
-                 */
-                $lowLink = $this->isProtectedLink();
-                if ($lowLink) {
 
-                    PageProtection::addPageProtectionSnippet();
-                    $this->attributes->addClassName(PageProtection::PROTECTED_LINK_CLASS);
-                    $protectionSourceAcronym = "";
-                    if ($this->getInternalPage()->isLowQualityPage()) {
-                        $protectionSourceAcronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
-                    } else if ($this->getInternalPage()->isLatePublication()) {
-                        $protectionSourceAcronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
-                    }
-                    $this->attributes->addHtmlAttributeValue(PageProtection::HTML_DATA_ATTRIBUTES, $protectionSourceAcronym);
-                    $this->attributes->removeAttributeIfPresent("href");
-                    $dataNamespace = Bootstrap::getDataNamespace();
-                    $this->attributes->addHtmlAttributeValue("data{$dataNamespace}-toggle", "tooltip");
-                    $this->attributes->addComponentAttributeValue("title", "To follow this link ({$linkedPage}), you need to log in (" . $protectionSourceAcronym . ")");
+                if (!$linkedPage->exists()) {
+
+                    /**
+                     * Red color
+                     */
+                    $this->attributes->addClassName(self::getHtmlClassNotExist());
+                    $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
 
                 } else {
 
-                    if (!$linkedPage->exists()) {
+                    /**
+                     * Internal Link Class
+                     */
+                    $this->attributes->addClassName(self::getHtmlClassInternalLink());
+
+                    /**
+                     * Link Creation
+                     * Do we need to set the title or the tooltip
+                     * Processing variables
+                     */
+                    $acronym = "";
+
+                    /**
+                     * Preview tooltip
+                     */
+                    $previewConfig = PluginUtility::getConfValue(self::CONF_PREVIEW_LINK, self::CONF_PREVIEW_LINK_DEFAULT);
+                    $preview = $this->attributes->getBooleanValueAndRemove(self::PREVIEW_ATTRIBUTE, $previewConfig);
+                    if ($preview) {
+                        syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
+                        $tooltipHtml = <<<EOF
+<h3>{$linkedPage->getPageNameNotEmpty()}</h3>
+<p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
+EOF;
+                        $dataAttributeNamespace = Bootstrap::getDataNamespace();
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-toggle", "tooltip");
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-placement", "top");
+                        $this->attributes->addHtmlAttributeValue("data{$dataAttributeNamespace}-html", "true");
+                        $this->attributes->addHtmlAttributeValue("title", $tooltipHtml);
+                    }
+
+                    /**
+                     * Low quality Page
+                     * (It has a higher priority than preview and
+                     * the code comes then after)
+                     */
+                    $pageProtectionAcronym = strtolower(PageProtection::ACRONYM);
+                    if ($linkedPage->isLowQualityPage()) {
 
                         /**
-                         * Red color
+                         * Add a class to style it differently
+                         * (the acronym is added to the description, later)
                          */
-                        $this->attributes->addClassName(self::getHtmlClassNotExist());
-                        $this->attributes->addHtmlAttributeValue("rel", 'nofollow');
+                        $acronym = LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM;
+                        $lowerCaseLowQualityAcronym = strtolower(LowQualityPage::LOW_QUALITY_PROTECTION_ACRONYM);
+                        $this->attributes->addClassName(LowQualityPage::CLASS_NAME . "-combo");
+                        $snippetLowQualityPageId = $lowerCaseLowQualityAcronym;
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($snippetLowQualityPageId);
+                        /**
+                         * Note The protection does occur on Javascript level, not on the HTML
+                         * because the created page is valid for a anonymous or logged-in user
+                         * Javascript is controlling
+                         */
+                        if (LowQualityPage::isProtectionEnabled()) {
 
-                    } else {
+                            $linkType = LowQualityPage::getLowQualityLinkType();
+                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", $linkType);
+                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLowQualityAcronym);
 
-                        $this->attributes->addClassName(self::getHtmlClassInternalLink());
+                            /**
+                             * Low Quality Page protection javascript is only for warning or login link
+                             */
+                            if (in_array($linkType, [PageProtection::PAGE_PROTECTION_LINK_WARNING, PageProtection::PAGE_PROTECTION_LINK_LOGIN])) {
+                                PageProtection::addPageProtectionSnippet();
+                            }
+
+                        }
+                    }
+
+                    /**
+                     * Late publication has a higher priority than
+                     * the late publication and the is therefore after
+                     * (In case this a low quality page late published)
+                     */
+                    if ($linkedPage->isLatePublication()) {
+                        /**
+                         * Add a class to style it differently if needed
+                         */
+                        $this->attributes->addClassName(Publication::LATE_PUBLICATION_CLASS_NAME . "-combo");
+                        if (Publication::isLatePublicationProtectionEnabled()) {
+                            $acronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
+                            $lowerCaseLatePublicationAcronym = strtolower(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM);
+                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", PageProtection::PAGE_PROTECTION_LINK_LOGIN);
+                            $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLatePublicationAcronym);
+                            PageProtection::addPageProtectionSnippet();
+                        }
 
                     }
 
-                    $this->attributes->addHtmlAttributeValue("title", $linkedPage->getTitle());
+                    /**
+                     * Title (ie tooltip vs title html attribute)
+                     */
+                    if (!$this->attributes->hasAttribute("title")) {
+
+                        /**
+                         * If this is not a link into the same page
+                         */
+                        if (!empty($this->getDokuwikiUrl()->getPathOrId())) {
+                            $description = $linkedPage->getDescriptionOrElseDokuWiki();
+                            if (empty($description)) {
+                                // Rare case
+                                $description = $linkedPage->getH1NotEmpty();
+                            }
+                            if (!empty($acronym)) {
+                                $description = $description . " ($acronym)";
+                            }
+                            $this->attributes->addHtmlAttributeValue("title", $description);
+                        }
+
+                    }
 
                 }
+
                 break;
-            case self::TYPE_EXTERNAL:
+            case
+            self::TYPE_EXTERNAL:
                 if ($conf['relnofollow']) {
                     $this->attributes->addHtmlAttributeValue("rel", 'nofollow ugc');
                 }
@@ -463,15 +577,6 @@ class LinkUtility
         }
 
         /**
-         * Title settings
-         */
-        if (!$this->attributes->hasComponentAttribute("title")) {
-            $title = $this->getTitle();
-            if (!empty($title)) {
-                $this->attributes->addHtmlAttributeValue("title", $title);
-            }
-        }
-        /**
          * An email URL and title
          * may be already encoded because of the vanguard configuration
          *
@@ -481,15 +586,14 @@ class LinkUtility
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->dokuwikiUrl->getPath());
+            $emailAddress = $this->emailObfuscation($this->dokuwikiUrl->getPathOrId());
             $this->attributes->addHtmlAttributeValue("title", $emailAddress);
         }
 
         /**
          * Return
          */
-        $tag = $this->getHTMLTag();
-        return $this->attributes->toHtmlEnterTag($tag);
+        return $this->attributes->toHtmlEnterTag("a");
 
 
     }
@@ -640,18 +744,10 @@ class LinkUtility
         if ($this->linkedPage == null) {
             if ($this->getType() == self::TYPE_INTERNAL) {
                 // if there is no path, this is the actual page
-                $path = $this->dokuwikiUrl->getPath();
-                if ($path == null) {
-                    global $ID;
-                    if ($ID == null) {
-                        LogUtility::msg("The path is not specified in the reference. The global ID should then be specified to get the target of the link");
-                    }
-                    $path = DokuPath::IdToAbsolutePath($ID);
-                }
-                /**
-                 * Create the linked page object
-                 */
-                $this->linkedPage = new Page($path);
+                $pathOrId = $this->dokuwikiUrl->getPathOrId();
+
+                $this->linkedPage = Page::createPageFromNonQualifiedPath($pathOrId);
+
             } else {
                 throw new \RuntimeException("You can't ask the internal page id from a link that is not an internal one");
             }
@@ -681,7 +777,7 @@ class LinkUtility
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::renderFromString($name, $this->dokuwikiUrl->getPath());
+                    $name = TemplateUtility::renderFromString($name, $this->dokuwikiUrl->getPathOrId());
                 }
                 if (empty($name)) {
                     $name = $this->getInternalPage()->getName();
@@ -707,7 +803,7 @@ class LinkUtility
             case self::TYPE_EMAIL:
                 if (empty($name)) {
                     global $conf;
-                    $email = $this->dokuwikiUrl->getPath();
+                    $email = $this->dokuwikiUrl->getPathOrId();
                     switch ($conf['mailguard']) {
                         case 'none' :
                             $name = $email;
@@ -722,7 +818,7 @@ class LinkUtility
                 break;
             case self::TYPE_INTERWIKI:
                 if (empty($name)) {
-                    $name = $this->dokuwikiUrl->getPath();
+                    $name = $this->dokuwikiUrl->getPathOrId();
                 }
                 break;
             case self::TYPE_LOCAL:
@@ -744,25 +840,6 @@ class LinkUtility
     function setTitle($title)
     {
         $this->title = $title;
-    }
-
-    /**
-     * @return string the title of the link
-     */
-    public
-    function getTitle()
-    {
-        if (empty($this->title)) {
-            switch ($this->type) {
-                case self::TYPE_INTERNAL:
-                    $this->title = $this->getInternalPage()->getTitle();
-                    break;
-                case self::TYPE_EXTERNAL:
-                    // null, stay empty
-                    break;
-            }
-        }
-        return $this->title;
     }
 
 
@@ -787,6 +864,27 @@ class LinkUtility
                     $url = wl($page->getId(), $this->dokuwikiUrl->getQueryParameters());
                 } else {
                     $url = wl($page->getId(), []);
+                    /**
+                     * The search term
+                     * Code adapted found at {@link Doku_Renderer_xhtml::internallink()}
+                     * We can't use the previous {@link wl function}
+                     * because it encode too much
+                     */
+                    $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
+                    if ($searchTerms != null) {
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar("search");
+                        if (is_array($searchTerms)) {
+
+                            $searchTerms = array_map('rawurlencode', $searchTerms);
+                            /**
+                             * Multiple s[] is the way to create an array
+                             */
+                            $url .= '&amp;s[]=' . join('&amp;s[]=', $searchTerms);
+
+                        } else {
+                            $url .= '&amp;s=' . rawurlencode($searchTerms);
+                        }
+                    }
                 }
                 if ($this->dokuwikiUrl->getFragment() != null) {
                     $url .= '#' . $this->dokuwikiUrl->getFragment();
@@ -794,7 +892,7 @@ class LinkUtility
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $url = $this->renderer->_resolveInterWiki($wiki, $this->dokuwikiUrl->getPath());
+                $url = $this->renderer->_resolveInterWiki($wiki, $this->dokuwikiUrl->getPathOrId());
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());
@@ -822,7 +920,7 @@ class LinkUtility
                  * {@link PluginTrait::email()
                  */
                 // common.php#obfsucate implements the $conf['mailguard']
-                $emailRef = $this->getDokuwikiUrl()->getPath();
+                $emailRef = $this->getDokuwikiUrl()->getPathOrId();
                 $queryParameters = $this->getDokuwikiUrl()->getQueryParameters();
                 if (sizeof($queryParameters) > 0) {
                     $emailRef .= "?";
@@ -873,17 +971,16 @@ class LinkUtility
     {
         $protectedLink = false;
         if ($this->getType() == self::TYPE_INTERNAL) {
-            global $conf;
 
             // Low Quality Page protection
-            $lqppEnable = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE];
+            $lqppEnable = PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE);
             if ($lqppEnable == 1
                 && $this->getInternalPage()->isLowQualityPage()) {
                 $protectedLink = true;
             }
 
             if ($protectedLink === false) {
-                $latePublicationProtectionEnabled = $conf['plugin'][PluginUtility::PLUGIN_BASE_NAME][Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE];
+                $latePublicationProtectionEnabled = PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
                 if ($latePublicationProtectionEnabled == 1
                     && $this->getInternalPage()->isLatePublication()) {
                     $protectedLink = true;
@@ -893,28 +990,14 @@ class LinkUtility
         return $protectedLink;
     }
 
+    /**
+     * @return string
+     * @deprecated a link is a HTML anchor element (ie a), no more link with span
+     */
     public
     function getHTMLTag()
     {
-        switch ($this->getType()) {
-            case self::TYPE_INTERNAL:
-                // We could also have used a <a> with `rel="nofollow"`
-                // The span element is then modified as link by javascript if the user is not anonymous
-                if ($this->isProtectedLink()) {
-                    return "span";
-                } else {
-                    return "a";
-                }
-            case self::TYPE_INTERWIKI:
-                if (!$this->wikiExists()) {
-                    return "span";
-                } else {
-                    return "a";
-                }
-            default:
-                return "a";
-        }
-
+        return "a";
     }
 
     private
@@ -998,7 +1081,7 @@ class LinkUtility
         }
     }
 
-    //FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
+//FYI: exist in dokuwiki is "wikilink1 but we let the control to the user
     public
     static function getHtmlClassNotExist()
     {

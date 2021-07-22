@@ -189,7 +189,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
                 foreach ($relatedPages as $backlink) {
                     $backlinkId = $backlink[self::RELATED_PAGE_ID_PROP];
-                    $backlinkPage = new Page($backlinkId);
+                    $backlinkPage = Page::createPageFromId($backlinkId);
                     $name = $backlinkPage->getH1();
                     /**
                      * Hack, moving title to h1

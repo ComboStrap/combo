@@ -57,7 +57,7 @@ class action_plugin_combo_sidebarscachebursting extends DokuWiki_Action_Plugin
          */
         foreach ($sidebars as $sidebarRelativePath) {
 
-            $id = new Page($sidebarRelativePath);
+            $id = Page::createPageFromNonQualifiedPath($sidebarRelativePath);
             $id->deleteCache();
 
         }

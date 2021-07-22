@@ -79,9 +79,9 @@ class SnippetManager
 
 
     /**
-     * @deprecated
      * @param $tag
      * @return string
+     * @deprecated create a {@link Snippet} instead and use the {@link Snippet::getClass()} function instead
      */
     public static function getClassFromSnippetId($tag)
     {
@@ -408,11 +408,16 @@ class SnippetManager
 
     /**
      * @param $snippetId
+     * @param null $script
      * @return Snippet a snippet scoped at the bar level
      */
-    public function &attachJavascriptSnippetForBar($snippetId)
+    public function &attachJavascriptSnippetForBar($snippetId, $script = null)
     {
-        return $this->attachSnippetFromBar($snippetId, Snippet::TYPE_JS);
+        $snippet =  $this->attachSnippetFromBar($snippetId, Snippet::TYPE_JS);
+        if ($script != null) {
+            $snippet->setContent($script);
+        }
+        return $snippet;
     }
 
     /**

@@ -88,7 +88,7 @@ EOF;
             'title' => 'twitter',
             'icon' => $imageBase . '/twitter.svg',
             'open' => '<blockquote>\n<cite>[[',
-            'close' => ']]</cite>\n</webcode>\n'
+            'close' => ']]</cite>\n</blockquote>\n'
             //'key' => $webCodeShortcutKey
         );
 

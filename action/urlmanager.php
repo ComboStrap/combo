@@ -425,10 +425,25 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         // Change the info id for the sidebar
         $INFO['id'] = $targetPageId;
         /**
-         * otherwise there is a meta robot = noindex,follow
+         * otherwise there is:
+         *   * a meta robot = noindex,follow
          * See {@link tpl_metaheaders()}
          */
         $INFO['exists'] = true;
+
+        /**
+         * Not compatible with
+         * https://www.dokuwiki.org/config:send404 is enabled
+         *
+         * This check happens before that dokuwiki is started
+         * and send an header in doku.php
+         *
+         * We send a warning
+         */
+        global $conf;
+        if ($conf['send404'] == true) {
+            LogUtility::msg("The <a href=\"https://www.dokuwiki.org/config:send404\">dokuwiki send404 configuration</a> is on and should be disabled when using the url manager",LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        }
 
         // Redirection
         $this->logRedirection($sourceId, $targetPageId, $targetOriginId, self::REDIRECT_ID);

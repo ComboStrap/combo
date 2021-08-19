@@ -135,14 +135,38 @@ class PipelineUtility
     private static function cut(array $commandArgs, $value)
     {
         $pattern = $commandArgs[0];
-        $result = preg_split("/$pattern/i", $value);
-        if ($result !== false) {
-            $part = $commandArgs[1] - 1;
-            if (isset($result[$part])) {
-                return $result[$part];
-            } else {
-                return $value;
+        $words = preg_split("/$pattern/i", $value);
+        if ($words !== false) {
+            $selector = $commandArgs[1];
+            $startEndSelector = preg_split("/-/i", $selector);
+            $start = $startEndSelector[0] - 1;
+            $end = null;
+            if (isset($startEndSelector[1])) {
+                $end = $startEndSelector[1];
+                if (empty($end)) {
+                    $end = sizeof($words);
+                }
+                $end = $end - 1;
             }
+            if ($end == null) {
+                if (isset($words[$start])) {
+                    return $words[$start];
+                } else {
+                    return $value;
+                }
+            } else {
+                $result = "";
+                for ($i = $start; $i <= $end; $i++) {
+                    if (isset($words[$i])) {
+                        if (!empty($result)) {
+                            $result .= $pattern;
+                        }
+                        $result .= $words[$i];
+                    }
+                }
+                return $result;
+            }
+
         } else {
             return "An error occurred: could not split with the pattern `$pattern`, the value `$value`.";
         }

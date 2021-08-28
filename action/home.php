@@ -29,6 +29,7 @@ class action_plugin_combo_home extends DokuWiki_Action_Plugin
      */
     function set_home(Doku_Event $event, $params)
     {
+        // See also: https://www.dokuwiki.org/devel:preload
 //        global $conf;
 //        $conf['mediadir']="D:/dokuwiki/website/media";
 //        $conf['datadir']="D:/dokuwiki/website/pages";

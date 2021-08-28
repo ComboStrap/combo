@@ -188,8 +188,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 /**
                  * nameSpacePath determination
                  */
-                if(!$tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)){
-                    switch($type){
+                if (!$tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
+                    switch ($type) {
                         case self::LIST_TYPE:
                             $requestedPage = Page::createRequestedPageFromEnvironment();
                             $namespacePath = $requestedPage->getNamespacePath();
@@ -269,20 +269,20 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * @var Call[] $templateNamespaceInstructions
                  * @var array $namespaceAttributes
                  */
-                $templateNamespaceInstructions = [];
-                $namespaceAttributes = [];
+                $templateNamespaceInstructions = null;
+                $namespaceAttributes = null;
                 /**
                  * @var Call[] $templatePageInstructions
                  * @var array $pageAttributes
                  */
-                $templatePageInstructions = [];
-                $pageAttributes = [];
+                $templatePageInstructions = null;
+                $pageAttributes = null;
                 /**
                  * @var Call[] $templateHomeInstructions
                  * @var array $homeAttributes
                  */
-                $templateHomeInstructions = [];
-                $homeAttributes = [];
+                $templateHomeInstructions = null;
+                $homeAttributes = null;
                 /**
                  * The instructions for the parent item in a page explorer list
                  * if any
@@ -351,9 +351,18 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  */
                 $callStack->deleteAllCallsAfter($openingTag);
 
+                /**
+                 * Home instruction
+                 * If unset, set it with the pages
+                 */
+                if ($homeAttributes == null) {
+                    if (sizeof($templateHomeInstructions) === 0) {
+                        $templateHomeInstructions = $templatePageInstructions;
+                    }
+                }
 
                 /**
-                 * Get the Namespace
+                 * Get the root Namespace of the command
                  */
                 $openingTagAttributes = $openingTag->getAttributes();
                 $tagAttributes = TagAttributes::createFromCallStackArray($openingTagAttributes, self::CANONICAL);
@@ -681,6 +690,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         $pageExplorerSubNamespaceTag = syntax_plugin_combo_pageexplorertreesubnamespace::TAG;
         $pageExplorerTreeButtonTag = syntax_plugin_combo_pageexplorernamespace::TAG;
         $pageExplorerTreeListTag = syntax_plugin_combo_pageexplorertreesubnamespacelist::TAG;
+
 
         /**
          * Processing variable

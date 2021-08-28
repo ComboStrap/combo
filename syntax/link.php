@@ -121,11 +121,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
          * at {@link \dokuwiki\Parsing\ParserMode\Internallink::getSort}
          * and the like
          *
-         * If the link is no more working:
-         *   * changing this number saving to a lower number
-         *   * refreshing
-         *   * changing this number back to its original number
-         * seems to work
+         * For whatever reason, the number below should be less than 100,
+         * otherwise on windows with DokuWiki Stick, the link syntax may be not taken
+         * into account
          */
         return 99;
     }

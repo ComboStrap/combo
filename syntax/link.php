@@ -127,7 +127,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
          *   * changing this number back to its original number
          * seems to work
          */
-        return 100;
+        return 99;
     }
 
 

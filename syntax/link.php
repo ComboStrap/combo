@@ -116,6 +116,17 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      */
     function getSort()
     {
+        /**
+         * It should be less than the number
+         * at {@link \dokuwiki\Parsing\ParserMode\Internallink::getSort}
+         * and the like
+         *
+         * If the link is no more working:
+         *   * changing this number saving to a lower number
+         *   * refreshing
+         *   * changing this number back to its original number
+         * seems to work
+         */
         return 100;
     }
 

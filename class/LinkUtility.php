@@ -777,7 +777,7 @@ EOF;
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::renderFromString($name, $this->dokuwikiUrl->getPathOrId());
+                    $name = TemplateUtility::renderFromStringForPageId($name, $this->dokuwikiUrl->getPathOrId());
                 }
                 if (empty($name)) {
                     $name = $this->getInternalPage()->getName();

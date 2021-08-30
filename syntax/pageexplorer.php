@@ -352,14 +352,50 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $callStack->deleteAllCallsAfter($openingTag);
 
                 /**
+                 * Default template
+                 * if null, no node page present
+                 */
+                if ($pageAttributes == null) {
+                    // attributes are mandatory as array
+                    $pageAttributes = [];
+                    // default template instructions
+                    if (sizeof($templatePageInstructions) === 0) {
+                        $templatePageInstructions = [];
+                        $templatePageInstructions[] = Call::createComboCall(
+                            syntax_plugin_combo_link::TAG,
+                            DOKU_LEXER_ENTER,
+                            ["ref"=>"\$path"],
+                            syntax_plugin_combo_pageexplorerpage::TAG,
+                            "[[\$path"
+                        );
+                        $templatePageInstructions[] = Call::createComboCall(
+                            syntax_plugin_combo_pipeline::TAG,
+                            DOKU_LEXER_SPECIAL,
+                            [PluginUtility::PAYLOAD=>""],
+                            "",
+                            "<pipeline>\"\$name\" | capitalize()</pipeline>"
+                        );
+                        $templatePageInstructions[] = Call::createComboCall(
+                            syntax_plugin_combo_link::TAG,
+                            DOKU_LEXER_EXIT,
+                            ["ref"=>"\$path"],
+                            syntax_plugin_combo_pageexplorerpage::TAG,
+                            "]]"
+                        );
+                    }
+                }
+                /**
                  * Home instruction
                  * If unset, set it with the pages
                  */
                 if ($homeAttributes == null) {
+                    $homeAttributes = [];
                     if (sizeof($templateHomeInstructions) === 0) {
                         $templateHomeInstructions = $templatePageInstructions;
                     }
                 }
+
+
 
                 /**
                  * Get the root Namespace of the command
@@ -444,6 +480,41 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         /**
                          * Parent ?
                          */
+                        if ($parentAttributes==null){
+                            $pageAttributes = [];
+                            // default template instructions
+                            if (sizeof($parentInstructions) === 0) {
+                                $parentInstructions = [];
+                                $parentInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_link::TAG,
+                                    DOKU_LEXER_ENTER,
+                                    ["ref"=>"\$path"],
+                                    syntax_plugin_combo_pageexplorerparent::TAG,
+                                    "[[\$path"
+                                );
+                                $parentInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_link::TAG,
+                                    DOKU_LEXER_UNMATCHED,
+                                    ["ref"=>"\$path"],
+                                    syntax_plugin_combo_pageexplorerparent::TAG,
+                                    "..."
+                                );
+                                $parentInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_pipeline::TAG,
+                                    DOKU_LEXER_SPECIAL,
+                                    [PluginUtility::PAYLOAD=>""],
+                                    "",
+                                    "<pipeline>\"\$name\" | capitalize()</pipeline>"
+                                );
+                                $parentInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_link::TAG,
+                                    DOKU_LEXER_EXIT,
+                                    ["ref"=>"\$path"],
+                                    syntax_plugin_combo_pageexplorerparent::TAG,
+                                    "]]"
+                                );
+                            }
+                        }
                         $parentPagePath = FsWikiUtility::getParentPagePath($nameSpacePath);
                         if ($parentPagePath != null && sizeof($parentInstructions) > 0) {
                             /**
@@ -471,7 +542,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         }
 
                         /**
-                         * Pages
+                         * children (Namespaces/Pages)
                          */
                         $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
                         $pageNum = 0;

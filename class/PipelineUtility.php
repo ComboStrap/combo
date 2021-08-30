@@ -84,6 +84,9 @@ class PipelineUtility
                     case "trim":
                         $value = trim($value);
                         break;
+                    case "capitalize":
+                        $value=ucwords($value);
+                        break;
                     default:
                         LogUtility::msg("command ($commandName) is unknown", LogUtility::LVL_MSG_ERROR, "pipeline");
                 }

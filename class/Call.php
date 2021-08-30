@@ -127,13 +127,16 @@ class Call
      * @param string $content
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '')
+    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '', $payload=null)
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
             PluginUtility::CONTEXT => $context,
             PluginUtility::STATE => $state
         );
+        if($payload!=null){
+            $data[PluginUtility::PAYLOAD] = $payload;
+        }
         $positionInText = null;
 
         $call = [
@@ -705,7 +708,7 @@ class Call
         $state = $this->getState();
         if ( $state == DOKU_LEXER_UNMATCHED) {
             if ($this->isPluginCall()) {
-                $payload = trim($this->getPayload());
+                $payload = $this->getPayload();
                 if (!empty($payload)) {
                     $this->setPayload(TemplateUtility::renderFromStringForPage($payload, $page));
                 }

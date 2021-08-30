@@ -175,7 +175,11 @@ class FsWikiUtility
          */
         $pos = strrpos($namespacePath, ':');
         if ($pos !== false) {
-            $parentNamespacePath = substr($namespacePath, 0, $pos);
+            if ($pos == 0){
+                $parentNamespacePath = ":";
+            } else {
+                $parentNamespacePath = substr($namespacePath, 0, $pos);
+            }
             return self::getHomePagePath($parentNamespacePath);
         } else {
             return null;

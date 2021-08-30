@@ -373,7 +373,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             DOKU_LEXER_SPECIAL,
                             [PluginUtility::PAYLOAD=>""],
                             "",
-                            "<pipeline>\"\$name\" | capitalize()</pipeline>"
+                            "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
                         );
                         $templatePageInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
@@ -493,18 +493,26 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     "[[\$path"
                                 );
                                 $parentInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_icon::TAG,
+                                    DOKU_LEXER_SPECIAL,
+                                    ["name"=>"arrow-up-box"],
+                                    syntax_plugin_combo_pageexplorerparent::TAG,
+                                    "<icon name=\"arrow-up-box\"/>"
+                                );
+                                $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_UNMATCHED,
-                                    ["ref"=>"\$path"],
-                                    syntax_plugin_combo_pageexplorerparent::TAG,
-                                    "..."
+                                    [],
+                                    syntax_plugin_combo_link::TAG,
+                                    " ... ",
+                                    " ... "
                                 );
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_pipeline::TAG,
                                     DOKU_LEXER_SPECIAL,
                                     [PluginUtility::PAYLOAD=>""],
                                     "",
-                                    "<pipeline>\"\$name\" | capitalize()</pipeline>"
+                                    "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
                                 );
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
@@ -529,7 +537,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Content
                              */
-                            $callStack->appendInstructions(TemplateUtility::renderFromInstructions($parentInstructions, $parentPagePath));
+                            $parentInstructionsInstance = TemplateUtility::renderFromInstructions($parentInstructions, $parentPagePath);
+                            $callStack->appendInstructions($parentInstructionsInstance);
                             /**
                              * End parent tag
                              */
@@ -569,7 +578,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         /**
                                          * SubNamespace Content
                                          */
-                                        $callStack->appendInstructions(TemplateUtility::renderFromInstructions($templateNamespaceInstructions, $subNamespacePagePath));
+                                        $namespaceInstructionsInstance = TemplateUtility::renderFromInstructions($templateNamespaceInstructions, $subNamespacePagePath);
+                                        $callStack->appendInstructions($namespaceInstructionsInstance);
                                         /**
                                          * SubNamespace Exit tag
                                          */

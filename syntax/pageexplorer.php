@@ -364,21 +364,21 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $templatePageInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
                             DOKU_LEXER_ENTER,
-                            ["ref"=>"\$path"],
+                            ["ref" => "\$path"],
                             syntax_plugin_combo_pageexplorerpage::TAG,
                             "[[\$path"
                         );
                         $templatePageInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_pipeline::TAG,
                             DOKU_LEXER_SPECIAL,
-                            [PluginUtility::PAYLOAD=>""],
+                            [PluginUtility::PAYLOAD => ""],
                             "",
                             "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
                         );
                         $templatePageInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
                             DOKU_LEXER_EXIT,
-                            ["ref"=>"\$path"],
+                            ["ref" => "\$path"],
                             syntax_plugin_combo_pageexplorerpage::TAG,
                             "]]"
                         );
@@ -394,7 +394,6 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         $templateHomeInstructions = $templatePageInstructions;
                     }
                 }
-
 
 
                 /**
@@ -480,7 +479,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         /**
                          * Parent ?
                          */
-                        if ($parentAttributes==null){
+                        if ($parentAttributes == null) {
                             $pageAttributes = [];
                             // default template instructions
                             if (sizeof($parentInstructions) === 0) {
@@ -488,14 +487,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_ENTER,
-                                    ["ref"=>"\$path"],
+                                    ["ref" => "\$path"],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
                                 );
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_icon::TAG,
                                     DOKU_LEXER_SPECIAL,
-                                    ["name"=>"arrow-up-box"],
+                                    ["name" => "arrow-up-box"],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "<icon name=\"arrow-up-box\"/>"
                                 );
@@ -510,14 +509,14 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_pipeline::TAG,
                                     DOKU_LEXER_SPECIAL,
-                                    [PluginUtility::PAYLOAD=>""],
+                                    [PluginUtility::PAYLOAD => ""],
                                     "",
                                     "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
                                 );
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_EXIT,
-                                    ["ref"=>"\$path"],
+                                    ["ref" => "\$path"],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "]]"
                                 );
@@ -553,6 +552,49 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         /**
                          * children (Namespaces/Pages)
                          */
+                        if ($namespaceAttributes == null) {
+                            $namespaceAttributes = [];
+                            // default template instructions
+                            if (sizeof($templateNamespaceInstructions) === 0) {
+                                $templateNamespaceInstructions = [];
+                                $templateNamespaceInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_link::TAG,
+                                    DOKU_LEXER_ENTER,
+                                    ["ref" => "\$path"],
+                                    syntax_plugin_combo_pageexplorerparent::TAG,
+                                    "[[\$path"
+                                );
+                                $templateNamespaceInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_icon::TAG,
+                                    DOKU_LEXER_SPECIAL,
+                                    ["name" => "folder"],
+                                    syntax_plugin_combo_pageexplorerparent::TAG,
+                                    "<icon name=\"folder\"/>"
+                                );
+                                $templateNamespaceInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_link::TAG,
+                                    DOKU_LEXER_UNMATCHED,
+                                    [],
+                                    syntax_plugin_combo_link::TAG,
+                                    " ",
+                                    " "
+                                );
+                                $templateNamespaceInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_pipeline::TAG,
+                                    DOKU_LEXER_SPECIAL,
+                                    [PluginUtility::PAYLOAD => ""],
+                                    "",
+                                    "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
+                                );
+                                $templateNamespaceInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_link::TAG,
+                                    DOKU_LEXER_EXIT,
+                                    ["ref" => "\$path"],
+                                    syntax_plugin_combo_pageexplorerparent::TAG,
+                                    "]]"
+                                );
+                            }
+                        }
                         $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
                         $pageNum = 0;
                         foreach ($pageOrNamespaces as $pageOrNamespace) {

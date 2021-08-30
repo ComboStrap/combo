@@ -681,6 +681,18 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         break;
                     case self::TYPE_TREE:
 
+                        if($namespaceAttributes==null){
+                            if(sizeof($templateNamespaceInstructions)==0){
+                                $templateNamespaceInstructions = [];
+                                $templateNamespaceInstructions[] = Call::createComboCall(
+                                    syntax_plugin_combo_pipeline::TAG,
+                                    DOKU_LEXER_SPECIAL,
+                                    [PluginUtility::PAYLOAD => ""],
+                                    "",
+                                    "<pipeline>\"\$name\" | replace(\"_\",\" \") | capitalize()</pipeline>"
+                                );
+                            }
+                        }
                         /**
                          * Printing the tree
                          *

@@ -4,17 +4,16 @@ use ComboStrap\AdsUtility;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
-use ComboStrap\MediaLink;
 use ComboStrap\LazyLoad;
-use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
+use ComboStrap\LowQualityPage;
+use ComboStrap\MediaLink;
 use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
-use ComboStrap\PageProtection;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
-use ComboStrap\LowQualityPage;
 use ComboStrap\Publication;
+use ComboStrap\RasterImageLink;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
 use ComboStrap\SvgDocument;
@@ -40,6 +39,7 @@ $lang[syntax_plugin_combo_disqus::CONF_DEFAULT_ATTRIBUTES] = PluginUtility::getU
 /**
  * Url Manager
  */
+$lang[action_plugin_combo_urlmanager::URL_MANAGER_ENABLE_CONF] = PluginUtility::getUrl("url:manager", action_plugin_combo_urlmanager::NAME ) . ' - If unchecked, the URL manager will be disabled';
 $lang['ActionReaderFirst'] = PluginUtility::getUrl("redirection:action", action_plugin_combo_urlmanager::NAME . " - Redirection Actions") . ' - First redirection action for a reader';
 $lang['ActionReaderSecond'] = PluginUtility::getUrl("redirection:action", action_plugin_combo_urlmanager::NAME . " - Redirection Actions") . ' - Second redirection action for a reader if the first action don\'t success.';
 $lang['ActionReaderThird'] = PluginUtility::getUrl("redirection:action", action_plugin_combo_urlmanager::NAME . " - Redirection Actions") . ' - Third redirection action for a reader if the second action don\'t success.';

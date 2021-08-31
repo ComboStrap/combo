@@ -23,7 +23,7 @@ use ComboStrap\UrlManagerBestEndPage;
 /**
  * Load all class via Plugin Utility
  */
-require_once (__DIR__.'/../class/PluginUtility.php');
+require_once(__DIR__ . '/../class/PluginUtility.php');
 
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -43,6 +43,7 @@ $meta[syntax_plugin_combo_disqus::CONF_DEFAULT_ATTRIBUTES] = array('string');
 /**
  * Url Manager
  */
+$meta[action_plugin_combo_urlmanager::URL_MANAGER_ENABLE_CONF] = array('onoff');
 $meta['ShowPageNameIsNotUnique'] = array('onoff');
 $meta['ShowMessageClassic'] = array('onoff');
 

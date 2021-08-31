@@ -2,6 +2,7 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
+use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\Page;
 use ComboStrap\UrlManagerBestEndPage;
@@ -31,6 +32,7 @@ require_once(__DIR__ . '/urlmessage.php');
 class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 {
 
+    const URL_MANAGER_ENABLE_CONF = "enableUrlManager";
 
     // The redirect type
     const REDIRECT_HTTP = 'Http';
@@ -78,13 +80,14 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-
-        /* This will call the function _handle404 */
-        $controller->register_hook('DOKUWIKI_STARTED',
-            'AFTER',
-            $this,
-            '_handle404',
-            array());
+        if(PluginUtility::getConfValue(self::URL_MANAGER_ENABLE_CONF,1)) {
+            /* This will call the function _handle404 */
+            $controller->register_hook('DOKUWIKI_STARTED',
+                'AFTER',
+                $this,
+                '_handle404',
+                array());
+        }
 
     }
 

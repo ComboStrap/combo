@@ -37,6 +37,10 @@ $conf['extra_pattern'] = '{{backlinks>.}}';
 $conf['disqusDefaultAttributes'] = 'shortName=""';
 
 /**
+ * Enable ie {@link action_plugin_combo_urlmanager::URL_MANAGER_ENABLE_CONF}
+ */
+$conf['enableUrlManager']=1;
+/**
  * ie {@link action_plugin_combo_urlmanager::GO_TO_BEST_END_PAGE_NAME}
  */
 $conf['ActionReaderFirst'] = 'GoToBestEndPageName';

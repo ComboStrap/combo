@@ -1,4 +1,7 @@
 .page-explorer-list-combo svg, .page-explorer-list-combo img {
     vertical-align: bottom;
 }
+.page-explorer-list-combo a {
+    text-decoration: none;
+}
 

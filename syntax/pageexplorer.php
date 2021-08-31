@@ -491,12 +491,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
                                 );
+                                $parentIconName = "arrow-left-box";
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_icon::TAG,
                                     DOKU_LEXER_SPECIAL,
-                                    ["name" => "arrow-up-box"],
+                                    ["name" => $parentIconName],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
-                                    "<icon name=\"arrow-up-box\"/>"
+                                    "<icon name=\"$parentIconName\"/>"
                                 );
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,

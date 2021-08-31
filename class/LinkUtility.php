@@ -276,6 +276,11 @@ class LinkUtility
 
     }
 
+    public static function createFromPageId($id)
+    {
+        return new LinkUtility(":$id");
+    }
+
     /**
      * @param $name
      * @return $this
@@ -342,19 +347,29 @@ class LinkUtility
      * and others
      *
      */
-    public function renderOpenTag($renderer)
+    public function renderOpenTag($renderer = null)
     {
+
+        $type = $this->getType();
+
         /**
          * Keep a reference to the renderer
          * The {@link LinkUtility::getUrl()} depends on it
+         * for local or interwiki link
          */
+        if ($renderer == null) {
+            if (in_array($type, [self::TYPE_LOCAL, self::TYPE_INTERWIKI])) {
+                LogUtility::msg("The link ($this) is not ($type) link, the renderer should be not null and given", LogUtility::LVL_MSG_ERROR);
+            }
+        }
         $this->renderer = $renderer;
 
         /**
          * Add the attribute from the URL
          * if this is not a `do`
          */
-        switch ($this->getType()) {
+
+        switch ($type) {
             case self::TYPE_INTERNAL:
                 if (!$this->dokuwikiUrl->hasQueryParameter("do")) {
                     foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
@@ -364,7 +379,8 @@ class LinkUtility
                     }
                 }
                 break;
-            case self::TYPE_EMAIL:
+            case
+            self::TYPE_EMAIL:
                 foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
                     if (!in_array($key, self::EMAIL_VALID_PARAMETERS)) {
                         $this->attributes->addComponentAttributeValue($key, $value);
@@ -1091,6 +1107,11 @@ EOF;
         } else {
             return self::TEXT_ERROR_CLASS;
         }
+    }
+
+    public function __toString()
+    {
+        return $this->ref;
     }
 
 

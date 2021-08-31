@@ -1,7 +1,6 @@
 window.addEventListener('load', function () {
     let namespace = "-bs"
     let version = 5;
-    debugger;
     if (typeof jQuery != 'undefined' && typeof jQuery.fn.tooltip.constructor.VERSION !== 'undefined') {
         version = parseInt(jQuery.fn.tooltip.constructor.VERSION.substr(0, 1), 10);
         if (version < 5) {

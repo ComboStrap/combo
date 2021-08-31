@@ -13,18 +13,19 @@
 
 use ComboStrap\Bootstrap;
 use ComboStrap\PluginUtility;
-use ComboStrap\SnippetManager;
-use ComboStrap\TraceMenuItem;
+use ComboStrap\HistoricalBreadcrumbMenuItem;
 
-require_once(__DIR__ . '/../class/' . 'TraceMenuItem.php');
+require_once(__DIR__ . '/../class/PluginUtility.php');
 
 /**
- * Class action_plugin_combo_analytics
- * Update the analytics data
+ *
+ * https://en.wikipedia.org/wiki/Breadcrumb_navigation#Websites
  */
-class action_plugin_combo_trace extends DokuWiki_Action_Plugin
+class action_plugin_combo_historicalbreadcrumb extends DokuWiki_Action_Plugin
 {
 
+
+    const HISTORICAL_BREADCRUMB_ID = "historical-breadcrumb";
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -33,14 +34,19 @@ class action_plugin_combo_trace extends DokuWiki_Action_Plugin
          * Add a icon in the page tools menu
          * https://www.dokuwiki.org/devel:event:menu_items_assembly
          */
-        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'handle_trace_item_rail_bar');
+        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'handle_breadcrumb_history');
 
 
     }
 
 
-    public function handle_trace_item_rail_bar(Doku_Event $event, $param)
+    public function handle_breadcrumb_history(Doku_Event $event, $param)
     {
+
+        global $conf;
+
+        //check if enabled
+        if (!$conf['breadcrumbs']) return;
 
         if(Bootstrap::getBootStrapMajorVersion()== Bootstrap::BootStrapFiveMajorVersion) {
 
@@ -57,7 +63,12 @@ class action_plugin_combo_trace extends DokuWiki_Action_Plugin
              */
             PluginUtility::getSnippetManager()->attachJavascriptSnippetForRequest("popover");
 
-            array_splice($event->data['items'], -1, 0, array(new TraceMenuItem()));
+            /**
+             * Css
+             */
+            PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::HISTORICAL_BREADCRUMB_ID);
+
+            array_splice($event->data['items'], -1, 0, array(new HistoricalBreadcrumbMenuItem()));
 
         }
 

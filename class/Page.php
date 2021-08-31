@@ -1057,7 +1057,7 @@ class Page extends DokuPath
             if (!empty($this->getTitle())) {
                 $h1Title = $this->getTitle();
             } else {
-                $h1Title = $this->getId();
+                $h1Title = $this->getPageNameNotEmpty();
             }
         }
         return $h1Title;

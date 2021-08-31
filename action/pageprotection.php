@@ -260,28 +260,28 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     function excludePageFromSearch(&$event, $protectionModes = [PageProtection::CONF_VALUE_ACL, PageProtection::CONF_VALUE_HIDDEN])
     {
 
-        $result = $event->result;
         /**
          * The value is always an array
          * but as we got this error:
          * ```
          * array_keys() expects parameter 1 to be array
          * ```
+         * The result is a list of page id
          */
-        if (is_array($result)) {
-            foreach (array_keys($result) as $idx) {
+        if (is_array($event->result)) {
+            foreach (array_keys($event->result) as $idx) {
                 $page = Page::createPageFromId($idx);
                 if ($page->isLowQualityPage()) {
                     $securityConf = $this->getConf(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE);
                     if (in_array($securityConf, $protectionModes)) {
-                        $event->result = AUTH_NONE;
+                        unset($event->result[$idx]);
                         return;
                     }
                 }
                 if ($page->isLatePublication()) {
                     $securityConf = $this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE);
                     if (in_array($securityConf, [PageProtection::CONF_VALUE_ACL, PageProtection::CONF_VALUE_HIDDEN])) {
-                        $event->result = AUTH_NONE;
+                        unset($event->result[$idx]);
                         return;
                     }
                 }

@@ -12,6 +12,11 @@ window.addEventListener('load', function () {
         if (version < 5) {
             namespace = "";
         }
-        document.querySelectorAll(`[data${namespace}-toggle="popover"]`).forEach(el => new bootstrap.Popover(el));
+        document.querySelectorAll(`[data${namespace}-toggle="popover"]`)
+            .forEach(el => {
+                new bootstrap.Popover(el);
+                // to not navigate on a anchor
+                el.onclick = (event => event.preventDefault());
+            });
     }
 });

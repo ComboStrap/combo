@@ -716,7 +716,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
     public function externalmedia($src, $title = null, $align = null, $width = null, $height = null, $cache = null, $linking = null)
     {
-        $this->stats[Analytics::EXTERNAL_MEDIAS]++;
+        $this->stats[Analytics::EXTERNAL_MEDIAS_COUNT]++;
     }
 
     public function reset()

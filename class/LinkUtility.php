@@ -689,7 +689,7 @@ EOF;
              * Broken link ?
              */
             $id = $this->getInternalPage()->getId();
-            if (!$this->getInternalPage()->existInFs()) {
+            if (!$this->getInternalPage()->exists()) {
                 $stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT]++;
                 $stats[Analytics::INFO][] = "The internal link `{$id}` does not exist";
             }

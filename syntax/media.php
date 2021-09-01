@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\Analytics;
 use ComboStrap\DokuPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
@@ -228,6 +229,29 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * @var Doku_Renderer_metadata $renderer
                  */
                 self::registerImageMeta($attributes, $renderer);
+                return true;
+
+            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
+
+                /**
+                 * Special pattern call
+                 * @var renderer_plugin_combo_analytics $renderer
+                 */
+                $attributes = $data[PluginUtility::ATTRIBUTES];
+                $media = MediaLink::createFromCallStackArray($attributes);
+                $renderer->stats[Analytics::MEDIAS_COUNT]++;
+                $scheme = $media->getScheme();
+                switch($scheme){
+                    case DokuPath::LOCAL_SCHEME:
+                        $renderer->stats[Analytics::INTERNAL_MEDIAS_COUNT]++;
+                        if(!$media->exists()){
+                            $renderer->stats[Analytics::INTERNAL_BROKEN_MEDIAS_COUNT]++;
+                        }
+                        break;
+                    case DokuPath::INTERNET_SCHEME:
+                        $renderer->stats[Analytics::EXTERNAL_MEDIAS_COUNT]++;
+                        break;
+                }
                 return true;
 
         }

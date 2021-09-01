@@ -34,9 +34,11 @@ class Analytics
     const TITLE = 'title';
     const INTERNAL_LINKS_COUNT = 'internal_links_count';
     const LOCAL_LINKS_COUNT = "local_links_count"; // ie fragment #hallo
-    const EXTERNAL_MEDIAS = 'external_medias_count';
+    const EXTERNAL_MEDIAS_COUNT = 'external_medias_count';
     const CHARS_COUNT = 'chars_count';
+    const MEDIAS_COUNT = 'medias_count';
     const INTERNAL_MEDIAS_COUNT = 'internal_medias_count';
+    const INTERNAL_BROKEN_MEDIAS_COUNT = 'internal_broken_medias_count';
     const EXTERNAL_LINKS_COUNT = 'external_links_count';
     const HEADERS_COUNT = 'headers_count';
     const SYNTAX_COUNT = "syntax_count";

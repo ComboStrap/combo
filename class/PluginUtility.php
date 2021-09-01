@@ -1176,7 +1176,7 @@ class PluginUtility
         if ($_SERVER["REMOTE_ADDR"] == "127.0.0.1") {
             return true;
         }
-        return defined('DOKU_UNITTEST');
+        return self::isTest();
     }
 
     public static function getInstructions($markiCode)
@@ -1204,6 +1204,11 @@ class PluginUtility
          */
         $string = str_replace(array(':','.'),'',$string);
         return sectionID($string,$check);
+    }
+
+    public static function isTest()
+    {
+        return defined('DOKU_UNITTEST');
     }
 
 

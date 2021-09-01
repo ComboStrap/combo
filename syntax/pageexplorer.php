@@ -491,14 +491,21 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
                                 );
-                                $parentIconName = "arrow-left-box";
-                                $parentInstructions[] = Call::createComboCall(
-                                    syntax_plugin_combo_icon::TAG,
-                                    DOKU_LEXER_SPECIAL,
-                                    ["name" => $parentIconName],
-                                    syntax_plugin_combo_pageexplorerparent::TAG,
-                                    "<icon name=\"$parentIconName\"/>"
-                                );
+                                /**
+                                 * To not hurt the icon
+                                 * server and to get
+                                 * stable test
+                                 */
+                                if(!PluginUtility::isTest()) {
+                                    $parentIconName = "arrow-left-box";
+                                    $parentInstructions[] = Call::createComboCall(
+                                        syntax_plugin_combo_icon::TAG,
+                                        DOKU_LEXER_SPECIAL,
+                                        ["name" => $parentIconName],
+                                        syntax_plugin_combo_pageexplorerparent::TAG,
+                                        "<icon name=\"$parentIconName\"/>"
+                                    );
+                                }
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_UNMATCHED,
@@ -565,13 +572,20 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
                                 );
-                                $templateNamespaceInstructions[] = Call::createComboCall(
-                                    syntax_plugin_combo_icon::TAG,
-                                    DOKU_LEXER_SPECIAL,
-                                    ["name" => "folder"],
-                                    syntax_plugin_combo_pageexplorerparent::TAG,
-                                    "<icon name=\"folder\"/>"
-                                );
+                                /**
+                                 * To not hurt
+                                 * the icon server in test
+                                 * and to get stable test
+                                 */
+                                if(!PluginUtility::isTest()) {
+                                    $templateNamespaceInstructions[] = Call::createComboCall(
+                                        syntax_plugin_combo_icon::TAG,
+                                        DOKU_LEXER_SPECIAL,
+                                        ["name" => "folder"],
+                                        syntax_plugin_combo_pageexplorerparent::TAG,
+                                        "<icon name=\"folder\"/>"
+                                    );
+                                }
                                 $templateNamespaceInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
                                     DOKU_LEXER_UNMATCHED,
@@ -682,8 +696,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         break;
                     case self::TYPE_TREE:
 
-                        if($namespaceAttributes==null){
-                            if(sizeof($templateNamespaceInstructions)==0){
+                        if ($namespaceAttributes == null) {
+                            if (sizeof($templateNamespaceInstructions) == 0) {
                                 $templateNamespaceInstructions = [];
                                 $templateNamespaceInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_pipeline::TAG,
@@ -829,13 +843,18 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
 
 
         /**
-         * Processing variable
+         * Home Page first
          */
-        $homePage = null; // the home page of the traversed namespace
-        $nonHomePages = []; // the other pages of the traversed namespace
+        $homePage = null;
+        $childDirectoryIds = [];
+        $nonHomePages = [];
 
-        $pageOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
-        foreach ($pageOrNamespaces as $pageOrNamespace) {
+        /**
+         * Scanning the directory to
+         * categorize the children as home, page or namesapce
+         */
+        $childPagesOrNamespaces = FsWikiUtility::getChildren($nameSpacePath);
+        foreach ($childPagesOrNamespaces as $pageOrNamespace) {
 
             $actualNamespaceId = $pageOrNamespace['id'];
             $actualPageOrNamespacePath = DokuPath::IdToAbsolutePath($actualNamespaceId);
@@ -845,71 +864,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
              */
             if ($pageOrNamespace['type'] == "d") {
 
-                $subHomePagePath = FsWikiUtility::getHomePagePath($actualPageOrNamespacePath);
-                if ($subHomePagePath != null) {
-                    if (sizeof($namespaceTemplateInstructions) > 0) {
-                        // Translate TODO
-                        $actualNamespaceInstructions = TemplateUtility::renderFromInstructions($namespaceTemplateInstructions, $subHomePagePath);
-                    } else {
-                        $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$subHomePagePath])->toCallArray()];
-                    }
-                } else {
-                    $namespaceName = self::toNamespaceName($actualPageOrNamespacePath);
-                    $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$namespaceName])->toCallArray()];
-                }
-
-                $this->namespaceCounter++;
-                $targetIdAtt = syntax_plugin_combo_pageexplorernamespace::TARGET_ID_ATT;
-                $id = PluginUtility::toHtmlId("page-explorer-{$actualNamespaceId}-{$this->namespaceCounter}-combo");
-
-                /**
-                 * Entering: Creating in instructions form
-                 * the same as in markup form
-                 *
-                 * <$pageExplorerTreeTag>
-                 *    <$pageExplorerTreeButtonTag $targetIdAtt="$id">
-                 *      $buttonInstructions
-                 *    </$pageExplorerTreeButtonTag>
-                 *    <$pageExplorerTreeListTag id="$id">
-                 *    ...
-                 */
-                $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerSubNamespaceTag, DOKU_LEXER_ENTER)
-                );
-                $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_ENTER, [
-                        $targetIdAtt => $id,
-                        TagAttributes::WIKI_ID => $actualNamespaceId
-                    ])
-                );
-                $callStack->appendInstructions($actualNamespaceInstructions);
-                $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_EXIT)
-                );
-                $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_ENTER, [TagAttributes::ID_KEY => "$id"])
-                );
-
-
-                /**
-                 * Recursion
-                 */
-                self::treeProcessSubNamespace($callStack, $actualPageOrNamespacePath, $namespaceTemplateInstructions, $pageTemplateInstructions, $homeTemplateInstructions);
-
-                /**
-                 * Closing: Creating in instructions form
-                 * the same as in markup form
-                 *
-                 *   </$pageExplorerTreeListTag>
-                 * </$pageExplorerTreeTag>
-                 */
-                $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_EXIT)
-                );
-                $callStack->appendCallAtTheEnd(
-                    Call::createComboCall($pageExplorerSubNamespaceTag, DOKU_LEXER_EXIT)
-                );
-
+                $childDirectoryIds[] = $actualNamespaceId;
 
             } else {
                 /**
@@ -931,6 +886,77 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
          */
         if ($homePage != null) {
             self::treeProcessLeaf($callStack, $homePage->getAbsolutePath(), $homeTemplateInstructions);
+        }
+
+        /**
+         * The the subdirectories
+         */
+        foreach ($childDirectoryIds as $childDirectoryId) {
+            $childDirectoryPath = DokuPath::IdToAbsolutePath($childDirectoryId);
+            $subHomePagePath = FsWikiUtility::getHomePagePath($childDirectoryPath);
+            if ($subHomePagePath != null) {
+                if (sizeof($namespaceTemplateInstructions) > 0) {
+                    // Translate TODO
+                    $actualNamespaceInstructions = TemplateUtility::renderFromInstructions($namespaceTemplateInstructions, $subHomePagePath);
+                } else {
+                    $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$subHomePagePath])->toCallArray()];
+                }
+            } else {
+                $namespaceName = self::toNamespaceName($childDirectoryPath);
+                $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$namespaceName])->toCallArray()];
+            }
+
+            $this->namespaceCounter++;
+            $targetIdAtt = syntax_plugin_combo_pageexplorernamespace::TARGET_ID_ATT;
+            $id = PluginUtility::toHtmlId("page-explorer-{$childDirectoryId}-{$this->namespaceCounter}-combo");
+
+            /**
+             * Entering: Creating in instructions form
+             * the same as in markup form
+             *
+             * <$pageExplorerTreeTag>
+             *    <$pageExplorerTreeButtonTag $targetIdAtt="$id">
+             *      $buttonInstructions
+             *    </$pageExplorerTreeButtonTag>
+             *    <$pageExplorerTreeListTag id="$id">
+             *    ...
+             */
+            $callStack->appendCallAtTheEnd(
+                Call::createComboCall($pageExplorerSubNamespaceTag, DOKU_LEXER_ENTER)
+            );
+            $callStack->appendCallAtTheEnd(
+                Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_ENTER, [
+                    $targetIdAtt => $id,
+                    TagAttributes::WIKI_ID => $childDirectoryId
+                ])
+            );
+            $callStack->appendInstructions($actualNamespaceInstructions);
+            $callStack->appendCallAtTheEnd(
+                Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_EXIT)
+            );
+            $callStack->appendCallAtTheEnd(
+                Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_ENTER, [TagAttributes::ID_KEY => "$id"])
+            );
+
+
+            /**
+             * Recursion
+             */
+            self::treeProcessSubNamespace($callStack, $childDirectoryPath, $namespaceTemplateInstructions, $pageTemplateInstructions, $homeTemplateInstructions);
+
+            /**
+             * Closing: Creating in instructions form
+             * the same as in markup form
+             *
+             *   </$pageExplorerTreeListTag>
+             * </$pageExplorerTreeTag>
+             */
+            $callStack->appendCallAtTheEnd(
+                Call::createComboCall($pageExplorerTreeListTag, DOKU_LEXER_EXIT)
+            );
+            $callStack->appendCallAtTheEnd(
+                Call::createComboCall($pageExplorerSubNamespaceTag, DOKU_LEXER_EXIT)
+            );
         }
 
         /**

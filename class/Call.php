@@ -615,6 +615,7 @@ class Call
 
     /**
      * @param $value string the class string to add
+     * @return Call
      */
     public function addClassName($value)
     {
@@ -623,6 +624,7 @@ class Call
             $value = "$class $value";
         }
         $this->addAttribute("class", $value);
+        return $this;
 
     }
 

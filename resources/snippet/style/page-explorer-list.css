@@ -4,4 +4,8 @@
 .page-explorer-list-combo a {
     text-decoration: none;
 }
-
+.page-explorer-list-home-combo {
+    border-bottom: 1px solid #e5e5e5;
+    /*noinspection CssUnresolvedCustomProperty*/
+    background-color: var(--bs-light)
+}

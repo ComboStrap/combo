@@ -352,6 +352,18 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $callStack->deleteAllCallsAfter($openingTag);
 
                 /**
+                 * Get the root Namespace of the command
+                 * and
+                 * Class Prefix
+                 */
+                $openingTagAttributes = $openingTag->getAttributes();
+                $tagAttributes = TagAttributes::createFromCallStackArray($openingTagAttributes, self::CANONICAL);
+                $wikiId = $tagAttributes->getValue(TagAttributes::WIKI_ID);
+                $nameSpacePath = DokuPath::IdToAbsolutePath($wikiId);
+                $type = $tagAttributes->getType();
+                $componentClassPrefix = self::CANONICAL . "-$type";
+
+                /**
                  * Default template
                  * if null, no node page present
                  */
@@ -367,7 +379,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             ["ref" => "\$path"],
                             syntax_plugin_combo_pageexplorerpage::TAG,
                             "[[\$path"
-                        );
+                        )->addClassName($componentClassPrefix . "-page-combo");
                         $templatePageInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_pipeline::TAG,
                             DOKU_LEXER_SPECIAL,
@@ -384,6 +396,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         );
                     }
                 }
+
                 /**
                  * Home instruction
                  * If unset, set it with the pages
@@ -395,20 +408,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     }
                 }
 
-
-                /**
-                 * Get the root Namespace of the command
-                 */
-                $openingTagAttributes = $openingTag->getAttributes();
-                $tagAttributes = TagAttributes::createFromCallStackArray($openingTagAttributes, self::CANONICAL);
-                $wikiId = $tagAttributes->getValue(TagAttributes::WIKI_ID);
-                $nameSpacePath = DokuPath::IdToAbsolutePath($wikiId);
-
-
                 /**
                  * Creating the callstack
                  */
-                $type = $tagAttributes->getType();
                 switch ($type) {
                     default:
                     case self::LIST_TYPE:
@@ -422,14 +424,13 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         /**
                          * Css
                          */
-                        $pageExplorerListPrefix = self::CANONICAL . "-$type";
-                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($pageExplorerListPrefix);
+                        PluginUtility::getSnippetManager()->attachCssSnippetForBar($componentClassPrefix);
 
                         /**
                          * Create the enter content list tag
                          */
                         $tagAttributes->addClassName(self::CANONICAL . "-combo");
-                        $tagAttributes->addClassName($pageExplorerListPrefix . "-combo");
+                        $tagAttributes->addClassName($componentClassPrefix . "-combo");
                         $tagAttributes->removeAttributeIfPresent(TagAttributes::TYPE_KEY);
                         $tagAttributes->removeAttributeIfPresent(TagAttributes::WIKI_ID);
                         $callStack->appendCallAtTheEnd(
@@ -450,17 +451,11 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Enter tag
                              */
-                            if (sizeof($homeAttributes) == 0) {
-                                $homeAttributes = [
-                                    "style" => "border-bottom:1px solid #e5e5e5",
-                                    Background::BACKGROUND_COLOR => "light"
-                                ];
-                            }
                             $callStack->appendCallAtTheEnd(
                                 Call::createComboCall($contentListItemTag,
                                     DOKU_LEXER_ENTER,
                                     $homeAttributes
-                                )
+                                )->addClassName($componentClassPrefix . "-home-combo")
                             );
                             /**
                              * Content
@@ -490,7 +485,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     ["ref" => "\$path"],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
-                                );
+                                )->addClassName($componentClassPrefix . "-parent-combo");
                                 /**
                                  * To not hurt the icon
                                  * server and to get
@@ -571,7 +566,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                     ["ref" => "\$path"],
                                     syntax_plugin_combo_pageexplorerparent::TAG,
                                     "[[\$path"
-                                );
+                                )->addClassName($componentClassPrefix . "-namespace-combo");
                                 /**
                                  * To not hurt
                                  * the icon server in test

@@ -97,14 +97,26 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
         global $ID;
         if (empty($ID)) {
+
             global $_SERVER;
-            $requestUri = $_SERVER['REQUEST_URI'];
-            if (!strpos($requestUri, "/lib/exe/ajax.php") !== false) {
+            $scriptName = $_SERVER['SCRIPT_NAME'];
+
+            /**
+             * If this is an ajax call, return
+             * only if this not from webcode
+             */
+            if (strpos($scriptName, "/lib/exe/ajax.php") !== false) {
                 global $_REQUEST;
                 $call = $_REQUEST['call'];
                 if ($call != action_plugin_combo_webcode::CALL_ID) {
                     return;
                 }
+            } else if (!(strpos($scriptName, "/lib/exe/detail.php") !== false)) {
+                /**
+                 * Image page has an header and footer that may needs snippet
+                 * We return only if this is not a image/detail page
+                 */
+                return;
             }
         }
 
@@ -200,7 +212,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
     {
 
         $format = $event->data[0];
-        if($format!=="xhtml"){
+        if ($format !== "xhtml") {
             return;
         }
 

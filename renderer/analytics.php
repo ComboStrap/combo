@@ -113,6 +113,24 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
      */
     private $page;
 
+    /**
+     * Get and unset a value from an array
+     * @param array $array
+     * @param $key
+     * @param $default
+     * @return mixed
+     */
+    private static function getAndUnset(array &$array, $key, $default)
+    {
+        if (isset($array[$key])) {
+            $value = $array[$key];
+            unset($array[$key]);
+            return $value;
+        }
+        return $default;
+
+    }
+
     public function document_start()
     {
         $this->reset();
@@ -424,6 +442,17 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         }
 
         /**
+         * Media
+         */
+        $mediasStats = [
+            "total_count" => self::getAndUnset($statExport, Analytics::MEDIAS_COUNT, 0),
+            "internal_count" => self::getAndUnset($statExport, Analytics::INTERNAL_MEDIAS_COUNT, 0),
+            "internal_broken_count" => self::getAndUnset($statExport, Analytics::INTERNAL_BROKEN_MEDIAS_COUNT,0),
+            "external_count" => self::getAndUnset($statExport, Analytics::EXTERNAL_MEDIAS_COUNT,0)
+        ];
+        $statExport['media'] = $mediasStats;
+
+        /**
          * Changes, the more changes the better
          */
         $qualityScores[Analytics::EDITS_COUNT] = $statExport[Analytics::EDITS_COUNT] * $this->getConf(self::CONF_QUALITY_SCORE_CHANGES_FACTOR, 0.25);
@@ -716,7 +745,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
 
     public function externalmedia($src, $title = null, $align = null, $width = null, $height = null, $cache = null, $linking = null)
     {
-        $this->stats[Analytics::EXTERNAL_MEDIAS]++;
+        $this->stats[Analytics::EXTERNAL_MEDIAS_COUNT]++;
     }
 
     public function reset()

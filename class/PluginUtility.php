@@ -11,6 +11,8 @@ use dokuwiki\Extension\SyntaxPlugin;
  * Plugin Utility is added in all Dokuwiki extension
  * and
  * all classes are added in plugin utility
+ *
+ * This is an utility master and the class loader
  */
 require_once('Align.php');
 require_once('Animation.php');
@@ -41,9 +43,9 @@ require_once('FsWikiUtility.php');
 require_once('File.php');
 require_once('FontSize.php');
 require_once('Hover.php');
-require_once('Identity.php');
-require_once('XhtmlUtility.php');
+require_once('Http.php');
 require_once('Icon.php');
+require_once('Identity.php');
 require_once('MediaLink.php');
 require_once('Lang.php');
 require_once('LineSpacing.php');
@@ -71,10 +73,11 @@ require_once('TemplateUtility.php');
 require_once('TextAlign.php');
 require_once('TextColor.php');
 require_once('ThirdMediaLink.php');
+require_once('HistoricalBreadcrumbMenuItem.php');
 require_once('TagAttributes.php');
 require_once('Toggle.php');
 require_once('Underline.php');
-require_once('DokuwikiUrl.php');
+require_once('XhtmlUtility.php');
 require_once('XmlDocument.php');
 require_once('XmlUtility.php');
 
@@ -1175,7 +1178,7 @@ class PluginUtility
         if ($_SERVER["REMOTE_ADDR"] == "127.0.0.1") {
             return true;
         }
-        return defined('DOKU_UNITTEST');
+        return self::isTest();
     }
 
     public static function getInstructions($markiCode)
@@ -1203,6 +1206,11 @@ class PluginUtility
          */
         $string = str_replace(array(':','.'),'',$string);
         return sectionID($string,$check);
+    }
+
+    public static function isTest()
+    {
+        return defined('DOKU_UNITTEST');
     }
 
 

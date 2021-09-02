@@ -23,14 +23,14 @@ class TemplateUtility
 
     const VARIABLE_PREFIX = "$";
 
-    static function renderFromString($pageTemplate, $pageId)
+    static function renderFromStringForPageId($pageTemplate, $pageId)
     {
 
 
         $page = Page::createPageFromId($pageId);
 
 
-        return self::renderForPage($pageTemplate, $page);
+        return self::renderFromStringForPage($pageTemplate, $page);
 
     }
 
@@ -114,7 +114,7 @@ class TemplateUtility
 
     }
 
-    public static function renderForPage($pageTemplate, Page $page)
+    public static function renderFromStringForPage($pageTemplate, Page $page)
     {
 
 
@@ -141,6 +141,7 @@ class TemplateUtility
         $template->set("id", $page->getId());
         $template->set("path", $page->getAbsolutePath());
         $template->set("description", $page->getDescriptionOrElseDokuWiki());
+        $template->set("name", $page->getPageNameNotEmpty());
 
         /**
          * Override / add the user variable

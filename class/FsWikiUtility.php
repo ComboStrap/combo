@@ -169,13 +169,25 @@ class FsWikiUtility
      */
     public static function getParentPagePath($namespacePath)
     {
+
+        /**
+         * Root case
+         */
+        if ($namespacePath === ":") {
+            return null;
+        }
+
         /**
          * A namespace path does not have a `:` at the end
          * only for the root
          */
         $pos = strrpos($namespacePath, ':');
         if ($pos !== false) {
-            $parentNamespacePath = substr($namespacePath, 0, $pos);
+            if ($pos == 0) {
+                $parentNamespacePath = ":";
+            } else {
+                $parentNamespacePath = substr($namespacePath, 0, $pos);
+            }
             return self::getHomePagePath($parentNamespacePath);
         } else {
             return null;

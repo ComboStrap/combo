@@ -11,26 +11,27 @@ branches:
 # https://docs.travis-ci.com/user/build-matrix/#excluding-jobs-with-env-value
 jobs:
     include:
-        ## not "7.4" because Array and string offset access syntax with curly braces is deprecated vendor/marcusschwarz/lesserphp/lessc.inc.php:761
+        # https://config.travis-ci.com/ref/job/if/condition
+        # 7.4 and 9 does not work: https://github.com/splitbrain/dokuwiki/issues/3399
+#        -   if: branch =~ ^main
+#            language: php
+#            php: "8.0"
+#            env: DOKUWIKI=stable # the last version of dokuwiki (master = dev, old-stable = previous)
+#        -   if: branch =~ ^main
+#            language: php
+#            php: "7.4"
+#            env: DOKUWIKI=stable # the last version of dokuwiki (master = dev, old-stable = previous)
         -   language: php
             php: "7.3"
             env: DOKUWIKI=stable # the last version of dokuwiki (master = dev, old-stable = previous)
-        -   language: php
-            php: "5.6"
-            env: DOKUWIKI=stable # the last version of dokuwiki (master = dev, old-stable = previous)
-            # https://config.travis-ci.com/ref/job/if/condition
         -   if: branch =~ ^main
             language: php
             env: DOKUWIKI=stable # the last version of dokuwiki (master = dev, old-stable = previous)
             php: "7.2"
         -   if: branch =~ ^main
             language: php
+            env: DOKUWIKI=stable # the last version of dokuwiki (master = dev, old-stable = previous)
             php: "7.1"
-            env: DOKUWIKI=stable # the last version of dokuwiki (master = dev, old-stable = previous)
-        -   if: branch =~ ^main
-            language: php
-            php: "7.0"
-            env: DOKUWIKI=stable # the last version of dokuwiki (master = dev, old-stable = previous)
 
 
 before_script:
@@ -39,6 +40,7 @@ before_script:
     - bash boot.sh
 
 script:
+    # with verbose, you see the configuration file used at the beginning
     - cd _test && ./phpunit.phar --stderr --group plugin_combo --verbose --debug
 
 notifications:

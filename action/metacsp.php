@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\LogUtility;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
 
@@ -23,7 +24,10 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
 
     public function register(Doku_Event_Handler $controller)
     {
-        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'metaCsp', array());
+
+        $controller->register_hook('DOKUWIKI_STARTED', 'BEFORE', $this, 'httpHeaderCsp', array());
+        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'htmlMetaCsp', array());
+
     }
 
     /**
@@ -32,7 +36,7 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
      *
      * @param $event
      */
-    function metaCsp($event)
+    function htmlMetaCsp($event)
     {
 
 
@@ -66,6 +70,10 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
             ];
         }
 
+    }
+
+    function httpHeaderCsp($event)
+    {
         /**
          * Http header CSP directives
          */
@@ -78,10 +86,13 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
                 "X-Frame-Options: deny" // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
             ];
         }
-        foreach ($httpDirectives as $httpDirective) {
-            header($httpDirective);
+        if (!headers_sent()) {
+            foreach ($httpDirectives as $httpDirective) {
+                header($httpDirective);
+            }
+        } else {
+            LogUtility::msg("HTTP Headers have already ben sent. We couldn't add the CSP security header", LogUtility::LVL_MSG_WARNING,"security");
         }
-
     }
 
 }

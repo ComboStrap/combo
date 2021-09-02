@@ -116,7 +116,16 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      */
     function getSort()
     {
-        return 100;
+        /**
+         * It should be less than the number
+         * at {@link \dokuwiki\Parsing\ParserMode\Internallink::getSort}
+         * and the like
+         *
+         * For whatever reason, the number below should be less than 100,
+         * otherwise on windows with DokuWiki Stick, the link syntax may be not taken
+         * into account
+         */
+        return 99;
     }
 
 

@@ -127,13 +127,16 @@ class Call
      * @param string $content
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '')
+    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '', $payload=null)
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
             PluginUtility::CONTEXT => $context,
             PluginUtility::STATE => $state
         );
+        if($payload!=null){
+            $data[PluginUtility::PAYLOAD] = $payload;
+        }
         $positionInText = null;
 
         $call = [
@@ -612,6 +615,7 @@ class Call
 
     /**
      * @param $value string the class string to add
+     * @return Call
      */
     public function addClassName($value)
     {
@@ -620,6 +624,7 @@ class Call
             $value = "$class $value";
         }
         $this->addAttribute("class", $value);
+        return $this;
 
     }
 
@@ -705,9 +710,9 @@ class Call
         $state = $this->getState();
         if ( $state == DOKU_LEXER_UNMATCHED) {
             if ($this->isPluginCall()) {
-                $payload = trim($this->getPayload());
+                $payload = $this->getPayload();
                 if (!empty($payload)) {
-                    $this->setPayload(TemplateUtility::renderForPage($payload, $page));
+                    $this->setPayload(TemplateUtility::renderFromStringForPage($payload, $page));
                 }
             }
         } else {
@@ -717,7 +722,7 @@ class Call
                     break;
                 case \syntax_plugin_combo_pipeline::TAG:
                     $pageTemplate = PluginUtility::getTagContent($this->getCapturedContent());
-                    $script = TemplateUtility::renderForPage($pageTemplate, $page);
+                    $script = TemplateUtility::renderFromStringForPage($pageTemplate, $page);
                     $string = PipelineUtility::execute($script);
                     $this->setPayload($string);
                     break;
@@ -725,7 +730,7 @@ class Call
                     switch ($this->getState()) {
                         case DOKU_LEXER_ENTER:
                             $ref = $this->getAttribute("ref");
-                            $this->addAttribute("ref", TemplateUtility::renderForPage($ref, $page));
+                            $this->addAttribute("ref", TemplateUtility::renderFromStringForPage($ref, $page));
                             break;
                     }
                     break;

@@ -13,11 +13,13 @@ if (!defined('DOKU_INC')) die();
 
 use ComboStrap\Analytics;
 use ComboStrap\Page;
-use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
 
-require_once(__DIR__ . '/class/Analytics.php');
+/**
+ * All dependency are loaded in plugin utility
+ */
+require_once(__DIR__ . '/class/PluginUtility.php');
 
 /**
  * The memory of the server 128 is not enough
@@ -155,11 +157,12 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
             fwrite($fileHandle, implode(",", $header) . PHP_EOL);
         }
         $pageCounter = 0;
+        $totalNumberOfPages = sizeof($pages);
         while ($page = array_shift($pages)) {
             $id = $page['id'];
 
             $pageCounter++;
-            echo "Processing the page {$id} ($pageCounter)\n";
+            echo "Processing the page {$id} ($pageCounter / $totalNumberOfPages)\n";
 
             $data = Analytics::processAndGetDataAsArray($id, $cache);
             if (!empty($fileHandle)) {
@@ -171,7 +174,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
                     'changes' => $statistics[Analytics::EDITS_COUNT],
                     'chars' => $statistics[Analytics::CHARS_COUNT],
                     'external_links' => $statistics[Analytics::EXTERNAL_LINKS_COUNT],
-                    'external_medias' => $statistics[Analytics::EXTERNAL_MEDIAS],
+                    'external_medias' => $statistics[Analytics::EXTERNAL_MEDIAS_COUNT],
                     Analytics::H1 => $statistics[Analytics::HEADERS_COUNT][Analytics::H1],
                     'h2' => $statistics[Analytics::HEADERS_COUNT]['h2'],
                     'h3' => $statistics[Analytics::HEADERS_COUNT]['h3'],

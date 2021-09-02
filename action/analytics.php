@@ -53,7 +53,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * Add a icon in the page tools menu
          * https://www.dokuwiki.org/devel:event:menu_items_assembly
          */
-        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'handle_page_tools');
+        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'handle_rail_bar');
 
         /**
          * Check the internal link that have been
@@ -90,7 +90,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
     }
 
-    public function handle_page_tools(Doku_Event $event, $param)
+    public function handle_rail_bar(Doku_Event $event, $param)
     {
 
         if (!Identity::isWriter()) {

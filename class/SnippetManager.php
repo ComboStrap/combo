@@ -177,7 +177,7 @@ class SnippetManager
         }
 
         /**
-         * Transform in dokuwuiki format
+         * Transform in dokuwiki format
          * We collect the separately head that have content
          * from the head that refers to external resources
          * because the content will depends on the resources

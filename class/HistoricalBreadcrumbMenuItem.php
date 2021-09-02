@@ -12,7 +12,6 @@
 
 namespace ComboStrap;
 
-require_once('PluginUtility.php');
 
 use dokuwiki\Menu\Item\AbstractItem;
 
@@ -29,6 +28,12 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
 
 
     const RECENT_PAGES_VISITED = "Recent Pages Visited";
+
+    /**
+     * This unique name should not be in the {@link \action_plugin_combo_historicalbreadcrumb}
+     * to avoid circular reference
+     */
+    const HISTORICAL_BREADCRUMB_NAME = "historical-breadcrumb";
 
 
     /**
@@ -62,7 +67,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
          */
         $actualPageId = array_keys($pages)[0];
         $actualPageName = array_shift($pages);
-        $html = $this->createLink($actualPageId,$actualPageName,\action_plugin_combo_historicalbreadcrumb::HISTORICAL_BREADCRUMB_NAME."-home");
+        $html = $this->createLink($actualPageId,$actualPageName, self::HISTORICAL_BREADCRUMB_NAME ."-home");
 
         $html .= '<ol>' . PHP_EOL;
         foreach ($pages as $id => $name) {

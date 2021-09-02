@@ -25,8 +25,6 @@ class action_plugin_combo_historicalbreadcrumb extends DokuWiki_Action_Plugin
 {
 
 
-    const HISTORICAL_BREADCRUMB_NAME = "historical-breadcrumb";
-
     public function register(Doku_Event_Handler $controller)
     {
 
@@ -66,7 +64,7 @@ class action_plugin_combo_historicalbreadcrumb extends DokuWiki_Action_Plugin
             /**
              * Css
              */
-            PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::HISTORICAL_BREADCRUMB_NAME);
+            PluginUtility::getSnippetManager()->attachCssSnippetForRequest(HistoricalBreadcrumbMenuItem::HISTORICAL_BREADCRUMB_NAME);
 
             array_splice($event->data['items'], -1, 0, array(new HistoricalBreadcrumbMenuItem()));
 

@@ -98,7 +98,10 @@ class DokuPath extends File
         } else {
 
             if (substr($absolutePath, 0, 1) != DokuPath::PATH_SEPARATOR) {
-                LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
+                if(PluginUtility::isDevOrTest()) {
+                    // Feel too much the log, test are not seeing anything, may be minimap ?
+                    LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
+                }
                 $this->absolutePath = ":" . $absolutePath;
             }
             $this->scheme = self::LOCAL_SCHEME;

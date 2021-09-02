@@ -289,8 +289,8 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * @var Call[] $parentInstructions
                  * @var array $parentAttributes
                  */
-                $parentInstructions = [];
-                $parentAttributes = [];
+                $parentInstructions = null;
+                $parentAttributes = null;
                 /**
                  * @var Call[] $actualInstructionsStack
                  */
@@ -371,7 +371,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     // attributes are mandatory as array
                     $pageAttributes = [];
                     // default template instructions
-                    if (sizeof($templatePageInstructions) === 0) {
+                    if ($templatePageInstructions === null) {
                         $templatePageInstructions = [];
                         $templatePageInstructions[] = Call::createComboCall(
                             syntax_plugin_combo_link::TAG,
@@ -403,7 +403,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  */
                 if ($homeAttributes == null) {
                     $homeAttributes = [];
-                    if (sizeof($templateHomeInstructions) === 0) {
+                    if ($templateHomeInstructions === null) {
                         $templateHomeInstructions = $templatePageInstructions;
                     }
                 }
@@ -446,7 +446,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * Home
                          */
                         $currentHomePagePath = FsWikiUtility::getHomePagePath($nameSpacePath);
-                        if ($currentHomePagePath != null && sizeof($templateHomeInstructions) > 0) {
+                        if ($currentHomePagePath != null && $templateHomeInstructions !== null) {
 
                             /**
                              * Enter tag
@@ -475,9 +475,9 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                          * Parent ?
                          */
                         if ($parentAttributes == null) {
-                            $pageAttributes = [];
+                            $parentAttributes = [];
                             // default template instructions
-                            if (sizeof($parentInstructions) === 0) {
+                            if ($parentInstructions === null) {
                                 $parentInstructions = [];
                                 $parentInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
@@ -491,7 +491,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                  * server and to get
                                  * stable test
                                  */
-                                if(!PluginUtility::isTest()) {
+                                if (!PluginUtility::isTest()) {
                                     $parentIconName = "arrow-left-box";
                                     $parentInstructions[] = Call::createComboCall(
                                         syntax_plugin_combo_icon::TAG,
@@ -526,7 +526,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             }
                         }
                         $parentPagePath = FsWikiUtility::getParentPagePath($nameSpacePath);
-                        if ($parentPagePath != null && sizeof($parentInstructions) > 0) {
+                        if ($parentPagePath != null && $parentInstructions !== null) {
                             /**
                              * Enter parent tag
                              */
@@ -558,7 +558,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         if ($namespaceAttributes == null) {
                             $namespaceAttributes = [];
                             // default template instructions
-                            if (sizeof($templateNamespaceInstructions) === 0) {
+                            if ($templateNamespaceInstructions === null) {
                                 $templateNamespaceInstructions = [];
                                 $templateNamespaceInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_link::TAG,
@@ -572,7 +572,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                  * the icon server in test
                                  * and to get stable test
                                  */
-                                if(!PluginUtility::isTest()) {
+                                if (!PluginUtility::isTest()) {
                                     $templateNamespaceInstructions[] = Call::createComboCall(
                                         syntax_plugin_combo_icon::TAG,
                                         DOKU_LEXER_SPECIAL,
@@ -692,7 +692,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     case self::TYPE_TREE:
 
                         if ($namespaceAttributes == null) {
-                            if (sizeof($templateNamespaceInstructions) == 0) {
+                            if ($templateNamespaceInstructions === null) {
                                 $templateNamespaceInstructions = [];
                                 $templateNamespaceInstructions[] = Call::createComboCall(
                                     syntax_plugin_combo_pipeline::TAG,
@@ -890,7 +890,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             $childDirectoryPath = DokuPath::IdToAbsolutePath($childDirectoryId);
             $subHomePagePath = FsWikiUtility::getHomePagePath($childDirectoryPath);
             if ($subHomePagePath != null) {
-                if (sizeof($namespaceTemplateInstructions) > 0) {
+                if ($namespaceTemplateInstructions !== null) {
                     // Translate TODO
                     $actualNamespaceInstructions = TemplateUtility::renderFromInstructions($namespaceTemplateInstructions, $subHomePagePath);
                 } else {
@@ -973,7 +973,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     static function treeProcessLeaf(&$callStack, $pageOrNamespacePath, $pageTemplateInstructions = [])
     {
         $leafTag = syntax_plugin_combo_pageexplorerpage::TAG;
-        if (sizeof($pageTemplateInstructions) > 0) {
+        if ($pageTemplateInstructions !== null) {
             $actualPageInstructions = TemplateUtility::renderFromInstructions($pageTemplateInstructions, $pageOrNamespacePath);
         } else {
             $actualPageInstructions = [Call::createNativeCall("cdata", [$pageOrNamespacePath])->toCallArray()];

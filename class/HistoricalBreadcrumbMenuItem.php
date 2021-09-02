@@ -19,7 +19,8 @@ use dokuwiki\Menu\Item\AbstractItem;
  * *
  * @package ComboStrap
  *
- *
+ * To be able to debug, disable the trigger data attribute
+ * The popover will stay on the page
  */
 class HistoricalBreadcrumbMenuItem extends AbstractItem
 {
@@ -47,26 +48,23 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         $linkAttributes["data{$dataAttributeNamespace}-title"] = $lang['breadcrumb'];
 
 
-        $html = '<ol>' . PHP_EOL;
+        $pages = array_reverse(breadcrumbs());
 
-        $i = 0;
-        foreach (array_reverse(breadcrumbs()) as $id => $name) {
+        /**
+         * All page should be shown,
+         * also the actual
+         * because when the user is going
+         * in admin mode, it's an easy way to get back
+         */
+        $actualPageId = array_keys($pages)[0];
+        $actualPageName = array_shift($pages);
+        $html = $this->createLink($actualPageId,$actualPageName,\action_plugin_combo_historicalbreadcrumb::HISTORICAL_BREADCRUMB_NAME."-home");
 
-            $i++;
-            if ($i == 1) {
-                continue;
-            } else {
-                $html .= '<li>';
-            }
+        $html .= '<ol>' . PHP_EOL;
+        foreach ($pages as $id => $name) {
 
-            $page = Page::createPageFromId($id);
-            if ($name == "start") {
-                $name = "Home Page";
-            } else {
-                $name = $page->getTitleNotEmpty();
-            }
-            $link = LinkUtility::createFromPageId($id);
-            $html .= $link->renderOpenTag() . $name . $link->renderClosingTag();
+            $html .= '<li>';
+            $html .= $this->createLink($id,$name);
             $html .= '</li>' . PHP_EOL;
 
         }
@@ -75,7 +73,9 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         $linkAttributes["data{$dataAttributeNamespace}-content"] = $html;
 
         // Dismiss on next click
+        // To debug, just comment this line
         $linkAttributes["data{$dataAttributeNamespace}-trigger"] = "focus";
+
         // See for the tabindex
         // https://getbootstrap.com/docs/5.1/components/popovers/#dismiss-on-next-click
         $linkAttributes['tabindex'] = "0";
@@ -97,6 +97,30 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
     {
         /** @var string icon file */
         return Resources::getImagesDirectory() . '/history.svg';
+    }
+
+    /**
+     * @param $id
+     * @param $name
+     * @param null $class
+     * @return string
+     */
+    public function createLink($id,$name,$class=null)
+    {
+        $page = Page::createPageFromId($id);
+        if ($name == "start") {
+            $name = "Home Page";
+        } else {
+            $name = $page->getTitleNotEmpty();
+        }
+        $tagAttributes = null;
+        if($class!=null){
+            $tagAttributes = TagAttributes::createEmpty();
+            $tagAttributes->addClassName($class);
+        }
+        $link = LinkUtility::createFromPageId($id,$tagAttributes);
+
+        return $link->renderOpenTag() . $name . $link->renderClosingTag();
     }
 
 

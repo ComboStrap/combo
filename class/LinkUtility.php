@@ -276,9 +276,9 @@ class LinkUtility
 
     }
 
-    public static function createFromPageId($id)
+    public static function createFromPageId($id,&$tagAttributes = null)
     {
-        return new LinkUtility(":$id");
+        return new LinkUtility(":$id",$tagAttributes);
     }
 
     /**

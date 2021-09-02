@@ -12,6 +12,8 @@
 
 namespace ComboStrap;
 
+require_once('PluginUtility.php');
+
 use dokuwiki\Menu\Item\AbstractItem;
 
 /**
@@ -24,6 +26,8 @@ use dokuwiki\Menu\Item\AbstractItem;
  */
 class HistoricalBreadcrumbMenuItem extends AbstractItem
 {
+
+
     const RECENT_PAGES_VISITED = "Recent Pages Visited";
 
 

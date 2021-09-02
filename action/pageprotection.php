@@ -233,20 +233,25 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
         $pagesToBeAdded = &$event->data["data"];
         foreach ($pagesToBeAdded as $key => $data) {
 
-            $page = Page::createPageFromId($data["id"]);
+            // To prevent an Illegal string offset 'id'
+            if(isset($data["id"])) {
 
-            if ($page->isLowQualityPage() && $isLowQualityProtectionEnabled) {
-                $protectionMode = LowQualityPage::getLowQualityProtectionMode();
-                if ($protectionMode != PageProtection::CONF_VALUE_ROBOT) {
-                    unset($pagesToBeAdded[$key]);
-                }
-            }
+                $page = Page::createPageFromId($data["id"]);
 
-            if ($page->isLatePublication() && $isLatePublicationProtectionEnabled) {
-                $protectionMode = Publication::getLatePublicationProtectionMode();
-                if ($protectionMode != PageProtection::CONF_VALUE_ROBOT) {
-                    unset($pagesToBeAdded[$key]);
+                if ($page->isLowQualityPage() && $isLowQualityProtectionEnabled) {
+                    $protectionMode = LowQualityPage::getLowQualityProtectionMode();
+                    if ($protectionMode != PageProtection::CONF_VALUE_ROBOT) {
+                        unset($pagesToBeAdded[$key]);
+                    }
                 }
+
+                if ($page->isLatePublication() && $isLatePublicationProtectionEnabled) {
+                    $protectionMode = Publication::getLatePublicationProtectionMode();
+                    if ($protectionMode != PageProtection::CONF_VALUE_ROBOT) {
+                        unset($pagesToBeAdded[$key]);
+                    }
+                }
+
             }
         }
 

@@ -11,6 +11,8 @@ use dokuwiki\Extension\SyntaxPlugin;
  * Plugin Utility is added in all Dokuwiki extension
  * and
  * all classes are added in plugin utility
+ *
+ * This is an utility master and the class loader
  */
 require_once('Align.php');
 require_once('Animation.php');

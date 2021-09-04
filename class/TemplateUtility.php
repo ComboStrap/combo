@@ -23,14 +23,14 @@ class TemplateUtility
 
     const VARIABLE_PREFIX = "$";
 
-    static function renderFromStringForPageId($pageTemplate, $pageId)
+    static function renderStringTemplateForPageId($pageTemplate, $pageId)
     {
 
 
         $page = Page::createPageFromId($pageId);
 
 
-        return self::renderFromStringForPage($pageTemplate, $page);
+        return self::renderStringTemplateForDataPage($pageTemplate, $page);
 
     }
 
@@ -102,7 +102,7 @@ class TemplateUtility
      * @param $pagePath
      * @return array
      */
-    public static function renderFromInstructions(array $namespaceTemplateInstructions, $pagePath)
+    public static function renderInstructionsTemplateFromDataPage(array $namespaceTemplateInstructions, $pagePath)
     {
         $page = Page::createPageFromQualifiedPath($pagePath);
         $instructions = [];
@@ -114,15 +114,54 @@ class TemplateUtility
 
     }
 
-    public static function renderFromStringForPage($pageTemplate, Page $page)
+    public static function renderInstructionsTemplateFromDataArray(array $namespaceTemplateInstructions, array $array)
+    {
+
+        $instructions = [];
+        foreach ($namespaceTemplateInstructions as $call) {
+            $newCall = clone $call;
+            $instructions[] = $newCall->renderFromData($array)->toCallArray();
+        }
+        return $instructions;
+
+    }
+
+    public static function renderStringTemplateForDataPage($stringTemplate, Page $page)
     {
 
 
-        /**
-         * Template
-         */
+
+        return TemplateUtility::renderStringTemplateFromDataArray($stringTemplate, TemplateUtility::getDataFromPage($page));
+
+    }
+
+    /**
+     * Render a template string from a data array
+     * @param $pageTemplate
+     * @param array $array
+     * @return string
+     */
+    public static function renderStringTemplateFromDataArray($pageTemplate, array $array)
+    {
+
         $template = Template::create($pageTemplate);
 
+        foreach ($array as $key => $val) {
+            /**
+             * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
+             * @see {@link \syntax_plugin_combo_pipeline}
+             */
+            $val = str_replace('"', "'", $val);
+            $template->set($key, $val);
+        }
+
+        return $template->render();
+
+    }
+
+    public static function getDataFromPage(Page $page)
+    {
+        $array = [];
         /**
          * The title/h1 should never be null
          * otherwise a template link such as [[$path|$title]] will return a link without an description
@@ -130,29 +169,28 @@ class TemplateUtility
          * We render at least the id
          */
         $h1 = $page->getH1NotEmpty();
-        $template->set("h1", $h1);
+        $array["h1"] = $h1;
         $title = $page->getTitleNotEmpty();
         /**
          * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
          * @see {@link \syntax_plugin_combo_pipeline}
          */
         $title = str_replace('"', "'", $title);
-        $template->set("title", $title);
-        $template->set("id", $page->getId());
-        $template->set("path", $page->getAbsolutePath());
-        $template->set("description", $page->getDescriptionOrElseDokuWiki());
-        $template->set("name", $page->getPageNameNotEmpty());
+        $array["title"] = $title;
+        $array["id"] = $page->getId();
+        $array["path"] = $page->getAbsolutePath();
+        $array["description"] = $page->getDescriptionOrElseDokuWiki();
+        $array["name"] = $page->getPageNameNotEmpty();
 
         /**
          * Override / add the user variable
          */
         foreach ($page->getPersistentMetadatas() as $metaKey => $metaValue) {
 
-            $template->set($metaKey, $metaValue);
+            $array[$metaKey] = $metaValue;
 
         }
-
-        return $template->render();
+        return $array;
 
     }
 

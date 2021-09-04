@@ -707,12 +707,16 @@ class Call
      */
     public function render(Page $page)
     {
+        return $this->renderFromData(TemplateUtility::getDataFromPage($page));
+    }
+
+    public function renderFromData(Array $array){
         $state = $this->getState();
         if ( $state == DOKU_LEXER_UNMATCHED) {
             if ($this->isPluginCall()) {
                 $payload = $this->getPayload();
                 if (!empty($payload)) {
-                    $this->setPayload(TemplateUtility::renderFromStringForPage($payload, $page));
+                    $this->setPayload(TemplateUtility::renderStringTemplateFromDataArray($payload, $array));
                 }
             }
         } else {
@@ -722,7 +726,7 @@ class Call
                     break;
                 case \syntax_plugin_combo_pipeline::TAG:
                     $pageTemplate = PluginUtility::getTagContent($this->getCapturedContent());
-                    $script = TemplateUtility::renderFromStringForPage($pageTemplate, $page);
+                    $script = TemplateUtility::renderStringTemplateFromDataArray($pageTemplate, $array);
                     $string = PipelineUtility::execute($script);
                     $this->setPayload($string);
                     break;
@@ -730,14 +734,13 @@ class Call
                     switch ($this->getState()) {
                         case DOKU_LEXER_ENTER:
                             $ref = $this->getAttribute("ref");
-                            $this->addAttribute("ref", TemplateUtility::renderFromStringForPage($ref, $page));
+                            $this->addAttribute("ref", TemplateUtility::renderStringTemplateFromDataArray($ref, $array));
                             break;
                     }
                     break;
             }
         }
         return $this;
-
     }
 
 

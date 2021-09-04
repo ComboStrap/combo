@@ -460,7 +460,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Content
                              */
-                            $callStack->appendInstructions(TemplateUtility::renderFromInstructions($templateHomeInstructions, $currentHomePagePath));
+                            $callStack->appendInstructions(TemplateUtility::renderInstructionsTemplateFromDataPage($templateHomeInstructions, $currentHomePagePath));
                             /**
                              * End home tag
                              */
@@ -539,7 +539,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Content
                              */
-                            $parentInstructionsInstance = TemplateUtility::renderFromInstructions($parentInstructions, $parentPagePath);
+                            $parentInstructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataPage($parentInstructions, $parentPagePath);
                             $callStack->appendInstructions($parentInstructionsInstance);
                             /**
                              * End parent tag
@@ -630,7 +630,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         /**
                                          * SubNamespace Content
                                          */
-                                        $namespaceInstructionsInstance = TemplateUtility::renderFromInstructions($templateNamespaceInstructions, $subNamespacePagePath);
+                                        $namespaceInstructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataPage($templateNamespaceInstructions, $subNamespacePagePath);
                                         $callStack->appendInstructions($namespaceInstructionsInstance);
                                         /**
                                          * SubNamespace Exit tag
@@ -661,7 +661,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                         /**
                                          * Page Content
                                          */
-                                        $pageInstructions = TemplateUtility::renderFromInstructions($templatePageInstructions, $pageOrNamespacePath);
+                                        $pageInstructions = TemplateUtility::renderInstructionsTemplateFromDataPage($templatePageInstructions, $pageOrNamespacePath);
                                         $callStack->appendInstructions($pageInstructions);
                                         /**
                                          * Page Exit tag
@@ -892,7 +892,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
             if ($subHomePagePath != null) {
                 if ($namespaceTemplateInstructions !== null) {
                     // Translate TODO
-                    $actualNamespaceInstructions = TemplateUtility::renderFromInstructions($namespaceTemplateInstructions, $subHomePagePath);
+                    $actualNamespaceInstructions = TemplateUtility::renderInstructionsTemplateFromDataPage($namespaceTemplateInstructions, $subHomePagePath);
                 } else {
                     $actualNamespaceInstructions = [Call::createNativeCall("cdata", [$subHomePagePath])->toCallArray()];
                 }
@@ -974,7 +974,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
     {
         $leafTag = syntax_plugin_combo_pageexplorerpage::TAG;
         if ($pageTemplateInstructions !== null) {
-            $actualPageInstructions = TemplateUtility::renderFromInstructions($pageTemplateInstructions, $pageOrNamespacePath);
+            $actualPageInstructions = TemplateUtility::renderInstructionsTemplateFromDataPage($pageTemplateInstructions, $pageOrNamespacePath);
         } else {
             $actualPageInstructions = [Call::createNativeCall("cdata", [$pageOrNamespacePath])->toCallArray()];
         }

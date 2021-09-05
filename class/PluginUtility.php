@@ -66,6 +66,7 @@ require_once('Site.php');
 require_once('SnippetManager.php');
 require_once('Spacing.php');
 require_once('Sqlite.php');
+require_once('SqlParser.php');
 require_once('StringUtility.php');
 require_once('StyleUtility.php');
 require_once('Template.php');

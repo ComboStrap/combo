@@ -196,4 +196,56 @@ class FsWikiUtility
 
     }
 
+
+    /**
+     * Find the pages in the tree
+     * @param $namespaces
+     * @param $depth
+     * @return array
+     */
+    public static function getPages($namespaces = array(), $depth = 0)
+    {
+        // Run as admin to overcome the fact that
+        // anonymous user cannot set all links and backlinks
+        global $conf;
+        $datadir = $conf['datadir'];
+
+        $pages = array();
+        foreach ($namespaces as $ns) {
+
+            search(
+                $pages,
+                $datadir,
+                'search_universal',
+                array(
+                    'depth' => $depth,
+                    'listfiles' => true,
+                    'listdirs' => false,
+                    'pagesonly' => true,
+                    'skipacl' => true,
+                    'firsthead' => false,
+                    'meta' => false,
+                ),
+                str_replace(':', '/', $ns)
+            );
+
+            // add the ns start page
+            if ($ns && page_exists($ns)) {
+                $pages[] = array(
+                    'id' => $ns,
+                    'ns' => getNS($ns),
+                    'title' => p_get_first_heading($ns, false),
+                    'size' => filesize(wikiFN($ns)),
+                    'mtime' => filemtime(wikiFN($ns)),
+                    'perm' => 16,
+                    'type' => 'f',
+                    'level' => 0,
+                    'open' => 1,
+                );
+            }
+
+        }
+        return $pages;
+    }
+
 }

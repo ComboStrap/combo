@@ -9,6 +9,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
+use ComboStrap\SqlParser;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
 
@@ -218,6 +219,16 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
 
                     }
                 }
+
+                /**
+                 * The returned array
+                 * in case there is a problem early
+                 */
+                $returnArray = array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
+                );
+
                 /**
                  * Remove all callstack from the opening tag
                  */
@@ -227,46 +238,64 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 /**
                  * Processing
                  */
-                if ($dataInstructions !== null) {
+                if ($dataInstructions === null) {
+                    LogUtility::msg("The iterator needs a data definition", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return $returnArray;
+                }
 
-                    $sql = $dataInstructions[0]->getCapturedContent();
+                $sql = $dataInstructions[0]->getCapturedContent();
+
+                /**
+                 * Create the SQL
+                 */
+                $columns = SqlParser::create($sql)
+                    ->parse()
+                    ->getColumns();
+                if (sizeof($columns) === 0) {
+                    LogUtility::msg("The parsed sql ($sql) contains no columns", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return $returnArray;
+                }
+
+                $executableSql = "select";
+                $queryParams = [];
+                foreach ($columns as $alias => $expression){
+                    $expression = "json_extract(analytics , '$.metadata.$expression')";
+                    $executableSql .= " $expression as $alias,";
+                }
+                $executableSql = trim($executableSql,",");
+                $executableSql .= " from pages";
+
+                /**
+                 * Run the Sql
+                 */
+                $sqlite = Sqlite::getSqlite();
+                if ($sqlite === null) {
+                    LogUtility::msg("iterator needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return $returnArray;
+                }
+
+                $res = $sqlite->query($executableSql);
+                if (!$res) {
+                    LogUtility::msg("An exception has occurred with the sql ($sql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                } else {
+
+                    $res2arr = $sqlite->res2arr($res);
+                    $sqlite->res_close($res);
 
                     /**
-                     * Run the Sql
+                     * Loop
                      */
-                    $sqlite = Sqlite::getSqlite();
-                    if($sqlite!==null) {
-                        $res = $sqlite->query($sql);
-                        if (!$res) {
-                            LogUtility::msg("An exception has occurred with the sql ($sql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        } else {
+                    foreach ($res2arr as $row) {
 
-                            $res2arr = $sqlite->res2arr($res);
-                            $sqlite->res_close($res);
+                        $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($bodyInstructions, $row);
+                        $callStack->appendInstructions($instructionsInstance);
 
-                            /**
-                             * Loop
-                             */
-                            foreach ($res2arr as $row) {
-
-                                $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($bodyInstructions, $row);
-                                $callStack->appendInstructions($instructionsInstance);
-
-                            }
-
-                        }
-                    } else {
-                        LogUtility::msg("iterator needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
                     }
-                } else {
-                    LogUtility::msg("The iterator needs a data definition", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+
                 }
 
 
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
-                );
+                return $returnArray;
 
 
         }

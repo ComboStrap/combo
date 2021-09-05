@@ -199,11 +199,11 @@ class FsWikiUtility
 
     /**
      * Find the pages in the tree
-     * @param $namespaces
+     * @param $namespaces (default to the root tree)
      * @param $depth
      * @return array
      */
-    public static function getPages($namespaces = array(), $depth = 0)
+    public static function getPages($namespaces = array(''), $depth = 0)
     {
         // Run as admin to overcome the fact that
         // anonymous user cannot set all links and backlinks

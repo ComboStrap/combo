@@ -256,17 +256,8 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     return $returnArray;
                 }
 
-                $executableSql = "select";
-                $queryParams = [];
-                foreach ($columns as $alias => $expression){
-                    $expression = "json_extract(analytics , '$.metadata.$expression')";
-                    $executableSql .= " $expression as $alias,";
-                }
-                $executableSql = trim($executableSql,",");
-                $executableSql .= " from pages";
-
                 /**
-                 * Run the Sql
+                 * Sqlite available ?
                  */
                 $sqlite = Sqlite::getSqlite();
                 if ($sqlite === null) {
@@ -274,26 +265,72 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     return $returnArray;
                 }
 
-                $res = $sqlite->query($executableSql);
-                if (!$res) {
-                    LogUtility::msg("An exception has occurred with the sql ($sql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                } else {
-
-                    $res2arr = $sqlite->res2arr($res);
-                    $sqlite->res_close($res);
-
-                    /**
-                     * Loop
-                     */
-                    foreach ($res2arr as $row) {
-
-                        $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($bodyInstructions, $row);
-                        $callStack->appendInstructions($instructionsInstance);
-
+                /**
+                 * Json support
+                 */
+                $res = $sqlite->query("PRAGMA compile_options");
+                $isJsonEnabled = false;
+                foreach ($sqlite->res2arr($res) as $row) {
+                    if ($row["compile_option"] === "ENABLE_JSON1") {
+                        $isJsonEnabled = true;
+                        break;
                     }
+                };
+                $sqlite->res_close($res);
 
+                if ($isJsonEnabled) {
+                    $expressionMetadataMapping = [
+                        "title" => "json_extract(analytics , '$.metadata.title')"
+                    ];
+                    $executableSql = "select";
+                    foreach ($columns as $alias => $expression) {
+                        $expression = $expressionMetadataMapping[$executableSql];
+                        $executableSql .= " $expression as $alias,";
+                    }
+                    $executableSql = trim($executableSql, ",");
+                    $executableSql .= " from pages";
+                    $res = $sqlite->query($executableSql);
+                    if (!$res) {
+                        LogUtility::msg("An exception has occurred with the sql ($executableSql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return $returnArray;
+                    }
+                    $rows = $sqlite->res2arr($res);
+                    $sqlite->res_close($res);
+                } else {
+                    $executableSql = "select analytics from pages";
+                    $res = $sqlite->query($executableSql);
+                    if (!$res) {
+                        LogUtility::msg("An exception has occurred with the sql ($executableSql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return $returnArray;
+                    }
+                    $res2arr = $sqlite->res2arr($res);
+                    $rows = [];
+                    foreach ($res2arr as $sourceRow) {
+                        $analytics = $sourceRow["ANALYTICS"];
+                        $jsonArray = json_decode($analytics, true);
+                        $targetRow = [];
+                        foreach ($columns as $alias => $expression) {
+                            if(isset($jsonArray["metadata"][$alias])) {
+                                $targetRow[$alias] = $jsonArray["metadata"][$alias];
+                            } else {
+                                $targetRow[$alias] = "NotFound";
+                            }
+                        }
+                        $rows[] = $targetRow;
+                    }
+                    $sqlite->res_close($res);
                 }
 
+
+                /**
+                 * Loop
+                 */
+                foreach ($rows as $row) {
+
+                    $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($bodyInstructions, $row);
+                    $callStack->appendInstructions($instructionsInstance);
+
+                }
 
                 return $returnArray;
 

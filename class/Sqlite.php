@@ -80,14 +80,14 @@ class Sqlite
             self::$sqlite = plugin_load('helper', 'sqlite');
             if (self::$sqlite == null) {
                 # TODO: Man we cannot get the message anymore ['SqliteMandatory'];
-                $sqliteMandatoryMessage = "The Sqlite Plugin is mandatory. Some functionalities of the Combostraps Plugin may not work.";
-                LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR,"support");
+                $sqliteMandatoryMessage = "The Sqlite Plugin is mandatory. Some functionalities of the ComboStrap Plugin may not work.";
+                LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
                 return null;
             }
             $adapter = self::$sqlite->getAdapter();
             if ($adapter == null) {
                 $sqliteMandatoryMessage = "The Sqlite Php Extension is mandatory. It seems that it's not available on this installation.";
-                LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR,"support");
+                LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
                 return null;
             }
 

@@ -134,7 +134,7 @@ class LogUtility
      * @param $canonical
      * @param bool $withIconURL
      */
-    public static function log2FrontEnd($message, $level, $canonical, $withIconURL = true)
+    public static function log2FrontEnd($message, $level, $canonical="support", $withIconURL = true)
     {
         /**
          * If we are not in the console

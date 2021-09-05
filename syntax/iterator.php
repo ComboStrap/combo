@@ -8,6 +8,7 @@ use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\Sqlite;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
 
@@ -224,12 +225,42 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
 
 
                 /**
-                 * Loop
+                 * Processing
                  */
-                $data = [];
-                $data["hello"] = "World";
-                $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($bodyInstructions, $data);
-                $callStack->appendInstructions($instructionsInstance);
+                if ($dataInstructions !== null) {
+
+                    $sql = $dataInstructions[0]->getCapturedContent();
+
+                    /**
+                     * Run the Sql
+                     */
+                    $sqlite = Sqlite::getSqlite();
+                    if($sqlite!==null) {
+                        $res = $sqlite->query($sql);
+                        if (!$res) {
+                            LogUtility::msg("An exception has occurred with the sql ($sql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        } else {
+
+                            $res2arr = $sqlite->res2arr($res);
+                            $sqlite->res_close($res);
+
+                            /**
+                             * Loop
+                             */
+                            foreach ($res2arr as $row) {
+
+                                $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($bodyInstructions, $row);
+                                $callStack->appendInstructions($instructionsInstance);
+
+                            }
+
+                        }
+                    } else {
+                        LogUtility::msg("iterator needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                    }
+                } else {
+                    LogUtility::msg("The iterator needs a data definition", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                }
 
 
                 return array(

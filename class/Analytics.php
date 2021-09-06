@@ -56,6 +56,12 @@ class Analytics
     const RULES = "rules";
     const DETAILS = 'details';
     const FAILED_MANDATORY_RULES = 'failed_mandatory_rules';
+    const NAME = "name";
+    const PATH = "path";
+    const DESCRIPTION = "description";
+    const METADATA = 'metadata';
+    const CANONICAL = "canonical";
+    const DATE_CREATED = 'date_created';
 
 
     /**

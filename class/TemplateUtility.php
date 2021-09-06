@@ -131,7 +131,7 @@ class TemplateUtility
 
 
 
-        return TemplateUtility::renderStringTemplateFromDataArray($stringTemplate, TemplateUtility::getDataFromPage($page));
+        return TemplateUtility::renderStringTemplateFromDataArray($stringTemplate, TemplateUtility::getMetadataDataFromPage($page));
 
     }
 
@@ -159,28 +159,14 @@ class TemplateUtility
 
     }
 
-    public static function getDataFromPage(Page $page)
+    public static function getMetadataDataFromPage(Page $page)
     {
-        $array = [];
+
+        $array = $page->getMetadataStandardNotEmpty();
         /**
-         * The title/h1 should never be null
-         * otherwise a template link such as [[$path|$title]] will return a link without an description
-         * and therefore will be not visible
-         * We render at least the id
+         * @deprecated for path
          */
-        $h1 = $page->getH1NotEmpty();
-        $array["h1"] = $h1;
-        $title = $page->getTitleNotEmpty();
-        /**
-         * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
-         * @see {@link \syntax_plugin_combo_pipeline}
-         */
-        $title = str_replace('"', "'", $title);
-        $array["title"] = $title;
         $array["id"] = $page->getId();
-        $array["path"] = $page->getAbsolutePath();
-        $array["description"] = $page->getDescriptionOrElseDokuWiki();
-        $array["name"] = $page->getPageNameNotEmpty();
 
         /**
          * Override / add the user variable

@@ -707,7 +707,7 @@ class Call
      */
     public function render(Page $page)
     {
-        return $this->renderFromData(TemplateUtility::getDataFromPage($page));
+        return $this->renderFromData(TemplateUtility::getMetadataDataFromPage($page));
     }
 
     public function renderFromData(Array $array){

@@ -989,7 +989,7 @@ class Page extends DokuPath
     function getH1()
     {
 
-        $heading = p_get_metadata($this->getId(), Analytics::H1, METADATA_RENDER_USING_SIMPLE_CACHE);
+        $heading = p_get_metadata($this->getId(), Analytics::H1, METADATA_DONT_RENDER);
         if (!blank($heading)) {
             return $heading;
         } else {
@@ -1818,6 +1818,43 @@ class Page extends DokuPath
             unset($meta['persistent'][$property]);
         }
         p_save_metadata($this->getId(), $meta);
+
+    }
+
+    /**
+     * @return array - return the standard / generated metadata
+     * used in templating
+     */
+    public function getMetadataStandardNotEmpty()
+    {
+        /**
+         * The title/h1 should never be null
+         * otherwise a template link such as [[$path|$title]] will return a link without an description
+         * and therefore will be not visible
+         * We render at least the id
+         */
+        $array[Analytics::H1] = $this->getH1NotEmpty();
+        $title = $this->getTitleNotEmpty();
+        /**
+         * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
+         * @see {@link \syntax_plugin_combo_pipeline}
+         */
+        $title = str_replace('"', "'", $title);
+        $array[Analytics::TITLE] = $title;
+        $array[Analytics::PATH] = $this->getAbsolutePath();
+        $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
+        $array[Analytics::NAME] = $this->getPageNameNotEmpty();
+        $array[self::TYPE_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
+
+        $dates = $this->getMetadata('date',[]) ;
+        $timestampCreation = $dates['created'];
+        $array[Analytics::DATE_CREATED] = date('Y-m-d h:i:s', $timestampCreation);
+        $timestampModification = $dates['modified'];
+        $array[Analytics::DATE_MODIFIED] = date('Y-m-d h:i:s', $timestampModification);
+        $array['age_creation'] = round((time() - $timestampCreation) / 60 / 60 / 24);
+        $array['age_modification'] = round((time() - $timestampModification) / 60 / 60 / 24);
+
+        return $array;
 
     }
 

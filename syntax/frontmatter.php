@@ -196,21 +196,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
                 /** @var renderer_plugin_combo_analytics $renderer */
                 $jsonArray = $data[PluginUtility::ATTRIBUTES];
-                if (array_key_exists("description", $jsonArray)) {
-                    $renderer->setMeta("description", $jsonArray["description"]);
-                }
-                if (array_key_exists(Page::CANONICAL_PROPERTY, $jsonArray)) {
-                    $renderer->setMeta(Page::CANONICAL_PROPERTY, $jsonArray[Page::CANONICAL_PROPERTY]);
-                }
-                if (array_key_exists(Page::TITLE_PROPERTY, $jsonArray)) {
-                    $renderer->setMeta(Page::TITLE_PROPERTY, $jsonArray[Page::TITLE_PROPERTY]);
-                }
-                if (array_key_exists(Page::LOW_QUALITY_PAGE_INDICATOR, $jsonArray)) {
-                    $renderer->setMeta(Page::LOW_QUALITY_PAGE_INDICATOR, $jsonArray[Page::LOW_QUALITY_PAGE_INDICATOR]);
+                foreach ($jsonArray as $key => $value) {
+                    $renderer->setMeta($key, $value);
                 }
                 break;
-            case "metadata":
 
+            case "metadata":
                 if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
                     return false;
                 }

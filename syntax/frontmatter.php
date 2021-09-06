@@ -20,9 +20,11 @@
  *
  */
 
+use ComboStrap\Analytics;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\Publication;
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
@@ -137,6 +139,27 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $result[PluginUtility::PAYLOAD] = $match;
             } else {
                 $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+                /**
+                 * Published is an alias for date published
+                 */
+                if (isset($jsonArray["published"])) {
+                    $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray["published"];
+                    unset($jsonArray["published"]);
+                }
+                /**
+                 * Add the time part if not present
+                 */
+                if (isset($jsonArray[Publication::DATE_PUBLISHED])) {
+                    $datePublished = $jsonArray[Publication::DATE_PUBLISHED];
+                    if (strlen($datePublished) <= 10) {
+                        /**
+                         * We had the time to 00:00:00
+                         * because {@link DateTime::createFromFormat} with a format of
+                         * Y-m-d will be using the actual time otherwise
+                         */
+                        $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray[Publication::DATE_PUBLISHED] . "T00:00:00";
+                    }
+                }
                 $result[PluginUtility::ATTRIBUTES] = $jsonArray;
             }
 
@@ -194,10 +217,20 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     return false;
                 }
 
+                $notModifiableMeta = [
+                    Analytics::PATH,
+                    Analytics::DATE_CREATED,
+                    Analytics::DATE_MODIFIED
+                ];
+
                 /** @var renderer_plugin_combo_analytics $renderer */
                 $jsonArray = $data[PluginUtility::ATTRIBUTES];
                 foreach ($jsonArray as $key => $value) {
-                    $renderer->setMeta($key, $value);
+                    if (!in_array($key, $notModifiableMeta)) {
+                        $renderer->setMeta($key, $value);
+                    } else {
+                        LogUtility::msg("The metadata ($key) cannot be set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    }
                 }
                 break;
 

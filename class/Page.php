@@ -1453,15 +1453,23 @@ class Page extends DokuPath
     public
     function getPublishedTime()
     {
-        $persistentMetadata = $this->getPersistentMetadata(Publication::META_KEY_PUBLISHED);
+        $persistentMetadata = $this->getPersistentMetadata(Publication::DATE_PUBLISHED);
         if (empty($persistentMetadata)) {
-            return null;
+            /**
+             * Old metadata key
+             */
+            $persistentMetadata = $this->getPersistentMetadata("published");
+            if(empty($persistentMetadata)) {
+                return null;
+            }
         }
         // Ms level parsing
         $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
         if ($dateTime === false) {
-            // Day level
-            $dateTime = DateTime::createFromFormat("Y-m-d", $persistentMetadata);
+            // Iso is equal to Y-m-d\TH:i:sO
+            // meaning that the timezone is present in php
+            // we try without the timezone
+            $dateTime = DateTime::createFromFormat("Y-m-d\TH:i:s", $persistentMetadata);
             if ($dateTime === false) {
                 LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, Publication::CANONICAL);
                 return null;
@@ -1825,8 +1833,10 @@ class Page extends DokuPath
      * @return array - return the standard / generated metadata
      * used in templating
      */
-    public function getMetadataStandardNotEmpty()
+    public function getMetadataStandard()
     {
+
+
         /**
          * The title/h1 should never be null
          * otherwise a template link such as [[$path|$title]] will return a link without an description
@@ -1846,13 +1856,16 @@ class Page extends DokuPath
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
         $array[self::TYPE_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
 
-        $dates = $this->getMetadata('date',[]) ;
-        $timestampCreation = $dates['created'];
-        $array[Analytics::DATE_CREATED] = date('Y-m-d h:i:s', $timestampCreation);
-        $timestampModification = $dates['modified'];
-        $array[Analytics::DATE_MODIFIED] = date('Y-m-d h:i:s', $timestampModification);
-        $array['age_creation'] = round((time() - $timestampCreation) / 60 / 60 / 24);
-        $array['age_modification'] = round((time() - $timestampModification) / 60 / 60 / 24);
+        /**
+         * or {@link DATE_W3C}
+         */
+        $dateFormat = DATE_ISO8601; // the google format
+        $array[Analytics::DATE_CREATED] = $this->getCreatedTime()->format($dateFormat);
+        $array[Analytics::DATE_MODIFIED] = $this->getModifiedTime()->format($dateFormat);
+        $publishedDate = $this->getPublishedTime();
+        if(!empty($publishedDate)){
+            $array[Publication::DATE_PUBLISHED] = $publishedDate->format($dateFormat);
+        }
 
         return $array;
 

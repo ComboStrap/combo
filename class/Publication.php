@@ -30,7 +30,7 @@ class Publication
     /**
      * The key that contains the published date
      */
-    const META_KEY_PUBLISHED = "published";
+    const DATE_PUBLISHED = "date_published";
 
     /**
      * Late publication protection

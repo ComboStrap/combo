@@ -62,6 +62,16 @@ class SnippetManager
 
     /**
      * @var array heads that are unique on a request scope
+     *
+     * TlDR: The snippet does not depends to a Page and cannot therefore be cached along.
+     *
+     * The code that adds this snippet is not created by the parsing of content
+     * or depends on the page.
+     *
+     * It's always called and add the snippet whatsoever.
+     * Generally, this is an action plugin with a `TPL_METAHEADER_OUTPUT` hook
+     * such as {@link Bootstrap}, {@link HistoricalBreadcrumbMenuItem},
+     * ,...
      */
     private $snippetsByRequestScope = array();
 
@@ -158,23 +168,8 @@ class SnippetManager
          *
          * Delete the bar, page scope
          */
-        $distinctSnippetIdByType = array();
-        $allSnippets = array(
-            "bar" => $this->snippetsByBarScope,
-            "page" => $this->snippetsByRequestScope
-        );
-        foreach ($allSnippets as $snippetsScoped) {
-            foreach ($snippetsScoped as $barOrPageId => $snippetTypes) {
-                foreach ($snippetTypes as $snippetType => $snippetId) {
-                    $snippetIdsInArray = &$distinctSnippetIdByType[$snippetType];
-                    if (isset($snippetIdsInArray)) {
-                        $snippetIdsInArray = array_merge($snippetIdsInArray, $snippetId);
-                    } else {
-                        $snippetIdsInArray = $snippetId;
-                    }
-                }
-            }
-        }
+        $distinctSnippetIdByType = $this->mergeSnippetArray($this->snippetsByBarScope, $this->snippetsByRequestScope);
+
 
         /**
          * Transform in dokuwiki format
@@ -320,23 +315,24 @@ class SnippetManager
     public function addSnippetsFromCacheForBar($bar, $snippets)
     {
 
+        /**
+         * It may happens that this snippetsByBarScope is not empty
+         * when the snippet is added with the bad scope
+         *
+         * For instance, due to the {@link HistoricalBreadcrumbMenuItem},
+         * A protected link can be used in a slot but also added on a page level (ie
+         * that has a {@link PageProtection::addPageProtectionSnippet() page protection}
+         *
+         * Therefore we just merge.
+         */
         if (!isset($this->snippetsByBarScope[$bar])) {
+
             $this->snippetsByBarScope[$bar] = $snippets;
+
         } else {
-            if (PluginUtility::isDebug()) {
-                // When we edit a sidebar
-                // The sidebar and the page competes
-                $barPage = new Page($bar);
-                if (!$barPage->isSlot()) {
-                    /**
-                     * For what ever reason, this happens
-                     * but it works
-                     * We still don't know yet why
-                     */
-                    $data = var_export($this->snippetsByBarScope[$bar], true);
-                    LogUtility::msg("Internal error: Snippets for the bar ($bar) have been added while the bar was cached. The snippets added are ($data). This snippet should be added at the request level", LogUtility::LVL_MSG_ERROR);
-                }
-            }
+
+            $this->snippetsByBarScope[$bar] = $this->mergeSnippetArray($this->snippetsByBarScope[$bar], $snippets);
+
         }
     }
 
@@ -413,7 +409,7 @@ class SnippetManager
      */
     public function &attachJavascriptSnippetForBar($snippetId, $script = null)
     {
-        $snippet =  $this->attachSnippetFromBar($snippetId, Snippet::TYPE_JS);
+        $snippet = $this->attachSnippetFromBar($snippetId, Snippet::TYPE_JS);
         if ($script != null) {
             $snippet->setContent($script);
         }
@@ -466,6 +462,28 @@ class SnippetManager
 
     public function getCssSnippetContent($string)
     {
+
+    }
+
+    private function mergeSnippetArray($left, $right)
+    {
+
+        $distinctSnippetIdByType = $left;
+        foreach (array_keys($right) as $snippetContentType) {
+            /**
+             * @var $snippetObject Snippet
+             */
+            foreach ($right[$snippetContentType] as $snippetObject) {
+                /**
+                 * Snippet is an object
+                 */
+                if(!array_key_exists($snippetObject->getId(), $distinctSnippetIdByType[$snippetContentType])){
+                    $distinctSnippetIdByType[$snippetContentType][$snippetObject->getId()]=$snippetObject;
+                };
+            }
+        }
+
+        return $distinctSnippetIdByType;
 
     }
 

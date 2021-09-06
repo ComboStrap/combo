@@ -31,6 +31,7 @@ class Publication
      * The key that contains the published date
      */
     const DATE_PUBLISHED = "date_published";
+    const OLD_META_KEY = "published";
 
     /**
      * Late publication protection
@@ -40,6 +41,7 @@ class Publication
     const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
     const LATE_PUBLICATION_CLASS_NAME = "late-publication";
     const CANONICAL = "published";
+
 
 
     public static function getLatePublicationProtectionMode()

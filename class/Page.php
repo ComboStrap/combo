@@ -1860,10 +1860,20 @@ class Page extends DokuPath
         $dateFormat = DATE_ISO8601; // the google format
         $array[Analytics::DATE_CREATED] = $this->getCreatedTime()->format($dateFormat);
         $array[Analytics::DATE_MODIFIED] = $this->getModifiedTime()->format($dateFormat);
-        $array[Publication::DATE_PUBLISHED] = $this->getPublishedElseCreationTime()->format($dateFormat);
+        $published = $this->getPublishedTime();
+        if($published!=null) {
+            $array[Publication::DATE_PUBLISHED] = $published->format($dateFormat);
+        } else {
+            $array[Publication::DATE_PUBLISHED] = null;
+        }
 
         return $array;
 
+    }
+
+    public function __toString()
+    {
+        return $this->getId();
     }
 
 

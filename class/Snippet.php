@@ -224,5 +224,10 @@ EOF;
 
     }
 
+    public function getId()
+    {
+        return $this->snippetId;
+    }
+
 
 }

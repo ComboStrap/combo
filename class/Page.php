@@ -1459,21 +1459,19 @@ class Page extends DokuPath
              * Old metadata key
              */
             $persistentMetadata = $this->getPersistentMetadata("published");
-            if(empty($persistentMetadata)) {
+            if (empty($persistentMetadata)) {
                 return null;
             }
         }
         // Ms level parsing
         $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
         if ($dateTime === false) {
-            // Iso is equal to Y-m-d\TH:i:sO
-            // meaning that the timezone is present in php
-            // we try without the timezone
-            $dateTime = DateTime::createFromFormat("Y-m-d\TH:i:s", $persistentMetadata);
-            if ($dateTime === false) {
-                LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, Publication::CANONICAL);
-                return null;
-            }
+            /**
+             * Should not happen as the data is validate in entry
+             * at the {@link \syntax_plugin_combo_frontmatter}
+             */
+            LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, Publication::CANONICAL);
+            return null;
         }
         return $dateTime;
     }
@@ -1862,10 +1860,7 @@ class Page extends DokuPath
         $dateFormat = DATE_ISO8601; // the google format
         $array[Analytics::DATE_CREATED] = $this->getCreatedTime()->format($dateFormat);
         $array[Analytics::DATE_MODIFIED] = $this->getModifiedTime()->format($dateFormat);
-        $publishedDate = $this->getPublishedTime();
-        if(!empty($publishedDate)){
-            $array[Publication::DATE_PUBLISHED] = $publishedDate->format($dateFormat);
-        }
+        $array[Publication::DATE_PUBLISHED] = $this->getPublishedElseCreationTime()->format($dateFormat);
 
         return $array;
 

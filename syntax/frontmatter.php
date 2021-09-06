@@ -156,9 +156,30 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                          * We had the time to 00:00:00
                          * because {@link DateTime::createFromFormat} with a format of
                          * Y-m-d will be using the actual time otherwise
+                         *
                          */
-                        $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray[Publication::DATE_PUBLISHED] . "T00:00:00";
+                        $datePublished .= "T00:00:00+000";
                     }
+                    if (strlen($datePublished) <= 19) {
+                        /**
+                         * Because this text metadata may be used in other part of the application
+                         * We add the timezone to make it whole
+                         * And to have a consistent value
+                         */
+                        $datePublished .= "+000";
+                    }
+
+                    /**
+                     * Date validation
+                     */
+                    $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $datePublished);
+                    if ($dateTime === false) {
+                        LogUtility::msg("The published date ($datePublished) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        unset($jsonArray[Publication::DATE_PUBLISHED]);
+                    } else {
+                        $jsonArray[Publication::DATE_PUBLISHED] = $datePublished;
+                    }
+
                 }
                 $result[PluginUtility::ATTRIBUTES] = $jsonArray;
             }

@@ -167,9 +167,16 @@ class SnippetManager
         /**
          * Distinct Snippet
          */
-        $distinctSnippetIdByType = array_shift($this->snippetsByRequestScope);
-        foreach($this->snippetsByBarScope as $snippet){
-            $distinctSnippetIdByType = $this->mergeSnippetArray($distinctSnippetIdByType,  $snippet);
+        $distinctSnippetIdByType = [];
+        if (sizeof($this->snippetsByRequestScope) == 1) {
+            /**
+             * There is only 0 or 1 value
+             * because this is still scoped to the actual request (by the requested id)
+             */
+            $distinctSnippetIdByType = array_shift($this->snippetsByRequestScope);
+        }
+        foreach ($this->snippetsByBarScope as $snippet) {
+            $distinctSnippetIdByType = $this->mergeSnippetArray($distinctSnippetIdByType, $snippet);
         }
 
 

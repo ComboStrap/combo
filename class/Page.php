@@ -1855,9 +1855,16 @@ class Page extends DokuPath
         $array[self::TYPE_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
 
         /**
-         * or {@link DATE_W3C}
+         * And note {@link DATE_ISO8601}
+         * because it's not the compliant IS0-8601 format
+         * as explained here
+         * https://www.php.net/manual/en/class.datetimeinterface.php#datetime.constants.iso8601
+         * ATOM is
+         *
+         * This format is used by Sqlite, Google and is pretty the standard everywhere
+         * https://www.w3.org/TR/NOTE-datetime
          */
-        $dateFormat = DATE_ISO8601; // the google format
+        $dateFormat = DATE_ATOM;
         $array[Analytics::DATE_CREATED] = $this->getCreatedTime()->format($dateFormat);
         $array[Analytics::DATE_MODIFIED] = $this->getModifiedTime()->format($dateFormat);
         $published = $this->getPublishedTime();

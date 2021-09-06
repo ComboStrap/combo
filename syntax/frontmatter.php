@@ -21,6 +21,7 @@
  */
 
 use ComboStrap\Analytics;
+use ComboStrap\Is8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -150,34 +151,13 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                  * Add the time part if not present
                  */
                 if (isset($jsonArray[Publication::DATE_PUBLISHED])) {
-                    $datePublished = $jsonArray[Publication::DATE_PUBLISHED];
-                    if (strlen($datePublished) <= 10) {
-                        /**
-                         * We had the time to 00:00:00
-                         * because {@link DateTime::createFromFormat} with a format of
-                         * Y-m-d will be using the actual time otherwise
-                         *
-                         */
-                        $datePublished .= "T00:00:00+000";
-                    }
-                    if (strlen($datePublished) <= 19) {
-                        /**
-                         * Because this text metadata may be used in other part of the application
-                         * We add the timezone to make it whole
-                         * And to have a consistent value
-                         */
-                        $datePublished .= "+000";
-                    }
-
-                    /**
-                     * Date validation
-                     */
-                    $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $datePublished);
-                    if ($dateTime === false) {
-                        LogUtility::msg("The published date ($datePublished) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $datePublishedString = $jsonArray[Publication::DATE_PUBLISHED];
+                    $datePublished = Is8601Date::create($datePublishedString);
+                    if (!$datePublished->isValidDateEntry()) {
+                        LogUtility::msg("The published date ($datePublishedString) is not a valid ISO date supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         unset($jsonArray[Publication::DATE_PUBLISHED]);
                     } else {
-                        $jsonArray[Publication::DATE_PUBLISHED] = $datePublished;
+                        $jsonArray[Publication::DATE_PUBLISHED] = "$datePublished";
                     }
 
                 }

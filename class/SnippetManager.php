@@ -165,10 +165,12 @@ class SnippetManager
     public function getSnippets()
     {
         /**
-         *
-         * Delete the bar, page scope
+         * Distinct Snippet
          */
-        $distinctSnippetIdByType = $this->mergeSnippetArray($this->snippetsByBarScope, $this->snippetsByRequestScope);
+        $distinctSnippetIdByType = array_shift($this->snippetsByRequestScope);
+        foreach($this->snippetsByBarScope as $snippet){
+            $distinctSnippetIdByType = $this->mergeSnippetArray($distinctSnippetIdByType,  $snippet);
+        }
 
 
         /**
@@ -477,9 +479,13 @@ class SnippetManager
                 /**
                  * Snippet is an object
                  */
-                if(!array_key_exists($snippetObject->getId(), $distinctSnippetIdByType[$snippetContentType])){
-                    $distinctSnippetIdByType[$snippetContentType][$snippetObject->getId()]=$snippetObject;
-                };
+                if (isset($distinctSnippetIdByType[$snippetContentType])) {
+                    if (!array_key_exists($snippetObject->getId(), $distinctSnippetIdByType[$snippetContentType])) {
+                        $distinctSnippetIdByType[$snippetContentType][$snippetObject->getId()] = $snippetObject;
+                    }
+                } else {
+                    $distinctSnippetIdByType[$snippetContentType][$snippetObject->getId()] = $snippetObject;
+                }
             }
         }
 

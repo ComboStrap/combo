@@ -28,9 +28,10 @@ require_once('Boldness.php');
  */
 require_once(__DIR__ . '/Bootstrap.php');
 require_once('BreadcrumbHierarchical.php');
-require_once('CacheMedia.php');
 require_once('CacheByLogicalKey.php');
 require_once('CacheInstructionsByLogicalKey.php');
+require_once('CacheManager.php');
+require_once('CacheMedia.php');
 require_once('Call.php');
 require_once('CallStack.php');
 require_once('ColorUtility.php');
@@ -175,7 +176,7 @@ class PluginUtility
         self::$URL_BASE = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
         self::$VERSION = self::$INFO_PLUGIN['version'];
 
-        PluginUtility::initSnippetManager();
+        PluginUtility::initStaticManager();
 
     }
 
@@ -910,8 +911,9 @@ class PluginUtility
     }
 
     public
-    static function initSnippetManager()
+    static function initStaticManager()
     {
+        CacheManager::init();
         SnippetManager::init();
     }
 
@@ -1213,6 +1215,11 @@ class PluginUtility
     public static function isTest()
     {
         return defined('DOKU_UNITTEST');
+    }
+
+    public static function getCacheManager()
+    {
+        return CacheManager::get();
     }
 
 

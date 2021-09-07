@@ -75,11 +75,7 @@ class SnippetManager
      */
     private $snippetsByRequestScope = array();
 
-    /**
-     * Just an utility variable to get the bar processed that needs snippet.
-     * @var array the processed bar
-     */
-    private $barsProcessed = array();
+
 
     public static function init()
     {
@@ -300,20 +296,7 @@ class SnippetManager
         $snippet->setTags($tags);
     }
 
-    /**
-     * Keep track of the parsed bar (ie page in page)
-     * @param $pageId
-     * @param $cached
-     */
-    public function addBar($pageId, $cached)
-    {
-        $this->barsProcessed[$pageId] = $cached;
-    }
 
-    public function getBarsOfPage()
-    {
-        return $this->barsProcessed;
-    }
 
     /**
      * A function to be able to add snippets from the snippets cache

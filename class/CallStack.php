@@ -57,11 +57,12 @@ class CallStack
      * The max key of the calls
      * @var int|null
      */
-    private $maxIndex;
+    private $maxIndex = 0;
+
     /**
      * @var array the call stack
      */
-    private $callStack;
+    private $callStack = [];
 
     /**
      * A pointer to keep the information
@@ -82,7 +83,7 @@ class CallStack
     /**
      * @var string the type of callstack
      */
-    private $callStackType;
+    private $callStackType = "unknown";
 
     /**
      * A callstack is a pointer implementation to manipulate
@@ -104,17 +105,66 @@ class CallStack
          * A temporary Call stack is created in the writer
          * for list, table, blockquote
          */
-        $writerCalls = &$handler->getCallWriter()->calls;
-        if (!empty($writerCalls)) {
+
+        if (!method_exists($handler, 'getCallWriter')) {
+            $class = get_class($handler);
+            LogUtility::msg("Your DokuWiki installation or a plugin is too old. The handler ($class) provided cannot manipulate the callstack (ie the function getCallWriter does not exist).", LogUtility::LVL_MSG_ERROR);
+            return;
+        }
+        $callWriter = $handler->getCallWriter();
+
+        /**
+         * Check the calls property
+         */
+        $callWriterClass = get_class($callWriter);
+        $callsPropertyFromCallWriterExists = true;
+        try {
+            $rp = new \ReflectionProperty($callWriterClass, "calls");
+            if ($rp->isPrivate()) {
+                LogUtility::msg("Your DokuWiki installation or a plugin is too old. The call writer ($callWriterClass) provided cannot manipulate the callstack (ie the calls of the call writer are private).", LogUtility::LVL_MSG_ERROR);
+                return;
+            }
+        } catch (\ReflectionException $e) {
+            $callsPropertyFromCallWriterExists = false;
+        }
+
+        /**
+         * The calls
+         */
+        if ($callsPropertyFromCallWriterExists) {
+
+            $writerCalls = &$callWriter->calls;
             $this->callStack = &$writerCalls;
             $this->callStackType = self::CALLSTACK_WRITER;
+
         } else {
+
+            /**
+             * Check the calls property of the handler
+             */
+            $handlerClass = get_class($handler);
+            try {
+                $rp = new \ReflectionProperty($handlerClass, "calls");
+                if ($rp->isPrivate()) {
+                    LogUtility::msg("Your DokuWiki installation or a plugin is too old. The handler ($handlerClass) provided cannot manipulate the callstack (ie the calls of the handler are private).", LogUtility::LVL_MSG_ERROR);
+                    return;
+                }
+            } catch (\ReflectionException $e) {
+                LogUtility::msg("Your DokuWiki installation or a plugin is too old. The handler ($handlerClass) provided cannot manipulate the callstack (ie the handler does not have any calls property).", LogUtility::LVL_MSG_ERROR);
+                return;
+            }
+
+            /**
+             * Initiate the callstack
+             */
             $this->callStack = &$handler->calls;
             $this->callStackType = self::CALLSTACK_MAIN;
+
         }
 
         $this->maxIndex = ArrayUtility::array_key_last($this->callStack);
         $this->moveToEnd();
+
 
     }
 
@@ -178,7 +228,7 @@ class CallStack
      * @return CallStack
      */
     public
-    static function createFromHandler(\Doku_Handler &$handler)
+    static function createFromHandler(&$handler)
     {
         return new CallStack($handler);
     }
@@ -277,8 +327,12 @@ class CallStack
     {
         if ($this->startWasReached) {
             $this->startWasReached = false;
-            reset($this->callStack);
-            return $this->getActualCall();
+            $result = reset($this->callStack);
+            if ($result === false) {
+                return false;
+            } else {
+                return $this->getActualCall();
+            }
         } else {
             $next = next($this->callStack);
             if ($next === false) {
@@ -303,6 +357,13 @@ class CallStack
     public
     function moveToPreviousCorrespondingOpeningCall()
     {
+
+        /**
+         * Edgde case
+         */
+        if(empty($this->callStack)){
+            return false;
+        }
 
         if (!$this->endWasReached) {
             $actualCall = $this->getActualCall();
@@ -417,6 +478,14 @@ class CallStack
     public
     function moveToNextSiblingTag()
     {
+
+        /**
+         * Edgde case
+         */
+        if(empty($this->callStack)){
+            return false;
+        }
+
         $actualCall = $this->getActualCall();
         $actualState = $actualCall->getState();
         if (!in_array($actualState, CallStack::TAG_STATE)) {
@@ -691,6 +760,13 @@ class CallStack
 
     public function moveToPreviousSiblingTag()
     {
+        /**
+         * Edge case
+         */
+        if(empty($this->callStack)){
+            return false;
+        }
+
         if (!$this->endWasReached) {
             $actualCall = $this->getActualCall();
             $actualState = $actualCall->getState();

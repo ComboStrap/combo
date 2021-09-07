@@ -23,49 +23,55 @@ class Is8601Date
     /**
      * Date constructor.
      */
-    public function __construct($string)
+    public function __construct($string = null)
     {
-        /**
-         * Time ?
-         * (ie only YYYY-MM-DD)
-         */
-        if (strlen($string) <= 10) {
+
+        if ($string == null) {
+
+            $this->dateTime = new DateTime();
+
+        } else {
             /**
-             * We had the time to 00:00:00
-             * because {@link DateTime::createFromFormat} with a format of
-             * Y-m-d will be using the actual time otherwise
+             * Time ?
+             * (ie only YYYY-MM-DD)
+             */
+            if (strlen($string) <= 10) {
+                /**
+                 * We had the time to 00:00:00
+                 * because {@link DateTime::createFromFormat} with a format of
+                 * Y-m-d will be using the actual time otherwise
+                 *
+                 */
+                $string .= "T00:00:00";
+            }
+
+            /**
+             * Timezone
+             */
+            if (strlen($string) <= 19) {
+                /**
+                 * Because this text metadata may be used in other part of the application
+                 * We add the timezone to make it whole
+                 * And to have a consistent value
+                 */
+                $string .= date('P');
+            }
+
+            /**
+             * Date validation
+             * Atom is the valid ISO format (and not IS8601 due to backward compatibility)
              *
+             * See:
+             * https://www.php.net/manual/en/class.datetimeinterface.php#datetime.constants.iso8601
              */
-            $string .= "T00:00:00";
+            $this->dateTime = DateTime::createFromFormat(DateTime::ATOM, $string);
         }
-
-        /**
-         * Timezone
-         */
-        if (strlen($string) <= 19) {
-            /**
-             * Because this text metadata may be used in other part of the application
-             * We add the timezone to make it whole
-             * And to have a consistent value
-             */
-            $string .= date('P');
-        }
-
-        /**
-         * Date validation
-         * Atom is the valid ISO format (and not IS8601 due to backward compatibility)
-         *
-         * See:
-         * https://www.php.net/manual/en/class.datetimeinterface.php#datetime.constants.iso8601
-         */
-        $this->dateTime = DateTime::createFromFormat(DateTime::ATOM, $string);
 
     }
 
-    public static function create($string)
+    public static function create($string = null)
     {
         return new Is8601Date($string);
-
     }
 
     public static function getFormat()
@@ -73,8 +79,9 @@ class Is8601Date
         return DATE_ATOM;
     }
 
-    public function isValidDateEntry(){
-        if ($this->dateTime!==false){
+    public function isValidDateEntry()
+    {
+        if ($this->dateTime !== false) {
             return true;
         } else {
             return false;

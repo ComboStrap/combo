@@ -1,5 +1,7 @@
 <?php
 
+use ComboStrap\CacheManager;
+use ComboStrap\Is8601Date;
 use ComboStrap\PluginUtility;
 use dokuwiki\Cache\CacheRenderer;
 
@@ -18,7 +20,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'logCacheResult', array());
+        /**
+         * Log the cache usage and also
+         */
+        $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'logRenderCacheUsage', array());
+
+        $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'purgeIfNeeded', array());
 
         /**
          * To add the cache result in the header
@@ -38,20 +45,57 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      * @param Doku_Event $event
      * @param $params
      */
-    function logCacheResult(Doku_Event $event, $params)
+    function logRenderCacheUsage(Doku_Event $event, $params)
     {
 
         /**
          * To log the cache used by bar
          */
         $data = $event->data;
-        if ($data->mode == "xhtml") {
+        $mode = $data->mode;
+        switch ($mode) {
+            case "xhtml":
+                /* @var CacheRenderer $data */
+                $pageId = $data->page;
+                $cached = $event->result;
+                PluginUtility::getCacheManager()->addSlot($pageId, $cached);
+                break;
+        }
 
-            /* @var CacheRenderer $data */
-            $pageId = $data->page;
-            $cached = $event->result;
-            PluginUtility::getCacheManager()->addSlot($pageId, $cached);
+    }
 
+    /**
+     *
+     * @param Doku_Event $event
+     * @param $params
+     */
+    function purgeIfNeeded(Doku_Event $event, $params)
+    {
+
+        /**
+         * To log the cache used by bar
+         */
+        $data = $event->data;
+        $mode = $data->mode;
+        switch ($mode) {
+            case "i":
+                /* @var \dokuwiki\Cache\CacheInstructions $data */
+
+                $pageId = $data->page;
+                $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRED_META_KEY, METADATA_DONT_RENDER);
+                if ($expirationStringDate !== null) {
+
+                    $expirationDate = Is8601Date::create($expirationStringDate)->getDateTime();
+                    $actualDate = new DateTime();
+                    if ($expirationDate < $actualDate) {
+                        /**
+                         * As seen in {@link Cache::makeDefaultCacheDecision()}
+                         * We request a purge
+                         */
+                        $data->depends["purge"] = true;
+                    }
+                }
+                break;
         }
 
     }
@@ -75,8 +119,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
     }
 
-    function close(Doku_Event $event, $params){
-        \ComboStrap\CacheManager::close();
+    function close(Doku_Event $event, $params)
+    {
+        CacheManager::close();
     }
 
 

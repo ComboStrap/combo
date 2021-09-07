@@ -8,11 +8,20 @@ class CacheManager
 {
 
     /**
+     * The meta key that has the expiration date
+     */
+    const DATE_CACHE_EXPIRED_META_KEY = "date_cache_expired";
+
+    /**
      * Just an utility variable to tracks the slot processed
      * @var array the processed slot
      */
     private $slotsProcessed = array();
 
+
+    /**
+     * @return CacheManager
+     */
     public static function get()
     {
         global $comboCacheManagerScript;
@@ -45,11 +54,11 @@ class CacheManager
     /**
      * Keep track of the parsed bar (ie page in page)
      * @param $pageId
-     * @param $cached
+     * @param $renderCacheUsed
      */
-    public function addSlot($pageId, $cached)
+    public function addSlot($pageId, $renderCacheUsed)
     {
-        $this->slotsProcessed[$pageId] = $cached;
+        $this->slotsProcessed[$pageId] = $renderCacheUsed;
     }
 
     public function getSlotsOfPage()

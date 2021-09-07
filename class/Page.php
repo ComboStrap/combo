@@ -923,7 +923,7 @@ class Page extends DokuPath
     function getLowQualityIndicator()
     {
 
-        $low = p_get_metadata($this->getId(), self::LOW_QUALITY_PAGE_INDICATOR);
+        $low = p_get_metadata($this->getId(), self::LOW_QUALITY_PAGE_INDICATOR, METADATA_DONT_RENDER);
         if ($low === null) {
             return null;
         } else {
@@ -1868,7 +1868,7 @@ class Page extends DokuPath
         $array[Analytics::DATE_CREATED] = $this->getCreatedTime()->format($dateFormat);
         $array[Analytics::DATE_MODIFIED] = $this->getModifiedTime()->format($dateFormat);
         $published = $this->getPublishedTime();
-        if($published!=null) {
+        if ($published != null) {
             $array[Publication::DATE_PUBLISHED] = $published->format($dateFormat);
         } else {
             $array[Publication::DATE_PUBLISHED] = null;
@@ -1881,6 +1881,15 @@ class Page extends DokuPath
     public function __toString()
     {
         return $this->getId();
+    }
+
+    public function setMetadata($key, $value)
+    {
+        p_set_metadata($this->getId(),
+            [
+                $key => $value
+            ]
+        );
     }
 
 

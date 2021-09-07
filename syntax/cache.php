@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\CacheManager;
 use ComboStrap\Is8601Date;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -27,7 +28,6 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
 
     const PARSING_STATUS = "status";
     const PARSING_STATE_SUCCESSFUL = "successful";
-    const DATE_CACHE_EXPIRED = "date_cache_expired";
     const EXPIRATION_ATTRIBUTE = "expiration";
 
 
@@ -84,7 +84,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                 return array(
                     PluginUtility::STATE => $state,
                     self::PARSING_STATUS => self::PARSING_STATE_SUCCESSFUL,
-                    PluginUtility::ATTRIBUTES => [self::DATE_CACHE_EXPIRED => $date]
+                    PluginUtility::ATTRIBUTES => [CacheManager::DATE_CACHE_EXPIRED_META_KEY => $date]
                 );
 
 

@@ -1217,6 +1217,7 @@ class PluginUtility
         return defined('DOKU_UNITTEST');
     }
 
+
     public static function getCacheManager()
     {
         return CacheManager::get();

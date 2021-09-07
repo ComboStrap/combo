@@ -21,6 +21,7 @@
  */
 
 use ComboStrap\Analytics;
+use ComboStrap\CacheManager;
 use ComboStrap\Is8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -318,11 +319,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
          */
         $managedMeta = [
             Page::CANONICAL_PROPERTY,
-            action_plugin_combo_metatitle::TITLE_META_KEY,
+            Analytics::TITLE,
             syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
             Publication::OLD_META_KEY,
+            Publication::DATE_PUBLISHED,
             Analytics::NAME,
-            Analytics::TITLE
+            CacheManager::DATE_CACHE_EXPIRED_META_KEY
         ];
         $meta = p_read_metadata($ID);
         foreach ($managedMeta as $metaKey) {

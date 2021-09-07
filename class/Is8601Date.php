@@ -68,6 +68,11 @@ class Is8601Date
 
     }
 
+    public static function getFormat()
+    {
+        return DATE_ATOM;
+    }
+
     public function isValidDateEntry(){
         if ($this->dateTime!==false){
             return true;
@@ -83,7 +88,7 @@ class Is8601Date
 
     public function __toString()
     {
-        return $this->getDateTime()->format(DATE_ATOM);
+        return $this->getDateTime()->format(self::getFormat());
     }
 
     /**

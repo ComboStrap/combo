@@ -224,7 +224,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     Analytics::DATE_MODIFIED
                 ];
 
-                /** @var renderer_plugin_combo_analytics $renderer */
+                    /** @var renderer_plugin_combo_analytics $renderer */
                 $jsonArray = $data[PluginUtility::ATTRIBUTES];
                 foreach ($jsonArray as $key => $value) {
                     if (!in_array($key, $notModifiableMeta)) {

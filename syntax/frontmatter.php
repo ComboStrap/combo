@@ -324,7 +324,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             Publication::OLD_META_KEY,
             Publication::DATE_PUBLISHED,
             Analytics::NAME,
-            CacheManager::DATE_CACHE_EXPIRED_META_KEY
+            CacheManager::DATE_CACHE_EXPIRATION_META_KEY
         ];
         $meta = p_read_metadata($ID);
         foreach ($managedMeta as $metaKey) {

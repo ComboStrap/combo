@@ -84,7 +84,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * because they can use the first one
          */
         if (!PluginUtility::getCacheManager()->isCacheLogPresent($pageId, $data->mode)) {
-            $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRED_META_KEY, METADATA_DONT_RENDER);
+            $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRATION_META_KEY, METADATA_DONT_RENDER);
             if ($expirationStringDate !== null) {
 
                 $expirationDate = Is8601Date::create($expirationStringDate)->getDateTime();

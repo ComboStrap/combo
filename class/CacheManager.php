@@ -12,7 +12,7 @@ class CacheManager
     /**
      * The meta key that has the expiration date
      */
-    const DATE_CACHE_EXPIRED_META_KEY = "date_cache_expired";
+    const DATE_CACHE_EXPIRATION_META_KEY = "date_cache_expiration";
     const RESULT_STATUS = 'result';
     const DATE_MODIFIED = 'ftime';
 

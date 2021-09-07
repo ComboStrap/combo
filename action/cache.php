@@ -50,13 +50,13 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
         /**
          * To log the cache used by bar
+         * @var \dokuwiki\Cache\CacheParser $data
          */
         $data = $event->data;
-        $mode = $data->mode;
+        $result = $event->result;
         $pageId = $data->page;
-        $cached = $event->result;
         $cacheManager = PluginUtility::getCacheManager();
-        $cacheManager->addSlot($pageId, $mode, $cached);
+        $cacheManager->addSlot($pageId, $result, $data);
 
 
     }
@@ -103,7 +103,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     }
 
     /**
-     *
+     * Add HTML meta to be able to debug
      * @param Doku_Event $event
      * @param $params
      */
@@ -112,14 +112,23 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
         $cacheManager = PluginUtility::getCacheManager();
         $slots = $cacheManager->getCacheSlotResults();
-        foreach ($slots as $slotId => $results) {
+        foreach ($slots as $slotId => $modes) {
 
             $cachedMode = [];
-            foreach ($results as $mode => $value) {
-                if ($value === true) {
-                    $cachedMode[] = $mode;
+            foreach ($modes as $mode => $values) {
+                if ($values[CacheManager::RESULT_STATUS] === true) {
+                    $metaContentData = $mode;
+                    if(!PluginUtility::isTest()){
+                        /**
+                         * @var DateTime $dateModified
+                         */
+                        $dateModified = $values[CacheManager::DATE_MODIFIED];
+                        $metaContentData .= ":". $dateModified->format('Y-m-d\TH:i:s');
+                    }
+                    $cachedMode[] = $metaContentData;
                 }
             }
+
             if (sizeof($cachedMode) === 0) {
                 $value = "nocache";
             } else {
@@ -129,7 +138,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
             // Add cache information into the head meta
             // to test
-            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $slotId, "content" => $value);
+            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $slotId, "content" => hsc($value));
         }
 
     }

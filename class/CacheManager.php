@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Cache\CacheParser;
+
 class CacheManager
 {
 
@@ -11,6 +13,8 @@ class CacheManager
      * The meta key that has the expiration date
      */
     const DATE_CACHE_EXPIRED_META_KEY = "date_cache_expired";
+    const RESULT_STATUS = 'result';
+    const DATE_MODIFIED = 'ftime';
 
     /**
      * Just an utility variable to tracks the slot processed
@@ -54,10 +58,10 @@ class CacheManager
     /**
      * Keep track of the parsed bar (ie page in page)
      * @param $pageId
-     * @param $mode
      * @param $result
+     * @param CacheParser $cacheParser
      */
-    public function addSlot($pageId, $mode, $result)
+    public function addSlot($pageId, $result, $cacheParser)
     {
         if (!isset($this->cacheDataBySlots[$pageId])) {
             $this->cacheDataBySlots[$pageId] = [];
@@ -69,8 +73,15 @@ class CacheManager
          * We record only the first one because the second call one will use the first
          * one
          */
-        if(!isset($this->cacheDataBySlots[$pageId][$mode])) {
-            $this->cacheDataBySlots[$pageId][$mode] = $result;
+        if (!isset($this->cacheDataBySlots[$pageId][$cacheParser->mode])) {
+            $date = null;
+            if(file_exists($cacheParser->cache)){
+                $date = Is8601Date::createFromTimestamp(filemtime($cacheParser->cache))->getDateTime();
+            }
+            $this->cacheDataBySlots[$pageId][$cacheParser->mode] = [
+                self::RESULT_STATUS => $result,
+                self::DATE_MODIFIED => $date
+            ];
         }
 
     }
@@ -78,9 +89,11 @@ class CacheManager
     public function getXhtmlRenderCacheSlotResults()
     {
         $xhtmlRenderResult = [];
-        foreach ($this->cacheDataBySlots as $pageId => $mode) {
-            if ($mode === "xhtml") {
-                $xhtmlRenderResult[$pageId] = $this->cacheDataBySlots[$pageId][$mode];
+        foreach ($this->cacheDataBySlots as $pageId => $modes) {
+            foreach($modes as $mode => $values) {
+                if ($mode === "xhtml") {
+                    $xhtmlRenderResult[$pageId] = $this->cacheDataBySlots[$pageId][$mode][self::RESULT_STATUS];
+                }
             }
         }
         return $xhtmlRenderResult;
@@ -88,6 +101,7 @@ class CacheManager
 
     public function getCacheSlotResults()
     {
+
         return $this->cacheDataBySlots;
     }
 

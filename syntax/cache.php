@@ -28,6 +28,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
 
     const PARSING_STATUS = "status";
     const PARSING_STATE_SUCCESSFUL = "successful";
+
     const EXPIRATION_ATTRIBUTE = "expiration";
 
 

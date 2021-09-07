@@ -16,7 +16,7 @@ class CacheManager
      * Just an utility variable to tracks the slot processed
      * @var array the processed slot
      */
-    private $slotsProcessed = array();
+    private $cacheDataBySlots = array();
 
 
     /**
@@ -54,16 +54,46 @@ class CacheManager
     /**
      * Keep track of the parsed bar (ie page in page)
      * @param $pageId
-     * @param $renderCacheUsed
+     * @param $mode
+     * @param $result
      */
-    public function addSlot($pageId, $renderCacheUsed)
+    public function addSlot($pageId, $mode, $result)
     {
-        $this->slotsProcessed[$pageId] = $renderCacheUsed;
+        if (!isset($this->cacheDataBySlots[$pageId])) {
+            $this->cacheDataBySlots[$pageId] = [];
+        }
+        /**
+         * Metadata and other rendering may occurs
+         * recursively in one request
+         *
+         * We record only the first one because the second call one will use the first
+         * one
+         */
+        if(!isset($this->cacheDataBySlots[$pageId][$mode])) {
+            $this->cacheDataBySlots[$pageId][$mode] = $result;
+        }
+
     }
 
-    public function getSlotsOfPage()
+    public function getXhtmlRenderCacheSlotResults()
     {
-        return $this->slotsProcessed;
+        $xhtmlRenderResult = [];
+        foreach ($this->cacheDataBySlots as $pageId => $mode) {
+            if ($mode === "xhtml") {
+                $xhtmlRenderResult[$pageId] = $this->cacheDataBySlots[$pageId][$mode];
+            }
+        }
+        return $xhtmlRenderResult;
+    }
+
+    public function getCacheSlotResults()
+    {
+        return $this->cacheDataBySlots;
+    }
+
+    public function isCacheLogPresent($pageId, $mode)
+    {
+        return isset($this->cacheDataBySlots[$pageId][$mode]);
     }
 
 

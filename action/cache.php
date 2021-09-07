@@ -23,7 +23,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         /**
          * Log the cache usage and also
          */
-        $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'logRenderCacheUsage', array());
+        $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'logCacheUsage', array());
 
         $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'purgeIfNeeded', array());
 
@@ -45,7 +45,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      * @param Doku_Event $event
      * @param $params
      */
-    function logRenderCacheUsage(Doku_Event $event, $params)
+    function logCacheUsage(Doku_Event $event, $params)
     {
 
         /**
@@ -53,14 +53,11 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $data = $event->data;
         $mode = $data->mode;
-        switch ($mode) {
-            case "xhtml":
-                /* @var CacheRenderer $data */
-                $pageId = $data->page;
-                $cached = $event->result;
-                PluginUtility::getCacheManager()->addSlot($pageId, $cached);
-                break;
-        }
+        $pageId = $data->page;
+        $cached = $event->result;
+        $cacheManager = PluginUtility::getCacheManager();
+        $cacheManager->addSlot($pageId, $mode, $cached);
+
 
     }
 
@@ -73,30 +70,35 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     {
 
         /**
-         * To log the cache used by bar
+         * No cache for all mode
+         * (ie xhtml, instruction)
          */
-        $data = $event->data;
-        $mode = $data->mode;
-        switch ($mode) {
-            case "i":
-                /* @var \dokuwiki\Cache\CacheInstructions $data */
+        $data = &$event->data;
+        $pageId = $data->page;
+        /**
+         * Because of the recursive nature of rendering
+         * inside dokuwiki, we just handle the first
+         * rendering for a request.
+         *
+         * The first will be purged, the other one not
+         * because they can use the first one
+         */
+        if (!PluginUtility::getCacheManager()->isCacheLogPresent($pageId, $data->mode)) {
+            $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRED_META_KEY, METADATA_DONT_RENDER);
+            if ($expirationStringDate !== null) {
 
-                $pageId = $data->page;
-                $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRED_META_KEY, METADATA_DONT_RENDER);
-                if ($expirationStringDate !== null) {
-
-                    $expirationDate = Is8601Date::create($expirationStringDate)->getDateTime();
-                    $actualDate = new DateTime();
-                    if ($expirationDate < $actualDate) {
-                        /**
-                         * As seen in {@link Cache::makeDefaultCacheDecision()}
-                         * We request a purge
-                         */
-                        $data->depends["purge"] = true;
-                    }
+                $expirationDate = Is8601Date::create($expirationStringDate)->getDateTime();
+                $actualDate = new DateTime();
+                if ($expirationDate < $actualDate) {
+                    /**
+                     * As seen in {@link Cache::makeDefaultCacheDecision()}
+                     * We request a purge
+                     */
+                    $data->depends["purge"] = true;
                 }
-                break;
+            }
         }
+
 
     }
 
@@ -109,12 +111,25 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     {
 
         $cacheManager = PluginUtility::getCacheManager();
-        $slots = $cacheManager->getSlotsOfPage();
-        foreach ($slots as $slotId => $servedFromCache) {
+        $slots = $cacheManager->getCacheSlotResults();
+        foreach ($slots as $slotId => $results) {
+
+            $cachedMode = [];
+            foreach ($results as $mode => $value) {
+                if ($value === true) {
+                    $cachedMode[] = $mode;
+                }
+            }
+            if (sizeof($cachedMode) === 0) {
+                $value = "nocache";
+            } else {
+                sort($cachedMode);
+                $value = implode(",", $cachedMode);
+            }
 
             // Add cache information into the head meta
             // to test
-            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $slotId, "content" => var_export($servedFromCache, true));
+            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $slotId, "content" => $value);
         }
 
     }

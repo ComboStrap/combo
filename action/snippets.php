@@ -129,7 +129,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          *   * retrieve the snippets from the cache or store the process one
          *   * add the cache information in meta
          */
-        $slots = $cacheManager->getSlotsOfPage();
+        $slots = $cacheManager->getXhtmlRenderCacheSlotResults();
         foreach ($slots as $slotId => $servedFromCache) {
 
 

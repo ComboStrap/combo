@@ -308,6 +308,9 @@ class TagAttributes
             $actual = $this->componentAttributesCaseInsensitive[$attLower];
         }
 
+        /**
+         * Type of data: list (class) or atomic (id)
+         */
         if ($attributeName === "class") {
             if (!is_string($attributeValue)) {
                 LogUtility::msg("The value ($attributeValue) for the `class` attribute is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -325,7 +328,7 @@ class TagAttributes
             $this->componentAttributesCaseInsensitive[$attLower] = implode(" ", $newValues);
         } else {
             if (!empty($actual)) {
-                LogUtility::msg("The attribute ($attLower) has already a value ($actual). Adding another value ($attributeValue) is not yet implemented. Use the set operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                LogUtility::msg("The attribute ($attLower) stores an unique value and has already a value ($actual). to set another value ($attributeValue), use the `set` operation instead", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
             $this->componentAttributesCaseInsensitive[$attLower] = $attributeValue;
         }

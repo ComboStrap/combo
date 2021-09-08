@@ -34,6 +34,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * and 'move_combo_img' to the below method
          */
         $event->data['handlers'][syntax_plugin_combo_media::COMPONENT] = array($this, 'move_combo_img');
+        $event->data['handlers'][syntax_plugin_combo_frontmatter::COMPONENT] = array($this, 'move_combo_frontmatter_img');
     }
 
     /**
@@ -52,6 +53,25 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          *
          */
         $handler->media($match,$state,$pos);
+
+    }
+
+    /**
+     *
+     * @param $match
+     * @param $state
+     * @param $pos
+     * @param $plugin
+     * @param helper_plugin_move_handler $handler
+     */
+    public function move_combo_frontmatter_img($match, $state, $pos, $plugin, helper_plugin_move_handler $handler)
+    {
+        /**
+         * The original move method
+         * is {@link helper_plugin_move_handler::media()}
+         *
+         */
+        return $match;
 
     }
 

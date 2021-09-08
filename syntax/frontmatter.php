@@ -50,6 +50,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const CONF_ENABLE_SECTION_EDITING = 'enableFrontMatterSectionEditing';
 
     /**
+     * Used in the move plugin
+     * !!! The two last word of the plugin class !!!
+     */
+    const COMPONENT = 'combo_' . self::CANONICAL;
+
+    /**
      * Syntax Type.
      *
      * Needs to return one of the mode types defined in $PARSER_MODES in parser.php

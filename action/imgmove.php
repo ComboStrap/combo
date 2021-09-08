@@ -66,6 +66,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
      * @param $pos
      * @param $plugin
      * @param helper_plugin_move_handler $handler
+     * @return string
      */
     public function move_combo_frontmatter_img($match, $state, $pos, $plugin, helper_plugin_move_handler $handler)
     {
@@ -83,25 +84,41 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             }
             $image = $jsonArray[Page::IMAGE_META_PROPERTY];
             try {
-                $new = $handler->resolveMoves($image, "media");
-                $jsonArray[Page::IMAGE_META_PROPERTY] = DokuPath::IdToAbsolutePath($new);
-                $jsonEncode = json_encode($jsonArray,JSON_PRETTY_PRINT);
-                if ($jsonEncode === false) {
-                    LogUtility::msg("A move error has occurred while trying to store the modified metadata as json (" . hsc(var_export($image, true)) . ")", LogUtility::LVL_MSG_ERROR);
-                    return $match;
-                }
-                $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
-                $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-                $frontMatterAsString = <<<EOF
-$frontmatterStartTag
-$jsonEncode
-$frontmatterEndTag
-EOF;
-                return $frontMatterAsString;
+                $newId = $handler->resolveMoves($image, "media");
             } catch (Exception $e) {
                 LogUtility::msg("A move error has occurred while trying to move the image ($image). The target resolution function send the following error message: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
                 return $match;
             }
+
+            $newPath = DokuPath::IdToAbsolutePath($newId);
+            $jsonArray[Page::IMAGE_META_PROPERTY] = $newPath;
+            $jsonEncode = json_encode($jsonArray, JSON_PRETTY_PRINT);
+            if ($jsonEncode === false) {
+                LogUtility::msg("A move error has occurred while trying to store the modified metadata as json (" . hsc(var_export($image, true)) . ")", LogUtility::LVL_MSG_ERROR);
+                return $match;
+            }
+            $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
+            $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
+            $frontMatterAsString = <<<EOF
+$frontmatterStartTag
+$jsonEncode
+$frontmatterEndTag
+EOF;
+
+            /**
+             * All good,
+             * modify the metadata
+             */
+            global $ID;
+            if (isset($ID)) {
+                p_set_metadata($ID, [Page::IMAGE_META_PROPERTY => $newPath]);
+            }
+
+            /**
+             * Return the match modified
+             */
+            return $frontMatterAsString;
+
         }
 
     }

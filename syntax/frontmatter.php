@@ -256,7 +256,15 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $jsonArray = $data[PluginUtility::ATTRIBUTES];
                 foreach ($jsonArray as $key => $value) {
                     if (!in_array($key, $notModifiableMeta)) {
+
                         $renderer->setMeta($key, $value);
+
+                        if($key===Page::IMAGE_META_PROPERTY){
+                            $media = MediaLink::createFromRenderMatch($value);
+                            $attributes = $media->toCallStackArray();
+                            syntax_plugin_combo_media::updateStatistics($attributes,$renderer);
+                        }
+                        
                     } else {
                         LogUtility::msg("The metadata ($key) cannot be set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     }

@@ -319,12 +319,15 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
          */
         $managedMeta = [
             Page::CANONICAL_PROPERTY,
+            Page::TYPE_META_PROPERTY,
             Analytics::TITLE,
             syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
             Publication::OLD_META_KEY,
             Publication::DATE_PUBLISHED,
             Analytics::NAME,
-            CacheManager::DATE_CACHE_EXPIRATION_META_KEY
+            CacheManager::DATE_CACHE_EXPIRATION_META_KEY,
+            action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
+
         ];
         $meta = p_read_metadata($ID);
         foreach ($managedMeta as $metaKey) {

@@ -28,7 +28,7 @@ require_once(__DIR__ . '/DokuPath.php');
 class Page extends DokuPath
 {
     const CANONICAL_PROPERTY = 'canonical';
-    const TITLE_PROPERTY = 'title';
+    const TITLE_META_PROPERTY = 'title';
 
     const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
 
@@ -53,7 +53,7 @@ class Page extends DokuPath
     const BLOG_TYPE = "blog";
     const NAME_PROPERTY = "name";
     const DESCRIPTION_PROPERTY = "description";
-    const TYPE_PROPERTY = "type";
+    const TYPE_META_PROPERTY = "type";
 
     /**
      * The scope is the namespace used to store the cache
@@ -77,6 +77,7 @@ class Page extends DokuPath
 
     const CURRENT_METADATA = "current";
     const PERSISTENT_METADATA = "persistent";
+    const PAGE_TYPE_META_PROPERTY = "type";
 
 
     private $canonical;
@@ -1126,7 +1127,7 @@ class Page extends DokuPath
     public
     function getType()
     {
-        $type = $this->getPersistentMetadata("type");
+        $type = $this->getPersistentMetadata(self::TYPE_META_PROPERTY);
         if (isset($type)) {
             return $type;
         } else {
@@ -1852,7 +1853,7 @@ class Page extends DokuPath
         $array[Analytics::PATH] = $this->getAbsolutePath();
         $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
-        $array[self::TYPE_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
+        $array[self::TYPE_META_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
 
         /**
          * And note {@link DATE_ISO8601}

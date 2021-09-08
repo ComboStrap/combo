@@ -350,6 +350,11 @@ abstract class MediaLink extends DokuPath
 
 
     /**
+     * Create a media link from a unknown type path (ie relative or absolute)
+     *
+     * This function transforms the path to absolute against the actual namespace of the requested page ID if the
+     * path is relative.
+     *
      * @param $nonQualifiedPath
      * @param TagAttributes $tagAttributes
      * @param string $rev
@@ -383,7 +388,7 @@ abstract class MediaLink extends DokuPath
         /**
          * Processing
          */
-        $dokuPath = DokuPath::createMediaPathFromQualifiedPath($qualifiedPath, $rev);
+        $dokuPath = DokuPath::createMediaPathFromAbsolutePath($qualifiedPath, $rev);
         if ($dokuPath->getExtension() == "svg") {
             /**
              * The mime type is set when uploading, not when

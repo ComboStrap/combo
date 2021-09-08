@@ -282,6 +282,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     }
 
     /**
+     * Update the index for the move plugin
+     * and {@link Page::FIRST_IMAGE_META_RELATION}
+     *
      * @param array $attributes
      * @param Doku_Renderer_metadata $renderer
      */

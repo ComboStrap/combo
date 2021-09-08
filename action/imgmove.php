@@ -116,25 +116,21 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             }
             $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
             $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-            $frontMatterAsString = <<<EOF
-$frontmatterStartTag
-$jsonEncode
-$frontmatterEndTag
-EOF;
 
             /**
              * All good,
-             * modify the metadata
+             * We don't modify the metadata for the page
+             * because the handler does not give it unfortunately
              */
-            global $ID;
-            if (isset($ID)) {
-                p_set_metadata($ID, [Page::IMAGE_META_PROPERTY => $newPath]);
-            }
 
             /**
              * Return the match modified
              */
-            return $frontMatterAsString;
+            return <<<EOF
+$frontmatterStartTag
+$jsonEncode
+$frontmatterEndTag
+EOF;
 
         }
 

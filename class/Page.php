@@ -32,6 +32,8 @@ class Page extends DokuPath
 
     const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
 
+    const FIRST_IMAGE_META_RELATION = "firstimage";
+
     /**
      * An indicator in the meta
      * that set a boolean to true or false
@@ -1153,8 +1155,8 @@ class Page extends DokuPath
     {
 
         $relation = $this->getCurrentMetadata('relation');
-        if (isset($relation['firstimage'])) {
-            $firstImageId = $relation['firstimage'];
+        if (isset($relation[Page::FIRST_IMAGE_META_RELATION])) {
+            $firstImageId = $relation[Page::FIRST_IMAGE_META_RELATION];
             if (empty($firstImageId)) {
                 return null;
             } else {
@@ -1172,7 +1174,37 @@ class Page extends DokuPath
     }
 
     /**
-     * An array of local images that represents the same image
+     * Return the media found in the index
+     *
+     * They are saved via the function {@link \Doku_Renderer_metadata::_recordMediaUsage()}
+     * called by the {@link \Doku_Renderer_metadata::internalmedia()}
+     *
+     *
+     * {@link \Doku_Renderer_metadata::externalmedia()} does not save them
+     */
+    public function getExistingInternalMediaIdFromTheIndex()
+    {
+
+        $medias = [];
+        $relation = $this->getCurrentMetadata('relation');
+        if (isset($relation['media'])) {
+            /**
+             * The relation is
+             * $this->meta['relation']['media'][$src] = $exists;
+             *
+             */
+            foreach ($relation['media'] as $src => $exists) {
+                if ($exists) {
+                    $medias[] = $src;
+                }
+            }
+        }
+        return $medias;
+
+    }
+
+    /**
+     * An array of local/internal images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
      * @return MediaLink[]
@@ -1874,7 +1906,7 @@ class Page extends DokuPath
         $modifiedTime = $this->getModifiedTime();
         $array[Analytics::DATE_MODIFIED] = $modifiedTime != null ? $modifiedTime->format($dateFormat) : null;
         $published = $this->getPublishedTime();
-        $array[Publication::DATE_PUBLISHED] = $published !=null ? $published->format($dateFormat) : null;
+        $array[Publication::DATE_PUBLISHED] = $published != null ? $published->format($dateFormat) : null;
 
         return $array;
 

@@ -179,17 +179,17 @@ class DokuPath extends File
 
     /**
      *
-     * @param $qualifiedPath
+     * @param $absolutePath
      * @return DokuPath
      */
-    public static function createPagePathFromPath($qualifiedPath)
+    public static function createPagePathFromPath($absolutePath)
     {
-        return new DokuPath($qualifiedPath, DokuPath::PAGE_TYPE);
+        return new DokuPath($absolutePath, DokuPath::PAGE_TYPE);
     }
 
-    public static function createMediaPathFromQualifiedPath($pathOrId, $rev = '')
+    public static function createMediaPathFromAbsolutePath($absolutePath, $rev = '')
     {
-        return new DokuPath($pathOrId, DokuPath::MEDIA_TYPE, $rev);
+        return new DokuPath($absolutePath, DokuPath::MEDIA_TYPE, $rev);
     }
 
     public static function createUnknownFromId($id)

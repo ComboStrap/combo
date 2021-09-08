@@ -78,6 +78,9 @@ class Page extends DokuPath
     const CURRENT_METADATA = "current";
     const PERSISTENT_METADATA = "persistent";
     const PAGE_TYPE_META_PROPERTY = "type";
+    const IMAGE_META_PROPERTY = 'image';
+    const COUNTRY_META_PROPERTY = "country";
+    const LANG_META_PROPERTY = "lang";
 
 
     private $canonical;
@@ -1183,7 +1186,7 @@ class Page extends DokuPath
          * for the same image
          * We may get an array then
          */
-        $imageMeta = $this->getMetadata('image');
+        $imageMeta = $this->getMetadata(self::IMAGE_META_PROPERTY);
         $images = array();
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
@@ -1382,7 +1385,7 @@ class Page extends DokuPath
     function getCountry()
     {
 
-        $country = $this->getPersistentMetadata("country");
+        $country = $this->getPersistentMetadata(self::COUNTRY_META_PROPERTY);
         if (!empty($country)) {
             if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
                 LogUtility::msg("The country value ($country) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
@@ -1399,7 +1402,7 @@ class Page extends DokuPath
     public
     function getLang()
     {
-        $lang = $this->getPersistentMetadata("lang");
+        $lang = $this->getPersistentMetadata(self::LANG_META_PROPERTY);
         if (empty($lang)) {
             global $conf;
             if (isset($conf["lang"])) {

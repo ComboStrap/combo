@@ -24,6 +24,7 @@ use ComboStrap\Analytics;
 use ComboStrap\CacheManager;
 use ComboStrap\Is8601Date;
 use ComboStrap\LogUtility;
+use ComboStrap\MediaLink;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
@@ -54,6 +55,30 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      * !!! The two last word of the plugin class !!!
      */
     const COMPONENT = 'combo_' . self::CANONICAL;
+    const START_TAG = '---json';
+    const END_TAG = '---';
+
+    /**
+     * @param $match
+     * @return array|mixed - null if decodage problem, empty array if no json or an associative array
+     */
+    public static function FrontMatterMatchToAssociativeArray($match)
+    {
+        // strip
+        //   from start `---json` + eol = 8
+        //   from end   `---` + eol = 4
+        $jsonString = substr($match, 7, -3);
+
+        // Empty front matter
+        if (trim($jsonString) == "") {
+            self::deleteKnownMetaThatAreNoMorePresent();
+            return [];
+        }
+
+        // Otherwise you get an object ie $arrayFormat-> syntax
+        $arrayFormat = true;
+        return json_decode($jsonString, $arrayFormat);
+    }
 
     /**
      * Syntax Type.
@@ -103,7 +128,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     {
         if ($mode == "base") {
             // only from the top
-            $this->Lexer->addSpecialPattern('---json.*?---', $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(self::START_TAG . '.*?' . self::END_TAG , $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 
@@ -125,34 +150,30 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
         if ($state == DOKU_LEXER_SPECIAL) {
 
-            // strip
-            //   from start `---json` + eol = 8
-            //   from end   `---` + eol = 4
-            $jsonString = substr($match, 7, -3);
 
-            // Empty front matter
-            if (trim($jsonString) == "") {
-                $this->deleteKnownMetaThatAreNoMorePresent();
-                return array(self::STATUS => self::PARSING_STATE_EMPTY);
-            }
+            $jsonArray = self::FrontMatterMatchToAssociativeArray($match);
 
-            // Otherwise you get an object ie $arrayFormat-> syntax
-            $arrayFormat = true;
-            $jsonArray = json_decode($jsonString, $arrayFormat);
 
             $result = [];
             // Decodage problem
             if ($jsonArray == null) {
+
                 $result[self::STATUS] = self::PARSING_STATE_ERROR;
                 $result[PluginUtility::PAYLOAD] = $match;
+
             } else {
+
+                if (sizeof($jsonArray) === 0) {
+                    return array(self::STATUS => self::PARSING_STATE_EMPTY);
+                }
+
                 $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
                 /**
                  * Published is an alias for date published
                  */
-                if (isset($jsonArray["published"])) {
-                    $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray["published"];
-                    unset($jsonArray["published"]);
+                if (isset($jsonArray[Publication::OLD_META_KEY])) {
+                    $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray[Publication::OLD_META_KEY];
+                    unset($jsonArray[Publication::OLD_META_KEY]);
                 }
                 /**
                  * Add the time part if not present
@@ -231,7 +252,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     Analytics::DATE_MODIFIED
                 ];
 
-                    /** @var renderer_plugin_combo_analytics $renderer */
+                /** @var renderer_plugin_combo_analytics $renderer */
                 $jsonArray = $data[PluginUtility::ATTRIBUTES];
                 foreach ($jsonArray as $key => $value) {
                     if (!in_array($key, $notModifiableMeta)) {
@@ -243,6 +264,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 break;
 
             case "metadata":
+
+                /** @var Doku_Renderer_metadata $renderer */
                 if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
                     return false;
                 }
@@ -293,6 +316,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                             $value = strtolower($value);
                             break;
 
+                        case Page::IMAGE_META_PROPERTY:
+                            $media = MediaLink::createFromRenderMatch($value);
+                            $attributes = $media->toCallStackArray();
+                            syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
+                            break;
+
                     }
                     // Set the value persistently
                     p_set_metadata($ID, array($lowerCaseKey => $value));
@@ -313,7 +342,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      * Delete the controlled meta that are no more present if they exists
      * @return bool
      */
-    public
+    static public
     function deleteKnownMetaThatAreNoMorePresent(array $json = array())
     {
         global $ID;
@@ -326,6 +355,9 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $managedMeta = [
             Page::CANONICAL_PROPERTY,
             Page::TYPE_META_PROPERTY,
+            Page::IMAGE_META_PROPERTY,
+            Page::COUNTRY_META_PROPERTY,
+            Page::LANG_META_PROPERTY,
             Analytics::TITLE,
             syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
             Publication::OLD_META_KEY,

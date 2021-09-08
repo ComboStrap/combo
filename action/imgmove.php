@@ -1,6 +1,9 @@
 <?php
 
+use ComboStrap\DokuPath;
 use ComboStrap\LinkUtility;
+use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -52,7 +55,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * is {@link helper_plugin_move_handler::media()}
          *
          */
-        $handler->media($match,$state,$pos);
+        $handler->media($match, $state, $pos);
 
     }
 
@@ -71,7 +74,35 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * is {@link helper_plugin_move_handler::media()}
          *
          */
-        return $match;
+        $jsonArray = syntax_plugin_combo_frontmatter::FrontMatterMatchToAssociativeArray($match);
+        if ($jsonArray === null) {
+            return $match;
+        } else {
+            if (!isset($jsonArray[Page::IMAGE_META_PROPERTY])) {
+                return $match;
+            }
+            $image = $jsonArray[Page::IMAGE_META_PROPERTY];
+            try {
+                $new = $handler->resolveMoves($image, "media");
+                $jsonArray[Page::IMAGE_META_PROPERTY] = DokuPath::IdToAbsolutePath($new);
+                $jsonEncode = json_encode($jsonArray,JSON_PRETTY_PRINT);
+                if ($jsonEncode === false) {
+                    LogUtility::msg("A move error has occurred while trying to store the modified metadata as json (" . hsc(var_export($image, true)) . ")", LogUtility::LVL_MSG_ERROR);
+                    return $match;
+                }
+                $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
+                $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
+                $frontMatterAsString = <<<EOF
+$frontmatterStartTag
+$jsonEncode
+$frontmatterEndTag
+EOF;
+                return $frontMatterAsString;
+            } catch (Exception $e) {
+                LogUtility::msg("A move error has occurred while trying to move the image ($image). The target resolution function send the following error message: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
+                return $match;
+            }
+        }
 
     }
 

@@ -57,6 +57,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const COMPONENT = 'combo_' . self::CANONICAL;
     const START_TAG = '---json';
     const END_TAG = '---';
+    const METADATA_IMAGE_CANONICAL = "metadata:image";
 
     /**
      * @param $match
@@ -128,7 +129,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     {
         if ($mode == "base") {
             // only from the top
-            $this->Lexer->addSpecialPattern(self::START_TAG . '.*?' . self::END_TAG , $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(self::START_TAG . '.*?' . self::END_TAG, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 
@@ -259,12 +260,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
                         $renderer->setMeta($key, $value);
 
-                        if($key===Page::IMAGE_META_PROPERTY){
+                        if ($key === Page::IMAGE_META_PROPERTY) {
                             $media = MediaLink::createFromRenderMatch($value);
                             $attributes = $media->toCallStackArray();
-                            syntax_plugin_combo_media::updateStatistics($attributes,$renderer);
+                            syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
                         }
-                        
+
                     } else {
                         LogUtility::msg("The metadata ($key) cannot be set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     }
@@ -325,9 +326,30 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                             break;
 
                         case Page::IMAGE_META_PROPERTY:
-                            $media = MediaLink::createFromRenderMatch($value);
-                            $attributes = $media->toCallStackArray();
-                            syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
+
+                            $imageValues = [];
+                            if (is_array($value)) {
+                                foreach ($value as $imageValue) {
+                                    if (is_array($imageValue)) {
+                                        foreach ($imageValue as $subImageValue) {
+                                            if(is_string($subImageValue)){
+                                                $imageValues[] = $subImageValue;
+                                            } else {
+                                                LogUtility::msg("The image frontmatter value (".hsc(var_export($subImageValue))." is not a string and cannot be therefore added as an image", LogUtility::LVL_MSG_ERROR,syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL);
+                                            }
+                                        }
+                                    } else {
+                                        $imageValues[] = $imageValue;
+                                    }
+                                }
+                            } else {
+                                $imageValues[] = $value;
+                            }
+                            foreach ($imageValues as $imageValue) {
+                                $media = MediaLink::createFromRenderMatch($imageValue);
+                                $attributes = $media->toCallStackArray();
+                                syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
+                            }
                             break;
 
                     }

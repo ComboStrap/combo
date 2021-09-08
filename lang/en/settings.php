@@ -141,7 +141,7 @@ $lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = PluginUtility
 /**
  * Page Image
  */
-$lang[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getUrl("page:image", "Page Image") . " - Disable the use of the first image as a page image";
+$lang[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getUrl(syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL, "Metadata Image") . " - Disable the use of the first image as a page image";
 
 /**
  * Default

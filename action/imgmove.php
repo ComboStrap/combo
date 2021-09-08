@@ -79,22 +79,39 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         if ($jsonArray === null) {
             return $match;
         } else {
+
             if (!isset($jsonArray[Page::IMAGE_META_PROPERTY])) {
                 return $match;
             }
-            $image = $jsonArray[Page::IMAGE_META_PROPERTY];
+
             try {
-                $newId = $handler->resolveMoves($image, "media");
-            } catch (Exception $e) {
-                LogUtility::msg("A move error has occurred while trying to move the image ($image). The target resolution function send the following error message: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
+                $images = &$jsonArray[Page::IMAGE_META_PROPERTY];
+                if (is_array($images)) {
+                    foreach ($images as &$subImage) {
+                        if (is_array($subImage)) {
+                            foreach($subImage as &$subSubImage){
+                                if(is_string($subSubImage)) {
+                                    $this->moveImage($subSubImage, $handler);
+                                } else {
+                                    LogUtility::msg("The image frontmatter value (".hsc(var_export($subSubImage))." is not a string and cannot be therefore moved", LogUtility::LVL_MSG_ERROR,syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL);
+                                    return $match;
+                                }
+                            }
+                        } else {
+                            $this->moveImage( $subImage, $handler);
+                        }
+                    }
+                } else {
+                    $this->moveImage($images, $handler);
+                }
+            } catch(Exception $e){
+                // Could not resolve the image, return the data without modification
                 return $match;
             }
 
-            $newPath = DokuPath::IdToAbsolutePath($newId);
-            $jsonArray[Page::IMAGE_META_PROPERTY] = $newPath;
             $jsonEncode = json_encode($jsonArray, JSON_PRETTY_PRINT);
             if ($jsonEncode === false) {
-                LogUtility::msg("A move error has occurred while trying to store the modified metadata as json (" . hsc(var_export($image, true)) . ")", LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("A move error has occurred while trying to store the modified metadata as json (" . hsc(var_export($images, true)) . ")", LogUtility::LVL_MSG_ERROR);
                 return $match;
             }
             $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
@@ -121,6 +138,23 @@ EOF;
 
         }
 
+    }
+
+    /**
+     * Move a single image and update the JSon
+     * @param $value
+     * @param helper_plugin_move_handler $handler
+     * @throws Exception on bad argument
+     */
+    private function moveImage(&$value, $handler)
+    {
+        try {
+            $newId = $handler->resolveMoves($value, "media");
+            $value = DokuPath::IdToAbsolutePath($newId);
+        } catch (Exception $e) {
+            LogUtility::msg("A move error has occurred while trying to move the image ($value). The target resolution function send the following error message: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
+            throw new RuntimeException();
+        }
     }
 
 

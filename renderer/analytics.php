@@ -195,7 +195,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          */
         $text = rawWiki($ID);
         $statExport[Analytics::CHARS_COUNT] = strlen($text);
-        $statExport[Analytics::WORDS_COUNT] = StringUtility::getWordCount($text);
+        $statExport[Analytics::WORD_COUNT] = StringUtility::getWordCount($text);
 
 
         /**
@@ -322,7 +322,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $maximalWordCount = 1500;
         $correctContentLength = true;
         $correctLengthScore = $this->getConf(self::CONF_QUALITY_SCORE_CORRECT_CONTENT, 10);
-        $missingWords = $minimalWordCount - $statExport[Analytics::WORDS_COUNT];
+        $missingWords = $minimalWordCount - $statExport[Analytics::WORD_COUNT];
         if ($missingWords > 0) {
             $ruleResults[self::RULE_WORDS_MINIMAL] = self::FAILED;
             $correctContentLength = false;
@@ -330,7 +330,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         } else {
             $ruleResults[self::RULE_WORDS_MINIMAL] = self::PASSED;
         }
-        $tooMuchWords = $statExport[Analytics::WORDS_COUNT] - $maximalWordCount;
+        $tooMuchWords = $statExport[Analytics::WORD_COUNT] - $maximalWordCount;
         if ($tooMuchWords > 0) {
             $ruleResults[self::RULE_WORDS_MAXIMAL] = self::FAILED;
             $ruleInfo[self::RULE_WORDS_MAXIMAL] = "Delete {$tooMuchWords} words to get {$correctLengthScore} points";
@@ -354,7 +354,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             $headerCount--; // h1 is supposed to have no words
             if ($headerCount > 0) {
 
-                $avgWordsCountBySection = round($this->stats[Analytics::WORDS_COUNT] / $headerCount);
+                $avgWordsCountBySection = round($this->stats[Analytics::WORD_COUNT] / $headerCount);
                 $statExport['word_section_count']['avg'] = $avgWordsCountBySection;
 
                 /**

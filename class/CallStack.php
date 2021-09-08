@@ -104,11 +104,19 @@ class CallStack
         /**
          * A temporary Call stack is created in the writer
          * for list, table, blockquote
+         *
+         * But third party plugin can overwrite the writer
+         * to capture the call
+         *
+         * See the
+         * https://www.dokuwiki.org/devel:parser#handler_token_methods
+         * for an example with a list component
+         *
          */
-
+        $headErrorMessage = "Your DokuWiki installation is too old or a writer plugin does not conform";
         if (!method_exists($handler, 'getCallWriter')) {
             $class = get_class($handler);
-            LogUtility::msg("Your DokuWiki installation or a plugin is too old. The handler ($class) provided cannot manipulate the callstack (ie the function getCallWriter does not exist).", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("$headErrorMessage. The handler ($class) provided cannot manipulate the callstack (ie the function getCallWriter does not exist).", LogUtility::LVL_MSG_ERROR);
             return;
         }
         $callWriter = $handler->getCallWriter();
@@ -121,7 +129,7 @@ class CallStack
         try {
             $rp = new \ReflectionProperty($callWriterClass, "calls");
             if ($rp->isPrivate()) {
-                LogUtility::msg("Your DokuWiki installation or a plugin is too old. The call writer ($callWriterClass) provided cannot manipulate the callstack (ie the calls of the call writer are private).", LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("$headErrorMessage. The call writer ($callWriterClass) provided cannot manipulate the callstack (ie the calls of the call writer are private).", LogUtility::LVL_MSG_ERROR);
                 return;
             }
         } catch (\ReflectionException $e) {

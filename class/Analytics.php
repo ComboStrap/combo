@@ -26,7 +26,7 @@ class Analytics
      */
     const HEADER_POSITION = 'header_id';
     const INTERNAL_BACKLINKS_COUNT = "internal_backlinks_count";
-    const WORDS_COUNT = 'words_count';
+    const WORD_COUNT = 'word_count';
     const INTERNAL_LINK_DISTANCE = 'internal_links_distance';
     const INTERWIKI_LINKS_COUNT = "interwiki_links_count";
     const EDITS_COUNT = 'edits_count';

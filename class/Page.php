@@ -1869,14 +1869,12 @@ class Page extends DokuPath
          * https://www.w3.org/TR/NOTE-datetime
          */
         $dateFormat = DATE_ATOM;
-        $array[Analytics::DATE_CREATED] = $this->getCreatedTime()->format($dateFormat);
-        $array[Analytics::DATE_MODIFIED] = $this->getModifiedTime()->format($dateFormat);
+        $createdTime = $this->getCreatedTime();
+        $array[Analytics::DATE_CREATED] = $createdTime != null ? $createdTime->format($dateFormat) : null;
+        $modifiedTime = $this->getModifiedTime();
+        $array[Analytics::DATE_MODIFIED] = $modifiedTime != null ? $modifiedTime->format($dateFormat) : null;
         $published = $this->getPublishedTime();
-        if ($published != null) {
-            $array[Publication::DATE_PUBLISHED] = $published->format($dateFormat);
-        } else {
-            $array[Publication::DATE_PUBLISHED] = null;
-        }
+        $array[Publication::DATE_PUBLISHED] = $published !=null ? $published->format($dateFormat) : null;
 
         return $array;
 

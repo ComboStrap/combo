@@ -133,8 +133,10 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     {
 
         if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
+
             $pattern = LinkUtility::ENTRY_PATTERN_SINGLE_LINE;
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+
         }
 
     }

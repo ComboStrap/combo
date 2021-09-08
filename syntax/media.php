@@ -61,10 +61,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $media = MediaLink::createFromCallStackArray($attributes);
         $renderer->stats[Analytics::MEDIAS_COUNT]++;
         $scheme = $media->getScheme();
-        switch($scheme){
+        switch ($scheme) {
             case DokuPath::LOCAL_SCHEME:
                 $renderer->stats[Analytics::INTERNAL_MEDIAS_COUNT]++;
-                if(!$media->exists()){
+                if (!$media->exists()) {
                     $renderer->stats[Analytics::INTERNAL_BROKEN_MEDIAS_COUNT]++;
                 }
                 break;
@@ -129,6 +129,18 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         if ($enable) {
             $this->Lexer->addSpecialPattern(self::MEDIA_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
+    }
+
+    public function accepts($mode)
+    {
+        /**
+         * Let Image Mapping plugin
+         * https://www.dokuwiki.org/plugin:imagemapping
+         */
+        if ($mode === "plugin_imagemapping") {
+            return false;
+        }
+        return parent::accepts($mode);
     }
 
 
@@ -261,7 +273,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                  * @var renderer_plugin_combo_analytics $renderer
                  */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                self::updateStatistics($attributes,$renderer);
+                self::updateStatistics($attributes, $renderer);
                 return true;
 
         }

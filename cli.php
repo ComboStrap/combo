@@ -192,7 +192,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
                     'h5' => $statistics[Analytics::HEADERS_COUNT]['h5'],
                     'internal_links' => $statistics[Analytics::INTERNAL_LINKS_COUNT],
                     'internal_medias' => $statistics[Analytics::INTERNAL_MEDIAS_COUNT],
-                    'words' => $statistics[Analytics::WORDS_COUNT],
+                    'words' => $statistics[Analytics::WORD_COUNT],
                     'low' => $data[Analytics::QUALITY]['low']
                 );
                 fwrite($fileHandle, implode(",", $row) . PHP_EOL);

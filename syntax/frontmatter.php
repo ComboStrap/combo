@@ -259,11 +259,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     if (!in_array($key, $notModifiableMeta)) {
 
                         $renderer->setMeta($key, $value);
-
                         if ($key === Page::IMAGE_META_PROPERTY) {
-                            $media = MediaLink::createFromRenderMatch($value);
-                            $attributes = $media->toCallStackArray();
-                            syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
+                            $this->updateImageStatistics($value, $renderer);
                         }
 
                     } else {
@@ -328,23 +325,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                         case Page::IMAGE_META_PROPERTY:
 
                             $imageValues = [];
-                            if (is_array($value)) {
-                                foreach ($value as $imageValue) {
-                                    if (is_array($imageValue)) {
-                                        foreach ($imageValue as $subImageValue) {
-                                            if(is_string($subImageValue)){
-                                                $imageValues[] = $subImageValue;
-                                            } else {
-                                                LogUtility::msg("The image frontmatter value (".hsc(var_export($subImageValue))." is not a string and cannot be therefore added as an image", LogUtility::LVL_MSG_ERROR,syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL);
-                                            }
-                                        }
-                                    } else {
-                                        $imageValues[] = $imageValue;
-                                    }
-                                }
-                            } else {
-                                $imageValues[] = $value;
-                            }
+                            $this->aggregateImageValues($imageValues, $value);
                             foreach ($imageValues as $imageValue) {
                                 $media = MediaLink::createFromRenderMatch($imageValue);
                                 $attributes = $media->toCallStackArray();
@@ -406,6 +387,30 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             }
         }
         return p_save_metadata($ID, $meta);
+    }
+
+    private function updateImageStatistics($value, $renderer)
+    {
+        if(is_array($value)){
+            foreach($value as $subImage){
+                $this->updateImageStatistics($subImage, $renderer);
+            }
+        } else {
+            $media = MediaLink::createFromRenderMatch($value);
+            $attributes = $media->toCallStackArray();
+            syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
+        }
+    }
+
+    private function aggregateImageValues(array &$imageValues, $value)
+    {
+        if (is_array($value)) {
+            foreach ($value as $subImageValue) {
+                $this->aggregateImageValues($imageValues,$subImageValue);
+            }
+        } else {
+            $imageValues[] = $value;
+        }
     }
 
 

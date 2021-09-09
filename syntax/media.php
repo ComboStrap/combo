@@ -21,6 +21,9 @@ if (!defined('DOKU_INC')) die();
  *
  *
  * It can be a internal / external media
+ *
+ * See:
+ * https://developers.google.com/search/docs/advanced/guidelines/google-images
  */
 class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 {
@@ -129,18 +132,6 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         if ($enable) {
             $this->Lexer->addSpecialPattern(self::MEDIA_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
-    }
-
-    public function accepts($mode)
-    {
-        /**
-         * Let Image Mapping plugin
-         * https://www.dokuwiki.org/plugin:imagemapping
-         */
-        if ($mode === "plugin_imagemapping") {
-            return false;
-        }
-        return parent::accepts($mode);
     }
 
 

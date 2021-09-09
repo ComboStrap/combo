@@ -110,7 +110,7 @@ class Icon
                 $iconNameSpace = $iconNameSpace . ":";
             }
             $mediaPathId = $iconNameSpace . $iconNameAttribute . ".svg";
-            $mediaDokuPath = DokuPath::createMediaPathFromQualifiedPath($mediaPathId);
+            $mediaDokuPath = DokuPath::createMediaPathFromAbsolutePath($mediaPathId);
 
             // Bug: null file created when the stream could not get any byte
             // We delete them

@@ -7,10 +7,20 @@ namespace ComboStrap;
 class SqlParser
 {
 
-    const IDENTIFIER_STATE = "identifier";
+    /**
+     * We are in the columns definition
+     * after the select
+     */
+    const IDENTIFIER_START_STATE = "identifier_start_state";
     const START_STATE = "start";
+    const STATE_IN_QUOTE = "in_quote";
     private $sql;
     private $cols = [];
+    /**
+     * The state of FSM
+     * @var string
+     */
+    private $state;
 
 
     /**
@@ -28,44 +38,62 @@ class SqlParser
 
     public function parse()
     {
+
         $sql = trim($this->sql);
-        $actualToken = "";
-        $state = self::START_STATE;
+
+        /**
+         * The word is the where the splitting happen
+         * (ie space)
+         */
+        $word = "";
+
+        /**
+         * The token is a serie of word
+         * For instance, for a identifier (column)
+         * `column as alias`
+         */
+        $token = "";
+
+        $this->state = self::START_STATE;
         for ($i = 0; $i < mb_strlen($sql); $i++) {
             $char = mb_substr($sql, $i, 1);
             switch ($char) {
                 case ',':
-                    // End token
-                    $this->addColumn($actualToken);
-                    $actualToken = "";
+                    if ($this->state != self::STATE_IN_QUOTE) {
+                        if ($this->state == self::IDENTIFIER_START_STATE) {
+                            $this->processColumn($token);
+                        } else {
+                            $this->triggerBadState();
+                        }
+                    } else {
+                        $token .= $char;
+                    }
                     break;
                 case ' ':
-                    // End token
-                    switch ($state) {
-                        case self::START_STATE:
-                            if (strtolower($actualToken) == "select") {
-                                $state = self::IDENTIFIER_STATE;
-                                $actualToken = "";
-                            } else {
+                    // End word
+                    switch ($word) {
+                        case "select":
+                            $this->state = self::IDENTIFIER_START_STATE;
+                            $token = "";
+                            if ($this->state != self::START_STATE) {
                                 LogUtility::msg("A sql should start with the key word `select`", LogUtility::LVL_MSG_ERROR);
                                 return $this;
                             }
                             break;
-                        case self::IDENTIFIER_STATE:
-                            $actualToken .= $char;
-                            break;
                         default:
-                            LogUtility::msg("Unknown SQL parsing state ($state)", LogUtility::LVL_MSG_ERROR);
+                            $token .= $word . $char;
                     }
+                    // init
+                    $word = "";
                     break;
                 case '\'':
                     break;
                 default:
-                    $actualToken .= $char;
+                    $word .= $char;
             }
         }
-        if (!empty($actualToken)) {
-            $this->addColumn($actualToken);
+        if (!empty($word) || !empty($token)) {
+            LogUtility::msg("The word ($word) or the token ($token) is not empty", LogUtility::LVL_MSG_ERROR);
         }
         return $this;
     }
@@ -75,10 +103,28 @@ class SqlParser
         return $this->cols;
     }
 
-    private function addColumn($actualToken)
+    private function processToken($actualToken)
     {
         $actualToken = trim($actualToken);
+
         $this->cols[$actualToken] = $actualToken;
+
+        return $actualToken;
     }
+
+    private function processColumn($actualToken)
+    {
+
+    }
+
+    private function triggerBadState()
+    {
+        LogUtility::msg("Unknown Bad State: $this->state}", LogUtility::LVL_MSG_ERROR);
+    }
+
+}
+
+class SqlColumn
+{
 
 }

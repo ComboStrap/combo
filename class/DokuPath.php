@@ -263,7 +263,7 @@ class DokuPath extends File
 
     public static function createMediaPathFromId($id)
     {
-        return self::createMediaPathFromQualifiedPath(DokuPath::PATH_SEPARATOR . $id);
+        return self::createMediaPathFromAbsolutePath(DokuPath::PATH_SEPARATOR . $id);
     }
 
     public static function createPagePathFromId($id)

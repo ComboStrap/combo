@@ -82,6 +82,11 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
         return array('substition', 'formatting', 'disabled');
     }
 
+    /**
+     * @param string $mode
+     * @return bool
+     * Accepts inside
+     */
     public function accepts($mode)
     {
         /**
@@ -132,7 +137,10 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        if (!$this->getConf(self::CONF_DISABLE_LINK, false)) {
+        if (!$this->getConf(self::CONF_DISABLE_LINK, false)
+            &&
+            $mode !== "plugin_imagemapping" // don't take over link in imagemapping plugin
+        ) {
 
             $pattern = LinkUtility::ENTRY_PATTERN_SINGLE_LINE;
             $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));

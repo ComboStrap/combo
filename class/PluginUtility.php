@@ -56,6 +56,7 @@ require_once('LowQualityPage.php');
 require_once('Opacity.php');
 require_once('Page.php');
 require_once('PipelineUtility.php');
+require_once('ThirdPartyPlugins.php');
 require_once('Position.php');
 require_once('Prism.php');
 require_once('Publication.php');
@@ -1221,6 +1222,11 @@ class PluginUtility
     public static function getCacheManager()
     {
         return CacheManager::get();
+    }
+
+    public static function getModeFromPluginName($name)
+    {
+        return "plugin_$name";
     }
 
 

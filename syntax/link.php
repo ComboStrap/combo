@@ -8,6 +8,7 @@ require_once(__DIR__ . "/../class/XhtmlUtility.php");
 
 use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;
+use ComboStrap\ThirdPartyPlugins;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
@@ -139,7 +140,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
 
         if (!$this->getConf(self::CONF_DISABLE_LINK, false)
             &&
-            $mode !== "plugin_imagemapping" // don't take over link in imagemapping plugin
+            $mode !== PluginUtility::getModeFromPluginName(ThirdPartyPlugins::IMAGE_MAPPING_NAME)
         ) {
 
             $pattern = LinkUtility::ENTRY_PATTERN_SINGLE_LINE;

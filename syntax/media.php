@@ -2,9 +2,11 @@
 
 
 use ComboStrap\Analytics;
+use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\ThirdPartyPlugins;
 use ComboStrap\PluginUtility;
 use ComboStrap\Tag;
 
@@ -37,12 +39,6 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      */
     const COMPONENT = 'combo_' . self::TAG;
 
-    /**
-     * The attribute that defines if the image is the first image in
-     * the component
-     *
-     */
-    const IS_FIRST_IMAGE_KEY = "isFirstImage";
 
     /**
      * Found at {@link \dokuwiki\Parsing\ParserMode\Media}
@@ -130,7 +126,9 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         }
 
         if ($enable) {
-            $this->Lexer->addSpecialPattern(self::MEDIA_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            if ($mode !== PluginUtility::getModeFromPluginName(ThirdPartyPlugins::IMAGE_MAPPING_NAME)) {
+                $this->Lexer->addSpecialPattern(self::MEDIA_PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            }
         }
     }
 
@@ -143,13 +141,19 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
             // As this is a container, this cannot happens but yeah, now, you know
             case DOKU_LEXER_SPECIAL :
+
                 $media = MediaLink::createFromRenderMatch($match);
                 $attributes = $media->toCallStackArray();
-                $tag = new Tag(self::TAG, $attributes, $state, $handler);
-                $parent = $tag->getParent();
+
+                $callStack = CallStack::createFromHandler($handler);
+
+                /**
+                 * Parent
+                 */
+                $parent = $callStack->moveToParent();
                 $parentTag = "";
                 if (!empty($parent)) {
-                    $parentTag = $parent->getName();
+                    $parentTag = $parent->getTagName();
                     if ($parentTag == syntax_plugin_combo_link::TAG) {
                         /**
                          * The image is in a link, we don't want another link
@@ -158,12 +162,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                         $attributes[MediaLink::LINKING_KEY] = MediaLink::LINKING_NOLINK_VALUE;
                     }
                 }
-                $isFirstSibling = $tag->isFirstMeaningFullSibling();
+
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $parentTag,
-                    self::IS_FIRST_IMAGE_KEY => $isFirstSibling
+                    PluginUtility::CONTEXT => $parentTag
                 );
 
 

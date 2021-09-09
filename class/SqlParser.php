@@ -190,7 +190,7 @@ class SqlParser
 
                             // Delete the limit word
                             $this->word = "";
-                            switch($this->state){
+                            switch ($this->state) {
                                 case self::STATE_COLUMN_IDENTIFIER:
                                     $this->processColumnToken();
                                     break;
@@ -216,8 +216,9 @@ class SqlParser
                                 return $this;
                             }
                             // delete the and/or
+                            $logicalOperator = $this->word;
                             $this->word = "";
-                            $this->processPredicateToken();
+                            $this->processPredicateToken($logicalOperator);
                             break;
                         case self::ORDER_WORD:
                             // Do we have a `by` ?
@@ -237,11 +238,23 @@ class SqlParser
                                 }
                             }
                             if ($nextWord === "by") {
-                                $this->state = self::STATE_ORDER_BY;
 
                                 // Process the token
-                                $this->word = ""; // delete the order
-                                $this->processPredicateToken();
+                                $this->word = ""; // delete the order word
+                                switch ($this->state) {
+                                    case self::STATE_PREDICATE:
+                                        $this->processPredicateToken();
+                                        break;
+                                    case self::STATE_COLUMN_IDENTIFIER:
+                                        $this->processColumnToken();
+                                        break;
+                                    default:
+                                        LogUtility::msg("The `order by` seems to be at the wrong place (state ($this->state) unknown)", LogUtility::LVL_MSG_ERROR);
+                                        return $this;
+
+                                }
+
+                                $this->state = self::STATE_ORDER_BY;
 
                                 // Advance the pointer
                                 $i = $j;
@@ -332,10 +345,10 @@ class SqlParser
         LogUtility::msg("Unknown Bad State: $this->state} (Token: ($this->token), Word: ($this->word), Character: ($this->parsedCharacterInfoForLog))", LogUtility::LVL_MSG_ERROR);
     }
 
-    private function processPredicateToken()
+    private function processPredicateToken($logicalOperator = "")
     {
         $token = $this->getFinalizedToken();
-        $this->predicates[] = $token;
+        $this->predicates[$logicalOperator] = $token;
 
     }
 

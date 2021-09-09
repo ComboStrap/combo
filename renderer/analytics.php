@@ -3,10 +3,8 @@
 
 use ComboStrap\Analytics;
 use ComboStrap\LinkUtility;
-use ComboStrap\StringUtility;
-
 use ComboStrap\Page;
-use ComboStrap\TemplateUtility;
+use ComboStrap\StringUtility;
 use dokuwiki\ChangeLog\PageChangeLog;
 
 require_once(__DIR__ . '/../class/LowQualityPage.php');
@@ -153,7 +151,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * The metadata
          */
         global $ID;
-            $dokuWikiMetadata = p_get_metadata($ID);
+        $dokuWikiMetadata = p_get_metadata($ID);
 
         /**
          * Edit author stats

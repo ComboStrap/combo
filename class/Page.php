@@ -676,16 +676,26 @@ class Page extends DokuPath
              */
 
             $json = json_encode($analytics, JSON_PRETTY_PRINT);
+            /**
+             * Same data as {@link Page::getMetadataStandard()}
+             */
             $entry = array(
                 'CANONICAL' => $this->getCanonical(),
                 'ANALYTICS' => $json,
+                'PATH'=>$this->getAbsolutePath(),
+                'NAME'=>$this->getName(),
+                'TITLE'=>$this->getTitleNotEmpty(),
+                'H1'=>$this->getH1NotEmpty(),
+                'DATE_CREATED'=>$this->getCreatedDateString(),
+                'DATE_MODIFIED'=>$this->getModifiedDateString(),
+                'DATE_PUBLISHED'=>$this->getPublishedTimeAsString(),
                 'ID' => $this->getId()
             );
             $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
             if ($sqlite->res2single($res) == 1) {
                 // Upset not supported on all version
                 //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-                $update = 'update PAGES SET CANONICAL = ?, ANALYTICS = ? where ID=?';
+                $update = 'update PAGES SET CANONICAL = ?, ANALYTICS = ?, PATH = ?, NAME = ?, TITLE = ?, H1 = ?, DATE_CREATED = ?, DATE_MODIFIED = ?, DATE_PUBLISHED = ? where ID=?';
                 $res = $sqlite->query($update, $entry);
             } else {
                 $res = $sqlite->storeEntry('PAGES', $entry);
@@ -1309,11 +1319,8 @@ class Page extends DokuPath
     function getModifiedDateString()
     {
         $modified = $this->getModifiedTime();
-        if (!empty($modified)) {
-            return $modified->format(DATE_W3C);
-        } else {
-            return null;
-        }
+        return $modified != null ? $modified->format(Iso8601Date::getFormat()) : null;
+
     }
 
     private
@@ -1371,12 +1378,7 @@ class Page extends DokuPath
     {
 
         $created = $this->getCreatedTime();
-        if (!empty($created)) {
-            return $created->format(DATE_W3C);
-        } else {
-            // Not created
-            return null;
-        }
+        return $created != null ? $created->format(Iso8601Date::getFormat()) : null;
 
     }
 
@@ -1890,23 +1892,11 @@ class Page extends DokuPath
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
         $array[self::TYPE_META_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
 
-        /**
-         * And note {@link DATE_ISO8601}
-         * because it's not the compliant IS0-8601 format
-         * as explained here
-         * https://www.php.net/manual/en/class.datetimeinterface.php#datetime.constants.iso8601
-         * ATOM is
-         *
-         * This format is used by Sqlite, Google and is pretty the standard everywhere
-         * https://www.w3.org/TR/NOTE-datetime
-         */
-        $dateFormat = DATE_ATOM;
-        $createdTime = $this->getCreatedTime();
-        $array[Analytics::DATE_CREATED] = $createdTime != null ? $createdTime->format($dateFormat) : null;
-        $modifiedTime = $this->getModifiedTime();
-        $array[Analytics::DATE_MODIFIED] = $modifiedTime != null ? $modifiedTime->format($dateFormat) : null;
-        $published = $this->getPublishedTime();
-        $array[Publication::DATE_PUBLISHED] = $published != null ? $published->format($dateFormat) : null;
+
+
+        $array[Analytics::DATE_CREATED] = $this->getCreatedDateString();
+        $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateString();
+        $array[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
 
         return $array;
 
@@ -1924,6 +1914,11 @@ class Page extends DokuPath
                 $key => $value
             ]
         );
+    }
+
+    private function getPublishedTimeAsString()
+    {
+        return $this->getPublishedTime()!==null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
     }
 
 

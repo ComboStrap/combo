@@ -1,7 +1,7 @@
 <?php
 
 use ComboStrap\CacheManager;
-use ComboStrap\Is8601Date;
+use ComboStrap\Iso8601Date;
 use ComboStrap\PluginUtility;
 use dokuwiki\Cache\CacheRenderer;
 
@@ -87,7 +87,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
             $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRATION_META_KEY, METADATA_DONT_RENDER);
             if ($expirationStringDate !== null) {
 
-                $expirationDate = Is8601Date::create($expirationStringDate)->getDateTime();
+                $expirationDate = Iso8601Date::create($expirationStringDate)->getDateTime();
                 $actualDate = new DateTime();
                 if ($expirationDate < $actualDate) {
                     /**

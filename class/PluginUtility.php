@@ -36,7 +36,7 @@ require_once('Call.php');
 require_once('CallStack.php');
 require_once('ColorUtility.php');
 require_once('ConditionalValue.php');
-require_once('Is8601Date.php');
+require_once('Iso8601Date.php');
 require_once('DokuPath.php');
 require_once('DokuwikiUrl.php');
 require_once('Dimension.php');

@@ -6,6 +6,7 @@ use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
+use ComboStrap\SqlLogical;
 use ComboStrap\SqlParser;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
@@ -242,16 +243,8 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
 
                 $sql = $dataInstructions[0]->getCapturedContent();
 
-                /**
-                 * Create the SQL
-                 */
-                $columns = SqlParser::create($sql)
-                    ->parse()
-                    ->getColumnIdentifiers();
-                if (sizeof($columns) === 0) {
-                    LogUtility::msg("The parsed sql ($sql) contains no columns", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $returnArray;
-                }
+
+
 
                 /**
                  * Sqlite available ?
@@ -275,17 +268,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 };
                 $sqlite->res_close($res);
 
+                /**
+                 * Create the SQL
+                 */
+                $logicalSql = SqlLogical::create($sql);
                 if ($isJsonEnabled) {
-                    $expressionMetadataMapping = [
-                        "title" => "json_extract(analytics , '$.metadata.title')"
-                    ];
-                    $executableSql = "select";
-                    foreach ($columns as $alias => $expression) {
-                        $expression = $expressionMetadataMapping[$executableSql];
-                        $executableSql .= " $expression as $alias,";
-                    }
-                    $executableSql = trim($executableSql, ",");
-                    $executableSql .= " from pages";
+                    $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_JSON);
                     $res = $sqlite->query($executableSql);
                     if (!$res) {
                         LogUtility::msg("An exception has occurred with the sql ($executableSql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -294,7 +282,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     $rows = $sqlite->res2arr($res);
                     $sqlite->res_close($res);
                 } else {
-                    $executableSql = "select analytics from pages";
+                    $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_NO_JSON);
                     $res = $sqlite->query($executableSql);
                     if (!$res) {
                         LogUtility::msg("An exception has occurred with the sql ($executableSql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -306,7 +294,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         $analytics = $sourceRow["ANALYTICS"];
                         $jsonArray = json_decode($analytics, true);
                         $targetRow = [];
-                        foreach ($columns as $alias => $expression) {
+                        foreach ($logicalSql->getColumns() as $alias => $expression) {
                             if(isset($jsonArray["metadata"][$alias])) {
                                 $targetRow[$alias] = $jsonArray["metadata"][$alias];
                             } else {

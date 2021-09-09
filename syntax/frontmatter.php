@@ -22,7 +22,7 @@
 
 use ComboStrap\Analytics;
 use ComboStrap\CacheManager;
-use ComboStrap\Is8601Date;
+use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
@@ -181,7 +181,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                  */
                 if (isset($jsonArray[Publication::DATE_PUBLISHED])) {
                     $datePublishedString = $jsonArray[Publication::DATE_PUBLISHED];
-                    $datePublished = Is8601Date::create($datePublishedString);
+                    $datePublished = Iso8601Date::create($datePublishedString);
                     if (!$datePublished->isValidDateEntry()) {
                         LogUtility::msg("The published date ($datePublishedString) is not a valid ISO date supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         unset($jsonArray[Publication::DATE_PUBLISHED]);

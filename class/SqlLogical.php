@@ -11,7 +11,12 @@ namespace ComboStrap;
 class SqlLogical
 {
     const SQLITE_JSON = "sqliteWithJsonSupport";
+    const SQLITE_NO_JSON = "sqliteWithoutJsonSupport";
     private $logicalSql;
+    /**
+     * @var SqlParser
+     */
+    private $sqlParser;
 
 
     /**
@@ -20,6 +25,8 @@ class SqlLogical
     public function __construct($logicalSql)
     {
         $this->logicalSql = $logicalSql;
+        $this->sqlParser = SqlParser::create($this->logicalSql)
+            ->parse();
     }
 
     public static function create($logicalSql)
@@ -31,23 +38,26 @@ class SqlLogical
     {
 
 
-        $sql = SqlParser::create($this->logicalSql)
-            ->parse();
-
         $physicalSql = "select\n\t";
-        $columnsIdentifier = [];
-        foreach ($sql->getColumnIdentifiers() as $columnIdentifier) {
 
-            $columnsIdentifier[] = "json_extract(analytics, '$.metadata.$columnIdentifier') as $columnIdentifier";
+        if ($databaseTarget === self::SQLITE_JSON) {
+            $columnsIdentifier = [];
+            foreach ($this->sqlParser->getColumnIdentifiers() as $columnIdentifier) {
 
+                $columnsIdentifier[] = "json_extract(analytics, '$.metadata.$columnIdentifier') as $columnIdentifier";
+
+            }
+            $physicalSql .= implode(",\n\t", $columnsIdentifier);
+        } else {
+            $physicalSql .= "*";
         }
-        $physicalSql .= implode(",\n\t", $columnsIdentifier);
+
         $physicalSql .= "\nfrom\n\tpages\nwhere\n\tanalytics is not null";
 
         /**
          * Predicates
          */
-        $predicates = $sql->getPredicates();
+        $predicates = $this->sqlParser->getPredicates();
         if (sizeof($predicates) > 0) {
             $physicalSql .= " and";
             foreach ($predicates as $nextLogicalOperator => $predicate) {
@@ -63,7 +73,7 @@ class SqlLogical
         /**
          * Order by
          */
-        $orderBys = $sql->getOrderBys();
+        $orderBys = $this->sqlParser->getOrderBys();
         if (sizeof($orderBys) > 0) {
             $physicalSql .= "\norder by\n\t" . implode(",\n\t", $orderBys);
         }
@@ -71,11 +81,16 @@ class SqlLogical
         /**
          * Limit
          */
-        $limit = $sql->getLimit();
+        $limit = $this->sqlParser->getLimit();
         if (!empty($limit)) {
             $physicalSql .= "\nlimit $limit";
         }
         return $physicalSql;
 
+    }
+
+    public function getColumns()
+    {
+        return $this->sqlParser->getColumnIdentifiers();
     }
 }

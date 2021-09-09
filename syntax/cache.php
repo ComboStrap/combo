@@ -2,7 +2,7 @@
 
 
 use ComboStrap\CacheManager;
-use ComboStrap\Is8601Date;
+use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -89,7 +89,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                 $date = "";
                 try {
                     $cron = Cron\CronExpression::factory($value);
-                    $date = $cron->getNextRunDate()->format(Is8601Date::getFormat());
+                    $date = $cron->getNextRunDate()->format(Iso8601Date::getFormat());
                 } catch (InvalidArgumentException $e) {
                     $status = self::PARSING_STATE_UNSUCCESSFUL;
                 }

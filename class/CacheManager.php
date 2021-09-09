@@ -76,7 +76,7 @@ class CacheManager
         if (!isset($this->cacheDataBySlots[$pageId][$cacheParser->mode])) {
             $date = null;
             if(file_exists($cacheParser->cache)){
-                $date = Is8601Date::createFromTimestamp(filemtime($cacheParser->cache))->getDateTime();
+                $date = Iso8601Date::createFromTimestamp(filemtime($cacheParser->cache))->getDateTime();
             }
             $this->cacheDataBySlots[$pageId][$cacheParser->mode] = [
                 self::RESULT_STATUS => $result,

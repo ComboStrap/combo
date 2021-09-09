@@ -12,7 +12,7 @@ use DateTime;
  * @package ComboStrap
  * Format used by Google, Sqlite and others
  */
-class Is8601Date
+class Iso8601Date
 {
     /**
      * @var DateTime|false
@@ -41,7 +41,7 @@ class Is8601Date
     public static function create($string = null)
     {
         if ($string === null) {
-            return new Is8601Date();
+            return new Iso8601Date();
         }
 
 
@@ -79,16 +79,26 @@ class Is8601Date
          * https://www.php.net/manual/en/class.datetimeinterface.php#datetime.constants.iso8601
          */
         $dateTime = DateTime::createFromFormat(DateTime::ATOM, $string);
-        return new Is8601Date($dateTime);
+        return new Iso8601Date($dateTime);
     }
 
     public static function createFromTimestamp($timestamp)
     {
        $dateTime = new DateTime();
        $dateTime->setTimestamp($timestamp);
-        return new Is8601Date($dateTime);
+        return new Iso8601Date($dateTime);
     }
 
+    /**
+     * And note {@link DATE_ISO8601}
+     * because it's not the compliant IS0-8601 format
+     * as explained here
+     * https://www.php.net/manual/en/class.datetimeinterface.php#datetime.constants.iso8601
+     * ATOM is
+     *
+     * This format is used by Sqlite, Google and is pretty the standard everywhere
+     * https://www.w3.org/TR/NOTE-datetime
+     */
     public static function getFormat()
     {
         return DATE_ATOM;

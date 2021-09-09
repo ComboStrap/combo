@@ -250,7 +250,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 $columns = SqlParser::create($sql)
                     ->parse()
-                    ->getColumns();
+                    ->getColumnIdentifiers();
                 if (sizeof($columns) === 0) {
                     LogUtility::msg("The parsed sql ($sql) contains no columns", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return $returnArray;

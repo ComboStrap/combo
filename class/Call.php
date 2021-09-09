@@ -127,14 +127,14 @@ class Call
      * @param string $content
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '', $payload=null)
+    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '', $payload = null)
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
             PluginUtility::CONTEXT => $context,
             PluginUtility::STATE => $state
         );
-        if($payload!=null){
+        if ($payload != null) {
             $data[PluginUtility::PAYLOAD] = $payload;
         }
         $positionInText = null;
@@ -710,9 +710,10 @@ class Call
         return $this->renderFromData(TemplateUtility::getMetadataDataFromPage($page));
     }
 
-    public function renderFromData(Array $array){
+    public function renderFromData(array $array)
+    {
         $state = $this->getState();
-        if ( $state == DOKU_LEXER_UNMATCHED) {
+        if ($state == DOKU_LEXER_UNMATCHED) {
             if ($this->isPluginCall()) {
                 $payload = $this->getPayload();
                 if (!empty($payload)) {
@@ -723,6 +724,10 @@ class Call
             $tagName = $this->getTagName();
             switch ($tagName) {
                 case "eol":
+                    break;
+                case "cdata":
+                    $payload = $this->getCapturedContent();
+                    $this->setCapturedContent(TemplateUtility::renderStringTemplateFromDataArray($payload, $array));
                     break;
                 case \syntax_plugin_combo_pipeline::TAG:
                     $pageTemplate = PluginUtility::getTagContent($this->getCapturedContent());
@@ -741,6 +746,18 @@ class Call
             }
         }
         return $this;
+    }
+
+    public function setCapturedContent($content)
+    {
+        $tagName = $this->getTagName();
+        switch ($tagName) {
+            case "cdata":
+                $this->call[1][0] = $content;
+                break;
+            default:
+                LogUtility::msg("Setting the captured content on a call for the tag ($tagName) is not yet implemented", LogUtility::LVL_MSG_ERROR);
+        }
     }
 
 

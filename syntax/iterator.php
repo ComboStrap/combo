@@ -295,10 +295,10 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                         $jsonArray = json_decode($analytics, true);
                         $targetRow = [];
                         foreach ($logicalSql->getColumns() as $alias => $expression) {
-                            if(isset($jsonArray["metadata"][$alias])) {
-                                $targetRow[$alias] = $jsonArray["metadata"][$alias];
+                            if(isset($jsonArray["metadata"][$expression])) {
+                                $targetRow[$expression] = $jsonArray["metadata"][$expression];
                             } else {
-                                $targetRow[$alias] = "NotFound";
+                                $targetRow[$expression] = "NotFound";
                             }
                         }
                         $rows[] = $targetRow;

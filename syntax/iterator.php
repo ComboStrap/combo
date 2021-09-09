@@ -3,10 +3,7 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\DokuPath;
-use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\SqlParser;
@@ -20,7 +17,7 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  *
  *
  *
- *
+ * An iterator to iterate over template
  *
  *
  */

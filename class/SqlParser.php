@@ -7,36 +7,74 @@ namespace ComboStrap;
 class SqlParser
 {
 
-    /**
-     * We are in the columns definition
-     * after the select
-     */
-    const IDENTIFIER_START_STATE = "identifier_start_state";
-    const START_STATE = "start";
-    const STATE_IN_QUOTE = "in_quote";
 
-    const WHERE_START_STATE = "where_start_state";
-    private $sql;
-    private $cols = [];
     /**
      * The state of FSM
      * @var string
      */
     private $state;
-    private $predicates = [];
 
     /**
-     * The word is the where the splitting happen
-     * (ie by space)
+     * The FSM state value while we
+     * are going through the statement
+     */
+    const START_STATE = "start_state";
+    const STATE_COLUMN_IDENTIFIER = "column_identifier_state";
+    const STATE_IN_QUOTE = "in_quote_state";
+    const STATE_ORDER_BY = "order_by_state";
+    const STATE_PREDICATE = "where_state";
+    const STATE_LIMIT = "limit_state";
+
+    /**
+     * The SQL word
+     */
+    const SELECT_WORD = "select";
+    const WHERE_WORD = "where";
+    const AND_WORD = "and";
+    const OR_WORD = "or";
+    const ORDER_WORD = "order";
+    const LIMIT_WORD = "limit";
+    const SQL_WORDS = [
+        self::SELECT_WORD,
+        self::WHERE_WORD,
+        self::AND_WORD,
+        self::OR_WORD,
+        self::LIMIT_WORD
+    ];
+
+
+    /**
+     * @var string the sql given
+     */
+    private $sql;
+
+
+    /**
+     * The word (ie separated by space)
      */
     private $word;
-
     /**
-     * The token is a serie of word
-     * For instance, for a identifier (column)
+     * The token is a series of word that represents a higher
+     * sequence of text than the word
+     *
+     * For instance:
+     *   * a identifier (column) (separated by ,)
      * `column as alias`
+     *   * a predicate (separated `by` or and `and`)
+     * `column = alias`
+     *   * a sort expression (separated by `,` in an `order by` sequence)
+     * `column asc`
      */
     private $token;
+
+    /**
+     * The results cols parsed
+     * @var array
+     */
+    private $cols = [];
+    private $predicates = [];
+
+
     /**
      * Character index
      * @var int
@@ -55,6 +93,15 @@ class SqlParser
      * @var false|string
      */
     private $openingQuoteCharacter;
+    /**
+     * The order by tokens
+     * @var array
+     */
+    private $orderBys = [];
+    /**
+     * @var string - the limit clause
+     */
+    private $limit;
 
 
     /**
@@ -75,48 +122,94 @@ class SqlParser
 
         $sql = trim($this->sql);
 
-
         $this->state = self::START_STATE;
-        for ($i = 0; $i < mb_strlen($sql); $i++) {
+        $i = -1;
+        $sqlLength = mb_strlen($sql);
+        while ($i < $sqlLength - 1) {
+            $i++;
             $char = mb_substr($sql, $i, 1);
             $this->parsedCharacterInfoForLog = "$char - $i";
             switch ($char) {
                 case ',':
-                    if ($this->state != self::STATE_IN_QUOTE) {
-                        if ($this->state == self::IDENTIFIER_START_STATE) {
+
+                    switch ($this->state) {
+
+                        case self::STATE_IN_QUOTE:
+                            $this->token .= $char;
+                            break;
+                        case  self::STATE_COLUMN_IDENTIFIER:
                             $this->processColumnToken();
-                        } else {
+                            break;
+                        case  self::STATE_ORDER_BY:
+                            $this->processOrderByToken();
+                            break;
+                        default:
                             $this->triggerBadState();
-                        }
-                    } else {
-                        $this->token .= $char;
+                            break;
                     }
+
                     break;
                 case ' ':
                     // End word
-                    switch (strtolower($this->word)) {
-                        case "select":
+                    $normalizedWord = strtolower($this->word);
+
+                    /**
+                     * In Quote Sql Operator ?
+                     */
+                    if (
+                        $this->state == self::STATE_IN_QUOTE &&
+                        in_array($normalizedWord, self::SQL_WORDS)
+                    ) {
+                        $this->word .= $char;
+                        continue 2;
+                    }
+
+                    /**
+                     * Sql Operator
+                     */
+                    switch ($normalizedWord) {
+                        case self::SELECT_WORD:
                             if ($this->state !== self::START_STATE) {
                                 LogUtility::msg("A sql should start with the key word `select` not with the word ($this->word)", LogUtility::LVL_MSG_ERROR);
                                 return $this;
                             }
-                            $this->state = self::IDENTIFIER_START_STATE;
+                            $this->state = self::STATE_COLUMN_IDENTIFIER;
                             $this->getFinalizedToken();
                             break;
-                        case "where":
-                            if ($this->state !== self::IDENTIFIER_START_STATE) {
+                        case self::WHERE_WORD:
+                            if ($this->state !== self::STATE_COLUMN_IDENTIFIER) {
                                 LogUtility::msg("The where key word should be located after a select", LogUtility::LVL_MSG_ERROR);
                                 return $this;
                             }
                             // Delete the where
                             $this->word = "";
                             $this->processColumnToken();
-                            $this->state = self::WHERE_START_STATE;
+                            $this->state = self::STATE_PREDICATE;
                             break;
-                        case "and":
-                        case "or":
+                        case self::LIMIT_WORD:
+
+                            // Delete the limit word
+                            $this->word = "";
+                            switch($this->state){
+                                case self::STATE_COLUMN_IDENTIFIER:
+                                    $this->processColumnToken();
+                                    break;
+                                case self::STATE_PREDICATE:
+                                    $this->processPredicateToken();
+                                    break;
+                                case self::STATE_ORDER_BY:
+                                    $this->processOrderByToken();
+                                    break;
+                                default:
+                                    LogUtility::msg("The limit key word should not be found at this place on this state ($this->state)", LogUtility::LVL_MSG_ERROR);
+                                    return $this;
+                            }
+                            $this->state = self::STATE_LIMIT;
+                            break;
+                        case self::AND_WORD:
+                        case self::OR_WORD:
                             if (
-                                $this->state !== self::WHERE_START_STATE
+                                $this->state !== self::STATE_PREDICATE
                                 && $this->state != self::STATE_IN_QUOTE
                             ) {
                                 LogUtility::msg("The logical `or` and `and` operator should be after the where clause", LogUtility::LVL_MSG_ERROR);
@@ -126,12 +219,43 @@ class SqlParser
                             $this->word = "";
                             $this->processPredicateToken();
                             break;
-                        default:
-                            if ($this->state !== self::STATE_IN_QUOTE) {
-                                $this->token .= $this->word . $char;
-                                $this->word = "";
+                        case self::ORDER_WORD:
+                            // Do we have a `by` ?
+                            $j = $i;
+                            $nextWord = "";
+                            $nonEmptyCharactersFound = false;
+                            while ($j < $sqlLength - 1) {
+                                $j++;
+                                $charAfterOrder = mb_substr($sql, $j, 1);
+                                if ($charAfterOrder !== " ") {
+                                    $nonEmptyCharactersFound = true;
+                                    $nextWord .= $charAfterOrder;
+                                } else {
+                                    if ($nonEmptyCharactersFound) {
+                                        break;
+                                    }
+                                }
+                            }
+                            if ($nextWord === "by") {
+                                $this->state = self::STATE_ORDER_BY;
+
+                                // Process the token
+                                $this->word = ""; // delete the order
+                                $this->processPredicateToken();
+
+                                // Advance the pointer
+                                $i = $j;
+
                             } else {
                                 $this->word .= $char;
+                            }
+                            break;
+                        default:
+                            if ($this->state === self::STATE_IN_QUOTE) {
+                                $this->word .= $char;
+                            } else {
+                                $this->token .= $this->word . $char;
+                                $this->word = "";
                             }
                     }
                     break;
@@ -152,7 +276,7 @@ class SqlParser
                          * '"hallo  where foo = 'bar '
                          * will pass because of the `'` quotation
                          */
-                        if($this->openingQuoteCharacter === $char) {
+                        if ($this->openingQuoteCharacter === $char) {
                             $this->openingQuoteCharacter = "";
                             $this->state = $this->previousState;
                         }
@@ -169,11 +293,17 @@ class SqlParser
         }
         if (!empty($this->word) || !empty($this->token)) {
             switch ($this->state) {
-                case self::IDENTIFIER_START_STATE:
+                case self::STATE_COLUMN_IDENTIFIER:
                     $this->processColumnToken();
                     break;
-                case self::WHERE_START_STATE:
+                case self::STATE_PREDICATE:
                     $this->processPredicateToken();
+                    break;
+                case self::STATE_ORDER_BY:
+                    $this->processOrderByToken();
+                    break;
+                case self::STATE_LIMIT:
+                    $this->processLimitToken();
                     break;
                 case self::STATE_IN_QUOTE:
                     LogUtility::msg("A quote is missing. Unable to find a closing quote ($this->openingQuoteCharacter) in ($this->word)", LogUtility::LVL_MSG_ERROR);
@@ -209,6 +339,13 @@ class SqlParser
 
     }
 
+    private function processOrderByToken()
+    {
+        $token = $this->getFinalizedToken();
+        $this->orderBys[] = $token;
+
+    }
+
     private function getFinalizedToken()
     {
         $token = $this->token . $this->word;
@@ -222,9 +359,22 @@ class SqlParser
         return $this->predicates;
     }
 
+    public function getOrderBys()
+    {
+        return $this->orderBys;
+
+    }
+
+    private function processLimitToken()
+    {
+        $token = $this->getFinalizedToken();
+        $this->limit = $token;
+    }
+
+    public function getLimit()
+    {
+        return $this->limit;
+    }
+
 }
 
-class SqlColumn
-{
-
-}

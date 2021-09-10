@@ -65,7 +65,8 @@ class TagAttributes
         SvgImageLink::CANONICAL,
         RasterImageLink::CANONICAL,
         \syntax_plugin_combo_link::TAG, // link button for instance
-        \syntax_plugin_combo_button::TAG
+        \syntax_plugin_combo_button::TAG,
+        \syntax_plugin_combo_heading::TAG
     ];
     const SCRIPT_KEY = "script";
     const TRANSFORM = "transform";

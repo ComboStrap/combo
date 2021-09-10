@@ -167,32 +167,22 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_ENTER:
 
-                $attributes = PluginUtility::getTagAttributes($match);
-                $tag = new Tag(self::TAG, $attributes, $state, $handler);
-
-                $parentTag = $tag->getParent();
-                if ($parentTag == null) {
-                    $context = self::TAG;
-                } else {
-                    $context = $parentTag->getName();
-                }
-
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
 
                 $this->cardCounter++;
                 $id = $this->cardCounter;
 
                 /** A card without context */
-                PluginUtility::addClass2Attributes("card", $attributes);
+                $tagAttributes->addClassName("card");
 
 
-                if (!in_array("id", $attributes)) {
-                    $attributes["id"] = self::TAG . $id;
+                if (!$tagAttributes->hasAttribute("id")) {
+                    $tagAttributes->addComponentAttributeValue("id", self::TAG . $id);
                 }
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $context,
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
                     PluginUtility::POSITION => $pos
                 );
 
@@ -214,8 +204,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 // Processing
                 $callStack->moveToEnd();
                 $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                // Gather the context for the data returned
-                $context = $openingCall->getContext();
                 // First child image ?
                 $firstOpeningChild = $callStack->moveToFirstChildTag();
                 if ($firstOpeningChild !== false) {
@@ -289,7 +277,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::CONTEXT => $context,
                     PluginUtility::POSITION => $endPosition
                 );
 
@@ -343,7 +330,9 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
 
                     $context = $data[PluginUtility::CONTEXT];
-                    syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns($renderer, $context);
+                    if($context===syntax_plugin_combo_masonry::TAG) {
+                        syntax_plugin_combo_masonry::addColIfBootstrap5AndCardColumns($renderer, $context);
+                    }
 
                     /**
                      * Illustrations
@@ -383,11 +372,13 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     $renderer->doc .= "</div>" . DOKU_LF;
 
                     /**
-                     * End Massonry column if any
-                     * {@link syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns()}
+                     * End Masonry column if any
+                     * {@link syntax_plugin_combo_masonry::addColIfBootstrap5AndCardColumns()}
                      */
                     $context = $data[PluginUtility::CONTEXT];
-                    syntax_plugin_combo_cardcolumns::endColIfBootstrap5AnCardColumns($renderer, $context);
+                    if ($context === syntax_plugin_combo_masonry::TAG) {
+                        syntax_plugin_combo_masonry::endColIfBootstrap5AnCardColumns($renderer, $context);
+                    }
 
 
                     break;

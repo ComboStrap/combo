@@ -5,6 +5,7 @@
  */
 
 use ComboStrap\Bootstrap;
+use ComboStrap\CallStack;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) {
@@ -21,27 +22,27 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * ie:
  *    syntax_plugin_PluginName_ComponentName
  */
-class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_masonry extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * The Tag constant should be the exact same last name of the class
      * This is how we recognize a tag in the {@link \ComboStrap\CallStack}
      */
-    const TAG = "cardcolumns";
+    const TAG = "masonry";
 
     /**
      * The syntax tags
      */
-    const SYNTAX_TAG_COLUMNS = "card-columns";
-    const SYNTAX_TAG_TEASER = 'teaser-columns';
+    const OLD_SYNTAX_TAG_COLUMNS = "card-columns";
+    const OLD_SYNTAX_TAG_TEASER = 'teaser-columns';
 
     /**
      * Same as commercial
      * https://isotope.metafizzy.co/
      *
      */
-    const MASONRY = "masonry";
+    const MASONRY_SCRIPT_ID = "masonry";
 
     /**
      * @param $renderer
@@ -52,14 +53,14 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
      * {@link syntax_plugin_combo_blockquote}
      * https://getbootstrap.com/docs/5.0/examples/masonry/
      *
-     * The column is open with the function {@link syntax_plugin_combo_cardcolumns::endColIfBootstrap5AndCardColumns()}
+     * The column is open with the function {@link syntax_plugin_combo_masonry::endColIfBootstrap5AndCardColumns()}
      *
      * TODO: do it programmatically by adding call with {@link \ComboStrap\CallStack}
      */
     public static function addColIfBootstrap5AndCardColumns(&$renderer, $context)
     {
         $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-        if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_cardcolumns::TAG) {
+        if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion && $context == syntax_plugin_combo_masonry::TAG) {
             $renderer->doc .= '<div class="col-sm-6 col-lg-4 mb-4">';
         }
     }
@@ -70,24 +71,21 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
      * We close it as seen here:
      * https://getbootstrap.com/docs/5.0/examples/masonry/
      *
-     * The column is open with the function {@link syntax_plugin_combo_cardcolumns::addColIfBootstrap5AndCardColumns()}
+     * The column is open with the function {@link syntax_plugin_combo_masonry::addColIfBootstrap5AndCardColumns()}
      * @param Doku_Renderer $renderer
      * @param $context
      */
     public static function endColIfBootstrap5AnCardColumns(Doku_Renderer $renderer, $context)
     {
 
-        if ($context == syntax_plugin_combo_cardcolumns::TAG) {
-            /**
-             * Bootstrap five does not include masonry
-             * directly, we need to add a column
-             * and we close it here
-             */
-            $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
-            if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
-                $renderer->doc .= '</div>';
-            }
-
+        /**
+         * Bootstrap five does not include masonry
+         * directly, we need to add a column
+         * and we close it here
+         */
+        $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
+        if ($bootstrapVersion == Bootstrap::BootStrapFiveMajorVersion) {
+            $renderer->doc .= '</div>';
         }
 
     }
@@ -208,6 +206,20 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
+                /**
+                 * When the masonry is used in an iterator, the direct
+                 * context is lost
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                while ($actualCall = $callStack->next()) {
+                    if (
+                        in_array($actualCall->getTagName(), [syntax_plugin_combo_card::TAG, syntax_plugin_combo_blockquote::TAG])
+                        && in_array($actualCall->getState(), [DOKU_LEXER_ENTER, DOKU_LEXER_EXIT])
+                    ) {
+                        $actualCall->setContext(self::TAG);
+                    }
+                }
                 return array(PluginUtility::STATE => $state);
 
 
@@ -245,7 +257,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                             // https://masonry.desandro.com/layout.html#responsive-layouts
                             // https://masonry.desandro.com/extras.html#bootstrap
                             // https://masonry.desandro.com/#initialize-with-vanilla-javascript
-                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::MASONRY,
+                            PluginUtility::getSnippetManager()->upsertTagsForBar(self::MASONRY_SCRIPT_ID,
                                 array(
                                     "script" => [
                                         array(
@@ -257,8 +269,8 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
                                     ]
                                 )
                             );
-                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::MASONRY);
-                            $masonryClass = self::MASONRY;
+                            PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar(self::MASONRY_SCRIPT_ID);
+                            $masonryClass = self::MASONRY_SCRIPT_ID;
                             $renderer->doc .= "<div class=\"row $masonryClass\">";
                             break;
                         default:
@@ -285,8 +297,7 @@ class syntax_plugin_combo_cardcolumns extends DokuWiki_Syntax_Plugin
     public
     static function getSyntaxTags()
     {
-
-        return array(self::SYNTAX_TAG_COLUMNS, self::SYNTAX_TAG_TEASER);
+        return array(self::TAG, self::OLD_SYNTAX_TAG_COLUMNS, self::OLD_SYNTAX_TAG_TEASER);
     }
 
 

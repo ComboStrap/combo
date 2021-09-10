@@ -4,6 +4,7 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\SqlLogical;
@@ -222,10 +223,11 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  * The returned array
                  * in case there is a problem early
                  */
-                $returnArray = array(
+                $handleReturnArray = array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
                 );
+
 
                 /**
                  * Remove all callstack from the opening tag
@@ -238,12 +240,10 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 if ($dataInstructions === null) {
                     LogUtility::msg("The iterator needs a data definition", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $returnArray;
+                    return $handleReturnArray;
                 }
 
                 $sql = $dataInstructions[0]->getCapturedContent();
-
-
 
 
                 /**
@@ -252,7 +252,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 $sqlite = Sqlite::getSqlite();
                 if ($sqlite === null) {
                     LogUtility::msg("iterator needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $returnArray;
+                    return $handleReturnArray;
                 }
 
                 /**
@@ -273,37 +273,28 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 $logicalSql = SqlLogical::create($sql);
                 if ($isJsonEnabled) {
-                    $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_JSON);
-                    $res = $sqlite->query($executableSql);
-                    if (!$res) {
-                        LogUtility::msg("An exception has occurred with the sql ($executableSql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return $returnArray;
-                    }
-                    $rows = $sqlite->res2arr($res);
-                    $sqlite->res_close($res);
-                } else {
-                    $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_NO_JSON);
-                    $res = $sqlite->query($executableSql);
-                    if (!$res) {
-                        LogUtility::msg("An exception has occurred with the sql ($executableSql).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return $returnArray;
-                    }
-                    $res2arr = $sqlite->res2arr($res);
-                    $rows = [];
-                    foreach ($res2arr as $sourceRow) {
-                        $analytics = $sourceRow["ANALYTICS"];
-                        $jsonArray = json_decode($analytics, true);
-                        $targetRow = [];
-                        foreach ($logicalSql->getColumns() as $alias => $expression) {
-                            if(isset($jsonArray["metadata"][$expression])) {
-                                $targetRow[$expression] = $jsonArray["metadata"][$expression];
-                            } else {
-                                $targetRow[$expression] = "NotFound";
-                            }
+                    try {
+                        $rows = $this->getRowsFromSqliteWithJsonSupport($logicalSql, $sqlite);
+                    } catch (Exception $e) {
+                        LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                        LogUtility::msg("Trying to get the rows without Json Support", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                        try {
+                            $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
+                        } catch (Exception $e) {
+                            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            return $handleReturnArray;
                         }
-                        $rows[] = $targetRow;
+                        LogUtility::msg("Succeeded", LogUtility::LVL_MSG_INFO, self::CANONICAL);
                     }
-                    $sqlite->res_close($res);
+                } else {
+
+                    try {
+                        $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
+                    } catch (Exception $e) {
+                        LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return $handleReturnArray;
+                    }
+
                 }
 
 
@@ -317,7 +308,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
 
                 }
 
-                return $returnArray;
+                return $handleReturnArray;
 
 
         }
@@ -339,6 +330,70 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     {
         // unsupported $mode
         return false;
+    }
+
+
+    /**
+     * @param SqlLogical $logicalSql
+     * @param $sqlite
+     * @return array
+     * @throws RuntimeException when the query is not good
+     */
+    private function getRowsFromSqliteWithoutJsonSupport(SqlLogical $logicalSql, $sqlite)
+    {
+        $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_NO_JSON);
+        $res = $sqlite->query($executableSql);
+        if (!$res) {
+            throw new \RuntimeException("The sql statement returns an error. Sql statement: $executableSql");
+        }
+        $res2arr = $sqlite->res2arr($res);
+        $rows = [];
+        foreach ($res2arr as $sourceRow) {
+            $analytics = $sourceRow["ANALYTICS"];
+            $jsonArray = json_decode($analytics, true);
+            $targetRow = [];
+            foreach ($logicalSql->getColumns() as $alias => $expression) {
+
+
+                $value = $jsonArray["metadata"][$expression];
+                if (isset($value)) {
+
+                    /**
+                     * Image asked ?
+                     * If this is an image, we try to select the page
+                     * with the same asked ratio
+                     */
+                    if($expression === Page::IMAGE_META_PROPERTY){
+
+                    } else {
+                        $targetRow[$expression] = $value;
+                    }
+                } else {
+                    $targetRow[$expression] = "NotFound";
+                }
+            }
+            $rows[] = $targetRow;
+        }
+        $sqlite->res_close($res);
+        return $rows;
+    }
+
+    /**
+     * @param SqlLogical $logicalSql
+     * @param helper_plugin_sqlite $sqlite
+     * @return array
+     * @throws RuntimeException when the sql is invalid
+     */
+    private function getRowsFromSqliteWithJsonSupport(SqlLogical $logicalSql, helper_plugin_sqlite $sqlite)
+    {
+        $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_JSON);
+        $res = $sqlite->query($executableSql);
+        if (!$res) {
+            throw new RuntimeException("The json sql statement returns an error. Sql Statement: $executableSql.");
+        }
+        $rows = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        return $rows;
     }
 
 

@@ -29,6 +29,12 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * The name of the class must follow a pattern (don't change it)
  * ie:
  *    syntax_plugin_PluginName_ComponentName
+ *
+ * Horizontal Card
+ * https://getbootstrap.com/docs/4.3/components/card/#horizontal
+ *
+ * https://material.io/components/cards
+ * [[https://getbootstrap.com/docs/5.0/components/card/|Bootstrap card]]
  */
 class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 {

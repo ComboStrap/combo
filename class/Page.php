@@ -191,6 +191,15 @@ class Page extends DokuPath
 
     }
 
+    /**
+     * @return Page - the requested page
+     */
+    public static function createPageFromRequestedPage()
+    {
+        $mainPageId = FsWikiUtility::getMainPageId();
+        return self::createPageFromId($mainPageId);
+    }
+
 
     /**
      * @var string the logical id is used with slots.

@@ -9,6 +9,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\SqlLogical;
 use ComboStrap\SqlParser;
+use ComboStrap\StringUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
 
@@ -272,6 +273,11 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                     LogUtility::msg("A template could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return $handleReturnArray;
                 }
+                if (sizeof($templateInstructions) !== 1) {
+                    LogUtility::msg("The template node needs should not be empty", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return $handleReturnArray;
+                }
+                $template = syntax_plugin_combo_template::getCapturedTemplateContent($templateInstructions[0]);
 
 
                 /**
@@ -345,12 +351,14 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 if (sizeof($rows) > 0) {
                     $callStack->appendInstructionsFromCallObjects($beforeInstructions);
+                    $marki = "";
                     foreach ($rows as $row) {
 
-                        $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateInstructions, $row);
-                        $callStack->appendInstructionsFromNativeArray($instructionsInstance);
+                        $marki .= TemplateUtility::renderStringTemplateFromDataArray($template, $row);
 
                     }
+                    $instructions = PluginUtility::getInstructions($marki);
+                    $callStack->appendInstructionsFromNativeArray($instructions);
                     $callStack->appendInstructionsFromCallObjects($afterInstructions);
                 }
 

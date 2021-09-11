@@ -86,6 +86,7 @@ class Call
         \syntax_plugin_combo_inote::TAG,
         \syntax_plugin_combo_button::TAG,
         \syntax_plugin_combo_tooltip::TAG,
+        \syntax_plugin_combo_pipeline::TAG,
     );
 
 
@@ -167,6 +168,11 @@ class Call
             $positionInText
         ];
         return new Call($call);
+    }
+
+    public static function createFromInstruction($instruction)
+    {
+        return new Call($instruction);
     }
 
 

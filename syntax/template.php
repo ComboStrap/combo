@@ -1,12 +1,30 @@
 <?php
 
 
+use ComboStrap\Call;
+use ComboStrap\CallStack;
+use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\TemplateUtility;
 
 
 /**
  *
  * Template
+ *
+ * A template capture the string
+ * and does not let the parser create the instructions.
+ *
+ * Why ?
+ * Because when you create a list with an {@link syntax_plugin_combo_iterator}
+ * A single list item such as
+ * `
+ *   * list
+ * `
+ * would be parsed as a complete list
+ *
+ * We create then the markup and we parse it.
  *
  */
 class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
@@ -14,6 +32,30 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
 
     const TAG = "template";
+
+
+    /**
+     * The template context
+     * To known if the template is inside a template generator
+     * or not
+     */
+    const STANDALONE_CONTEXT = "standalone";
+    const ITERATOR_CONTEXT = "iterator";
+    const CANONICAL = "template";
+
+    /**
+     * @param Call $call
+     */
+    public static function getCapturedTemplateContent($call)
+    {
+        $content = $call->getCapturedContent();
+        if (!empty($content)) {
+            if ($content[0] === DOKU_LF) {
+                $content = substr($content, 1);
+            }
+        }
+        return $content;
+    }
 
 
     /**
@@ -25,7 +67,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'block';
+        return 'protected';
     }
 
     /**
@@ -40,7 +82,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'normal';
+        return 'block';
     }
 
     /**
@@ -54,17 +96,19 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+
+        /**
+         * A template capture the string
+         * and does not let the parser create the instructions.
+         *
+         * See {@link syntax_plugin_combo_template template} documentation for more
+         */
+        return array();
     }
 
     function getSort()
     {
         return 201;
-    }
-
-    public function accepts($mode)
-    {
-        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
 
@@ -107,6 +151,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         switch ($state) {
 
             case DOKU_LEXER_ENTER :
+
                 $attributes = PluginUtility::getTagAttributes($match);
                 return array(
                     PluginUtility::STATE => $state,
@@ -121,10 +166,52 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
+                $callStack = CallStack::createFromHandler($handler);
 
-                return array(
-                    PluginUtility::STATE => $state,
+
+                /**
+                 * The context
+                 */
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                $context = self::STANDALONE_CONTEXT;
+                while ($parent = $callStack->moveToParent()) {
+                    if ($parent->getTagName() === syntax_plugin_combo_iterator::TAG) {
+                        $context = self::ITERATOR_CONTEXT;
+                    }
+                }
+
+                /**
+                 * The array returned if any error
+                 */
+                $returnedArray = array(
+                    PluginUtility::STATE => $state
                 );
+
+                if ($context === self::STANDALONE_CONTEXT) {
+
+                    /**
+                     * Gather template string
+                     */
+                    $callStack->moveToEnd();;
+                    $unmatchedCall = $callStack->previous();
+                    $content = "";
+                    if ($unmatchedCall->getState() === DOKU_LEXER_UNMATCHED) {
+                        $content = self::getCapturedTemplateContent($unmatchedCall);
+                    }
+
+                    if (empty($content)) {
+                        LogUtility::msg("The content of a template is empty", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                        return $returnedArray;
+                    }
+
+                    $page = Page::createPageFromRequestedPage();
+                    $metadata = $page->getMetadataStandard();
+                    $marki = TemplateUtility::renderStringTemplateFromDataArray($content, $metadata);
+                    $instructions = p_get_instructions($marki);
+                    $callStack->appendInstructionsFromNativeArray($instructions);
+
+                }
+                return $returnedArray;
 
 
         }
@@ -145,8 +232,10 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
 
-        // unsupported $mode
+        // template is not rendering
+        // it captures content that is used to create instructions
         return false;
+
     }
 
 

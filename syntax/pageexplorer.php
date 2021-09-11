@@ -460,7 +460,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                             /**
                              * Content
                              */
-                            $callStack->appendInstructions(TemplateUtility::renderInstructionsTemplateFromDataPage($templateHomeInstructions, $currentHomePagePath));
+                            $callStack->appendInstructionsFromNativeArray(TemplateUtility::renderInstructionsTemplateFromDataPage($templateHomeInstructions, $currentHomePagePath));
                             /**
                              * End home tag
                              */
@@ -540,7 +540,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                              * Content
                              */
                             $parentInstructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataPage($parentInstructions, $parentPagePath);
-                            $callStack->appendInstructions($parentInstructionsInstance);
+                            $callStack->appendInstructionsFromNativeArray($parentInstructionsInstance);
                             /**
                              * End parent tag
                              */
@@ -631,7 +631,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                          * SubNamespace Content
                                          */
                                         $namespaceInstructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataPage($templateNamespaceInstructions, $subNamespacePagePath);
-                                        $callStack->appendInstructions($namespaceInstructionsInstance);
+                                        $callStack->appendInstructionsFromNativeArray($namespaceInstructionsInstance);
                                         /**
                                          * SubNamespace Exit tag
                                          */
@@ -662,7 +662,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                                          * Page Content
                                          */
                                         $pageInstructions = TemplateUtility::renderInstructionsTemplateFromDataPage($templatePageInstructions, $pageOrNamespacePath);
-                                        $callStack->appendInstructions($pageInstructions);
+                                        $callStack->appendInstructionsFromNativeArray($pageInstructions);
                                         /**
                                          * Page Exit tag
                                          */
@@ -925,7 +925,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     TagAttributes::WIKI_ID => $childDirectoryId
                 ])
             );
-            $callStack->appendInstructions($actualNamespaceInstructions);
+            $callStack->appendInstructionsFromNativeArray($actualNamespaceInstructions);
             $callStack->appendCallAtTheEnd(
                 Call::createComboCall($pageExplorerTreeButtonTag, DOKU_LEXER_EXIT)
             );
@@ -988,7 +988,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         $callStack->appendCallAtTheEnd(
             Call::createComboCall($leafTag, DOKU_LEXER_ENTER)
         );
-        $callStack->appendInstructions($actualPageInstructions);
+        $callStack->appendInstructionsFromNativeArray($actualPageInstructions);
         $callStack->appendCallAtTheEnd(
             Call::createComboCall($leafTag, DOKU_LEXER_EXIT)
         );

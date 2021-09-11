@@ -168,12 +168,26 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 $dataInstructions = null;
                 $dataAttributes = null;
+
                 /**
-                 * @var Call[] $bodyInstructions
-                 * @var array $bodyAttributes
+                 * @var Call[] $beforeInstructions
+                 * @var array $afterInstructions
                  */
-                $bodyInstructions = null;
                 $bodyAttributes = null;
+
+                /**
+                 * @var Call[] $beforeInstructions
+                 * @var Call[] $afterInstructions
+                 */
+                $beforeInstructions = [];
+                $afterInstructions = [];
+
+                /**
+                 * @var Call[] $templateInstructions
+                 * @var array $templateAttributes
+                 */
+                $templateInstructions = null;
+                $templateAttributes = null;
 
                 /**
                  * @var Call[] $actualInstructionsStack
@@ -193,6 +207,11 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                     $bodyAttributes = $actualCall->getAttributes();
                                     $actualInstructionsStack = [];
                                     continue 3;
+                                case syntax_plugin_combo_template::TAG:
+                                    $beforeInstructions = $actualInstructionsStack;
+                                    $actualInstructionsStack = [];
+                                    $templateAttributes = $actualCall->getAttributes();
+                                    continue 3;
                                 default:
                                     $actualInstructionsStack[] = $actualCall;
                                     continue 3;
@@ -203,8 +222,12 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                                     $dataInstructions = $actualInstructionsStack;
                                     $actualInstructionsStack = [];
                                     continue 3;
+                                case syntax_plugin_combo_template::TAG:
+                                    $templateInstructions = $actualInstructionsStack;
+                                    $actualInstructionsStack = [];
+                                    continue 3;
                                 case syntax_plugin_combo_iteratorbody::TAG:
-                                    $bodyInstructions = $actualInstructionsStack;
+                                    $afterInstructions = $actualInstructionsStack;
                                     $actualInstructionsStack = [];
                                     continue 3;
                                 default:
@@ -234,15 +257,34 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 $callStack->deleteAllCallsAfter($openingTag);
 
-
                 /**
-                 * Processing
+                 * The template should not be empty
                  */
-                if ($dataInstructions === null) {
-                    LogUtility::msg("The iterator needs a data definition", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                if ($bodyAttributes === null) {
+                    LogUtility::msg("A body node could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return $handleReturnArray;
                 }
 
+                /**
+                 * The template should not be empty
+                 */
+                if ($templateInstructions === null) {
+                    LogUtility::msg("A template could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return $handleReturnArray;
+                }
+
+
+                /**
+                 * Data Processing
+                 */
+                if ($dataInstructions === null) {
+                    LogUtility::msg("A data node could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return $handleReturnArray;
+                }
+                if (sizeof($dataInstructions) !== 1) {
+                    LogUtility::msg("The data node definition needs a logical sql content", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return $handleReturnArray;
+                }
                 $sql = $dataInstructions[0]->getCapturedContent();
 
 
@@ -251,7 +293,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                  */
                 $sqlite = Sqlite::getSqlite();
                 if ($sqlite === null) {
-                    LogUtility::msg("iterator needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::msg("The iterator component needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return $handleReturnArray;
                 }
 
@@ -301,11 +343,15 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 /**
                  * Loop
                  */
-                foreach ($rows as $row) {
+                if (sizeof($rows) > 0) {
+                    $callStack->appendInstructionsFromCallObjects($beforeInstructions);
+                    foreach ($rows as $row) {
 
-                    $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($bodyInstructions, $row);
-                    $callStack->appendInstructions($instructionsInstance);
+                        $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateInstructions, $row);
+                        $callStack->appendInstructionsFromNativeArray($instructionsInstance);
 
+                    }
+                    $callStack->appendInstructionsFromCallObjects($afterInstructions);
                 }
 
                 return $handleReturnArray;
@@ -363,7 +409,7 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                      * If this is an image, we try to select the page
                      * with the same asked ratio
                      */
-                    if($expression === Page::IMAGE_META_PROPERTY){
+                    if ($expression === Page::IMAGE_META_PROPERTY) {
 
                     } else {
                         $targetRow[$expression] = $value;

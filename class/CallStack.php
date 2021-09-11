@@ -751,9 +751,9 @@ class CallStack
 
     /**
      * Append instructions to the callstack (ie at the end)
-     * @param $instructions
+     * @param array $instructions
      */
-    public function appendInstructions($instructions)
+    public function appendInstructionsFromNativeArray($instructions)
     {
         array_splice($this->callStack, count($this->callStack), 0, $instructions);
     }
@@ -831,6 +831,17 @@ class CallStack
             array_splice($this->callStack, $offset + 1);
         } else {
             LogUtility::msg("The call ($call) could not be found in the callStack. We couldn't therefore delete the calls after");
+        }
+
+    }
+
+    /**
+     * @param Call[] $calls
+     */
+    public function appendInstructionsFromCallObjects($calls)
+    {
+        foreach($calls as $call){
+            $this->appendCallAtTheEnd($call);
         }
 
     }

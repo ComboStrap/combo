@@ -678,6 +678,8 @@ class CallStack
 
     /**
      * @return Call|false the parent call or false if there is no parent
+     * If you are on an {@link DOKU_LEXER_EXIT} state, you should
+     * call first the {@link CallStack::moveToPreviousCorrespondingOpeningCall()}
      */
     public function moveToParent()
     {

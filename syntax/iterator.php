@@ -1,27 +1,42 @@
 <?php
 
 
-use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\Sqlite;
 use ComboStrap\SqlLogical;
-use ComboStrap\SqlParser;
-use ComboStrap\StringUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\TemplateUtility;
 
 require_once(__DIR__ . '/../class/PluginUtility.php');
 
 
 /**
  *
+ * An iterator to iterate over templates.
  *
+ * *******************
+ * Iteration driver
+ * *******************
+ * The end tag of the template node is driving the iteration.
+ * This way, the tags just after the template
+ * sees them in the {@link CallStack} and can change their context
  *
- * An iterator to iterate over template
+ * For instance, a {@link syntax_plugin_combo_masonry}
+ * component will change the context of all card inside it.
  *
+ * ********************
+ * Header and footer delimitation
+ * ********************
+ * The iterator delimits also the header and footer.
+ * Some component needs the header to be generate completely.
+ * This is the case of a complex markup such as a table
+ *
+ * ******************************
+ * Delete if no data
+ * ******************************
+ * It gives also the possibility to {@link syntax_plugin_combo_iterator::EMPTY_ROWS_COUNT_ATTRIBUTE
+ * delete the whole block}
+ * (header and footer also) if there is no data
  *
  */
 class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
@@ -37,6 +52,15 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
      * Page canonical and tag pattern
      */
     const CANONICAL = "iterator";
+
+    /**
+     * An attribute that is set back
+     * by the {@link DOKU_LEXER_EXIT} state in {@link syntax_plugin_combo_template::handle()}
+     * in order to delete the whole iterator content (ie header, footer)
+     * at the {@link DOKU_LEXER_EXIT} state of {@link syntax_plugin_combo_iterator::handle()}
+     * if there is no rows to iterate
+     */
+    const EMPTY_ROWS_COUNT_ATTRIBUTE = "emptyRowCount";
 
 
     /**
@@ -83,11 +107,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     function getSort()
     {
         return 201;
-    }
-
-    public function accepts($mode)
-    {
-        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
 
@@ -144,226 +163,10 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
                 // We should not ever come here but a user does not not known that
                 return PluginUtility::handleAndReturnUnmatchedData(self::TAG, $match, $handler);
 
-            case DOKU_LEXER_MATCHED :
-
-                return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => PluginUtility::getTagAttributes($match),
-                    PluginUtility::PAYLOAD => PluginUtility::getTagContent($match),
-                    PluginUtility::TAG => PluginUtility::getTag($match)
-                );
 
             case DOKU_LEXER_EXIT :
 
-                $callStack = CallStack::createFromHandler($handler);
-
-                /**
-                 * Capture the instructions for
-                 * {@link syntax_plugin_combo_iteratordata}
-                 * {@link syntax_plugin_combo_iteratorbody}
-                 */
-                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
-                /**
-                 * @var Call[] $dataInstructions
-                 * @var array $dataAttributes
-                 */
-                $dataInstructions = null;
-                $dataAttributes = null;
-
-                /**
-                 * @var Call[] $beforeInstructions
-                 * @var array $afterInstructions
-                 */
-                $bodyAttributes = null;
-
-                /**
-                 * @var Call[] $beforeInstructions
-                 * @var Call[] $afterInstructions
-                 */
-                $beforeInstructions = [];
-                $afterInstructions = [];
-
-                /**
-                 * @var Call[] $templateInstructions
-                 * @var array $templateAttributes
-                 */
-                $templateInstructions = null;
-                $templateAttributes = null;
-
-                /**
-                 * @var Call[] $actualInstructionsStack
-                 */
-                $actualInstructionsStack = [];
-                while ($callStack->next()) {
-                    $actualCall = $callStack->getActualCall();
-                    $tagName = $actualCall->getTagName();
-                    switch ($actualCall->getState()) {
-                        case DOKU_LEXER_ENTER:
-                            switch ($tagName) {
-                                case syntax_plugin_combo_iteratordata::TAG:
-                                    $actualInstructionsStack = [];
-                                    $dataAttributes = $actualCall->getAttributes();
-                                    continue 3;
-                                case syntax_plugin_combo_iteratorbody::TAG:
-                                    $bodyAttributes = $actualCall->getAttributes();
-                                    $actualInstructionsStack = [];
-                                    continue 3;
-                                case syntax_plugin_combo_template::TAG:
-                                    $beforeInstructions = $actualInstructionsStack;
-                                    $actualInstructionsStack = [];
-                                    $templateAttributes = $actualCall->getAttributes();
-                                    continue 3;
-                                default:
-                                    $actualInstructionsStack[] = $actualCall;
-                                    continue 3;
-                            }
-                        case DOKU_LEXER_EXIT:
-                            switch ($tagName) {
-                                case syntax_plugin_combo_iteratordata::TAG:
-                                    $dataInstructions = $actualInstructionsStack;
-                                    $actualInstructionsStack = [];
-                                    continue 3;
-                                case syntax_plugin_combo_template::TAG:
-                                    $templateInstructions = $actualInstructionsStack;
-                                    $actualInstructionsStack = [];
-                                    continue 3;
-                                case syntax_plugin_combo_iteratorbody::TAG:
-                                    $afterInstructions = $actualInstructionsStack;
-                                    $actualInstructionsStack = [];
-                                    continue 3;
-                                default:
-                                    $actualInstructionsStack[] = $actualCall;
-                                    continue 3;
-
-                            }
-                        default:
-                            $actualInstructionsStack[] = $actualCall;
-                            break;
-
-                    }
-                }
-
-                /**
-                 * The returned array
-                 * in case there is a problem early
-                 */
-                $handleReturnArray = array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $openingTag->getAttributes()
-                );
-
-
-                /**
-                 * Remove all callstack from the opening tag
-                 */
-                $callStack->deleteAllCallsAfter($openingTag);
-
-                /**
-                 * The template should not be empty
-                 */
-                if ($bodyAttributes === null) {
-                    LogUtility::msg("A body node could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $handleReturnArray;
-                }
-
-                /**
-                 * The template should not be empty
-                 */
-                if ($templateInstructions === null) {
-                    LogUtility::msg("A template could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $handleReturnArray;
-                }
-                if (sizeof($templateInstructions) !== 1) {
-                    LogUtility::msg("The template node needs should not be empty", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $handleReturnArray;
-                }
-                $template = syntax_plugin_combo_template::getCapturedTemplateContent($templateInstructions[0]);
-
-
-                /**
-                 * Data Processing
-                 */
-                if ($dataInstructions === null) {
-                    LogUtility::msg("A data node could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $handleReturnArray;
-                }
-                if (sizeof($dataInstructions) !== 1) {
-                    LogUtility::msg("The data node definition needs a logical sql content", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $handleReturnArray;
-                }
-                $sql = $dataInstructions[0]->getCapturedContent();
-
-
-                /**
-                 * Sqlite available ?
-                 */
-                $sqlite = Sqlite::getSqlite();
-                if ($sqlite === null) {
-                    LogUtility::msg("The iterator component needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return $handleReturnArray;
-                }
-
-                /**
-                 * Json support
-                 */
-                $res = $sqlite->query("PRAGMA compile_options");
-                $isJsonEnabled = false;
-                foreach ($sqlite->res2arr($res) as $row) {
-                    if ($row["compile_option"] === "ENABLE_JSON1") {
-                        $isJsonEnabled = true;
-                        break;
-                    }
-                };
-                $sqlite->res_close($res);
-
-                /**
-                 * Create the SQL
-                 */
-                $logicalSql = SqlLogical::create($sql);
-                if ($isJsonEnabled) {
-                    try {
-                        $rows = $this->getRowsFromSqliteWithJsonSupport($logicalSql, $sqlite);
-                    } catch (Exception $e) {
-                        LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-                        LogUtility::msg("Trying to get the rows without Json Support", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                        try {
-                            $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
-                        } catch (Exception $e) {
-                            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            return $handleReturnArray;
-                        }
-                        LogUtility::msg("Succeeded", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                    }
-                } else {
-
-                    try {
-                        $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
-                    } catch (Exception $e) {
-                        LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        return $handleReturnArray;
-                    }
-
-                }
-
-
-                /**
-                 * Loop
-                 */
-                if (sizeof($rows) > 0) {
-                    $callStack->appendInstructionsFromCallObjects($beforeInstructions);
-                    $marki = "";
-                    foreach ($rows as $row) {
-
-                        $marki .= TemplateUtility::renderStringTemplateFromDataArray($template, $row);
-
-                    }
-                    $instructions = PluginUtility::getInstructions($marki);
-                    $callStack->appendInstructionsFromNativeArray($instructions);
-                    $callStack->appendInstructionsFromCallObjects($afterInstructions);
-                }
-
-                return $handleReturnArray;
-
+                return array(PluginUtility::STATE => $state);
 
         }
         return array();
@@ -387,68 +190,8 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     }
 
 
-    /**
-     * @param SqlLogical $logicalSql
-     * @param $sqlite
-     * @return array
-     * @throws RuntimeException when the query is not good
-     */
-    private function getRowsFromSqliteWithoutJsonSupport(SqlLogical $logicalSql, $sqlite)
-    {
-        $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_NO_JSON);
-        $res = $sqlite->query($executableSql);
-        if (!$res) {
-            throw new \RuntimeException("The sql statement returns an error. Sql statement: $executableSql");
-        }
-        $res2arr = $sqlite->res2arr($res);
-        $rows = [];
-        foreach ($res2arr as $sourceRow) {
-            $analytics = $sourceRow["ANALYTICS"];
-            $jsonArray = json_decode($analytics, true);
-            $targetRow = [];
-            foreach ($logicalSql->getColumns() as $alias => $expression) {
 
 
-                $value = $jsonArray["metadata"][$expression];
-                if (isset($value)) {
-
-                    /**
-                     * Image asked ?
-                     * If this is an image, we try to select the page
-                     * with the same asked ratio
-                     */
-                    if ($expression === Page::IMAGE_META_PROPERTY) {
-
-                    } else {
-                        $targetRow[$expression] = $value;
-                    }
-                } else {
-                    $targetRow[$expression] = "NotFound";
-                }
-            }
-            $rows[] = $targetRow;
-        }
-        $sqlite->res_close($res);
-        return $rows;
-    }
-
-    /**
-     * @param SqlLogical $logicalSql
-     * @param helper_plugin_sqlite $sqlite
-     * @return array
-     * @throws RuntimeException when the sql is invalid
-     */
-    private function getRowsFromSqliteWithJsonSupport(SqlLogical $logicalSql, helper_plugin_sqlite $sqlite)
-    {
-        $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_JSON);
-        $res = $sqlite->query($executableSql);
-        if (!$res) {
-            throw new RuntimeException("The json sql statement returns an error. Sql Statement: $executableSql.");
-        }
-        $rows = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        return $rows;
-    }
 
 
 }

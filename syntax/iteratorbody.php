@@ -6,6 +6,10 @@ use ComboStrap\PluginUtility;
 
 /**
  *
+ * The body is enclosing the header and footer of the template
+ *
+ *
+ *
  * This syntax is not a classic syntax plugin
  * The instructions are captured at the {@link DOKU_LEXER_END}
  * state of {@link syntax_plugin_combo_iterator::handle()}

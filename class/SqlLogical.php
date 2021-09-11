@@ -93,4 +93,11 @@ class SqlLogical
     {
         return $this->sqlParser->getColumnIdentifiers();
     }
+
+    public function __toString()
+    {
+        return $this->logicalSql;
+    }
+
+
 }

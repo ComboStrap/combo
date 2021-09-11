@@ -6,6 +6,8 @@ use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\Sqlite;
+use ComboStrap\SqlLogical;
 use ComboStrap\TemplateUtility;
 
 
@@ -53,6 +55,11 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
             if ($content[0] === DOKU_LF) {
                 $content = substr($content, 1);
             }
+            /**
+             * To allow the template to be indented
+             * without triggering a {@link syntax_plugin_combo_preformatted}
+             */
+            $content = rtrim($content, " ");
         }
         return $content;
     }
@@ -67,7 +74,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
      */
     function getType()
     {
-        return 'protected';
+        return 'formatting';
     }
 
     /**
@@ -82,7 +89,10 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
      */
     function getPType()
     {
-        return 'block';
+        /**
+         * No P please
+         */
+        return 'normal';
     }
 
     /**
@@ -97,13 +107,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     function getAllowedTypes()
     {
 
-        /**
-         * A template capture the string
-         * and does not let the parser create the instructions.
-         *
-         * See {@link syntax_plugin_combo_template template} documentation for more
-         */
-        return array();
+        return array('baseonly','container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
     function getSort()
@@ -168,17 +172,16 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
                 $callStack = CallStack::createFromHandler($handler);
 
-
                 /**
-                 * The context
+                 * Iterator node parent ?
                  */
+                $iteratorNode = null;
                 $callStack->moveToPreviousCorrespondingOpeningCall();
-                $context = self::STANDALONE_CONTEXT;
-                while ($parent = $callStack->moveToParent()) {
-                    if ($parent->getTagName() === syntax_plugin_combo_iterator::TAG) {
-                        $context = self::ITERATOR_CONTEXT;
-                    }
+                $parent = $callStack->moveToParent();
+                if ($parent->getTagName() === syntax_plugin_combo_iterator::TAG) {
+                    $iteratorNode = $parent;
                 }
+
 
                 /**
                  * The array returned if any error
@@ -187,28 +190,202 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state
                 );
 
-                if ($context === self::STANDALONE_CONTEXT) {
+                if ($iteratorNode === null) {
 
                     /**
                      * Gather template string
                      */
-                    $callStack->moveToEnd();;
-                    $unmatchedCall = $callStack->previous();
-                    $content = "";
-                    if ($unmatchedCall->getState() === DOKU_LEXER_UNMATCHED) {
-                        $content = self::getCapturedTemplateContent($unmatchedCall);
+                    $callStack->moveToEnd();
+                    $templateEnterCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                    $templateStack = [];
+                    while ($actualCall = $callStack->next()) {
+                        $templateStack[] = $actualCall;
                     }
+                    $callStack->deleteAllCallsAfter($templateEnterCall);
 
-                    if (empty($content)) {
-                        LogUtility::msg("The content of a template is empty", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                    /**
+                     * Template
+                     */
+                    $page = Page::createPageFromRequestedPage();
+                    $metadata = $page->getMetadataStandard();
+                    $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $metadata);
+                    $callStack->appendInstructionsFromNativeArray($instructionsInstance);
+
+
+                } else {
+
+                    /**
+                     * Scanning the callstack and extracting the information
+                     * such as sql and template instructions
+                     */
+                    $logicalSql = null;
+                    /**
+                     * @var Call[]
+                     */
+                    $headerStack = [];
+                    /**
+                     * @var Call[]
+                     */
+                    $actualStack = [];
+                    $complexMarkupFound = false;
+                    while ($actualCall = $callStack->next()) {
+                        switch ($actualCall->getTagName()) {
+                            case syntax_plugin_combo_iteratordata::TAG:
+                                if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
+                                    $logicalSql = $actualCall->getCapturedContent();
+                                }
+                                continue 2;
+                            case self::TAG:
+                                if ($actualCall->getState() === DOKU_LEXER_ENTER) {
+                                    $headerStack = $actualStack;
+                                    $actualStack = [];
+                                } else {
+                                    $actualStack[] = $actualCall;
+                                }
+                                continue 2;
+                            default:
+                                $actualStack[] = $actualCall;
+                                /**
+                                 * Do we have markup where the instructions should be generated at once
+                                 * and not line by line
+                                 *
+                                 * ie a list or a table
+                                 */
+                                if (in_array($actualCall->getComponentName(), Call::BLOCK_MARKUP_DOKUWIKI_COMPONENTS)) {
+                                    $complexMarkupFound = true;
+                                }
+
+                        }
+                    }
+                    $templateStack = $actualStack;
+
+
+                    /**
+                     * Data Processing
+                     */
+                    if ($logicalSql === null) {
+                        LogUtility::msg("A data node could not be found in the iterator", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return $returnedArray;
+                    }
+                    if (empty($logicalSql)) {
+                        LogUtility::msg("The data node definition needs a logical sql content", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return $returnedArray;
                     }
 
-                    $page = Page::createPageFromRequestedPage();
-                    $metadata = $page->getMetadataStandard();
-                    $marki = TemplateUtility::renderStringTemplateFromDataArray($content, $metadata);
-                    $instructions = p_get_instructions($marki);
-                    $callStack->appendInstructionsFromNativeArray($instructions);
+                    /**
+                     * Sqlite available ?
+                     */
+                    $sqlite = Sqlite::getSqlite();
+                    if ($sqlite === null) {
+                        LogUtility::msg("The iterator component needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return $returnedArray;
+                    }
+
+                    /**
+                     * Json support
+                     */
+                    $res = $sqlite->query("PRAGMA compile_options");
+                    $isJsonEnabled = false;
+                    foreach ($sqlite->res2arr($res) as $row) {
+                        if ($row["compile_option"] === "ENABLE_JSON1") {
+                            $isJsonEnabled = true;
+                            break;
+                        }
+                    };
+                    $sqlite->res_close($res);
+
+                    /**
+                     * Create the SQL
+                     */
+                    $logicalSql = SqlLogical::create($logicalSql);
+                    if ($isJsonEnabled) {
+                        try {
+                            $rows = $this->getRowsFromSqliteWithJsonSupport($logicalSql, $sqlite);
+                        } catch (Exception $e) {
+                            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                            LogUtility::msg("Trying to get the rows without Json Support", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                            try {
+                                $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
+                            } catch (Exception $e) {
+                                LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                                return $returnedArray;
+                            }
+                            LogUtility::msg("Succeeded", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                        }
+                    } else {
+
+                        try {
+                            $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
+                        } catch (Exception $e) {
+                            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                            return $returnedArray;
+                        }
+
+                    }
+
+
+                    /**
+                     * Loop
+                     */
+                    if (sizeof($rows) == 0) {
+                        $parent->addAttribute(syntax_plugin_combo_iterator::EMPTY_ROWS_COUNT_ATTRIBUTE, true);
+                        LogUtility::msg("The logical query ($logicalSql) does not return any data", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_iterator::CANONICAL);
+                        return $returnedArray;
+                    }
+
+                    /**
+                     * Markup rendering
+                     */
+                    if ($complexMarkupFound) {
+                        /**
+                         * @var Call $call
+                         */
+                        $headerMarkup = "";
+                        foreach ($headerStack as $call) {
+                            $headerMarkup .= $call->getCapturedContent();
+                        }
+                        $templateMarkup = "";
+                        foreach ($templateStack as $call) {
+                            if($call->getComponentName()==="listitem_open"){
+                                $templateMarkup = "  * ";
+                            }
+                            $templateMarkup .= $call->getCapturedContent();
+                        }
+                        $marki = $headerMarkup;
+                        foreach ($rows as $row) {
+                            $marki .= TemplateUtility::renderStringTemplateFromDataArray($templateMarkup, $row);
+                        }
+                        $instructions = p_get_instructions($marki);
+
+                        // Delete the calls
+                        $callStack->deleteAllCallsAfter($parent);
+
+                        // Add the new ones
+                        $callStack->appendInstructionsFromNativeArray($instructions);
+
+                    } else {
+
+                        /**
+                         * No Complex Markup
+                         * We can use the calls form
+                         */
+
+                        /**
+                         * Delete the template
+                         */
+                        $callStack->moveToEnd();
+                        $templateEnterCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                        $callStack->deleteAllCallsAfter($templateEnterCall);
+
+                        /**
+                         * Append the new instructions by row
+                         */
+                        foreach ($rows as $row) {
+                            $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $row);
+                            $callStack->appendInstructionsFromNativeArray($instructionsInstance);
+                        }
+
+                    }
 
                 }
                 return $returnedArray;
@@ -236,6 +413,69 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         // it captures content that is used to create instructions
         return false;
 
+    }
+
+    /**
+     * @param SqlLogical $logicalSql
+     * @param helper_plugin_sqlite $sqlite
+     * @return array
+     * @throws RuntimeException when the sql is invalid
+     */
+    private function getRowsFromSqliteWithJsonSupport(SqlLogical $logicalSql, helper_plugin_sqlite $sqlite)
+    {
+        $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_JSON);
+        $res = $sqlite->query($executableSql);
+        if (!$res) {
+            throw new RuntimeException("The json sql statement returns an error. Sql Statement: $executableSql.");
+        }
+        $rows = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        return $rows;
+    }
+
+    /**
+     * @param SqlLogical $logicalSql
+     * @param $sqlite
+     * @return array
+     * @throws RuntimeException when the query is not good
+     */
+    private function getRowsFromSqliteWithoutJsonSupport(SqlLogical $logicalSql, $sqlite)
+    {
+        $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_NO_JSON);
+        $res = $sqlite->query($executableSql);
+        if (!$res) {
+            throw new \RuntimeException("The sql statement returns an error. Sql statement: $executableSql");
+        }
+        $res2arr = $sqlite->res2arr($res);
+        $rows = [];
+        foreach ($res2arr as $sourceRow) {
+            $analytics = $sourceRow["ANALYTICS"];
+            $jsonArray = json_decode($analytics, true);
+            $targetRow = [];
+            foreach ($logicalSql->getColumns() as $alias => $expression) {
+
+
+                $value = $jsonArray["metadata"][$expression];
+                if (isset($value)) {
+
+                    /**
+                     * Image asked ?
+                     * If this is an image, we try to select the page
+                     * with the same asked ratio
+                     */
+                    if ($expression === Page::IMAGE_META_PROPERTY) {
+
+                    } else {
+                        $targetRow[$expression] = $value;
+                    }
+                } else {
+                    $targetRow[$expression] = "NotFound";
+                }
+            }
+            $rows[] = $targetRow;
+        }
+        $sqlite->res_close($res);
+        return $rows;
     }
 
 

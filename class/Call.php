@@ -90,7 +90,7 @@ class Call
     );
 
 
-    const BLOCK_DOKUWIKI_COMPONENTS = array(
+    const BLOCK_MARKUP_DOKUWIKI_COMPONENTS = array(
         "listu_open", // ul
         "listu_close",
         "listitem_open", //li
@@ -410,7 +410,7 @@ class Call
                     return Call::INLINE_DISPLAY;
                 }
 
-                if (in_array($mode, self::BLOCK_DOKUWIKI_COMPONENTS)) {
+                if (in_array($mode, self::BLOCK_MARKUP_DOKUWIKI_COMPONENTS)) {
                     return Call::BlOCK_DISPLAY;
                 }
 

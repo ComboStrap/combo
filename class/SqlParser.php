@@ -6,6 +6,17 @@ namespace ComboStrap;
 
 class SqlParser
 {
+    const TOKEN = "token";
+    const OPERATOR = "operator";
+
+    /**
+     * Type of token
+     */
+    const TOKEN_TYPE_PREDICATE = "predicate";
+    const TOKEN_TYPE_LOGICAL_OPERATOR = "logicalOperator";
+    const TOKEN_TYPE_IDENTIFIER = "identifier";
+    const TOKEN_TYPE_ORDER_BY = "orderBy";
+    const TOKEN_TYPE_LIMIT = "limit";
 
 
     /**
@@ -67,13 +78,6 @@ class SqlParser
      */
     private $token;
 
-    /**
-     * The results cols parsed
-     * @var array
-     */
-    private $cols = [];
-    private $predicates = [];
-
 
     /**
      * Character index
@@ -93,15 +97,13 @@ class SqlParser
      * @var false|string
      */
     private $openingQuoteCharacter;
+
     /**
-     * The order by tokens
-     * @var array
+     * All the tokens in the same sequence
+     * that found in the sql
+     * @var SqlToken[]
      */
-    private $orderBys = [];
-    /**
-     * @var string - the limit clause
-     */
-    private $limit;
+    private $tokens;
 
 
     /**
@@ -330,14 +332,14 @@ class SqlParser
 
     public function getColumnIdentifiers()
     {
-        return $this->cols;
+        return $this->getTokensFromType(self::TOKEN_TYPE_IDENTIFIER);
     }
 
 
     private function processColumnToken()
     {
         $token = $this->getFinalizedToken();
-        $this->cols[] = $token;
+        $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_IDENTIFIER, $token);
     }
 
     private function triggerBadState()
@@ -348,14 +350,17 @@ class SqlParser
     private function processPredicateToken($logicalOperator = "")
     {
         $token = $this->getFinalizedToken();
-        $this->predicates[$logicalOperator] = $token;
+        $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_PREDICATE, $token);
+        if (!empty($logicalOperator)) {
+            $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_LOGICAL_OPERATOR, $token);
+        }
 
     }
 
     private function processOrderByToken()
     {
         $token = $this->getFinalizedToken();
-        $this->orderBys[] = $token;
+        $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_ORDER_BY, $token);
 
     }
 
@@ -369,25 +374,47 @@ class SqlParser
 
     public function getPredicates()
     {
-        return $this->predicates;
+        return $this->getTokensFromType(self::TOKEN_TYPE_PREDICATE);
     }
 
     public function getOrderBys()
     {
-        return $this->orderBys;
+        return $this->getTokensFromType(self::TOKEN_TYPE_ORDER_BY);
 
     }
 
     private function processLimitToken()
     {
         $token = $this->getFinalizedToken();
-        $this->limit = $token;
+        $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_LIMIT, $token);
     }
 
     public function getLimit()
     {
-        return $this->limit;
+        return $this->getTokensFromType(self::TOKEN_TYPE_LIMIT);
+    }
+
+    private function getTokensFromType($type)
+    {
+        /**
+         * Filter and set the key back to 0,1,2,...
+         */
+        $tokens = array_values(array_filter(
+            $this->tokens,
+            function ($a) use ($type) {
+                return $a->getType() === $type;
+            }
+        ));
+
+        return array_map(
+            function ($a) {
+                return $a->getTokenString();
+            },
+            $tokens
+        );
     }
 
 }
+
+
 

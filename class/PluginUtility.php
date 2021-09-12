@@ -13,78 +13,79 @@ use dokuwiki\Extension\SyntaxPlugin;
  * all classes are added in plugin utility
  *
  * This is an utility master and the class loader
+ *
+ * If the load is relative, the load path is used
+ * and the bad php file may be loaded
+ * Furthermore, the absolute path helps
+ * the IDE when refactoring
  */
-require_once('Align.php');
-require_once('Animation.php');
-require_once('ArrayCaseInsensitive.php');
-require_once('ArrayUtility.php');
-require_once('Background.php');
-require_once('Boldness.php');
-/**
- * There is already a bootstrap file
- * and it seems that php is loosing
- * its mind on it and will then not load it.
- * we give the qualified path to boostrap then
- */
+require_once(__DIR__ . '/Align.php');
+require_once(__DIR__ . '/Animation.php');
+require_once(__DIR__ . '/ArrayCaseInsensitive.php');
+require_once(__DIR__ . '/ArrayUtility.php');
+require_once(__DIR__ . '/Background.php');
+require_once(__DIR__ . '/Boldness.php');
+
 require_once(__DIR__ . '/Bootstrap.php');
-require_once('BreadcrumbHierarchical.php');
-require_once('CacheByLogicalKey.php');
-require_once('CacheInstructionsByLogicalKey.php');
-require_once('CacheManager.php');
-require_once('CacheMedia.php');
-require_once('Call.php');
-require_once('CallStack.php');
-require_once('ColorUtility.php');
-require_once('ConditionalValue.php');
-require_once('Iso8601Date.php');
-require_once('DokuPath.php');
-require_once('DokuwikiUrl.php');
-require_once('Dimension.php');
-require_once('FloatAttribute.php');
-require_once('FsWikiUtility.php');
-require_once('File.php');
-require_once('FontSize.php');
-require_once('HistoricalBreadcrumbMenuItem.php');
-require_once('Hover.php');
-require_once('Http.php');
-require_once('Icon.php');
-require_once('Identity.php');
-require_once('MediaLink.php');
-require_once('Lang.php');
-require_once('LineSpacing.php');
-require_once('LogUtility.php');
-require_once('LowQualityPage.php');
-require_once('Opacity.php');
-require_once('Page.php');
-require_once('PipelineUtility.php');
-require_once('Position.php');
-require_once('Prism.php');
-require_once('Publication.php');
-require_once('RasterImageLink.php');
-require_once('RenderUtility.php');
-require_once('Resources.php');
-require_once('Skin.php');
-require_once('Shadow.php');
-require_once('Site.php');
-require_once('SnippetManager.php');
-require_once('Spacing.php');
-require_once('Sqlite.php');
-require_once('SqlLogical.php');
-require_once('SqlParser.php');
-require_once('StringUtility.php');
-require_once('StyleUtility.php');
-require_once('TagAttributes.php');
-require_once('Template.php');
-require_once('TemplateUtility.php');
-require_once('TextAlign.php');
-require_once('TextColor.php');
-require_once('ThirdMediaLink.php');
-require_once('ThirdPartyPlugins.php');
-require_once('Toggle.php');
-require_once('Underline.php');
-require_once('XhtmlUtility.php');
-require_once('XmlDocument.php');
-require_once('XmlUtility.php');
+require_once(__DIR__ . '/BreadcrumbHierarchical.php');
+require_once(__DIR__ . '/CacheByLogicalKey.php');
+require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
+require_once(__DIR__ . '/CacheManager.php');
+require_once(__DIR__ . '/CacheMedia.php');
+require_once(__DIR__ . '/Call.php');
+require_once(__DIR__ . '/CallStack.php');
+require_once(__DIR__ . '/ColorUtility.php');
+require_once(__DIR__ . '/ConditionalValue.php');
+require_once(__DIR__ . '/Iso8601Date.php');
+require_once(__DIR__ . '/DokuPath.php');
+require_once(__DIR__ . '/DokuwikiUrl.php');
+require_once(__DIR__ . '/Dimension.php');
+require_once(__DIR__ . '/FloatAttribute.php');
+require_once(__DIR__ . '/FsWikiUtility.php');
+require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/FontSize.php');
+require_once(__DIR__ . '/HistoricalBreadcrumbMenuItem.php');
+require_once(__DIR__ . '/Hover.php');
+require_once(__DIR__ . '/Http.php');
+require_once(__DIR__ . '/Icon.php');
+require_once(__DIR__ . '/Identity.php');
+require_once(__DIR__ . '/MediaLink.php');
+require_once(__DIR__ . '/Lang.php');
+require_once(__DIR__ . '/LineSpacing.php');
+require_once(__DIR__ . '/LogUtility.php');
+require_once(__DIR__ . '/LowQualityPage.php');
+require_once(__DIR__ . '/Opacity.php');
+require_once(__DIR__ . '/Page.php');
+require_once(__DIR__ . '/PipelineUtility.php');
+require_once(__DIR__ . '/Position.php');
+require_once(__DIR__ . '/Prism.php');
+require_once(__DIR__ . '/Publication.php');
+require_once(__DIR__ . '/RasterImageLink.php');
+require_once(__DIR__ . '/RenderUtility.php');
+require_once(__DIR__ . '/Resources.php');
+require_once(__DIR__ . '/Skin.php');
+require_once(__DIR__ . '/Shadow.php');
+require_once(__DIR__ . '/Site.php');
+require_once(__DIR__ . '/SnippetManager.php');
+require_once(__DIR__ . '/Spacing.php');
+require_once(__DIR__ . '/Sqlite.php');
+require_once(__DIR__ . '/SqlLogical.php');
+require_once(__DIR__ . '/SqlParser.php');
+require_once(__DIR__ . '/SqlToken.php');
+require_once(__DIR__ . '/StringUtility.php');
+require_once(__DIR__ . '/StyleUtility.php');
+require_once(__DIR__ . '/TagAttributes.php');
+require_once(__DIR__ . '/Template.php');
+require_once(__DIR__ . '/TemplateUtility.php');
+require_once(__DIR__ . '/TextAlign.php');
+require_once(__DIR__ . '/TextColor.php');
+require_once(__DIR__ . '/ThirdMediaLink.php');
+require_once(__DIR__ . '/ThirdPartyPlugins.php');
+require_once(__DIR__ . '/Toggle.php');
+require_once(__DIR__ . '/Underline.php');
+require_once(__DIR__ . '/XhtmlUtility.php');
+require_once(__DIR__ . '/XmlDocument.php');
+require_once(__DIR__ . '/XmlUtility.php');
 
 /**
  * Class url static
@@ -852,7 +853,6 @@ class PluginUtility
     }
 
 
-
     /**
      * @param string $string add a command into HTML
      */
@@ -1147,7 +1147,7 @@ class PluginUtility
             $templateVersion = $templateInfo['version'];
             $comboVersion = self::$INFO_PLUGIN['version'];
             if ($templateVersion != $comboVersion) {
-                if($comboVersion>$templateVersion){
+                if ($comboVersion > $templateVersion) {
                     LogUtility::msg("You should upgrade <a href=\"https://www.dokuwiki.org/template:strap\">strap</a> to the latest version to get a fully functional experience. The version of Combo is ($comboVersion) while the version of Strap is ($templateVersion).");
                 } else {
                     LogUtility::msg("You should upgrade <a href=\"https://www.dokuwiki.org/plugin:combo\">combo</a>  to the latest version to get a fully functional experience. The version of Combo is ($comboVersion) while the version of Strap is ($templateVersion).");
@@ -1210,8 +1210,8 @@ class PluginUtility
          * we do then the replace before to not
          * lost a minus '-' separator
          */
-        $string = str_replace(array(':','.'),'',$string);
-        return sectionID($string,$check);
+        $string = str_replace(array(':', '.'), '', $string);
+        return sectionID($string, $check);
     }
 
     public static function isTest()

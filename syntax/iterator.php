@@ -38,6 +38,17 @@ require_once(__DIR__ . '/../class/PluginUtility.php');
  * delete the whole block}
  * (header and footer also) if there is no data
  *
+ * *****************************
+ * Always Contextual
+ * *****************************
+ * We don't capture the text markup such as in a {@link syntax_plugin_combo_code}
+ * in order to loop because you can't pass the actual handler (ie callstack)
+ * when you {@link p_get_instructions() parse again} a markup.
+ *
+ * The markup is then seen as a new single page without any context.
+ * That may lead to problems.
+ * Example: `heading` may then think that they are `outline heading` ...
+ *
  */
 class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
 {
@@ -107,6 +118,11 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
     function getSort()
     {
         return 201;
+    }
+
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
 

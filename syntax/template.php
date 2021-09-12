@@ -107,12 +107,17 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     function getAllowedTypes()
     {
 
-        return array('baseonly','container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
     }
 
     function getSort()
     {
         return 201;
+    }
+
+    public function accepts($mode)
+    {
+        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
     }
 
 
@@ -174,12 +179,16 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
                 /**
                  * Iterator node parent ?
+                 * The iterator is often the grand-parent
+                 * (ie a parent is generally a layout component
+                 * such as masonry, ...)
                  */
                 $iteratorNode = null;
                 $callStack->moveToPreviousCorrespondingOpeningCall();
-                $parent = $callStack->moveToParent();
-                if ($parent->getTagName() === syntax_plugin_combo_iterator::TAG) {
-                    $iteratorNode = $parent;
+                while($parent = $callStack->moveToParent()) {
+                    if ($parent->getTagName() === syntax_plugin_combo_iterator::TAG) {
+                        $iteratorNode = $parent;
+                    }
                 }
 
 
@@ -219,10 +228,6 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                      * such as sql and template instructions
                      */
                     $logicalSql = null;
-                    /**
-                     * @var Call[]
-                     */
-                    $headerStack = [];
                     /**
                      * @var Call[]
                      */
@@ -334,34 +339,71 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     }
 
                     /**
-                     * Markup rendering
+                     * List and table
                      */
                     if ($complexMarkupFound) {
+
                         /**
-                         * @var Call $call
+                         * Splits the template into header, main and footer
+                         * @var Call $actualCall
                          */
-                        $headerMarkup = "";
-                        foreach ($headerStack as $call) {
-                            $headerMarkup .= $call->getCapturedContent();
-                        }
-                        $templateMarkup = "";
-                        foreach ($templateStack as $call) {
-                            if($call->getComponentName()==="listitem_open"){
-                                $templateMarkup = "  * ";
+                        $templateHeader = array();
+                        $templateMain = array();
+                        $actualStack = array();
+                        foreach ($templateStack as $actualCall) {
+                            switch ($actualCall->getComponentName()) {
+                                case "listitem_open":
+                                case "tablerow_open":
+                                    $templateHeader = $actualStack;
+                                    $actualStack = [$actualCall];
+                                    continue 2;
+                                case "listitem_close":
+                                case "tablerow_close":
+                                    $actualStack[]=$actualCall;
+                                    $templateMain=$actualStack;
+                                    $actualStack= [];
+                                    continue 2;
+                                default:
+                                    $actualStack[]=$actualCall;
                             }
-                            $templateMarkup .= $call->getCapturedContent();
                         }
-                        $marki = $headerMarkup;
+                        $templateFooter = $actualStack;
+
+                        /**
+                         * Delete the template calls
+                         */
+                        $callStack->moveToEnd();;
+                        $openingTemplateCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                        $callStack->deleteAllCallsAfter($openingTemplateCall);
+
+                        /**
+                         * Table with an header
+                         * If this is the case, the table_close of the header
+                         * and the table_open of the template should be
+                         * deleted to create one table
+                         */
+                        if(!empty($templateHeader)){
+                            $firstTemplateCall = $templateHeader[0];
+                            if($firstTemplateCall->getComponentName()==="table_open"){
+                                $callStack->moveToEnd();
+                                $callStack->moveToPreviousCorrespondingOpeningCall();
+                                $previousCall = $callStack->previous();
+                                if($previousCall->getComponentName()==="table_close"){
+                                    $callStack->deleteActualCallAndPrevious();
+                                    unset($templateHeader[0]);
+                                }
+                            }
+                        }
+                        /**
+                         * Loop and recreate the call stack
+                         */
+                        $callStack->appendInstructionsFromCallObjects($templateHeader);
                         foreach ($rows as $row) {
-                            $marki .= TemplateUtility::renderStringTemplateFromDataArray($templateMarkup, $row);
+                            $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateMain, $row);
+                            $callStack->appendInstructionsFromNativeArray($instructionsInstance);
                         }
-                        $instructions = p_get_instructions($marki);
+                        $callStack->appendInstructionsFromCallObjects($templateFooter);
 
-                        // Delete the calls
-                        $callStack->deleteAllCallsAfter($parent);
-
-                        // Add the new ones
-                        $callStack->appendInstructionsFromNativeArray($instructions);
 
                     } else {
 

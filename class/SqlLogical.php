@@ -52,18 +52,27 @@ class SqlLogical
             $physicalSql .= "*";
         }
 
-        $physicalSql .= "\nfrom\n\tpages\nwhere\n\tanalytics is not null";
+        $physicalSql .= "\nfrom\n\tpages\n";
 
         /**
          * Predicates
          */
         $predicates = $this->sqlParser->getPredicates();
-        if (sizeof($predicates) > 0) {
-            $physicalSql .= " and";
-            foreach ($predicates as $nextLogicalOperator => $predicate) {
 
-                $physicalSql .= "\n\t$physicalSql";
-                if (!empty($nextLogicalOperator)) {
+        // Special predicates if json
+        if ($databaseTarget === self::SQLITE_JSON) {
+            $predicates["and"] = "analytics is not null";
+        }
+
+
+        $predicateSize = sizeof($predicates);
+        if ($predicateSize > 0) {
+            $physicalSql .= "where";
+            $i = -1;
+            foreach ($predicates as $nextLogicalOperator => $predicate) {
+                $i++;
+                $physicalSql .= "\n\t$predicate";
+                if ($i != $predicateSize - 1) {
                     $physicalSql .= " $nextLogicalOperator";
                 }
 

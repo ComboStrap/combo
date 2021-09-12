@@ -42,7 +42,7 @@ class SqlLogical
 
         if ($databaseTarget === self::SQLITE_JSON) {
             $columnsIdentifier = [];
-            foreach ($this->sqlParser->getColumnIdentifiers() as $columnIdentifier) {
+            foreach ($this->sqlParser->getStringColumnIdentifiers() as $columnIdentifier) {
 
                 $columnsIdentifier[] = "json_extract(analytics, '$.metadata.$columnIdentifier') as $columnIdentifier";
 
@@ -52,37 +52,41 @@ class SqlLogical
             $physicalSql .= "*";
         }
 
-        $physicalSql .= "\nfrom\n\tpages\n";
+        $physicalSql .= "\nfrom\n\tpages";
 
         /**
-         * Predicates
+         * Where tokens
          */
-        $predicates = $this->sqlParser->getPredicates();
+        $parsedWhereTokens = $this->sqlParser->getWhereTokens();
+        $parsedWhereTokenSize = sizeof($parsedWhereTokens);
 
+        $whereTokens = [];
         // Special predicates if json
         if ($databaseTarget === self::SQLITE_JSON) {
-            $predicates["and"] = "analytics is not null";
+            $whereTokens[] = SqlToken::create(SqlParser::TOKEN_TYPE_PREDICATE, "analytics is not null");
+            if ($parsedWhereTokenSize > 0) {
+                $whereTokens[] = SqlToken::create(SqlParser::TOKEN_TYPE_LOGICAL_OPERATOR, "and");
+            }
         }
+        $whereTokens = array_merge($whereTokens, $parsedWhereTokens);
 
 
-        $predicateSize = sizeof($predicates);
-        if ($predicateSize > 0) {
-            $physicalSql .= "where";
-            $i = -1;
-            foreach ($predicates as $nextLogicalOperator => $predicate) {
-                $i++;
-                $physicalSql .= "\n\t$predicate";
-                if ($i != $predicateSize - 1) {
-                    $physicalSql .= " $nextLogicalOperator";
+        if (sizeof($whereTokens) > 0) {
+            $physicalSql .= "\nwhere";
+            foreach ($whereTokens as $whereToken) {
+                if ($whereToken->getType() == SqlParser::TOKEN_TYPE_PREDICATE) {
+                    $physicalSql .= "\n\t";
+                } else {
+                    $physicalSql .= " ";
                 }
-
+                $physicalSql .= $whereToken->getTokenString();
             }
         }
 
         /**
          * Order by
          */
-        $orderBys = $this->sqlParser->getOrderBys();
+        $orderBys = $this->sqlParser->getStringOrderBys();
         if (sizeof($orderBys) > 0) {
             $physicalSql .= "\norder by\n\t" . implode(",\n\t", $orderBys);
         }
@@ -100,7 +104,7 @@ class SqlLogical
 
     public function getColumns()
     {
-        return $this->sqlParser->getColumnIdentifiers();
+        return $this->sqlParser->getStringColumnIdentifiers();
     }
 
     public function __toString()

@@ -330,9 +330,9 @@ class SqlParser
         return $this;
     }
 
-    public function getColumnIdentifiers()
+    public function getStringColumnIdentifiers()
     {
-        return $this->getTokensFromType(self::TOKEN_TYPE_IDENTIFIER);
+        return $this->getStringTokensFromType(self::TOKEN_TYPE_IDENTIFIER);
     }
 
 
@@ -352,7 +352,7 @@ class SqlParser
         $token = $this->getFinalizedToken();
         $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_PREDICATE, $token);
         if (!empty($logicalOperator)) {
-            $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_LOGICAL_OPERATOR, $token);
+            $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_LOGICAL_OPERATOR, $logicalOperator);
         }
 
     }
@@ -374,12 +374,12 @@ class SqlParser
 
     public function getPredicates()
     {
-        return $this->getTokensFromType(self::TOKEN_TYPE_PREDICATE);
+        return $this->getStringTokensFromType(self::TOKEN_TYPE_PREDICATE);
     }
 
-    public function getOrderBys()
+    public function getStringOrderBys()
     {
-        return $this->getTokensFromType(self::TOKEN_TYPE_ORDER_BY);
+        return $this->getStringTokensFromType(self::TOKEN_TYPE_ORDER_BY);
 
     }
 
@@ -391,20 +391,17 @@ class SqlParser
 
     public function getLimit()
     {
-        return $this->getTokensFromType(self::TOKEN_TYPE_LIMIT);
+        $limits =  $this->getStringTokensFromType(self::TOKEN_TYPE_LIMIT);
+        if(sizeof($limits)===1){
+            return $limits[0];
+        } else {
+            return null;
+        }
     }
 
-    private function getTokensFromType($type)
+    private function getStringTokensFromType(...$type)
     {
-        /**
-         * Filter and set the key back to 0,1,2,...
-         */
-        $tokens = array_values(array_filter(
-            $this->tokens,
-            function ($a) use ($type) {
-                return $a->getType() === $type;
-            }
-        ));
+        $tokens = $this->getTokensFromType(...$type);
 
         return array_map(
             function ($a) {
@@ -412,6 +409,27 @@ class SqlParser
             },
             $tokens
         );
+    }
+
+    /**
+     * @return SqlToken[]
+     */
+    public function getWhereTokens()
+    {
+        return $this->getTokensFromType(self::TOKEN_TYPE_PREDICATE, self::TOKEN_TYPE_LOGICAL_OPERATOR);
+    }
+
+    private function getTokensFromType(...$type)
+    {
+        /**
+         * Filter and set the key back to 0,1,2,...
+         */
+        return array_values(array_filter(
+            $this->tokens,
+            function ($a) use ($type) {
+                return in_array($a->getType(), $type);
+            }
+        ));
     }
 
 }

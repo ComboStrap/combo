@@ -136,7 +136,7 @@ class DokuPath extends File
 
             $this->id = DokuPath::absolutePathToId($this->absolutePath);
             $isNamespacePath = false;
-            if (mb_substr($this->absolutePath, -1) == self::PATH_SEPARATOR) {
+            if (\mb_substr($this->absolutePath, -1) == self::PATH_SEPARATOR) {
                 $isNamespacePath = true;
             }
 

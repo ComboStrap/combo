@@ -11,8 +11,8 @@ use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 
-require_once(__DIR__ . '/../class/PluginUtility.php');
-require_once(__DIR__ . '/../class/Icon.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../ComboStrap/Icon.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism

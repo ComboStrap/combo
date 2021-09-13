@@ -18,8 +18,8 @@ use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
 use syntax_plugin_combo_tooltip;
 
-require_once(__DIR__ . '/../../combo/class/' . 'TemplateUtility.php');
-require_once(__DIR__ . '/../../combo/class/' . 'Publication.php');
+require_once(__DIR__ . '/TemplateUtility.php');
+require_once(__DIR__ . '/Publication.php');
 
 /**
  * Class LinkUtility

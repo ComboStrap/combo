@@ -7,8 +7,8 @@ use ComboStrap\Page;
 use ComboStrap\StringUtility;
 use dokuwiki\ChangeLog\PageChangeLog;
 
-require_once(__DIR__ . '/../class/LowQualityPage.php');
-require_once(__DIR__ . '/../class/Analytics.php');
+
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 /**

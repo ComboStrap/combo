@@ -29,7 +29,7 @@ use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 
-require_once(__DIR__ . '/../class/PluginUtility.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 if (!defined('DOKU_INC')) {
     die();

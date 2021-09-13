@@ -3,9 +3,8 @@
 use ComboStrap\CacheManager;
 use ComboStrap\Iso8601Date;
 use ComboStrap\PluginUtility;
-use dokuwiki\Cache\CacheRenderer;
 
-require_once(__DIR__ . '/../class/PluginUtility.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * Can we use the parser cache

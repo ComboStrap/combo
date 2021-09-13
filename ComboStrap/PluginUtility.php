@@ -23,6 +23,8 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  */
 require_once(__DIR__ . '/Align.php');
 require_once(__DIR__ . '/Animation.php');
+require_once(__DIR__ . '/Analytics.php');
+require_once(__DIR__ . '/AnalyticsMenuItem.php');
 require_once(__DIR__ . '/ArrayCaseInsensitive.php');
 require_once(__DIR__ . '/ArrayUtility.php');
 require_once(__DIR__ . '/Background.php');
@@ -55,6 +57,7 @@ require_once(__DIR__ . '/Lang.php');
 require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
+require_once(__DIR__ . '/MetadataUtility.php');
 require_once(__DIR__ . '/Opacity.php');
 require_once(__DIR__ . '/Page.php');
 require_once(__DIR__ . '/PipelineUtility.php');

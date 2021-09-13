@@ -1,7 +1,7 @@
 <?php
 
 
-require_once(__DIR__ . '/../class/CacheMedia.php');
+require_once(__DIR__ . '/../ComboStrap/CacheMedia.php');
 
 use ComboStrap\Dimension;
 use ComboStrap\Identity;

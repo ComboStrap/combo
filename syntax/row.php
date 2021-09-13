@@ -21,7 +21,7 @@ if (!defined('DOKU_INC')) {
     die();
 }
 
-require_once(__DIR__ . '/../class/PluginUtility.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * The {@link https://combostrap.com/row row} of a {@link https://combostrap.com/grid grid}

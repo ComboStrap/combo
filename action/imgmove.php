@@ -7,8 +7,8 @@ use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
-require_once(__DIR__ . '/../class/PluginUtility.php');
-require_once(__DIR__ . '/../class/LinkUtility.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../ComboStrap/LinkUtility.php');
 
 /**
  * Handle the move of a image

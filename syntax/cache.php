@@ -8,7 +8,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
 
-require_once(__DIR__ . '/../class/PluginUtility.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * Load the cron dependency

@@ -15,7 +15,7 @@ use RuntimeException;
 /**
  * Page
  */
-require_once(__DIR__ . '/DokuPath.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  *

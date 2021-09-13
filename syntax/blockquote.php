@@ -19,9 +19,9 @@ if (!defined('DOKU_INC')) {
     die();
 }
 
-require_once(__DIR__ . '/../class/PluginUtility.php');
-require_once(__DIR__ . '/../class/StringUtility.php');
-require_once(__DIR__ . '/../class/Tag.php');
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+require_once(__DIR__ . '/../ComboStrap/StringUtility.php');
+require_once(__DIR__ . '/../ComboStrap/Tag.php');
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism

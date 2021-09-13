@@ -11,12 +11,20 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         array (
             'Cron\\' => 5,
         ),
+        'A' => 
+        array (
+            'Antlr\\Antlr4\\Runtime\\' => 21,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
         'Cron\\' => 
         array (
             0 => __DIR__ . '/..' . '/dragonmantank/cron-expression/src/Cron',
+        ),
+        'Antlr\\Antlr4\\Runtime\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/antlr/antlr4-php-runtime/src',
         ),
     );
 

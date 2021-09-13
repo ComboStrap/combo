@@ -6,11 +6,20 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'ee89d55a2cf46f5447b78afe5e4675f4528335ed',
+    'reference' => 'e00360b6decd41771547ddf57a5535bfc4e32e34',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
   array (
+    'antlr/antlr4-php-runtime' => 
+    array (
+      'pretty_version' => '0.5.0',
+      'version' => '0.5.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '0cb16628b575b50bd087a81d11bd961ac3b8e9e9',
+    ),
     'combostrap/combo' => 
     array (
       'pretty_version' => '1.20.x-dev',
@@ -18,7 +27,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'ee89d55a2cf46f5447b78afe5e4675f4528335ed',
+      'reference' => 'e00360b6decd41771547ddf57a5535bfc4e32e34',
     ),
     'dragonmantank/cron-expression' => 
     array (

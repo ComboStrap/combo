@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Cron\\' => array($vendorDir . '/dragonmantank/cron-expression/src/Cron'),
+    'Antlr\\Antlr4\\Runtime\\' => array($vendorDir . '/antlr/antlr4-php-runtime/src'),
 );

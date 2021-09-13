@@ -20,15 +20,15 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 	final class logicalSqlLexer extends Lexer
 	{
 		public const SCOL = 1, DOT = 2, OPEN_PAR = 3, CLOSE_PAR = 4, COMMA = 5, 
-               ASSIGN = 6, STAR = 7, PLUS = 8, MINUS = 9, TILDE = 10, PIPE2 = 11, 
+               EQUAL = 6, STAR = 7, PLUS = 8, MINUS = 9, TILDE = 10, PIPE2 = 11, 
                DIV = 12, MOD = 13, LT2 = 14, GT2 = 15, AMP = 16, PIPE = 17, 
-               LT = 18, LT_EQ = 19, GT = 20, GT_EQ = 21, EQ = 22, NOT_EQ1 = 23, 
-               NOT_EQ2 = 24, AND_ = 25, AS_ = 26, ASC_ = 27, BETWEEN_ = 28, 
-               BY_ = 29, DESC_ = 30, FALSE_ = 31, FROM_ = 32, GLOB_ = 33, 
-               IN_ = 34, IS_ = 35, ISNULL_ = 36, LIKE_ = 37, LIMIT_ = 38, 
-               NOT_ = 39, NOTNULL_ = 40, NOW_ = 41, NULL_ = 42, OR_ = 43, 
-               ORDER_ = 44, SELECT_ = 45, TRUE_ = 46, WHERE_ = 47, SPACES = 48, 
-               NUMERIC_LITERAL = 49, STRING_LITERAL = 50, IDENTIFIER = 51;
+               LESS_THAN = 18, LESS_THAN_OR_EQUAL = 19, GREATER_THAN = 20, 
+               GREATER_THAN_OR_EQUAL = 21, EQ = 22, NOT_EQUAL = 23, NOT_EQ2 = 24, 
+               AND = 25, AS = 26, ASC = 27, BETWEEN = 28, BY = 29, DESC = 30, 
+               FALSE = 31, FROM = 32, GLOB = 33, IN = 34, IS = 35, ISNULL = 36, 
+               LIKE = 37, LIMIT = 38, NOT = 39, NOTNULL = 40, NOW = 41, 
+               NULL = 42, OR = 43, ORDER = 44, SELECT = 45, TRUE = 46, WHERE = 47, 
+               SPACES = 48, NUMERIC_LITERAL = 49, STRING_LITERAL = 50, IDENTIFIER = 51;
 
 		/**
 		 * @var array<string>
@@ -48,15 +48,15 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		 * @var array<string>
 		 */
 		public const RULE_NAMES = [
-			'SCOL', 'DOT', 'OPEN_PAR', 'CLOSE_PAR', 'COMMA', 'ASSIGN', 'STAR', 'PLUS', 
+			'SCOL', 'DOT', 'OPEN_PAR', 'CLOSE_PAR', 'COMMA', 'EQUAL', 'STAR', 'PLUS', 
 			'MINUS', 'TILDE', 'PIPE2', 'DIV', 'MOD', 'LT2', 'GT2', 'AMP', 'PIPE', 
-			'LT', 'LT_EQ', 'GT', 'GT_EQ', 'EQ', 'NOT_EQ1', 'NOT_EQ2', 'AND_', 'AS_', 
-			'ASC_', 'BETWEEN_', 'BY_', 'DESC_', 'FALSE_', 'FROM_', 'GLOB_', 'IN_', 
-			'IS_', 'ISNULL_', 'LIKE_', 'LIMIT_', 'NOT_', 'NOTNULL_', 'NOW_', 'NULL_', 
-			'OR_', 'ORDER_', 'SELECT_', 'TRUE_', 'WHERE_', 'SPACES', 'NUMERIC_LITERAL', 
-			'STRING_LITERAL', 'IDENTIFIER', 'HEX_DIGIT', 'DIGIT', 'A', 'B', 'C', 
-			'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 
-			'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+			'LESS_THAN', 'LESS_THAN_OR_EQUAL', 'GREATER_THAN', 'GREATER_THAN_OR_EQUAL', 
+			'EQ', 'NOT_EQUAL', 'NOT_EQ2', 'AND', 'AS', 'ASC', 'BETWEEN', 'BY', 'DESC', 
+			'FALSE', 'FROM', 'GLOB', 'IN', 'IS', 'ISNULL', 'LIKE', 'LIMIT', 'NOT', 
+			'NOTNULL', 'NOW', 'NULL', 'OR', 'ORDER', 'SELECT', 'TRUE', 'WHERE', 'SPACES', 
+			'NUMERIC_LITERAL', 'STRING_LITERAL', 'IDENTIFIER', 'HEX_DIGIT', 'DIGIT', 
+			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 
+			'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
 		];
 
 		/**
@@ -72,13 +72,13 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		 * @var array<string>
 		 */
 		private const SYMBOLIC_NAMES = [
-		    null, "SCOL", "DOT", "OPEN_PAR", "CLOSE_PAR", "COMMA", "ASSIGN", "STAR", 
+		    null, "SCOL", "DOT", "OPEN_PAR", "CLOSE_PAR", "COMMA", "EQUAL", "STAR", 
 		    "PLUS", "MINUS", "TILDE", "PIPE2", "DIV", "MOD", "LT2", "GT2", "AMP", 
-		    "PIPE", "LT", "LT_EQ", "GT", "GT_EQ", "EQ", "NOT_EQ1", "NOT_EQ2", 
-		    "AND_", "AS_", "ASC_", "BETWEEN_", "BY_", "DESC_", "FALSE_", "FROM_", 
-		    "GLOB_", "IN_", "IS_", "ISNULL_", "LIKE_", "LIMIT_", "NOT_", "NOTNULL_", 
-		    "NOW_", "NULL_", "OR_", "ORDER_", "SELECT_", "TRUE_", "WHERE_", "SPACES", 
-		    "NUMERIC_LITERAL", "STRING_LITERAL", "IDENTIFIER"
+		    "PIPE", "LESS_THAN", "LESS_THAN_OR_EQUAL", "GREATER_THAN", "GREATER_THAN_OR_EQUAL", 
+		    "EQ", "NOT_EQUAL", "NOT_EQ2", "AND", "AS", "ASC", "BETWEEN", "BY", 
+		    "DESC", "FALSE", "FROM", "GLOB", "IN", "IS", "ISNULL", "LIKE", "LIMIT", 
+		    "NOT", "NOTNULL", "NOW", "NULL", "OR", "ORDER", "SELECT", "TRUE", 
+		    "WHERE", "SPACES", "NUMERIC_LITERAL", "STRING_LITERAL", "IDENTIFIER"
 		];
 
 		/**

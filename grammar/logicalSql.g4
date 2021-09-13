@@ -12,7 +12,7 @@ DOT:       '.';
 OPEN_PAR:  '(';
 CLOSE_PAR: ')';
 COMMA:     ',';
-ASSIGN:    '=';
+EQUAL:    '=';
 STAR:      '*';
 PLUS:      '+';
 MINUS:     '-';
@@ -24,40 +24,40 @@ LT2:       '<<';
 GT2:       '>>';
 AMP:       '&';
 PIPE:      '|';
-LT:        '<';
-LT_EQ:     '<=';
-GT:        '>';
-GT_EQ:     '>=';
+LESS_THAN:        '<';
+LESS_THAN_OR_EQUAL:     '<=';
+GREATER_THAN:        '>';
+GREATER_THAN_OR_EQUAL:     '>=';
 EQ:        '==';
-NOT_EQ1:   '!=';
+NOT_EQUAL:   '!=';
 NOT_EQ2:   '<>';
 
 /**
  * Key word
 */
-AND_:               A N D;
-AS_:                A S;
-ASC_:               A S C;
-BETWEEN_:           B E T W E E N;
-BY_:                B Y;
-DESC_:              D E S C;
-FALSE_:             F A L S E;
-FROM_:              F R O M;
-GLOB_:              G L O B;
-IN_:                I N;
-IS_:                I S;
-ISNULL_:            I S N U L L;
-LIKE_:              L I K E;
-LIMIT_:             L I M I T;
-NOT_:               N O T;
-NOTNULL_:           N O T N U L L;
-NOW_:               N O W;
-NULL_:              N U L L;
-OR_:                O R;
-ORDER_:             O R D E R;
-SELECT_:            S E L E C T;
-TRUE_:              T R U E;
-WHERE_:             W H E R E;
+AND:               A N D;
+AS:                A S;
+ASC:               A S C;
+BETWEEN:           B E T W E E N;
+BY:                B Y;
+DESC:              D E S C;
+FALSE:             F A L S E;
+FROM:              F R O M;
+GLOB:              G L O B;
+IN:                I N;
+IS:                I S;
+ISNULL:            I S N U L L;
+LIKE:              L I K E;
+LIMIT:             L I M I T;
+NOT:               N O T;
+NOTNULL:           N O T N U L L;
+NOW:               N O W;
+NULL:              N U L L;
+OR:                O R;
+ORDER:             O R D E R;
+SELECT:            S E L E C T;
+TRUE:              T R U E;
+WHERE:             W H E R E;
 
 SPACES: [ \u000B\t\r\n] -> channel(HIDDEN);
 
@@ -108,59 +108,49 @@ fragment Z: [zZ];
 
 
 
-result_column: IDENTIFIER (DOT IDENTIFIER)? ( AS_? column_alias)? ;
+result_column: IDENTIFIER (DOT IDENTIFIER)? ( AS? column_alias)? ;
 
 column_alias: IDENTIFIER | STRING_LITERAL;
 
 literal_value:
     NUMERIC_LITERAL
     | STRING_LITERAL
-    | NULL_
-    | TRUE_
-    | FALSE_
-    | NOW_
+    | NULL
+    | TRUE
+    | FALSE
+    | NOW
 ;
 
 predicate_expression: column_name
     (
-        (( LT | LT_EQ | GT | GT_EQ | NOT_EQ1 | ASSIGN) literal_value)
+        (( LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL | NOT_EQUAL | EQUAL) literal_value)
         |
-        (NOT_? (LIKE_|GLOB_| literal_value))
+        (NOT? (LIKE|GLOB| literal_value))
         |
-        (NOT_? BETWEEN_ literal_value AND_ literal_value)
+        (NOT? BETWEEN literal_value AND literal_value)
         |
-        (NOT_? IN_ OPEN_PAR (literal_value ( COMMA literal_value)*)? CLOSE_PAR)
+        (NOT? IN OPEN_PAR (literal_value ( COMMA literal_value)*)? CLOSE_PAR)
     );
 
 
 logicalSql:
-        SELECT_ result_column (COMMA result_column)*
-        (FROM_ table_name )?
-        (WHERE_ predicate_expression ((AND_|OR_) predicate_expression)?)?
+        SELECT result_column (COMMA result_column)*
+        (FROM table_name )?
+        (WHERE predicate_expression ((AND|OR) predicate_expression)?)?
         order_by_stmt?
         limit_stmt?
 ;
 
 table_name: any_name ;
+
 column_name: any_name ;
 
-any_name:
-    IDENTIFIER
-    | STRING_LITERAL
-    | OPEN_PAR any_name CLOSE_PAR
-;
+any_name: IDENTIFIER | STRING_LITERAL | OPEN_PAR any_name CLOSE_PAR;
 
-limit_stmt: LIMIT_ NUMERIC_LITERAL;
+limit_stmt: LIMIT NUMERIC_LITERAL;
 
-order_by_stmt:
-    ORDER_ BY_ ordering_term (COMMA ordering_term)*
-;
+order_by_stmt: ORDER BY ordering_term (COMMA ordering_term)* ;
 
-ordering_term:
-    column_name asc_desc?
-;
+ordering_term: column_name asc_desc? ;
 
-asc_desc:
-    ASC_
-    | DESC_
-;
+asc_desc: ASC | DESC ;

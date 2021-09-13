@@ -24,15 +24,15 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 	final class logicalSqlParser extends Parser
 	{
 		public const SCOL = 1, DOT = 2, OPEN_PAR = 3, CLOSE_PAR = 4, COMMA = 5, 
-               ASSIGN = 6, STAR = 7, PLUS = 8, MINUS = 9, TILDE = 10, PIPE2 = 11, 
+               EQUAL = 6, STAR = 7, PLUS = 8, MINUS = 9, TILDE = 10, PIPE2 = 11, 
                DIV = 12, MOD = 13, LT2 = 14, GT2 = 15, AMP = 16, PIPE = 17, 
-               LT = 18, LT_EQ = 19, GT = 20, GT_EQ = 21, EQ = 22, NOT_EQ1 = 23, 
-               NOT_EQ2 = 24, AND_ = 25, AS_ = 26, ASC_ = 27, BETWEEN_ = 28, 
-               BY_ = 29, DESC_ = 30, FALSE_ = 31, FROM_ = 32, GLOB_ = 33, 
-               IN_ = 34, IS_ = 35, ISNULL_ = 36, LIKE_ = 37, LIMIT_ = 38, 
-               NOT_ = 39, NOTNULL_ = 40, NOW_ = 41, NULL_ = 42, OR_ = 43, 
-               ORDER_ = 44, SELECT_ = 45, TRUE_ = 46, WHERE_ = 47, SPACES = 48, 
-               NUMERIC_LITERAL = 49, STRING_LITERAL = 50, IDENTIFIER = 51;
+               LESS_THAN = 18, LESS_THAN_OR_EQUAL = 19, GREATER_THAN = 20, 
+               GREATER_THAN_OR_EQUAL = 21, EQ = 22, NOT_EQUAL = 23, NOT_EQ2 = 24, 
+               AND = 25, AS = 26, ASC = 27, BETWEEN = 28, BY = 29, DESC = 30, 
+               FALSE = 31, FROM = 32, GLOB = 33, IN = 34, IS = 35, ISNULL = 36, 
+               LIKE = 37, LIMIT = 38, NOT = 39, NOTNULL = 40, NOW = 41, 
+               NULL = 42, OR = 43, ORDER = 44, SELECT = 45, TRUE = 46, WHERE = 47, 
+               SPACES = 48, NUMERIC_LITERAL = 49, STRING_LITERAL = 50, IDENTIFIER = 51;
 
 		public const RULE_result_column = 0, RULE_column_alias = 1, RULE_literal_value = 2, 
                RULE_predicate_expression = 3, RULE_logicalSql = 4, RULE_table_name = 5, 
@@ -61,13 +61,13 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		 * @var array<string>
 		 */
 		private const SYMBOLIC_NAMES = [
-		    null, "SCOL", "DOT", "OPEN_PAR", "CLOSE_PAR", "COMMA", "ASSIGN", "STAR", 
+		    null, "SCOL", "DOT", "OPEN_PAR", "CLOSE_PAR", "COMMA", "EQUAL", "STAR", 
 		    "PLUS", "MINUS", "TILDE", "PIPE2", "DIV", "MOD", "LT2", "GT2", "AMP", 
-		    "PIPE", "LT", "LT_EQ", "GT", "GT_EQ", "EQ", "NOT_EQ1", "NOT_EQ2", 
-		    "AND_", "AS_", "ASC_", "BETWEEN_", "BY_", "DESC_", "FALSE_", "FROM_", 
-		    "GLOB_", "IN_", "IS_", "ISNULL_", "LIKE_", "LIMIT_", "NOT_", "NOTNULL_", 
-		    "NOW_", "NULL_", "OR_", "ORDER_", "SELECT_", "TRUE_", "WHERE_", "SPACES", 
-		    "NUMERIC_LITERAL", "STRING_LITERAL", "IDENTIFIER"
+		    "PIPE", "LESS_THAN", "LESS_THAN_OR_EQUAL", "GREATER_THAN", "GREATER_THAN_OR_EQUAL", 
+		    "EQ", "NOT_EQUAL", "NOT_EQ2", "AND", "AS", "ASC", "BETWEEN", "BY", 
+		    "DESC", "FALSE", "FROM", "GLOB", "IN", "IS", "ISNULL", "LIKE", "LIMIT", 
+		    "NOT", "NOTNULL", "NOW", "NULL", "OR", "ORDER", "SELECT", "TRUE", 
+		    "WHERE", "SPACES", "NUMERIC_LITERAL", "STRING_LITERAL", "IDENTIFIER"
 		];
 
 		/**
@@ -261,14 +261,14 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
-		        if (((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::AS_) | (1 << self::STRING_LITERAL) | (1 << self::IDENTIFIER))) !== 0)) {
+		        if (((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::AS) | (1 << self::STRING_LITERAL) | (1 << self::IDENTIFIER))) !== 0)) {
 		        	$this->setState(30);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
 
-		        	if ($_la === self::AS_) {
+		        	if ($_la === self::AS) {
 		        		$this->setState(29);
-		        		$this->match(self::AS_);
+		        		$this->match(self::AS);
 		        	}
 		        	$this->setState(32);
 		        	$this->column_alias();
@@ -335,7 +335,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		        $_la = $this->input->LA(1);
 
-		        if (!(((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::FALSE_) | (1 << self::NOW_) | (1 << self::NULL_) | (1 << self::TRUE_) | (1 << self::NUMERIC_LITERAL) | (1 << self::STRING_LITERAL))) !== 0))) {
+		        if (!(((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::FALSE) | (1 << self::NOW) | (1 << self::NULL) | (1 << self::TRUE) | (1 << self::NUMERIC_LITERAL) | (1 << self::STRING_LITERAL))) !== 0))) {
 		        $this->errorHandler->recoverInline($this);
 		        } else {
 		        	if ($this->input->LA(1) === Token::EOF) {
@@ -378,7 +378,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		        	    $_la = $this->input->LA(1);
 
-		        	    if (!(((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::ASSIGN) | (1 << self::LT) | (1 << self::LT_EQ) | (1 << self::GT) | (1 << self::GT_EQ) | (1 << self::NOT_EQ1))) !== 0))) {
+		        	    if (!(((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::EQUAL) | (1 << self::LESS_THAN) | (1 << self::LESS_THAN_OR_EQUAL) | (1 << self::GREATER_THAN) | (1 << self::GREATER_THAN_OR_EQUAL) | (1 << self::NOT_EQUAL))) !== 0))) {
 		        	    $this->errorHandler->recoverInline($this);
 		        	    } else {
 		        	    	if ($this->input->LA(1) === Token::EOF) {
@@ -397,28 +397,28 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
-		        	    if ($_la === self::NOT_) {
+		        	    if ($_la === self::NOT) {
 		        	    	$this->setState(42);
-		        	    	$this->match(self::NOT_);
+		        	    	$this->match(self::NOT);
 		        	    }
 		        	    $this->setState(48);
 		        	    $this->errorHandler->sync($this);
 
 		        	    switch ($this->input->LA(1)) {
-		        	        case self::LIKE_:
+		        	        case self::LIKE:
 		        	        	$this->setState(45);
-		        	        	$this->match(self::LIKE_);
+		        	        	$this->match(self::LIKE);
 		        	        	break;
 
-		        	        case self::GLOB_:
+		        	        case self::GLOB:
 		        	        	$this->setState(46);
-		        	        	$this->match(self::GLOB_);
+		        	        	$this->match(self::GLOB);
 		        	        	break;
 
-		        	        case self::FALSE_:
-		        	        case self::NOW_:
-		        	        case self::NULL_:
-		        	        case self::TRUE_:
+		        	        case self::FALSE:
+		        	        case self::NOW:
+		        	        case self::NULL:
+		        	        case self::TRUE:
 		        	        case self::NUMERIC_LITERAL:
 		        	        case self::STRING_LITERAL:
 		        	        	$this->setState(47);
@@ -435,16 +435,16 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
-		        	    if ($_la === self::NOT_) {
+		        	    if ($_la === self::NOT) {
 		        	    	$this->setState(50);
-		        	    	$this->match(self::NOT_);
+		        	    	$this->match(self::NOT);
 		        	    }
 		        	    $this->setState(53);
-		        	    $this->match(self::BETWEEN_);
+		        	    $this->match(self::BETWEEN);
 		        	    $this->setState(54);
 		        	    $this->literal_value();
 		        	    $this->setState(55);
-		        	    $this->match(self::AND_);
+		        	    $this->match(self::AND);
 		        	    $this->setState(56);
 		        	    $this->literal_value();
 		        	break;
@@ -454,19 +454,19 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
-		        	    if ($_la === self::NOT_) {
+		        	    if ($_la === self::NOT) {
 		        	    	$this->setState(58);
-		        	    	$this->match(self::NOT_);
+		        	    	$this->match(self::NOT);
 		        	    }
 		        	    $this->setState(61);
-		        	    $this->match(self::IN_);
+		        	    $this->match(self::IN);
 		        	    $this->setState(62);
 		        	    $this->match(self::OPEN_PAR);
 		        	    $this->setState(71);
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
-		        	    if (((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::FALSE_) | (1 << self::NOW_) | (1 << self::NULL_) | (1 << self::TRUE_) | (1 << self::NUMERIC_LITERAL) | (1 << self::STRING_LITERAL))) !== 0)) {
+		        	    if (((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::FALSE) | (1 << self::NOW) | (1 << self::NULL) | (1 << self::TRUE) | (1 << self::NUMERIC_LITERAL) | (1 << self::STRING_LITERAL))) !== 0)) {
 		        	    	$this->setState(63);
 		        	    	$this->literal_value();
 		        	    	$this->setState(68);
@@ -510,7 +510,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
 		        $this->setState(76);
-		        $this->match(self::SELECT_);
+		        $this->match(self::SELECT);
 		        $this->setState(77);
 		        $this->result_column();
 		        $this->setState(82);
@@ -530,9 +530,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
-		        if ($_la === self::FROM_) {
+		        if ($_la === self::FROM) {
 		        	$this->setState(85);
-		        	$this->match(self::FROM_);
+		        	$this->match(self::FROM);
 		        	$this->setState(86);
 		        	$this->table_name();
 		        }
@@ -540,21 +540,21 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
-		        if ($_la === self::WHERE_) {
+		        if ($_la === self::WHERE) {
 		        	$this->setState(89);
-		        	$this->match(self::WHERE_);
+		        	$this->match(self::WHERE);
 		        	$this->setState(90);
 		        	$this->predicate_expression();
 		        	$this->setState(93);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
 
-		        	if ($_la === self::AND_ || $_la === self::OR_) {
+		        	if ($_la === self::AND || $_la === self::OR) {
 		        		$this->setState(91);
 
 		        		$_la = $this->input->LA(1);
 
-		        		if (!($_la === self::AND_ || $_la === self::OR_)) {
+		        		if (!($_la === self::AND || $_la === self::OR)) {
 		        		$this->errorHandler->recoverInline($this);
 		        		} else {
 		        			if ($this->input->LA(1) === Token::EOF) {
@@ -572,7 +572,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
-		        if ($_la === self::ORDER_) {
+		        if ($_la === self::ORDER) {
 		        	$this->setState(97);
 		        	$this->order_by_stmt();
 		        }
@@ -580,7 +580,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
-		        if ($_la === self::LIMIT_) {
+		        if ($_la === self::LIMIT) {
 		        	$this->setState(100);
 		        	$this->limit_stmt();
 		        }
@@ -705,7 +705,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
 		        $this->setState(115);
-		        $this->match(self::LIMIT_);
+		        $this->match(self::LIMIT);
 		        $this->setState(116);
 		        $this->match(self::NUMERIC_LITERAL);
 		    } catch (RecognitionException $exception) {
@@ -731,9 +731,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
 		        $this->setState(118);
-		        $this->match(self::ORDER_);
+		        $this->match(self::ORDER);
 		        $this->setState(119);
-		        $this->match(self::BY_);
+		        $this->match(self::BY);
 		        $this->setState(120);
 		        $this->ordering_term();
 		        $this->setState(125);
@@ -777,7 +777,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
-		        if ($_la === self::ASC_ || $_la === self::DESC_) {
+		        if ($_la === self::ASC || $_la === self::DESC) {
 		        	$this->setState(129);
 		        	$this->asc_desc();
 		        }
@@ -807,7 +807,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		        $_la = $this->input->LA(1);
 
-		        if (!($_la === self::ASC_ || $_la === self::DESC_)) {
+		        if (!($_la === self::ASC || $_la === self::DESC)) {
 		        $this->errorHandler->recoverInline($this);
 		        } else {
 		        	if ($this->input->LA(1) === Token::EOF) {
@@ -874,9 +874,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    	return $this->getTypedRuleContext(Column_aliasContext::class, 0);
 	    }
 
-	    public function AS_() : ?TerminalNode
+	    public function AS() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::AS_, 0);
+	        return $this->getToken(logicalSqlParser::AS, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
@@ -971,24 +971,24 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	        return $this->getToken(logicalSqlParser::STRING_LITERAL, 0);
 	    }
 
-	    public function NULL_() : ?TerminalNode
+	    public function NULL() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::NULL_, 0);
+	        return $this->getToken(logicalSqlParser::NULL, 0);
 	    }
 
-	    public function TRUE_() : ?TerminalNode
+	    public function TRUE() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::TRUE_, 0);
+	        return $this->getToken(logicalSqlParser::TRUE, 0);
 	    }
 
-	    public function FALSE_() : ?TerminalNode
+	    public function FALSE() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::FALSE_, 0);
+	        return $this->getToken(logicalSqlParser::FALSE, 0);
 	    }
 
-	    public function NOW_() : ?TerminalNode
+	    public function NOW() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::NOW_, 0);
+	        return $this->getToken(logicalSqlParser::NOW, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
@@ -1044,19 +1044,19 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	        return $this->getTypedRuleContext(Literal_valueContext::class, $index);
 	    }
 
-	    public function BETWEEN_() : ?TerminalNode
+	    public function BETWEEN() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::BETWEEN_, 0);
+	        return $this->getToken(logicalSqlParser::BETWEEN, 0);
 	    }
 
-	    public function AND_() : ?TerminalNode
+	    public function AND() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::AND_, 0);
+	        return $this->getToken(logicalSqlParser::AND, 0);
 	    }
 
-	    public function IN_() : ?TerminalNode
+	    public function IN() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::IN_, 0);
+	        return $this->getToken(logicalSqlParser::IN, 0);
 	    }
 
 	    public function OPEN_PAR() : ?TerminalNode
@@ -1069,49 +1069,49 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	        return $this->getToken(logicalSqlParser::CLOSE_PAR, 0);
 	    }
 
-	    public function LT() : ?TerminalNode
+	    public function LESS_THAN() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::LT, 0);
+	        return $this->getToken(logicalSqlParser::LESS_THAN, 0);
 	    }
 
-	    public function LT_EQ() : ?TerminalNode
+	    public function LESS_THAN_OR_EQUAL() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::LT_EQ, 0);
+	        return $this->getToken(logicalSqlParser::LESS_THAN_OR_EQUAL, 0);
 	    }
 
-	    public function GT() : ?TerminalNode
+	    public function GREATER_THAN() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::GT, 0);
+	        return $this->getToken(logicalSqlParser::GREATER_THAN, 0);
 	    }
 
-	    public function GT_EQ() : ?TerminalNode
+	    public function GREATER_THAN_OR_EQUAL() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::GT_EQ, 0);
+	        return $this->getToken(logicalSqlParser::GREATER_THAN_OR_EQUAL, 0);
 	    }
 
-	    public function NOT_EQ1() : ?TerminalNode
+	    public function NOT_EQUAL() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::NOT_EQ1, 0);
+	        return $this->getToken(logicalSqlParser::NOT_EQUAL, 0);
 	    }
 
-	    public function ASSIGN() : ?TerminalNode
+	    public function EQUAL() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::ASSIGN, 0);
+	        return $this->getToken(logicalSqlParser::EQUAL, 0);
 	    }
 
-	    public function LIKE_() : ?TerminalNode
+	    public function LIKE() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::LIKE_, 0);
+	        return $this->getToken(logicalSqlParser::LIKE, 0);
 	    }
 
-	    public function GLOB_() : ?TerminalNode
+	    public function GLOB() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::GLOB_, 0);
+	        return $this->getToken(logicalSqlParser::GLOB, 0);
 	    }
 
-	    public function NOT_() : ?TerminalNode
+	    public function NOT() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::NOT_, 0);
+	        return $this->getToken(logicalSqlParser::NOT, 0);
 	    }
 
 	    /**
@@ -1162,9 +1162,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 		    return logicalSqlParser::RULE_logicalSql;
 	    }
 
-	    public function SELECT_() : ?TerminalNode
+	    public function SELECT() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::SELECT_, 0);
+	        return $this->getToken(logicalSqlParser::SELECT, 0);
 	    }
 
 	    /**
@@ -1191,9 +1191,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	        return $this->getToken(logicalSqlParser::COMMA, $index);
 	    }
 
-	    public function FROM_() : ?TerminalNode
+	    public function FROM() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::FROM_, 0);
+	        return $this->getToken(logicalSqlParser::FROM, 0);
 	    }
 
 	    public function table_name() : ?Table_nameContext
@@ -1201,9 +1201,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    	return $this->getTypedRuleContext(Table_nameContext::class, 0);
 	    }
 
-	    public function WHERE_() : ?TerminalNode
+	    public function WHERE() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::WHERE_, 0);
+	        return $this->getToken(logicalSqlParser::WHERE, 0);
 	    }
 
 	    /**
@@ -1228,14 +1228,14 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    	return $this->getTypedRuleContext(Limit_stmtContext::class, 0);
 	    }
 
-	    public function AND_() : ?TerminalNode
+	    public function AND() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::AND_, 0);
+	        return $this->getToken(logicalSqlParser::AND, 0);
 	    }
 
-	    public function OR_() : ?TerminalNode
+	    public function OR() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::OR_, 0);
+	        return $this->getToken(logicalSqlParser::OR, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
@@ -1417,9 +1417,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 		    return logicalSqlParser::RULE_limit_stmt;
 	    }
 
-	    public function LIMIT_() : ?TerminalNode
+	    public function LIMIT() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::LIMIT_, 0);
+	        return $this->getToken(logicalSqlParser::LIMIT, 0);
 	    }
 
 	    public function NUMERIC_LITERAL() : ?TerminalNode
@@ -1463,14 +1463,14 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 		    return logicalSqlParser::RULE_order_by_stmt;
 	    }
 
-	    public function ORDER_() : ?TerminalNode
+	    public function ORDER() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::ORDER_, 0);
+	        return $this->getToken(logicalSqlParser::ORDER, 0);
 	    }
 
-	    public function BY_() : ?TerminalNode
+	    public function BY() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::BY_, 0);
+	        return $this->getToken(logicalSqlParser::BY, 0);
 	    }
 
 	    /**
@@ -1579,14 +1579,14 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 		    return logicalSqlParser::RULE_asc_desc;
 	    }
 
-	    public function ASC_() : ?TerminalNode
+	    public function ASC() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::ASC_, 0);
+	        return $this->getToken(logicalSqlParser::ASC, 0);
 	    }
 
-	    public function DESC_() : ?TerminalNode
+	    public function DESC() : ?TerminalNode
 	    {
-	        return $this->getToken(logicalSqlParser::DESC_, 0);
+	        return $this->getToken(logicalSqlParser::DESC, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void

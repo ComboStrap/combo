@@ -38,7 +38,11 @@ class SqlParser
         $parser->setBuildParseTree(true);
         $tree = $parser->logicalSql();
 
-        ParseTreeWalker::default()->walk(new sqlTreeListener(), $tree);
+        /**
+         * Performs a walk on the given parse tree starting at the root
+         * and going down recursively with depth-first search.
+         */
+        ParseTreeWalker::default()->walk(new sqlTreeListener($lexer,$parser), $tree);
     }
 
 }

@@ -232,4 +232,9 @@ $lang[action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM] = PluginUtility::
 $lang[action_plugin_combo_profile::CONF_ENABLE_PROFILE_UPDATE_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the profile update form will be styled by Combo");
 $lang[action_plugin_combo_profile::CONF_ENABLE_PROFILE_DELETE_FORM] = PluginUtility::getUrl(Identity::CANONICAL, "If enable, the profile delete form will be styled by Combo");
 
+/**
+ * Comment
+ */
+$lang[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = PluginUtility::getUrl(syntax_plugin_combo_comment::CANONICAL, "If enable, the comments will be present in the created page as comment (ie not visible but present)");
+
 ?>

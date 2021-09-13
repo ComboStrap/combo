@@ -308,4 +308,9 @@ $meta[action_plugin_combo_resend::CONF_ENABLE_RESEND_PWD_FORM] = array("onoff");
 $meta[action_plugin_combo_profile::CONF_ENABLE_PROFILE_UPDATE_FORM] = array("onoff");
 $meta[action_plugin_combo_profile::CONF_ENABLE_PROFILE_DELETE_FORM] = array("onoff");
 
+/**
+ * Comment
+ */
+$meta[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = array("onoff");
+
 

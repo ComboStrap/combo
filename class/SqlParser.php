@@ -9,15 +9,6 @@ class SqlParser
     const TOKEN = "token";
     const OPERATOR = "operator";
 
-    /**
-     * Type of token
-     */
-    const TOKEN_TYPE_PREDICATE = "predicate";
-    const TOKEN_TYPE_LOGICAL_OPERATOR = "logicalOperator";
-    const TOKEN_TYPE_IDENTIFIER = "identifier";
-    const TOKEN_TYPE_ORDER_BY = "orderBy";
-    const TOKEN_TYPE_LIMIT = "limit";
-
 
     /**
      * The state of FSM
@@ -176,6 +167,7 @@ class SqlParser
                                 return $this;
                             }
                             $this->state = self::STATE_COLUMN_IDENTIFIER;
+                            $this->tokens[]=SqlToken::create(SqlToken::SELECT_TOKEN,$normalizedWord);
                             $this->getFinalizedToken();
                             break;
                         case self::WHERE_WORD:
@@ -332,14 +324,14 @@ class SqlParser
 
     public function getStringColumnIdentifiers()
     {
-        return $this->getStringTokensFromType(self::TOKEN_TYPE_IDENTIFIER);
+        return $this->getStringTokensFromType(SqlToken::TOKEN_TYPE_IDENTIFIER);
     }
 
 
     private function processColumnToken()
     {
         $token = $this->getFinalizedToken();
-        $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_IDENTIFIER, $token);
+        $this->tokens[] = SqlToken::create(SqlToken::TOKEN_TYPE_IDENTIFIER, $token);
     }
 
     private function triggerBadState()
@@ -349,10 +341,11 @@ class SqlParser
 
     private function processPredicateToken($logicalOperator = "")
     {
+
         $token = $this->getFinalizedToken();
-        $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_PREDICATE, $token);
+        $this->tokens[] = SqlToken::create(SqlToken::TOKEN_TYPE_PREDICATE, $token);
         if (!empty($logicalOperator)) {
-            $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_LOGICAL_OPERATOR, $logicalOperator);
+            $this->tokens[] = SqlToken::create(SqlToken::TOKEN_TYPE_LOGICAL_OPERATOR, $logicalOperator);
         }
 
     }
@@ -360,7 +353,7 @@ class SqlParser
     private function processOrderByToken()
     {
         $token = $this->getFinalizedToken();
-        $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_ORDER_BY, $token);
+        $this->tokens[] = SqlToken::create(SqlToken::TOKEN_TYPE_ORDER_BY, $token);
 
     }
 
@@ -374,24 +367,24 @@ class SqlParser
 
     public function getPredicates()
     {
-        return $this->getStringTokensFromType(self::TOKEN_TYPE_PREDICATE);
+        return $this->getStringTokensFromType(SqlToken::TOKEN_TYPE_PREDICATE);
     }
 
     public function getStringOrderBys()
     {
-        return $this->getStringTokensFromType(self::TOKEN_TYPE_ORDER_BY);
+        return $this->getStringTokensFromType(SqlToken::TOKEN_TYPE_ORDER_BY);
 
     }
 
     private function processLimitToken()
     {
         $token = $this->getFinalizedToken();
-        $this->tokens[] = SqlToken::create(self::TOKEN_TYPE_LIMIT, $token);
+        $this->tokens[] = SqlToken::create(SqlToken::TOKEN_TYPE_LIMIT, $token);
     }
 
     public function getLimit()
     {
-        $limits =  $this->getStringTokensFromType(self::TOKEN_TYPE_LIMIT);
+        $limits =  $this->getStringTokensFromType(SqlToken::TOKEN_TYPE_LIMIT);
         if(sizeof($limits)===1){
             return $limits[0];
         } else {
@@ -416,7 +409,7 @@ class SqlParser
      */
     public function getWhereTokens()
     {
-        return $this->getTokensFromType(self::TOKEN_TYPE_PREDICATE, self::TOKEN_TYPE_LOGICAL_OPERATOR);
+        return $this->getTokensFromType(SqlToken::TOKEN_TYPE_PREDICATE, SqlToken::TOKEN_TYPE_LOGICAL_OPERATOR);
     }
 
     private function getTokensFromType(...$type)

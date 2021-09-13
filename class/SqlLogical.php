@@ -63,9 +63,9 @@ class SqlLogical
         $whereTokens = [];
         // Special predicates if json
         if ($databaseTarget === self::SQLITE_JSON) {
-            $whereTokens[] = SqlToken::create(SqlParser::TOKEN_TYPE_PREDICATE, "analytics is not null");
+            $whereTokens[] = SqlToken::create(SqlToken::TOKEN_TYPE_PREDICATE, "analytics is not null");
             if ($parsedWhereTokenSize > 0) {
-                $whereTokens[] = SqlToken::create(SqlParser::TOKEN_TYPE_LOGICAL_OPERATOR, "and");
+                $whereTokens[] = SqlToken::create(SqlToken::TOKEN_TYPE_LOGICAL_OPERATOR, "and");
             }
         }
         $whereTokens = array_merge($whereTokens, $parsedWhereTokens);
@@ -74,12 +74,14 @@ class SqlLogical
         if (sizeof($whereTokens) > 0) {
             $physicalSql .= "\nwhere";
             foreach ($whereTokens as $whereToken) {
-                if ($whereToken->getType() == SqlParser::TOKEN_TYPE_PREDICATE) {
+                if ($whereToken->getType() == SqlToken::TOKEN_TYPE_PREDICATE) {
                     $physicalSql .= "\n\t";
+                    $physicalSql .= $whereToken->getTokenString();
                 } else {
                     $physicalSql .= " ";
+                    $physicalSql .= $whereToken->getTokenString();
                 }
-                $physicalSql .= $whereToken->getTokenString();
+
             }
         }
 

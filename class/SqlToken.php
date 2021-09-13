@@ -6,6 +6,16 @@ namespace ComboStrap;
 
 class SqlToken
 {
+    const SELECT_TOKEN = "select";
+    const TOKEN_TYPE_LOGICAL_OPERATOR = "logicalOperator";
+    const TOKEN_TYPE_ORDER_BY = "orderBy";
+    const TOKEN_TYPE_IDENTIFIER = "identifier";
+    const TOKEN_TYPE_LIMIT = "limit";
+    /**
+     * Type of token
+     */
+    const TOKEN_TYPE_PREDICATE = "predicate";
+
     private $token;
     private $type;
 

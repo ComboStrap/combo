@@ -20,9 +20,8 @@ use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
-require_once(__DIR__ . '/../../class/PluginUtility.php');
-require_once(__DIR__ . '/../../class/UrlManagerBestEndPage.php');
-require_once(__DIR__ . '/../../class/MetadataUtility.php');
+require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
+
 
 /**
  * @var array

@@ -3,6 +3,8 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\LogicalSql;
+use ComboStrap\LogicalSqlAntlr\LogicalSqlAntlr;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -302,7 +304,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     /**
                      * Create the SQL
                      */
-                    $logicalSql = SqlLogical::create($logicalSql);
+                    $logicalSql = LogicalSqlAntlr::create($logicalSql);
                     if ($isJsonEnabled) {
                         try {
                             $rows = $this->getRowsFromSqliteWithJsonSupport($logicalSql, $sqlite);
@@ -457,33 +459,17 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     }
 
-    /**
-     * @param SqlLogical $logicalSql
-     * @param helper_plugin_sqlite $sqlite
-     * @return array
-     * @throws RuntimeException when the sql is invalid
-     */
-    private function getRowsFromSqliteWithJsonSupport(SqlLogical $logicalSql, helper_plugin_sqlite $sqlite)
-    {
-        $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_JSON);
-        $res = $sqlite->query($executableSql);
-        if (!$res) {
-            throw new RuntimeException("The json sql statement returns an error. Sql Statement: $executableSql.");
-        }
-        $rows = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        return $rows;
-    }
+
 
     /**
-     * @param SqlLogical $logicalSql
+     * @param LogicalSql $logicalSql
      * @param $sqlite
      * @return array
      * @throws RuntimeException when the query is not good
      */
-    private function getRowsFromSqliteWithoutJsonSupport(SqlLogical $logicalSql, $sqlite)
+    private function getRowsFromSqliteWithoutJsonSupport(LogicalSql $logicalSql, $sqlite)
     {
-        $executableSql = $logicalSql->toPhysical(SqlLogical::SQLITE_NO_JSON);
+        $executableSql = $logicalSql->toPhysicalSqlWithParameters();
         $res = $sqlite->query($executableSql);
         if (!$res) {
             throw new \RuntimeException("The sql statement returns an error. Sql statement: $executableSql");

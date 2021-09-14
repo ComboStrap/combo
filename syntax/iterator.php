@@ -2,9 +2,7 @@
 
 
 use ComboStrap\CallStack;
-use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\SqlLogical;
 use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -204,10 +202,6 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
         // unsupported $mode
         return false;
     }
-
-
-
-
 
 
 }

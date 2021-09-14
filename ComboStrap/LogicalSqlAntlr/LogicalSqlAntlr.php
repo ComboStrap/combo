@@ -14,7 +14,7 @@ use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlParser;
 
 require_once(__DIR__ . '/../PluginUtility.php');
 
-class SqlParser
+class LogicalSqlAntlr
 {
     private $text;
     /**
@@ -28,14 +28,14 @@ class SqlParser
         $this->text = $text;
     }
 
-    public static function create(string $string): SqlParser
+    public static function create(string $string): LogicalSqlAntlr
     {
-        $parser = new SqlParser($string);
+        $parser = new LogicalSqlAntlr($string);
         $parser->parse();
         return $parser;
     }
 
-    function parse(): SqlParser
+    function parse(): LogicalSqlAntlr
     {
         $input = InputStream::fromString($this->text);
         $lexer = new LogicalSqlLexer($input);

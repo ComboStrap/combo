@@ -12,7 +12,7 @@
 
 namespace ComboStrap;
 
-require_once (__DIR__.'/LogUtility.php');
+require_once(__DIR__ . '/LogUtility.php');
 
 use helper_plugin_sqlite;
 
@@ -60,7 +60,7 @@ class Sqlite
              * are not installed
              * ie: SQLite & PDO SQLite support missing
              */
-            if($adapter!=null) {
+            if ($adapter != null) {
                 $dbFile = $adapter->getDbFile();
                 if (file_exists($dbFile)) {
                     if (strpos($dbFile, $metaDir) === 0) {
@@ -124,17 +124,17 @@ class Sqlite
     public static function printDbInfoAtConsole(helper_plugin_sqlite $sqlite)
     {
         $dbFile = $sqlite->getAdapter()->getDbFile();
-        fwrite(STDERR, "Stderr DbFile: " . $dbFile."\n");
+        fwrite(STDERR, "Stderr DbFile: " . $dbFile . "\n");
         if (file_exists($dbFile)) {
             fwrite(STDERR, "File does exists\n");
-            fwrite(STDERR, "Permission " . substr(sprintf('%o', fileperms($dbFile)), -4)."\n");
+            fwrite(STDERR, "Permission " . substr(sprintf('%o', fileperms($dbFile)), -4) . "\n");
         } else {
             fwrite(STDERR, "File does not exist\n");
         }
 
         global $conf;
         $metadir = $conf['metadir'];
-        fwrite(STDERR, "MetaDir: " . $metadir."\n");
+        fwrite(STDERR, "MetaDir: " . $metadir . "\n");
         $subdir = strpos($dbFile, $metadir) === 0;
         if ($subdir) {
             fwrite(STDERR, "Meta is a subdirectory of the db \n");
@@ -143,4 +143,23 @@ class Sqlite
         }
 
     }
+
+    /**
+     * Json support
+     */
+    public static function supportJson(): bool
+    {
+
+        $sqlite = self::getSqlite();
+        $res = $sqlite->query("PRAGMA compile_options");
+        $isJsonEnabled = false;
+        foreach ($sqlite->res2arr($res) as $row) {
+            if ($row["compile_option"] === "ENABLE_JSON1") {
+                $isJsonEnabled = true;
+                break;
+            }
+        };
+        $sqlite->res_close($res);
+        return $isJsonEnabled;
+}
 }

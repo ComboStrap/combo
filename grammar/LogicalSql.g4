@@ -83,7 +83,7 @@ LITERAL_VALUE: ALL_LITERAL_VALUE;
  * to start with a number
  * (just ot have no conflict with a NUMERIC_LITERAL)
 */
-SQL_NAME : [a-zA-Z] [a-zA-Z0-9]*;
+SQL_NAME : [a-zA-Z] [a-zA-Z0-9_-]*;
 
 /**
  * Fragment rules does not result in tokens visible to the parser.

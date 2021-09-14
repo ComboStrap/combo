@@ -100,19 +100,6 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function enterLogicalSql(Context\LogicalSqlContext $context) : void {}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
-	public function exitLogicalSql(Context\LogicalSqlContext $context) : void {}
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
 	public function enterLimit(Context\LimitContext $context) : void {}
 
 	/**
@@ -147,6 +134,19 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 * The default implementation does nothing.
 	 */
 	public function exitOrderByDef(Context\OrderByDefContext $context) : void {}
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
+	public function enterLogicalSql(Context\LogicalSqlContext $context) : void {}
+
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
+	public function exitLogicalSql(Context\LogicalSqlContext $context) : void {}
 
 	/**
 	 * {@inheritdoc}

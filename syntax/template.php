@@ -187,7 +187,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                  */
                 $iteratorNode = null;
                 $callStack->moveToPreviousCorrespondingOpeningCall();
-                while($parent = $callStack->moveToParent()) {
+                while ($parent = $callStack->moveToParent()) {
                     if ($parent->getTagName() === syntax_plugin_combo_iterator::TAG) {
                         $iteratorNode = $parent;
                     }
@@ -288,46 +288,17 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                         return $returnedArray;
                     }
 
-                    /**
-                     * Json support
-                     */
-                    $res = $sqlite->query("PRAGMA compile_options");
-                    $isJsonEnabled = false;
-                    foreach ($sqlite->res2arr($res) as $row) {
-                        if ($row["compile_option"] === "ENABLE_JSON1") {
-                            $isJsonEnabled = true;
-                            break;
-                        }
-                    };
-                    $sqlite->res_close($res);
 
                     /**
                      * Create the SQL
                      */
-                    $logicalSql = LogicalSqlAntlr::create($logicalSql);
-                    if ($isJsonEnabled) {
-                        try {
-                            $rows = $this->getRowsFromSqliteWithJsonSupport($logicalSql, $sqlite);
-                        } catch (Exception $e) {
-                            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-                            LogUtility::msg("Trying to get the rows without Json Support", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                            try {
-                                $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
-                            } catch (Exception $e) {
-                                LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                                return $returnedArray;
-                            }
-                            LogUtility::msg("Succeeded", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                        }
-                    } else {
+                    $logicalSql = LogicalSql::create($logicalSql);
 
-                        try {
-                            $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
-                        } catch (Exception $e) {
-                            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                            return $returnedArray;
-                        }
-
+                    try {
+                        $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
+                    } catch (Exception $e) {
+                        LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        return $returnedArray;
                     }
 
 
@@ -361,12 +332,12 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                     continue 2;
                                 case "listitem_close":
                                 case "tablerow_close":
-                                    $actualStack[]=$actualCall;
-                                    $templateMain=$actualStack;
-                                    $actualStack= [];
+                                    $actualStack[] = $actualCall;
+                                    $templateMain = $actualStack;
+                                    $actualStack = [];
                                     continue 2;
                                 default:
-                                    $actualStack[]=$actualCall;
+                                    $actualStack[] = $actualCall;
                             }
                         }
                         $templateFooter = $actualStack;
@@ -384,13 +355,13 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                          * and the table_open of the template should be
                          * deleted to create one table
                          */
-                        if(!empty($templateHeader)){
+                        if (!empty($templateHeader)) {
                             $firstTemplateCall = $templateHeader[0];
-                            if($firstTemplateCall->getComponentName()==="table_open"){
+                            if ($firstTemplateCall->getComponentName() === "table_open") {
                                 $callStack->moveToEnd();
                                 $callStack->moveToPreviousCorrespondingOpeningCall();
                                 $previousCall = $callStack->previous();
-                                if($previousCall->getComponentName()==="table_close"){
+                                if ($previousCall->getComponentName() === "table_close") {
                                     $callStack->deleteActualCallAndPrevious();
                                     unset($templateHeader[0]);
                                 }
@@ -460,17 +431,19 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     }
 
 
-
     /**
      * @param LogicalSql $logicalSql
-     * @param $sqlite
+     * @param helper_plugin_sqlite $sqlite
      * @return array
      * @throws RuntimeException when the query is not good
      */
-    private function getRowsFromSqliteWithoutJsonSupport(LogicalSql $logicalSql, $sqlite)
+    private function getRowsFromSqliteWithoutJsonSupport(LogicalSql $logicalSql, helper_plugin_sqlite $sqlite): array
     {
         $executableSql = $logicalSql->toPhysicalSqlWithParameters();
-        $res = $sqlite->query($executableSql);
+        $parameters = $logicalSql->getParameters();
+        $args = [$executableSql];
+        $args = array_merge($args, $parameters);
+        $res = $sqlite->getAdapter()->query($args);
         if (!$res) {
             throw new \RuntimeException("The sql statement returns an error. Sql statement: $executableSql");
         }
@@ -480,10 +453,10 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
             $analytics = $sourceRow["ANALYTICS"];
             $jsonArray = json_decode($analytics, true);
             $targetRow = [];
-            foreach ($logicalSql->getColumns() as $alias => $expression) {
+            foreach ($logicalSql->getColumns() as $column) {
 
 
-                $value = $jsonArray["metadata"][$expression];
+                $value = $jsonArray["metadata"][$column];
                 if (isset($value)) {
 
                     /**
@@ -491,13 +464,13 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                      * If this is an image, we try to select the page
                      * with the same asked ratio
                      */
-                    if ($expression === Page::IMAGE_META_PROPERTY) {
+                    if ($column === Page::IMAGE_META_PROPERTY) {
 
                     } else {
-                        $targetRow[$expression] = $value;
+                        $targetRow[$column] = $value;
                     }
                 } else {
-                    $targetRow[$expression] = "NotFound";
+                    $targetRow[$column] = "NotFound";
                 }
             }
             $rows[] = $targetRow;

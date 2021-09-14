@@ -73,16 +73,6 @@ interface LogicalSqlListener extends ParseTreeListener {
 	 */
 	public function exitTables(Context\TablesContext $context) : void;
 	/**
-	 * Enter a parse tree produced by {@see LogicalSqlParser::logicalSql()}.
-	 * @param $context The parse tree.
-	 */
-	public function enterLogicalSql(Context\LogicalSqlContext $context) : void;
-	/**
-	 * Exit a parse tree produced by {@see LogicalSqlParser::logicalSql()}.
-	 * @param $context The parse tree.
-	 */
-	public function exitLogicalSql(Context\LogicalSqlContext $context) : void;
-	/**
 	 * Enter a parse tree produced by {@see LogicalSqlParser::limit()}.
 	 * @param $context The parse tree.
 	 */
@@ -112,4 +102,14 @@ interface LogicalSqlListener extends ParseTreeListener {
 	 * @param $context The parse tree.
 	 */
 	public function exitOrderByDef(Context\OrderByDefContext $context) : void;
+	/**
+	 * Enter a parse tree produced by {@see LogicalSqlParser::logicalSql()}.
+	 * @param $context The parse tree.
+	 */
+	public function enterLogicalSql(Context\LogicalSqlContext $context) : void;
+	/**
+	 * Exit a parse tree produced by {@see LogicalSqlParser::logicalSql()}.
+	 * @param $context The parse tree.
+	 */
+	public function exitLogicalSql(Context\LogicalSqlContext $context) : void;
 }

@@ -22,6 +22,11 @@ class LogicalSql
         $this->logicalSql = LogicalSqlAntlr::create($logicalSql);
     }
 
+    public static function create($logicalSql): LogicalSql
+    {
+        return new LogicalSql($logicalSql);
+    }
+
     public function toPhysicalSqlWithParameters(): string
     {
         return $this->logicalSql->getPhysicalSql();
@@ -30,5 +35,10 @@ class LogicalSql
     public function getParameters(): array
     {
         return $this->logicalSql->getParameters();
+    }
+
+    public function getColumns()
+    {
+        return $this->logicalSql->getColumns();
     }
 }

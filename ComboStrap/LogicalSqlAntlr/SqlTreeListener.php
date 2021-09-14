@@ -49,7 +49,11 @@ final class SqlTreeListener implements ParseTreeListener
     /**
      * @var string[]
      */
-    private $parameters;
+    private $parameters = [];
+    /**
+     * @var array
+     */
+    private $columns;
 
     /**
      * SqlTreeListener constructor.
@@ -101,12 +105,15 @@ final class SqlTreeListener implements ParseTreeListener
                 $this->physicalSql .= "\t{$text}\n";
                 break;
             case LogicalSqlParser::SQL_NAME:
-                if ($this->state === LogicalSqlParser::RULE_predicates
-                    ||
-                    $this->state === LogicalSqlParser::RULE_orderBys
-                ) {
-                    $text = strtolower($text);
-                    $this->physicalSql .= "\t{$text} ";
+                switch ($this->state) {
+                    case LogicalSqlParser::RULE_predicates:
+                    case LogicalSqlParser::RULE_orderBys:
+                        $text = strtolower($text);
+                        $this->physicalSql .= "\t{$text} ";
+                        break;
+                    case LogicalSqlParser::RULE_columns:
+                        $this->columns[] = $text;
+                        break;
                 }
                 break;
             case LogicalSqlParser::EQUAL:
@@ -215,6 +222,11 @@ final class SqlTreeListener implements ParseTreeListener
     public function getParameters(): array
     {
         return $this->parameters;
+    }
+
+    public function getColumns(): array
+    {
+        return $this->columns;
     }
 
     /**

@@ -23,6 +23,7 @@ class LogicalSqlAntlr
     private $listener;
 
 
+
     public function __construct($text)
     {
         $this->text = $text;
@@ -62,6 +63,11 @@ class LogicalSqlAntlr
     public function getParameters(): array
     {
         return $this->listener->getParameters();
+    }
+
+    public function getColumns()
+    {
+        return $this->listener->getColumns();
     }
 
 }

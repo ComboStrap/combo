@@ -68,15 +68,6 @@ interface LogicalSqlVisitor extends ParseTreeVisitor
 	public function visitTables(Context\TablesContext $context);
 
 	/**
-	 * Visit a parse tree produced by {@see LogicalSqlParser::logicalSql()}.
-	 *
-	 * @param Context\LogicalSqlContext $context The parse tree.
-	 *
-	 * @return mixed The visitor result.
-	 */
-	public function visitLogicalSql(Context\LogicalSqlContext $context);
-
-	/**
 	 * Visit a parse tree produced by {@see LogicalSqlParser::limit()}.
 	 *
 	 * @param Context\LimitContext $context The parse tree.
@@ -102,4 +93,13 @@ interface LogicalSqlVisitor extends ParseTreeVisitor
 	 * @return mixed The visitor result.
 	 */
 	public function visitOrderByDef(Context\OrderByDefContext $context);
+
+	/**
+	 * Visit a parse tree produced by {@see LogicalSqlParser::logicalSql()}.
+	 *
+	 * @param Context\LogicalSqlContext $context The parse tree.
+	 *
+	 * @return mixed The visitor result.
+	 */
+	public function visitLogicalSql(Context\LogicalSqlContext $context);
 }

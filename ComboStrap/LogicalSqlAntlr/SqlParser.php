@@ -17,6 +17,10 @@ require_once(__DIR__ . '/../PluginUtility.php');
 class SqlParser
 {
     private $text;
+    /**
+     * @var SqlTreeListener
+     */
+    private $listener;
 
 
     public function __construct($text)
@@ -26,10 +30,13 @@ class SqlParser
 
     public static function create(string $string): SqlParser
     {
-        return new SqlParser($string);
+        $parser = new SqlParser($string);
+        $parser->parse();
+        return $parser;
     }
 
-    function parse(){
+    function parse(): SqlParser
+    {
         $input = InputStream::fromString($this->text);
         $lexer = new LogicalSqlLexer($input);
         $tokens = new CommonTokenStream($lexer);
@@ -42,9 +49,19 @@ class SqlParser
          * Performs a walk on the given parse tree starting at the root
          * and going down recursively with depth-first search.
          */
-        $listener = new SqlTreeListener($lexer, $parser);
-        ParseTreeWalker::default()->walk($listener, $tree);
-        return $listener->getPhysicalSql();
+        $this->listener = new SqlTreeListener($lexer, $parser);
+        ParseTreeWalker::default()->walk($this->listener, $tree);
+        return $this;
+    }
+
+    public function getPhysicalSql(): string
+    {
+        return $this->listener->getPhysicalSql();
+    }
+
+    public function getParameters(): array
+    {
+        return $this->listener->getParameters();
     }
 
 }

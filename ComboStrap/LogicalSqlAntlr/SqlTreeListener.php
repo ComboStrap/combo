@@ -6,11 +6,11 @@ namespace ComboStrap\LogicalSqlAntlr;
 
 use Antlr\Antlr4\Runtime\ParserRuleContext;
 use Antlr\Antlr4\Runtime\Tree\ErrorNode;
-use Antlr\Antlr4\Runtime\Tree\ParseTreeListener;
 use Antlr\Antlr4\Runtime\Tree\ParseTreeWalker;
 use Antlr\Antlr4\Runtime\Tree\TerminalNode;
-use ComboStrap\LogicalSqlAntlr\Gen\logicalSqlLexer;
-use ComboStrap\LogicalSqlAntlr\Gen\logicalSqlParser;
+use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlLexer;
+use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlListener;
+use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlParser;
 
 /**
  * Class SqlTreeListener
@@ -20,7 +20,7 @@ use ComboStrap\LogicalSqlAntlr\Gen\logicalSqlParser;
  * that performs a walk on the given parse tree starting at the root
  * and going down recursively with depth-first search.
  */
-final class SqlTreeListener implements ParseTreeListener
+final class SqlTreeListener implements LogicalSqlListener
 {
     /**
      * @var logicalSqlLexer
@@ -30,6 +30,10 @@ final class SqlTreeListener implements ParseTreeListener
      * @var logicalSqlParser
      */
     private $parser;
+    /**
+     * @var String
+     */
+    private $physicalSql ;
 
 
     /**
@@ -51,12 +55,10 @@ final class SqlTreeListener implements ParseTreeListener
      */
     public function visitTerminal(TerminalNode $node): void
     {
-        $tokeName = $this->getTokenName($node);
-        $found = "";
+
         if(logicalSqlParser::SELECT===$node->getSymbol()->getType()){
-            $found = "- select found! ";
+            $this->physicalSql .= "select";
         }
-        echo "terminal: $tokeName $found - {$node->getText()}\n";
     }
 
 
@@ -105,4 +107,11 @@ final class SqlTreeListener implements ParseTreeListener
         $token = $node->getSymbol();
         return $this->lexer->getVocabulary()->getSymbolicName($token->getType());
     }
+
+    public function getPhysicalSql()
+    {
+        return $this->physicalSql;
+    }
+
+
 }

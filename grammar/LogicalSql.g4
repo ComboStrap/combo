@@ -1,6 +1,6 @@
 //https://github.com/antlr/grammars-v4/blob/master/sql/sqlite
 
-grammar logicalSql;
+grammar LogicalSql;
 
 
 /**
@@ -61,11 +61,18 @@ WHERE:             W H E R E;
 
 SPACES: [ \u000B\t\r\n] -> channel(HIDDEN);
 
-NUMERIC_LITERAL: DIGIT+;
+INTEGER_LITERAL: DIGIT+;
+NUMERIC_LITERAL: DIGIT+ ('.' DIGIT*)?;
+
 STRING_LITERAL: '\'' ( ~'\'' | '\'\'')* '\'';
 
 
-IDENTIFIER : [a-zA-Z] [a-zA-Z0-9]*;
+/**
+ * Sql also does not permit
+ * to start with a number
+ * (just ot have no conflict with a NUMERIC_LITERAL)
+*/
+SQL_NAME : [a-zA-Z] [a-zA-Z0-9]*;
 
 /**
  * Fragment rules does not result in tokens visible to the parser.
@@ -75,6 +82,7 @@ IDENTIFIER : [a-zA-Z] [a-zA-Z0-9]*;
 fragment HEX_DIGIT: [0-9a-fA-F];
 fragment DIGIT:     [0-9];
 
+fragment ANY_NAME: SQL_NAME | STRING_LITERAL | OPEN_PAR ANY_NAME CLOSE_PAR;
 fragment A: [aA];
 fragment B: [bB];
 fragment C: [cC];
@@ -103,17 +111,18 @@ fragment Y: [yY];
 fragment Z: [zZ];
 
 /**
- Parser (ie structure)
+ * Parser (ie structure)
+ * https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md
 */
 
 
+column: SQL_NAME (DOT SQL_NAME)? ( AS? columnAlias)?;
 
-result_column: IDENTIFIER (DOT IDENTIFIER)? ( AS? column_alias)? ;
+columnAlias: SQL_NAME | STRING_LITERAL;
 
-column_alias: IDENTIFIER | STRING_LITERAL;
-
-literal_value:
-    NUMERIC_LITERAL
+literalValue:
+    INTEGER_LITERAL
+    | NUMERIC_LITERAL
     | STRING_LITERAL
     | NULL
     | TRUE
@@ -121,36 +130,40 @@ literal_value:
     | NOW
 ;
 
-predicate_expression: column_name
+predicate: columnName
     (
-        (( LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL | NOT_EQUAL | EQUAL) literal_value)
+        (( LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL | NOT_EQUAL | EQUAL) literalValue)
         |
-        (NOT? (LIKE|GLOB| literal_value))
+        (NOT? (LIKE|GLOB| literalValue))
         |
-        (NOT? BETWEEN literal_value AND literal_value)
+        (NOT? BETWEEN literalValue AND literalValue)
         |
-        (NOT? IN OPEN_PAR (literal_value ( COMMA literal_value)*)? CLOSE_PAR)
+        (NOT? IN OPEN_PAR (literalValue ( COMMA literalValue)*)? CLOSE_PAR)
     );
 
+columns: column (COMMA column)*;
+
+predicates: predicate ((AND|OR) predicate)*;
+
+where: (WHERE predicates)?;
+tables: (FROM tabelName)?;
 
 logicalSql:
-        SELECT result_column (COMMA result_column)*
-        (FROM table_name )?
-        (WHERE predicate_expression ((AND|OR) predicate_expression)?)?
-        order_by_stmt?
-        limit_stmt?
+        SELECT columns
+        tables
+        where
+        orderBy?
+        limit?
 ;
 
-table_name: any_name ;
+tabelName: SQL_NAME ;
 
-column_name: any_name ;
+columnName: SQL_NAME ;
 
-any_name: IDENTIFIER | STRING_LITERAL | OPEN_PAR any_name CLOSE_PAR;
 
-limit_stmt: LIMIT NUMERIC_LITERAL;
+limit: LIMIT INTEGER_LITERAL;
 
-order_by_stmt: ORDER BY ordering_term (COMMA ordering_term)* ;
+orderBy: ORDER BY orderByDef (COMMA orderByDef)* ;
 
-ordering_term: column_name asc_desc? ;
+orderByDef: SQL_NAME (ASC | DESC)? ;
 
-asc_desc: ASC | DESC ;

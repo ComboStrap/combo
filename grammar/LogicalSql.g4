@@ -65,16 +65,17 @@ WHERE:             W H E R E;
 PAGES: P A G E S;
 BACKLINKS: B A C K L I N K S;
 
+/**
+* Space are for human (discard)
+*/
 SPACES: [ \u000B\t\r\n] -> channel(HIDDEN);
 
-LITERAL_VALUE: STRING_LITERAL | INTEGER_LITERAL | NUMERIC_LITERAL | NULL | TRUE
-   | FALSE
-   | NOW;
-
-INTEGER_LITERAL: DIGIT+;
-NUMERIC_LITERAL: DIGIT+ ('.' DIGIT*)?;
-
-STRING_LITERAL: '\'' ( ~'\'' | '\'\'')* '\'';
+/**
+* Literal Value capture all literal value
+* to avoid token conflict detection between (integer, numeric, ...)
+* The type is catched at runtime
+*/
+LITERAL_VALUE: ALL_LITERAL_VALUE;
 
 
 /**
@@ -91,7 +92,12 @@ SQL_NAME : [a-zA-Z] [a-zA-Z0-9]*;
 
 fragment HEX_DIGIT: [0-9a-fA-F];
 fragment DIGIT:     [0-9];
-
+fragment INTEGER_LITERAL: DIGIT+;
+fragment NUMERIC_LITERAL: DIGIT+ ('.' DIGIT*)?;
+fragment STRING_LITERAL: '\'' ( ~'\'' | '\'\'')* '\'';
+fragment ALL_LITERAL_VALUE: STRING_LITERAL | INTEGER_LITERAL | NUMERIC_LITERAL | NULL | TRUE
+   | FALSE
+   | NOW;
 
 
 fragment ANY_NAME: SQL_NAME | STRING_LITERAL | OPEN_PAR ANY_NAME CLOSE_PAR;
@@ -151,15 +157,6 @@ predicates: WHERE predicate ((AND|OR) predicate)*;
 
 tables: FROM (PAGES|BACKLINKS);
 
-logicalSql:
-        SELECT columns
-        tables?
-        predicates?
-        orderBys?
-        limit?
-;
-
-
 /**
  * The type of the literal value is
  * checked afterwards on tree traversing
@@ -171,3 +168,13 @@ orderBys: ORDER BY orderByDef (COMMA orderByDef)* ;
 
 orderByDef: SQL_NAME (ASC | DESC)? ;
 
+/**
+* The main/root rule
+*/
+logicalSql:
+        SELECT columns
+        tables?
+        predicates?
+        orderBys?
+        limit?
+;

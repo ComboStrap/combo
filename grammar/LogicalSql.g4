@@ -59,11 +59,7 @@ SELECT:            S E L E C T;
 TRUE:              T R U E;
 WHERE:             W H E R E;
 
-/**
-* Table Name
-*/
-PAGES: P A G E S;
-BACKLINKS: B A C K L I N K S;
+
 
 /**
 * Space are for human (discard)
@@ -84,6 +80,7 @@ LITERAL_VALUE: ALL_LITERAL_VALUE;
  * (just ot have no conflict with a NUMERIC_LITERAL)
 */
 SQL_NAME : [a-zA-Z] [a-zA-Z0-9_-]*;
+
 
 /**
  * Fragment rules does not result in tokens visible to the parser.
@@ -134,28 +131,28 @@ fragment Z: [zZ];
 */
 
 
-column: SQL_NAME (DOT SQL_NAME)? ( AS? columnAlias)?;
-
-columnAlias: SQL_NAME | STRING_LITERAL;
+column: SQL_NAME (DOT SQL_NAME)? ( AS? STRING_LITERAL)?;
 
 
+
+expression: LITERAL_VALUE | SQL_NAME OPEN_PAR expression ( COMMA expression)* CLOSE_PAR;
 
 predicate: SQL_NAME
     (
-        (( LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL | NOT_EQUAL | EQUAL) LITERAL_VALUE)
+        (( LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL | NOT_EQUAL | EQUAL) expression)
         |
-        (NOT? (LIKE|GLOB) LITERAL_VALUE)
+        (NOT? (LIKE|GLOB) expression)
         |
-        (NOT? BETWEEN LITERAL_VALUE AND LITERAL_VALUE)
+        (NOT? BETWEEN expression AND expression)
         |
-        (NOT? IN OPEN_PAR (LITERAL_VALUE ( COMMA LITERAL_VALUE)*)? CLOSE_PAR)
+        (NOT? IN OPEN_PAR (expression ( COMMA expression)*)? CLOSE_PAR)
     );
 
 columns: column (COMMA column)*;
 
 predicates: WHERE predicate ((AND|OR) predicate)*;
 
-tables: FROM (PAGES|BACKLINKS);
+tables: FROM SQL_NAME;
 
 /**
  * The type of the literal value is

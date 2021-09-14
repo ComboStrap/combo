@@ -18,7 +18,7 @@ class LogicalSqlAntlr
 {
     private $text;
     /**
-     * @var SqlTreeListener
+     * @var LogicalSqlTreeListener
      */
     private $listener;
 
@@ -50,7 +50,7 @@ class LogicalSqlAntlr
          * Performs a walk on the given parse tree starting at the root
          * and going down recursively with depth-first search.
          */
-        $this->listener = new SqlTreeListener($lexer, $parser);
+        $this->listener = new LogicalSqlTreeListener($lexer, $parser);
         ParseTreeWalker::default()->walk($this->listener, $tree);
         return $this;
     }

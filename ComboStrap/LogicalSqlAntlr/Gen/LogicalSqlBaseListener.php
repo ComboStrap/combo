@@ -35,14 +35,14 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function enterColumnAlias(Context\ColumnAliasContext $context) : void {}
+	public function enterExpression(Context\ExpressionContext $context) : void {}
 
 	/**
 	 * {@inheritdoc}
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function exitColumnAlias(Context\ColumnAliasContext $context) : void {}
+	public function exitExpression(Context\ExpressionContext $context) : void {}
 	/**
 	 * {@inheritdoc}
 	 *

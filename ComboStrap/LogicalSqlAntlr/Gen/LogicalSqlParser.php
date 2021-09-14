@@ -32,10 +32,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
                FALSE = 31, FROM = 32, GLOB = 33, IN = 34, IS = 35, ISNULL = 36, 
                LIKE = 37, LIMIT = 38, NOT = 39, NOTNULL = 40, NOW = 41, 
                NULL = 42, OR = 43, ORDER = 44, SELECT = 45, TRUE = 46, WHERE = 47, 
-               PAGES = 48, BACKLINKS = 49, SPACES = 50, LITERAL_VALUE = 51, 
-               SQL_NAME = 52, STRING_LITERAL = 53;
+               SPACES = 48, LITERAL_VALUE = 49, SQL_NAME = 50, STRING_LITERAL = 51;
 
-		public const RULE_column = 0, RULE_columnAlias = 1, RULE_predicate = 2, 
+		public const RULE_column = 0, RULE_expression = 1, RULE_predicate = 2, 
                RULE_columns = 3, RULE_predicates = 4, RULE_tables = 5, RULE_limit = 6, 
                RULE_orderBys = 7, RULE_orderByDef = 8, RULE_logicalSql = 9;
 
@@ -43,7 +42,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		 * @var array<string>
 		 */
 		public const RULE_NAMES = [
-			'column', 'columnAlias', 'predicate', 'columns', 'predicates', 'tables', 
+			'column', 'expression', 'predicate', 'columns', 'predicates', 'tables', 
 			'limit', 'orderBys', 'orderByDef', 'logicalSql'
 		];
 
@@ -66,8 +65,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		    "EQ", "NOT_EQUAL", "NOT_EQ2", "AND", "AS", "ASC", "BETWEEN", "BY", 
 		    "DESC", "FALSE", "FROM", "GLOB", "IN", "IS", "ISNULL", "LIKE", "LIMIT", 
 		    "NOT", "NOTNULL", "NOW", "NULL", "OR", "ORDER", "SELECT", "TRUE", 
-		    "WHERE", "PAGES", "BACKLINKS", "SPACES", "LITERAL_VALUE", "SQL_NAME", 
-		    "STRING_LITERAL"
+		    "WHERE", "SPACES", "LITERAL_VALUE", "SQL_NAME", "STRING_LITERAL"
 		];
 
 		/**
@@ -75,92 +73,101 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		 */
 		private const SERIALIZED_ATN =
 			"\u{3}\u{608B}\u{A72A}\u{8133}\u{B9ED}\u{417C}\u{3BE7}\u{7786}\u{5964}" .
-		    "\u{3}\u{37}\u{78}\u{4}\u{2}\u{9}\u{2}\u{4}\u{3}\u{9}\u{3}\u{4}\u{4}" .
+		    "\u{3}\u{35}\u{86}\u{4}\u{2}\u{9}\u{2}\u{4}\u{3}\u{9}\u{3}\u{4}\u{4}" .
 		    "\u{9}\u{4}\u{4}\u{5}\u{9}\u{5}\u{4}\u{6}\u{9}\u{6}\u{4}\u{7}\u{9}" .
 		    "\u{7}\u{4}\u{8}\u{9}\u{8}\u{4}\u{9}\u{9}\u{9}\u{4}\u{A}\u{9}\u{A}" .
 		    "\u{4}\u{B}\u{9}\u{B}\u{3}\u{2}\u{3}\u{2}\u{3}\u{2}\u{5}\u{2}\u{1A}" .
 		    "\u{A}\u{2}\u{3}\u{2}\u{5}\u{2}\u{1D}\u{A}\u{2}\u{3}\u{2}\u{5}\u{2}" .
-		    "\u{20}\u{A}\u{2}\u{3}\u{3}\u{3}\u{3}\u{3}\u{4}\u{3}\u{4}\u{3}\u{4}" .
-		    "\u{3}\u{4}\u{5}\u{4}\u{28}\u{A}\u{4}\u{3}\u{4}\u{3}\u{4}\u{3}\u{4}" .
-		    "\u{5}\u{4}\u{2D}\u{A}\u{4}\u{3}\u{4}\u{3}\u{4}\u{3}\u{4}\u{3}\u{4}" .
-		    "\u{3}\u{4}\u{5}\u{4}\u{34}\u{A}\u{4}\u{3}\u{4}\u{3}\u{4}\u{3}\u{4}" .
-		    "\u{3}\u{4}\u{3}\u{4}\u{7}\u{4}\u{3B}\u{A}\u{4}\u{C}\u{4}\u{E}\u{4}" .
-		    "\u{3E}\u{B}\u{4}\u{5}\u{4}\u{40}\u{A}\u{4}\u{3}\u{4}\u{5}\u{4}\u{43}" .
-		    "\u{A}\u{4}\u{3}\u{5}\u{3}\u{5}\u{3}\u{5}\u{7}\u{5}\u{48}\u{A}\u{5}" .
-		    "\u{C}\u{5}\u{E}\u{5}\u{4B}\u{B}\u{5}\u{3}\u{6}\u{3}\u{6}\u{3}\u{6}" .
-		    "\u{3}\u{6}\u{7}\u{6}\u{51}\u{A}\u{6}\u{C}\u{6}\u{E}\u{6}\u{54}\u{B}" .
-		    "\u{6}\u{3}\u{7}\u{3}\u{7}\u{3}\u{7}\u{3}\u{8}\u{3}\u{8}\u{3}\u{8}" .
-		    "\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{7}\u{9}\u{61}" .
-		    "\u{A}\u{9}\u{C}\u{9}\u{E}\u{9}\u{64}\u{B}\u{9}\u{3}\u{A}\u{3}\u{A}" .
-		    "\u{5}\u{A}\u{68}\u{A}\u{A}\u{3}\u{B}\u{3}\u{B}\u{3}\u{B}\u{5}\u{B}" .
-		    "\u{6D}\u{A}\u{B}\u{3}\u{B}\u{5}\u{B}\u{70}\u{A}\u{B}\u{3}\u{B}\u{5}" .
-		    "\u{B}\u{73}\u{A}\u{B}\u{3}\u{B}\u{5}\u{B}\u{76}\u{A}\u{B}\u{3}\u{B}" .
-		    "\u{2}\u{2}\u{C}\u{2}\u{4}\u{6}\u{8}\u{A}\u{C}\u{E}\u{10}\u{12}\u{14}" .
-		    "\u{2}\u{8}\u{3}\u{2}\u{36}\u{37}\u{5}\u{2}\u{8}\u{8}\u{14}\u{17}\u{19}" .
-		    "\u{19}\u{4}\u{2}\u{23}\u{23}\u{27}\u{27}\u{4}\u{2}\u{1B}\u{1B}\u{2D}" .
-		    "\u{2D}\u{3}\u{2}\u{32}\u{33}\u{4}\u{2}\u{1D}\u{1D}\u{20}\u{20}\u{2}" .
-		    "\u{80}\u{2}\u{16}\u{3}\u{2}\u{2}\u{2}\u{4}\u{21}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{6}\u{23}\u{3}\u{2}\u{2}\u{2}\u{8}\u{44}\u{3}\u{2}\u{2}\u{2}\u{A}" .
-		    "\u{4C}\u{3}\u{2}\u{2}\u{2}\u{C}\u{55}\u{3}\u{2}\u{2}\u{2}\u{E}\u{58}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{10}\u{5B}\u{3}\u{2}\u{2}\u{2}\u{12}\u{65}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{14}\u{69}\u{3}\u{2}\u{2}\u{2}\u{16}\u{19}\u{7}\u{36}" .
-		    "\u{2}\u{2}\u{17}\u{18}\u{7}\u{4}\u{2}\u{2}\u{18}\u{1A}\u{7}\u{36}" .
-		    "\u{2}\u{2}\u{19}\u{17}\u{3}\u{2}\u{2}\u{2}\u{19}\u{1A}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{1A}\u{1F}\u{3}\u{2}\u{2}\u{2}\u{1B}\u{1D}\u{7}\u{1C}\u{2}" .
-		    "\u{2}\u{1C}\u{1B}\u{3}\u{2}\u{2}\u{2}\u{1C}\u{1D}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{1D}\u{1E}\u{3}\u{2}\u{2}\u{2}\u{1E}\u{20}\u{5}\u{4}\u{3}\u{2}\u{1F}" .
-		    "\u{1C}\u{3}\u{2}\u{2}\u{2}\u{1F}\u{20}\u{3}\u{2}\u{2}\u{2}\u{20}\u{3}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{21}\u{22}\u{9}\u{2}\u{2}\u{2}\u{22}\u{5}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{23}\u{42}\u{7}\u{36}\u{2}\u{2}\u{24}\u{25}\u{9}" .
-		    "\u{3}\u{2}\u{2}\u{25}\u{43}\u{7}\u{35}\u{2}\u{2}\u{26}\u{28}\u{7}" .
-		    "\u{29}\u{2}\u{2}\u{27}\u{26}\u{3}\u{2}\u{2}\u{2}\u{27}\u{28}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{28}\u{29}\u{3}\u{2}\u{2}\u{2}\u{29}\u{2A}\u{9}\u{4}" .
-		    "\u{2}\u{2}\u{2A}\u{43}\u{7}\u{35}\u{2}\u{2}\u{2B}\u{2D}\u{7}\u{29}" .
-		    "\u{2}\u{2}\u{2C}\u{2B}\u{3}\u{2}\u{2}\u{2}\u{2C}\u{2D}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{2D}\u{2E}\u{3}\u{2}\u{2}\u{2}\u{2E}\u{2F}\u{7}\u{1E}\u{2}" .
-		    "\u{2}\u{2F}\u{30}\u{7}\u{35}\u{2}\u{2}\u{30}\u{31}\u{7}\u{1B}\u{2}" .
-		    "\u{2}\u{31}\u{43}\u{7}\u{35}\u{2}\u{2}\u{32}\u{34}\u{7}\u{29}\u{2}" .
-		    "\u{2}\u{33}\u{32}\u{3}\u{2}\u{2}\u{2}\u{33}\u{34}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{34}\u{35}\u{3}\u{2}\u{2}\u{2}\u{35}\u{36}\u{7}\u{24}\u{2}\u{2}" .
-		    "\u{36}\u{3F}\u{7}\u{5}\u{2}\u{2}\u{37}\u{3C}\u{7}\u{35}\u{2}\u{2}" .
-		    "\u{38}\u{39}\u{7}\u{7}\u{2}\u{2}\u{39}\u{3B}\u{7}\u{35}\u{2}\u{2}" .
-		    "\u{3A}\u{38}\u{3}\u{2}\u{2}\u{2}\u{3B}\u{3E}\u{3}\u{2}\u{2}\u{2}\u{3C}" .
-		    "\u{3A}\u{3}\u{2}\u{2}\u{2}\u{3C}\u{3D}\u{3}\u{2}\u{2}\u{2}\u{3D}\u{40}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{3E}\u{3C}\u{3}\u{2}\u{2}\u{2}\u{3F}\u{37}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{3F}\u{40}\u{3}\u{2}\u{2}\u{2}\u{40}\u{41}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{41}\u{43}\u{7}\u{6}\u{2}\u{2}\u{42}\u{24}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{42}\u{27}\u{3}\u{2}\u{2}\u{2}\u{42}\u{2C}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{42}\u{33}\u{3}\u{2}\u{2}\u{2}\u{43}\u{7}\u{3}\u{2}\u{2}\u{2}\u{44}" .
-		    "\u{49}\u{5}\u{2}\u{2}\u{2}\u{45}\u{46}\u{7}\u{7}\u{2}\u{2}\u{46}\u{48}" .
-		    "\u{5}\u{2}\u{2}\u{2}\u{47}\u{45}\u{3}\u{2}\u{2}\u{2}\u{48}\u{4B}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{49}\u{47}\u{3}\u{2}\u{2}\u{2}\u{49}\u{4A}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{4A}\u{9}\u{3}\u{2}\u{2}\u{2}\u{4B}\u{49}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{4C}\u{4D}\u{7}\u{31}\u{2}\u{2}\u{4D}\u{52}\u{5}\u{6}\u{4}" .
-		    "\u{2}\u{4E}\u{4F}\u{9}\u{5}\u{2}\u{2}\u{4F}\u{51}\u{5}\u{6}\u{4}\u{2}" .
-		    "\u{50}\u{4E}\u{3}\u{2}\u{2}\u{2}\u{51}\u{54}\u{3}\u{2}\u{2}\u{2}\u{52}" .
-		    "\u{50}\u{3}\u{2}\u{2}\u{2}\u{52}\u{53}\u{3}\u{2}\u{2}\u{2}\u{53}\u{B}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{54}\u{52}\u{3}\u{2}\u{2}\u{2}\u{55}\u{56}\u{7}" .
-		    "\u{22}\u{2}\u{2}\u{56}\u{57}\u{9}\u{6}\u{2}\u{2}\u{57}\u{D}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{58}\u{59}\u{7}\u{28}\u{2}\u{2}\u{59}\u{5A}\u{7}\u{35}" .
-		    "\u{2}\u{2}\u{5A}\u{F}\u{3}\u{2}\u{2}\u{2}\u{5B}\u{5C}\u{7}\u{2E}\u{2}" .
-		    "\u{2}\u{5C}\u{5D}\u{7}\u{1F}\u{2}\u{2}\u{5D}\u{62}\u{5}\u{12}\u{A}" .
-		    "\u{2}\u{5E}\u{5F}\u{7}\u{7}\u{2}\u{2}\u{5F}\u{61}\u{5}\u{12}\u{A}" .
-		    "\u{2}\u{60}\u{5E}\u{3}\u{2}\u{2}\u{2}\u{61}\u{64}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{62}\u{60}\u{3}\u{2}\u{2}\u{2}\u{62}\u{63}\u{3}\u{2}\u{2}\u{2}\u{63}" .
-		    "\u{11}\u{3}\u{2}\u{2}\u{2}\u{64}\u{62}\u{3}\u{2}\u{2}\u{2}\u{65}\u{67}" .
-		    "\u{7}\u{36}\u{2}\u{2}\u{66}\u{68}\u{9}\u{7}\u{2}\u{2}\u{67}\u{66}" .
-		    "\u{3}\u{2}\u{2}\u{2}\u{67}\u{68}\u{3}\u{2}\u{2}\u{2}\u{68}\u{13}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{69}\u{6A}\u{7}\u{2F}\u{2}\u{2}\u{6A}\u{6C}\u{5}" .
-		    "\u{8}\u{5}\u{2}\u{6B}\u{6D}\u{5}\u{C}\u{7}\u{2}\u{6C}\u{6B}\u{3}\u{2}" .
-		    "\u{2}\u{2}\u{6C}\u{6D}\u{3}\u{2}\u{2}\u{2}\u{6D}\u{6F}\u{3}\u{2}\u{2}" .
-		    "\u{2}\u{6E}\u{70}\u{5}\u{A}\u{6}\u{2}\u{6F}\u{6E}\u{3}\u{2}\u{2}\u{2}" .
-		    "\u{6F}\u{70}\u{3}\u{2}\u{2}\u{2}\u{70}\u{72}\u{3}\u{2}\u{2}\u{2}\u{71}" .
-		    "\u{73}\u{5}\u{10}\u{9}\u{2}\u{72}\u{71}\u{3}\u{2}\u{2}\u{2}\u{72}" .
-		    "\u{73}\u{3}\u{2}\u{2}\u{2}\u{73}\u{75}\u{3}\u{2}\u{2}\u{2}\u{74}\u{76}" .
-		    "\u{5}\u{E}\u{8}\u{2}\u{75}\u{74}\u{3}\u{2}\u{2}\u{2}\u{75}\u{76}\u{3}" .
-		    "\u{2}\u{2}\u{2}\u{76}\u{15}\u{3}\u{2}\u{2}\u{2}\u{13}\u{19}\u{1C}" .
-		    "\u{1F}\u{27}\u{2C}\u{33}\u{3C}\u{3F}\u{42}\u{49}\u{52}\u{62}\u{67}" .
-		    "\u{6C}\u{6F}\u{72}\u{75}";
+		    "\u{20}\u{A}\u{2}\u{3}\u{3}\u{3}\u{3}\u{3}\u{3}\u{3}\u{3}\u{3}\u{3}" .
+		    "\u{3}\u{3}\u{7}\u{3}\u{28}\u{A}\u{3}\u{C}\u{3}\u{E}\u{3}\u{2B}\u{B}" .
+		    "\u{3}\u{3}\u{3}\u{3}\u{3}\u{5}\u{3}\u{2F}\u{A}\u{3}\u{3}\u{4}\u{3}" .
+		    "\u{4}\u{3}\u{4}\u{3}\u{4}\u{5}\u{4}\u{35}\u{A}\u{4}\u{3}\u{4}\u{3}" .
+		    "\u{4}\u{3}\u{4}\u{5}\u{4}\u{3A}\u{A}\u{4}\u{3}\u{4}\u{3}\u{4}\u{3}" .
+		    "\u{4}\u{3}\u{4}\u{3}\u{4}\u{3}\u{4}\u{5}\u{4}\u{42}\u{A}\u{4}\u{3}" .
+		    "\u{4}\u{3}\u{4}\u{3}\u{4}\u{3}\u{4}\u{3}\u{4}\u{7}\u{4}\u{49}\u{A}" .
+		    "\u{4}\u{C}\u{4}\u{E}\u{4}\u{4C}\u{B}\u{4}\u{5}\u{4}\u{4E}\u{A}\u{4}" .
+		    "\u{3}\u{4}\u{5}\u{4}\u{51}\u{A}\u{4}\u{3}\u{5}\u{3}\u{5}\u{3}\u{5}" .
+		    "\u{7}\u{5}\u{56}\u{A}\u{5}\u{C}\u{5}\u{E}\u{5}\u{59}\u{B}\u{5}\u{3}" .
+		    "\u{6}\u{3}\u{6}\u{3}\u{6}\u{3}\u{6}\u{7}\u{6}\u{5F}\u{A}\u{6}\u{C}" .
+		    "\u{6}\u{E}\u{6}\u{62}\u{B}\u{6}\u{3}\u{7}\u{3}\u{7}\u{3}\u{7}\u{3}" .
+		    "\u{8}\u{3}\u{8}\u{3}\u{8}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}\u{3}\u{9}" .
+		    "\u{3}\u{9}\u{7}\u{9}\u{6F}\u{A}\u{9}\u{C}\u{9}\u{E}\u{9}\u{72}\u{B}" .
+		    "\u{9}\u{3}\u{A}\u{3}\u{A}\u{5}\u{A}\u{76}\u{A}\u{A}\u{3}\u{B}\u{3}" .
+		    "\u{B}\u{3}\u{B}\u{5}\u{B}\u{7B}\u{A}\u{B}\u{3}\u{B}\u{5}\u{B}\u{7E}" .
+		    "\u{A}\u{B}\u{3}\u{B}\u{5}\u{B}\u{81}\u{A}\u{B}\u{3}\u{B}\u{5}\u{B}" .
+		    "\u{84}\u{A}\u{B}\u{3}\u{B}\u{2}\u{2}\u{C}\u{2}\u{4}\u{6}\u{8}\u{A}" .
+		    "\u{C}\u{E}\u{10}\u{12}\u{14}\u{2}\u{6}\u{5}\u{2}\u{8}\u{8}\u{14}\u{17}" .
+		    "\u{19}\u{19}\u{4}\u{2}\u{23}\u{23}\u{27}\u{27}\u{4}\u{2}\u{1B}\u{1B}" .
+		    "\u{2D}\u{2D}\u{4}\u{2}\u{1D}\u{1D}\u{20}\u{20}\u{2}\u{90}\u{2}\u{16}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{4}\u{2E}\u{3}\u{2}\u{2}\u{2}\u{6}\u{30}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{8}\u{52}\u{3}\u{2}\u{2}\u{2}\u{A}\u{5A}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{C}\u{63}\u{3}\u{2}\u{2}\u{2}\u{E}\u{66}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{10}\u{69}\u{3}\u{2}\u{2}\u{2}\u{12}\u{73}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{14}\u{77}\u{3}\u{2}\u{2}\u{2}\u{16}\u{19}\u{7}\u{34}\u{2}\u{2}" .
+		    "\u{17}\u{18}\u{7}\u{4}\u{2}\u{2}\u{18}\u{1A}\u{7}\u{34}\u{2}\u{2}" .
+		    "\u{19}\u{17}\u{3}\u{2}\u{2}\u{2}\u{19}\u{1A}\u{3}\u{2}\u{2}\u{2}\u{1A}" .
+		    "\u{1F}\u{3}\u{2}\u{2}\u{2}\u{1B}\u{1D}\u{7}\u{1C}\u{2}\u{2}\u{1C}" .
+		    "\u{1B}\u{3}\u{2}\u{2}\u{2}\u{1C}\u{1D}\u{3}\u{2}\u{2}\u{2}\u{1D}\u{1E}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{1E}\u{20}\u{7}\u{35}\u{2}\u{2}\u{1F}\u{1C}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{1F}\u{20}\u{3}\u{2}\u{2}\u{2}\u{20}\u{3}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{21}\u{2F}\u{7}\u{33}\u{2}\u{2}\u{22}\u{23}\u{7}" .
+		    "\u{34}\u{2}\u{2}\u{23}\u{24}\u{7}\u{5}\u{2}\u{2}\u{24}\u{29}\u{5}" .
+		    "\u{4}\u{3}\u{2}\u{25}\u{26}\u{7}\u{7}\u{2}\u{2}\u{26}\u{28}\u{5}\u{4}" .
+		    "\u{3}\u{2}\u{27}\u{25}\u{3}\u{2}\u{2}\u{2}\u{28}\u{2B}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{29}\u{27}\u{3}\u{2}\u{2}\u{2}\u{29}\u{2A}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{2A}\u{2C}\u{3}\u{2}\u{2}\u{2}\u{2B}\u{29}\u{3}\u{2}\u{2}\u{2}\u{2C}" .
+		    "\u{2D}\u{7}\u{6}\u{2}\u{2}\u{2D}\u{2F}\u{3}\u{2}\u{2}\u{2}\u{2E}\u{21}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{2E}\u{22}\u{3}\u{2}\u{2}\u{2}\u{2F}\u{5}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{30}\u{50}\u{7}\u{34}\u{2}\u{2}\u{31}\u{32}\u{9}" .
+		    "\u{2}\u{2}\u{2}\u{32}\u{51}\u{5}\u{4}\u{3}\u{2}\u{33}\u{35}\u{7}\u{29}" .
+		    "\u{2}\u{2}\u{34}\u{33}\u{3}\u{2}\u{2}\u{2}\u{34}\u{35}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{35}\u{36}\u{3}\u{2}\u{2}\u{2}\u{36}\u{37}\u{9}\u{3}\u{2}\u{2}" .
+		    "\u{37}\u{51}\u{5}\u{4}\u{3}\u{2}\u{38}\u{3A}\u{7}\u{29}\u{2}\u{2}" .
+		    "\u{39}\u{38}\u{3}\u{2}\u{2}\u{2}\u{39}\u{3A}\u{3}\u{2}\u{2}\u{2}\u{3A}" .
+		    "\u{3B}\u{3}\u{2}\u{2}\u{2}\u{3B}\u{3C}\u{7}\u{1E}\u{2}\u{2}\u{3C}" .
+		    "\u{3D}\u{5}\u{4}\u{3}\u{2}\u{3D}\u{3E}\u{7}\u{1B}\u{2}\u{2}\u{3E}" .
+		    "\u{3F}\u{5}\u{4}\u{3}\u{2}\u{3F}\u{51}\u{3}\u{2}\u{2}\u{2}\u{40}\u{42}" .
+		    "\u{7}\u{29}\u{2}\u{2}\u{41}\u{40}\u{3}\u{2}\u{2}\u{2}\u{41}\u{42}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{42}\u{43}\u{3}\u{2}\u{2}\u{2}\u{43}\u{44}\u{7}" .
+		    "\u{24}\u{2}\u{2}\u{44}\u{4D}\u{7}\u{5}\u{2}\u{2}\u{45}\u{4A}\u{5}" .
+		    "\u{4}\u{3}\u{2}\u{46}\u{47}\u{7}\u{7}\u{2}\u{2}\u{47}\u{49}\u{5}\u{4}" .
+		    "\u{3}\u{2}\u{48}\u{46}\u{3}\u{2}\u{2}\u{2}\u{49}\u{4C}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{4A}\u{48}\u{3}\u{2}\u{2}\u{2}\u{4A}\u{4B}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{4B}\u{4E}\u{3}\u{2}\u{2}\u{2}\u{4C}\u{4A}\u{3}\u{2}\u{2}\u{2}\u{4D}" .
+		    "\u{45}\u{3}\u{2}\u{2}\u{2}\u{4D}\u{4E}\u{3}\u{2}\u{2}\u{2}\u{4E}\u{4F}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{4F}\u{51}\u{7}\u{6}\u{2}\u{2}\u{50}\u{31}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{50}\u{34}\u{3}\u{2}\u{2}\u{2}\u{50}\u{39}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{50}\u{41}\u{3}\u{2}\u{2}\u{2}\u{51}\u{7}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{52}\u{57}\u{5}\u{2}\u{2}\u{2}\u{53}\u{54}\u{7}\u{7}\u{2}\u{2}" .
+		    "\u{54}\u{56}\u{5}\u{2}\u{2}\u{2}\u{55}\u{53}\u{3}\u{2}\u{2}\u{2}\u{56}" .
+		    "\u{59}\u{3}\u{2}\u{2}\u{2}\u{57}\u{55}\u{3}\u{2}\u{2}\u{2}\u{57}\u{58}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{58}\u{9}\u{3}\u{2}\u{2}\u{2}\u{59}\u{57}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{5A}\u{5B}\u{7}\u{31}\u{2}\u{2}\u{5B}\u{60}\u{5}" .
+		    "\u{6}\u{4}\u{2}\u{5C}\u{5D}\u{9}\u{4}\u{2}\u{2}\u{5D}\u{5F}\u{5}\u{6}" .
+		    "\u{4}\u{2}\u{5E}\u{5C}\u{3}\u{2}\u{2}\u{2}\u{5F}\u{62}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{60}\u{5E}\u{3}\u{2}\u{2}\u{2}\u{60}\u{61}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{61}\u{B}\u{3}\u{2}\u{2}\u{2}\u{62}\u{60}\u{3}\u{2}\u{2}\u{2}\u{63}" .
+		    "\u{64}\u{7}\u{22}\u{2}\u{2}\u{64}\u{65}\u{7}\u{34}\u{2}\u{2}\u{65}" .
+		    "\u{D}\u{3}\u{2}\u{2}\u{2}\u{66}\u{67}\u{7}\u{28}\u{2}\u{2}\u{67}\u{68}" .
+		    "\u{7}\u{33}\u{2}\u{2}\u{68}\u{F}\u{3}\u{2}\u{2}\u{2}\u{69}\u{6A}\u{7}" .
+		    "\u{2E}\u{2}\u{2}\u{6A}\u{6B}\u{7}\u{1F}\u{2}\u{2}\u{6B}\u{70}\u{5}" .
+		    "\u{12}\u{A}\u{2}\u{6C}\u{6D}\u{7}\u{7}\u{2}\u{2}\u{6D}\u{6F}\u{5}" .
+		    "\u{12}\u{A}\u{2}\u{6E}\u{6C}\u{3}\u{2}\u{2}\u{2}\u{6F}\u{72}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{70}\u{6E}\u{3}\u{2}\u{2}\u{2}\u{70}\u{71}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{71}\u{11}\u{3}\u{2}\u{2}\u{2}\u{72}\u{70}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{73}\u{75}\u{7}\u{34}\u{2}\u{2}\u{74}\u{76}\u{9}\u{5}\u{2}" .
+		    "\u{2}\u{75}\u{74}\u{3}\u{2}\u{2}\u{2}\u{75}\u{76}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{76}\u{13}\u{3}\u{2}\u{2}\u{2}\u{77}\u{78}\u{7}\u{2F}\u{2}\u{2}" .
+		    "\u{78}\u{7A}\u{5}\u{8}\u{5}\u{2}\u{79}\u{7B}\u{5}\u{C}\u{7}\u{2}\u{7A}" .
+		    "\u{79}\u{3}\u{2}\u{2}\u{2}\u{7A}\u{7B}\u{3}\u{2}\u{2}\u{2}\u{7B}\u{7D}" .
+		    "\u{3}\u{2}\u{2}\u{2}\u{7C}\u{7E}\u{5}\u{A}\u{6}\u{2}\u{7D}\u{7C}\u{3}" .
+		    "\u{2}\u{2}\u{2}\u{7D}\u{7E}\u{3}\u{2}\u{2}\u{2}\u{7E}\u{80}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{7F}\u{81}\u{5}\u{10}\u{9}\u{2}\u{80}\u{7F}\u{3}\u{2}" .
+		    "\u{2}\u{2}\u{80}\u{81}\u{3}\u{2}\u{2}\u{2}\u{81}\u{83}\u{3}\u{2}\u{2}" .
+		    "\u{2}\u{82}\u{84}\u{5}\u{E}\u{8}\u{2}\u{83}\u{82}\u{3}\u{2}\u{2}\u{2}" .
+		    "\u{83}\u{84}\u{3}\u{2}\u{2}\u{2}\u{84}\u{15}\u{3}\u{2}\u{2}\u{2}\u{15}" .
+		    "\u{19}\u{1C}\u{1F}\u{29}\u{2E}\u{34}\u{39}\u{41}\u{4A}\u{4D}\u{50}" .
+		    "\u{57}\u{60}\u{70}\u{75}\u{7A}\u{7D}\u{80}\u{83}";
 
 		protected static $atn;
 		protected static $decisionToDFA;
@@ -249,7 +256,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
-		        if (((($_la) & ~0x3f) === 0 && ((1 << $_la) & ((1 << self::AS) | (1 << self::SQL_NAME) | (1 << self::STRING_LITERAL))) !== 0)) {
+		        if ($_la === self::AS || $_la === self::STRING_LITERAL) {
 		        	$this->setState(26);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
@@ -259,7 +266,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        		$this->match(self::AS);
 		        	}
 		        	$this->setState(28);
-		        	$this->columnAlias();
+		        	$this->match(self::STRING_LITERAL);
 		        }
 		    } catch (RecognitionException $exception) {
 		        $localContext->exception = $exception;
@@ -275,27 +282,50 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		/**
 		 * @throws RecognitionException
 		 */
-		public function columnAlias() : Context\ColumnAliasContext
+		public function expression() : Context\ExpressionContext
 		{
-		    $localContext = new Context\ColumnAliasContext($this->ctx, $this->getState());
+		    $localContext = new Context\ExpressionContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 2, self::RULE_columnAlias);
+		    $this->enterRule($localContext, 2, self::RULE_expression);
 
 		    try {
-		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(31);
+		        $this->setState(44);
+		        $this->errorHandler->sync($this);
 
-		        $_la = $this->input->LA(1);
+		        switch ($this->input->LA(1)) {
+		            case self::LITERAL_VALUE:
+		            	$this->enterOuterAlt($localContext, 1);
+		            	$this->setState(31);
+		            	$this->match(self::LITERAL_VALUE);
+		            	break;
 
-		        if (!($_la === self::SQL_NAME || $_la === self::STRING_LITERAL)) {
-		        $this->errorHandler->recoverInline($this);
-		        } else {
-		        	if ($this->input->LA(1) === Token::EOF) {
-		        	    $this->matchedEOF = true;
-		            }
+		            case self::SQL_NAME:
+		            	$this->enterOuterAlt($localContext, 2);
+		            	$this->setState(32);
+		            	$this->match(self::SQL_NAME);
+		            	$this->setState(33);
+		            	$this->match(self::OPEN_PAR);
+		            	$this->setState(34);
+		            	$this->expression();
+		            	$this->setState(39);
+		            	$this->errorHandler->sync($this);
 
-		        	$this->errorHandler->reportMatch($this);
-		        	$this->consume();
+		            	$_la = $this->input->LA(1);
+		            	while ($_la === self::COMMA) {
+		            		$this->setState(35);
+		            		$this->match(self::COMMA);
+		            		$this->setState(36);
+		            		$this->expression();
+		            		$this->setState(41);
+		            		$this->errorHandler->sync($this);
+		            		$_la = $this->input->LA(1);
+		            	}
+		            	$this->setState(42);
+		            	$this->match(self::CLOSE_PAR);
+		            	break;
+
+		        default:
+		        	throw new NoViableAltException($this);
 		        }
 		    } catch (RecognitionException $exception) {
 		        $localContext->exception = $exception;
@@ -319,14 +349,14 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(33);
+		        $this->setState(46);
 		        $this->match(self::SQL_NAME);
-		        $this->setState(64);
+		        $this->setState(78);
 		        $this->errorHandler->sync($this);
 
-		        switch ($this->getInterpreter()->adaptivePredict($this->input, 8, $this->ctx)) {
+		        switch ($this->getInterpreter()->adaptivePredict($this->input, 10, $this->ctx)) {
 		        	case 1:
-		        	    $this->setState(34);
+		        	    $this->setState(47);
 
 		        	    $_la = $this->input->LA(1);
 
@@ -340,20 +370,20 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        	    	$this->errorHandler->reportMatch($this);
 		        	    	$this->consume();
 		        	    }
-		        	    $this->setState(35);
-		        	    $this->match(self::LITERAL_VALUE);
+		        	    $this->setState(48);
+		        	    $this->expression();
 		        	break;
 
 		        	case 2:
-		        	    $this->setState(37);
+		        	    $this->setState(50);
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
 		        	    if ($_la === self::NOT) {
-		        	    	$this->setState(36);
+		        	    	$this->setState(49);
 		        	    	$this->match(self::NOT);
 		        	    }
-		        	    $this->setState(39);
+		        	    $this->setState(52);
 
 		        	    $_la = $this->input->LA(1);
 
@@ -367,64 +397,64 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        	    	$this->errorHandler->reportMatch($this);
 		        	    	$this->consume();
 		        	    }
-		        	    $this->setState(40);
-		        	    $this->match(self::LITERAL_VALUE);
+		        	    $this->setState(53);
+		        	    $this->expression();
 		        	break;
 
 		        	case 3:
-		        	    $this->setState(42);
+		        	    $this->setState(55);
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
 		        	    if ($_la === self::NOT) {
-		        	    	$this->setState(41);
+		        	    	$this->setState(54);
 		        	    	$this->match(self::NOT);
 		        	    }
-		        	    $this->setState(44);
+		        	    $this->setState(57);
 		        	    $this->match(self::BETWEEN);
-		        	    $this->setState(45);
-		        	    $this->match(self::LITERAL_VALUE);
-		        	    $this->setState(46);
+		        	    $this->setState(58);
+		        	    $this->expression();
+		        	    $this->setState(59);
 		        	    $this->match(self::AND);
-		        	    $this->setState(47);
-		        	    $this->match(self::LITERAL_VALUE);
+		        	    $this->setState(60);
+		        	    $this->expression();
 		        	break;
 
 		        	case 4:
-		        	    $this->setState(49);
+		        	    $this->setState(63);
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
 		        	    if ($_la === self::NOT) {
-		        	    	$this->setState(48);
+		        	    	$this->setState(62);
 		        	    	$this->match(self::NOT);
 		        	    }
-		        	    $this->setState(51);
+		        	    $this->setState(65);
 		        	    $this->match(self::IN);
-		        	    $this->setState(52);
+		        	    $this->setState(66);
 		        	    $this->match(self::OPEN_PAR);
-		        	    $this->setState(61);
+		        	    $this->setState(75);
 		        	    $this->errorHandler->sync($this);
 		        	    $_la = $this->input->LA(1);
 
-		        	    if ($_la === self::LITERAL_VALUE) {
-		        	    	$this->setState(53);
-		        	    	$this->match(self::LITERAL_VALUE);
-		        	    	$this->setState(58);
+		        	    if ($_la === self::LITERAL_VALUE || $_la === self::SQL_NAME) {
+		        	    	$this->setState(67);
+		        	    	$this->expression();
+		        	    	$this->setState(72);
 		        	    	$this->errorHandler->sync($this);
 
 		        	    	$_la = $this->input->LA(1);
 		        	    	while ($_la === self::COMMA) {
-		        	    		$this->setState(54);
+		        	    		$this->setState(68);
 		        	    		$this->match(self::COMMA);
-		        	    		$this->setState(55);
-		        	    		$this->match(self::LITERAL_VALUE);
-		        	    		$this->setState(60);
+		        	    		$this->setState(69);
+		        	    		$this->expression();
+		        	    		$this->setState(74);
 		        	    		$this->errorHandler->sync($this);
 		        	    		$_la = $this->input->LA(1);
 		        	    	}
 		        	    }
-		        	    $this->setState(63);
+		        	    $this->setState(77);
 		        	    $this->match(self::CLOSE_PAR);
 		        	break;
 		        }
@@ -450,18 +480,18 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(66);
+		        $this->setState(80);
 		        $this->column();
-		        $this->setState(71);
+		        $this->setState(85);
 		        $this->errorHandler->sync($this);
 
 		        $_la = $this->input->LA(1);
 		        while ($_la === self::COMMA) {
-		        	$this->setState(67);
+		        	$this->setState(81);
 		        	$this->match(self::COMMA);
-		        	$this->setState(68);
+		        	$this->setState(82);
 		        	$this->column();
-		        	$this->setState(73);
+		        	$this->setState(87);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
 		        }
@@ -487,16 +517,16 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(74);
+		        $this->setState(88);
 		        $this->match(self::WHERE);
-		        $this->setState(75);
+		        $this->setState(89);
 		        $this->predicate();
-		        $this->setState(80);
+		        $this->setState(94);
 		        $this->errorHandler->sync($this);
 
 		        $_la = $this->input->LA(1);
 		        while ($_la === self::AND || $_la === self::OR) {
-		        	$this->setState(76);
+		        	$this->setState(90);
 
 		        	$_la = $this->input->LA(1);
 
@@ -510,9 +540,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		        		$this->errorHandler->reportMatch($this);
 		        		$this->consume();
 		        	}
-		        	$this->setState(77);
+		        	$this->setState(91);
 		        	$this->predicate();
-		        	$this->setState(82);
+		        	$this->setState(96);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
 		        }
@@ -538,22 +568,10 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(83);
+		        $this->setState(97);
 		        $this->match(self::FROM);
-		        $this->setState(84);
-
-		        $_la = $this->input->LA(1);
-
-		        if (!($_la === self::PAGES || $_la === self::BACKLINKS)) {
-		        $this->errorHandler->recoverInline($this);
-		        } else {
-		        	if ($this->input->LA(1) === Token::EOF) {
-		        	    $this->matchedEOF = true;
-		            }
-
-		        	$this->errorHandler->reportMatch($this);
-		        	$this->consume();
-		        }
+		        $this->setState(98);
+		        $this->match(self::SQL_NAME);
 		    } catch (RecognitionException $exception) {
 		        $localContext->exception = $exception;
 		        $this->errorHandler->reportError($this, $exception);
@@ -576,9 +594,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(86);
+		        $this->setState(100);
 		        $this->match(self::LIMIT);
-		        $this->setState(87);
+		        $this->setState(101);
 		        $this->match(self::LITERAL_VALUE);
 		    } catch (RecognitionException $exception) {
 		        $localContext->exception = $exception;
@@ -602,22 +620,22 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(89);
+		        $this->setState(103);
 		        $this->match(self::ORDER);
-		        $this->setState(90);
+		        $this->setState(104);
 		        $this->match(self::BY);
-		        $this->setState(91);
+		        $this->setState(105);
 		        $this->orderByDef();
-		        $this->setState(96);
+		        $this->setState(110);
 		        $this->errorHandler->sync($this);
 
 		        $_la = $this->input->LA(1);
 		        while ($_la === self::COMMA) {
-		        	$this->setState(92);
+		        	$this->setState(106);
 		        	$this->match(self::COMMA);
-		        	$this->setState(93);
+		        	$this->setState(107);
 		        	$this->orderByDef();
-		        	$this->setState(98);
+		        	$this->setState(112);
 		        	$this->errorHandler->sync($this);
 		        	$_la = $this->input->LA(1);
 		        }
@@ -643,14 +661,14 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(99);
+		        $this->setState(113);
 		        $this->match(self::SQL_NAME);
-		        $this->setState(101);
+		        $this->setState(115);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::ASC || $_la === self::DESC) {
-		        	$this->setState(100);
+		        	$this->setState(114);
 
 		        	$_la = $this->input->LA(1);
 
@@ -687,40 +705,40 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
-		        $this->setState(103);
+		        $this->setState(117);
 		        $this->match(self::SELECT);
-		        $this->setState(104);
+		        $this->setState(118);
 		        $this->columns();
-		        $this->setState(106);
+		        $this->setState(120);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::FROM) {
-		        	$this->setState(105);
+		        	$this->setState(119);
 		        	$this->tables();
 		        }
-		        $this->setState(109);
+		        $this->setState(123);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::WHERE) {
-		        	$this->setState(108);
+		        	$this->setState(122);
 		        	$this->predicates();
 		        }
-		        $this->setState(112);
+		        $this->setState(126);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::ORDER) {
-		        	$this->setState(111);
+		        	$this->setState(125);
 		        	$this->orderBys();
 		        }
-		        $this->setState(115);
+		        $this->setState(129);
 		        $this->errorHandler->sync($this);
 		        $_la = $this->input->LA(1);
 
 		        if ($_la === self::LIMIT) {
-		        	$this->setState(114);
+		        	$this->setState(128);
 		        	$this->limit();
 		        }
 		    } catch (RecognitionException $exception) {
@@ -775,9 +793,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	        return $this->getToken(LogicalSqlParser::DOT, 0);
 	    }
 
-	    public function columnAlias() : ?ColumnAliasContext
+	    public function STRING_LITERAL() : ?TerminalNode
 	    {
-	    	return $this->getTypedRuleContext(ColumnAliasContext::class, 0);
+	        return $this->getToken(LogicalSqlParser::STRING_LITERAL, 0);
 	    }
 
 	    public function AS() : ?TerminalNode
@@ -809,7 +827,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 		}
 	} 
 
-	class ColumnAliasContext extends ParserRuleContext
+	class ExpressionContext extends ParserRuleContext
 	{
 		public function __construct(?ParserRuleContext $parent, ?int $invokingState = null)
 		{
@@ -818,7 +836,12 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_columnAlias;
+		    return LogicalSqlParser::RULE_expression;
+	    }
+
+	    public function LITERAL_VALUE() : ?TerminalNode
+	    {
+	        return $this->getToken(LogicalSqlParser::LITERAL_VALUE, 0);
 	    }
 
 	    public function SQL_NAME() : ?TerminalNode
@@ -826,29 +849,58 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	        return $this->getToken(LogicalSqlParser::SQL_NAME, 0);
 	    }
 
-	    public function STRING_LITERAL() : ?TerminalNode
+	    public function OPEN_PAR() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::STRING_LITERAL, 0);
+	        return $this->getToken(LogicalSqlParser::OPEN_PAR, 0);
+	    }
+
+	    /**
+	     * @return array<ExpressionContext>|ExpressionContext|null
+	     */
+	    public function expression(?int $index = null)
+	    {
+	    	if ($index === null) {
+	    		return $this->getTypedRuleContexts(ExpressionContext::class);
+	    	}
+
+	        return $this->getTypedRuleContext(ExpressionContext::class, $index);
+	    }
+
+	    public function CLOSE_PAR() : ?TerminalNode
+	    {
+	        return $this->getToken(LogicalSqlParser::CLOSE_PAR, 0);
+	    }
+
+	    /**
+	     * @return array<TerminalNode>|TerminalNode|null
+	     */
+	    public function COMMA(?int $index = null)
+	    {
+	    	if ($index === null) {
+	    		return $this->getTokens(LogicalSqlParser::COMMA);
+	    	}
+
+	        return $this->getToken(LogicalSqlParser::COMMA, $index);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
 			if ($listener instanceof LogicalSqlListener) {
-			    $listener->enterColumnAlias($this);
+			    $listener->enterExpression($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
 			if ($listener instanceof LogicalSqlListener) {
-			    $listener->exitColumnAlias($this);
+			    $listener->exitExpression($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
 			if ($visitor instanceof LogicalSqlVisitor) {
-			    return $visitor->visitColumnAlias($this);
+			    return $visitor->visitExpression($this);
 		    }
 
 			return $visitor->visitChildren($this);
@@ -873,15 +925,15 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    }
 
 	    /**
-	     * @return array<TerminalNode>|TerminalNode|null
+	     * @return array<ExpressionContext>|ExpressionContext|null
 	     */
-	    public function LITERAL_VALUE(?int $index = null)
+	    public function expression(?int $index = null)
 	    {
 	    	if ($index === null) {
-	    		return $this->getTokens(LogicalSqlParser::LITERAL_VALUE);
+	    		return $this->getTypedRuleContexts(ExpressionContext::class);
 	    	}
 
-	        return $this->getToken(LogicalSqlParser::LITERAL_VALUE, $index);
+	        return $this->getTypedRuleContext(ExpressionContext::class, $index);
 	    }
 
 	    public function BETWEEN() : ?TerminalNode
@@ -1144,14 +1196,9 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	        return $this->getToken(LogicalSqlParser::FROM, 0);
 	    }
 
-	    public function PAGES() : ?TerminalNode
+	    public function SQL_NAME() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::PAGES, 0);
-	    }
-
-	    public function BACKLINKS() : ?TerminalNode
-	    {
-	        return $this->getToken(LogicalSqlParser::BACKLINKS, 0);
+	        return $this->getToken(LogicalSqlParser::SQL_NAME, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void

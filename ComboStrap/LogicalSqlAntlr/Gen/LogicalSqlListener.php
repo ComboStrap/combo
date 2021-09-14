@@ -23,15 +23,15 @@ interface LogicalSqlListener extends ParseTreeListener {
 	 */
 	public function exitColumn(Context\ColumnContext $context) : void;
 	/**
-	 * Enter a parse tree produced by {@see LogicalSqlParser::columnAlias()}.
+	 * Enter a parse tree produced by {@see LogicalSqlParser::expression()}.
 	 * @param $context The parse tree.
 	 */
-	public function enterColumnAlias(Context\ColumnAliasContext $context) : void;
+	public function enterExpression(Context\ExpressionContext $context) : void;
 	/**
-	 * Exit a parse tree produced by {@see LogicalSqlParser::columnAlias()}.
+	 * Exit a parse tree produced by {@see LogicalSqlParser::expression()}.
 	 * @param $context The parse tree.
 	 */
-	public function exitColumnAlias(Context\ColumnAliasContext $context) : void;
+	public function exitExpression(Context\ExpressionContext $context) : void;
 	/**
 	 * Enter a parse tree produced by {@see LogicalSqlParser::predicate()}.
 	 * @param $context The parse tree.

@@ -91,7 +91,7 @@ require_once(__DIR__ . '/XmlUtility.php');
 require_once(__DIR__ . '/LogicalSql.php');
 require_once(__DIR__ . '/LogicalSqlAntlr/Gen/logicalSqlLexer.php');
 require_once(__DIR__ . '/LogicalSqlAntlr/Gen/logicalSqlParser.php');
-require_once(__DIR__ . '/LogicalSqlAntlr/SqlTreeListener.php');
+require_once(__DIR__ . '/LogicalSqlAntlr/LogicalSqlTreeListener.php');
 require_once(__DIR__ . '/LogicalSqlAntlr/LogicalSqlAntlr.php');
 require_once(__DIR__ . '/LogicalSqlManual/SqlLogical.php');
 require_once(__DIR__ . '/LogicalSqlManual/SqlParser.php');

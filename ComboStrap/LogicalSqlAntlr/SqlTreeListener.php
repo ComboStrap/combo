@@ -6,10 +6,10 @@ namespace ComboStrap\LogicalSqlAntlr;
 
 use Antlr\Antlr4\Runtime\ParserRuleContext;
 use Antlr\Antlr4\Runtime\Tree\ErrorNode;
+use Antlr\Antlr4\Runtime\Tree\ParseTreeListener;
 use Antlr\Antlr4\Runtime\Tree\ParseTreeWalker;
 use Antlr\Antlr4\Runtime\Tree\TerminalNode;
 use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlLexer;
-use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlListener;
 use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlParser;
 
 /**
@@ -20,7 +20,7 @@ use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlParser;
  * that performs a walk on the given parse tree starting at the root
  * and going down recursively with depth-first search.
  */
-final class SqlTreeListener implements LogicalSqlListener
+final class SqlTreeListener implements ParseTreeListener
 {
     /**
      * @var logicalSqlLexer
@@ -33,8 +33,18 @@ final class SqlTreeListener implements LogicalSqlListener
     /**
      * @var String
      */
-    private $physicalSql ;
+    private $physicalSql;
+    /**
+     * @var int
+     */
+    private $state;
 
+    private const STATE_VALUES = [
+        LogicalSqlParser::RULE_columns,
+        LogicalSqlParser::RULE_tables,
+        LogicalSqlParser::RULE_predicates,
+        LogicalSqlParser::RULE_orderBys
+    ];
 
     /**
      * SqlTreeListener constructor.
@@ -42,7 +52,7 @@ final class SqlTreeListener implements LogicalSqlListener
      * @param logicalSqlLexer $lexer
      * @param logicalSqlParser $parser
      */
-    public function __construct($lexer,$parser)
+    public function __construct(LogicalSqlLexer $lexer, LogicalSqlParser $parser)
     {
         $this->lexer = $lexer;
         $this->parser = $parser;
@@ -56,8 +66,30 @@ final class SqlTreeListener implements LogicalSqlListener
     public function visitTerminal(TerminalNode $node): void
     {
 
-        if(logicalSqlParser::SELECT===$node->getSymbol()->getType()){
-            $this->physicalSql .= "select";
+        $type = $node->getSymbol()->getType();
+        switch ($type) {
+            case LogicalSqlParser::SELECT:
+                $this->physicalSql .= "select\n\t*\n";
+
+                /**
+                 * The from select is optional
+                 * Check if it's there
+                 */
+                $parent = $node->getParent();
+                for ($i = 0; $i < $parent->getChildCount(); $i++) {
+                    $child = $parent->getChild($i);
+                    if($child instanceof ParserRuleContext){
+                        /**
+                         * @var ParserRuleContext $child
+                         */
+                        if($child->getRuleIndex()===LogicalSqlParser::RULE_tables){
+                            return;
+                        }
+                    }
+                }
+                $this->physicalSql .= "from\n\tpages\n";
+                break;
+
         }
     }
 
@@ -79,7 +111,19 @@ final class SqlTreeListener implements LogicalSqlListener
     public function enterEveryRule(ParserRuleContext $ctx): void
     {
 
-        echo "enter - rule name: {$this->getRuleName($ctx)}\n";
+        $ruleIndex = $ctx->getRuleIndex();
+        if (in_array($ruleIndex, self::STATE_VALUES)) {
+            $this->state = $ruleIndex;
+        }
+        switch ($ruleIndex) {
+            case LogicalSqlParser::RULE_orderBys:
+                $this->physicalSql .= "order by\n";
+                break;
+            case LogicalSqlParser::RULE_predicates:
+                $this->physicalSql .= "where\n";
+                break;
+        }
+
 
     }
 
@@ -93,7 +137,7 @@ final class SqlTreeListener implements LogicalSqlListener
      */
     public function exitEveryRule(ParserRuleContext $ctx): void
     {
-        echo "exit - rule name: {$this->getRuleName($ctx)}\n";
+
     }
 
     private function getRuleName(ParserRuleContext $ctx): string

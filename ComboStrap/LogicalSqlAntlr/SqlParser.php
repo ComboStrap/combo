@@ -8,8 +8,8 @@ use Antlr\Antlr4\Runtime\CommonTokenStream;
 use Antlr\Antlr4\Runtime\Error\Listeners\DiagnosticErrorListener;
 use Antlr\Antlr4\Runtime\InputStream;
 use Antlr\Antlr4\Runtime\Tree\ParseTreeWalker;
-use ComboStrap\LogicalSqlAntlr\Gen\logicalSqlLexer;
-use ComboStrap\LogicalSqlAntlr\Gen\logicalSqlParser;
+use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlLexer;
+use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlParser;
 
 
 require_once(__DIR__ . '/../PluginUtility.php');
@@ -31,9 +31,9 @@ class SqlParser
 
     function parse(){
         $input = InputStream::fromString($this->text);
-        $lexer = new logicalSqlLexer($input);
+        $lexer = new LogicalSqlLexer($input);
         $tokens = new CommonTokenStream($lexer);
-        $parser = new logicalSqlParser($tokens);
+        $parser = new LogicalSqlParser($tokens);
         $parser->addErrorListener(new DiagnosticErrorListener());
         $parser->setBuildParseTree(true);
         $tree = $parser->logicalSql();
@@ -42,7 +42,7 @@ class SqlParser
          * Performs a walk on the given parse tree starting at the root
          * and going down recursively with depth-first search.
          */
-        $listener = new sqlTreeListener($lexer, $parser);
+        $listener = new SqlTreeListener($lexer, $parser);
         ParseTreeWalker::default()->walk($listener, $tree);
         return $listener->getPhysicalSql();
     }

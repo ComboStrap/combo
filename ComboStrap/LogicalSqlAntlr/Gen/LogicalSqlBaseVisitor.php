@@ -42,17 +42,6 @@ class LogicalSqlBaseVisitor extends AbstractParseTreeVisitor implements LogicalS
 	 * The default implementation returns the result of calling
 	 * {@see self::visitChildren()} on `context`.
 	 */
-	public function visitLiteralValue(Context\LiteralValueContext $context)
-	{
-	    return $this->visitChildren($context);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation returns the result of calling
-	 * {@see self::visitChildren()} on `context`.
-	 */
 	public function visitPredicate(Context\PredicateContext $context)
 	{
 	    return $this->visitChildren($context);
@@ -86,17 +75,6 @@ class LogicalSqlBaseVisitor extends AbstractParseTreeVisitor implements LogicalS
 	 * The default implementation returns the result of calling
 	 * {@see self::visitChildren()} on `context`.
 	 */
-	public function visitWhere(Context\WhereContext $context)
-	{
-	    return $this->visitChildren($context);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation returns the result of calling
-	 * {@see self::visitChildren()} on `context`.
-	 */
 	public function visitTables(Context\TablesContext $context)
 	{
 	    return $this->visitChildren($context);
@@ -119,28 +97,6 @@ class LogicalSqlBaseVisitor extends AbstractParseTreeVisitor implements LogicalS
 	 * The default implementation returns the result of calling
 	 * {@see self::visitChildren()} on `context`.
 	 */
-	public function visitTabelName(Context\TabelNameContext $context)
-	{
-	    return $this->visitChildren($context);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation returns the result of calling
-	 * {@see self::visitChildren()} on `context`.
-	 */
-	public function visitColumnName(Context\ColumnNameContext $context)
-	{
-	    return $this->visitChildren($context);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation returns the result of calling
-	 * {@see self::visitChildren()} on `context`.
-	 */
 	public function visitLimit(Context\LimitContext $context)
 	{
 	    return $this->visitChildren($context);
@@ -152,7 +108,7 @@ class LogicalSqlBaseVisitor extends AbstractParseTreeVisitor implements LogicalS
 	 * The default implementation returns the result of calling
 	 * {@see self::visitChildren()} on `context`.
 	 */
-	public function visitOrderBy(Context\OrderByContext $context)
+	public function visitOrderBys(Context\OrderBysContext $context)
 	{
 	    return $this->visitChildren($context);
 	}
@@ -164,17 +120,6 @@ class LogicalSqlBaseVisitor extends AbstractParseTreeVisitor implements LogicalS
 	 * {@see self::visitChildren()} on `context`.
 	 */
 	public function visitOrderByDef(Context\OrderByDefContext $context)
-	{
-	    return $this->visitChildren($context);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation returns the result of calling
-	 * {@see self::visitChildren()} on `context`.
-	 */
-	public function visitOrder(Context\OrderContext $context)
 	{
 	    return $this->visitChildren($context);
 	}

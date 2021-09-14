@@ -59,7 +59,17 @@ SELECT:            S E L E C T;
 TRUE:              T R U E;
 WHERE:             W H E R E;
 
+/**
+* Table Name
+*/
+PAGES: P A G E S;
+BACKLINKS: B A C K L I N K S;
+
 SPACES: [ \u000B\t\r\n] -> channel(HIDDEN);
+
+LITERAL_VALUE: STRING_LITERAL | INTEGER_LITERAL | NUMERIC_LITERAL | NULL | TRUE
+   | FALSE
+   | NOW;
 
 INTEGER_LITERAL: DIGIT+;
 NUMERIC_LITERAL: DIGIT+ ('.' DIGIT*)?;
@@ -81,6 +91,8 @@ SQL_NAME : [a-zA-Z] [a-zA-Z0-9]*;
 
 fragment HEX_DIGIT: [0-9a-fA-F];
 fragment DIGIT:     [0-9];
+
+
 
 fragment ANY_NAME: SQL_NAME | STRING_LITERAL | OPEN_PAR ANY_NAME CLOSE_PAR;
 fragment A: [aA];
@@ -120,50 +132,42 @@ column: SQL_NAME (DOT SQL_NAME)? ( AS? columnAlias)?;
 
 columnAlias: SQL_NAME | STRING_LITERAL;
 
-literalValue:
-    INTEGER_LITERAL
-    | NUMERIC_LITERAL
-    | STRING_LITERAL
-    | NULL
-    | TRUE
-    | FALSE
-    | NOW
-;
 
-predicate: columnName
+
+predicate: SQL_NAME
     (
-        (( LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL | NOT_EQUAL | EQUAL) literalValue)
+        (( LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL | NOT_EQUAL | EQUAL) LITERAL_VALUE)
         |
-        (NOT? (LIKE|GLOB| literalValue))
+        (NOT? (LIKE|GLOB) LITERAL_VALUE)
         |
-        (NOT? BETWEEN literalValue AND literalValue)
+        (NOT? BETWEEN LITERAL_VALUE AND LITERAL_VALUE)
         |
-        (NOT? IN OPEN_PAR (literalValue ( COMMA literalValue)*)? CLOSE_PAR)
+        (NOT? IN OPEN_PAR (LITERAL_VALUE ( COMMA LITERAL_VALUE)*)? CLOSE_PAR)
     );
 
 columns: column (COMMA column)*;
 
-predicates: predicate ((AND|OR) predicate)*;
+predicates: WHERE predicate ((AND|OR) predicate)*;
 
-where: (WHERE predicates)?;
-tables: (FROM tabelName)?;
+tables: FROM (PAGES|BACKLINKS);
 
 logicalSql:
         SELECT columns
-        tables
-        where
-        orderBy?
+        tables?
+        predicates?
+        orderBys?
         limit?
 ;
 
-tabelName: SQL_NAME ;
 
-columnName: SQL_NAME ;
+/**
+ * The type of the literal value is
+ * checked afterwards on tree traversing
+ * otherwise there is conflict between token
+*/
+limit: LIMIT LITERAL_VALUE;
 
-
-limit: LIMIT INTEGER_LITERAL;
-
-orderBy: ORDER BY orderByDef (COMMA orderByDef)* ;
+orderBys: ORDER BY orderByDef (COMMA orderByDef)* ;
 
 orderByDef: SQL_NAME (ASC | DESC)? ;
 

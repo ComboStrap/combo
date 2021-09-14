@@ -48,19 +48,6 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function enterLiteralValue(Context\LiteralValueContext $context) : void {}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
-	public function exitLiteralValue(Context\LiteralValueContext $context) : void {}
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
 	public function enterPredicate(Context\PredicateContext $context) : void {}
 
 	/**
@@ -100,19 +87,6 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function enterWhere(Context\WhereContext $context) : void {}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
-	public function exitWhere(Context\WhereContext $context) : void {}
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
 	public function enterTables(Context\TablesContext $context) : void {}
 
 	/**
@@ -139,32 +113,6 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function enterTabelName(Context\TabelNameContext $context) : void {}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
-	public function exitTabelName(Context\TabelNameContext $context) : void {}
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
-	public function enterColumnName(Context\ColumnNameContext $context) : void {}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
-	public function exitColumnName(Context\ColumnNameContext $context) : void {}
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
 	public function enterLimit(Context\LimitContext $context) : void {}
 
 	/**
@@ -178,14 +126,14 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function enterOrderBy(Context\OrderByContext $context) : void {}
+	public function enterOrderBys(Context\OrderBysContext $context) : void {}
 
 	/**
 	 * {@inheritdoc}
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function exitOrderBy(Context\OrderByContext $context) : void {}
+	public function exitOrderBys(Context\OrderBysContext $context) : void {}
 	/**
 	 * {@inheritdoc}
 	 *
@@ -199,19 +147,6 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 * The default implementation does nothing.
 	 */
 	public function exitOrderByDef(Context\OrderByDefContext $context) : void {}
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
-	public function enterOrder(Context\OrderContext $context) : void {}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * The default implementation does nothing.
-	 */
-	public function exitOrder(Context\OrderContext $context) : void {}
 
 	/**
 	 * {@inheritdoc}

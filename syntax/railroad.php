@@ -213,7 +213,7 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                          * This code is replaced at runtime by the diagram
                          */
                         $class = self::CLASS_NAME;
-                        $renderer->doc = "<pre class=\"$class\">$bnfCode</pre>";
+                        $renderer->doc .= "<pre class=\"$class\">$bnfCode</pre>";
                     } else {
                         LogUtility::msg("No code component with bnf grammar was found", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                     }

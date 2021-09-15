@@ -67,6 +67,15 @@ TRUE:              T R U E;
 WHERE:             W H E R E;
 RANDOM:            R A N D O M;
 
+// Function
+DATE:            D A T E;
+DATETIME:        D A T E T I M E;
+functionNames: DATE | DATETIME;
+
+// Tables
+PAGES:            P A G E S;
+BACKLINKS:        B A C K L I N K S;
+tableNames: DATE | DATETIME;
 
 // LITERALS
 fragment Letter : 'a'..'z' | 'A'..'Z';
@@ -179,8 +188,10 @@ sqlNames : SqlName|Number;
 column: sqlNames (DOT sqlNames)? ( AS? (sqlNames|StringLiteral))?;
 
 
-expression: (SqlName|StringLiteral|NumberLiteral|Number)
-    | LPAREN expression ( COMMA expression)* RPAREN;
+expression:
+    (SqlName|StringLiteral|NumberLiteral|Number)
+    | functionNames LPAREN expression? ( COMMA expression)* RPAREN
+;
 
 predicate: sqlNames
     (
@@ -197,7 +208,7 @@ columns: column (COMMA column)*;
 
 predicates: WHERE predicate ((AND|OR) predicate)*;
 
-tables: FROM SqlName;
+tables: FROM tableNames;
 
 /**
  * The type of the literal value is

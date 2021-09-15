@@ -22,6 +22,32 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
+	public function enterFunctionNames(Context\FunctionNamesContext $context) : void {}
+
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
+	public function exitFunctionNames(Context\FunctionNamesContext $context) : void {}
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
+	public function enterTableNames(Context\TableNamesContext $context) : void {}
+
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
+	public function exitTableNames(Context\TableNamesContext $context) : void {}
+	/**
+	 * {@inheritdoc}
+	 *
+	 * The default implementation does nothing.
+	 */
 	public function enterSqlNames(Context\SqlNamesContext $context) : void {}
 
 	/**

@@ -6,6 +6,12 @@ namespace ComboStrap;
 
 use ComboStrap\LogicalSqlAntlr\LogicalSqlAntlr;
 
+/**
+ * Class LogicalSql
+ * @package ComboStrap
+ *
+ * Note that the regexp function is implemented in the {@link Sqlite::getSqlite() Sqlite initialization}
+ */
 class LogicalSql
 {
     /**

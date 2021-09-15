@@ -15,6 +15,7 @@ namespace ComboStrap;
 require_once(__DIR__ . '/LogUtility.php');
 
 use helper_plugin_sqlite;
+use helper_plugin_sqlite_adapter_pdosqlite;
 
 class Sqlite
 {
@@ -109,6 +110,19 @@ class Sqlite
                 # TODO: Message 'SqliteUnableToInitialize'
                 $message = "Unable to initialize Sqlite";
                 LogUtility::msg($message, MSG_MANAGERS_ONLY);
+            } else {
+                // regexp implementation
+                // https://stackoverflow.com/questions/5071601/how-do-i-use-regex-in-a-sqlite-query/18484596#18484596
+                $adapter = self::$sqlite->getAdapter();
+                $adapter->create_function('regexp',
+                    function ($pattern, $data, $delimiter = '~', $modifiers = 'isuS') {
+                        if (isset($pattern, $data) === true) {
+                            return (preg_match(sprintf('%1$s%2$s%1$s%3$s', $delimiter, $pattern, $modifiers), $data) > 0);
+                        }
+                        return null;
+                    },
+                    4
+                );
             }
         }
         return self::$sqlite;
@@ -161,5 +175,5 @@ class Sqlite
         };
         $sqlite->res_close($res);
         return $isJsonEnabled;
-}
+    }
 }

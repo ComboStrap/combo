@@ -100,30 +100,10 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                 }
                 $this->physicalSql .= "from\n\tpages\n";
                 break;
-            case LogicalSqlParser::SQL_NAME:
+            case LogicalSqlParser::SqlName:
                 switch ($this->state) {
-                    case LogicalSqlParser::RULE_tables:
-                        $lowerTableName = strtolower($text);
-                        $validTableNames = ['pages', 'backlinks'];
-                        if (!in_array($lowerTableName, $validTableNames)) {
-                            throw new RuntimeException("The table name ($text) is invalid and should be one of" . var_export($validTableNames, true));
-                        }
-                        $this->physicalSql .= "\t{$text}\n";
-                        break;
                     case LogicalSqlParser::RULE_predicates:
-                        $parent = $node->getParent();
-                        if ($parent instanceof ParserRuleContext) {
-                            if ($parent->getRuleIndex() === LogicalSqlParser::RULE_expression) {
-                                // function name
-                                $functionNames = ["date", "datetime"];
-                                $functionName = strtolower($text);
-                                if (!in_array($functionName, $functionNames)) {
-                                    throw new RuntimeException("The function name ($text) is invalid and should be one of" . var_export($functionNames, true));
-                                }
-                                $this->physicalSql .= "{$text}";
-                                return;
-                            }
-                        }
+
                         // variable name
                         $variableName = strtolower($text);
                         $this->physicalSql .= "\t{$variableName} ";
@@ -150,7 +130,7 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                         $this->physicalSql .= "{$text} ";
                 }
                 break;
-            case LogicalSqlParser::LITERAL_VALUE:
+            case LogicalSqlParser::StringLiteral:
                 switch ($this->state) {
                     case LogicalSqlParser::RULE_predicates:
                         $grandParent = $node->getParent()->getParent();
@@ -173,10 +153,6 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                         $this->parameters[] = $text;
                         $this->physicalSql .= "?";
                         break;
-                    case
-                    LogicalSqlParser::RULE_limit:
-                        $this->physicalSql .= "{$text}";
-                        break;
                 }
                 break;
             case LogicalSqlParser:: AND:
@@ -184,10 +160,10 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                 if ($this->state === LogicalSqlParser::RULE_predicates) {
                     $this->physicalSql .= " {$text}\n";
                 }
-                break;
+                return;
             case LogicalSqlParser:: DESC:
-            case LogicalSqlParser:: CLOSE_PAR:
-            case LogicalSqlParser:: OPEN_PAR:
+            case LogicalSqlParser:: LPAREN:
+            case LogicalSqlParser:: RPAREN:
             case LogicalSqlParser:: ASC:
                 $this->physicalSql .= "{$text}";
                 break;
@@ -202,10 +178,24 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                         $this->physicalSql .= "{$text}";
                         return;
                 }
-            case LogicalSqlParser:: LIMIT:
+            case LogicalSqlParser::LIMIT:
                 $this->physicalSql .= "{$text} ";
-                break;
-
+                return;
+            case LogicalSqlParser::Number:
+                switch ($this->state) {
+                    case LogicalSqlParser::RULE_limit:
+                        $this->physicalSql .= "{$text}";
+                        return;
+                    case LogicalSqlParser::RULE_predicates:
+                        $this->parameters[] = $text;
+                        $this->physicalSql .= "?";
+                        return;
+                    default:
+                        $this->physicalSql .= "{$text} ";
+                        return;
+                }
+            default:
+                // We do nothing because the token may have been printed at a higher level such as order by
         }
     }
 
@@ -242,6 +232,14 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                 break;
             case LogicalSqlParser::RULE_predicates:
                 $this->physicalSql .= "where\n";
+                break;
+            case LogicalSqlParser::RULE_functionNames:
+                // Print the function name
+                $this->physicalSql .= $ctx->getText();
+                break;
+            case LogicalSqlParser::RULE_tableNames:
+                // Print the table name
+                $this->physicalSql .= "\t{$ctx->getText()}\n";
                 break;
         }
 

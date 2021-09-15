@@ -14,6 +14,24 @@ use Antlr\Antlr4\Runtime\Tree\ParseTreeVisitor;
 interface LogicalSqlVisitor extends ParseTreeVisitor
 {
 	/**
+	 * Visit a parse tree produced by {@see LogicalSqlParser::functionNames()}.
+	 *
+	 * @param Context\FunctionNamesContext $context The parse tree.
+	 *
+	 * @return mixed The visitor result.
+	 */
+	public function visitFunctionNames(Context\FunctionNamesContext $context);
+
+	/**
+	 * Visit a parse tree produced by {@see LogicalSqlParser::tableNames()}.
+	 *
+	 * @param Context\TableNamesContext $context The parse tree.
+	 *
+	 * @return mixed The visitor result.
+	 */
+	public function visitTableNames(Context\TableNamesContext $context);
+
+	/**
 	 * Visit a parse tree produced by {@see LogicalSqlParser::sqlNames()}.
 	 *
 	 * @param Context\SqlNamesContext $context The parse tree.

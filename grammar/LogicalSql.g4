@@ -58,6 +58,7 @@ ORDER:             O R D E R;
 SELECT:            S E L E C T;
 TRUE:              T R U E;
 WHERE:             W H E R E;
+RANDOM:            RANDOM;
 
 
 

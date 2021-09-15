@@ -48,6 +48,7 @@ ASC:               A S C;
 BETWEEN:           B E T W E E N;
 BY:                B Y;
 DESC:              D E S C;
+ESCAPE:            E S C A P E;
 FALSE:             F A L S E;
 FROM:              F R O M;
 GLOB:              G L O B;
@@ -93,10 +94,11 @@ fragment RegexComponent :
     | BITWISEXOR | PIPE | DOLLAR | '!'
     ;
 
-
+// https://www.sqlite.org/lang_expr.html
+// A string constant is formed by enclosing the string in single quotes ('). A single quote within the string can be encoded by putting two single quotes in a row - as in Pascal. C-style escapes using the backslash character are not supported because they are not standard SQL.
 StringLiteral :
-    ( '\'' ( ~('\''|'\\') | ('\\' .) )* '\''
-    | '"' ( ~('"'|'\\') | ('\\' .) )* '"'
+    ( '\'' ( ~'\'' | '\'\'')* '\''
+    | '"' ( ~('"') )* '"'
     )+
     ;
 
@@ -185,7 +187,9 @@ fragment Z: [zZ];
 
 sqlNames : SqlName|Number;
 
-column: sqlNames (DOT sqlNames)? ( AS? (sqlNames|StringLiteral))?;
+column: sqlNames (DOT sqlNames)? (AS (sqlNames|StringLiteral))?;
+
+pattern: (StringLiteral|NumberLiteral);
 
 
 expression:
@@ -197,7 +201,12 @@ predicate: sqlNames
     (
         (( LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL | NOT_EQUAL | EQUAL) expression)
         |
-        (NOT? (LIKE|GLOB) expression)
+        (
+            NOT?
+            (LIKE pattern (ESCAPE StringLiteral)?)
+            |
+            (GLOB pattern)
+        )
         |
         (NOT? BETWEEN expression AND expression)
         |

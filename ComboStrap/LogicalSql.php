@@ -17,15 +17,16 @@ class LogicalSql
     /**
      * @var LogicalSqlAntlr
      */
-    private $logicalSql;
+    private $pageSql;
 
 
     /**
      * LogicalSql constructor.
      */
-    public function __construct($logicalSql)
+    public function __construct($pageSql)
     {
-        $this->logicalSql = LogicalSqlAntlr::create($logicalSql);
+        $this->pageSqlString = $pageSql;
+        $this->pageSql = LogicalSqlAntlr::create($pageSql);
     }
 
     public static function create($logicalSql): LogicalSql
@@ -35,16 +36,23 @@ class LogicalSql
 
     public function toPhysicalSqlWithParameters(): string
     {
-        return $this->logicalSql->getPhysicalSql();
+        return $this->pageSql->getPhysicalSql();
     }
 
     public function getParameters(): array
     {
-        return $this->logicalSql->getParameters();
+        return $this->pageSql->getParameters();
     }
 
     public function getColumns()
     {
-        return $this->logicalSql->getColumns();
+        return $this->pageSql->getColumns();
     }
+
+    public function __toString()
+    {
+        return $this->pageSqlString;
+    }
+
+
 }

@@ -306,8 +306,8 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                      * Loop
                      */
                     if (sizeof($rows) == 0) {
-                        $parent->addAttribute(syntax_plugin_combo_iterator::EMPTY_ROWS_COUNT_ATTRIBUTE, true);
-                        LogUtility::msg("The logical query ($logicalSql) does not return any data", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_iterator::CANONICAL);
+                        $iteratorNode->addAttribute(syntax_plugin_combo_iterator::EMPTY_ROWS_COUNT_ATTRIBUTE, true);
+                        LogUtility::msg("The physical query ({$logicalSql->toPhysicalSqlWithParameters()}) does not return any data", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_iterator::CANONICAL);
                         return $returnedArray;
                     }
 

@@ -13,6 +13,16 @@ use Antlr\Antlr4\Runtime\Tree\ParseTreeListener;
  */
 interface LogicalSqlListener extends ParseTreeListener {
 	/**
+	 * Enter a parse tree produced by {@see LogicalSqlParser::sqlNames()}.
+	 * @param $context The parse tree.
+	 */
+	public function enterSqlNames(Context\SqlNamesContext $context) : void;
+	/**
+	 * Exit a parse tree produced by {@see LogicalSqlParser::sqlNames()}.
+	 * @param $context The parse tree.
+	 */
+	public function exitSqlNames(Context\SqlNamesContext $context) : void;
+	/**
 	 * Enter a parse tree produced by {@see LogicalSqlParser::column()}.
 	 * @param $context The parse tree.
 	 */

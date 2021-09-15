@@ -87,8 +87,7 @@ class Sqlite
             }
             $adapter = self::$sqlite->getAdapter();
             if ($adapter == null) {
-                $sqliteMandatoryMessage = "The Sqlite Php Extension is mandatory. It seems that it's not available on this installation.";
-                LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
+                self::sendMessageAsNotAvailable();
                 return null;
             }
 
@@ -165,6 +164,11 @@ class Sqlite
     {
 
         $sqlite = self::getSqlite();
+        if ($sqlite === null) {
+            self::sendMessageAsNotAvailable();
+            return false;
+        }
+
         $res = $sqlite->query("PRAGMA compile_options");
         $isJsonEnabled = false;
         foreach ($sqlite->res2arr($res) as $row) {
@@ -175,5 +179,24 @@ class Sqlite
         };
         $sqlite->res_close($res);
         return $isJsonEnabled;
+    }
+
+    /**
+     * @param helper_plugin_sqlite $sqlite
+     * @param string $executableSql
+     * @param array $parameters
+     * @return bool|\PDOStatement|\SQLiteResult
+     */
+    public static function queryWithParameters(helper_plugin_sqlite $sqlite, string $executableSql, array $parameters)
+    {
+        $args = [$executableSql];
+        $args = array_merge($args, $parameters);
+        return $sqlite->getAdapter()->query($args);
+    }
+
+    public static function sendMessageAsNotAvailable(): void
+    {
+        $sqliteMandatoryMessage = "The Sqlite Php Extension is mandatory. It seems that it's not available on this installation.";
+        LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
     }
 }

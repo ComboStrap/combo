@@ -11,7 +11,6 @@ use Antlr\Antlr4\Runtime\Tree\ParseTreeWalker;
 use Antlr\Antlr4\Runtime\Tree\TerminalNode;
 use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlLexer;
 use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlParser;
-use http\Exception\RuntimeException;
 
 /**
  * Class SqlTreeListener
@@ -20,6 +19,9 @@ use http\Exception\RuntimeException;
  * The listener that is called by {@link  ParseTreeWalker::walk()}
  * that performs a walk on the given parse tree starting at the root
  * and going down recursively with depth-first search.
+ *
+ * The process is to check all token and to process them
+ * with context
  */
 final class LogicalSqlTreeListener implements ParseTreeListener
 {
@@ -38,7 +40,7 @@ final class LogicalSqlTreeListener implements ParseTreeListener
     /**
      * @var int
      */
-    private $state;
+    private $ruleState;
 
     private const STATE_VALUES = [
         LogicalSqlParser::RULE_columns,
@@ -101,7 +103,7 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                 $this->physicalSql .= "from\n\tpages\n";
                 break;
             case LogicalSqlParser::SqlName:
-                switch ($this->state) {
+                switch ($this->ruleState) {
                     case LogicalSqlParser::RULE_predicates:
 
                         // variable name
@@ -121,26 +123,29 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                 break;
             case LogicalSqlParser::EQUAL:
             case LogicalSqlParser::LIKE:
+            case LogicalSqlParser::GLOB:
             case LogicalSqlParser::LESS_THAN_OR_EQUAL:
             case LogicalSqlParser::LESS_THAN:
             case LogicalSqlParser::GREATER_THAN:
             case LogicalSqlParser::GREATER_THAN_OR_EQUAL:
-                switch ($this->state) {
+                switch ($this->ruleState) {
                     case LogicalSqlParser::RULE_predicates:
                         $this->physicalSql .= "{$text} ";
                 }
                 break;
             case LogicalSqlParser::StringLiteral:
-                switch ($this->state) {
+                switch ($this->ruleState) {
                     case LogicalSqlParser::RULE_predicates:
-                        $grandParent = $node->getParent()->getParent();
-                        if ($grandParent  instanceof ParserRuleContext) {
-                            if($grandParent->getRuleIndex()===LogicalSqlParser::RULE_expression) {
-                                // Literal Value in Expression of an Expression (ie Function)
-                                $this->physicalSql .= $text;
-                                return;
-                            }
-                        }
+                        $grandParent = $node->getParent();
+
+//                        if ($grandParent instanceof ParserRuleContext) {
+//                            switch ($grandParent->getRuleIndex()) {
+//                                case LogicalSqlParser::RULE_predicate:
+//                                    // Literal Value in Expression of an Expression (ie Function)
+//                                    $this->physicalSql .= $text;
+//                                    return;
+//                            }
+//                        }
                         // Literal value alone
                         if (
                             ($text[0] === "'" and $text[strlen($text) - 1] === "'")
@@ -157,9 +162,12 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                 break;
             case LogicalSqlParser:: AND:
             case LogicalSqlParser:: OR:
-                if ($this->state === LogicalSqlParser::RULE_predicates) {
+                if ($this->ruleState === LogicalSqlParser::RULE_predicates) {
                     $this->physicalSql .= " {$text}\n";
                 }
+                return;
+            case LogicalSqlParser:: NOT:
+                $this->physicalSql .= "{$text} ";
                 return;
             case LogicalSqlParser:: DESC:
             case LogicalSqlParser:: LPAREN:
@@ -168,7 +176,7 @@ final class LogicalSqlTreeListener implements ParseTreeListener
                 $this->physicalSql .= "{$text}";
                 break;
             case LogicalSqlParser:: COMMA:
-                switch ($this->state) {
+                switch ($this->ruleState) {
                     case LogicalSqlParser::RULE_columns:
                         return;
                     case LogicalSqlParser::RULE_orderBys:
@@ -181,8 +189,11 @@ final class LogicalSqlTreeListener implements ParseTreeListener
             case LogicalSqlParser::LIMIT:
                 $this->physicalSql .= "{$text} ";
                 return;
+            case LogicalSqlParser::ESCAPE:
+                $this->physicalSql .= " {$text} ";
+                return;
             case LogicalSqlParser::Number:
-                switch ($this->state) {
+                switch ($this->ruleState) {
                     case LogicalSqlParser::RULE_limit:
                         $this->physicalSql .= "{$text}";
                         return;
@@ -221,7 +232,7 @@ final class LogicalSqlTreeListener implements ParseTreeListener
 
         $ruleIndex = $ctx->getRuleIndex();
         if (in_array($ruleIndex, self::STATE_VALUES)) {
-            $this->state = $ruleIndex;
+            $this->ruleState = $ruleIndex;
         }
         switch ($ruleIndex) {
             case LogicalSqlParser::RULE_orderBys:
@@ -308,6 +319,7 @@ final class LogicalSqlTreeListener implements ParseTreeListener
     {
         return $this->physicalSql;
     }
+
 
 
 }

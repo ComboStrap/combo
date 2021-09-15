@@ -441,9 +441,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     {
         $executableSql = $logicalSql->toPhysicalSqlWithParameters();
         $parameters = $logicalSql->getParameters();
-        $args = [$executableSql];
-        $args = array_merge($args, $parameters);
-        $res = $sqlite->getAdapter()->query($args);
+        $res = Sqlite::queryWithParameters($sqlite,$executableSql,$parameters);
         if (!$res) {
             throw new \RuntimeException("The sql statement returns an error. Sql statement: $executableSql");
         }

@@ -50,6 +50,15 @@ interface LogicalSqlVisitor extends ParseTreeVisitor
 	public function visitColumn(Context\ColumnContext $context);
 
 	/**
+	 * Visit a parse tree produced by {@see LogicalSqlParser::pattern()}.
+	 *
+	 * @param Context\PatternContext $context The parse tree.
+	 *
+	 * @return mixed The visitor result.
+	 */
+	public function visitPattern(Context\PatternContext $context);
+
+	/**
 	 * Visit a parse tree produced by {@see LogicalSqlParser::expression()}.
 	 *
 	 * @param Context\ExpressionContext $context The parse tree.

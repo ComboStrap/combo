@@ -36,13 +36,6 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     const TAG = "template";
 
 
-    /**
-     * The template context
-     * To known if the template is inside a template generator
-     * or not
-     */
-    const STANDALONE_CONTEXT = "standalone";
-    const ITERATOR_CONTEXT = "iterator";
     const CANONICAL = "template";
 
     /**
@@ -422,8 +415,12 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
 
-        // template is not rendering
-        // it captures content that is used to create instructions
+        if($format==="xhtml"){
+            $state = $data[PluginUtility::STATE];
+            if($state===DOKU_LEXER_UNMATCHED){
+                $renderer->doc .= PluginUtility::renderUnmatched($data);
+            }
+        }
         return false;
 
     }

@@ -50,6 +50,7 @@ class CallStack
      */
     const CALLSTACK_WRITER = "writer";
     const CALLSTACK_MAIN = "main";
+    public const MESSAGE_PREFIX_CALLSTACK_NOT_CONFORM = "Your DokuWiki installation is too old or a writer plugin does not conform";
 
     private $handler;
 
@@ -113,7 +114,7 @@ class CallStack
          * for an example with a list component
          *
          */
-        $headErrorMessage = "Your DokuWiki installation is too old or a writer plugin does not conform";
+        $headErrorMessage = self::MESSAGE_PREFIX_CALLSTACK_NOT_CONFORM;
         if (!method_exists($handler, 'getCallWriter')) {
             $class = get_class($handler);
             LogUtility::msg("$headErrorMessage. The handler ($class) provided cannot manipulate the callstack (ie the function getCallWriter does not exist).", LogUtility::LVL_MSG_ERROR);
@@ -154,11 +155,11 @@ class CallStack
             try {
                 $rp = new \ReflectionProperty($handlerClass, "calls");
                 if ($rp->isPrivate()) {
-                    LogUtility::msg("Your DokuWiki installation or a plugin is too old. The handler ($handlerClass) provided cannot manipulate the callstack (ie the calls of the handler are private).", LogUtility::LVL_MSG_ERROR);
+                    LogUtility::msg("$headErrorMessage. The handler ($handlerClass) provided cannot manipulate the callstack (ie the calls of the handler are private).", LogUtility::LVL_MSG_ERROR);
                     return;
                 }
             } catch (\ReflectionException $e) {
-                LogUtility::msg("Your DokuWiki installation or a plugin is too old. The handler ($handlerClass) provided cannot manipulate the callstack (ie the handler does not have any calls property).", LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("$headErrorMessage. The handler ($handlerClass) provided cannot manipulate the callstack (ie the handler does not have any calls property).", LogUtility::LVL_MSG_ERROR);
                 return;
             }
 

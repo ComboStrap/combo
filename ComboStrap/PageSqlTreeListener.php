@@ -128,6 +128,7 @@ final class PageSqlTreeListener implements ParseTreeListener
             case PageSqlParser::LESS_THAN:
             case PageSqlParser::GREATER_THAN:
             case PageSqlParser::GREATER_THAN_OR_EQUAL:
+            case PageSqlParser::NOT_EQUAL:
                 switch ($this->ruleState) {
                     case PageSqlParser::RULE_predicates:
                         $this->physicalSql .= "{$text} ";

@@ -1,15 +1,19 @@
 <?php
 
 
+use ComboStrap\Analytics;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\PageSql;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\Publication;
 use ComboStrap\Sqlite;
 use ComboStrap\TemplateUtility;
 
+
+require_once (__DIR__."/../ComboStrap/PluginUtility.php");
 
 /**
  *
@@ -35,6 +39,15 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     const TAG = "template";
 
+    const ATTRIBUTES_IN_PAGE_TABLE = [
+        "id",
+        Analytics::CANONICAL,
+        Analytics::PATH,
+        Analytics::DATE_MODIFIED,
+        Analytics::DATE_CREATED,
+        Publication::DATE_PUBLISHED,
+        Analytics::NAME
+    ];
 
     const CANONICAL = "template";
 
@@ -415,9 +428,9 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data)
     {
 
-        if($format==="xhtml"){
+        if ($format === "xhtml") {
             $state = $data[PluginUtility::STATE];
-            if($state===DOKU_LEXER_UNMATCHED){
+            if ($state === DOKU_LEXER_UNMATCHED) {
                 $renderer->doc .= PluginUtility::renderUnmatched($data);
             }
         }
@@ -427,16 +440,16 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
 
     /**
-     * @param PageSql $logicalSql
+     * @param PageSql $pageSql
      * @param helper_plugin_sqlite $sqlite
      * @return array
      * @throws RuntimeException when the query is not good
      */
-    private function getRowsFromSqliteWithoutJsonSupport(PageSql $logicalSql, helper_plugin_sqlite $sqlite): array
+    private function getRowsFromSqliteWithoutJsonSupport(PageSql $pageSql, helper_plugin_sqlite $sqlite): array
     {
-        $executableSql = $logicalSql->getExecutableSql();
-        $parameters = $logicalSql->getParameters();
-        $res = Sqlite::queryWithParameters($sqlite,$executableSql,$parameters);
+        $executableSql = $pageSql->getExecutableSql();
+        $parameters = $pageSql->getParameters();
+        $res = Sqlite::queryWithParameters($sqlite, $executableSql, $parameters);
         if (!$res) {
             throw new \RuntimeException("The sql statement returns an error. Sql statement: $executableSql");
         }
@@ -444,27 +457,66 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         $rows = [];
         foreach ($res2arr as $sourceRow) {
             $analytics = $sourceRow["ANALYTICS"];
+            /**
+             * @deprecated
+             * We use id until path is full in the database
+             */
+            $id = $sourceRow["ID"];
+            $page = Page::createPageFromId($id);
+            $standardMetadata = $page->getMetadataStandard();
+
             $jsonArray = json_decode($analytics, true);
             $targetRow = [];
-            foreach ($logicalSql->getColumns() as $column) {
+            foreach ($pageSql->getColumns() as $column) {
 
+                $lowerColumn = strtolower($column);
 
-                $value = $jsonArray["metadata"][$column];
-                if (isset($value)) {
-
-                    /**
-                     * Image asked ?
-                     * If this is an image, we try to select the page
-                     * with the same asked ratio
-                     */
-                    if ($column === Page::IMAGE_META_PROPERTY) {
-
-                    } else {
-                        $targetRow[$column] = $value;
-                    }
-                } else {
-                    $targetRow[$column] = "NotFound";
+                /**
+                 * TODO: Image asked, replace with a link to the doc
+                 * If this is an image, we try to select the page
+                 * with the same asked ratio
+                 */
+                if ($column === Page::IMAGE_META_PROPERTY) {
+                    LogUtility::msg("To add an image, you must use the page image component",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                    continue;
                 }
+
+                /**
+                 * Data in the pages tables
+                 */
+                if (!in_array($lowerColumn, self::ATTRIBUTES_IN_PAGE_TABLE)) {
+                    $data = $sourceRow[strtoupper($column)];
+                    if (!empty($data)) {
+                        $targetRow[$column] = $data;
+                        continue;
+                    }
+                }
+
+                /**
+                 * In the analytics
+                 */
+                $value = $jsonArray["metadata"][$column];
+                if (!empty($value)) {
+                    $targetRow[$column] = $value;
+                    continue;
+                }
+
+                /**
+                 * Computed
+                 * (if the table is empty because of migration)
+                 */
+                $value = $standardMetadata[$column];
+                if (isset($value)) {
+                    $targetRow[$column] = $value;
+                    continue;
+                }
+
+                /**
+                 * Bad luck
+                 */
+                $targetRow[$column] = "$column attribute was not found in the <a href=\"https://combostrap.com/metadata\">metadata</a> for the page (:$id)";
+
+
             }
             $rows[] = $targetRow;
         }

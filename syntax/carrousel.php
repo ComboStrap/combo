@@ -10,18 +10,16 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 /**
- * Railroad
- * https://github.com/Chrriis/rrdiagram-js/
+ * Carrousel
+ *
  */
-class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Enable or disable the code component
      */
-    const TAG = 'railroad';
-    const CLASS_NAME = "railroad-bnf";
-
+    const TAG = 'carrousel';
     const CANONICAL = self::TAG;
 
 
@@ -119,31 +117,9 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
 
 
             case DOKU_LEXER_EXIT :
-                $callStack = CallStack::createFromHandler($handler);
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                $bnfCode = "";
-                $bnfCodeFound = false;
-                while ($actual = $callStack->next()) {
-                    if (in_array($actual->getTagName(), syntax_plugin_combo_webcode::CODE_TAGS)) {
-                        switch ($actual->getState()) {
-                            case DOKU_LEXER_ENTER:
-                                $actualCodeType = strtolower($actual->getType());
-                                if ($actualCodeType === 'bnf') {
-                                    $bnfCodeFound = true;
-                                };
-                                break;
-                            case DOKU_LEXER_UNMATCHED:
-                                if($bnfCodeFound) {
-                                    $bnfCode = $actual->getCapturedContent();
-                                    break 2;
-                                }
-                                break;
-                        }
-                    }
-                }
+
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $bnfCode
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -162,7 +138,7 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
 
@@ -172,6 +148,40 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
+
+                    $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES], self::TAG);
+                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
+
+                    /**
+                     * Snippet
+                     */
+                    $snippetManager = PluginUtility::getSnippetManager();
+                    $snippetId = self::TAG;
+
+                    $snippetManager->attachCssSnippetForBar($snippetId);
+                    $snippetManager->attachJavascriptSnippetForBar($snippetId);
+                    $snippetManager->attachTagsForBar($snippetId)->setTags(
+                        array(
+                            "script" =>
+                                [
+                                    array(
+                                        "src" => "https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.2/min/tiny-slider.js",
+                                        "integrity" => "sha256-CApIX5Te4OdXVy1iWP+5+qG/iHa+8apfYOFagdVMRwk=",
+                                        "crossorigin" => "anonymous"
+                                    )
+                                ],
+                            "link" =>
+                                [
+                                    array(
+                                        "rel" => "stylesheet",
+                                        "href" => "https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.3/tiny-slider.css",
+                                        "integrity" => "sha256-6biQaot1QLisz9KkkcCCHWvW2My9SrU6VtqJBv8ChCM=",
+                                        "crossorigin" => "anonymous"
+                                    )
+                                ]
+                        )
+                    );
+
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -180,34 +190,9 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    $bnfCode = $data[PluginUtility::PAYLOAD];
-                    if (!empty($bnfCode)) {
-                        $snippetManager = PluginUtility::getSnippetManager();
-                        $snippetId = self::TAG;
-                        $libraryId = "rrdiagram";
-                        $snippetManager->attachCssSnippetForBar($snippetId);
-                        $snippetManager->attachJavascriptSnippetForBar($snippetId);
-                        $snippetManager->attachTagsForBar($snippetId)->setTags(
-                            array(
-                                "script" =>
-                                    [
-                                        array(
-                                            "src" => PluginUtility::getResourceBaseUrl() . "/library/$libraryId/$libraryId.js",
-                                            "integrity" => "sha256-iYKdedDsJ2q8Vl0lgyGw6y5iM5Bu4RYEs02X+/5SKVY=",
-                                            "crossorigin" => "anonymous"
-                                        )
-                                    ],
 
-                            )
-                        );
-                        /**
-                         * This code is replaced at runtime by the diagram
-                         */
-                        $class = self::CLASS_NAME;
-                        $renderer->doc .= "<pre class=\"$class\">$bnfCode</pre>";
-                    } else {
-                        LogUtility::msg("No code component with bnf grammar was found", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-                    }
+                    $renderer->doc .= "</div>";
+
                     break;
 
             }

@@ -6,12 +6,11 @@ use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
-use ComboStrap\ThirdPartyPlugins;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
+use ComboStrap\ThirdPartyPlugins;
 
 
-if (!defined('DOKU_INC')) die();
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 /**
@@ -49,6 +48,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
      * Enable or disable the image
      */
     const CONF_IMAGE_ENABLE = "imageEnable";
+
+    /**
+     * Svg Rendering error
+     */
+    const SVG_RENDERING_ERROR_CLASS = "combo-svg-rendering-error";
 
 
     /**
@@ -197,7 +201,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $media = MediaLink::createFromCallStackArray($attributes);
                 if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
                     $media = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
-                    if ($media->isImage()) {
+                    if ($media->isImage() || $media->getExtension() === "svg") {
                         /**
                          * We don't support crop
                          */
@@ -211,7 +215,16 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                             }
                         }
                         if (!$crop) {
-                            $renderer->doc .= $media->renderMediaTagWithLink();
+                            try {
+                                $renderer->doc .= $media->renderMediaTagWithLink();
+                            } catch (RuntimeException $e) {
+                                $errorClass = self::SVG_RENDERING_ERROR_CLASS;
+                                $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
+                                $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc($message) . "</span>";
+                                if(!PluginUtility::isTest()) {
+                                    LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);
+                                }
+                            }
                             return true;
                         }
                     }

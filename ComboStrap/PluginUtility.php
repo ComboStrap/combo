@@ -111,7 +111,6 @@ require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/XmlUtility.php');
 
 
-
 /**
  * Class url static
  * List of static utilities
@@ -1205,11 +1204,19 @@ class PluginUtility
      */
     public static function isDevOrTest()
     {
+        if (self::isDev()) {
+            return true;
+        }
+        return self::isTest();
+    }
+
+    public static function isDev()
+    {
         global $_SERVER;
         if ($_SERVER["REMOTE_ADDR"] == "127.0.0.1") {
             return true;
         }
-        return self::isTest();
+        return false;
     }
 
     public static function getInstructions($markiCode)

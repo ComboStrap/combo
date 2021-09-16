@@ -1,6 +1,6 @@
-//https://github.com/antlr/grammars-v4/blob/master/sql/sqlite
+//https://github.com/antlr/grammars-v4/
 
-grammar LogicalSql;
+grammar PageSql;
 
 
 /**
@@ -233,7 +233,7 @@ orderByDef: SqlName (ASC | DESC)? ;
 /**
 * The main/root rule
 */
-logicalSql:
+pageSql:
         SELECT
         RANDOM?
         columns

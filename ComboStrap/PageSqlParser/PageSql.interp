@@ -154,7 +154,7 @@ tables
 limit
 orderBys
 orderByDef
-logicalSql
+pageSql
 
 
 atn:

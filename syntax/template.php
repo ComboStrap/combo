@@ -3,13 +3,11 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
-use ComboStrap\LogicalSql;
-use ComboStrap\LogicalSqlAntlr\LogicalSqlAntlr;
+use ComboStrap\PageSql;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
-use ComboStrap\SqlLogical;
 use ComboStrap\TemplateUtility;
 
 
@@ -292,7 +290,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     /**
                      * Create the SQL
                      */
-                    $logicalSql = LogicalSql::create($logicalSql);
+                    $logicalSql = PageSql::create($logicalSql);
 
                     try {
                         $rows = $this->getRowsFromSqliteWithoutJsonSupport($logicalSql, $sqlite);
@@ -307,7 +305,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                      */
                     if (sizeof($rows) == 0) {
                         $iteratorNode->addAttribute(syntax_plugin_combo_iterator::EMPTY_ROWS_COUNT_ATTRIBUTE, true);
-                        LogUtility::msg("The physical query ({$logicalSql->toPhysicalSqlWithParameters()}) does not return any data", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_iterator::CANONICAL);
+                        LogUtility::msg("The physical query ({$logicalSql->getExecutableSql()}) does not return any data", LogUtility::LVL_MSG_WARNING, syntax_plugin_combo_iterator::CANONICAL);
                         return $returnedArray;
                     }
 
@@ -432,14 +430,14 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
 
     /**
-     * @param LogicalSql $logicalSql
+     * @param PageSql $logicalSql
      * @param helper_plugin_sqlite $sqlite
      * @return array
      * @throws RuntimeException when the query is not good
      */
-    private function getRowsFromSqliteWithoutJsonSupport(LogicalSql $logicalSql, helper_plugin_sqlite $sqlite): array
+    private function getRowsFromSqliteWithoutJsonSupport(PageSql $logicalSql, helper_plugin_sqlite $sqlite): array
     {
-        $executableSql = $logicalSql->toPhysicalSqlWithParameters();
+        $executableSql = $logicalSql->getExecutableSql();
         $parameters = $logicalSql->getParameters();
         $res = Sqlite::queryWithParameters($sqlite,$executableSql,$parameters);
         if (!$res) {

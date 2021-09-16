@@ -1,24 +1,24 @@
 <?php
 
 
-namespace ComboStrap\LogicalSqlAntlr;
+namespace ComboStrap;
 
 
 use Antlr\Antlr4\Runtime\CommonTokenStream;
 use Antlr\Antlr4\Runtime\Error\Listeners\DiagnosticErrorListener;
 use Antlr\Antlr4\Runtime\InputStream;
 use Antlr\Antlr4\Runtime\Tree\ParseTreeWalker;
-use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlLexer;
-use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlParser;
+use ComboStrap\PageSqlParser\PageSqlLexer;
+use ComboStrap\PageSqlParser\PageSqlParser;
 
 
-require_once(__DIR__ . '/../PluginUtility.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
-class LogicalSqlAntlr
+class PageSql
 {
-    private $text;
+    private $sql;
     /**
-     * @var LogicalSqlTreeListener
+     * @var PageSqlTreeListener
      */
     private $listener;
 
@@ -26,36 +26,36 @@ class LogicalSqlAntlr
 
     public function __construct($text)
     {
-        $this->text = $text;
+        $this->sql = $text;
     }
 
-    public static function create(string $string): LogicalSqlAntlr
+    public static function create(string $string): PageSql
     {
-        $parser = new LogicalSqlAntlr($string);
+        $parser = new PageSql($string);
         $parser->parse();
         return $parser;
     }
 
-    function parse(): LogicalSqlAntlr
+    function parse(): PageSql
     {
-        $input = InputStream::fromString($this->text);
-        $lexer = new LogicalSqlLexer($input);
+        $input = InputStream::fromString($this->sql);
+        $lexer = new PageSqlLexer($input);
         $tokens = new CommonTokenStream($lexer);
-        $parser = new LogicalSqlParser($tokens);
+        $parser = new PageSqlParser($tokens);
         $parser->addErrorListener(new DiagnosticErrorListener());
         $parser->setBuildParseTree(true);
-        $tree = $parser->logicalSql();
+        $tree = $parser->pageSql();
 
         /**
          * Performs a walk on the given parse tree starting at the root
          * and going down recursively with depth-first search.
          */
-        $this->listener = new LogicalSqlTreeListener($lexer, $parser);
+        $this->listener = new PageSqlTreeListener($lexer, $parser);
         ParseTreeWalker::default()->walk($this->listener, $tree);
         return $this;
     }
 
-    public function getPhysicalSql(): string
+    public function getExecutableSql(): string
     {
         return $this->listener->getPhysicalSql();
     }
@@ -68,6 +68,11 @@ class LogicalSqlAntlr
     public function getColumns()
     {
         return $this->listener->getColumns();
+    }
+
+    public function __toString()
+    {
+        return $this->sql;
     }
 
 }

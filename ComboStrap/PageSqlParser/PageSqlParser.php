@@ -1,10 +1,10 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\LogicalSql.g4 by ANTLR 4.9.1
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.1
  */
 
-namespace ComboStrap\LogicalSqlAntlr\Gen {
+namespace ComboStrap\PageSqlParser {
 	use Antlr\Antlr4\Runtime\Atn\ATN;
 	use Antlr\Antlr4\Runtime\Atn\ATNDeserializer;
 	use Antlr\Antlr4\Runtime\Atn\ParserATNSimulator;
@@ -21,7 +21,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 	use Antlr\Antlr4\Runtime\RuntimeMetaData;
 	use Antlr\Antlr4\Runtime\Parser;
 
-	final class LogicalSqlParser extends Parser
+	final class PageSqlParser extends Parser
 	{
 		public const SCOL = 1, DOT = 2, LPAREN = 3, RPAREN = 4, LSQUARE = 5, RSQUARE = 6, 
                LCURLY = 7, RCURLY = 8, COMMA = 9, BITWISEXOR = 10, DOLLAR = 11, 
@@ -41,7 +41,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		public const RULE_functionNames = 0, RULE_tableNames = 1, RULE_sqlNames = 2, 
                RULE_column = 3, RULE_pattern = 4, RULE_expression = 5, RULE_predicate = 6, 
                RULE_columns = 7, RULE_predicates = 8, RULE_tables = 9, RULE_limit = 10, 
-               RULE_orderBys = 11, RULE_orderByDef = 12, RULE_logicalSql = 13;
+               RULE_orderBys = 11, RULE_orderByDef = 12, RULE_pageSql = 13;
 
 		/**
 		 * @var array<string>
@@ -49,7 +49,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		public const RULE_NAMES = [
 			'functionNames', 'tableNames', 'sqlNames', 'column', 'pattern', 'expression', 
 			'predicate', 'columns', 'predicates', 'tables', 'limit', 'orderBys', 
-			'orderByDef', 'logicalSql'
+			'orderByDef', 'pageSql'
 		];
 
 		/**
@@ -235,7 +235,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		public function getGrammarFileName() : string
 		{
-			return "LogicalSql.g4";
+			return "PageSql.g4";
 		}
 
 		public function getRuleNames() : array
@@ -921,11 +921,11 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 		/**
 		 * @throws RecognitionException
 		 */
-		public function logicalSql() : Context\LogicalSqlContext
+		public function pageSql() : Context\PageSqlContext
 		{
-		    $localContext = new Context\LogicalSqlContext($this->ctx, $this->getState());
+		    $localContext = new Context\PageSqlContext($this->ctx, $this->getState());
 
-		    $this->enterRule($localContext, 26, self::RULE_logicalSql);
+		    $this->enterRule($localContext, 26, self::RULE_pageSql);
 
 		    try {
 		        $this->enterOuterAlt($localContext, 1);
@@ -986,15 +986,15 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 	}
 }
 
-namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
+namespace ComboStrap\PageSqlParser\Context {
 	use Antlr\Antlr4\Runtime\ParserRuleContext;
 	use Antlr\Antlr4\Runtime\Token;
 	use Antlr\Antlr4\Runtime\Tree\ParseTreeVisitor;
 	use Antlr\Antlr4\Runtime\Tree\TerminalNode;
 	use Antlr\Antlr4\Runtime\Tree\ParseTreeListener;
-	use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlParser;
-	use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlVisitor;
-	use ComboStrap\LogicalSqlAntlr\Gen\LogicalSqlListener;
+	use ComboStrap\PageSqlParser\PageSqlParser;
+	use ComboStrap\PageSqlParser\PageSqlVisitor;
+	use ComboStrap\PageSqlParser\PageSqlListener;
 
 	class FunctionNamesContext extends ParserRuleContext
 	{
@@ -1005,36 +1005,36 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_functionNames;
+		    return PageSqlParser::RULE_functionNames;
 	    }
 
 	    public function DATE() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::DATE, 0);
+	        return $this->getToken(PageSqlParser::DATE, 0);
 	    }
 
 	    public function DATETIME() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::DATETIME, 0);
+	        return $this->getToken(PageSqlParser::DATETIME, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterFunctionNames($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitFunctionNames($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitFunctionNames($this);
 		    }
 
@@ -1051,36 +1051,36 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_tableNames;
+		    return PageSqlParser::RULE_tableNames;
 	    }
 
 	    public function DATE() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::DATE, 0);
+	        return $this->getToken(PageSqlParser::DATE, 0);
 	    }
 
 	    public function DATETIME() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::DATETIME, 0);
+	        return $this->getToken(PageSqlParser::DATETIME, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterTableNames($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitTableNames($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitTableNames($this);
 		    }
 
@@ -1097,36 +1097,36 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_sqlNames;
+		    return PageSqlParser::RULE_sqlNames;
 	    }
 
 	    public function SqlName() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::SqlName, 0);
+	        return $this->getToken(PageSqlParser::SqlName, 0);
 	    }
 
 	    public function Number() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::Number, 0);
+	        return $this->getToken(PageSqlParser::Number, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterSqlNames($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitSqlNames($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitSqlNames($this);
 		    }
 
@@ -1143,7 +1143,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_column;
+		    return PageSqlParser::RULE_column;
 	    }
 
 	    /**
@@ -1160,36 +1160,36 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 	    public function DOT() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::DOT, 0);
+	        return $this->getToken(PageSqlParser::DOT, 0);
 	    }
 
 	    public function AS() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::AS, 0);
+	        return $this->getToken(PageSqlParser::AS, 0);
 	    }
 
 	    public function StringLiteral() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::StringLiteral, 0);
+	        return $this->getToken(PageSqlParser::StringLiteral, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterColumn($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitColumn($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitColumn($this);
 		    }
 
@@ -1206,36 +1206,36 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_pattern;
+		    return PageSqlParser::RULE_pattern;
 	    }
 
 	    public function StringLiteral() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::StringLiteral, 0);
+	        return $this->getToken(PageSqlParser::StringLiteral, 0);
 	    }
 
 	    public function NumberLiteral() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::NumberLiteral, 0);
+	        return $this->getToken(PageSqlParser::NumberLiteral, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterPattern($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitPattern($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitPattern($this);
 		    }
 
@@ -1252,27 +1252,27 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_expression;
+		    return PageSqlParser::RULE_expression;
 	    }
 
 	    public function SqlName() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::SqlName, 0);
+	        return $this->getToken(PageSqlParser::SqlName, 0);
 	    }
 
 	    public function StringLiteral() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::StringLiteral, 0);
+	        return $this->getToken(PageSqlParser::StringLiteral, 0);
 	    }
 
 	    public function NumberLiteral() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::NumberLiteral, 0);
+	        return $this->getToken(PageSqlParser::NumberLiteral, 0);
 	    }
 
 	    public function Number() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::Number, 0);
+	        return $this->getToken(PageSqlParser::Number, 0);
 	    }
 
 	    public function functionNames() : ?FunctionNamesContext
@@ -1282,12 +1282,12 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 	    public function LPAREN() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::LPAREN, 0);
+	        return $this->getToken(PageSqlParser::LPAREN, 0);
 	    }
 
 	    public function RPAREN() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::RPAREN, 0);
+	        return $this->getToken(PageSqlParser::RPAREN, 0);
 	    }
 
 	    /**
@@ -1308,29 +1308,29 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    public function COMMA(?int $index = null)
 	    {
 	    	if ($index === null) {
-	    		return $this->getTokens(LogicalSqlParser::COMMA);
+	    		return $this->getTokens(PageSqlParser::COMMA);
 	    	}
 
-	        return $this->getToken(LogicalSqlParser::COMMA, $index);
+	        return $this->getToken(PageSqlParser::COMMA, $index);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterExpression($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitExpression($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitExpression($this);
 		    }
 
@@ -1347,7 +1347,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_predicate;
+		    return PageSqlParser::RULE_predicate;
 	    }
 
 	    public function sqlNames() : ?SqlNamesContext
@@ -1369,62 +1369,62 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 	    public function BETWEEN() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::BETWEEN, 0);
+	        return $this->getToken(PageSqlParser::BETWEEN, 0);
 	    }
 
 	    public function AND() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::AND, 0);
+	        return $this->getToken(PageSqlParser::AND, 0);
 	    }
 
 	    public function IN() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::IN, 0);
+	        return $this->getToken(PageSqlParser::IN, 0);
 	    }
 
 	    public function LPAREN() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::LPAREN, 0);
+	        return $this->getToken(PageSqlParser::LPAREN, 0);
 	    }
 
 	    public function RPAREN() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::RPAREN, 0);
+	        return $this->getToken(PageSqlParser::RPAREN, 0);
 	    }
 
 	    public function LESS_THAN() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::LESS_THAN, 0);
+	        return $this->getToken(PageSqlParser::LESS_THAN, 0);
 	    }
 
 	    public function LESS_THAN_OR_EQUAL() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::LESS_THAN_OR_EQUAL, 0);
+	        return $this->getToken(PageSqlParser::LESS_THAN_OR_EQUAL, 0);
 	    }
 
 	    public function GREATER_THAN() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::GREATER_THAN, 0);
+	        return $this->getToken(PageSqlParser::GREATER_THAN, 0);
 	    }
 
 	    public function GREATER_THAN_OR_EQUAL() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::GREATER_THAN_OR_EQUAL, 0);
+	        return $this->getToken(PageSqlParser::GREATER_THAN_OR_EQUAL, 0);
 	    }
 
 	    public function NOT_EQUAL() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::NOT_EQUAL, 0);
+	        return $this->getToken(PageSqlParser::NOT_EQUAL, 0);
 	    }
 
 	    public function EQUAL() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::EQUAL, 0);
+	        return $this->getToken(PageSqlParser::EQUAL, 0);
 	    }
 
 	    public function LIKE() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::LIKE, 0);
+	        return $this->getToken(PageSqlParser::LIKE, 0);
 	    }
 
 	    public function pattern() : ?PatternContext
@@ -1434,22 +1434,22 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 	    public function GLOB() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::GLOB, 0);
+	        return $this->getToken(PageSqlParser::GLOB, 0);
 	    }
 
 	    public function NOT() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::NOT, 0);
+	        return $this->getToken(PageSqlParser::NOT, 0);
 	    }
 
 	    public function ESCAPE() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::ESCAPE, 0);
+	        return $this->getToken(PageSqlParser::ESCAPE, 0);
 	    }
 
 	    public function StringLiteral() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::StringLiteral, 0);
+	        return $this->getToken(PageSqlParser::StringLiteral, 0);
 	    }
 
 	    /**
@@ -1458,29 +1458,29 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    public function COMMA(?int $index = null)
 	    {
 	    	if ($index === null) {
-	    		return $this->getTokens(LogicalSqlParser::COMMA);
+	    		return $this->getTokens(PageSqlParser::COMMA);
 	    	}
 
-	        return $this->getToken(LogicalSqlParser::COMMA, $index);
+	        return $this->getToken(PageSqlParser::COMMA, $index);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterPredicate($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitPredicate($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitPredicate($this);
 		    }
 
@@ -1497,7 +1497,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_columns;
+		    return PageSqlParser::RULE_columns;
 	    }
 
 	    /**
@@ -1518,29 +1518,29 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    public function COMMA(?int $index = null)
 	    {
 	    	if ($index === null) {
-	    		return $this->getTokens(LogicalSqlParser::COMMA);
+	    		return $this->getTokens(PageSqlParser::COMMA);
 	    	}
 
-	        return $this->getToken(LogicalSqlParser::COMMA, $index);
+	        return $this->getToken(PageSqlParser::COMMA, $index);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterColumns($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitColumns($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitColumns($this);
 		    }
 
@@ -1557,12 +1557,12 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_predicates;
+		    return PageSqlParser::RULE_predicates;
 	    }
 
 	    public function WHERE() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::WHERE, 0);
+	        return $this->getToken(PageSqlParser::WHERE, 0);
 	    }
 
 	    /**
@@ -1583,10 +1583,10 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    public function AND(?int $index = null)
 	    {
 	    	if ($index === null) {
-	    		return $this->getTokens(LogicalSqlParser::AND);
+	    		return $this->getTokens(PageSqlParser::AND);
 	    	}
 
-	        return $this->getToken(LogicalSqlParser::AND, $index);
+	        return $this->getToken(PageSqlParser::AND, $index);
 	    }
 
 	    /**
@@ -1595,29 +1595,29 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    public function OR(?int $index = null)
 	    {
 	    	if ($index === null) {
-	    		return $this->getTokens(LogicalSqlParser::OR);
+	    		return $this->getTokens(PageSqlParser::OR);
 	    	}
 
-	        return $this->getToken(LogicalSqlParser::OR, $index);
+	        return $this->getToken(PageSqlParser::OR, $index);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterPredicates($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitPredicates($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitPredicates($this);
 		    }
 
@@ -1634,12 +1634,12 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_tables;
+		    return PageSqlParser::RULE_tables;
 	    }
 
 	    public function FROM() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::FROM, 0);
+	        return $this->getToken(PageSqlParser::FROM, 0);
 	    }
 
 	    public function tableNames() : ?TableNamesContext
@@ -1649,21 +1649,21 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterTables($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitTables($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitTables($this);
 		    }
 
@@ -1680,36 +1680,36 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_limit;
+		    return PageSqlParser::RULE_limit;
 	    }
 
 	    public function LIMIT() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::LIMIT, 0);
+	        return $this->getToken(PageSqlParser::LIMIT, 0);
 	    }
 
 	    public function Number() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::Number, 0);
+	        return $this->getToken(PageSqlParser::Number, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterLimit($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitLimit($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitLimit($this);
 		    }
 
@@ -1726,17 +1726,17 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_orderBys;
+		    return PageSqlParser::RULE_orderBys;
 	    }
 
 	    public function ORDER() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::ORDER, 0);
+	        return $this->getToken(PageSqlParser::ORDER, 0);
 	    }
 
 	    public function BY() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::BY, 0);
+	        return $this->getToken(PageSqlParser::BY, 0);
 	    }
 
 	    /**
@@ -1757,29 +1757,29 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 	    public function COMMA(?int $index = null)
 	    {
 	    	if ($index === null) {
-	    		return $this->getTokens(LogicalSqlParser::COMMA);
+	    		return $this->getTokens(PageSqlParser::COMMA);
 	    	}
 
-	        return $this->getToken(LogicalSqlParser::COMMA, $index);
+	        return $this->getToken(PageSqlParser::COMMA, $index);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterOrderBys($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitOrderBys($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitOrderBys($this);
 		    }
 
@@ -1796,41 +1796,41 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_orderByDef;
+		    return PageSqlParser::RULE_orderByDef;
 	    }
 
 	    public function SqlName() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::SqlName, 0);
+	        return $this->getToken(PageSqlParser::SqlName, 0);
 	    }
 
 	    public function ASC() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::ASC, 0);
+	        return $this->getToken(PageSqlParser::ASC, 0);
 	    }
 
 	    public function DESC() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::DESC, 0);
+	        return $this->getToken(PageSqlParser::DESC, 0);
 	    }
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->enterOrderByDef($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
+			if ($listener instanceof PageSqlListener) {
 			    $listener->exitOrderByDef($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
+			if ($visitor instanceof PageSqlVisitor) {
 			    return $visitor->visitOrderByDef($this);
 		    }
 
@@ -1838,7 +1838,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 		}
 	} 
 
-	class LogicalSqlContext extends ParserRuleContext
+	class PageSqlContext extends ParserRuleContext
 	{
 		public function __construct(?ParserRuleContext $parent, ?int $invokingState = null)
 		{
@@ -1847,12 +1847,12 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function getRuleIndex() : int
 		{
-		    return LogicalSqlParser::RULE_logicalSql;
+		    return PageSqlParser::RULE_pageSql;
 	    }
 
 	    public function SELECT() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::SELECT, 0);
+	        return $this->getToken(PageSqlParser::SELECT, 0);
 	    }
 
 	    public function columns() : ?ColumnsContext
@@ -1862,7 +1862,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 	    public function RANDOM() : ?TerminalNode
 	    {
-	        return $this->getToken(LogicalSqlParser::RANDOM, 0);
+	        return $this->getToken(PageSqlParser::RANDOM, 0);
 	    }
 
 	    public function tables() : ?TablesContext
@@ -1887,22 +1887,22 @@ namespace ComboStrap\LogicalSqlAntlr\Gen\Context {
 
 		public function enterRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
-			    $listener->enterLogicalSql($this);
+			if ($listener instanceof PageSqlListener) {
+			    $listener->enterPageSql($this);
 		    }
 		}
 
 		public function exitRule(ParseTreeListener $listener) : void
 		{
-			if ($listener instanceof LogicalSqlListener) {
-			    $listener->exitLogicalSql($this);
+			if ($listener instanceof PageSqlListener) {
+			    $listener->exitPageSql($this);
 		    }
 		}
 
 		public function accept(ParseTreeVisitor $visitor)
 		{
-			if ($visitor instanceof LogicalSqlVisitor) {
-			    return $visitor->visitLogicalSql($this);
+			if ($visitor instanceof PageSqlVisitor) {
+			    return $visitor->visitPageSql($this);
 		    }
 
 			return $visitor->visitChildren($this);

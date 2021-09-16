@@ -1,21 +1,21 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\LogicalSql.g4 by ANTLR 4.9.1
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.1
  */
 
-namespace ComboStrap\LogicalSqlAntlr\Gen;
+namespace ComboStrap\PageSqlParser;
 
 use Antlr\Antlr4\Runtime\ParserRuleContext;
 use Antlr\Antlr4\Runtime\Tree\ErrorNode;
 use Antlr\Antlr4\Runtime\Tree\TerminalNode;
 
 /**
- * This class provides an empty implementation of {@see LogicalSqlListener},
+ * This class provides an empty implementation of {@see PageSqlListener},
  * which can be extended to create a listener which only needs to handle a subset
  * of the available methods.
  */
-class LogicalSqlBaseListener implements LogicalSqlListener
+class PageSqlBaseListener implements PageSqlListener
 {
 	/**
 	 * {@inheritdoc}
@@ -191,14 +191,14 @@ class LogicalSqlBaseListener implements LogicalSqlListener
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function enterLogicalSql(Context\LogicalSqlContext $context) : void {}
+	public function enterPageSql(Context\PageSqlContext $context) : void {}
 
 	/**
 	 * {@inheritdoc}
 	 *
 	 * The default implementation does nothing.
 	 */
-	public function exitLogicalSql(Context\LogicalSqlContext $context) : void {}
+	public function exitPageSql(Context\PageSqlContext $context) : void {}
 
 	/**
 	 * {@inheritdoc}

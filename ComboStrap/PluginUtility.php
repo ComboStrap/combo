@@ -60,6 +60,10 @@ require_once(__DIR__ . '/LowQualityPage.php');
 require_once(__DIR__ . '/MetadataUtility.php');
 require_once(__DIR__ . '/Opacity.php');
 require_once(__DIR__ . '/Page.php');
+require_once(__DIR__ . '/PageSql.php');
+require_once(__DIR__ . '/PageSqlParser/PageSqlLexer.php');
+require_once(__DIR__ . '/PageSqlParser/PageSqlParser.php');
+require_once(__DIR__ . '/PageSqlTreeListener.php');
 require_once(__DIR__ . '/PipelineUtility.php');
 require_once(__DIR__ . '/Position.php');
 require_once(__DIR__ . '/Prism.php');
@@ -73,7 +77,6 @@ require_once(__DIR__ . '/Site.php');
 require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Spacing.php');
 require_once(__DIR__ . '/Sqlite.php');
-
 require_once(__DIR__ . '/StringUtility.php');
 require_once(__DIR__ . '/StyleUtility.php');
 require_once(__DIR__ . '/TagAttributes.php');
@@ -88,14 +91,8 @@ require_once(__DIR__ . '/Underline.php');
 require_once(__DIR__ . '/XhtmlUtility.php');
 require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/XmlUtility.php');
-require_once(__DIR__ . '/LogicalSql.php');
-require_once(__DIR__ . '/LogicalSqlAntlr/Gen/logicalSqlLexer.php');
-require_once(__DIR__ . '/LogicalSqlAntlr/Gen/logicalSqlParser.php');
-require_once(__DIR__ . '/LogicalSqlAntlr/LogicalSqlTreeListener.php');
-require_once(__DIR__ . '/LogicalSqlAntlr/LogicalSqlAntlr.php');
-require_once(__DIR__ . '/LogicalSqlManual/SqlLogical.php');
-require_once(__DIR__ . '/LogicalSqlManual/SqlParser.php');
-require_once(__DIR__ . '/LogicalSqlManual/SqlToken.php');
+
+
 
 /**
  * Class url static

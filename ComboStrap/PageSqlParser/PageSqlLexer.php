@@ -1,10 +1,10 @@
 <?php
 
 /*
- * Generated from D:/dokuwiki/lib/plugins/combo/grammar\LogicalSql.g4 by ANTLR 4.9.1
+ * Generated from D:/dokuwiki/lib/plugins/combo/grammar\PageSql.g4 by ANTLR 4.9.1
  */
 
-namespace ComboStrap\LogicalSqlAntlr\Gen {
+namespace ComboStrap\PageSqlParser {
 	use Antlr\Antlr4\Runtime\Atn\ATNDeserializer;
 	use Antlr\Antlr4\Runtime\Atn\LexerATNSimulator;
 	use Antlr\Antlr4\Runtime\Lexer;
@@ -17,7 +17,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 	use Antlr\Antlr4\Runtime\RuntimeMetaData;
 	use Antlr\Antlr4\Runtime\VocabularyImpl;
 
-	final class LogicalSqlLexer extends Lexer
+	final class PageSqlLexer extends Lexer
 	{
 		public const SCOL = 1, DOT = 2, LPAREN = 3, RPAREN = 4, LSQUARE = 5, RSQUARE = 6, 
                LCURLY = 7, RCURLY = 8, COMMA = 9, BITWISEXOR = 10, DOLLAR = 11, 
@@ -625,7 +625,7 @@ namespace ComboStrap\LogicalSqlAntlr\Gen {
 
 		public function getGrammarFileName() : string
 		{
-			return 'LogicalSql.g4';
+			return 'PageSql.g4';
 		}
 
 		public function getRuleNames() : array

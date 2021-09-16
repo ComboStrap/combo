@@ -31,6 +31,7 @@ syntax/list.php
 syntax/ntoc.php
 syntax/slice.php
 syntax/tabpanel.php
+class/Auth.php
 class/AdsUtility.php
 class/Align.php
 class/Analytics.php
@@ -44,6 +45,7 @@ class/Bootstrap.php
 class/BreadcrumbHierarchical.php
 class/CacheByLogicalKey.php
 class/CacheInstructionsByLogicalKey.php
+class/Cache.php
 class/CacheMedia.php
 class/Call.php
 class/CallStack.php
@@ -61,8 +63,12 @@ class/HeaderUtility.php
 class/HistoricalBreadcrumbMenuItem.php
 class/Hover.php
 class/Http.php
+class/HtmlUtility.php
 class/Icon.php
+class/IconUtility.php
 class/Identity.php
+class/Image.php
+class/ImgUtility.php
 class/Lang.php
 class/LazyLoad.php
 class/LineSpacing.php
@@ -73,6 +79,7 @@ class/MediaLink.php
 class/Message.php
 class/MetadataUtility.php
 class/NavBarUtility.php
+class/Note.php
 class/Opacity.php
 class/Page.php
 class/PageProtection.php
@@ -110,9 +117,13 @@ class/TocUtility.php
 class/Toggle.php
 class/Underline.php
 class/Unit.php
+class/Url.php
 class/UrlManagerBestEndPage.php
 class/UrlUtility.php
 class/XhtmlUtility.php
 class/XmlDocument.php
 class/XmlUtility.php
 syntax/cardcolumns.php
+action/blockquote.php
+action/metadata.php
+

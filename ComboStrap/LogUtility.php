@@ -79,7 +79,12 @@ class LogUtility
         if (!empty($loglevelProp)) {
             $level = $loglevelProp;
         }
-        self::log2file($message, $level, $canonical);
+        /**
+         * TODO: Make it a configuration ?
+         */
+        if($level >= self::LVL_MSG_WARNING) {
+            self::log2file($message, $level, $canonical);
+        }
 
         /**
          * If test, we throw an error

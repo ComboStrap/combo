@@ -20,7 +20,7 @@ use splitbrain\phpcli\Options;
 /**
  * All dependency are loaded in plugin utility
  */
-require_once(__DIR__ . '/class/PluginUtility.php');
+require_once(__DIR__ . '/ComboStrap/PluginUtility.php');
 
 /**
  * The memory of the server 128 is not enough

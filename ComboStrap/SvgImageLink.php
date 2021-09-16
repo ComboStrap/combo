@@ -289,6 +289,10 @@ class SvgImageLink extends MediaLink
              */
             $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
             $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
+            /**
+             * TODO: Title should be a node just below SVG
+             */
+            $this->tagAttributes->removeComponentAttributeIfPresent(Page::TITLE_META_PROPERTY);
 
             if (
                 $this->getSize() > $this->getMaxInlineSize()

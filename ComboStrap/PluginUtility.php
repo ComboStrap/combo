@@ -1262,6 +1262,12 @@ class PluginUtility
         return "plugin_$name";
     }
 
+    public static function isCi(): bool
+    {
+        // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+        return getenv("CI")==="true";
+    }
+
 
 }
 

@@ -137,7 +137,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     }
 
 
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {
@@ -160,6 +160,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     $parentTag = $parent->getTagName();
                     if ($parentTag == syntax_plugin_combo_link::TAG) {
                         /**
+                         * TODO: should be on the exit tag of the link
                          * The image is in a link, we don't want another link
                          * to the image
                          */

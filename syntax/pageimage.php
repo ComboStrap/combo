@@ -65,7 +65,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     }
 
 
-    function handle($match, $state, $pos, Doku_Handler $handler)
+    function handle($match, $state, $pos, Doku_Handler $handler): array
     {
 
         switch ($state) {

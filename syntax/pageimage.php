@@ -4,6 +4,7 @@
 use ComboStrap\CacheManager;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
+use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -73,21 +74,9 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
 
                 $attributes = TagAttributes::createFromTagMatch($match);
-                $value = $attributes->getValue(self::EXPIRATION_ATTRIBUTE);
-                $status = self::PARSING_STATE_SUCCESSFUL;
-                $date = "";
-                try {
-                    $cron = Cron\CronExpression::factory($value);
-                    $date = $cron->getNextRunDate()->format(Iso8601Date::getFormat());
-                } catch (InvalidArgumentException $e) {
-                    $status = self::PARSING_STATE_UNSUCCESSFUL;
-                }
-
                 return array(
                     PluginUtility::STATE => $state,
-                    self::PARSING_STATUS => $status,
-                    PluginUtility::PAYLOAD => $value,
-                    PluginUtility::ATTRIBUTES => [CacheManager::DATE_CACHE_EXPIRATION_META_KEY => $date]
+                    PluginUtility::ATTRIBUTES => $attributes
                 );
 
 
@@ -112,32 +101,8 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         switch ($format) {
 
             case 'xhtml':
-                if ($data[self::PARSING_STATUS] !== self::PARSING_STATE_SUCCESSFUL) {
-                    $cronExpression = $data[PluginUtility::PAYLOAD];
-                    LogUtility::msg("The expression ($cronExpression) is not a valid expression", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
-                }
-                break;
-            case 'metadata':
-
-                if ($data[self::PARSING_STATUS] != self::PARSING_STATE_SUCCESSFUL) {
-                    return false;
-                }
-
-                /** @var Doku_Renderer_metadata $renderer */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                global $ID;
-                p_set_metadata($ID, $attributes);
-                break;
-
-            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
-                if ($data[self::PARSING_STATUS] != self::PARSING_STATE_SUCCESSFUL) {
-                    return false;
-                }
-                /** @var renderer_plugin_combo_analytics $renderer */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                foreach ($attributes as $key => $value) {
-                    $renderer->setMeta($key, $value);
-                }
+                $mediaLink =  MediaLink::createMediaLinkFromAbsolutePath(":image.png");
+                $renderer->doc .= $mediaLink->renderMediaTag();
                 break;
 
 

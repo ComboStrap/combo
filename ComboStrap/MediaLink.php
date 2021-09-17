@@ -378,13 +378,19 @@ abstract class MediaLink extends DokuPath
          * Resolution
          */
         $qualifiedPath = $nonQualifiedPath;
-        if(!media_isexternal($qualifiedPath)) {
+        if (!media_isexternal($qualifiedPath)) {
             global $ID;
             $qualifiedId = $nonQualifiedPath;
             resolve_mediaid(getNS($ID), $qualifiedId, $exists);
             $qualifiedPath = DokuPath::PATH_SEPARATOR . $qualifiedId;
         }
 
+
+        return self::createMediaLinkFromAbsolutePath($qualifiedPath,$rev,$tagAttributes);
+    }
+
+    public static function createMediaLinkFromAbsolutePath($qualifiedPath, $rev = null, $tagAttributes = null)
+    {
         /**
          * Processing
          */
@@ -413,14 +419,13 @@ abstract class MediaLink extends DokuPath
             }
         } else {
             if ($mime == false) {
-                LogUtility::msg("The mime type of the media ($nonQualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
+                LogUtility::msg("The mime type of the media ($qualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
                 $internalMedia = new RasterImageLink($qualifiedPath, $tagAttributes);
             } else {
-                LogUtility::msg("The type ($mime) of media ($nonQualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
+                LogUtility::msg("The type ($mime) of media ($qualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
                 $internalMedia = new ThirdMediaLink($qualifiedPath, $tagAttributes);
             }
         }
-
 
         return $internalMedia;
     }

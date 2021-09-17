@@ -52,7 +52,7 @@ class PageSql
          * Performs a walk on the given parse tree starting at the root
          * and going down recursively with depth-first search.
          */
-        $this->listener = new PageSqlTreeListener($lexer, $parser);
+        $this->listener = new PageSqlTreeListener($lexer, $parser,$this->sql);
         ParseTreeWalker::default()->walk($this->listener, $tree);
         return $this;
     }

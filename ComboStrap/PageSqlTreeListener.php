@@ -58,17 +58,23 @@ final class PageSqlTreeListener implements ParseTreeListener
      * @var array
      */
     private $columns;
+    /**
+     * @var string
+     */
+    private $pageSqlString;
 
     /**
      * SqlTreeListener constructor.
      *
      * @param PageSqlLexer $lexer
      * @param PageSqlParser $parser
+     * @param string $sql
      */
-    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser)
+    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql)
     {
         $this->lexer = $lexer;
         $this->parser = $parser;
+        $this->pageSqlString = $sql;
     }
 
 
@@ -204,7 +210,21 @@ final class PageSqlTreeListener implements ParseTreeListener
     public
     function visitErrorNode(ErrorNode $node): void
     {
-         throw new \RuntimeException($node->getText());
+        $charPosition = $node->getSymbol()->getCharPositionInLine();
+        $textMakingTheError = $this->lexer->getText();
+
+        $position = "at position: $charPosition";
+        if ($charPosition != 0) {
+            if (strlen($this->pageSqlString) > $charPosition) {
+                $offset = $charPosition - 15;
+            } else {
+                $offset = 0;
+            }
+            $position .= ", after `" . substr($this->pageSqlString, $offset, -1)."`";
+        }
+        $message = "PageSql Parsing Error: The token `$textMakingTheError` was unexpected ($position). Message: {$node->getText()}";
+        throw new \RuntimeException($message);
+
     }
 
 
@@ -310,7 +330,6 @@ final class PageSqlTreeListener implements ParseTreeListener
     {
         return $this->physicalSql;
     }
-
 
 
 }

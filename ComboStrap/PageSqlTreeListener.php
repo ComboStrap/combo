@@ -12,6 +12,7 @@ use Antlr\Antlr4\Runtime\Tree\TerminalNode;
 use ComboStrap\PageSqlParser\PageSqlLexer;
 use ComboStrap\PageSqlParser\PageSqlParser;
 
+
 /**
  * Class SqlTreeListener
  * @package ComboStrap\LogicalSqlAntlr
@@ -157,6 +158,7 @@ final class PageSqlTreeListener implements ParseTreeListener
                     $this->physicalSql .= " {$text}\n";
                 }
                 return;
+            case PageSqlParser::LIMIT:
             case PageSqlParser:: NOT:
                 $this->physicalSql .= "{$text} ";
                 return;
@@ -177,9 +179,6 @@ final class PageSqlTreeListener implements ParseTreeListener
                         $this->physicalSql .= "{$text}";
                         return;
                 }
-            case PageSqlParser::LIMIT:
-                $this->physicalSql .= "{$text} ";
-                return;
             case PageSqlParser::ESCAPE:
                 $this->physicalSql .= " {$text} ";
                 return;
@@ -205,6 +204,7 @@ final class PageSqlTreeListener implements ParseTreeListener
     public
     function visitErrorNode(ErrorNode $node): void
     {
+         throw new \RuntimeException($node->getText());
     }
 
 

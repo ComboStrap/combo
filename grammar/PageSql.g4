@@ -236,7 +236,7 @@ orderByDef: SqlName (ASC | DESC)? ;
 pageSql:
         SELECT
         RANDOM?
-        columns
+        (STAR|columns)?
         tables?
         predicates?
         orderBys?

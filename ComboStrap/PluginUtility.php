@@ -57,6 +57,7 @@ require_once(__DIR__ . '/Identity.php');
 require_once(__DIR__ . '/Iso8601Date.php');
 require_once(__DIR__ . '/Lang.php');
 require_once(__DIR__ . '/LineSpacing.php');
+require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
 require_once(__DIR__ . '/MediaLink.php');

@@ -10,28 +10,20 @@ use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+
 /**
  * Set the cache of the bar
  * Ie add the possibility to add a time
  * over {@link \dokuwiki\Parsing\ParserMode\Nocache}
- *
- * Depend on the cron dependency
- * https://github.com/dragonmantank/cron-expression
  */
-class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 {
 
 
-    const TAG = "cache";
-
-    const PARSING_STATUS = "status";
-    const PARSING_STATE_SUCCESSFUL = "successful";
-    const PARSING_STATE_UNSUCCESSFUL = "unsuccessful";
-
-    const EXPIRATION_ATTRIBUTE = "expiration";
+    const TAG = "pageimage";
 
 
-    const CANONICAL = "cache";
+    const CANONICAL = self::TAG;
 
 
     function getType()

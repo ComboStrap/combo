@@ -92,7 +92,7 @@ class LogUtility
         if (defined('DOKU_UNITTEST')
             && ($level >= self::LVL_MSG_WARNING)
         ) {
-            throw new \RuntimeException(PluginUtility::$PLUGIN_NAME . " - " . $message);
+            throw new LogException(PluginUtility::$PLUGIN_NAME . " - " . $message);
         }
     }
 

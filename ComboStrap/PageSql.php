@@ -16,6 +16,8 @@ require_once(__DIR__ . '/PluginUtility.php');
 
 class PageSql
 {
+    const CANONICAL = "sql";
+
     private $sql;
     /**
      * @var PageSqlTreeListener

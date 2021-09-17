@@ -50,6 +50,7 @@ class Page extends DokuPath
     const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
     const WEBSITE_TYPE = "website";
     const ARTICLE_TYPE = "article";
+    const EVENT_TYPE = "article";
     const ORGANIZATION_TYPE = "organization";
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";

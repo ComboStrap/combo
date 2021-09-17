@@ -15,6 +15,9 @@ require_once(__DIR__ . '/../ComboStrap/Site.php');
  * To test locally use ngrok
  * https://developers.google.com/search/docs/guides/debug#testing-firewalled-pages
  *
+ * Tool:
+ * https://support.google.com/webmasters/answer/2774099# - Data Highlighter
+ * to tag page manually (you see well what kind of information they need)
  *
  * Ref:
  * https://developers.google.com/search/docs/guides/intro-structured-data
@@ -237,6 +240,10 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 if (!empty($schemaImages)) {
                     $ldJson["image"] = $schemaImages;
                 }
+                break;
+
+            case PAGE::EVENT_TYPE:
+                // https://developers.google.com/search/docs/advanced/structured-data/event
                 break;
 
             default:

@@ -716,7 +716,7 @@ class Call
         return $this->renderFromData(TemplateUtility::getMetadataDataFromPage($page));
     }
 
-    public function renderFromData(array $array)
+    public function renderFromData(array $array): Call
     {
         $state = $this->getState();
         if ($state == DOKU_LEXER_UNMATCHED) {

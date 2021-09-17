@@ -62,6 +62,8 @@ class Analytics
     const METADATA = 'metadata';
     const CANONICAL = "canonical";
     const DATE_CREATED = 'date_created';
+    const DATE_END = "date_end";
+    const DATE_START = "date_start";
 
 
     /**

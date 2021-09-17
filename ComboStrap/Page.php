@@ -80,7 +80,6 @@ class Page extends DokuPath
 
     const CURRENT_METADATA = "current";
     const PERSISTENT_METADATA = "persistent";
-    const PAGE_TYPE_META_PROPERTY = "type";
     const IMAGE_META_PROPERTY = 'image';
     const COUNTRY_META_PROPERTY = "country";
     const LANG_META_PROPERTY = "lang";
@@ -425,10 +424,10 @@ class Page extends DokuPath
     /**
      * Persist a page in the database
      */
-    function processAndPersistInDb()
+    function processAndPersistInDb(): Page
     {
 
-        $canonical = p_get_metadata($this->getId(), "canonical");
+        $canonical = p_get_metadata($this->getId(), Page::CANONICAL_PROPERTY);
         if ($canonical != "") {
 
             // Do we have a page attached to this canonical
@@ -506,7 +505,7 @@ class Page extends DokuPath
     }
 
     private
-    function setCanonical($canonical)
+    function setCanonical($canonical): Page
     {
         $this->canonical = $canonical;
         return $this;
@@ -676,7 +675,7 @@ class Page extends DokuPath
     }
 
     public
-    function saveAnalytics(array $analytics)
+    function persistAnalytics(array $analytics)
     {
 
         $sqlite = Sqlite::getSqlite();
@@ -684,7 +683,6 @@ class Page extends DokuPath
             /**
              * Sqlite Plugin installed
              */
-
             $json = json_encode($analytics, JSON_PRETTY_PRINT);
             /**
              * Same data as {@link Page::getMetadataForRendering()}
@@ -692,20 +690,49 @@ class Page extends DokuPath
             $entry = array(
                 'CANONICAL' => $this->getCanonical(),
                 'ANALYTICS' => $json,
-                'PATH'=>$this->getAbsolutePath(),
-                'NAME'=>$this->getName(),
-                'TITLE'=>$this->getTitleNotEmpty(),
-                'H1'=>$this->getH1NotEmpty(),
-                'DATE_CREATED'=>$this->getCreatedDateString(),
-                'DATE_MODIFIED'=>$this->getModifiedDateString(),
-                'DATE_PUBLISHED'=>$this->getPublishedTimeAsString(),
-                'ID' => $this->getId()
+                'PATH' => $this->getAbsolutePath(),
+                'NAME' => $this->getName(),
+                'TITLE' => $this->getTitleNotEmpty(),
+                'H1' => $this->getH1NotEmpty(),
+                'DATE_CREATED' => $this->getCreatedDateString(),
+                'DATE_MODIFIED' => $this->getModifiedDateString(),
+                'DATE_PUBLISHED' => $this->getPublishedTimeAsString(),
+                'DATE_START' => $this->getEndDateAsString(),
+                'DATE_END' => $this->getStartDateAsString(),
+                'COUNTRY' => $this->getCountry(),
+                'LANG' => $this->getLang(),
+                'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 0 : 1),
+                'TYPE' => $this->getType(),
+                'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
+                'ID' => $this->getId(),
             );
             $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
             if ($sqlite->res2single($res) == 1) {
                 // Upset not supported on all version
                 //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-                $update = 'update PAGES SET CANONICAL = ?, ANALYTICS = ?, PATH = ?, NAME = ?, TITLE = ?, H1 = ?, DATE_CREATED = ?, DATE_MODIFIED = ?, DATE_PUBLISHED = ? where ID=?';
+                $update = <<<EOF
+update
+    PAGES
+SET
+    CANONICAL = ?,
+    ANALYTICS = ?,
+    PATH = ?,
+    NAME = ?,
+    TITLE = ?,
+    H1 = ?,
+    DATE_CREATED = ?,
+    DATE_MODIFIED = ?,
+    DATE_PUBLISHED = ?,
+    DATE_START = ?,
+    DATE_END = ?,
+    COUNTRY = ?,
+    LANG = ?,
+    IS_LOW_QUALITY = ?,
+    TYPE = ?,
+    WORD_COUNT = ?
+where
+    ID=?
+EOF;
                 $res = $sqlite->query($update, $entry);
             } else {
                 $res = $sqlite->storeEntry('PAGES', $entry);
@@ -873,7 +900,7 @@ class Page extends DokuPath
      */
 
     public
-    function setLowQualityIndicator($newIndicator)
+    function setLowQualityIndicator(bool $newIndicator)
     {
         $actualIndicator = $this->getLowQualityIndicator();
         if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
@@ -927,7 +954,7 @@ class Page extends DokuPath
      * Low page quality
      * @return bool true if this is a low internal page rank
      */
-    function isLowQualityPage()
+    function isLowQualityPage(): bool
     {
 
         $lowQualityIndicator = $this->getLowQualityIndicator();
@@ -1499,9 +1526,10 @@ class Page extends DokuPath
     }
 
     public
-    function getPublishedTime()
+    function getPublishedTime(): ?DateTime
     {
-        $persistentMetadata = $this->getPersistentMetadata(Publication::DATE_PUBLISHED);
+        $property = Publication::DATE_PUBLISHED;
+        $persistentMetadata = $this->getPersistentMetadata($property);
         if (empty($persistentMetadata)) {
             /**
              * Old metadata key
@@ -1518,7 +1546,7 @@ class Page extends DokuPath
              * Should not happen as the data is validate in entry
              * at the {@link \syntax_plugin_combo_frontmatter}
              */
-            LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, Publication::CANONICAL);
+            LogUtility::msg("The published date property ($property) of the page ($this) has a value  ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
             return null;
         }
         return $dateTime;
@@ -1903,7 +1931,6 @@ class Page extends DokuPath
         $array[self::TYPE_META_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
 
 
-
         $array[Analytics::DATE_CREATED] = $this->getCreatedDateString();
         $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateString();
         $array[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
@@ -1926,9 +1953,61 @@ class Page extends DokuPath
         );
     }
 
-    private function getPublishedTimeAsString()
+    private function getPublishedTimeAsString(): ?string
     {
-        return $this->getPublishedTime()!==null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
+        return $this->getPublishedTime() !== null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
+    }
+
+    private function getEndDateAsString(): ?string
+    {
+        return $this->getEndDate() !== null ? $this->getEndDate()->format(Iso8601Date::getFormat()) : null;
+    }
+
+    private function getEndDate(): ?DateTime
+    {
+        $dateEndProperty = Analytics::DATE_END;
+        $persistentMetadata = $this->getPersistentMetadata($dateEndProperty);
+        if (empty($persistentMetadata)) {
+            return null;
+        }
+
+        // Ms level parsing
+        $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
+        if ($dateTime === false) {
+            /**
+             * Should not happen as the data is validate in entry
+             * at the {@link \syntax_plugin_combo_frontmatter}
+             */
+            LogUtility::msg("The property $dateEndProperty of the page ($this) has a value ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+            return null;
+        }
+        return $dateTime;
+    }
+
+    private function getStartDateAsString(): ?string
+    {
+        return $this->getStartDate() !== null ? $this->getStartDate()->format(Iso8601Date::getFormat()) : null;
+    }
+
+    private function getStartDate(): ?DateTime
+    {
+        $dateStartProperty = Analytics::DATE_START;
+        $persistentMetadata = $this->getPersistentMetadata($dateStartProperty);
+        if (empty($persistentMetadata)) {
+            return null;
+        }
+
+        // Ms level parsing
+        $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
+        if ($dateTime === false) {
+            /**
+             * Should not happen as the data is validate in entry
+             * at the {@link \syntax_plugin_combo_frontmatter}
+             */
+            LogUtility::msg("The start date property $dateStartProperty of the page ($this) has a value ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+            return null;
+        }
+        return $dateTime;
     }
 
 

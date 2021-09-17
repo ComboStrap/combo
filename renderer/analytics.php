@@ -533,7 +533,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * Metadata
          */
         $page = Page::createPageFromCurrentId();
-        $meta = $page->getMetadataStandard();
+        $meta = $page->getMetadataForRendering();
         foreach ($meta as $key => $value) {
             /**
              * The metadata may have been set

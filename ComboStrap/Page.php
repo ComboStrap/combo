@@ -686,7 +686,7 @@ class Page extends DokuPath
 
             $json = json_encode($analytics, JSON_PRETTY_PRINT);
             /**
-             * Same data as {@link Page::getMetadataStandard()}
+             * Same data as {@link Page::getMetadataForRendering()}
              */
             $entry = array(
                 'CANONICAL' => $this->getCanonical(),
@@ -1878,7 +1878,7 @@ class Page extends DokuPath
      * @return array - return the standard / generated metadata
      * used in templating
      */
-    public function getMetadataStandard()
+    public function getMetadataForRendering()
     {
 
 

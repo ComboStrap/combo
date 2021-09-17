@@ -10,6 +10,7 @@ use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 use ComboStrap\Sqlite;
+use ComboStrap\Template;
 use ComboStrap\TemplateUtility;
 
 
@@ -222,7 +223,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                      * Template
                      */
                     $page = Page::createPageFromRequestedPage();
-                    $metadata = $page->getMetadataStandard();
+                    $metadata = $page->getMetadataForRendering();
                     $instructionsInstance = TemplateUtility::renderInstructionsTemplateFromDataArray($templateStack, $metadata);
                     $callStack->appendInstructionsFromNativeArray($instructionsInstance);
 
@@ -239,13 +240,28 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                      */
                     $actualStack = [];
                     $complexMarkupFound = false;
+                    $variableNames = [];
                     while ($actualCall = $callStack->next()) {
+
+                        /**
+                         * Capture Variable Names
+                         */
+                        $capturedContent = $actualCall->getCapturedContent();
+                        if(!empty($capturedContent)) {
+                            $template = Template::create($capturedContent);
+                            $variablesDetected = $template->getVariablesDetected();
+                            $variableNames = array_merge($variableNames, $variablesDetected);
+                        }
+
+                        /**
+                         * Other capture
+                         */
                         switch ($actualCall->getTagName()) {
                             case syntax_plugin_combo_iteratordata::TAG:
                                 if ($actualCall->getState() === DOKU_LEXER_UNMATCHED) {
                                     $pageSql = $actualCall->getCapturedContent();
                                 }
-                                continue 2;
+                                break;
                             case self::TAG:
                                 if ($actualCall->getState() === DOKU_LEXER_ENTER) {
                                     $headerStack = $actualStack;
@@ -253,7 +269,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                 } else {
                                     $actualStack[] = $actualCall;
                                 }
-                                continue 2;
+                                break;
                             default:
                                 $actualStack[] = $actualCall;
                                 /**
@@ -269,6 +285,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                         }
                     }
                     $templateStack = $actualStack;
+                    $variableNames = array_unique($variableNames);
 
 
                     /**
@@ -323,15 +340,15 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                              */
                             $id = $sourceRow["ID"];
                             $page = Page::createPageFromId($id);
-                            $standardMetadata = $page->getMetadataStandard();
+                            $standardMetadata = $page->getMetadataForRendering();
 
                             $jsonArray = json_decode($analytics, true);
                             $targetRow = [];
-                            foreach ($pageSql->getColumns() as $column) {
+                            foreach ($variableNames as $variableName) {
 
-                                $lowerColumn = strtolower($column);
+                                $lowerColumn = strtolower($variableName);
 
-                                if ($column === Page::IMAGE_META_PROPERTY) {
+                                if ($variableName === Page::IMAGE_META_PROPERTY) {
                                     LogUtility::msg("To add an image, you must use the page image component", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
                                     continue;
                                 }
@@ -340,9 +357,9 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                  * Data in the pages tables
                                  */
                                 if (!in_array($lowerColumn, self::ATTRIBUTES_IN_PAGE_TABLE)) {
-                                    $data = $sourceRow[strtoupper($column)];
+                                    $data = $sourceRow[strtoupper($variableName)];
                                     if (!empty($data)) {
-                                        $targetRow[$column] = $data;
+                                        $targetRow[$variableName] = $data;
                                         continue;
                                     }
                                 }
@@ -350,9 +367,9 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                 /**
                                  * In the analytics
                                  */
-                                $value = $jsonArray["metadata"][$column];
+                                $value = $jsonArray["metadata"][$variableName];
                                 if (!empty($value)) {
-                                    $targetRow[$column] = $value;
+                                    $targetRow[$variableName] = $value;
                                     continue;
                                 }
 
@@ -360,16 +377,16 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                  * Computed
                                  * (if the table is empty because of migration)
                                  */
-                                $value = $standardMetadata[$column];
+                                $value = $standardMetadata[$variableName];
                                 if (isset($value)) {
-                                    $targetRow[$column] = $value;
+                                    $targetRow[$variableName] = $value;
                                     continue;
                                 }
 
                                 /**
                                  * Bad luck
                                  */
-                                $targetRow[$column] = "$column attribute was not found in the <a href=\"https://combostrap.com/metadata\">metadata</a> for the page (:$id)";
+                                $targetRow[$variableName] = "$variableName attribute was not found in the <a href=\"https://combostrap.com/metadata\">metadata</a> for the page (:$id)";
 
 
                             }

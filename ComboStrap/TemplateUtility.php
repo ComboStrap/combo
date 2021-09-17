@@ -167,7 +167,7 @@ class TemplateUtility
     public static function getMetadataDataFromPage(Page $page)
     {
 
-        $array = $page->getMetadataStandard();
+        $array = $page->getMetadataForRendering();
         /**
          * @deprecated for path
          */

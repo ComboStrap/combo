@@ -10,6 +10,12 @@ use dokuwiki\Extension\SyntaxPlugin;
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
+ * Parent in th hierarchy should be first
+ * Ie before {@link ImageLink, SvgImageLink, RasterImageLink)
+ */
+require_once(__DIR__ . '/MediaLink.php');
+
+/**
  * Plugin Utility is added in all Dokuwiki extension
  * and
  * all classes are added in plugin utility
@@ -54,13 +60,16 @@ require_once(__DIR__ . '/Hover.php');
 require_once(__DIR__ . '/Http.php');
 require_once(__DIR__ . '/Icon.php');
 require_once(__DIR__ . '/Identity.php');
+require_once(__DIR__ . '/Image.php');
+require_once(__DIR__ . '/ImageRaster.php');
+require_once(__DIR__ . '/ImageSvg.php');
+require_once(__DIR__ . '/ImageLink.php');
 require_once(__DIR__ . '/Iso8601Date.php');
 require_once(__DIR__ . '/Lang.php');
 require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
-require_once(__DIR__ . '/MediaLink.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/MetadataUtility.php');
 require_once(__DIR__ . '/NavBarUtility.php');

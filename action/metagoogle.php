@@ -222,11 +222,11 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                             );
                             if ($image instanceof RasterImageLink) {
                                 if ($image->isAnalyzable()) {
-                                    if (!empty($image->getMediaWidth())) {
-                                        $imageObjectSchema["width"] = $image->getMediaWidth();
+                                    if (!empty($image->getWidth())) {
+                                        $imageObjectSchema["width"] = $image->getWidth();
                                     }
-                                    if (!empty($image->getMediaHeight())) {
-                                        $imageObjectSchema["height"] = $image->getMediaHeight();
+                                    if (!empty($image->getHeight())) {
+                                        $imageObjectSchema["height"] = $image->getHeight();
                                     }
                                 }
                             }

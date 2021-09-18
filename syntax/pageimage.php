@@ -1,10 +1,10 @@
 <?php
 
 
-use ComboStrap\CacheManager;
-use ComboStrap\Iso8601Date;
+use ComboStrap\Analytics;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -29,7 +29,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
     function getType()
     {
-        return 'protected';
+        return 'formatting';
     }
 
     /**
@@ -73,10 +73,19 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_SPECIAL :
 
-                $attributes = TagAttributes::createFromTagMatch($match);
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                if (!$tagAttributes->hasAttribute(Analytics::PATH)) {
+                    return array(
+                        PluginUtility::STATE => $state,
+                        PluginUtility::PAYLOAD => "The path is mandatory and was not found"
+                    );
+                }
+                $path = $tagAttributes->getValue(Analytics::PATH);
+                $page =  Page::createPageFromQualifiedPath($path);
+                $imageSet =  $page->getLocalImageSet();
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes
                 );
 
 
@@ -95,13 +104,19 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         switch ($format) {
 
             case 'xhtml':
-                $mediaLink =  MediaLink::createMediaLinkFromAbsolutePath(":image.png");
+                if(isset($data[PluginUtility::PAYLOAD])){
+                    $error = $data[PluginUtility::PAYLOAD];
+                    LogUtility::msg($error,LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                    return false;
+                }
+
+                $mediaLink = MediaLink::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
                 $renderer->doc .= $mediaLink->renderMediaTag();
                 break;
 

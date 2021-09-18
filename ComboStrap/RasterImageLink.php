@@ -28,7 +28,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * https://web.dev/optimize-cls/#images-without-dimensions
  * https://web.dev/cls/
  */
-class RasterImageLink extends MediaLink
+class RasterImageLink extends ImageLink
 {
 
     const CANONICAL = "raster";
@@ -49,36 +49,16 @@ class RasterImageLink extends MediaLink
         );
 
 
-    private $imageWidth = null;
-    /**
-     * @var int
-     */
-    private $imageWeight = null;
-    /**
-     * See {@link image_type_to_mime_type}
-     * @var int
-     */
-    private $imageType;
-    private $wasAnalyzed = false;
 
-    /**
-     * @var bool
-     */
-    private $analyzable = false;
-
-    /**
-     * @var mixed - the mime from the {@link RasterImageLink::analyzeImageIfNeeded()}
-     */
-    private $mime;
 
     /**
      * RasterImageLink constructor.
-     * @param $ref
+     * @param ImageRaster $imageRaster
      * @param TagAttributes $tagAttributes
      */
-    public function __construct($ref, $tagAttributes = null)
+    public function __construct($imageRaster, $tagAttributes = null)
     {
-        parent::__construct($ref, $tagAttributes);
+        parent::__construct($imageRaster, $tagAttributes);
         $this->getTagAttributes()->setLogicalTag(self::CANONICAL);
 
     }
@@ -91,8 +71,8 @@ class RasterImageLink extends MediaLink
      */
     public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $localWidth = null)
     {
-
-        if ($this->exists()) {
+        $image = $this->getDefaultImage();
+        if ($image->exists()) {
 
             /**
              * Link attribute
@@ -100,7 +80,7 @@ class RasterImageLink extends MediaLink
             $att = array();
 
             // Width is driving the computation
-            if ($localWidth != null && $localWidth != $this->getMediaWidth()) {
+            if ($localWidth != null && $localWidth != $image->getWidth()) {
 
                 $att['w'] = $localWidth;
 
@@ -119,7 +99,7 @@ class RasterImageLink extends MediaLink
             }
             $direct = true;
 
-            return ml($this->getId(), $att, $direct, $ampersand, true);
+            return ml($image->getId(), $att, $direct, $ampersand, true);
 
         } else {
 
@@ -142,11 +122,11 @@ class RasterImageLink extends MediaLink
      * A media can be a video also (Use
      * @return string
      */
-    public function renderMediaTag()
+    public function renderMediaTag(): string
     {
 
-
-        if ($this->exists()) {
+        $image = $this->getDefaultImage();
+        if ($image->exists()) {
 
 
             /**
@@ -207,7 +187,7 @@ class RasterImageLink extends MediaLink
              *
              * The max-width value is set
              */
-            $mediaWidthValue = $this->getMediaWidth();
+            $mediaWidthValue = $image->getWidth();
             $srcValue = $this->getUrl();
 
             /**
@@ -378,73 +358,6 @@ class RasterImageLink extends MediaLink
         return $imgHTML;
     }
 
-    /**
-     * @return int - the width of the image from the file
-     */
-    public
-    function getMediaWidth()
-    {
-        $this->analyzeImageIfNeeded();
-        return $this->imageWidth;
-    }
-
-    /**
-     * @return int - the height of the image from the file
-     */
-    public
-    function getMediaHeight()
-    {
-        $this->analyzeImageIfNeeded();
-        return $this->imageWeight;
-    }
-
-    private
-    function analyzeImageIfNeeded()
-    {
-
-        if (!$this->wasAnalyzed) {
-
-            if ($this->exists()) {
-
-                /**
-                 * Based on {@link media_image_preview_size()}
-                 * $dimensions = media_image_preview_size($this->id, '', false);
-                 */
-                $imageInfo = array();
-                $imageSize = getimagesize($this->getFileSystemPath(), $imageInfo);
-                if ($imageSize === false) {
-                    $this->analyzable = false;
-                    LogUtility::msg("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                } else {
-                    $this->analyzable = true;
-                    $this->imageWidth = (int)$imageSize[0];
-                    if (empty($this->imageWidth)) {
-                        $this->analyzable = false;
-                    }
-                    $this->imageWeight = (int)$imageSize[1];
-                    if (empty($this->imageWeight)) {
-                        $this->analyzable = false;
-                    }
-                    $this->imageType = (int)$imageSize[2];
-                    $this->mime = $imageSize[3];
-                }
-            }
-        }
-        $this->wasAnalyzed = true;
-    }
-
-
-    /**
-     *
-     * @return bool true if we could extract the dimensions
-     */
-    public
-    function isAnalyzable()
-    {
-        $this->analyzeImageIfNeeded();
-        return $this->analyzable;
-
-    }
 
 
     public function getRequestedHeight()
@@ -452,7 +365,7 @@ class RasterImageLink extends MediaLink
         $requestedHeight = parent::getRequestedHeight();
         if (!empty($requestedHeight)) {
             // it should not be bigger than the media Height
-            $mediaHeight = $this->getMediaHeight();
+            $mediaHeight = $this->getDokuPath()->getHeight();
             if (!empty($mediaHeight)) {
                 if ($requestedHeight > $mediaHeight) {
                     LogUtility::msg("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -468,7 +381,7 @@ class RasterImageLink extends MediaLink
         $requestedWidth = parent::getRequestedWidth();
         if (!empty($requestedWidth)) {
             // it should not be bigger than the media Height
-            $mediaWidth = $this->getMediaWidth();
+            $mediaWidth = $this->getDokuPath()->getWidth();
             if (!empty($mediaWidth)) {
                 if ($requestedWidth > $mediaWidth) {
                     global $ID;
@@ -503,7 +416,7 @@ class RasterImageLink extends MediaLink
      * @return string sizes with a dpi correction if
      */
     private
-    function getSizes($screenWidth, $imageWidth)
+    function getSizes($screenWidth, $imageWidth): string
     {
 
         if ($this->getWithDpiCorrection()) {
@@ -528,7 +441,7 @@ class RasterImageLink extends MediaLink
      * @return bool
      */
     private
-    function getWithDpiCorrection()
+    function getWithDpiCorrection(): bool
     {
         /**
          * Support for retina means no DPI correction

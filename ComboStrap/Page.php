@@ -1257,7 +1257,7 @@ EOF;
      * @return MediaLink[]
      */
     public
-    function getLocalImageSet()
+    function getLocalImageSet(): array
     {
 
         /**

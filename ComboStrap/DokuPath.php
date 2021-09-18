@@ -36,7 +36,7 @@ class DokuPath extends File
      */
     private $finalType;
     /**
-     * @var string|null
+     * @var string|null - ie mtime
      */
     private $rev;
 
@@ -261,12 +261,14 @@ class DokuPath extends File
         }
     }
 
-    public static function createMediaPathFromId($id)
+    public static function createMediaPathFromId($id): DokuPath
     {
         return self::createMediaPathFromAbsolutePath(DokuPath::PATH_SEPARATOR . $id);
     }
 
-    public static function createPagePathFromId($id)
+
+
+    public static function createPagePathFromId($id): DokuPath
     {
         return new DokuPath(DokuPath::PATH_SEPARATOR . $id, self::PAGE_TYPE);
     }
@@ -406,7 +408,7 @@ class DokuPath extends File
      *   * page with media for media
      */
     public
-    function getRelatedPages()
+    function getRelatedPages(): array
     {
         $absoluteId = $this->getId();
         if ($this->finalType == self::MEDIA_TYPE) {

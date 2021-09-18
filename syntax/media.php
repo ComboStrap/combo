@@ -200,9 +200,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 /** @var Doku_Renderer_xhtml $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $media = MediaLink::createFromCallStackArray($attributes);
-                if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
+                $dokuPath = $media->getDokuPath();
+                if ($dokuPath->getScheme() == DokuPath::LOCAL_SCHEME) {
                     $media = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
-                    if ($media->isImage() || $media->getExtension() === "svg") {
+                    if ($dokuPath->isImage() || $dokuPath->getExtension() === "svg") {
                         /**
                          * We don't support crop
                          */
@@ -220,7 +221,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                                 $renderer->doc .= $media->renderMediaTagWithLink();
                             } catch (RuntimeException $e) {
                                 $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                                $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
+                                $message = "Media ({$dokuPath->getPath()}). Error while rendering: {$e->getMessage()}";
                                 $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc($message) . "</span>";
                                 if(!PluginUtility::isTest()) {
                                     LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);

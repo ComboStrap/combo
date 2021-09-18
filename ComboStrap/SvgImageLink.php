@@ -12,16 +12,16 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/MediaLink.php');
+
 require_once(__DIR__ . '/PluginUtility.php');
-require_once(__DIR__ . '/SvgDocument.php');
+
 
 /**
  * Image
  * This is the class that handles the
  * svg link type
  */
-class SvgImageLink extends MediaLink
+class SvgImageLink extends ImageLink
 {
 
     const CANONICAL = "svg";
@@ -42,25 +42,22 @@ class SvgImageLink extends MediaLink
      */
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
-    /**
-     * @var SvgDocument
-     */
-    private $svgDocument;
+
 
     /**
      * SvgImageLink constructor.
-     * @param $ref
+     * @param ImageSvg $imageSvg
      * @param TagAttributes $tagAttributes
-     * @param string $rev
      */
-    public function __construct($ref, $tagAttributes = null, $rev = '')
+    public function __construct($imageSvg, $tagAttributes = null)
     {
-        parent::__construct($ref, $tagAttributes, $rev);
+        parent::__construct($imageSvg, $tagAttributes);
         $this->getTagAttributes()->setLogicalTag(self::CANONICAL);
+
     }
 
 
-    private function createImgHTMLTag()
+    private function createImgHTMLTag(): string
     {
 
 
@@ -181,7 +178,7 @@ class SvgImageLink extends MediaLink
     }
 
 
-    public function getAbsoluteUrl()
+    public function getAbsoluteUrl(): ?string
     {
 
         return $this->getUrl();
@@ -194,10 +191,11 @@ class SvgImageLink extends MediaLink
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND)
+    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND): ?string
     {
 
-        if ($this->exists()) {
+        $image = $this->getDefaultImage();
+        if ($image->exists()) {
 
             /**
              * We remove align and linking because,
@@ -260,11 +258,11 @@ class SvgImageLink extends MediaLink
              * Cache bursting
              */
             if (!$this->tagAttributes->hasComponentAttribute(CacheMedia::CACHE_BUSTER_KEY)) {
-                $att[CacheMedia::CACHE_BUSTER_KEY] = $this->getModifiedTime();
+                $att[CacheMedia::CACHE_BUSTER_KEY] = $image->getModifiedTime();
             }
 
             $direct = true;
-            return ml($this->getId(), $att, $direct, $ampersand, true);
+            return ml($image->getId(), $att, $direct, $ampersand, true);
 
         } else {
 
@@ -279,10 +277,11 @@ class SvgImageLink extends MediaLink
      * A media can be a video also
      * @return string
      */
-    public function renderMediaTag()
+    public function renderMediaTag(): string
     {
 
-        if ($this->exists()) {
+        $image = $this->getDefaultImage();
+        if ($image->exists()) {
 
             /**
              * This attributes should not be in the render
@@ -295,7 +294,7 @@ class SvgImageLink extends MediaLink
             $this->tagAttributes->removeComponentAttributeIfPresent(Page::TITLE_META_PROPERTY);
 
             if (
-                $this->getSize() > $this->getMaxInlineSize()
+                $image->getSize() > $this->getMaxInlineSize()
             ) {
 
                 /**
@@ -340,31 +339,19 @@ class SvgImageLink extends MediaLink
 
     public function getSvgFile()
     {
-
-        $cache = new CacheMedia($this, $this->tagAttributes);
+        /**
+         * @var ImageSvg $image
+         */
+        $image = $this->getDokuPath();
+        $cache = new CacheMedia($image, $this->tagAttributes);
         if (!$cache->isCacheUsable()) {
-            $content = $this->getSvgDocument()->getXmlText($this->tagAttributes);
+            $content = $image->getSvgDocument()->getXmlText($this->tagAttributes);
             $cache->storeCache($content);
         }
         return $cache->getFile()->getFileSystemPath();
 
     }
 
-    public function getMediaWidth()
-    {
-        return $this->getSvgDocument()->getMediaWidth();
-    }
 
-    public function getMediaHeight()
-    {
-        return $this->getSvgDocument()->getMediaHeight();
-    }
 
-    private function getSvgDocument()
-    {
-        if ($this->svgDocument == null) {
-            $this->svgDocument = SvgDocument::createFromPath($this);
-        }
-        return $this->svgDocument;
-    }
 }

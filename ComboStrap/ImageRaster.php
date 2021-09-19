@@ -37,8 +37,7 @@ class ImageRaster extends Image
     /**
      * @return int - the width of the image from the file
      */
-    public
-    function getWidth(): ?int
+    public function getWidth(): ?int
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWidth;
@@ -47,8 +46,7 @@ class ImageRaster extends Image
     /**
      * @return int - the height of the image from the file
      */
-    public
-    function getHeight()
+    public function getHeight(): ?int
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWeight;
@@ -94,8 +92,7 @@ class ImageRaster extends Image
      *
      * @return bool true if we could extract the dimensions
      */
-    public
-    function isAnalyzable()
+    public function isAnalyzable(): bool
     {
         $this->analyzeImageIfNeeded();
         return $this->analyzable;
@@ -105,10 +102,10 @@ class ImageRaster extends Image
     /**
      * @param string $ampersand
      * @param null $requestedWidth - the asked width - use for responsive image
-     * @param false $cache
+     * @param string $cache - one of {@link CacheMedia::CACHE_KEY}
      * @return string|null
      */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $requestedWidth = null, $requestedHeight = null, $cache = false)
+    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $requestedWidth = null, $cache = "")
     {
 
         if ($this->exists()) {
@@ -118,13 +115,16 @@ class ImageRaster extends Image
              */
             $att = array();
 
-            // Width is driving the computation
+            /**
+             * The image ratio is fixed
+             * Width is driving the computation
+             */
             if ($requestedWidth != null && $requestedWidth != $this->getWidth()) {
 
                 $att['w'] = $requestedWidth;
 
-                // Height
-                $height = $this->getImgTagHeightValue($requestedWidth, $requestedHeight);
+                // Height for the given width
+                $height = $this->getHeightValueScaledDown($requestedWidth, null);
                 if (!empty($height)) {
                     $att['h'] = $height;
                     $this->checkLogicalRatioAgainstIntrinsicRatio($requestedWidth, $height);
@@ -133,7 +133,7 @@ class ImageRaster extends Image
 
             }
 
-            if ($cache) {
+            if (!empty($cache)) {
                 $att[CacheMedia::CACHE_KEY] = $cache;
             }
             $direct = true;
@@ -142,6 +142,7 @@ class ImageRaster extends Image
 
         } else {
 
+            LogUtility::msg("The image ($this) does not exist, you can't ask the URL");
             return false;
 
         }
@@ -153,7 +154,6 @@ class ImageRaster extends Image
         return $this->getUrl();
 
     }
-
 
 
 }

@@ -145,7 +145,7 @@ class SvgDocument extends XmlDocument
      * @param TagAttributes $tagAttributes
      * @return string
      */
-    public function getXmlText($tagAttributes = null)
+    public function getXmlText($tagAttributes = null): string
     {
 
         if ($tagAttributes == null) {

@@ -106,7 +106,7 @@ class SvgImageLink extends ImageLink
         /**
          * Src
          */
-        $srcValue = $this->getDefaultImage()->getUrl();
+        $srcValue = $this->getDefaultImage()->getUrl(DokuwikiUrl::URL_ENCODED_AND, $this->tagAttributes);
         if ($lazyLoad) {
 
             /**
@@ -114,8 +114,8 @@ class SvgImageLink extends ImageLink
              */
             $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
             $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
-                $this->getDefaultImage()->getImgTagWidthValue($this->getRequestedWidth(), $this->getRequestedHeight()),
-                $this->getDefaultImage()->getImgTagHeightValue($this->getRequestedWidth(), $this->getRequestedHeight()))
+                $this->getDefaultImage()->getWidthValueScaledDown($this->getRequestedWidth(), $this->getRequestedHeight()),
+                $this->getDefaultImage()->getHeightValueScaledDown($this->getRequestedWidth(), $this->getRequestedHeight()))
             );
 
         } else {
@@ -169,13 +169,13 @@ class SvgImageLink extends ImageLink
          * to avoid layout shift (CLS)
          */
         $this->tagAttributes->addHtmlAttributeValue(Dimension::WIDTH_KEY,
-            $this->getDefaultImage()->getImgTagWidthValue(
+            $this->getDefaultImage()->getWidthValueScaledDown(
                 $this->getRequestedWidth(),
                 $this->getRequestedHeight())
         );
         $this->tagAttributes->addHtmlAttributeValue(
             Dimension::HEIGHT_KEY,
-            $this->getDefaultImage()->getImgTagHeightValue($this->getRequestedWidth(),$this->getRequestedHeight())
+            $this->getDefaultImage()->getHeightValueScaledDown($this->getRequestedWidth(), $this->getRequestedHeight())
         );
 
 
@@ -185,10 +185,6 @@ class SvgImageLink extends ImageLink
         return '<img ' . $this->tagAttributes->toHTMLAttributeString() . '/>';
 
     }
-
-
-
-
 
 
     /**

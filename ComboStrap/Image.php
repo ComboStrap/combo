@@ -3,7 +3,6 @@
 
 namespace ComboStrap;
 
-use http\Exception\RuntimeException;
 
 require_once(__DIR__ . "/PluginUtility.php");
 
@@ -15,6 +14,8 @@ require_once(__DIR__ . "/PluginUtility.php");
 abstract class Image extends DokuPath
 {
 
+
+    const CANONICAL = "image";
 
     public static function createImageFromAbsolutePath($imageIdFromMeta, $rev = null)
     {
@@ -36,7 +37,7 @@ abstract class Image extends DokuPath
 
             }
         } else {
-            throw new RuntimeException("The file ($imageIdFromMeta) has not been detected as beeing an image.");
+            throw new \RuntimeException("The file ($imageIdFromMeta) has not been detected as beeing an image.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
 
     }
@@ -55,44 +56,32 @@ abstract class Image extends DokuPath
      *         * null: return the intrinsic / natural height
      *         * not null: return the height as being the width scaled down by the {@link Image::getAspectRatio()}
      */
-    public function getImgTagHeightValue(?int $requestedWidth, ?int $requestedHeight): int
+    public function getHeightValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
     {
 
-        /**
-         * Cropping is not yet supported.
-         */
-        if (
-            $requestedHeight != null
-            && $requestedHeight != 0
-            && $requestedWidth != null
-            && $requestedWidth != 0
-        ) {
-            global $ID;
-            if ($ID != "wiki:syntax") {
-                /**
-                 * Cropping
-                 */
-                LogUtility::msg("The width and height has been set on the image ($this) but we don't support yet cropping. Set only the width or the height (0x250)", LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);
-            }
+        if (!empty($requestedWidth) && !empty($requestedHeight)) {
+            LogUtility::msg("The requested width ($requestedWidth) and the requested height ($requestedHeight) are not null. You can't scale an image in width and height. The width or the height should be null.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
 
+        $computedHeight = $requestedHeight;
         if (empty($requestedHeight)) {
 
             if (empty($requestedWidth)) {
 
-                $requestedHeight = $this->getHeight();
+                $computedHeight = $this->getHeight();
 
             } else {
 
                 // Width is not empty
                 // We derive the height from it
                 if ($this->getAspectRatio() !== false) {
-                    $requestedHeight = $requestedWidth / $this->getAspectRatio();
+                    $computedHeight = $requestedWidth / $this->getAspectRatio();
+                } else {
+                    LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }
 
             }
         }
-
 
         /**
          * Rounding to integer
@@ -103,7 +92,7 @@ abstract class Image extends DokuPath
          *
          * And not directly {@link intval} because it will make from 3.6, 3 and not 4
          */
-        return intval(round($requestedHeight));
+        return intval(round($computedHeight));
 
     }
 
@@ -115,29 +104,31 @@ abstract class Image extends DokuPath
      * @return int - the width value attribute in a img (in CSS pixel that the image should takes)
      *
      * Algorithm:
-     *   * If the requested width given is not null, return the given width rounded
+     *   * If the requested width given is not null, return the given width
      *   * If the requested width is null, if the requested height is:
      *         * null: return the intrinsic / natural width
      *         * not null: return the width as being the height scaled down by the {@link Image::getAspectRatio()}
      */
-    public function getImgTagWidthValue(?int $requestedWidth, ?int $requestedHeight): int
+    public function getWidthValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
     {
 
+        if (!empty($requestedWidth) && !empty($requestedHeight)) {
+            LogUtility::msg("The requested width ($requestedWidth) and the requested height ($requestedHeight) are not null. You can't scale an image in width and height. The width or the height should be null.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        }
+
+        $computedWidth = $requestedWidth;
         if (empty($requestedWidth)) {
 
             if (empty($requestedHeight)) {
 
-                $requestedWidth = $this->getWidth();
+                $computedWidth = $this->getWidth();
 
             } else {
 
-                // Height is not empty
-                // We derive the width from it
-                if ($this->getHeight() != 0
-                    && !empty($this->getHeight())
-                    && !empty($this->getWidth())
-                ) {
-                    $requestedWidth = $this->getAspectRatio() * $requestedHeight;
+                if ($this->getAspectRatio() !== false) {
+                    $computedWidth = $this->getAspectRatio() * $requestedHeight;
+                } else {
+                    LogUtility::msg("The aspect ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }
 
             }
@@ -155,7 +146,7 @@ abstract class Image extends DokuPath
          *
          * And not {@link intval} because it will make from 3.6, 3 and not 4
          */
-        return intval(round($requestedWidth));
+        return intval(round($computedWidth));
     }
 
 

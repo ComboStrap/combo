@@ -223,9 +223,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                                 $errorClass = self::SVG_RENDERING_ERROR_CLASS;
                                 $message = "Media ({$dokuPath->getPath()}). Error while rendering: {$e->getMessage()}";
                                 $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc($message) . "</span>";
-                                if(!PluginUtility::isTest()) {
-                                    LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);
-                                }
+                                LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);
                             }
                             return true;
                         }

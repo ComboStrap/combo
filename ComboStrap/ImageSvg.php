@@ -11,10 +11,13 @@ namespace ComboStrap;
 class ImageSvg extends Image
 {
 
+            const MIME = "image/svg+xml";
+    const EXTENSION = "svg";
+
     public function __construct($absolutePath, $rev = null)
-    {
-        parent::__construct($absolutePath, DokuPath::MEDIA_TYPE, $rev);
-    }
+            {
+                parent::__construct($absolutePath, DokuPath::MEDIA_TYPE, $rev);
+            }
 
 
     /**

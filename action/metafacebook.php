@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Image;
 use ComboStrap\RasterImageLink;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
@@ -115,13 +116,13 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         }
 
         /**
-         * @var MediaLink[]
+         * @var Image[]
          */
         $facebookImages = $page->getLocalImageSet();
         if (empty($facebookImages)) {
             $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
             if (!empty($defaultFacebookImage)) {
-                $image = MediaLink::createMediaLinkFromNonQualifiedPath($defaultFacebookImage);
+                $image = Image::createImageFromAbsolutePath($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {
@@ -129,8 +130,6 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                         LogUtility::msg("The default facebook image ($defaultFacebookImage) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     }
                 }
-
-
             }
         }
         if (!empty($facebookImages)) {
@@ -146,9 +145,9 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     continue;
                 }
 
-                /** @var RasterImageLink $facebookImage */
-                if (!($facebookImage instanceof RasterImageLink)) {
-                    LogUtility::msg("Internal: The image ($facebookImage) is not a raster image and this should not be the case for facebook", LogUtility::LVL_MSG_ERROR, "support");
+                /** @var Image $facebookImage */
+                if (!($facebookImage->isRaster())) {
+                    LogUtility::msg("Internal: The image ($facebookImage) is not a raster image and this should not be the case for facebook", LogUtility::LVL_MSG_ERROR);
                     continue;
                 }
 

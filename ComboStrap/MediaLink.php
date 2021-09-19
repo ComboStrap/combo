@@ -416,13 +416,10 @@ abstract class MediaLink
 
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime, 6) == "svg+xml") {
-                // The require is here because Svg Image Link is child of Internal Media Link (extends)
-                require_once(__DIR__ . '/SvgImageLink.php');
+
                 $svgImage = new ImageSvg($qualifiedPath, $rev);
                 $internalMedia = new SvgImageLink($svgImage, $tagAttributes);
             } else {
-                // The require is here because Raster Image Link is child of Internal Media Link (extends)
-                require_once(__DIR__ . '/RasterImageLink.php');
                 $rasterImage = new ImageRaster($qualifiedPath, $rev);
                 $internalMedia = new RasterImageLink($rasterImage, $tagAttributes);
             }

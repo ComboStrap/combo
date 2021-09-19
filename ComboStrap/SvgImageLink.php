@@ -43,7 +43,6 @@ class SvgImageLink extends ImageLink
     const CONF_SVG_INJECTION_ENABLE = "svgInjectionEnable";
 
 
-
     /**
      * SvgImageLink constructor.
      * @param ImageSvg $imageSvg
@@ -79,7 +78,7 @@ class SvgImageLink extends ImageLink
                     'script' => [
                         array(
                             "src" => "https://cdn.jsdelivr.net/npm/svg-injector@1.1.3/svg-injector.min.js",
-                           // "integrity" => "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
+                            // "integrity" => "sha256-CjBlJvxqLCU2HMzFunTelZLFHCJdqgDoHi/qGJWdRJk=",
                             "crossorigin" => "anonymous"
                         )
                     ]
@@ -114,7 +113,10 @@ class SvgImageLink extends ImageLink
              * Note: Responsive image srcset is not needed for svg
              */
             $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
-            $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder($this->getImgTagWidthValue(), $this->getImgTagHeightValue()));
+            $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
+                $this->getDefaultImage()->getImgTagWidthValue($this->getRequestedWidth(), $this->getRequestedHeight()),
+                $this->getDefaultImage()->getImgTagHeightValue($this->getRequestedWidth(), $this->getRequestedHeight()))
+            );
 
         } else {
 
@@ -166,8 +168,15 @@ class SvgImageLink extends ImageLink
          * Dimension are mandatory
          * to avoid layout shift (CLS)
          */
-        $this->tagAttributes->addHtmlAttributeValue(Dimension::WIDTH_KEY, $this->getImgTagWidthValue());
-        $this->tagAttributes->addHtmlAttributeValue(Dimension::HEIGHT_KEY, $this->getImgTagHeightValue());
+        $this->tagAttributes->addHtmlAttributeValue(Dimension::WIDTH_KEY,
+            $this->getDefaultImage()->getImgTagWidthValue(
+                $this->getRequestedWidth(),
+                $this->getRequestedHeight())
+        );
+        $this->tagAttributes->addHtmlAttributeValue(
+            Dimension::HEIGHT_KEY,
+            $this->getDefaultImage()->getImgTagHeightValue($this->getRequestedWidth(),$this->getRequestedHeight())
+        );
 
 
         /**
@@ -351,7 +360,6 @@ class SvgImageLink extends ImageLink
         return $cache->getFile()->getFileSystemPath();
 
     }
-
 
 
 }

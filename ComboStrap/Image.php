@@ -3,6 +3,10 @@
 
 namespace ComboStrap;
 
+use http\Exception\RuntimeException;
+
+require_once(__DIR__ . "/PluginUtility.php");
+
 /**
  * Class Image
  * @package ComboStrap
@@ -10,6 +14,149 @@ namespace ComboStrap;
  */
 abstract class Image extends DokuPath
 {
+
+
+    public static function createImageFromAbsolutePath($imageIdFromMeta, $rev = null)
+    {
+
+        /**
+         * Processing
+         */
+        $dokuPath = DokuPath::createMediaPathFromAbsolutePath($imageIdFromMeta, $rev);
+        $mime = $dokuPath->getMime();
+
+        if (substr($mime, 0, 5) == 'image') {
+            if (substr($mime, 6) == "svg+xml") {
+
+                return new ImageSvg($imageIdFromMeta, $rev);
+
+            } else {
+
+                return new ImageRaster($imageIdFromMeta, $rev);
+
+            }
+        } else {
+            throw new RuntimeException("The file ($imageIdFromMeta) has not been detected as beeing an image.");
+        }
+
+    }
+
+    /**
+     * Return a height value that is conform to the {@link Image::getAspectRatio()} of the image.
+     *
+     * @param int|null $requestedWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
+     * if not specified, the requested width and if not specified the intrinsic width
+     * @param int|null $requestedHeight
+     * @return int the height value attribute in a img
+     *
+     * Algorithm:
+     *   * If the requested height given is not null, return the given height rounded
+     *   * If the requested height is null, if the requested width is:
+     *         * null: return the intrinsic / natural height
+     *         * not null: return the height as being the width scaled down by the {@link Image::getAspectRatio()}
+     */
+    public function getImgTagHeightValue($requestedWidth = null, $requestedHeight = null): int
+    {
+
+        /**
+         * Cropping is not yet supported.
+         */
+        if (
+            $requestedHeight != null
+            && $requestedHeight != 0
+            && $requestedWidth != null
+            && $requestedWidth != 0
+        ) {
+            global $ID;
+            if ($ID != "wiki:syntax") {
+                /**
+                 * Cropping
+                 */
+                LogUtility::msg("The width and height has been set on the image ($this) but we don't support yet cropping. Set only the width or the height (0x250)", LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);
+            }
+        }
+
+        if (empty($requestedHeight)) {
+
+            if (empty($requestedWidth)) {
+
+                $requestedHeight = $this->getHeight();
+
+            } else {
+
+                // Width is not empty
+                // We derive the height from it
+                if ($this->getAspectRatio()!==false) {
+                    $requestedHeight = $requestedWidth/$this->getAspectRatio();
+                }
+
+            }
+        }
+
+
+        /**
+         * Rounding to integer
+         * The fetch.php file takes int as value for width and height
+         * making a rounding if we pass a double (such as 37.5)
+         * This is important because the security token is based on width and height
+         * and therefore the fetch will failed
+         *
+         * And not directly {@link intval} because it will make from 3.6, 3 and not 4
+         */
+        return intval(round($requestedHeight));
+
+    }
+
+    /**
+     * Return a width value that is conform to the {@link Image::getAspectRatio()} of the image.
+     *
+     * @param int|null $requestedWidth - the requested width (may be null)
+     * @param int|null $requestedHeight - the request height (may be null)
+     * @return int - the width value attribute in a img (in CSS pixel that the image should takes)
+     *
+     * Algorithm:
+     *   * If the requested width given is not null, return the given width rounded
+     *   * If the requested width is null, if the requested height is:
+     *         * null: return the intrinsic / natural width
+     *         * not null: return the width as being the height scaled down by the {@link Image::getAspectRatio()}
+     */
+    public function getImgTagWidthValue(?int $requestedWidth, ?int $requestedHeight): int
+    {
+
+        if (empty($requestedWidth)) {
+
+            if (empty($requestedHeight)) {
+
+                $requestedWidth = $this->getWidth();
+
+            } else {
+
+                // Height is not empty
+                // We derive the width from it
+                if ($this->getHeight() != 0
+                    && !empty($this->getHeight())
+                    && !empty($this->getWidth())
+                ) {
+                    $requestedWidth = $this->getAspectRatio() * $requestedHeight;
+                }
+
+            }
+        }
+        /**
+         * Rounding to integer
+         * The fetch.php file takes int as value for width and height
+         * making a rounding if we pass a double (such as 37.5)
+         * This is important because the security token is based on width and height
+         * and therefore the fetch will failed
+         *
+         * And this is also ask by the specification
+         * a non-null positive integer
+         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+         *
+         * And not {@link intval} because it will make from 3.6, 3 and not 4
+         */
+        return intval(round($requestedWidth));
+    }
 
 
     /**
@@ -33,5 +180,37 @@ abstract class Image extends DokuPath
      * @return mixed
      */
     public abstract function getHeight();
+
+    /**
+     * The Aspect ratio as explained here
+     * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+     * @return float|int|false
+     * false if the image is not supported
+     *
+     * It's needed for an img tag to set the img `width` and `height` that pass the
+     * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
+     * to avoid layout shift
+     */
+    public function getAspectRatio()
+    {
+
+        if ($this->getHeight() == null || $this->getWidth() == null) {
+            return false;
+        } else {
+            return $this->getWidth() / $this->getHeight();
+        }
+    }
+
+    /**
+     * @return bool if this is raster image, false if this is a vector image
+     */
+    public function isRaster(): bool
+    {
+        if ($this->getMime() === ImageSvg::MIME) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
 }

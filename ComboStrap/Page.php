@@ -1213,7 +1213,7 @@ EOF;
                 if (!media_isexternal($firstImageId)) {
                     $pathId = DokuPath::PATH_SEPARATOR . $firstImageId;
                 }
-                return MediaLink::createMediaLinkFromNonQualifiedPath($pathId);
+                return Image::createImageFromAbsolutePath($pathId);
             }
         }
         return null;
@@ -1254,7 +1254,7 @@ EOF;
      * An array of local/internal images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
-     * @return MediaLink[]
+     * @return Image[]
      */
     public
     function getLocalImageSet(): array
@@ -1269,11 +1269,11 @@ EOF;
         $images = array();
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
-                foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = MediaLink::createMediaLinkFromNonQualifiedPath($imageIdFromMeta);
+                foreach ($imageMeta as $key => $imageIdFromMeta) {
+                    $images[$key] = Image::createImageFromAbsolutePath($imageIdFromMeta);
                 }
             } else {
-                $images = array(MediaLink::createMediaLinkFromNonQualifiedPath($imageMeta));
+                $images = array(Image::createImageFromAbsolutePath($imageMeta));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {

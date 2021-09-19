@@ -85,7 +85,7 @@ class RasterImageLink extends ImageLink
                 $att['w'] = $localWidth;
 
                 // Height
-                $height = $this->getImgTagHeightValue($localWidth);
+                $height = $this->getDefaultImage()->getImgTagHeightValue($localWidth);
                 if (!empty($height)) {
                     $att['h'] = $height;
                     $this->checkWidthAndHeightRatioAndReturnTheGoodValue($localWidth, $height);
@@ -169,7 +169,7 @@ class RasterImageLink extends ImageLink
              * The doc is {@link https://www.dokuwiki.org/images#resizing}
              * See the ''0x20''
              */
-            $imgTagHeight = $this->getImgTagHeightValue();
+            $imgTagHeight = $this->getDefaultImage()->getImgTagHeightValue($this->getRequestedWidth(), $this->getRequestedHeight());
             if (!empty($imgTagHeight)) {
                 $this->tagAttributes->addHtmlAttributeValue("height", $imgTagHeight . $htmlLengthUnit);
             }
@@ -212,7 +212,7 @@ class RasterImageLink extends ImageLink
                 /**
                  * The internal intrinsic value of the image
                  */
-                $imgTagWidth = $this->getImgTagWidthValue();
+                $imgTagWidth = $this->getDefaultImage()->getImgTagWidthValue($this->getRequestedWidth(),$this->getRequestedHeight());
                 if (!empty($imgTagWidth)) {
 
                     if (!empty($imgTagHeight)) {

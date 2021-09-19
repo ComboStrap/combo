@@ -102,6 +102,58 @@ class ImageRaster extends Image
 
     }
 
+    /**
+     * @param string $ampersand
+     * @param null $requestedWidth - the asked width - use for responsive image
+     * @param false $cache
+     * @return string|null
+     */
+    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $requestedWidth = null, $requestedHeight = null, $cache = false)
+    {
+
+        if ($this->exists()) {
+
+            /**
+             * Link attribute
+             */
+            $att = array();
+
+            // Width is driving the computation
+            if ($requestedWidth != null && $requestedWidth != $this->getWidth()) {
+
+                $att['w'] = $requestedWidth;
+
+                // Height
+                $height = $this->getImgTagHeightValue($requestedWidth, $requestedHeight);
+                if (!empty($height)) {
+                    $att['h'] = $height;
+                    $this->checkLogicalRatioAgainstIntrinsicRatio($requestedWidth, $height);
+                }
+
+
+            }
+
+            if ($cache) {
+                $att[CacheMedia::CACHE_KEY] = $cache;
+            }
+            $direct = true;
+
+            return ml($this->getId(), $att, $direct, $ampersand, true);
+
+        } else {
+
+            return false;
+
+        }
+    }
+
+    public function getAbsoluteUrl()
+    {
+
+        return $this->getUrl();
+
+    }
+
 
 
 }

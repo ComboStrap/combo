@@ -64,56 +64,8 @@ class RasterImageLink extends ImageLink
     }
 
 
-    /**
-     * @param string $ampersand
-     * @param null $localWidth - the asked width - use for responsive image
-     * @return string|null
-     */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $localWidth = null)
-    {
-        $image = $this->getDefaultImage();
-        if ($image->exists()) {
-
-            /**
-             * Link attribute
-             */
-            $att = array();
-
-            // Width is driving the computation
-            if ($localWidth != null && $localWidth != $image->getWidth()) {
-
-                $att['w'] = $localWidth;
-
-                // Height
-                $height = $this->getDefaultImage()->getImgTagHeightValue($localWidth);
-                if (!empty($height)) {
-                    $att['h'] = $height;
-                    $this->checkWidthAndHeightRatioAndReturnTheGoodValue($localWidth, $height);
-                }
 
 
-            }
-
-            if ($this->getCache()) {
-                $att[CacheMedia::CACHE_KEY] = $this->getCache();
-            }
-            $direct = true;
-
-            return ml($image->getId(), $att, $direct, $ampersand, true);
-
-        } else {
-
-            return false;
-
-        }
-    }
-
-    public function getAbsoluteUrl()
-    {
-
-        return $this->getUrl();
-
-    }
 
 
     /**
@@ -188,7 +140,7 @@ class RasterImageLink extends ImageLink
              * The max-width value is set
              */
             $mediaWidthValue = $image->getWidth();
-            $srcValue = $this->getUrl();
+            $srcValue = $image->getUrl();
 
             /**
              * Responsive image src set building
@@ -216,7 +168,7 @@ class RasterImageLink extends ImageLink
                 if (!empty($imgTagWidth)) {
 
                     if (!empty($imgTagHeight)) {
-                        $imgTagWidth = $this->checkWidthAndHeightRatioAndReturnTheGoodValue($imgTagWidth, $imgTagHeight);
+                        $this->getDefaultImage()->checkLogicalRatioAgainstIntrinsicRatio($imgTagWidth, $imgTagHeight);
                     }
                     $this->tagAttributes->addHtmlAttributeValue("width", $imgTagWidth . $htmlLengthUnit);
                 }
@@ -239,7 +191,7 @@ class RasterImageLink extends ImageLink
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $breakpointWidthMinusMargin);
+                        $xsmUrl = $this->getDefaultImage()->getUrl(DokuwikiUrl::URL_ENCODED_AND, $breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -254,7 +206,7 @@ class RasterImageLink extends ImageLink
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $imgTagWidth);
+                    $srcUrl = $this->getDefaultImage()->getUrl(DokuwikiUrl::URL_ENCODED_AND, $imgTagWidth);
                     $srcSet .= "$srcUrl {$imgTagWidth}w";
                     $sizes .= "{$imgTagWidth}px";
                 }

@@ -106,7 +106,7 @@ class SvgImageLink extends ImageLink
         /**
          * Src
          */
-        $srcValue = $this->getUrl();
+        $srcValue = $this->getDefaultImage()->getUrl();
         if ($lazyLoad) {
 
             /**
@@ -187,98 +187,9 @@ class SvgImageLink extends ImageLink
     }
 
 
-    public function getAbsoluteUrl(): ?string
-    {
-
-        return $this->getUrl();
-
-    }
-
-    /**
-     * @param string $ampersand $absolute - the & separator (should be encoded for HTML but not for CSS)
-     * @return string|null
-     *
-     * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
-     */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND): ?string
-    {
-
-        $image = $this->getDefaultImage();
-        if ($image->exists()) {
-
-            /**
-             * We remove align and linking because,
-             * they should apply only to the img tag
-             */
 
 
-            /**
-             *
-             * Create the array $att that will cary the query
-             * parameter for the URL
-             */
-            $att = array();
-            $componentAttributes = $this->tagAttributes->getComponentAttributes();
-            foreach ($componentAttributes as $name => $value) {
 
-                if (!in_array(strtolower($name), MediaLink::NON_URL_ATTRIBUTES)) {
-                    $newName = $name;
-
-                    /**
-                     * Width and Height
-                     * permits to create SVG of the asked size
-                     *
-                     * This is a little bit redundant with the
-                     * {@link Dimension::processWidthAndHeight()}
-                     * `max-width and width` styling property
-                     * but you may use them outside of HTML.
-                     */
-                    switch ($name) {
-                        case Dimension::WIDTH_KEY:
-                            $newName = "w";
-                            /**
-                             * We don't remove width because,
-                             * the sizing should apply to img
-                             */
-                            break;
-                        case Dimension::HEIGHT_KEY:
-                            $newName = "h";
-                            /**
-                             * We don't remove height because,
-                             * the sizing should apply to img
-                             */
-                            break;
-                    }
-
-                    if ($newName == CacheMedia::CACHE_KEY && $value == CacheMedia::CACHE_DEFAULT_VALUE) {
-                        // This is the default
-                        // No need to add it
-                        continue;
-                    }
-
-                    if (!empty($value)) {
-                        $att[$newName] = trim($value);
-                    }
-                }
-
-            }
-
-            /**
-             * Cache bursting
-             */
-            if (!$this->tagAttributes->hasComponentAttribute(CacheMedia::CACHE_BUSTER_KEY)) {
-                $att[CacheMedia::CACHE_BUSTER_KEY] = $image->getModifiedTime();
-            }
-
-            $direct = true;
-            return ml($image->getId(), $att, $direct, $ampersand, true);
-
-        } else {
-
-            return null;
-
-        }
-    }
 
     /**
      * Render a link

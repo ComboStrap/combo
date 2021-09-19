@@ -640,11 +640,6 @@ abstract class MediaLink
      */
     public abstract function renderMediaTag(): string;
 
-    /**
-     * The Url
-     * @return mixed
-     */
-    public abstract function getAbsoluteUrl();
 
     /**
      * The default image in a

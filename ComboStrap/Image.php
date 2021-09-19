@@ -55,7 +55,7 @@ abstract class Image extends DokuPath
      *         * null: return the intrinsic / natural height
      *         * not null: return the height as being the width scaled down by the {@link Image::getAspectRatio()}
      */
-    public function getImgTagHeightValue($requestedWidth = null, $requestedHeight = null): int
+    public function getImgTagHeightValue(?int $requestedWidth, ?int $requestedHeight): int
     {
 
         /**
@@ -86,8 +86,8 @@ abstract class Image extends DokuPath
 
                 // Width is not empty
                 // We derive the height from it
-                if ($this->getAspectRatio()!==false) {
-                    $requestedHeight = $requestedWidth/$this->getAspectRatio();
+                if ($this->getAspectRatio() !== false) {
+                    $requestedHeight = $requestedWidth / $this->getAspectRatio();
                 }
 
             }
@@ -211,6 +211,69 @@ abstract class Image extends DokuPath
         } else {
             return true;
         }
+    }
+
+    /**
+     * Giving width and height, check that the aspect ratio is the same
+     * than the intrinsic one
+     * @param $height
+     * @param $width
+     */
+    public
+    function checkLogicalRatioAgainstIntrinsicRatio($width, $height)
+    {
+        /**
+         * Check of height and width dimension
+         * as specified here
+         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+         */
+        $targetRatio = $this->getAspectRatio();
+        if (!(
+            $height * $targetRatio >= $width - 0.5
+            &&
+            $height * $targetRatio <= $width + 0.5
+        )) {
+            // check the second statement
+            if (!(
+                $width / $targetRatio >= $height - 0.5
+                &&
+                $width / $targetRatio <= $height + 0.5
+            )) {
+                if (
+                    !empty($width)
+                    && !empty($height)
+                ) {
+                    /**
+                     * The user has asked for a width and height
+                     */
+                    $width = round($height * $targetRatio);
+                    LogUtility::msg("The width ($height) and height ($width) specified on the image ($this) does not follow the natural ratio as <a href=\"https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height\">required by HTML</a>. The width was then set to ($width).", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                } else {
+                    /**
+                     * Programmatic error from the developer
+                     */
+                    $imgTagRatio = $width / $height;
+                    LogUtility::msg("Internal Error: The width ($width) and height ($height) calculated for the image ($this) does not pass the ratio test. They have a ratio of ($imgTagRatio) while the natural dimension ratio is ($targetRatio)");
+                }
+            }
+        }
+    }
+
+    /**
+     * The Url
+     * @return mixed
+     */
+    public abstract function getAbsoluteUrl();
+
+    /**
+     * TODO:
+     * Alt is the description of the image
+     * for screen reader, unfortunately nothing for now
+     * @return null
+     */
+    public function getAlt()
+    {
+        return null;
     }
 
 }

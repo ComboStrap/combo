@@ -273,6 +273,18 @@ class DokuPath extends File
         return new DokuPath(DokuPath::PATH_SEPARATOR . $id, self::PAGE_TYPE);
     }
 
+    /**
+     * If the path does not have a root separator,
+     * it's added
+     * @param string $path
+     */
+    public static function addRootSeparatorIfNotPresent(string &$path)
+    {
+        if(substr($path,0,1)!==":"){
+            $path = DokuPath::PATH_SEPARATOR.$path;
+        }
+    }
+
 
     public
     function getName()

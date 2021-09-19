@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\DokuPath;
 use ComboStrap\Image;
 use ComboStrap\RasterImageLink;
 use ComboStrap\MediaLink;
@@ -120,13 +121,14 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
          */
         $facebookImages = $page->getLocalImageSet();
         if (empty($facebookImages)) {
-            $defaultFacebookImage = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE));
+            $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
+                DokuPath::addRootSeparatorIfNotPresent($defaultFacebookImage);
                 $image = Image::createImageFromAbsolutePath($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {
-                    if ($defaultFacebookImage != "logo-facebook.png") {
+                    if ($defaultFacebookImage != ":logo-facebook.png") {
                         LogUtility::msg("The default facebook image ($defaultFacebookImage) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     }
                 }

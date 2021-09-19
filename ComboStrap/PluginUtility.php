@@ -13,6 +13,8 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  * Parent in th hierarchy should be first
  * Ie before {@link ImageLink, SvgImageLink, RasterImageLink)
  */
+require_once(__DIR__ . '/DokuPath.php');
+require_once(__DIR__ . '/Media.php');
 require_once(__DIR__ . '/MediaLink.php');
 
 /**
@@ -48,7 +50,6 @@ require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/ConfUtility.php');
 require_once(__DIR__ . '/Dimension.php');
-require_once(__DIR__ . '/DokuPath.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/FloatAttribute.php');

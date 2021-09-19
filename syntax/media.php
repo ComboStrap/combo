@@ -4,6 +4,7 @@
 use ComboStrap\Analytics;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
+use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
@@ -22,6 +23,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  *
  *
  * It can be a internal / external media
+ *
  *
  * See:
  * https://developers.google.com/search/docs/advanced/guidelines/google-images
@@ -199,15 +201,18 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $media = MediaLink::createFromCallStackArray($attributes);
-                $dokuPath = $media->getDokuPath();
-                if ($dokuPath->getScheme() == DokuPath::LOCAL_SCHEME) {
-                    $media = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
-                    if ($dokuPath->isImage() || $dokuPath->getExtension() === "svg") {
+                $mediaLink = MediaLink::createFromCallStackArray($attributes);
+                $media = $mediaLink->getMedia();
+                if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
+                    $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
+                    if ($media->isImage() || $media->getExtension() === "svg") {
                         /**
                          * We don't support crop
                          */
                         $crop = false;
+                        /**
+                         * @var Image $media
+                         */
                         if ($media->getRequestedWidth() != null && $media->getRequestedHeight() != null) {
                             /**
                              * Width of 0 = resizing by height (supported)
@@ -218,10 +223,10 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                         }
                         if (!$crop) {
                             try {
-                                $renderer->doc .= $media->renderMediaTagWithLink();
+                                $renderer->doc .= $mediaLink->renderMediaTagWithLink();
                             } catch (RuntimeException $e) {
                                 $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                                $message = "Media ({$dokuPath->getPath()}). Error while rendering: {$e->getMessage()}";
+                                $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
                                 $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc($message) . "</span>";
                                 LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);
                             }

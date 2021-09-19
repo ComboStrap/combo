@@ -9,13 +9,32 @@ require_once(__DIR__ . "/PluginUtility.php");
 /**
  * Class Image
  * @package ComboStrap
- * An image
+ * An image and its attribute
+ * (ie a file and its transformation attribute if any such as
+ * width, height, ...)
  */
-abstract class Image extends DokuPath
+abstract class Image extends Media
 {
 
 
     const CANONICAL = "image";
+
+
+    /**
+     * Image constructor.
+     * @param $absolutePath
+     * @param TagAttributes|null $attributes - the attributes
+     * @param string|null $rev
+     */
+    public function __construct($absolutePath, $rev = null, $attributes = null)
+    {
+        if ($attributes === null) {
+            $this->attributes = TagAttributes::createEmpty(self::CANONICAL);
+        }
+
+        parent::__construct($absolutePath, $rev, $attributes);
+    }
+
 
     public static function createImageFromAbsolutePath($imageIdFromMeta, $rev = null)
     {
@@ -257,14 +276,59 @@ abstract class Image extends DokuPath
     public abstract function getAbsoluteUrl();
 
     /**
-     * TODO:
-     * Alt is the description of the image
-     * for screen reader, unfortunately nothing for now
+     *
+     * The alternate text (the title in Dokuwiki media term)
      * @return null
      */
     public function getAlt()
     {
-        return null;
+        return $this->getTitle();
     }
+
+    public
+    function getRequestedHeight()
+    {
+        $requestedHeight = $this->attributes->getValue(Dimension::HEIGHT_KEY);
+        if (!empty($requestedHeight)) {
+            // it should not be bigger than the media Height
+            $mediaHeight = $this->getHeight();
+            if (!empty($mediaHeight)) {
+                if ($requestedHeight > $mediaHeight) {
+                    LogUtility::msg("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $requestedHeight = $mediaHeight;
+                }
+            }
+        }
+        return $requestedHeight;
+
+    }
+
+    /**
+     * The requested width
+     */
+    public
+    function getRequestedWidth()
+    {
+        $requestedWidth = $this->attributes->getValue(Dimension::WIDTH_KEY);
+        if (!empty($requestedWidth)) {
+            // it should not be bigger than the media Height
+            $mediaWidth = $this->getWidth();
+            if (!empty($mediaWidth)) {
+                if ($requestedWidth > $mediaWidth) {
+                    global $ID;
+                    if ($ID != "wiki:syntax") {
+                        // There is a bug in the wiki syntax page
+                        // {{wiki:dokuwiki-128.png?200x50}}
+                        // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
+                        LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    }
+                    $requestedWidth = $mediaWidth;
+                }
+            }
+        }
+        return $requestedWidth;
+
+    }
+
 
 }

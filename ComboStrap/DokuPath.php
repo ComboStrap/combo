@@ -77,7 +77,7 @@ class DokuPath extends File
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
      */
-    protected function __construct($absolutePath, $type, $rev = null)
+    protected function __construct($absolutePath, string $type, $rev = null)
     {
 
         if (empty($absolutePath)) {
@@ -98,7 +98,7 @@ class DokuPath extends File
         } else {
 
             if (substr($absolutePath, 0, 1) != DokuPath::PATH_SEPARATOR) {
-                if(PluginUtility::isDevOrTest()) {
+                if (PluginUtility::isDevOrTest()) {
                     // Feel too much the log, test are not seeing anything, may be minimap ?
                     LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
                 }
@@ -267,7 +267,6 @@ class DokuPath extends File
     }
 
 
-
     public static function createPagePathFromId($id): DokuPath
     {
         return new DokuPath(DokuPath::PATH_SEPARATOR . $id, self::PAGE_TYPE);
@@ -280,8 +279,8 @@ class DokuPath extends File
      */
     public static function addRootSeparatorIfNotPresent(string &$path)
     {
-        if(substr($path,0,1)!==":"){
-            $path = DokuPath::PATH_SEPARATOR.$path;
+        if (substr($path, 0, 1) !== ":") {
+            $path = DokuPath::PATH_SEPARATOR . $path;
         }
     }
 
@@ -305,8 +304,7 @@ class DokuPath extends File
     /**
      * @return bool true if this id represents a page
      */
-    public
-    function isPage()
+    public function isPage(): bool
     {
 
         if (
@@ -322,8 +320,7 @@ class DokuPath extends File
     }
 
 
-    public
-    function isGlob()
+    public function isGlob(): bool
     {
         /**
          * {@link search_universal} triggers ACL check

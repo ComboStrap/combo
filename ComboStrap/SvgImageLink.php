@@ -24,7 +24,7 @@ require_once(__DIR__ . '/PluginUtility.php');
 class SvgImageLink extends ImageLink
 {
 
-    const CANONICAL = "svg";
+    const CANONICAL = ImageSvg::CANONICAL;
 
     /**
      * The maximum size to be embedded
@@ -48,10 +48,10 @@ class SvgImageLink extends ImageLink
      * @param ImageSvg $imageSvg
      * @param TagAttributes $tagAttributes
      */
-    public function __construct($imageSvg, $tagAttributes = null)
+    public function __construct($imageSvg)
     {
-        parent::__construct($imageSvg, $tagAttributes);
-        $this->getTagAttributes()->setLogicalTag(self::CANONICAL);
+        parent::__construct($imageSvg);
+        $imageSvg->getAttributes()->setLogicalTag(self::CANONICAL);
 
     }
 
@@ -95,32 +95,34 @@ class SvgImageLink extends ImageLink
          * Remove the cache attribute
          * (no cache for the img tag)
          */
-        $this->tagAttributes->removeComponentAttributeIfPresent(CacheMedia::CACHE_KEY);
+        $image = $this->getDefaultImage();
+        $attributes = $image->getAttributes();
+        $attributes->removeComponentAttributeIfPresent(CacheMedia::CACHE_KEY);
 
         /**
          * Remove linking (not yet implemented)
          */
-        $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::LINKING_KEY);
+        $attributes->removeComponentAttributeIfPresent(MediaLink::LINKING_KEY);
 
 
         /**
          * Src
          */
-        $srcValue = $this->getDefaultImage()->getUrl(DokuwikiUrl::URL_ENCODED_AND, $this->tagAttributes);
+        $srcValue = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND);
         if ($lazyLoad) {
 
             /**
              * Note: Responsive image srcset is not needed for svg
              */
-            $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
-            $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
-                $this->getDefaultImage()->getWidthValueScaledDown($this->getRequestedWidth(), $this->getRequestedHeight()),
-                $this->getDefaultImage()->getHeightValueScaledDown($this->getRequestedWidth(), $this->getRequestedHeight()))
+            $attributes->addHtmlAttributeValue("data-src", $srcValue);
+            $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
+                $image->getWidthValueScaledDown($image->getRequestedWidth(), $image->getRequestedHeight()),
+                $image->getHeightValueScaledDown($image->getRequestedWidth(), $image->getRequestedHeight()))
             );
 
         } else {
 
-            $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
+            $attributes->addHtmlAttributeValue("src", $srcValue);
 
         }
 
@@ -129,14 +131,14 @@ class SvgImageLink extends ImageLink
          * It adds a `height: auto` that avoid a layout shift when
          * using the img tag
          */
-        $this->tagAttributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
+        $attributes->addClassName(RasterImageLink::RESPONSIVE_CLASS);
 
 
         /**
-         * Title
+         * Alt
          */
-        if (!empty($this->getTitle())) {
-            $this->tagAttributes->addHtmlAttributeValue("alt", $this->getTitle());
+        if (!empty($image->getAlt())) {
+            $attributes->addHtmlAttributeValue("alt", $image->getAlt());
         }
 
 
@@ -162,27 +164,28 @@ class SvgImageLink extends ImageLink
             // A class to all component lazy loaded to download them before print
             $svgFunctionalClass .= " " . LazyLoad::LAZY_CLASS;
         }
-        $this->tagAttributes->addClassName($svgFunctionalClass);
+        $attributes->addClassName($svgFunctionalClass);
 
         /**
          * Dimension are mandatory
          * to avoid layout shift (CLS)
          */
-        $this->tagAttributes->addHtmlAttributeValue(Dimension::WIDTH_KEY,
-            $this->getDefaultImage()->getWidthValueScaledDown(
-                $this->getRequestedWidth(),
-                $this->getRequestedHeight())
+        $attributes->addHtmlAttributeValue(Dimension::WIDTH_KEY,
+            $image->getWidthValueScaledDown(
+                $image->getRequestedWidth(),
+                $image->getRequestedHeight()
+            )
         );
-        $this->tagAttributes->addHtmlAttributeValue(
+        $attributes->addHtmlAttributeValue(
             Dimension::HEIGHT_KEY,
-            $this->getDefaultImage()->getHeightValueScaledDown($this->getRequestedWidth(), $this->getRequestedHeight())
+            $image->getHeightValueScaledDown($image->getRequestedWidth(), $image->getRequestedHeight())
         );
 
 
         /**
          * Return the image
          */
-        return '<img ' . $this->tagAttributes->toHTMLAttributeString() . '/>';
+        return '<img ' . $attributes->toHTMLAttributeString() . '/>';
 
     }
 
@@ -202,12 +205,13 @@ class SvgImageLink extends ImageLink
             /**
              * This attributes should not be in the render
              */
-            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
-            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
+            $attributes = $this->getDefaultImage()->getAttributes();
+            $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
+            $attributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
             /**
              * TODO: Title should be a node just below SVG
              */
-            $this->tagAttributes->removeComponentAttributeIfPresent(Page::TITLE_META_PROPERTY);
+            $attributes->removeComponentAttributeIfPresent(Page::TITLE_META_PROPERTY);
 
             if (
                 $image->getSize() > $this->getMaxInlineSize()
@@ -258,10 +262,10 @@ class SvgImageLink extends ImageLink
         /**
          * @var ImageSvg $image
          */
-        $image = $this->getDokuPath();
-        $cache = new CacheMedia($image, $this->tagAttributes);
+        $image = $this->getMedia();
+        $cache = new CacheMedia($image, $image->getAttributes());
         if (!$cache->isCacheUsable()) {
-            $content = $image->getSvgDocument()->getXmlText($this->tagAttributes);
+            $content = $image->getSvgDocument()->getXmlText($image->getAttributes());
             $cache->storeCache($content);
         }
         return $cache->getFile()->getFileSystemPath();

@@ -118,37 +118,23 @@ abstract class MediaLink
 
 
     /**
-     * @var TagAttributes
-     */
-    protected $tagAttributes;
-
-    /**
      * The path of the media
-     * @var DokuPath[]
+     * @var Media[]
      */
-    private $dokuPath;
+    private $media;
 
 
     /**
      * Image constructor.
-     * @param Image $dokuPath
-     * @param null $tagAttributes
+     * @param Image $media
      *
      * Protected and not private
      * to allow cascading init
      * If private, the parent attributes are null
      */
-    protected function __construct(DokuPath $dokuPath, $tagAttributes = null)
+    protected function __construct(Media $media)
     {
-
-        $this->dokuPath = $dokuPath;
-
-        if ($tagAttributes == null) {
-            $this->tagAttributes = TagAttributes::createEmpty();
-        } else {
-            $this->tagAttributes = $tagAttributes;
-        }
-
+        $this->media = $media;
     }
 
 
@@ -307,7 +293,7 @@ abstract class MediaLink
             Dimension::WIDTH_KEY => $parsedAttributes[Dimension::WIDTH_KEY],
             Dimension::HEIGHT_KEY => $parsedAttributes[Dimension::HEIGHT_KEY],
             CacheMedia::CACHE_KEY => $parsedAttributes[CacheMedia::CACHE_KEY],
-            'title' => $description,
+            TagAttributes::TITLE_KEY => $description,
             MediaLink::ALIGN_KEY => $align,
             MediaLink::LINKING_KEY => $parsedAttributes[MediaLink::LINKING_KEY],
         );
@@ -417,21 +403,21 @@ abstract class MediaLink
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime, 6) == "svg+xml") {
 
-                $svgImage = new ImageSvg($qualifiedPath, $rev);
-                $internalMedia = new SvgImageLink($svgImage, $tagAttributes);
+                $svgImage = new ImageSvg($qualifiedPath, $rev, $tagAttributes);
+                $internalMedia = new SvgImageLink($svgImage);
             } else {
-                $rasterImage = new ImageRaster($qualifiedPath, $rev);
-                $internalMedia = new RasterImageLink($rasterImage, $tagAttributes);
+                $rasterImage = new ImageRaster($qualifiedPath, $rev, $tagAttributes);
+                $internalMedia = new RasterImageLink($rasterImage );
             }
         } else {
             if ($mime == false) {
                 LogUtility::msg("The mime type of the media ($qualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-                $media = new ImageRaster($qualifiedPath, $rev);
-                $internalMedia = new RasterImageLink($media, $tagAttributes);
+                $media = new ImageRaster($qualifiedPath, $rev, $tagAttributes);
+                $internalMedia = new RasterImageLink($media);
             } else {
                 LogUtility::msg("The type ($mime) of media ($qualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                $media = DokuPath::createMediaPathFromAbsolutePath($qualifiedPath, $rev);
-                $internalMedia = new ThirdMediaLink($media, $tagAttributes);
+                $media = Media::create($qualifiedPath, $rev, $tagAttributes);
+                $internalMedia = new ThirdMediaLink($media);
             }
         }
 
@@ -453,8 +439,7 @@ abstract class MediaLink
      *
      * @return array of key string and value
      */
-    public
-    function toCallStackArray()
+    public function toCallStackArray(): array
     {
         /**
          * Trying to stay inline with the dokuwiki key
@@ -463,29 +448,18 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            DokuPath::PATH_ATTRIBUTE => $this->getDokuPath()->getPath()
+            DokuPath::PATH_ATTRIBUTE => $this->getMedia()->getPath()
         );
 
 
         // Add the extra attribute
-        return array_merge($this->tagAttributes->toCallStackArray(), $array);
+        return array_merge($this->getMedia()->getAttributes()->toCallStackArray(), $array);
 
 
     }
 
 
-    /**
-     * @return string the wiki syntax
-     */
-    public
-    function getMarkupSyntax()
-    {
-        $descriptionPart = "";
-        if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
-            $descriptionPart = "|" . $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
-        }
-        return '{{:' . $this->getDokuPath()->getId() . $descriptionPart . '}}';
-    }
+
 
 
     public
@@ -495,60 +469,26 @@ abstract class MediaLink
     }
 
 
-    public
-    function getRequestedHeight()
-    {
-        return $this->tagAttributes->getValue(Dimension::HEIGHT_KEY);
-    }
-
-
-    /**
-     * The requested width
-     */
-    public
-    function getRequestedWidth()
-    {
-        return $this->tagAttributes->getValue(Dimension::WIDTH_KEY);
-    }
-
-
-    public
-    function getCache()
-    {
-        return $this->tagAttributes->getValue(CacheMedia::CACHE_KEY);
-    }
-
-    protected
-    function getTitle()
-    {
-        return $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
-    }
-
 
     public
     function __toString()
     {
-        return $this->getDokuPath()->getId();
+        return $this->getMedia()->getId();
     }
 
     private
     function getAlign()
     {
-        return $this->getTagAttributes()->getComponentAttributeValue(self::ALIGN_KEY, null);
+        return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::ALIGN_KEY);
     }
 
     private
     function getLinking()
     {
-        return $this->getTagAttributes()->getComponentAttributeValue(self::LINKING_KEY, null);
+        return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::LINKING_KEY);
     }
 
 
-    public
-    function &getTagAttributes(): TagAttributes
-    {
-        return $this->tagAttributes;
-    }
 
     /**
      * @return string - the HTML of the image inside a link if asked
@@ -561,68 +501,68 @@ abstract class MediaLink
          * Link to the media
          *
          */
-        $imageLink = TagAttributes::createEmpty();
+        $mediaLink = TagAttributes::createEmpty();
         // https://www.dokuwiki.org/config:target
         global $conf;
         $target = $conf['target']['media'];
-        $imageLink->addHtmlAttributeValueIfNotEmpty("target", $target);
+        $mediaLink->addHtmlAttributeValueIfNotEmpty("target", $target);
         if (!empty($target)) {
-            $imageLink->addHtmlAttributeValue("rel", 'noopener');
+            $mediaLink->addHtmlAttributeValue("rel", 'noopener');
         }
 
         /**
          * Do we add a link to the image ?
          */
-        $linking = $this->tagAttributes->getValue(self::LINKING_KEY);
-        $image = $this->getDokuPath();
+        $media = $this->getMedia();
+        $linking = $media->getAttributes()->getValue(self::LINKING_KEY);
         switch ($linking) {
             case self::LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(
-                    $image->getId(),
+                    $media->getId(),
                     array(
-                        'id' => $image->getId(),
-                        'cache' => $this->getCache(),
-                        'rev' => $image->getRevision()
+                        'id' => $media->getId(),
+                        'cache' => $media->getCache(),
+                        'rev' => $media->getRevision()
                     )
                 );
-                $imageLink->addHtmlAttributeValue("href", $src);
-                $title = $this->getTitle();
+                $mediaLink->addHtmlAttributeValue("href", $src);
+                $title = $media->getTitle();
                 if (empty($title)) {
-                    $title = $image->getBaseName();
+                    $title = $media->getBaseName();
                 }
-                return $imageLink->toHtmlEnterTag("a") . $title . "</a>";
+                return $mediaLink->toHtmlEnterTag("a") . $title . "</a>";
             case self::LINKING_NOLINK_VALUE:
                 return $this->renderMediaTag();
             default:
             case self::LINKING_DIRECT_VALUE:
                 //directly to the image
                 $src = ml(
-                    $image->getId(),
+                    $media->getId(),
                     array(
-                        'id' => $image->getId(),
-                        'cache' => $this->getCache(),
-                        'rev' => $image->getRevision()
+                        'id' => $media->getId(),
+                        'cache' => $media->getCache(),
+                        'rev' => $media->getRevision()
                     ),
                     true
                 );
-                $imageLink->addHtmlAttributeValue("href", $src);
-                return $imageLink->toHtmlEnterTag("a") .
+                $mediaLink->addHtmlAttributeValue("href", $src);
+                return $mediaLink->toHtmlEnterTag("a") .
                     $this->renderMediaTag() .
                     "</a>";
 
             case self::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
                 $src = ml(
-                    $image->getId(),
+                    $media->getId(),
                     array(
-                        'id' => $image->getId(),
-                        'cache' => $this->getCache(),
-                        'rev' => $image->getRevision()
+                        'id' => $media->getId(),
+                        'cache' => $media->getCache(),
+                        'rev' => $media->getRevision()
                     ),
                     false
                 );
-                $imageLink->addHtmlAttributeValue("href", $src);
-                return $imageLink->toHtmlEnterTag("a") .
+                $mediaLink->addHtmlAttributeValue("href", $src);
+                return $mediaLink->toHtmlEnterTag("a") .
                     $this->renderMediaTag() .
                     "</a>";
 
@@ -642,12 +582,12 @@ abstract class MediaLink
 
 
     /**
-     * The default image in a
-     * @return Image
+     * The file
+     * @return Media
      */
-    public function getDokuPath(): DokuPath
+    public function getMedia(): Media
     {
-        return $this->dokuPath;
+        return $this->media;
     }
 
 

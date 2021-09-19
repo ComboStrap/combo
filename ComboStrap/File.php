@@ -16,7 +16,7 @@ namespace ComboStrap;
 class File
 {
 
-    private $path;
+    protected $path;
 
 
     /**
@@ -85,7 +85,7 @@ class File
         return pathinfo($this->path, PATHINFO_BASENAME);
     }
 
-    public function isImage()
+    public function isImage(): bool
     {
         return substr($this->getMime(), 0, 5) == 'image';
     }

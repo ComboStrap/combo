@@ -15,9 +15,9 @@ class ImageSvg extends Image
     const EXTENSION = "svg";
     const CANONICAL = "svg";
 
-    public function __construct($absolutePath, $rev = null)
+    public function __construct($absolutePath, $rev = null, $tagAttributes = null)
     {
-        parent::__construct($absolutePath, DokuPath::MEDIA_TYPE, $rev);
+        parent::__construct($absolutePath, $rev, $tagAttributes);
     }
 
 
@@ -50,12 +50,9 @@ class ImageSvg extends Image
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $tagAttributes = null): ?string
+    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND): ?string
     {
 
-        if ($tagAttributes === null) {
-            $tagAttributes = TagAttributes::createEmpty(self::CANONICAL);
-        }
 
         if ($this->exists()) {
 
@@ -71,7 +68,8 @@ class ImageSvg extends Image
              * parameter for the URL
              */
             $att = array();
-            $componentAttributes = $tagAttributes->getComponentAttributes();
+            $attributes = $this->getAttributes();
+            $componentAttributes = $attributes->getComponentAttributes();
             foreach ($componentAttributes as $name => $value) {
 
                 if (!in_array(strtolower($name), MediaLink::NON_URL_ATTRIBUTES)) {
@@ -119,7 +117,7 @@ class ImageSvg extends Image
             /**
              * Cache bursting
              */
-            if (!$tagAttributes->hasComponentAttribute(CacheMedia::CACHE_BUSTER_KEY)) {
+            if (!$attributes->hasComponentAttribute(CacheMedia::CACHE_BUSTER_KEY)) {
                 $att[CacheMedia::CACHE_BUSTER_KEY] = $this->getModifiedTime();
             }
 

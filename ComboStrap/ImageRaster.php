@@ -7,9 +7,12 @@ namespace ComboStrap;
 class ImageRaster extends Image
 {
 
-    public function __construct($absolutePath, $rev = null)
+    const CANONICAL = "raster";
+
+    public function __construct($absolutePath, $rev = null, $attributes = null)
     {
-        parent::__construct($absolutePath, DokuPath::MEDIA_TYPE, $rev);
+        parent::__construct($absolutePath,  $rev, $attributes);
+        $this->getAttributes()->setLogicalTag(self::CANONICAL);
     }
 
     private $imageWidth = null;
@@ -100,12 +103,11 @@ class ImageRaster extends Image
     }
 
     /**
-     * @param string $ampersand
+     * @param string $ampersand - do we encode & or not (in css, you do not, in html, you do)
      * @param null $requestedWidth - the asked width - use for responsive image
-     * @param string $cache - one of {@link CacheMedia::CACHE_KEY}
      * @return string|null
      */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $requestedWidth = null, $cache = "")
+    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $requestedWidth = null)
     {
 
         if ($this->exists()) {
@@ -133,8 +135,8 @@ class ImageRaster extends Image
 
             }
 
-            if (!empty($cache)) {
-                $att[CacheMedia::CACHE_KEY] = $cache;
+            if (!empty($this->getCache())) {
+                $att[CacheMedia::CACHE_KEY] = $this->getCache();
             }
             $direct = true;
 

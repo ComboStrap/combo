@@ -18,7 +18,19 @@ abstract class ImageLink extends MediaLink
 
     function getDefaultImage(): Image
     {
-        return $this->getDokuPath();
+        return $this->getMedia();
+    }
+
+    /**
+     * @return string the wiki syntax
+     */
+    public  function getMarkupSyntax(): string
+    {
+        $descriptionPart = "";
+        if (!empty($this->getDefaultImage()->getAlt())) {
+            $descriptionPart = "|" . $this->getDefaultImage()->getAlt();
+        }
+        return '{{:' . $this->getMedia()->getAbsolutePath() . $descriptionPart . '}}';
     }
 
 }

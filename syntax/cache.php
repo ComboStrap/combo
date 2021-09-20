@@ -31,7 +31,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
     const EXPIRATION_ATTRIBUTE = "expiration";
 
 
-    const CANONICAL = "cache";
+    const CANONICAL = "page:cache";
 
 
     function getType()

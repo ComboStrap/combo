@@ -144,6 +144,12 @@ class ImageRaster extends Image
             if (!empty($this->getCache())) {
                 $att[CacheMedia::CACHE_KEY] = $this->getCache();
             }
+
+            /**
+             * Cache bursting
+             */
+            $this->addCacheBusterToQueryParameters($att);
+
             $direct = true;
 
             return ml($this->getId(), $att, $direct, $ampersand, true);

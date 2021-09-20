@@ -36,7 +36,7 @@ abstract class Image extends Media
     }
 
 
-    public static function createImageFromAbsolutePath($imageIdFromMeta, $rev = null)
+    public static function createImageFromAbsolutePath($imageIdFromMeta, $rev = null, $attributes = null)
     {
 
         /**
@@ -48,11 +48,11 @@ abstract class Image extends Media
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime, 6) == "svg+xml") {
 
-                return new ImageSvg($imageIdFromMeta, $rev);
+                return new ImageSvg($imageIdFromMeta, $rev, $attributes);
 
             } else {
 
-                return new ImageRaster($imageIdFromMeta, $rev);
+                return new ImageRaster($imageIdFromMeta, $rev, $attributes);
 
             }
         } else {
@@ -396,6 +396,15 @@ abstract class Image extends Media
     private function round(float $param): int
     {
         return intval(round($param));
+    }
+
+    /**
+     * The URL will change if the file change
+     * @param $queryParameters
+     */
+    protected function addCacheBusterToQueryParameters(&$queryParameters)
+    {
+        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getModifiedTime();
     }
 
 

@@ -117,9 +117,7 @@ class ImageSvg extends Image
             /**
              * Cache bursting
              */
-            if (!$attributes->hasComponentAttribute(CacheMedia::CACHE_BUSTER_KEY)) {
-                $att[CacheMedia::CACHE_BUSTER_KEY] = $this->getModifiedTime();
-            }
+            $this->addCacheBusterToQueryParameters($att);
 
             $direct = true;
             return ml($this->getId(), $att, $direct, $ampersand, true);
@@ -135,6 +133,23 @@ class ImageSvg extends Image
     {
 
         return $this->getUrl();
+
+    }
+
+    /**
+     * Return the svg file transformed by the attributes
+     * from cache if possible. Used when making a fetch with the URL
+     * @return mixed
+     */
+    public function getSvgFile()
+    {
+
+        $cache = new CacheMedia($this, $this->getAttributes());
+        if (!$cache->isCacheUsable()) {
+            $content = $this->getSvgDocument()->getXmlText($this->getAttributes());
+            $cache->storeCache($content);
+        }
+        return $cache->getFile()->getFileSystemPath();
 
     }
 

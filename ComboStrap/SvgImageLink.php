@@ -218,7 +218,7 @@ class SvgImageLink extends ImageLink
                 /**
                  * Svg tag
                  */
-                $imgHTML = file_get_contents($this->getSvgFile());
+                $imgHTML = file_get_contents($image->getSvgFile());
 
             }
 
@@ -248,20 +248,6 @@ class SvgImageLink extends ImageLink
     }
 
 
-    public function getSvgFile()
-    {
-        /**
-         * @var ImageSvg $image
-         */
-        $image = $this->getMedia();
-        $cache = new CacheMedia($image, $image->getAttributes());
-        if (!$cache->isCacheUsable()) {
-            $content = $image->getSvgDocument()->getXmlText($image->getAttributes());
-            $cache->storeCache($content);
-        }
-        return $cache->getFile()->getFileSystemPath();
-
-    }
 
 
 }

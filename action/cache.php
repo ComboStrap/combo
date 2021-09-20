@@ -3,6 +3,7 @@
 use ComboStrap\CacheManager;
 use ComboStrap\Iso8601Date;
 use ComboStrap\PluginUtility;
+use dokuwiki\Cache\CacheRenderer;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -74,6 +75,19 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $data = &$event->data;
         $pageId = $data->page;
+
+        /**
+         * Bug on empty cache for XHTML page
+         */
+        if($data instanceof CacheRenderer){
+            if($data->mode==="xhtml"){
+                if(file_exists($data->cache)) {
+                    if (filesize($data->cache) === 0) {
+                        $data->depends["purge"] = true;
+                    }
+                }
+            }
+        }
         /**
          * Because of the recursive nature of rendering
          * inside dokuwiki, we just handle the first

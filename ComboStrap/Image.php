@@ -62,9 +62,9 @@ abstract class Image extends Media
     }
 
     /**
-     * Return a height value that is conform to the {@link Image::getAspectRatio()} of the image.
+     * Return a height value that is conform to the {@link Image::getIntrinsicAspectRatio()} of the image.
      *
-     * @param int|null $requestedWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
+     * @param int|null $breakpointWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
      * if not specified, the requested width and if not specified the intrinsic width
      * @param int|null $requestedHeight
      * @return int the height value attribute in a img
@@ -73,50 +73,21 @@ abstract class Image extends Media
      *   * If the requested height given is not null, return the given height rounded
      *   * If the requested height is null, if the requested width is:
      *         * null: return the intrinsic / natural height
-     *         * not null: return the height as being the width scaled down by the {@link Image::getAspectRatio()}
+     *         * not null: return the height as being the width scaled down by the {@link Image::getIntrinsicAspectRatio()}
      */
-    public function getHeightValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
+    public function getBreakpointHeight(?int $breakpointWidth): int
     {
 
-        if (!empty($requestedWidth) && !empty($requestedHeight)) {
-            LogUtility::msg("The requested width ($requestedWidth) and the requested height ($requestedHeight) are not null. You can't scale an image in width and height. The width or the height should be null.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        if ($this->getTargetAspectRatio() === false) {
+            LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return $this->getTargetHeight();
         }
-
-        $computedHeight = $requestedHeight;
-        if (empty($requestedHeight)) {
-
-            if (empty($requestedWidth)) {
-
-                $computedHeight = $this->getHeight();
-
-            } else {
-
-                // Width is not empty
-                // We derive the height from it
-                if ($this->getAspectRatio() !== false) {
-                    $computedHeight = $requestedWidth / $this->getAspectRatio();
-                } else {
-                    LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                }
-
-            }
-        }
-
-        /**
-         * Rounding to integer
-         * The fetch.php file takes int as value for width and height
-         * making a rounding if we pass a double (such as 37.5)
-         * This is important because the security token is based on width and height
-         * and therefore the fetch will failed
-         *
-         * And not directly {@link intval} because it will make from 3.6, 3 and not 4
-         */
-        return intval(round($computedHeight));
+        return $this->round($breakpointWidth / $this->getTargetAspectRatio());
 
     }
 
     /**
-     * Return a width value that is conform to the {@link Image::getAspectRatio()} of the image.
+     * Return a width value that is conform to the {@link Image::getIntrinsicAspectRatio()} of the image.
      *
      * @param int|null $requestedWidth - the requested width (may be null)
      * @param int|null $requestedHeight - the request height (may be null)
@@ -126,7 +97,7 @@ abstract class Image extends Media
      *   * If the requested width given is not null, return the given width
      *   * If the requested width is null, if the requested height is:
      *         * null: return the intrinsic / natural width
-     *         * not null: return the width as being the height scaled down by the {@link Image::getAspectRatio()}
+     *         * not null: return the width as being the height scaled down by the {@link Image::getIntrinsicAspectRatio()}
      */
     public function getWidthValueScaledDown(?int $requestedWidth, ?int $requestedHeight): int
     {
@@ -140,12 +111,12 @@ abstract class Image extends Media
 
             if (empty($requestedHeight)) {
 
-                $computedWidth = $this->getWidth();
+                $computedWidth = $this->getIntrinsicWidth();
 
             } else {
 
-                if ($this->getAspectRatio() !== false) {
-                    $computedWidth = $this->getAspectRatio() * $requestedHeight;
+                if ($this->getIntrinsicAspectRatio() !== false) {
+                    $computedWidth = $this->getIntrinsicAspectRatio() * $requestedHeight;
                 } else {
                     LogUtility::msg("The aspect ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }
@@ -173,12 +144,10 @@ abstract class Image extends Media
      * For a raster image, the internal width
      * for a svg, the defined viewBox
      *
-     * This is needed to calculate the {@link MediaLink::getTargetRatio() target ratio}
-     * and pass them to the img tag to avoid layout shift
      *
      * @return mixed
      */
-    public abstract function getWidth();
+    public abstract function getIntrinsicWidth();
 
     /**
      * For a raster image, the internal height
@@ -189,7 +158,7 @@ abstract class Image extends Media
      *
      * @return mixed
      */
-    public abstract function getHeight();
+    public abstract function getIntrinsicHeight();
 
     /**
      * The Aspect ratio as explained here
@@ -201,13 +170,54 @@ abstract class Image extends Media
      * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
      * to avoid layout shift
      */
-    public function getAspectRatio()
+    public function getIntrinsicAspectRatio()
     {
 
-        if ($this->getHeight() == null || $this->getWidth() == null) {
+        if ($this->getIntrinsicHeight() == null || $this->getIntrinsicWidth() == null) {
             return false;
         } else {
-            return $this->getWidth() / $this->getHeight();
+            return $this->getIntrinsicWidth() / $this->getIntrinsicHeight();
+        }
+    }
+
+    /**
+     * The Aspect ratio of the target image (may be the original or the an image scaled down)
+     *
+     * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+     * @return float|int|false
+     * false if the image is not supported
+     *
+     * It's needed for an img tag to set the img `width` and `height` that pass the
+     * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
+     * to avoid layout shift
+     */
+    public function getTargetAspectRatio()
+    {
+
+        if (empty($this->getTargetHeight()) || empty($this->getIntrinsicWidth())) {
+            return false;
+        } else {
+            return $this->getTargetWidth() / $this->getTargetHeight();
+        }
+    }
+
+    /**
+     * The Aspect ratio as explained here
+     * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
+     * @return float|int|false
+     * false if the image is not supported
+     *
+     * It's needed for an img tag to set the img `width` and `height` that pass the
+     * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
+     * to avoid layout shift
+     */
+    public function getRequestedAspectRatio()
+    {
+
+        if ($this->getTargetHeight() == null || $this->getTargetWidth() == null) {
+            return false;
+        } else {
+            return $this->getTargetWidth() / $this->getTargetHeight();
         }
     }
 
@@ -237,7 +247,7 @@ abstract class Image extends Media
          * as specified here
          * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
          */
-        $targetRatio = $this->getAspectRatio();
+        $targetRatio = $this->getTargetAspectRatio();
         if (!(
             $height * $targetRatio >= $width - 0.5
             &&
@@ -285,49 +295,107 @@ abstract class Image extends Media
         return $this->getTitle();
     }
 
-    public
-    function getRequestedHeight()
+    /**
+     * The logical height is the calculated height of the target image
+     * specified in the query parameters
+     *
+     * For instance,
+     *   * with `200`, the target image has a {@link Image::getTargetWidth() logical width} of 200 and a {@link Image::getTargetHeight() logical height} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with ''0x20'', the target image has a {@link Image::getTargetHeight() logical height} of 20 and a {@link Image::getTargetWidth() logical width} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
+     *
+     * The doc is {@link https://www.dokuwiki.org/images#resizing}
+     *
+     *
+     * @return array|int|mixed|string
+     */
+    public function getTargetHeight()
     {
-        $requestedHeight = $this->attributes->getValue(Dimension::HEIGHT_KEY);
+        $requestedHeight = $this->getRequestedHeight();
         if (!empty($requestedHeight)) {
-            // it should not be bigger than the media Height
-            $mediaHeight = $this->getHeight();
-            if (!empty($mediaHeight)) {
-                if ($requestedHeight > $mediaHeight) {
-                    LogUtility::msg("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    $requestedHeight = $mediaHeight;
-                }
-            }
+            return $requestedHeight;
         }
-        return $requestedHeight;
+
+        /**
+         * Scaled down by width
+         */
+        $requestedWidth = $this->getRequestedWidth();
+        if (empty($requestedWidth)) {
+            return $this->getIntrinsicHeight();
+        }
+
+        if ($this->getIntrinsicAspectRatio() === false) {
+            LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return $this->getIntrinsicHeight();
+        }
+        return $this->round($requestedWidth / $this->getIntrinsicAspectRatio());
 
     }
 
     /**
-     * The requested width
+     * The logical width is the width of the target image calculated from the requested dimension
+     *
+     * For instance,
+     *   * with `200`, the target image has a {@link Image::getTargetWidth() logical width} of 200 and a {@link Image::getTargetHeight() logical height} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
+     *   * with ''0x20'', the target image has a {@link Image::getTargetHeight() logical height} of 20 and a {@link Image::getTargetWidth() logical width} that is scaled down by the {@link Image::getIntrinsicAspectRatio() instrinsic ratio}
+     *
+     * The doc is {@link https://www.dokuwiki.org/images#resizing}
      */
-    public
-    function getRequestedWidth()
+    public function getTargetWidth()
     {
-        $requestedWidth = $this->attributes->getValue(Dimension::WIDTH_KEY);
-        if (!empty($requestedWidth)) {
-            // it should not be bigger than the media Height
-            $mediaWidth = $this->getWidth();
-            if (!empty($mediaWidth)) {
-                if ($requestedWidth > $mediaWidth) {
-                    global $ID;
-                    if ($ID != "wiki:syntax") {
-                        // There is a bug in the wiki syntax page
-                        // {{wiki:dokuwiki-128.png?200x50}}
-                        // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
-                        LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    }
-                    $requestedWidth = $mediaWidth;
-                }
-            }
-        }
-        return $requestedWidth;
+        $requestedWidth = $this->getRequestedWidth();
 
+        /**
+         * May be 0 (ie empty)
+         */
+        if (!empty($requestedWidth)) {
+            return $requestedWidth;
+        }
+
+        /**
+         * Empty requested width, may be scaled down by height
+         */
+        $requestedHeight = $this->getRequestedHeight();
+        if (empty($requestedHeight)) {
+            return $this->getIntrinsicWidth();
+        }
+
+        if ($this->getIntrinsicAspectRatio() === false) {
+            LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return $this->getIntrinsicHeight();
+        }
+
+        return $this->round($this->getIntrinsicAspectRatio() * $requestedHeight);
+
+    }
+
+    /**
+     * @return array|string|null
+     */
+    public function getRequestedWidth()
+    {
+        return $this->attributes->getValue(Dimension::WIDTH_KEY);
+    }
+
+    /**
+     * @return array|string|null
+     */
+    public function getRequestedHeight()
+    {
+        return $this->attributes->getValue(Dimension::HEIGHT_KEY);
+    }
+
+    /**
+     * Rounding to integer
+     * The fetch.php file takes int as value for width and height
+     * making a rounding if we pass a double (such as 37.5)
+     * This is important because the security token is based on width and height
+     * and therefore the fetch will failed
+     *
+     * And not directly {@link intval} because it will make from 3.6, 3 and not 4
+     */
+    private function round(float $param): int
+    {
+        return intval(round($param));
     }
 
 

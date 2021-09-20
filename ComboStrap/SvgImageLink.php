@@ -116,9 +116,9 @@ class SvgImageLink extends ImageLink
              */
             $attributes->addHtmlAttributeValue("data-src", $srcValue);
             $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder(
-                $image->getWidthValueScaledDown($image->getRequestedWidth(), $image->getRequestedHeight()),
-                $image->getHeightValueScaledDown($image->getRequestedWidth(), $image->getRequestedHeight()))
-            );
+                $image->getTargetWidth(),
+                $image->getTargetHeight()
+            ));
 
         } else {
 
@@ -170,17 +170,8 @@ class SvgImageLink extends ImageLink
          * Dimension are mandatory
          * to avoid layout shift (CLS)
          */
-        $attributes->addHtmlAttributeValue(Dimension::WIDTH_KEY,
-            $image->getWidthValueScaledDown(
-                $image->getRequestedWidth(),
-                $image->getRequestedHeight()
-            )
-        );
-        $attributes->addHtmlAttributeValue(
-            Dimension::HEIGHT_KEY,
-            $image->getHeightValueScaledDown($image->getRequestedWidth(), $image->getRequestedHeight())
-        );
-
+        $attributes->addHtmlAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
+        $attributes->addHtmlAttributeValue( Dimension::HEIGHT_KEY, $image->getTargetHeight());
 
         /**
          * Return the image

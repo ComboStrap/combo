@@ -161,20 +161,20 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     if ($facebookImage->isAnalyzable()) {
 
                         // There is a minimum size constraint of 200px by 200px
-                        if ($facebookImage->getWidth() < 200) {
+                        if ($facebookImage->getIntrinsicWidth() < 200) {
                             $toSmall = true;
                         } else {
-                            $facebookMeta["og:image:width"] = $facebookImage->getWidth();
-                            if ($facebookImage->getHeight() < 200) {
+                            $facebookMeta["og:image:width"] = $facebookImage->getIntrinsicWidth();
+                            if ($facebookImage->getIntrinsicHeight() < 200) {
                                 $toSmall = true;
                             } else {
-                                $facebookMeta["og:image:height"] = $facebookImage->getHeight();
+                                $facebookMeta["og:image:height"] = $facebookImage->getIntrinsicHeight();
                             }
                         }
                     }
 
                     if ($toSmall) {
-                        $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getWidth() . " x " . $facebookImage->getHeight() . "). The minimum size constraint is 200px by 200px";
+                        $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getIntrinsicWidth() . " x " . $facebookImage->getIntrinsicHeight() . "). The minimum size constraint is 200px by 200px";
                         if ($facebookImage->getId() != $page->getFirstImage()->getId()) {
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         } else {

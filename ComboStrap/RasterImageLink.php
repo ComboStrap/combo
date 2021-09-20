@@ -119,12 +119,10 @@ class RasterImageLink extends ImageLink
              *
              * Note: The style is also set in {@link Dimension::processWidthAndHeight()}
              *
-             * The doc is {@link https://www.dokuwiki.org/images#resizing}
-             * See the ''0x20''
              */
-            $imgTagHeight = $image->getHeightValueScaledDown($image->getRequestedWidth(), $image->getRequestedHeight());
-            if (!empty($imgTagHeight)) {
-                $attributes->addHtmlAttributeValue("height", $imgTagHeight . $htmlLengthUnit);
+            $targetHeight = $image->getTargetHeight();
+            if (!empty($targetHeight)) {
+                $attributes->addHtmlAttributeValue("height", $targetHeight . $htmlLengthUnit);
             }
 
 
@@ -140,7 +138,7 @@ class RasterImageLink extends ImageLink
              *
              * The max-width value is set
              */
-            $mediaWidthValue = $image->getWidth();
+            $mediaWidthValue = $image->getIntrinsicWidth();
             $srcValue = $image->getUrl();
 
             /**
@@ -163,15 +161,15 @@ class RasterImageLink extends ImageLink
             if (!empty($mediaWidthValue)) {
 
                 /**
-                 * The internal intrinsic value of the image
+                 * The value of the target image
                  */
-                $imgTagWidth = $image->getWidthValueScaledDown($image->getRequestedWidth(),$image->getRequestedHeight());
-                if (!empty($imgTagWidth)) {
+                $targetWidth = $image->getTargetWidth();
+                if (!empty($targetWidth)) {
 
-                    if (!empty($imgTagHeight)) {
-                        $image->checkLogicalRatioAgainstIntrinsicRatio($imgTagWidth, $imgTagHeight);
+                    if (!empty($targetHeight)) {
+                        $image->checkLogicalRatioAgainstIntrinsicRatio($targetWidth, $targetHeight);
                     }
-                    $attributes->addHtmlAttributeValue("width", $imgTagWidth . $htmlLengthUnit);
+                    $attributes->addHtmlAttributeValue("width", $targetWidth . $htmlLengthUnit);
                 }
 
                 /**
@@ -185,7 +183,7 @@ class RasterImageLink extends ImageLink
                  */
                 foreach (self::BREAKPOINTS as $breakpointWidth) {
 
-                    if ($imgTagWidth > $breakpointWidth) {
+                    if ($targetWidth > $breakpointWidth) {
 
                         if (!empty($srcSet)) {
                             $srcSet .= ", ";
@@ -202,14 +200,14 @@ class RasterImageLink extends ImageLink
 
                 /**
                  * Add the last size
-                 * If the image is really small, srcset and sizes are empty
+                 * If the target image is really small, srcset and sizes are empty
                  */
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND, $imgTagWidth);
-                    $srcSet .= "$srcUrl {$imgTagWidth}w";
-                    $sizes .= "{$imgTagWidth}px";
+                    $srcUrl = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND, $targetWidth);
+                    $srcSet .= "$srcUrl {$targetWidth}w";
+                    $sizes .= "{$targetWidth}px";
                 }
 
                 /**
@@ -240,7 +238,7 @@ class RasterImageLink extends ImageLink
                          * We use a svg instead
                          */
                         $attributes->addHtmlAttributeValue("src", $srcValue);
-                        $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($imgTagWidth,$imgTagHeight));
+                        $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth,$targetHeight));
                         /**
                          * We use `data-sizes` and not `sizes`
                          * because `sizes` without `srcset`

@@ -11,7 +11,7 @@ class ImageRaster extends Image
 
     public function __construct($absolutePath, $rev = null, $attributes = null)
     {
-        parent::__construct($absolutePath,  $rev, $attributes);
+        parent::__construct($absolutePath, $rev, $attributes);
         $this->getAttributes()->setLogicalTag(self::CANONICAL);
     }
 
@@ -40,7 +40,7 @@ class ImageRaster extends Image
     /**
      * @return int - the width of the image from the file
      */
-    public function getWidth(): ?int
+    public function getIntrinsicWidth(): ?int
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWidth;
@@ -49,7 +49,7 @@ class ImageRaster extends Image
     /**
      * @return int - the height of the image from the file
      */
-    public function getHeight(): ?int
+    public function getIntrinsicHeight(): ?int
     {
         $this->analyzeImageIfNeeded();
         return $this->imageWeight;
@@ -104,11 +104,18 @@ class ImageRaster extends Image
 
     /**
      * @param string $ampersand - do we encode & or not (in css, you do not, in html, you do)
-     * @param null $requestedWidth - the asked width - use for responsive image
+     * @param null $breakpointWidth - the breakpoint width - use for responsive image
      * @return string|null
      */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $requestedWidth = null)
+    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $breakpointWidth = null)
     {
+
+        /**
+         * Default
+         */
+        if($breakpointWidth==null){
+            $breakpointWidth = $this->getTargetWidth();
+        }
 
         if ($this->exists()) {
 
@@ -121,17 +128,16 @@ class ImageRaster extends Image
              * The image ratio is fixed
              * Width is driving the computation
              */
-            if ($requestedWidth != null && $requestedWidth != $this->getWidth()) {
+            if ($breakpointWidth != null && $breakpointWidth < $this->getIntrinsicWidth()) {
 
-                $att['w'] = $requestedWidth;
+                $att['w'] = $breakpointWidth;
 
                 // Height for the given width
-                $height = $this->getHeightValueScaledDown($requestedWidth, null);
-                if (!empty($height)) {
-                    $att['h'] = $height;
-                    $this->checkLogicalRatioAgainstIntrinsicRatio($requestedWidth, $height);
+                $breakpointHeight = $this->getBreakpointHeight($breakpointWidth);
+                if (!empty($breakpointHeight)) {
+                    $att['h'] = $breakpointHeight;
+                    $this->checkLogicalRatioAgainstIntrinsicRatio($breakpointWidth, $breakpointHeight);
                 }
-
 
             }
 
@@ -153,8 +159,62 @@ class ImageRaster extends Image
     public function getAbsoluteUrl()
     {
 
-        return $this->getUrl();
+        return $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $this->getTargetWidth());
 
+    }
+
+    /**
+     * We overwrite the {@link Image::getTargetWidth()}
+     * because we don't scale up for raster image
+     * to not lose quality.
+     *
+     * @return array|int|mixed|string
+     */
+    public function getTargetWidth()
+    {
+        $requestedWidth = $this->getRequestedWidth();
+
+        /**
+         * May be 0 (ie empty)
+         */
+        if (!empty($requestedWidth)) {
+            // it should not be bigger than the media Height
+            $mediaWidth = $this->getIntrinsicWidth();
+            if (!empty($mediaWidth)) {
+                if ($requestedWidth > $mediaWidth) {
+                    global $ID;
+                    if ($ID != "wiki:syntax") {
+                        // There is a bug in the wiki syntax page
+                        // {{wiki:dokuwiki-128.png?200x50}}
+                        // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
+                        LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    }
+                    $requestedWidth = $mediaWidth;
+                }
+            }
+            return $requestedWidth;
+        }
+
+        return parent::getTargetWidth();
+    }
+
+    public function getTargetHeight()
+    {
+
+        $requestedHeight = $this->getRequestedHeight();
+        if (!empty($requestedHeight)) {
+            // it should not be bigger than the media Height
+            $mediaHeight = $this->getIntrinsicHeight();
+            if (!empty($mediaHeight)) {
+                if ($requestedHeight > $mediaHeight) {
+                    LogUtility::msg("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $requestedHeight = $mediaHeight;
+                }
+            }
+            return $requestedHeight;
+        }
+
+        return parent::getTargetHeight();
     }
 
 

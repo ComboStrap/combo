@@ -206,32 +206,15 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
                     $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                     if ($media->isImage() || $media->getExtension() === "svg") {
-                        /**
-                         * We don't support crop
-                         */
-                        $crop = false;
-                        /**
-                         * @var Image $media
-                         */
-                        if ($media->getRequestedWidth() != null && $media->getRequestedHeight() != null) {
-                            /**
-                             * Width of 0 = resizing by height (supported)
-                             */
-                            if ($media->getRequestedWidth() != "0") {
-                                $crop = true;
-                            }
+                        try {
+                            $renderer->doc .= $mediaLink->renderMediaTagWithLink();
+                        } catch (RuntimeException $e) {
+                            $errorClass = self::SVG_RENDERING_ERROR_CLASS;
+                            $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
+                            $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc($message) . "</span>";
+                            LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);
                         }
-                        if (!$crop) {
-                            try {
-                                $renderer->doc .= $mediaLink->renderMediaTagWithLink();
-                            } catch (RuntimeException $e) {
-                                $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                                $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
-                                $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc($message) . "</span>";
-                                LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, MediaLink::CANONICAL);
-                            }
-                            return true;
-                        }
+                        return true;
                     }
                 }
 

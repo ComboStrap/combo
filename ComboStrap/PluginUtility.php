@@ -974,8 +974,8 @@ class PluginUtility
         $display = $tagAttributes->getValue(TagAttributes::DISPLAY);
         if ($display != "none") {
             $payload = $data[self::PAYLOAD];
-            $context = $data[self::CONTEXT];
-            if (!in_array($context, Call::INLINE_DOKUWIKI_COMPONENTS)) {
+            $previousTagDisplayType = $data[self::CONTEXT];
+            if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
                 $payload = ltrim($payload);
             }
             return PluginUtility::htmlEncode($payload);
@@ -993,13 +993,13 @@ class PluginUtility
      * @return array
      */
     public
-    static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
+    static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler): array
     {
-        $tag = new Tag($tagName, array(), DOKU_LEXER_UNMATCHED, $handler);
-        $sibling = $tag->getPreviousSibling();
+        $callStack = CallStack::createFromHandler($handler);
+        $sibling = $callStack->previous();
         $context = null;
         if (!empty($sibling)) {
-            $context = $sibling->getName();
+            $context = $sibling->getDisplay();
         }
         return array(
             PluginUtility::STATE => DOKU_LEXER_UNMATCHED,
@@ -1276,7 +1276,7 @@ class PluginUtility
     public static function isCi(): bool
     {
         // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
-        return getenv("CI")==="true";
+        return getenv("CI") === "true";
     }
 
 

@@ -64,7 +64,7 @@ class Call
         /**
          * Others
          */
-        "acronym",
+        "acronym", // abbr
         "strong_close",
         "strong_open",
         "monospace_open",
@@ -78,8 +78,6 @@ class Call
         MediaLink::EXTERNAL_MEDIA_CALL_NAME,
         /**
          * The inline of combo
-         * TODO: Should be deleted when {@link PluginUtility::renderUnmatched()} is not using the array anymore
-         * but is using {@link Call::getDisplay()} instead or any other rewrite
          */
         \syntax_plugin_combo_link::TAG,
         \syntax_plugin_combo_icon::TAG,

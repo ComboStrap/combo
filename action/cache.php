@@ -105,6 +105,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * may be empty - No error found on the web server or the log.
          *
          * We just delete it then.
+         *
+         * It has been seen after the creation of a new page or a `move` of the page.
          */
         if ($data instanceof CacheRenderer) {
             if ($data->mode === "xhtml") {

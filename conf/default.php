@@ -151,7 +151,7 @@ $conf['mandatoryQualityRules'] = 'words_min,internal_backlinks_min,internal_link
 /**
  * {@link action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE}
  */
-$conf['autoFrontMatterEnable'] = 1;
+$conf['autoFrontMatterEnable'] = 0;
 
 /**
  * {@link action_plugin_combo_qualitymessage::CONF_EXCLUDED_QUALITY_RULES_FROM_DYNAMIC_MONITORING}

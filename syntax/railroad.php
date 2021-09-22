@@ -3,6 +3,7 @@
 
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
+use ComboStrap\Os;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -187,13 +188,27 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                         $libraryId = "rrdiagram";
                         $snippetManager->attachCssSnippetForBar($snippetId);
                         $snippetManager->attachJavascriptSnippetForBar($snippetId);
+
+                        /**
+                         * Don't understand why but
+                         * Chrome calculation is not the same than
+                         * `
+                         * openssl dgst -sha256 -binary rrdiagram.js | openssl base64 -A
+                         * `
+                         * on the linux server
+                         */
+                        if(Os::isWindows()){
+                            $sha256integrity = "iYKdedDsJ2q8Vl0lgyGw6y5iM5Bu4RYEs02X+/5SKVY=";
+                        } else {
+                            $sha256integrity = "esFqPWXUOW/oA7Puh9cetSI1bE1CS5BpoMUlMfb9gMM=";
+                        }
                         $snippetManager->attachTagsForBar($snippetId)->setTags(
                             array(
                                 "script" =>
                                     [
                                         array(
-                                            "src" => PluginUtility::getResourceBaseUrl() . "/library/$libraryId/$libraryId.js",
-                                            "integrity" => "sha256-iYKdedDsJ2q8Vl0lgyGw6y5iM5Bu4RYEs02X+/5SKVY=",
+                                            "src" => PluginUtility::getResourceBaseUrl() . "/library/$libraryId/0.9.4/$libraryId.js",
+                                            "integrity" => "sha256-".$sha256integrity,
                                             "crossorigin" => "anonymous"
                                         )
                                     ],

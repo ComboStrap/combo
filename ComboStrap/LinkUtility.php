@@ -796,7 +796,7 @@ EOF;
                     $name = TemplateUtility::renderStringTemplateForPageId($name, $this->dokuwikiUrl->getPathOrId());
                 }
                 if (empty($name)) {
-                    $name = $this->getInternalPage()->getName();
+                    $name = $this->getInternalPage()->getPageNameNotEmpty();
                     if (useHeading('content')) {
                         $page = $this->getInternalPage();
                         $h1 = $page->getH1();

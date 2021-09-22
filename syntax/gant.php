@@ -14,20 +14,20 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * Mermaid
  * https://mermaid-js.github.io/mermaid/
  */
-class syntax_plugin_combo_mermaid extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_gant extends DokuWiki_Syntax_Plugin
 {
 
     /**
      * Enable or disable the code component
      */
-    const TAG = 'mermaid';
+    const TAG = 'gant';
 
     const CANONICAL = self::TAG;
 
 
     function getType(): string
     {
-        return 'container';
+        return 'protected';
     }
 
     /**
@@ -55,7 +55,7 @@ class syntax_plugin_combo_mermaid extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes(): array
     {
-        return array('baseonly', 'container', 'formatting', 'substition', 'protected', 'disabled', 'paragraphs');
+        return array();
     }
 
     function getSort(): int
@@ -119,33 +119,8 @@ class syntax_plugin_combo_mermaid extends DokuWiki_Syntax_Plugin
 
 
             case DOKU_LEXER_EXIT :
-                $callStack = CallStack::createFromHandler($handler);
-                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                $attributes = $openingCall->getAttributes();
-                $mermaidCode = "";
-                $mermaidCodeFound = false;
-                while ($actual = $callStack->next()) {
-                    if (in_array($actual->getTagName(), syntax_plugin_combo_webcode::CODE_TAGS)) {
-                        switch ($actual->getState()) {
-                            case DOKU_LEXER_ENTER:
-                                $actualCodeType = strtolower($actual->getType());
-                                if ($actualCodeType === 'mermaid') {
-                                    $mermaidCodeFound = true;
-                                };
-                                break;
-                            case DOKU_LEXER_UNMATCHED:
-                                if ($mermaidCodeFound) {
-                                    $mermaidCode = $actual->getCapturedContent();
-                                    break 2;
-                                }
-                                break;
-                        }
-                    }
-                }
                 return array(
-                    PluginUtility::STATE => $state,
-                    PluginUtility::PAYLOAD => $mermaidCode,
-                    PluginUtility::ATTRIBUTES => $attributes
+                    PluginUtility::STATE => $state
                 );
 
 
@@ -164,7 +139,7 @@ class syntax_plugin_combo_mermaid extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
 
@@ -174,6 +149,8 @@ class syntax_plugin_combo_mermaid extends DokuWiki_Syntax_Plugin
             $state = $data [PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
+                    Mermaid::addSnippet();
+                    $renderer->doc .= Mermaid::enter($data[PluginUtility::ATTRIBUTES]);
                     break;
 
                 case DOKU_LEXER_UNMATCHED :
@@ -182,15 +159,7 @@ class syntax_plugin_combo_mermaid extends DokuWiki_Syntax_Plugin
                     break;
 
                 case DOKU_LEXER_EXIT :
-                    $mermaidCode = $data[PluginUtility::PAYLOAD];
-                    if (!empty($mermaidCode)) {
-                        Mermaid::addSnippet();
-                        $renderer->doc .= Mermaid::enter($data[PluginUtility::ATTRIBUTES]);
-                        $renderer->doc .= $mermaidCode;
-                        $renderer->doc .= Mermaid::close();
-                    } else {
-                        LogUtility::msg("No code component with bnf grammar was found", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-                    }
+                    $renderer->doc .= Mermaid::close();
                     break;
 
             }

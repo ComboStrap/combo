@@ -17,12 +17,9 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 class syntax_plugin_combo_mermaid extends DokuWiki_Syntax_Plugin
 {
 
-    /**
-     * Enable or disable the code component
-     */
     const TAG = 'mermaid';
 
-    const CANONICAL = self::TAG;
+    const CANONICAL = Mermaid::CANONICAL;
 
 
     function getType(): string
@@ -186,7 +183,7 @@ class syntax_plugin_combo_mermaid extends DokuWiki_Syntax_Plugin
                     if (!empty($mermaidCode)) {
                         Mermaid::addSnippet();
                         $renderer->doc .= Mermaid::enter($data[PluginUtility::ATTRIBUTES]);
-                        $renderer->doc .= hsc($mermaidCode);
+                        $renderer->doc .= Mermaid::sanitize($mermaidCode);
                         $renderer->doc .= Mermaid::close();
                     } else {
                         LogUtility::msg("No code component with bnf grammar was found", LogUtility::LVL_MSG_WARNING, self::CANONICAL);

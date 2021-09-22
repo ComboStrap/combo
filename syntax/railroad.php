@@ -17,9 +17,6 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
 {
 
-    /**
-     * Enable or disable the code component
-     */
     const TAG = 'railroad';
     const CLASS_NAME = "railroad-bnf";
 

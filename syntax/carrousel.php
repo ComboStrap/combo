@@ -16,9 +16,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 class syntax_plugin_combo_carrousel extends DokuWiki_Syntax_Plugin
 {
 
-    /**
-     * Enable or disable the code component
-     */
+
     const TAG = 'carrousel';
     const CANONICAL = self::TAG;
 

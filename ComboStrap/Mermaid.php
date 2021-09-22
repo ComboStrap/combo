@@ -7,6 +7,8 @@ namespace ComboStrap;
 class Mermaid
 {
 
+
+    const CANONICAL = "mermaid";
     public const CLASS_NAME = "mermaid";
 
     public static function addSnippet()
@@ -51,6 +53,71 @@ class Mermaid
     public static function close(): string
     {
         return "</div>";
+    }
+
+    /**
+     * The content cannot be HTML escaped
+     *
+     * because
+     * `->>` would become `→&gt;`
+     * or  <br/> would not work
+     *
+     * There is a parameter
+     * @param $content
+     * @return mixed
+     */
+    public static function sanitize($content)
+    {
+
+        return Sanitizer::sanitize($content, " in a mermaid language", self::CANONICAL);
+
+    }
+
+    public static function render($data, &$renderer)
+    {
+        $state = $data [PluginUtility::STATE];
+        switch ($state) {
+            case DOKU_LEXER_ENTER :
+                Mermaid::addSnippet();
+                $renderer->doc .= Mermaid::enter($data[PluginUtility::ATTRIBUTES]);
+                break;
+
+            case DOKU_LEXER_UNMATCHED :
+
+                $renderer->doc .= Mermaid::sanitize($data[PluginUtility::PAYLOAD]);
+                break;
+
+            case DOKU_LEXER_EXIT :
+                $renderer->doc .= Mermaid::close();
+                break;
+
+        }
+    }
+
+    public static function handle($state,$match,&$handler): array
+    {
+        switch ($state) {
+
+            case DOKU_LEXER_ENTER :
+                $tagAttributes = TagAttributes::createFromTagMatch($match);
+                return array(
+                    PluginUtility::STATE => $state,
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                );
+
+            case DOKU_LEXER_UNMATCHED :
+
+                return PluginUtility::handleAndReturnUnmatchedData("", $match, $handler);
+
+
+            case DOKU_LEXER_EXIT :
+                return array(
+                    PluginUtility::STATE => $state
+                );
+
+
+        }
+        return array();
     }
 
 

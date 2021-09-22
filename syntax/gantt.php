@@ -12,17 +12,15 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * Mermaid
  * https://mermaid-js.github.io/mermaid/
  *
- * The parser rules:
- * https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/sequence/parser/sequenceDiagram.jison
+ * Lexer
+ * https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/gantt/parser/gantt.jison
  */
-class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_gantt extends DokuWiki_Syntax_Plugin
 {
 
+    const TAG = 'gantt';
 
-    const TAG = 'sequencediagram';
-    const MARKUP = 'sequence-diagram';
-
-    const CANONICAL = self::MARKUP;
+    const CANONICAL = self::TAG;
 
 
     function getType(): string
@@ -58,8 +56,6 @@ class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
         return array();
     }
 
-
-
     function getSort(): int
     {
         return 199;
@@ -75,7 +71,7 @@ class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::MARKUP);
+        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
@@ -85,7 +81,7 @@ class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
     function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::MARKUP . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }
@@ -123,14 +119,15 @@ class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-        /** @var Doku_Renderer_xhtml $renderer */
+
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            Mermaid::render($data, $renderer);
+            Mermaid::render($data,$renderer);
             return true;
 
         }
+
         // unsupported $mode
         return false;
 

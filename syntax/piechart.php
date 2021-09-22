@@ -3,7 +3,6 @@
 
 use ComboStrap\Mermaid;
 use ComboStrap\PluginUtility;
-use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -13,16 +12,15 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * https://mermaid-js.github.io/mermaid/
  *
  * The parser rules:
- * https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/sequence/parser/sequenceDiagram.jison
+ * https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/er/parser/erDiagram.jison
  */
-class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_piechart extends DokuWiki_Syntax_Plugin
 {
 
+    const CANONICAL = self::TAG;
+    const TAG = 'piechart';
 
-    const TAG = 'sequencediagram';
-    const MARKUP = 'sequence-diagram';
 
-    const CANONICAL = self::MARKUP;
 
 
     function getType(): string
@@ -75,7 +73,7 @@ class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
     {
 
 
-        $pattern = PluginUtility::getContainerTagPattern(self::MARKUP);
+        $pattern = PluginUtility::getContainerTagPattern(self::TAG);
         $this->Lexer->addEntryPattern($pattern, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
@@ -85,7 +83,7 @@ class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
     function postConnect()
     {
 
-        $this->Lexer->addExitPattern('</' . self::MARKUP . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addExitPattern('</' . self::TAG . '>', PluginUtility::getModeFromTag($this->getPluginComponent()));
 
 
     }

@@ -3,7 +3,6 @@
 
 use ComboStrap\Mermaid;
 use ComboStrap\PluginUtility;
-use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -12,15 +11,16 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * Mermaid
  * https://mermaid-js.github.io/mermaid/
  *
- * Lexer
- * https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/gantt/parser/gantt.jison
+ * The parser rules:
+ * https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/flowchart/parser/flow.jison
  */
-class syntax_plugin_combo_gant extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_flowchart extends DokuWiki_Syntax_Plugin
 {
 
-    const TAG = 'gant';
-
     const CANONICAL = self::TAG;
+    const TAG = 'flowchart';
+
+
 
 
     function getType(): string
@@ -55,6 +55,8 @@ class syntax_plugin_combo_gant extends DokuWiki_Syntax_Plugin
     {
         return array();
     }
+
+
 
     function getSort(): int
     {
@@ -119,15 +121,14 @@ class syntax_plugin_combo_gant extends DokuWiki_Syntax_Plugin
     function render($format, Doku_Renderer $renderer, $data): bool
     {
 
-
+        /** @var Doku_Renderer_xhtml $renderer */
         if ($format == 'xhtml') {
 
             /** @var Doku_Renderer_xhtml $renderer */
-            Mermaid::render($data,$renderer);
+            Mermaid::render($data, $renderer);
             return true;
 
         }
-
         // unsupported $mode
         return false;
 

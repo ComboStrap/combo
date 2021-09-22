@@ -3,7 +3,6 @@
 
 use ComboStrap\Mermaid;
 use ComboStrap\PluginUtility;
-use ComboStrap\TagAttributes;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -13,14 +12,14 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  * https://mermaid-js.github.io/mermaid/
  *
  * The parser rules:
- * https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/sequence/parser/sequenceDiagram.jison
+ * https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/user-journey/parser/journey.jison
  */
-class syntax_plugin_combo_sequencediagram extends DokuWiki_Syntax_Plugin
+class syntax_plugin_combo_journey extends DokuWiki_Syntax_Plugin
 {
 
 
-    const TAG = 'sequencediagram';
-    const MARKUP = 'sequence-diagram';
+    const TAG = 'journey';
+    const MARKUP = 'journey';
 
     const CANONICAL = self::MARKUP;
 

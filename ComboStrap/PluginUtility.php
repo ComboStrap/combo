@@ -51,6 +51,7 @@ require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/ConfUtility.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
+require_once(__DIR__ . '/ExitException.php');
 require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FontSize.php');
@@ -1280,6 +1281,21 @@ class PluginUtility
     {
         // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         return getenv("CI") === "true";
+    }
+
+    /**
+     * An helper function to not exit when it's a test environment
+     * @param string $message
+     */
+    public static function softExit($message = null)
+    {
+
+        if (!PluginUtility::isTest()) {
+            exit;
+        } else {
+            throw new ExitException($message);
+        }
+
     }
 
 

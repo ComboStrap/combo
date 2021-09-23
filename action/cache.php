@@ -193,7 +193,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         CacheManager::close();
     }
 
-    function imageHttpCacheBefore(Doku_Event $event, $params){
+    function imageHttpCacheBefore(Doku_Event $event, $params)
+    {
 
         if (PluginUtility::getConfValue(self::CONF_SMART_IMAGE_CACHE_ENABLED, 1)) {
             /**
@@ -228,14 +229,15 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                         /**
                          * The mime
                          */
-                        header("Content-Type: {$mediaPath->getMime()}");
+                        $mime = $mediaPath->getMime();
+                        header("Content-Type: {$mime}");
 
                         /**
                          * The cache instructions
                          */
                         $infiniteMaxAge = self::INFINITE_MAX_AGE;
                         $expires = time() + $infiniteMaxAge;
-                        header('Expires: '.gmdate("D, d M Y H:i:s", $expires).' GMT');
+                        header('Expires: ' . gmdate("D, d M Y H:i:s", $expires) . ' GMT');
                         header("Cache-Control: public, max-age=$infiniteMaxAge, immutable");
                         Http::removeHeaderIfPresent("Pragma");
 
@@ -249,35 +251,38 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                          * Last-Modified is not needed for the same reason
                          *
                          */
-                        $lastModifiedTimeMailFormat = $mediaPath->getModifiedTime()->format('r');
-                        $etagString = $lastModifiedTimeMailFormat.$_SERVER["QUERY_STRING"];
-                        $etag = '"'.md5($etagString).'"';
+                        $etag = self::getEtagValue($mediaPath, $_REQUEST);
                         header("ETag: $etag");
 
                         /**
                          * Conditional Request ?
                          * We don't check on HTTP_IF_MODIFIED_SINCE because this is useless
                          */
-                        if (isset($_SERVER['HTTP_IF_NONE_MATCH'])){
+                        if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
                             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
                             if ($ifNoneMatch && $ifNoneMatch === $etag) {
 
                                 header('HTTP/1.0 304 Not Modified');
 
                                 /**
-                                 * don't produce any output
+                                 * Clean the buffer to not produce any output
                                  */
                                 @ob_end_clean();
-                                exit;
+
+                                /**
+                                 * Exit
+                                 */
+                                PluginUtility::softExit("File not modified");
                             }
                         }
 
                         /**
                          * Send the file
                          */
-                        $physicalFile = $event->data["orig"];
-                        if ( empty($physicalFile)) {
-                            $physicalFile = $event->data["file"];
+                        $originalFile = $event->data["orig"]; // the original file
+                        $physicalFile = $event->data["file"]; // the file modified
+                        if (empty($physicalFile)) {
+                            $physicalFile = $originalFile;
                         }
 
                         /**
@@ -285,15 +290,21 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                          * (Taken over from SendFile)
                          */
                         $download = $event->data["download"];
-                        if ($download) {
+                        if ($download && $mime !== "image/svg+xml") {
                             header('Content-Disposition: attachment;' . rfc2231_encode(
-                                    'filename', PhpString::basename($physicalFile)) . ';'
+                                    'filename', PhpString::basename($originalFile)) . ';'
                             );
                         } else {
                             header('Content-Disposition: inline;' . rfc2231_encode(
-                                    'filename', PhpString::basename($physicalFile)) . ';'
+                                    'filename', PhpString::basename($originalFile)) . ';'
                             );
                         }
+
+                        /**
+                         * No cookie, no vary
+                         */
+                        Http::removeHeaderIfPresent("Set-Cookie");
+                        Http::removeHeaderIfPresent("Vary");
 
                         /**
                          * Use x-sendfile header to pass the delivery to compatible web servers
@@ -305,8 +316,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                          * Send the file
                          */
                         $filePointer = @fopen($physicalFile, "rb");
-                        if($filePointer) {
-                            http_rangeRequest($filePointer, filesize($physicalFile), $mediaPath->getMime());
+                        if ($filePointer) {
+                            http_rangeRequest($filePointer, filesize($physicalFile), $mime);
                         } else {
                             http_status(500);
                             print "Could not read $physicalFile - bad permissions?";
@@ -319,11 +330,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                          * We exit only if not test
                          */
                         $event->stopPropagation();
-                        if (!PluginUtility::isTest()){
-                            exit;
-                        } else {
-                            throw new LogException("File Send");
-                        }
+                        PluginUtility::softExit("File Send");
 
                     }
                 }
@@ -332,6 +339,23 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         }
     }
 
+    /**
+     * @param DokuPath $mediaPath
+     * @param Array $properties - the query properties
+     * @return string
+     */
+    public static function getEtagValue(DokuPath $mediaPath, array $properties): string
+    {
+        $etagString = $mediaPath->getModifiedTime()->format('r');
+        ksort($properties);
+        foreach ($properties as $key => $value) {
+            if ($key = "media") {
+                continue;
+            }
+            $etagString .= "$key=$value";
+        }
+        return '"' . md5($etagString) . '"';
+    }
 
 
 }

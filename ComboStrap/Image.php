@@ -404,7 +404,7 @@ abstract class Image extends Media
      */
     protected function addCacheBusterToQueryParameters(&$queryParameters)
     {
-        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getModifiedTime();
+        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getModifiedTime()->getTimestamp();
     }
 
 

@@ -1372,8 +1372,7 @@ EOF;
      *
      * @return DateTime
      */
-    public
-    function getCreatedTime()
+    public function getCreatedTime(): ?DateTime
     {
         $createdMeta = $this->getPersistentMetadata('date')['created'];
         if (empty($createdMeta)) {
@@ -1393,12 +1392,11 @@ EOF;
      *
      * @return DateTime
      */
-    public
-    function getModifiedTime()
+    public function getModifiedTime(): \DateTime
     {
         $modified = $this->getCurrentMetadata('date')['modified'];
         if (empty($modified)) {
-            return null;
+            return parent::getModifiedTime();
         } else {
             $datetime = new DateTime();
             $datetime->setTimestamp($modified);

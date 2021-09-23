@@ -3,10 +3,13 @@
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
+use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
+use ComboStrap\LogException;
 use ComboStrap\PluginUtility;
 use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Menu\Item\Media;
+use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -49,7 +52,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         /**
          * Control the HTTP cache of the image
          */
-        $controller->register_hook('MEDIA_SENDFILE', 'BEFORE', $this, 'imageHTTPCache', array());
+        $controller->register_hook('MEDIA_SENDFILE', 'BEFORE', $this, 'imageHTTPCacheBefore', array());
 
         /**
          * To add the cache result in the header
@@ -190,14 +193,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         CacheManager::close();
     }
 
-    /**
-     * https://www.dokuwiki.org/devel:event:media_sendfile
-     *
-     * @param Doku_Event $event
-     * @param $params
-     */
-    function imageHttpCache(Doku_Event $event, $params)
-    {
+    function imageHttpCacheBefore(Doku_Event $event, $params){
 
         if (PluginUtility::getConfValue(self::CONF_SMART_IMAGE_CACHE_ENABLED, 1)) {
             /**
@@ -218,30 +214,124 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                     if ($mediaPath->isImage()) {
 
                         /**
+                         * We take over the complete {@link sendFile()} function and exit
+                         *
                          * in {@link sendFile()}, DokuWiki set the `Cache-Control` and
                          * may exit early / send a 304 (not modified) with the function {@link http_conditionalRequest()}
                          * Meaning that the AFTER event is never reached
                          * that we can't send a cache control as below
                          * header("Cache-Control: public, max-age=$infiniteMaxAge, s-maxage=$infiniteMaxAge");
                          *
-                         * We use therefore the standard mechanism
+                         * We take the control over then
                          */
-                        $infiniteMaxAge = self::INFINITE_MAX_AGE;
-                        $event->data["cache"] = $infiniteMaxAge;
 
                         /**
-                         * Content location is mandatory for a 304
+                         * The mime
                          */
-                        header("Content-Location", $mediaPath->getAbsolutePath());
+                        header("Content-Type: {$mediaPath->getMime()}");
 
+                        /**
+                         * The cache instructions
+                         */
+                        $infiniteMaxAge = self::INFINITE_MAX_AGE;
+                        $expires = time() + $infiniteMaxAge;
+                        header('Expires: '.gmdate("D, d M Y H:i:s", $expires).' GMT');
+                        header("Cache-Control: public, max-age=$infiniteMaxAge, immutable");
+                        Http::removeHeaderIfPresent("Pragma");
+
+                        /**
+                         * The Etag cache validator
+                         *
+                         * Dokuwiki {@link http_conditionalRequest()} uses only the datetime of
+                         * the file but we need to add the parameters also because they
+                         * are generated image
+                         *
+                         * Last-Modified is not needed for the same reason
+                         *
+                         */
+                        $lastModifiedTimeMailFormat = $mediaPath->getModifiedTime()->format('r');
+                        $etagString = $lastModifiedTimeMailFormat.$_SERVER["QUERY_STRING"];
+                        $etag = '"'.md5($etagString).'"';
+                        header("ETag: $etag");
+
+                        /**
+                         * Conditional Request ?
+                         * We don't check on HTTP_IF_MODIFIED_SINCE because this is useless
+                         */
+                        if (isset($_SERVER['HTTP_IF_NONE_MATCH'])){
+                            $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
+                            if ($ifNoneMatch && $ifNoneMatch === $etag) {
+
+                                header('HTTP/1.0 304 Not Modified');
+
+                                /**
+                                 * don't produce any output
+                                 */
+                                @ob_end_clean();
+                                exit;
+                            }
+                        }
+
+                        /**
+                         * Send the file
+                         */
+                        $physicalFile = $event->data["orig"];
+                        if ( empty($physicalFile)) {
+                            $physicalFile = $event->data["file"];
+                        }
+
+                        /**
+                         * Download or display feature
+                         * (Taken over from SendFile)
+                         */
+                        $download = $event->data["download"];
+                        if ($download) {
+                            header('Content-Disposition: attachment;' . rfc2231_encode(
+                                    'filename', PhpString::basename($physicalFile)) . ';'
+                            );
+                        } else {
+                            header('Content-Disposition: inline;' . rfc2231_encode(
+                                    'filename', PhpString::basename($physicalFile)) . ';'
+                            );
+                        }
+
+                        /**
+                         * Use x-sendfile header to pass the delivery to compatible web servers
+                         * (Taken over from SendFile)
+                         */
+                        http_sendfile($physicalFile);
+
+                        /**
+                         * Send the file
+                         */
+                        $filePointer = @fopen($physicalFile, "rb");
+                        if($filePointer) {
+                            http_rangeRequest($filePointer, filesize($physicalFile), $mediaPath->getMime());
+                        } else {
+                            http_status(500);
+                            print "Could not read $physicalFile - bad permissions?";
+                        }
+
+                        /**
+                         * Stop the propagation
+                         * Unfortunately, you can stop the default ({@link sendFile()})
+                         * because the event in fetch.php does not allow it
+                         * We exit only if not test
+                         */
+                        $event->stopPropagation();
+                        if (!PluginUtility::isTest()){
+                            exit;
+                        } else {
+                            throw new LogException("File Send");
+                        }
 
                     }
                 }
 
             }
         }
-
     }
+
 
 
 }

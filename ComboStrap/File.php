@@ -55,11 +55,11 @@ class File
     }
 
     /**
-     * @return false|int - unix time stamp
+     * @return \DateTime - The date time
      */
-    public function getModifiedTime()
+    public function getModifiedTime(): \DateTime
     {
-        return filemtime($this->path);
+        return Iso8601Date::createFromTimestamp(filemtime($this->path))->getDateTime();
     }
 
     /**

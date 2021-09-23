@@ -148,7 +148,7 @@ class ImageRaster extends Image
             /**
              * Cache bursting
              */
-            $this->addCacheBusterToQueryParameters($att);
+            //$this->addCacheBusterToQueryParameters($att);
 
             $direct = true;
 

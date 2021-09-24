@@ -301,9 +301,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                         }
 
                         /**
-                         * No cookie, no vary
+                         * No Vary
                          */
-                        Http::removeHeaderIfPresent("Set-Cookie");
                         Http::removeHeaderIfPresent("Vary");
 
                         /**

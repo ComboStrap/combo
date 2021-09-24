@@ -64,17 +64,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     public static function updateStatistics($attributes, renderer_plugin_combo_analytics $renderer)
     {
         $media = MediaLink::createFromCallStackArray($attributes);
-        $renderer->stats[Analytics::MEDIAS_COUNT]++;
+        $renderer->stats[Analytics::MEDIA_COUNT]++;
         $scheme = $media->getDefaultImage()->getScheme();
         switch ($scheme) {
             case DokuPath::LOCAL_SCHEME:
-                $renderer->stats[Analytics::INTERNAL_MEDIAS_COUNT]++;
+                $renderer->stats[Analytics::INTERNAL_MEDIA_COUNT]++;
                 if (!$media->getDefaultImage()->exists()) {
-                    $renderer->stats[Analytics::INTERNAL_BROKEN_MEDIAS_COUNT]++;
+                    $renderer->stats[Analytics::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
             case DokuPath::INTERNET_SCHEME:
-                $renderer->stats[Analytics::EXTERNAL_MEDIAS_COUNT]++;
+                $renderer->stats[Analytics::EXTERNAL_MEDIA_COUNT]++;
                 break;
         }
     }

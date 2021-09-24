@@ -679,10 +679,10 @@ EOF;
             /**
              * Internal link count
              */
-            if (!array_key_exists(Analytics::INTERNAL_LINKS_COUNT, $stats)) {
-                $stats[Analytics::INTERNAL_LINKS_COUNT] = 0;
+            if (!array_key_exists(Analytics::INTERNAL_LINK_COUNT, $stats)) {
+                $stats[Analytics::INTERNAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::INTERNAL_LINKS_COUNT]++;
+            $stats[Analytics::INTERNAL_LINK_COUNT]++;
 
 
             /**
@@ -690,7 +690,7 @@ EOF;
              */
             $id = $this->getInternalPage()->getId();
             if (!$this->getInternalPage()->exists()) {
-                $stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT]++;
+                $stats[Analytics::INTERNAL_LINK_BROKEN_COUNT]++;
                 $stats[Analytics::INFO][] = "The internal link `{$id}` does not exist";
             }
 
@@ -709,31 +709,31 @@ EOF;
 
         } else if ($this->getType() == self::TYPE_EXTERNAL) {
 
-            if (!array_key_exists(Analytics::EXTERNAL_LINKS_COUNT, $stats)) {
-                $stats[Analytics::EXTERNAL_LINKS_COUNT] = 0;
+            if (!array_key_exists(Analytics::EXTERNAL_LINK_COUNT, $stats)) {
+                $stats[Analytics::EXTERNAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::EXTERNAL_LINKS_COUNT]++;
+            $stats[Analytics::EXTERNAL_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_LOCAL) {
 
-            if (!array_key_exists(Analytics::LOCAL_LINKS_COUNT, $stats)) {
-                $stats[Analytics::LOCAL_LINKS_COUNT] = 0;
+            if (!array_key_exists(Analytics::LOCAL_LINK_COUNT, $stats)) {
+                $stats[Analytics::LOCAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::LOCAL_LINKS_COUNT]++;
+            $stats[Analytics::LOCAL_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_INTERWIKI) {
 
-            if (!array_key_exists(Analytics::INTERWIKI_LINKS_COUNT, $stats)) {
-                $stats[Analytics::INTERWIKI_LINKS_COUNT] = 0;
+            if (!array_key_exists(Analytics::INTERWIKI_LINK_COUNT, $stats)) {
+                $stats[Analytics::INTERWIKI_LINK_COUNT] = 0;
             }
-            $stats[Analytics::INTERWIKI_LINKS_COUNT]++;
+            $stats[Analytics::INTERWIKI_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_EMAIL) {
 
-            if (!array_key_exists(Analytics::EMAILS_COUNT, $stats)) {
-                $stats[Analytics::EMAILS_COUNT] = 0;
+            if (!array_key_exists(Analytics::EMAIL_COUNT, $stats)) {
+                $stats[Analytics::EMAIL_COUNT] = 0;
             }
-            $stats[Analytics::EMAILS_COUNT]++;
+            $stats[Analytics::EMAIL_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_WINDOWS_SHARE) {
 

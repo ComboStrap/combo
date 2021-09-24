@@ -704,6 +704,7 @@ class Page extends DokuPath
                 'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 0 : 1),
                 'TYPE' => $this->getType(),
                 'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
+                'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],
                 'ID' => $this->getId(),
             );
             $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
@@ -729,7 +730,8 @@ SET
     LANG = ?,
     IS_LOW_QUALITY = ?,
     TYPE = ?,
-    WORD_COUNT = ?
+    WORD_COUNT = ?,
+    BACKLINK_COUNT = ?
 where
     ID=?
 EOF;
@@ -929,6 +931,7 @@ EOF;
 
     /**
      * @return Page[] the backlinks
+     * Duplicate of related
      */
     public
     function getBacklinks()

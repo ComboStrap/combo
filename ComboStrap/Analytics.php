@@ -25,26 +25,26 @@ class Analytics
      * Constant in Key or value
      */
     const HEADER_POSITION = 'header_id';
-    const INTERNAL_BACKLINKS_COUNT = "internal_backlinks_count";
+    const INTERNAL_BACKLINK_COUNT = "internal_backlink_count";
     const WORD_COUNT = 'word_count';
-    const INTERNAL_LINK_DISTANCE = 'internal_links_distance';
-    const INTERWIKI_LINKS_COUNT = "interwiki_links_count";
+    const INTERNAL_LINK_DISTANCE = 'internal_link_distance';
+    const INTERWIKI_LINK_COUNT = "interwiki_link_count";
     const EDITS_COUNT = 'edits_count';
-    const INTERNAL_LINKS_BROKEN_COUNT = 'internal_broken_links_count';
+    const INTERNAL_LINK_BROKEN_COUNT = 'internal_broken_link_count';
     const TITLE = 'title';
-    const INTERNAL_LINKS_COUNT = 'internal_links_count';
-    const LOCAL_LINKS_COUNT = "local_links_count"; // ie fragment #hallo
-    const EXTERNAL_MEDIAS_COUNT = 'external_medias_count';
-    const CHARS_COUNT = 'chars_count';
-    const MEDIAS_COUNT = 'medias_count';
-    const INTERNAL_MEDIAS_COUNT = 'internal_medias_count';
-    const INTERNAL_BROKEN_MEDIAS_COUNT = 'internal_broken_medias_count';
-    const EXTERNAL_LINKS_COUNT = 'external_links_count';
-    const HEADERS_COUNT = 'headers_count';
+    const INTERNAL_LINK_COUNT = 'internal_link_count';
+    const LOCAL_LINK_COUNT = "local_link_count"; // ie fragment #hallo
+    const EXTERNAL_MEDIA_COUNT = 'external_media_count';
+    const CHAR_COUNT = 'char_count';
+    const MEDIA_COUNT = 'media_count';
+    const INTERNAL_MEDIA_COUNT = 'internal_media_count';
+    const INTERNAL_BROKEN_MEDIA_COUNT = 'internal_broken_media_count';
+    const EXTERNAL_LINK_COUNT = 'external_link_count';
+    const HEADING_COUNT = 'heading_count';
     const SYNTAX_COUNT = "syntax_count";
     const QUALITY = 'quality';
     const STATISTICS = "statistics";
-    const EMAILS_COUNT = "emails_count";
+    const EMAIL_COUNT = "email_count";
     const WINDOWS_SHARE_COUNT = "windows_share_count";
 
     /**

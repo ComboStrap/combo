@@ -189,7 +189,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
                     if ($backlinkId != self::MORE_PAGE_ID) {
                         $linkUtility = LinkUtility::createFromPageId($backlinkId);
                         $renderer->doc .= $linkUtility->renderOpenTag($renderer);
-                        $renderer->doc .= $linkUtility->getName();
+                        $renderer->doc .= ucfirst($linkUtility->getName());
                         $renderer->doc .= $linkUtility->renderClosingTag();
                     } else {
                         $renderer->doc .=

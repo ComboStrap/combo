@@ -34,7 +34,8 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      * Enable an infinite cache on image URL with the {@link CacheMedia::CACHE_BUSTER_KEY}
      * present
      */
-    const CONF_SMART_IMAGE_CACHE_ENABLED = "smartImageCacheEnabled";
+    const CONF_SMART_CACHE_ENABLED = "smartCacheEnabled";
+    const CANONICAL = "cache";
 
     /**
      * @param Doku_Event_Handler $controller
@@ -196,7 +197,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     function imageHttpCacheBefore(Doku_Event $event, $params)
     {
 
-        if (PluginUtility::getConfValue(self::CONF_SMART_IMAGE_CACHE_ENABLED, 1)) {
+        if (PluginUtility::getConfValue(self::CONF_SMART_CACHE_ENABLED, 1)) {
             /**
              * If there is the buster key, the infinite cache is on
              */
@@ -301,9 +302,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                         }
 
                         /**
-                         * No Vary
+                         * No Vary: Cookie
+                         * https://github.com/splitbrain/dokuwiki/issues/1594
                          */
-                        Http::removeHeaderIfPresent("Vary");
+                        if($mediaPath->isPublic()) {
+                            Http::removeHeaderIfPresent("Vary");
+                        }
 
                         /**
                          * Use x-sendfile header to pass the delivery to compatible web servers

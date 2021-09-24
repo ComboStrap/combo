@@ -943,15 +943,6 @@ EOF;
         return $backlinks;
     }
 
-    /**
-     * @return int - An AUTH_ value for this page for the current logged user
-     *
-     */
-    public
-    function getAuthAclValue()
-    {
-        return auth_quickaclcheck($this->getId());
-    }
 
     /**
      * Low page quality

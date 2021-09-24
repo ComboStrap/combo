@@ -444,4 +444,19 @@ class DokuPath extends File
 
     }
 
+    public function isPublic(): bool
+    {
+        return $this->getAuthAclValue() >= AUTH_READ;
+    }
+
+    /**
+     * @return int - An AUTH_ value for this page for the current logged user
+     * See the file defines.php
+     *
+     */
+    public function getAuthAclValue(): int
+    {
+        return auth_quickaclcheck($this->getId());
+    }
+
 }

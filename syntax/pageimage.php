@@ -90,6 +90,13 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_SPECIAL :
 
+                /**
+                 * Because the pageimage can also be used
+                 * in a template
+                 *
+                 * The calculation are done in the {@link syntax_plugin_combo_pageimage::render render function}
+                 *
+                 */
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
 
                 return array(

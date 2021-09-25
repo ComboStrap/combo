@@ -9,7 +9,6 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\MediaLink;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) {
@@ -213,7 +212,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                 // First child image ?
                 $firstOpeningChild = $callStack->moveToFirstChildTag();
                 if ($firstOpeningChild !== false) {
-                    if ($firstOpeningChild->getTagName() == syntax_plugin_combo_media::TAG) {
+                    /**
+                     * We take for granted that the first media is an image
+                     */
+                    if ($firstOpeningChild->getTagName() === syntax_plugin_combo_media::TAG) {
                         $imageAttributes = $firstOpeningChild->getAttributes();
                         $openingCall->addAttribute(syntax_plugin_combo_card::IMAGE_ILLUSTRATION_KEY, $imageAttributes);
                         /**
@@ -223,8 +225,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                          * We add it in the index in the render
                          */
                         $callStack->deleteActualCallAndPrevious();
-
-
                     }
                 }
 
@@ -336,7 +336,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
 
                     $context = $data[PluginUtility::CONTEXT];
-                    if($context===syntax_plugin_combo_masonry::TAG) {
+                    if ($context === syntax_plugin_combo_masonry::TAG) {
                         syntax_plugin_combo_masonry::addColIfBootstrap5AndCardColumns($renderer, $context);
                     }
 
@@ -356,9 +356,10 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                      * Image
                      */
                     if (sizeof($imageIllustration) > 0) {
-                        $image = MediaLink::createFromCallStackArray($imageIllustration);
-                        $image->getTagAttributes()->addClassName("card-img-top");
-                        $renderer->doc .= $image->renderMediaTag();
+
+                        $mediaLink = MediaLink::createFromCallStackArray($imageIllustration);
+                        $mediaLink->getDefaultImage()->getAttributes()->addClassName("card-img-top");
+                        $renderer->doc .= $mediaLink->renderMediaTag();
                     }
 
                     break;

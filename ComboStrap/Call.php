@@ -716,6 +716,22 @@ class Call
 
     public function renderFromData(array $array): Call
     {
+
+        /**
+         * Render all attributes
+         */
+        $attributes = $this->getAttributes();
+        if($attributes!==null) {
+            foreach ($attributes as $key => $value) {
+                if (is_string($value)) {
+                    $this->addAttribute($key, TemplateUtility::renderStringTemplateFromDataArray($value, $array));
+                }
+            }
+        }
+
+        /**
+         * Content rendering
+         */
         $state = $this->getState();
         if ($state == DOKU_LEXER_UNMATCHED) {
             if ($this->isPluginCall()) {
@@ -739,16 +755,9 @@ class Call
                     $string = PipelineUtility::execute($script);
                     $this->setPayload($string);
                     break;
-                case \syntax_plugin_combo_link::TAG:
-                    switch ($this->getState()) {
-                        case DOKU_LEXER_ENTER:
-                            $ref = $this->getAttribute("ref");
-                            $this->addAttribute("ref", TemplateUtility::renderStringTemplateFromDataArray($ref, $array));
-                            break;
-                    }
-                    break;
             }
         }
+
         return $this;
     }
 

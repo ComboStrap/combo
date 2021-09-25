@@ -1086,5 +1086,10 @@ class TagAttributes
         }
     }
 
+    public function __toString()
+    {
+        return "TagAttributes";
+    }
+
 
 }

@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\RasterImageLink;
@@ -163,7 +164,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     "@type" => $schemaType,
                     'url' => $page->getCanonicalUrlOrDefault(),
                     "headline" => $page->getTitleNotEmpty(),
-                    self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(DATE_ISO8601)
+                    self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(Iso8601Date::getFormat())
                 );
 
                 /**
@@ -171,7 +172,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                  */
                 $modifiedTime = $page->getModifiedTime();
                 if ($modifiedTime != null) {
-                    $ldJson[self::DATE_MODIFIED_KEY] = $modifiedTime->format(DATE_ISO8601);
+                    $ldJson[self::DATE_MODIFIED_KEY] = $modifiedTime->format(Iso8601Date::getFormat());
                 };
 
                 /**

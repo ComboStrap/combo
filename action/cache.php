@@ -5,10 +5,8 @@ use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
-use ComboStrap\LogException;
 use ComboStrap\PluginUtility;
 use dokuwiki\Cache\CacheRenderer;
-use dokuwiki\Menu\Item\Media;
 use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -34,8 +32,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      * Enable an infinite cache on image URL with the {@link CacheMedia::CACHE_BUSTER_KEY}
      * present
      */
-    const CONF_SMART_CACHE_ENABLED = "smartCacheEnabled";
+    const CONF_STATIC_CACHE_ENABLED = "staticCacheEnabled";
     const CANONICAL = "cache";
+    const STATIC_SCRIPT_NAMES = ["/lib/exe/jquery.php", "/lib/exe/js.php", "/lib/exe/css.php"];
 
     /**
      * @param Doku_Event_Handler $controller
@@ -65,6 +64,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * between two run in the test
          */
         $controller->register_hook('DOKUWIKI_DONE', 'BEFORE', $this, 'close', array());
+
+        /**
+         * To delete the VARY on css.php, jquery.php, js.php
+         */
+        $controller->register_hook('INIT_LANG_LOAD', 'BEFORE', $this, 'deleteVaryFromStaticGeneratedResources', array());
+
 
     }
 
@@ -197,7 +202,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     function imageHttpCacheBefore(Doku_Event $event, $params)
     {
 
-        if (PluginUtility::getConfValue(self::CONF_SMART_CACHE_ENABLED, 1)) {
+        if (PluginUtility::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1)) {
             /**
              * If there is the buster key, the infinite cache is on
              */
@@ -214,6 +219,13 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                      */
                     $mediaPath = DokuPath::createMediaPathFromId($event->data["media"]);
                     if ($mediaPath->isImage()) {
+
+                        /**
+                         * Only for public images
+                         */
+                        if (!$mediaPath->isPublic()) {
+                            return;
+                        }
 
                         /**
                          * We take over the complete {@link sendFile()} function and exit
@@ -302,12 +314,10 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                         }
 
                         /**
-                         * No Vary: Cookie
-                         * https://github.com/splitbrain/dokuwiki/issues/1594
+                         * The vary header avoid caching
+                         * Delete it
                          */
-                        if($mediaPath->isPublic()) {
-                            Http::removeHeaderIfPresent("Vary");
-                        }
+                        self::deleteVaryHeader();
 
                         /**
                          * Use x-sendfile header to pass the delivery to compatible web servers
@@ -328,7 +338,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
                         /**
                          * Stop the propagation
-                         * Unfortunately, you can stop the default ({@link sendFile()})
+                         * Unfortunately, you can't stop the default ({@link sendFile()})
                          * because the event in fetch.php does not allow it
                          * We exit only if not test
                          */
@@ -352,12 +362,47 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $etagString = $mediaPath->getModifiedTime()->format('r');
         ksort($properties);
         foreach ($properties as $key => $value) {
-            if ($key = "media") {
+            if ($key === "media") {
                 continue;
             }
             $etagString .= "$key=$value";
         }
         return '"' . md5($etagString) . '"';
+    }
+
+
+    /**
+     * Delete the Vary header
+     * @param Doku_Event $event
+     * @param $params
+     */
+    public static function deleteVaryFromStaticGeneratedResources(Doku_Event $event, $params)
+    {
+
+        $script = $_SERVER["SCRIPT_NAME"];
+        if (in_array($script, self::STATIC_SCRIPT_NAMES)) {
+            // To be extra sure, they must have a tseed
+            if (isset($_REQUEST["tseed"])) {
+                self::deleteVaryHeader();
+            }
+        }
+
+    }
+
+    /**
+     *
+     * No Vary: Cookie
+     * Introduced at
+     * https://github.com/splitbrain/dokuwiki/issues/1594
+     * But cache problem at:
+     * https://github.com/splitbrain/dokuwiki/issues/2520
+     *
+     */
+    public static function deleteVaryHeader(): void
+    {
+        if (PluginUtility::getConfValue(self::CONF_STATIC_CACHE_ENABLED, 1)) {
+            Http::removeHeaderIfPresent("Vary");
+        }
     }
 
 

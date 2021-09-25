@@ -167,7 +167,7 @@ class RasterImageLink extends ImageLink
                 if (!empty($targetWidth)) {
 
                     if (!empty($targetHeight)) {
-                        $image->checkLogicalRatioAgainstIntrinsicRatio($targetWidth, $targetHeight);
+                        $image->checkLogicalRatioAgainstTargetRatio($targetWidth, $targetHeight);
                     }
                     $attributes->addHtmlAttributeValue("width", $targetWidth . $htmlLengthUnit);
                 }

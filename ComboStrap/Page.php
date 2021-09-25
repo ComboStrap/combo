@@ -1285,10 +1285,10 @@ EOF;
 
 
     /**
-     * @return MediaLink
+     * @return Image
      */
     public
-    function getImage()
+    function getImage(): ?Image
     {
 
         $images = $this->getLocalImageSet();

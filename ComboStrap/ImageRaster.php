@@ -136,7 +136,7 @@ class ImageRaster extends Image
                 $breakpointHeight = $this->getBreakpointHeight($breakpointWidth);
                 if (!empty($breakpointHeight)) {
                     $att['h'] = $breakpointHeight;
-                    $this->checkLogicalRatioAgainstIntrinsicRatio($breakpointWidth, $breakpointHeight);
+                    $this->checkLogicalRatioAgainstTargetRatio($breakpointWidth, $breakpointHeight);
                 }
 
             }

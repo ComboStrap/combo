@@ -514,7 +514,7 @@ abstract class MediaLink
          * Do we add a link to the image ?
          */
         $media = $this->getMedia();
-        $linking = $media->getAttributes()->getValue(self::LINKING_KEY);
+        $linking = $this->getLinking();
         switch ($linking) {
             case self::LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(

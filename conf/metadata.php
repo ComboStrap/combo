@@ -316,4 +316,4 @@ $meta[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = array("onoff");
 /**
  * Cache
  */
-$meta[action_plugin_combo_cache::CONF_SMART_CACHE_ENABLED] = array("onoff");
+$meta[action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED] = array("onoff");

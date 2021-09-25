@@ -235,46 +235,40 @@ abstract class Image extends Media
 
     /**
      * Giving width and height, check that the aspect ratio is the same
-     * than the intrinsic one
+     * than the target one
      * @param $height
      * @param $width
      */
     public
-    function checkLogicalRatioAgainstIntrinsicRatio($width, $height)
+    function checkLogicalRatioAgainstTargetRatio($width, $height)
     {
         /**
          * Check of height and width dimension
          * as specified here
+         *
+         * This is about the intrinsic dimension but we have the notion of target dimension
+         *
          * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
          */
         $targetRatio = $this->getTargetAspectRatio();
         if (!(
-            $height * $targetRatio >= $width - 0.5
+            $height * $targetRatio >= $width - 1
             &&
-            $height * $targetRatio <= $width + 0.5
+            $height * $targetRatio <= $width + 1
         )) {
             // check the second statement
             if (!(
-                $width / $targetRatio >= $height - 0.5
+                $width / $targetRatio >= $height - 1
                 &&
-                $width / $targetRatio <= $height + 0.5
+                $width / $targetRatio <= $height + 1
             )) {
-                if (
-                    !empty($width)
-                    && !empty($height)
-                ) {
-                    /**
-                     * The user has asked for a width and height
-                     */
-                    $width = round($height * $targetRatio);
-                    LogUtility::msg("The width ($height) and height ($width) specified on the image ($this) does not follow the natural ratio as <a href=\"https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height\">required by HTML</a>. The width was then set to ($width).", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                } else {
-                    /**
-                     * Programmatic error from the developer
-                     */
-                    $imgTagRatio = $width / $height;
-                    LogUtility::msg("Internal Error: The width ($width) and height ($height) calculated for the image ($this) does not pass the ratio test. They have a ratio of ($imgTagRatio) while the natural dimension ratio is ($targetRatio)");
-                }
+
+                /**
+                 * Programmatic error from the developer
+                 */
+                $imgTagRatio = $width / $height;
+                LogUtility::msg("Internal Error: The width ($width) and height ($height) calculated for the image ($this) does not pass the ratio test. They have a ratio of ($imgTagRatio) while the target dimension ratio is ($targetRatio)");
+
             }
         }
     }
@@ -327,7 +321,7 @@ abstract class Image extends Media
             LogUtility::msg("The ratio of the image ($this) could not be calculated", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return $this->getIntrinsicHeight();
         }
-        return $this->round($requestedWidth / $this->getIntrinsicAspectRatio());
+        return self::round($requestedWidth / $this->getIntrinsicAspectRatio());
 
     }
 
@@ -364,7 +358,7 @@ abstract class Image extends Media
             return $this->getIntrinsicHeight();
         }
 
-        return $this->round($this->getIntrinsicAspectRatio() * $requestedHeight);
+        return self::round($this->getIntrinsicAspectRatio() * $requestedHeight);
 
     }
 
@@ -393,7 +387,7 @@ abstract class Image extends Media
      *
      * And not directly {@link intval} because it will make from 3.6, 3 and not 4
      */
-    private function round(float $param): int
+    public static function round(float $param): int
     {
         return intval(round($param));
     }

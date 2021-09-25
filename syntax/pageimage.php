@@ -2,6 +2,9 @@
 
 
 use ComboStrap\Analytics;
+use ComboStrap\Dimension;
+use ComboStrap\DokuPath;
+use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
@@ -23,8 +26,22 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
 
     const TAG = "pageimage";
 
+    const MARKUP = "page-image";
+
 
     const CANONICAL = self::TAG;
+    const RATIO_ATTRIBUTE = "ratio";
+
+    /**
+     * @param $stringRatio
+     * @return float
+     */
+    public static function getTargetAspectRatio($stringRatio)
+    {
+        list($width, $height) = explode(":", $stringRatio, 2);
+        return floatval($width / $height);
+
+    }
 
 
     function getType()
@@ -60,7 +77,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
 
-        $this->Lexer->addSpecialPattern(PluginUtility::getVoidElementTagPattern(self::TAG), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+        $this->Lexer->addSpecialPattern(PluginUtility::getVoidElementTagPattern(self::MARKUP), $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
 
     }
 
@@ -74,18 +91,10 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
 
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
-                if (!$tagAttributes->hasAttribute(Analytics::PATH)) {
-                    return array(
-                        PluginUtility::STATE => $state,
-                        PluginUtility::PAYLOAD => "The path is mandatory and was not found"
-                    );
-                }
-                $path = $tagAttributes->getValue(Analytics::PATH);
-                $page =  Page::createPageFromQualifiedPath($path);
-                $imageSet =  $page->getLocalImageSet();
+
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
                 );
 
 
@@ -110,14 +119,64 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
         switch ($format) {
 
             case 'xhtml':
-                if(isset($data[PluginUtility::PAYLOAD])){
-                    $error = $data[PluginUtility::PAYLOAD];
-                    LogUtility::msg($error,LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+
+                $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                if (!$tagAttributes->hasAttribute(Analytics::PATH)) {
+
+                    LogUtility::msg("The path is mandatory and was not found", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return false;
                 }
 
-                $mediaLink = MediaLink::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
+                $path = $tagAttributes->getValue(Analytics::PATH);
+                DokuPath::addRootSeparatorIfNotPresent($path);
+
+                $page = Page::createPageFromQualifiedPath($path);
+                $selectedPageImage = $page->getImage();
+                if ($selectedPageImage === null) {
+                    LogUtility::msg("No page image defined for the page ($path)", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                    return false;
+                }
+                $width = null;
+                $height = null;
+                if ($tagAttributes->hasComponentAttribute(self::RATIO_ATTRIBUTE)) {
+                    $bestRatioDistance = 9999;
+                    $targetRatio = self::getTargetAspectRatio($tagAttributes->getComponentAttributeValue(self::RATIO_ATTRIBUTE));
+                    foreach ($page->getLocalImageSet() as $image) {
+                        $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
+                        if ($ratioDistance < $bestRatioDistance) {
+                            $bestRatioDistance = $ratioDistance;
+                            $selectedPageImage = $image;
+                        }
+                    }
+                    /**
+                     * Trying to crop on the width
+                     */
+                    $width = $selectedPageImage->getIntrinsicWidth();
+                    $height = Image::round($width / $targetRatio);
+                    if ($height > $selectedPageImage->getIntrinsicHeight()) {
+                        /**
+                         * Cropping by height
+                         */
+                        $height = $selectedPageImage->getIntrinsicHeight();
+                        $width = Image::round($targetRatio * $height);
+                    }
+                }
+
+
+                $tagAttributes = TagAttributes::createEmpty(self::TAG);
+                if ($width !== null) {
+                    $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
+                    if ($height !== null) {
+                        $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
+                    }
+                }
+                $mediaLink = MediaLink::createMediaLinkFromAbsolutePath(
+                    $selectedPageImage->getAbsolutePath(),
+                    null,
+                    $tagAttributes
+                );
                 $renderer->doc .= $mediaLink->renderMediaTag();
+
                 break;
 
 

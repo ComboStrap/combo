@@ -239,6 +239,6 @@ $lang[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = PluginUtility::getUrl(
 /**
  * Smart cache
  */
-$lang[action_plugin_combo_cache::CONF_SMART_CACHE_ENABLED] = PluginUtility::getUrl(action_plugin_combo_cache::CANONICAL, "If disabled, the smart image browser cache will be disabled");
+$lang[action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED] = PluginUtility::getUrl(action_plugin_combo_cache::CANONICAL, "If disabled, the smart image browser cache will be disabled");
 
 ?>

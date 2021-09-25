@@ -273,7 +273,7 @@ class CallStack
      * @return Call the deleted call
      */
     public
-    function deleteActualCallAndPrevious()
+    function deleteActualCallAndPrevious(): ?Call
     {
 
         $actualCall = $this->getActualCall();
@@ -299,7 +299,7 @@ class CallStack
          */
         $this->moveToOffset($offset - 1);
 
-        return $actualCall;
+        return $this->getActualCall();
 
     }
 

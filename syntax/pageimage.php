@@ -134,7 +134,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     return false;
                 }
 
-                $path = $tagAttributes->getValue(Analytics::PATH);
+                $path = $tagAttributes->getValueAndRemove(Analytics::PATH);
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
                 $page = Page::createPageFromQualifiedPath($path);
@@ -147,7 +147,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 $height = null;
                 if ($tagAttributes->hasComponentAttribute(self::RATIO_ATTRIBUTE)) {
                     $bestRatioDistance = 9999;
-                    $targetRatio = self::getTargetAspectRatio($tagAttributes->getComponentAttributeValue(self::RATIO_ATTRIBUTE));
+                    $targetRatio = self::getTargetAspectRatio($tagAttributes->getValueAndRemove(self::RATIO_ATTRIBUTE));
                     foreach ($page->getLocalImageSet() as $image) {
                         $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
                         if ($ratioDistance < $bestRatioDistance) {
@@ -170,7 +170,6 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 }
 
 
-                $tagAttributes = TagAttributes::createEmpty(self::TAG);
                 if ($width !== null) {
                     $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
                     if ($height !== null) {

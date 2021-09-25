@@ -1264,9 +1264,11 @@ EOF;
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
                 foreach ($imageMeta as $key => $imageIdFromMeta) {
+                    DokuPath::addRootSeparatorIfNotPresent($imageIdFromMeta);
                     $images[$key] = Image::createImageFromAbsolutePath($imageIdFromMeta);
                 }
             } else {
+                DokuPath::addRootSeparatorIfNotPresent($imageMeta);
                 $images = array(Image::createImageFromAbsolutePath($imageMeta));
             }
         } else {

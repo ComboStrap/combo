@@ -42,10 +42,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
     const TAG = 'card';
 
 
-    /**
-     * Key of the attributes that says if the card has an image illustration
-     */
-    const IMAGE_ILLUSTRATION_KEY = "imageIllustration";
     const CONF_ENABLE_SECTION_EDITING = "enableCardSectionEditing";
 
 
@@ -208,63 +204,55 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
                 // Processing
                 $callStack->moveToEnd();
-                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
-                // First child image ?
-                $firstOpeningChild = $callStack->moveToFirstChildTag();
-                if ($firstOpeningChild !== false) {
-                    /**
-                     * We take for granted that the first media is an image
-                     */
-                    if ($firstOpeningChild->getTagName() === syntax_plugin_combo_media::TAG) {
-                        $imageAttributes = $firstOpeningChild->getAttributes();
-                        $openingCall->addAttribute(syntax_plugin_combo_card::IMAGE_ILLUSTRATION_KEY, $imageAttributes);
-                        /**
-                         * We delete the image to not create
-                         * a paragraph (when the {@link syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack() process is kicking)
-                         * as an image is a inline component
-                         * We add it in the index in the render
-                         */
-                        $callStack->deleteActualCallAndPrevious();
+                $callStack->moveToPreviousCorrespondingOpeningCall();
+                /**
+                 * Do we have an illustrative image ?
+                 *
+                 * Because the image is considered an inline component
+                 * We need to be careful to not wrap it into
+                 * a paragraph (when the {@link syntax_plugin_combo_para::fromEolToParagraphUntilEndOfStack() process is kicking)
+                 */
+                while ($actualCall = $callStack->next()) {
+
+                    if($actualCall->isUnMatchedEmptyCall()){
+                        continue;
                     }
+
+                    $tagName = $actualCall->getTagName();
+                    $imageTag = "image";
+                    if (in_array($tagName, Call::IMAGE_TAGS)) {
+                        $tagName = $imageTag;
+                    }
+                    switch ($tagName) {
+                        case $imageTag:
+                            $actualCall->addClassName("card-img-top");
+                            $actualCall->addAttribute(MediaLink::LINKING_KEY, MediaLink::LINKING_NOLINK_VALUE);
+                            $actualCall->setDisplay(Call::BlOCK_DISPLAY);
+                            break 2;
+                        case "eol":
+                            break;
+                        default:
+                            break 2;
+
+                    }
+
                 }
 
-                // Transform eol to paragraph
-                // after the image illustration (otherwise, the image may be wrapped in a paragraph)
-                $callStack->moveToEnd();
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                $callStack->insertEolIfNextCallIsNotEolOrBlock(); // a paragraph is mandatory
+                $callStack->insertAfter(
+                    Call::createComboCall(
+                        syntax_plugin_combo_cardbody::TAG,
+                        DOKU_LEXER_ENTER
+                    )
+                );
 
+                /**
+                 * Process the body
+                 */
                 $callStack->processEolToEndStack([TagAttributes::CLASS_KEY => "card-text"]);
 
-                // Insert the card body enter
-                $callStack->moveToEnd();
-                $callStack->moveToPreviousCorrespondingOpeningCall();
-                $firstChild = $callStack->moveToFirstChildTag();
-                if ($firstChild !== false) {
-                    if ($firstChild->getTagName() == syntax_plugin_combo_header::TAG) {
-                        $callStack->moveToNextSiblingTag();
-                    }
-                    $callStack->insertBefore(
-                        Call::createComboCall(
-                            syntax_plugin_combo_cardbody::TAG,
-                            DOKU_LEXER_ENTER
-                        )
-                    );
-                } else {
-                    // no child
-                    $callStack->moveToEnd();
-                    $callStack->moveToPreviousCorrespondingOpeningCall();
-                    $callStack->insertAfter(
-                        Call::createComboCall(
-                            syntax_plugin_combo_cardbody::TAG,
-                            DOKU_LEXER_ENTER
-                        )
-                    );
-                }
-
-
-                // Insert the card body exit
-                $callStack->moveToEnd();
+                /**
+                 * Insert the card body exit
+                 */
                 $callStack->insertBefore(
                     Call::createComboCall(
                         syntax_plugin_combo_cardbody::TAG,
@@ -340,27 +328,11 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                         syntax_plugin_combo_masonry::addColIfBootstrap5AndCardColumns($renderer, $context);
                     }
 
-                    /**
-                     * Illustrations
-                     * (Must come before the next {@link TagAttributes::toHtmlEnterTag()} of the enter tag
-                     * to remove the image illustration attribute
-                     */
-                    $imageIllustration = $tagAttributes->getValueAndRemove(self::IMAGE_ILLUSTRATION_KEY, array());
 
                     /**
                      * Card
                      */
                     $renderer->doc .= $tagAttributes->toHtmlEnterTag("div") . DOKU_LF;
-
-                    /**
-                     * Image
-                     */
-                    if (sizeof($imageIllustration) > 0) {
-
-                        $mediaLink = MediaLink::createFromCallStackArray($imageIllustration);
-                        $mediaLink->getDefaultImage()->getAttributes()->addClassName("card-img-top");
-                        $renderer->doc .= $mediaLink->renderMediaTag();
-                    }
 
                     break;
 
@@ -403,20 +375,6 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
 
             return true;
 
-        } else if ($format == 'metadata') {
-
-            /** @var Doku_Renderer_metadata $renderer */
-            $state = $data[PluginUtility::STATE];
-            if ($state == DOKU_LEXER_ENTER) {
-
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
-                $imageIllustration = $tagAttributes->getValueAndRemove(self::IMAGE_ILLUSTRATION_KEY, array());
-                if (sizeof($imageIllustration) > 0) {
-                    syntax_plugin_combo_media::registerImageMeta($imageIllustration, $renderer);
-                }
-            }
-            return true;
         }
         return false;
     }

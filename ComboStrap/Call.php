@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
+use syntax_plugin_combo_media;
+use syntax_plugin_combo_pageimage;
 
 
 /**
@@ -98,6 +100,15 @@ class Call
         "table_open",
         "table_close",
     );
+
+    /**
+     * A media is not really an image
+     * but it may contains one
+     */
+    const IMAGE_TAGS = [
+        syntax_plugin_combo_media::TAG,
+        syntax_plugin_combo_pageimage::TAG
+    ];
 
     private $call;
 
@@ -364,8 +375,29 @@ class Call
 
     }
 
+    /**
+     * Does the display has been set
+     * to override the dokuwiki default
+     * ({@link Syntax::getPType()}
+     *
+     * because an image is by default a inline component
+     * but can be a block (ie top image of a card)
+     * @return bool
+     */
+    public function isDisplaySet(): bool
+    {
+        return isset($this->call[1][1][PluginUtility::DISPLAY]);
+    }
+
     public function getDisplay()
     {
+        $mode = $this->getMode();
+        if ($mode == "plugin") {
+            if ($this->isDisplaySet()) {
+                return $this->call[1][1][PluginUtility::DISPLAY];
+            }
+        }
+
         if ($this->getState() == DOKU_LEXER_UNMATCHED) {
             /**
              * Unmatched are content (ie text node in XML/HTML) and have
@@ -494,7 +526,6 @@ class Call
     public function getType()
     {
         if ($this->getState() == DOKU_LEXER_UNMATCHED) {
-            LogUtility::msg("The unmatched tag ($this) does not have any attributes. Get its parent if you want the type", LogUtility::LVL_MSG_ERROR);
             return null;
         } else {
             /**
@@ -721,7 +752,7 @@ class Call
          * Render all attributes
          */
         $attributes = $this->getAttributes();
-        if($attributes!==null) {
+        if ($attributes !== null) {
             foreach ($attributes as $key => $value) {
                 if (is_string($value)) {
                     $this->addAttribute($key, TemplateUtility::renderStringTemplateFromDataArray($value, $array));
@@ -771,6 +802,44 @@ class Call
             default:
                 LogUtility::msg("Setting the captured content on a call for the tag ($tagName) is not yet implemented", LogUtility::LVL_MSG_ERROR);
         }
+    }
+
+    /**
+     * Set the display to block or inline
+     * One of `block` or `inline`
+     */
+    public function setDisplay($display): Call
+    {
+        $mode = $this->getMode();
+        if ($mode == "plugin") {
+            $this->call[1][1][PluginUtility::DISPLAY] = $display;
+        } else {
+            LogUtility::msg("You can't set a display on a non plugin call mode (" . $mode . ")", LogUtility::LVL_MSG_WARNING);
+        }
+        return $this;
+
+    }
+
+    /**
+     * The plugin or not
+     * @return mixed
+     */
+    private function getMode()
+    {
+        return $this->call[0];
+    }
+
+    /**
+     * Return if this an unmatched call with space
+     * in captured content
+     * @return bool
+     */
+    public function isUnMatchedEmptyCall(): bool
+    {
+        if ($this->getState() === DOKU_LEXER_UNMATCHED && trim($this->getCapturedContent()) === "") {
+            return true;
+        }
+        return false;
     }
 
 

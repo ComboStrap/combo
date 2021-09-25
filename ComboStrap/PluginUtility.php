@@ -165,6 +165,7 @@ class PluginUtility
     const EDIT_SECTION_TARGET = 'section';
     const ERROR_MESSAGE = "errorAtt";
     const ERROR_LEVEL = "errorLevel";
+    const DISPLAY = "display";
 
     /**
      * The URL base of the documentation

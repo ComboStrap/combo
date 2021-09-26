@@ -119,7 +119,7 @@ class syntax_plugin_combo_comment extends DokuWiki_Syntax_Plugin
         if(PluginUtility::getConfValue(self::CONF_OUTPUT_COMMENT,0)) {
             if ($format === "xhtml") {
                 if ($data[PluginUtility::STATE] === DOKU_LEXER_UNMATCHED) {
-                    $renderer->doc .= "<!-- " . PluginUtility::renderUnmatched($data) . "-->";
+                    $renderer->doc .= "<!--" . PluginUtility::renderUnmatched($data) . "-->";
                 }
             }
         }

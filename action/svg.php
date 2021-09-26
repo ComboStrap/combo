@@ -58,7 +58,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         if ($event->data['status'] >= 400) return; // ACLs and precondition checks
 
 
-        $tagAttributes = TagAttributes::createEmpty();
+        $tagAttributes = TagAttributes::createEmpty(ImageSvg::CANONICAL);
         $width = $event->data['width'];
         if ($width != 0) {
             $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);

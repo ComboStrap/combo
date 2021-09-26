@@ -190,6 +190,9 @@ class SvgImageLink extends ImageLink
     public function renderMediaTag(): string
     {
 
+        /**
+         * @var ImageSvg $image
+         */
         $image = $this->getDefaultImage();
         if ($image->exists()) {
 

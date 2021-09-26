@@ -278,6 +278,10 @@ class SvgDocument extends XmlDocument
                  */
                 $tagAttributes->addStyleDeclaration("width", "100%");
                 $tagAttributes->addStyleDeclaration("height", "auto");
+                if($tagAttributes->hasComponentAttribute(Dimension::WIDTH_KEY)){
+                    $width = $tagAttributes->getComponentAttributeValue(Dimension::WIDTH_KEY);
+                    $tagAttributes->addStyleDeclaration("max-width", "{$width}px");
+                }
                 break;
 
         }
@@ -338,14 +342,14 @@ class SvgDocument extends XmlDocument
         return $this;
     }
 
-    public function getMediaWidth()
+    public function getMediaWidth(): int
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
         $attributes = explode(" ", $viewBox);
         return intval(round($attributes[2]));
     }
 
-    public function getMediaHeight()
+    public function getMediaHeight(): int
     {
         $viewBox = $this->getXmlDom()->documentElement->getAttribute("viewBox");
         $attributes = explode(" ", $viewBox);

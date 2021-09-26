@@ -349,7 +349,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                 $lowerColumn = strtolower($variableName);
 
                                 if ($variableName === Page::IMAGE_META_PROPERTY) {
-                                    LogUtility::msg("To add an image, you must use the page image component", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
+                                    LogUtility::msg("To add an image, you must use the page image component, not the image metadata", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
                                     continue;
                                 }
 

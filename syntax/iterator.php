@@ -180,6 +180,14 @@ class syntax_plugin_combo_iterator extends DokuWiki_Syntax_Plugin
 
             case DOKU_LEXER_EXIT :
 
+                /**
+                 * Do we need to delete all call because the data returns no rows
+                 */
+                $callStack = CallStack::createFromHandler($handler);
+                $openingCall = $callStack->moveToPreviousCorrespondingOpeningCall();
+                if($openingCall->getAttribute(self::EMPTY_ROWS_COUNT_ATTRIBUTE,false)){
+                    $callStack->deleteAllCallsAfter($openingCall);
+                }
                 return array(PluginUtility::STATE => $state);
 
         }

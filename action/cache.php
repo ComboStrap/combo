@@ -362,7 +362,18 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $etagString = $mediaPath->getModifiedTime()->format('r');
         ksort($properties);
         foreach ($properties as $key => $value) {
-            if ($key === "media") {
+            /**
+             * Media is already on the URL
+             * tok is just added when w and h are on the url
+             * Buster is the timestamp
+             */
+            if (in_array($key, ["media","tok",CacheMedia::CACHE_BUSTER_KEY])) {
+                continue;
+            }
+            /**
+             * If empty means not used
+             */
+            if(empty($value)){
                 continue;
             }
             $etagString .= "$key=$value";

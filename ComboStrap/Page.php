@@ -50,7 +50,7 @@ class Page extends DokuPath
     const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
     const WEBSITE_TYPE = "website";
     const ARTICLE_TYPE = "article";
-    const EVENT_TYPE = "article";
+    const EVENT_TYPE = "event";
     const ORGANIZATION_TYPE = "organization";
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
@@ -1874,9 +1874,14 @@ EOF;
     }
 
     public
+    function getPageName(){
+        return p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+
+    }
+    public
     function getPageNameNotEmpty()
     {
-        $name = p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+        $name = $this->getPageName();
         if (!blank($name)) {
             return $name;
         } else {
@@ -1952,12 +1957,12 @@ EOF;
         return $this->getPublishedTime() !== null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
     }
 
-    private function getEndDateAsString(): ?string
+    public function getEndDateAsString(): ?string
     {
         return $this->getEndDate() !== null ? $this->getEndDate()->format(Iso8601Date::getFormat()) : null;
     }
 
-    private function getEndDate(): ?DateTime
+    public function getEndDate(): ?DateTime
     {
         $dateEndProperty = Analytics::DATE_END;
         $persistentMetadata = $this->getPersistentMetadata($dateEndProperty);
@@ -1966,7 +1971,7 @@ EOF;
         }
 
         // Ms level parsing
-        $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
+        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
         if ($dateTime === false) {
             /**
              * Should not happen as the data is validate in entry
@@ -1978,12 +1983,12 @@ EOF;
         return $dateTime;
     }
 
-    private function getStartDateAsString(): ?string
+    public function getStartDateAsString(): ?string
     {
         return $this->getStartDate() !== null ? $this->getStartDate()->format(Iso8601Date::getFormat()) : null;
     }
 
-    private function getStartDate(): ?DateTime
+    public function getStartDate(): ?DateTime
     {
         $dateStartProperty = Analytics::DATE_START;
         $persistentMetadata = $this->getPersistentMetadata($dateStartProperty);
@@ -1992,7 +1997,7 @@ EOF;
         }
 
         // Ms level parsing
-        $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
+        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
         if ($dateTime === false) {
             /**
              * Should not happen as the data is validate in entry

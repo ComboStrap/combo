@@ -67,6 +67,7 @@ require_once(__DIR__ . '/ImageRaster.php');
 require_once(__DIR__ . '/ImageSvg.php');
 require_once(__DIR__ . '/ImageLink.php');
 require_once(__DIR__ . '/Iso8601Date.php');
+require_once(__DIR__ . '/Json.php');
 require_once(__DIR__ . '/Lang.php');
 require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/LogException.php');

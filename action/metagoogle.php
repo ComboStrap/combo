@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Image;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -45,6 +46,56 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
         // enable direct access to language strings
         // ie $this->lang
         $this->setupLocale();
+    }
+
+    private static function addImage(array &$ldJson, $page)
+    {
+        /**
+         * Image must belong to the page
+         * https://developers.google.com/search/docs/guides/sd-policies#images
+         *
+         * Image may have IPTC metadata: not yet implemented
+         * https://developers.google.com/search/docs/advanced/appearance/image-rights-metadata
+         *
+         * Image must have the supported format
+         * https://developers.google.com/search/docs/advanced/guidelines/google-images#supported-image-formats
+         * BMP, GIF, JPEG, PNG, WebP, and SVG
+         */
+        $supportedMime = [
+            "image/bmp",
+            "image/gif",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/svg+xml",
+        ];
+        $imagesSet = $page->getLocalImageSet();
+        $schemaImages = array();
+        foreach ($imagesSet as $image) {
+
+            $mime = $image->getMime();
+            if (in_array($mime, $supportedMime)) {
+                if ($image->exists()) {
+                    $imageObjectSchema = array(
+                        "@type" => "ImageObject",
+                        "url" => $image->getAbsoluteUrl()
+                    );
+                    if (!empty($image->getIntrinsicWidth())) {
+                        $imageObjectSchema["width"] = $image->getIntrinsicWidth();
+                    }
+                    if (!empty($image->getIntrinsicHeight())) {
+                        $imageObjectSchema["height"] = $image->getIntrinsicHeight();
+                    }
+                    $schemaImages[] = $imageObjectSchema;
+                } else {
+                    LogUtility::msg("The image ($image) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                }
+            }
+        }
+
+        if (!empty($schemaImages)) {
+            $ldJson["image"] = $schemaImages;
+        }
     }
 
     public function register(Doku_Event_Handler $controller)
@@ -191,60 +242,43 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 }
                 $ldJson["publisher"] = $publisher;
 
-                /**
-                 * Image must belong to the page
-                 * https://developers.google.com/search/docs/guides/sd-policies#images
-                 *
-                 * Image may have IPTC metadata: not yet implemented
-                 * https://developers.google.com/search/docs/advanced/appearance/image-rights-metadata
-                 *
-                 * Image must have the supported format
-                 * https://developers.google.com/search/docs/advanced/guidelines/google-images#supported-image-formats
-                 * BMP, GIF, JPEG, PNG, WebP, and SVG
-                 */
-                $supportedMime = [
-                    "image/bmp",
-                    "image/gif",
-                    "image/jpeg",
-                    "image/png",
-                    "image/webp",
-                    "image/svg+xml",
-                ];
-                $imagesSet = $page->getLocalImageSet();
-                $schemaImages = array();
-                foreach ($imagesSet as $image) {
-
-                    $mime = $image->getMime();
-                    if (in_array($mime, $supportedMime)) {
-                        if ($image->exists()) {
-                            $imageObjectSchema = array(
-                                "@type" => "ImageObject",
-                                "url" => $image->getAbsoluteUrl()
-                            );
-                            if ($image instanceof RasterImageLink) {
-                                if ($image->isAnalyzable()) {
-                                    if (!empty($image->getWidth())) {
-                                        $imageObjectSchema["width"] = $image->getWidth();
-                                    }
-                                    if (!empty($image->getHeight())) {
-                                        $imageObjectSchema["height"] = $image->getHeight();
-                                    }
-                                }
-                            }
-                            $schemaImages[] = $imageObjectSchema;
-                        } else {
-                            LogUtility::msg("The image ($image) does not exist and was not added to the google ld-json", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                        }
-                    }
-                }
-
-                if (!empty($schemaImages)) {
-                    $ldJson["image"] = $schemaImages;
-                }
+                self::addImage($ldJson, $page);
                 break;
 
             case PAGE::EVENT_TYPE:
                 // https://developers.google.com/search/docs/advanced/structured-data/event
+                $ldJson = array(
+                    "@context" => "https://schema.org",
+                    "@type" => "Event");
+                $eventName = $page->getPageName();
+                if (!blank($eventName)) {
+                    $ldJson["name"] = $eventName;
+                } else {
+                    LogUtility::msg("The name metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return;
+                }
+                $eventDescription = $page->getDescription();
+                if (blank($eventDescription)) {
+                    LogUtility::msg("The description metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return;
+                }
+                $ldJson["description"] = $eventDescription;
+                $startDate = $page->getStartDateAsString();
+                if($startDate===null){
+                    LogUtility::msg("The date_start metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return;
+                }
+                $ldJson["startDate"] = $page->getStartDateAsString();
+
+                $endDate = $page->getEndDateAsString();
+                if($endDate===null){
+                    LogUtility::msg("The date_end metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    return;
+                }
+                $ldJson["endDate"] = $page->getEndDateAsString();
+
+
+                self::addImage($ldJson, $page);
                 break;
 
             default:

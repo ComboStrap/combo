@@ -29,7 +29,7 @@ class Iso8601Date
      * See {@link Iso8601Date::getFormat()} for more information
      */
     private const VALID_FORMATS = [
-        DateTime::ATOM,
+        \DateTimeInterface::ATOM,
         'Y-m-d H:i:sP',
         'Y-m-d H:i:s',
         'Y-m-d H:i',

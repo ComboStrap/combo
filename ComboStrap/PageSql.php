@@ -67,7 +67,7 @@ class PageSql
         return $this->listener->getParameters();
     }
 
-    public function getColumns()
+    public function getColumns(): array
     {
         return $this->listener->getColumns();
     }

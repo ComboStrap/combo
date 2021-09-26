@@ -76,7 +76,7 @@ functionNames: DATE | DATETIME;
 // Tables
 PAGES:            P A G E S;
 BACKLINKS:        B A C K L I N K S;
-tableNames: DATE | DATETIME;
+tableNames: PAGES | BACKLINKS;
 
 // LITERALS
 fragment Letter : 'a'..'z' | 'A'..'Z';

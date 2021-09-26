@@ -57,7 +57,7 @@ final class PageSqlTreeListener implements ParseTreeListener
     /**
      * @var array
      */
-    private $columns;
+    private $columns = [];
     /**
      * @var string
      */
@@ -210,19 +210,14 @@ final class PageSqlTreeListener implements ParseTreeListener
     public
     function visitErrorNode(ErrorNode $node): void
     {
-        $charPosition = $node->getSymbol()->getCharPositionInLine();
-        $textMakingTheError = $this->lexer->getText();
+        $charPosition = $node->getSymbol()->getStartIndex();
+        $textMakingTheError = $node->getText(); // $this->lexer->getText();
 
         $position = "at position: $charPosition";
         if ($charPosition != 0) {
-            if (strlen($this->pageSqlString) > $charPosition) {
-                $offset = $charPosition - 15;
-            } else {
-                $offset = 0;
-            }
-            $position .= ", after `" . substr($this->pageSqlString, $offset, -1)."`";
+            $position .= ", in `" . substr($this->pageSqlString, $charPosition, -1)."`";
         }
-        $message = "PageSql Parsing Error: The token `$textMakingTheError` was unexpected ($position). Message: {$node->getText()}";
+        $message = "PageSql Parsing Error: The token `$textMakingTheError` was unexpected ($position).";
         throw new \RuntimeException($message);
 
     }

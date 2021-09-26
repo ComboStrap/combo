@@ -113,7 +113,7 @@ class ImageRaster extends Image
         /**
          * Default
          */
-        if($breakpointWidth==null){
+        if ($breakpointWidth == null) {
             $breakpointWidth = $this->getTargetWidth();
         }
 
@@ -128,12 +128,22 @@ class ImageRaster extends Image
              * The image ratio is fixed
              * Width is driving the computation
              */
-            if ($breakpointWidth != null && $breakpointWidth < $this->getIntrinsicWidth()) {
+            // Height for the given width
+            $breakpointHeight = $this->getBreakpointHeight($breakpointWidth);
+
+            /**
+             * If the request is not the original image
+             * and not cropped, add the width and height
+             */
+            if ($breakpointWidth != null &&
+                (
+                    $breakpointWidth < $this->getIntrinsicWidth()
+                    ||
+                    $breakpointHeight < $this->getIntrinsicHeight()
+                )) {
 
                 $att['w'] = $breakpointWidth;
 
-                // Height for the given width
-                $breakpointHeight = $this->getBreakpointHeight($breakpointWidth);
                 if (!empty($breakpointHeight)) {
                     $att['h'] = $breakpointHeight;
                     $this->checkLogicalRatioAgainstTargetRatio($breakpointWidth, $breakpointHeight);

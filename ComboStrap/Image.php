@@ -61,6 +61,11 @@ abstract class Image extends Media
 
     }
 
+    public static function createImageFromId(string $imageId)
+    {
+        return self::createImageFromAbsolutePath(":$imageId");
+    }
+
     /**
      * Return a height value that is conform to the {@link Image::getIntrinsicAspectRatio()} of the image.
      *

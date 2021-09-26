@@ -30,7 +30,7 @@ abstract class ImageLink extends MediaLink
         if (!empty($this->getDefaultImage()->getAlt())) {
             $descriptionPart = "|" . $this->getDefaultImage()->getAlt();
         }
-        return '{{:' . $this->getMedia()->getAbsolutePath() . $descriptionPart . '}}';
+        return '{{' . $this->getMedia()->getAbsolutePath() . $descriptionPart . '}}';
     }
 
 }

@@ -299,7 +299,7 @@ class CallStack
          */
         $this->moveToOffset($offset - 1);
 
-        return $this->getActualCall();
+        return $actualCall;
 
     }
 
@@ -532,7 +532,7 @@ class CallStack
      * @return Call the inserted call
      */
     public
-    function insertBefore($call)
+    function insertBefore(Call $call): Call
     {
         if ($this->endWasReached) {
 

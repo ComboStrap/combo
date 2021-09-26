@@ -58,7 +58,8 @@ class action_plugin_combo_blockpostprocessing extends DokuWiki_Action_Plugin
                          * An empty unmatched call will create a block
                          * Delete
                          */
-                        $previous = $callStack->deleteActualCallAndPrevious();
+                        $callStack->deleteActualCallAndPrevious();
+                        $previous = $callStack->getActualCall();
                     }
                     if ($previous->getTagName() === "p" && $previous->getState() === DOKU_LEXER_ENTER) {
                         $callStack->deleteActualCallAndPrevious();

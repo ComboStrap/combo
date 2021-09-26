@@ -2,6 +2,7 @@
 
 
 // must be run within Dokuwiki
+use ComboStrap\Analytics;
 use ComboStrap\Background;
 use ComboStrap\CacheMedia;
 use ComboStrap\CallStack;
@@ -180,7 +181,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                              */
                             $backgroundImageAttribute = [
                                 MediaLink::MEDIA_DOKUWIKI_TYPE => MediaLink::INTERNAL_MEDIA_CALL_NAME,
-                                MediaLink::PATH_ATTRIBUTE => $imageAttribute[0],
+                                Analytics::PATH => $imageAttribute[0],
                                 Dimension::WIDTH_KEY => $imageAttribute[3],
                                 Dimension::HEIGHT_KEY => $imageAttribute[4],
                                 CacheMedia::CACHE_KEY => $imageAttribute[5]

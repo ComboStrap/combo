@@ -34,17 +34,17 @@ class Media extends DokuPath
 
     }
 
-    public static function create(DokuPath $dokuPath, $rev, $tagAttributes): Media
+    public static function create($absolutePath, $rev, $tagAttributes): Media
     {
-        return new Media($dokuPath, $rev, $tagAttributes);
+        return new Media($absolutePath, $rev, $tagAttributes);
     }
 
     /**
-     * @return string $cache - one of {@link CacheMedia::CACHE_KEY}
+     * @return string $cache - one of {@link CacheMedia::CACHE_KEY} or null if not set
      */
-    public function getCache(): string
+    public function getCache(): ?string
     {
-        return $this->attributes->getValue(CacheMedia::CACHE_KEY, CacheMedia::CACHE_DEFAULT_VALUE);
+        return $this->attributes->getValue(CacheMedia::CACHE_KEY);
 
     }
 

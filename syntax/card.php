@@ -214,7 +214,7 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                  */
                 while ($actualCall = $callStack->next()) {
 
-                    if($actualCall->isUnMatchedEmptyCall()){
+                    if ($actualCall->isUnMatchedEmptyCall()) {
                         continue;
                     }
 
@@ -237,17 +237,47 @@ class syntax_plugin_combo_card extends DokuWiki_Syntax_Plugin
                     }
 
                 }
-
-                $callStack->insertAfter(
-                    Call::createComboCall(
-                        syntax_plugin_combo_cardbody::TAG,
-                        DOKU_LEXER_ENTER
-                    )
+                /**
+                 * If there is an Header
+                 * go to the end
+                 */
+                if ($actualCall->getTagName() === syntax_plugin_combo_header::TAG && $actualCall->getState() === DOKU_LEXER_ENTER) {
+                    while ($actualCall = $callStack->next()) {
+                        if (
+                            $actualCall->getTagName() === syntax_plugin_combo_header::TAG
+                            && $actualCall->getState() === DOKU_LEXER_EXIT) {
+                            break;
+                        }
+                    }
+                }
+                /**
+                 * Insert card-body
+                 */
+                $bodyCall = Call::createComboCall(
+                    syntax_plugin_combo_cardbody::TAG,
+                    DOKU_LEXER_ENTER
                 );
+                $insertBodyAfterThisCalls = PluginUtility::mergeAttributes(Call::IMAGE_TAGS, [syntax_plugin_combo_header::TAG]);
+                if (in_array($actualCall->getTagName(), $insertBodyAfterThisCalls)) {
+
+                    $callStack->insertAfter($bodyCall);
+
+                } else {
+                    /**
+                     * Body was reached
+                     */
+                    $callStack->insertBefore($bodyCall);
+                    /**
+                     * Previous because the next function (EOL processing)
+                     * should start from previous
+                     */
+                    $callStack->previous();
+                }
 
                 /**
                  * Process the body
                  */
+                $callStack->insertEolIfNextCallIsNotEolOrBlock();
                 $callStack->processEolToEndStack([TagAttributes::CLASS_KEY => "card-text"]);
 
                 /**

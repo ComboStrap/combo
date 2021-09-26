@@ -291,13 +291,13 @@ class RasterImageLink extends ImageLink
              */
             if (!empty($image->getAlt())) {
                 $attributes->addHtmlAttributeValueIfNotEmpty("alt", $image->getAlt());
-                /**
-                 * TODO: Side effect of the fact that we use the same attributes
-                 * Title attribute of a media is the alt of an image
-                 * And title should not be in an image tag
-                 */
-                $attributes->removeAttributeIfPresent(TagAttributes::TITLE_KEY);
             }
+            /**
+             * TODO: Side effect of the fact that we use the same attributes
+             * Title attribute of a media is the alt of an image
+             * And title should not be in an image tag
+             */
+            $attributes->removeAttributeIfPresent(TagAttributes::TITLE_KEY);
 
             /**
              * Create the img element

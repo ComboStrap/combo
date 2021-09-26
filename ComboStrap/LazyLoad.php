@@ -175,7 +175,7 @@ class LazyLoad
 
     /**
      * The placeholder is not mandatory
-     * but if present, it should have the same intrinsic ratio of the image
+     * but if present, it should have the same target ratio of the image
      *
      * This function is documenting this fact.
      *

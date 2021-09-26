@@ -111,7 +111,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             // https://ogp.me/#type_article
             $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
             $modifiedTime = $page->getModifiedTime();
-            if($modifiedTime!=null) {
+            if ($modifiedTime != null) {
                 $facebookMeta["article:modified_time"] = $modifiedTime->format(DATE_ISO8601);
             }
         }
@@ -203,21 +203,10 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
         $facebookMeta["fb:app_id"] = self::FACEBOOK_APP_ID;
 
-        $lang = $page->getLang();
-        if (!empty($lang)) {
+        $facebookDefaultLocale = "en_US";
+        $locale = $page->getLocale($facebookDefaultLocale);
+        $facebookMeta["og:locale"] = $locale;
 
-            $country = $page->getCountry();
-            if (empty($country)) {
-                $country = $lang;
-            }
-            $facebookMeta["og:locale"] = $lang . "_" . strtoupper($country);
-
-        } else {
-
-            // The Facebook default
-            $facebookMeta["og:locale"] = "en_US";
-
-        }
 
         /**
          * Add the properties

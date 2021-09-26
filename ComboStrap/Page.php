@@ -1591,7 +1591,7 @@ EOF;
      * @return string|null - the locale facebook way
      */
     public
-    function getLocale()
+    function getLocale($default = null): ?string
     {
         $lang = $this->getLang();
         if (!empty($lang)) {
@@ -1602,7 +1602,7 @@ EOF;
             }
             return $lang . "_" . strtoupper($country);
         }
-        return null;
+        return $default;
     }
 
     private
@@ -1874,10 +1874,12 @@ EOF;
     }
 
     public
-    function getPageName(){
+    function getPageName()
+    {
         return p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
 
     }
+
     public
     function getPageNameNotEmpty()
     {

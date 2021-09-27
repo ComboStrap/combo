@@ -31,6 +31,7 @@
   * [Best Class Performance](https://combostrap.com/performance)
   * [Supports of International Language](https://combostrap.com/lang)
   * [Action Rail navigation bar](https://combostrap.com/railbar)
+  * [Templating](https://combostrap.com/template)
 
 
 

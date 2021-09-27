@@ -48,13 +48,13 @@ class Prism
      */
     const THEMES_INTEGRITY = [
         Prism::PRISM_THEME => "sha256-ko4j5rn874LF8dHwW29/xabhh8YBleWfvxb8nQce4Fc=",
-        "coy" => "sha256-0I7KRu3ythnGB35kGsiGUugMkxcKhiBPrucGSiUwMZA=",
-        "dark" => "sha256-8G4aO4AImqFesmM5ePmFnhImR073326PFC3HTanuXoc=",
-        "funky" => "sha256-Aggb3zTcrFLDeGFJwD0w1ZhWfGb747mqtpk364aIwqw=",
-        "okaidia" => "sha256-nwDipdLn93O1CZGoRDor0i4CLmDQb+mdg/yaYMUCuLM=",
-        "solarizedlight" => "sha256-278ChCYdhj8w7EmLSI3+/Z0GIaUwPzWEPIntaHH086I=",
-        "tomorrow" => "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
-        "twilight" => "sha256-vF3CcT1ZU/pt1qw8MIUaPvse3WGu7ZarZJHCZqOnQc8="
+        "coy" => "sha256-gkHLZLptZZHaBY+jqrRkAVzOGfMa4HBhSCJteem8wy8=",
+        "dark" => "sha256-l+VX6V333ll/PXrjqG1W6DyZvDEw+50M7aAP6dcD7Qc=",
+        "funky" => "sha256-l9GTgvTMmAvPQ6IlNCd/I2FQwXVlJCLbGId7z6QlOpo=",
+        "okaidia" => "sha256-zzHVEO0xOoVm0I6bT9v5SgpRs1cYNyvEvHXW/1yCgqU=",
+        "solarizedlight" => "sha256-Lr49DyE+/KstnLdBxqZBoDYgNi6ONfZyAZw3LDhxB9I=",
+        "tomorrow" => "sha256-GxX+KXGZigSK67YPJvbu12EiBx257zuZWr0AMiT1Kpg=",
+        "twilight" => "sha256-R7PF7y9XAuz19FB93NgH/WQUVGk30iytl7EwtETrypo="
     ];
 
     /**

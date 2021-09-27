@@ -102,9 +102,11 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                 $callStack = CallStack::createFromHandler($handler);
                 $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
                 $call = $callStack->next();
-                $date = $call->getCapturedContent();
-                $openingTag->addAttribute(self::DATE_ATTRIBUTE, $date);
-                $callStack->deleteActualCallAndPrevious();
+                if($call!==false) {
+                    $date = $call->getCapturedContent();
+                    $openingTag->addAttribute(self::DATE_ATTRIBUTE, $date);
+                    $callStack->deleteActualCallAndPrevious();
+                }
                 return array(
                     PluginUtility::STATE => $state
                 );

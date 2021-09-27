@@ -1,13 +1,12 @@
 <?php
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
-use ComboStrap\Os;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 /**
@@ -193,14 +192,14 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                          * openssl dgst -sha256 -binary rrdiagram.js | openssl base64 -A
                          * `
                          */
-                        $sha256integrity = "iYKdedDsJ2q8Vl0lgyGw6y5iM5Bu4RYEs02X+/5SKVY=";
+                        $sha256integrity = "noP8Tag5vKjRfh3+8GXy5QSZqKnRt7WQe6I9rGVl+go=";
 
                         $snippetManager->attachTagsForBar($snippetId)->setTags(
                             array(
                                 "script" =>
                                     [
                                         array(
-                                            "src" => PluginUtility::getResourceBaseUrl() . "/library/$libraryId/0.9.4/$libraryId.js",
+                                            "src" => PluginUtility::getResourceBaseUrl() . "/library/$libraryId/0.9.4.1/$libraryId.js",
                                             "integrity" => "sha256-".$sha256integrity,
                                             "crossorigin" => "anonymous"
                                         )

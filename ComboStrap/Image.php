@@ -299,7 +299,8 @@ abstract class Image extends Media
     {
         $title = $this->getTitle();
         if(empty($title)){
-            return $this->getName();
+            $generatedAlt = str_replace( $this->getBaseNameWithoutExtension(),"-"," ");
+            return str_replace( $generatedAlt,"_"," ");
         } else {
             return $title;
         }

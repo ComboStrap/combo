@@ -291,7 +291,7 @@ class DokuwikiUrl
         return isset($this->queryParameters[$propertyKey]);
     }
 
-    public function getQueryParameters()
+    public function getQueryParameters(): array
     {
         return $this->queryParameters;
     }

@@ -2,6 +2,7 @@
 
 
 use ComboStrap\Analytics;
+use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
 use ComboStrap\Image;
@@ -39,6 +40,18 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
     public static function getTargetAspectRatio($stringRatio)
     {
         list($width, $height) = explode(":", $stringRatio, 2);
+        if(!is_numeric($width)){
+            LogUtility::msg("The width value ($width) of the ratio `$stringRatio` is not numeric", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            return 1;
+        }
+        if(!is_numeric($height)){
+            LogUtility::msg("The width value ($height) of the ratio `$stringRatio` is not numeric", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            return 1;
+        }
+        if($height==0){
+            LogUtility::msg("The height value of the ratio `$stringRatio` should not be zero", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            return 1;
+        }
         return floatval($width / $height);
 
     }
@@ -98,10 +111,18 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                  *
                  */
                 $tagAttributes = TagAttributes::createFromTagMatch($match);
+                $callStack = CallStack::createFromHandler($handler);
+                $context = self::TAG;
+                $parent = $callStack->moveToParent();
+                if ($parent !== false) {
+                    $context = $parent->getTagName();
+                }
+
 
                 return array(
                     PluginUtility::STATE => $state,
-                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray()
+                    PluginUtility::ATTRIBUTES => $tagAttributes->toCallStackArray(),
+                    PluginUtility::CONTEXT => $context
                 );
 
 
@@ -146,26 +167,34 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 $width = null;
                 $height = null;
                 if ($tagAttributes->hasComponentAttribute(self::RATIO_ATTRIBUTE)) {
-                    $bestRatioDistance = 9999;
-                    $targetRatio = self::getTargetAspectRatio($tagAttributes->getValueAndRemove(self::RATIO_ATTRIBUTE));
-                    foreach ($page->getLocalImageSet() as $image) {
-                        $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
-                        if ($ratioDistance < $bestRatioDistance) {
-                            $bestRatioDistance = $ratioDistance;
-                            $selectedPageImage = $image;
+                    $stringRatio = $tagAttributes->getValueAndRemove(self::RATIO_ATTRIBUTE);
+                    if (empty($stringRatio)) {
+
+                        LogUtility::msg("The ratio value is empty and was therefore not taken into account", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+
+                    } else {
+                        $bestRatioDistance = 9999;
+
+                        $targetRatio = self::getTargetAspectRatio($stringRatio);
+                        foreach ($page->getLocalImageSet() as $image) {
+                            $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
+                            if ($ratioDistance < $bestRatioDistance) {
+                                $bestRatioDistance = $ratioDistance;
+                                $selectedPageImage = $image;
+                            }
                         }
-                    }
-                    /**
-                     * Trying to crop on the width
-                     */
-                    $width = $selectedPageImage->getIntrinsicWidth();
-                    $height = Image::round($width / $targetRatio);
-                    if ($height > $selectedPageImage->getIntrinsicHeight()) {
                         /**
-                         * Cropping by height
+                         * Trying to crop on the width
                          */
-                        $height = $selectedPageImage->getIntrinsicHeight();
-                        $width = Image::round($targetRatio * $height);
+                        $width = $selectedPageImage->getIntrinsicWidth();
+                        $height = Image::round($width / $targetRatio);
+                        if ($height > $selectedPageImage->getIntrinsicHeight()) {
+                            /**
+                             * Cropping by height
+                             */
+                            $height = $selectedPageImage->getIntrinsicHeight();
+                            $width = Image::round($targetRatio * $height);
+                        }
                     }
                 }
 
@@ -176,6 +205,16 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         $tagAttributes->addComponentAttributeValue(Dimension::HEIGHT_KEY, $height);
                     }
                 }
+
+                /**
+                 * Used as an illustration in a card
+                 * If the image is too small, we allows that it will stretch
+                 */
+                if ($data[PluginUtility::CONTEXT] === syntax_plugin_combo_card::TAG) {
+                    $tagAttributes->addStyleDeclaration("max-width", "100%");
+                    $tagAttributes->addStyleDeclaration("max-height", "unset");
+                }
+
                 $mediaLink = MediaLink::createMediaLinkFromAbsolutePath(
                     $selectedPageImage->getAbsolutePath(),
                     null,

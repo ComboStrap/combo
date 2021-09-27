@@ -187,18 +187,14 @@ class syntax_plugin_combo_railroad extends DokuWiki_Syntax_Plugin
                         $snippetManager->attachJavascriptSnippetForBar($snippetId);
 
                         /**
-                         * Don't understand why but
-                         * Chrome calculation is not the same than
+                         *
+                         * Calculation
                          * `
                          * openssl dgst -sha256 -binary rrdiagram.js | openssl base64 -A
                          * `
-                         * on the linux server
                          */
-                        if(Os::isWindows()){
-                            $sha256integrity = "iYKdedDsJ2q8Vl0lgyGw6y5iM5Bu4RYEs02X+/5SKVY=";
-                        } else {
-                            $sha256integrity = "esFqPWXUOW/oA7Puh9cetSI1bE1CS5BpoMUlMfb9gMM=";
-                        }
+                        $sha256integrity = "iYKdedDsJ2q8Vl0lgyGw6y5iM5Bu4RYEs02X+/5SKVY=";
+
                         $snippetManager->attachTagsForBar($snippetId)->setTags(
                             array(
                                 "script" =>

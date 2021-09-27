@@ -1,5 +1,6 @@
 <?php
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
@@ -7,7 +8,6 @@ use ComboStrap\Mermaid;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 /**

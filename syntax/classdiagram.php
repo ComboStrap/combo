@@ -1,10 +1,11 @@
 <?php
 
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 use ComboStrap\Mermaid;
 use ComboStrap\PluginUtility;
 
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 /**

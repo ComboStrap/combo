@@ -135,11 +135,9 @@ class SvgImageLink extends ImageLink
 
 
         /**
-         * Alt
+         * Alt is mandatory
          */
-        if (!empty($image->getAlt())) {
-            $attributes->addHtmlAttributeValue("alt", $image->getAlt());
-        }
+        $attributes->addHtmlAttributeValue("alt", $image->getAltNotEmpty());
 
 
         /**
@@ -171,7 +169,7 @@ class SvgImageLink extends ImageLink
          * to avoid layout shift (CLS)
          */
         $attributes->addHtmlAttributeValue(Dimension::WIDTH_KEY, $image->getTargetWidth());
-        $attributes->addHtmlAttributeValue( Dimension::HEIGHT_KEY, $image->getTargetHeight());
+        $attributes->addHtmlAttributeValue(Dimension::HEIGHT_KEY, $image->getTargetHeight());
 
         /**
          * Return the image
@@ -249,8 +247,6 @@ class SvgImageLink extends ImageLink
             return PluginUtility::getConfValue(SvgImageLink::CONF_LAZY_LOAD_ENABLE);
         }
     }
-
-
 
 
 }

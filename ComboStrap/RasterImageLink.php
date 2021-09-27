@@ -49,8 +49,6 @@ class RasterImageLink extends ImageLink
         );
 
 
-
-
     /**
      * RasterImageLink constructor.
      * @param ImageRaster $imageRaster
@@ -62,10 +60,6 @@ class RasterImageLink extends ImageLink
 
 
     }
-
-
-
-
 
 
     /**
@@ -238,7 +232,7 @@ class RasterImageLink extends ImageLink
                          * We use a svg instead
                          */
                         $attributes->addHtmlAttributeValue("src", $srcValue);
-                        $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth,$targetHeight));
+                        $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
                         /**
                          * We use `data-sizes` and not `sizes`
                          * because `sizes` without `srcset`
@@ -289,9 +283,8 @@ class RasterImageLink extends ImageLink
             /**
              * Title (ie alt)
              */
-            if (!empty($image->getAlt())) {
-                $attributes->addHtmlAttributeValueIfNotEmpty("alt", $image->getAlt());
-            }
+            $attributes->addHtmlAttributeValueIfNotEmpty("alt", $image->getAltNotEmpty());
+
             /**
              * TODO: Side effect of the fact that we use the same attributes
              * Title attribute of a media is the alt of an image
@@ -313,10 +306,6 @@ class RasterImageLink extends ImageLink
 
         return $imgHTML;
     }
-
-
-
-
 
 
     public

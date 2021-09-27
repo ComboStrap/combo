@@ -285,14 +285,29 @@ abstract class Image extends Media
     public abstract function getAbsoluteUrl();
 
     /**
-     *
+     * This is mandatory for HTML
      * The alternate text (the title in Dokuwiki media term)
      * @return null
+     *
+     * TODO: try to extract it from the metadata file ?
+     *
+     * An img element must have an alt attribute, except under certain conditions.
+     * For details, consult guidance on providing text alternatives for images.
+     * https://www.w3.org/WAI/tutorials/images/
      */
-    public function getAlt()
+    public function getAltNotEmpty()
     {
-        return $this->getTitle();
+        $title = $this->getTitle();
+        if(empty($title)){
+            return $this->getName();
+        } else {
+            return $title;
+        }
     }
+
+
+
+
 
     /**
      * The logical height is the calculated height of the target image

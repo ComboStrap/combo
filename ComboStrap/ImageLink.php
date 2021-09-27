@@ -29,8 +29,8 @@ abstract class ImageLink extends MediaLink
     public function getMarkupSyntax(): string
     {
         $descriptionPart = "";
-        if (!empty($this->getDefaultImage()->getAlt())) {
-            $descriptionPart = "|" . $this->getDefaultImage()->getAlt();
+        if (!empty($this->getDefaultImage()->getAltNotEmpty())) {
+            $descriptionPart = "|" . $this->getDefaultImage()->getAltNotEmpty();
         }
         return '{{' . $this->getMedia()->getAbsolutePath() . $descriptionPart . '}}';
     }

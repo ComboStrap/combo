@@ -164,7 +164,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
             foreach ($twitterImages as $twitterImage) {
                 if ($twitterImage->exists()) {
                     $twitterMeta[self::META_IMAGE] = $twitterImage->getAbsoluteUrl();
-                    $title = $twitterImage->getAlt();
+                    $title = $twitterImage->getAltNotEmpty();
                     if (!empty($title)) {
                         $twitterMeta[self::META_IMAGE_ALT] = $title;
                     }

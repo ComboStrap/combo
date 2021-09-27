@@ -10,6 +10,14 @@ use dokuwiki\Extension\SyntaxPlugin;
 require_once(__DIR__ . '/../vendor/autoload.php');
 
 /**
+ * Parent in th hierarchy should be first
+ * Ie before {@link ImageLink, SvgImageLink, RasterImageLink)
+ */
+require_once(__DIR__ . '/DokuPath.php');
+require_once(__DIR__ . '/Media.php');
+require_once(__DIR__ . '/MediaLink.php');
+
+/**
  * Plugin Utility is added in all Dokuwiki extension
  * and
  * all classes are added in plugin utility
@@ -42,8 +50,8 @@ require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/ConfUtility.php');
 require_once(__DIR__ . '/Dimension.php');
-require_once(__DIR__ . '/DokuPath.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
+require_once(__DIR__ . '/ExitException.php');
 require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FontSize.php');
@@ -54,16 +62,23 @@ require_once(__DIR__ . '/Hover.php');
 require_once(__DIR__ . '/Http.php');
 require_once(__DIR__ . '/Icon.php');
 require_once(__DIR__ . '/Identity.php');
+require_once(__DIR__ . '/Image.php');
+require_once(__DIR__ . '/ImageLink.php');
+require_once(__DIR__ . '/ImageRaster.php');
+require_once(__DIR__ . '/ImageSvg.php');
 require_once(__DIR__ . '/Iso8601Date.php');
+require_once(__DIR__ . '/Json.php');
 require_once(__DIR__ . '/Lang.php');
 require_once(__DIR__ . '/LineSpacing.php');
+require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
-require_once(__DIR__ . '/MediaLink.php');
-require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/MetadataUtility.php');
+require_once(__DIR__ . '/Message.php');
+require_once(__DIR__ . '/Mermaid.php');
 require_once(__DIR__ . '/NavBarUtility.php');
 require_once(__DIR__ . '/Opacity.php');
+require_once(__DIR__ . '/Os.php');
 require_once(__DIR__ . '/Page.php');
 require_once(__DIR__ . '/PageProtection.php');
 require_once(__DIR__ . '/PageRules.php');
@@ -79,6 +94,7 @@ require_once(__DIR__ . '/Publication.php');
 require_once(__DIR__ . '/RasterImageLink.php');
 require_once(__DIR__ . '/RenderUtility.php');
 require_once(__DIR__ . '/Resources.php');
+require_once(__DIR__ . '/Sanitizer.php');
 require_once(__DIR__ . '/Shadow.php');
 require_once(__DIR__ . '/Site.php');
 require_once(__DIR__ . '/Skin.php');
@@ -149,6 +165,8 @@ class PluginUtility
 
     const EDIT_SECTION_TARGET = 'section';
     const ERROR_MESSAGE = "errorAtt";
+    const ERROR_LEVEL = "errorLevel";
+    const DISPLAY = "display";
 
     /**
      * The URL base of the documentation
@@ -963,8 +981,8 @@ class PluginUtility
         $display = $tagAttributes->getValue(TagAttributes::DISPLAY);
         if ($display != "none") {
             $payload = $data[self::PAYLOAD];
-            $context = $data[self::CONTEXT];
-            if (!in_array($context, Call::INLINE_DOKUWIKI_COMPONENTS)) {
+            $previousTagDisplayType = $data[self::CONTEXT];
+            if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
                 $payload = ltrim($payload);
             }
             return PluginUtility::htmlEncode($payload);
@@ -982,13 +1000,13 @@ class PluginUtility
      * @return array
      */
     public
-    static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler)
+    static function handleAndReturnUnmatchedData($tagName, $match, \Doku_Handler $handler): array
     {
-        $tag = new Tag($tagName, array(), DOKU_LEXER_UNMATCHED, $handler);
-        $sibling = $tag->getPreviousSibling();
+        $callStack = CallStack::createFromHandler($handler);
+        $sibling = $callStack->previous();
         $context = null;
         if (!empty($sibling)) {
-            $context = $sibling->getName();
+            $context = $sibling->getDisplay();
         }
         return array(
             PluginUtility::STATE => DOKU_LEXER_UNMATCHED,
@@ -1265,7 +1283,22 @@ class PluginUtility
     public static function isCi(): bool
     {
         // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
-        return getenv("CI")==="true";
+        return getenv("CI") === "true";
+    }
+
+    /**
+     * An helper function to not exit when it's a test environment
+     * @param string $message
+     */
+    public static function softExit($message = null)
+    {
+
+        if (!PluginUtility::isTest()) {
+            exit;
+        } else {
+            throw new ExitException($message);
+        }
+
     }
 
 

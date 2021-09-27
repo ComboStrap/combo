@@ -4,10 +4,10 @@
  *
  */
 
+use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Shadow;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
 use ComboStrap\TextColor;
 
@@ -156,8 +156,15 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                  * The parent
                  * to apply automatically styling in a bar
                  */
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                if ($tag->isDescendantOf(syntax_plugin_combo_menubar::TAG)) {
+                $callStack = CallStack::createFromHandler($handler);
+                $isInMenuBar = false;
+                while ($parent = $callStack->moveToParent()) {
+                    if ($parent->getTagName() === syntax_plugin_combo_menubar::TAG) {
+                        $isInMenuBar = true;
+                        break;
+                    }
+                }
+                if ($isInMenuBar) {
                     if (!isset($attributes["class"]) && !isset($attributes["spacing"])) {
                         $attributes["spacing"] = "mr-2 mb-2 mt-2 mb-lg-0 mt-lg-0";
                     }
@@ -166,26 +173,16 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                 /**
                  * The context give set if this is a button
                  * or a link button
-                 * The context is checked in the exist
+                 * The context is checked in the `exit` state
                  * Default context: This is not a link button
                  */
                 $context = self::TAG;
 
-                /**
-                 * The parent is used to close
-                 * the text of a card if any
-                 */
-                $parentName = "";
-                $parent = $tag->getParent();
-                if ($parent != null) {
-                    $parentName = $parent->getName();
-                }
 
                 return array(
                     PluginUtility::STATE => $state,
                     PluginUtility::ATTRIBUTES => $attributes,
-                    PluginUtility::CONTEXT => $context,
-                    PluginUtility::PARENT => $parentName
+                    PluginUtility::CONTEXT => $context
                 );
 
             case DOKU_LEXER_UNMATCHED :
@@ -194,16 +191,19 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
 
 
             case DOKU_LEXER_EXIT :
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $openingTag = $tag->getOpeningTag();
-                $linkDescendant = $openingTag->getDescendant(syntax_plugin_combo_link::TAG);
-                if ($linkDescendant != null) {
-                    $context = syntax_plugin_combo_link::TAG;
-                } else {
-                    $context = self::TAG;
+                $callStack = CallStack::createFromHandler($handler);
+                $openingTag = $callStack->moveToPreviousCorrespondingOpeningCall();
+                /**
+                 * Button or link button
+                 */
+                $context = self::TAG;
+                $descendant = $callStack->moveToFirstChildTag();
+                if ($descendant !== false) {
+                    if ($descendant->getTagName() === syntax_plugin_combo_link::TAG) {
+                        $context = syntax_plugin_combo_link::TAG;
+                    }
                 }
                 $openingTag->setContext($context);
-
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -261,7 +261,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
                         if ($context == self::TAG) {
                             $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes);
                             self::processButtonAttributesToHtmlAttributes($tagAttributes);
-                            $tagAttributes->addHtmlAttributeValue("type","button");
+                            $tagAttributes->addHtmlAttributeValue("type", "button");
                             $renderer->doc .= $tagAttributes->toHtmlEnterTag('button');
                         }
                         break;
@@ -295,7 +295,7 @@ class syntax_plugin_combo_button extends DokuWiki_Syntax_Plugin
     }
 
 
-    public static function getTags()
+    public static function getTags(): array
     {
         $elements[] = self::TAG;
         $elements[] = 'btn';

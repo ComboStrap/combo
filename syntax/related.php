@@ -4,8 +4,10 @@
  *
  */
 
+use ComboStrap\LinkUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\TagAttributes;
 
 
 require_once(DOKU_INC . 'inc/parserutils.php');
@@ -48,12 +50,6 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
     const RELATED_BACKLINKS_COUNT_PROP = 'backlinks';
 
 
-    public static function getElementId()
-    {
-        return PluginUtility::PLUGIN_BASE_NAME . "_" . self::getElementName();
-    }
-
-
     /**
      * Syntax Type.
      *
@@ -90,7 +86,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
     function connectTo($mode)
     {
         // The basic
-        $this->Lexer->addSpecialPattern('<' . self::getElementName() . '[^>]*>', $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
+        $this->Lexer->addSpecialPattern('<' . self::getTag() . '[^>]*>', $mode, 'plugin_' . PluginUtility::PLUGIN_BASE_NAME . '_' . $this->getPluginComponent());
 
         // To replace backlinks, you may add it in the configuration
         $extraPattern = $this->getConf(self::EXTRA_PATTERN_CONF);
@@ -124,7 +120,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
             case DOKU_LEXER_SPECIAL :
 
                 // Parse the parameters
-                $match = substr($match, strlen(self::getElementName()), -1);
+                $match = substr($match, strlen(self::getTag()), -1);
                 $parameters = array();
 
                 // /i not case sensitive
@@ -171,38 +167,30 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
         if ($format == 'xhtml') {
 
             $relatedPages = $this->related($id);
-
-            $renderer->doc .= '<div class="' . self::getElementName() . '-container d-print-none">' . DOKU_LF;
+            $tagAttributes = TagAttributes::createEmpty(self::getTag());
+            $tagAttributes->addClassName("d-print-none");
+            $renderer->doc .= $tagAttributes->toHtmlEnterTag("div");
 
             if (empty($relatedPages)) {
 
                 // Dokuwiki debug
                 dbglog("No Backlinks", "Related plugins: all backlinks for page: $id");
-                $renderer->doc .= "<strong>Plugin " . PluginUtility::PLUGIN_BASE_NAME . " - Component " . self::getElementName() . ": " . $lang['nothingfound'] . "</strong>" . DOKU_LF;
+                $renderer->doc .= "<strong>Plugin " . PluginUtility::PLUGIN_BASE_NAME . " - Component " . self::getTag() . ": " . $lang['nothingfound'] . "</strong>" . DOKU_LF;
 
             } else {
 
                 // Dokuwiki debug
-                dbglog($relatedPages, self::getElementName() . " plugins: all backlinks for page: $id");
 
                 $renderer->doc .= '<ul>' . DOKU_LF;
 
                 foreach ($relatedPages as $backlink) {
                     $backlinkId = $backlink[self::RELATED_PAGE_ID_PROP];
-                    $backlinkPage = Page::createPageFromId($backlinkId);
-                    $name = $backlinkPage->getH1();
-                    /**
-                     * Hack, moving title to h1
-                     * in case if the page was not still analyzed
-                     * the h1 is saved in title by dokuwiki
-                     */
-                    if (empty($name)) {
-                        $name = $backlinkPage->getTitle();
-                        $name = substr($name, 0, 50);
-                    }
                     $renderer->doc .= '<li>';
                     if ($backlinkId != self::MORE_PAGE_ID) {
-                        $renderer->doc .= html_wikilink(':' . $backlinkId, $name);
+                        $linkUtility = LinkUtility::createFromPageId($backlinkId);
+                        $renderer->doc .= $linkUtility->renderOpenTag($renderer);
+                        $renderer->doc .= ucfirst($linkUtility->getName());
+                        $renderer->doc .= $linkUtility->renderClosingTag();
                     } else {
                         $renderer->doc .=
                             tpl_link(
@@ -231,7 +219,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
      * @param $max
      * @return array
      */
-    public function related($id, $max = NULL)
+    public function related($id, $max = NULL): array
     {
         if ($max == NULL) {
             $max = $this->getConf(self::MAX_LINKS_CONF);
@@ -271,7 +259,7 @@ class syntax_plugin_combo_related extends DokuWiki_Syntax_Plugin
 
     }
 
-    public static function getElementName()
+    public static function getTag(): string
     {
         return "related";
     }

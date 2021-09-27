@@ -175,7 +175,7 @@ class LazyLoad
 
     /**
      * The placeholder is not mandatory
-     * but if present, it should have the same intrinsic ratio of the image
+     * but if present, it should have the same target ratio of the image
      *
      * This function is documenting this fact.
      *
@@ -191,7 +191,7 @@ class LazyLoad
      *
      */
 
-    public static function getPlaceholder($imgTagWidth = null, $imgTagHeight = null)
+    public static function getPlaceholder($imgTagWidth = null, $imgTagHeight = null): string
     {
         if ($imgTagWidth != null) {
             $svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 $imgTagWidth $imgTagHeight'></svg>";

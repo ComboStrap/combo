@@ -250,7 +250,7 @@ class syntax_plugin_combo_para extends DokuWiki_Syntax_Plugin
      * @param CallStack $callstack
      * @param array $attributes - the attributes passed to the paragraph
      */
-    public static function fromEolToParagraphUntilEndOfStack(&$callstack, $attributes)
+    public static function fromEolToParagraphUntilEndOfStack(CallStack &$callstack, array $attributes)
     {
 
         if (!is_array($attributes)) {

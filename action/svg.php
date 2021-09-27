@@ -7,6 +7,7 @@ use ComboStrap\Dimension;
 use ComboStrap\Identity;
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
+use ComboStrap\ImageSvg;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -57,7 +58,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         if ($event->data['status'] >= 400) return; // ACLs and precondition checks
 
 
-        $tagAttributes = TagAttributes::createEmpty();
+        $tagAttributes = TagAttributes::createEmpty(ImageSvg::CANONICAL);
         $width = $event->data['width'];
         if ($width != 0) {
             $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, $width);
@@ -110,9 +111,9 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
         $id = $event->data["media"];
         $pathId = DokuPath::IdToAbsolutePath($id);
-        $svgImageLink = SvgImageLink::createMediaLinkFromNonQualifiedPath($pathId, $rev, $tagAttributes);
+        $svgImage = new ImageSvg($pathId, $rev, $tagAttributes);
         try {
-            $event->data['file'] = $svgImageLink->getSvgFile();
+            $event->data['file'] = $svgImage->getSvgFile();
         } catch (RuntimeException $e) {
 
             $event->data['file'] = PluginUtility::getResourceBaseUrl()."/images/error-bad-format.svg";

@@ -184,7 +184,7 @@ class syntax_plugin_combo_icon extends DokuWiki_Syntax_Plugin
                             } catch (Exception $e){
                                 $errorClass = syntax_plugin_combo_media::SVG_RENDERING_ERROR_CLASS;
                                 $message = "Icon ({$tagAttribute->getValue("name")}). Error while rendering: {$e->getMessage()}";
-                                $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc($message) . "</span>";
+                                $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc(trim($message)) . "</span>";
                                 if(!PluginUtility::isTest()) {
                                     LogUtility::msg($message, LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                                 }

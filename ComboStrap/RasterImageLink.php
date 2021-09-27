@@ -28,10 +28,10 @@ require_once(__DIR__ . '/PluginUtility.php');
  * https://web.dev/optimize-cls/#images-without-dimensions
  * https://web.dev/cls/
  */
-class RasterImageLink extends MediaLink
+class RasterImageLink extends ImageLink
 {
 
-    const CANONICAL = "raster";
+    const CANONICAL = ImageRaster::CANONICAL;
     const CONF_LAZY_LOADING_ENABLE = "rasterImageLazyLoadingEnable";
 
     const RESPONSIVE_CLASS = "img-fluid";
@@ -49,89 +49,15 @@ class RasterImageLink extends MediaLink
         );
 
 
-    private $imageWidth = null;
-    /**
-     * @var int
-     */
-    private $imageWeight = null;
-    /**
-     * See {@link image_type_to_mime_type}
-     * @var int
-     */
-    private $imageType;
-    private $wasAnalyzed = false;
-
-    /**
-     * @var bool
-     */
-    private $analyzable = false;
-
-    /**
-     * @var mixed - the mime from the {@link RasterImageLink::analyzeImageIfNeeded()}
-     */
-    private $mime;
-
     /**
      * RasterImageLink constructor.
-     * @param $ref
+     * @param ImageRaster $imageRaster
      * @param TagAttributes $tagAttributes
      */
-    public function __construct($ref, $tagAttributes = null)
+    public function __construct($imageRaster)
     {
-        parent::__construct($ref, $tagAttributes);
-        $this->getTagAttributes()->setLogicalTag(self::CANONICAL);
+        parent::__construct($imageRaster);
 
-    }
-
-
-    /**
-     * @param string $ampersand
-     * @param null $localWidth - the asked width - use for responsive image
-     * @return string|null
-     */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $localWidth = null)
-    {
-
-        if ($this->exists()) {
-
-            /**
-             * Link attribute
-             */
-            $att = array();
-
-            // Width is driving the computation
-            if ($localWidth != null && $localWidth != $this->getMediaWidth()) {
-
-                $att['w'] = $localWidth;
-
-                // Height
-                $height = $this->getImgTagHeightValue($localWidth);
-                if (!empty($height)) {
-                    $att['h'] = $height;
-                    $this->checkWidthAndHeightRatioAndReturnTheGoodValue($localWidth, $height);
-                }
-
-
-            }
-
-            if ($this->getCache()) {
-                $att[CacheMedia::CACHE_KEY] = $this->getCache();
-            }
-            $direct = true;
-
-            return ml($this->getId(), $att, $direct, $ampersand, true);
-
-        } else {
-
-            return false;
-
-        }
-    }
-
-    public function getAbsoluteUrl()
-    {
-
-        return $this->getUrl();
 
     }
 
@@ -142,18 +68,19 @@ class RasterImageLink extends MediaLink
      * A media can be a video also (Use
      * @return string
      */
-    public function renderMediaTag()
+    public function renderMediaTag(): string
     {
 
+        $image = $this->getDefaultImage();
+        if ($image->exists()) {
 
-        if ($this->exists()) {
-
+            $attributes = $image->getAttributes();
 
             /**
              * No dokuwiki type attribute
              */
-            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
-            $this->tagAttributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
+            $attributes->removeComponentAttributeIfPresent(MediaLink::MEDIA_DOKUWIKI_TYPE);
+            $attributes->removeComponentAttributeIfPresent(MediaLink::DOKUWIKI_SRC);
 
             /**
              * Responsive image
@@ -164,7 +91,7 @@ class RasterImageLink extends MediaLink
              * the height: auto on styling is needed to conserve the ratio
              * while scaling down the screen
              */
-            $this->tagAttributes->addClassName(self::RESPONSIVE_CLASS);
+            $attributes->addClassName(self::RESPONSIVE_CLASS);
 
 
             /**
@@ -186,12 +113,10 @@ class RasterImageLink extends MediaLink
              *
              * Note: The style is also set in {@link Dimension::processWidthAndHeight()}
              *
-             * The doc is {@link https://www.dokuwiki.org/images#resizing}
-             * See the ''0x20''
              */
-            $imgTagHeight = $this->getImgTagHeightValue();
-            if (!empty($imgTagHeight)) {
-                $this->tagAttributes->addHtmlAttributeValue("height", $imgTagHeight . $htmlLengthUnit);
+            $targetHeight = $image->getTargetHeight();
+            if (!empty($targetHeight)) {
+                $attributes->addHtmlAttributeValue("height", $targetHeight . $htmlLengthUnit);
             }
 
 
@@ -207,8 +132,8 @@ class RasterImageLink extends MediaLink
              *
              * The max-width value is set
              */
-            $mediaWidthValue = $this->getMediaWidth();
-            $srcValue = $this->getUrl();
+            $mediaWidthValue = $image->getIntrinsicWidth();
+            $srcValue = $image->getUrl();
 
             /**
              * Responsive image src set building
@@ -230,15 +155,15 @@ class RasterImageLink extends MediaLink
             if (!empty($mediaWidthValue)) {
 
                 /**
-                 * The internal intrinsic value of the image
+                 * The value of the target image
                  */
-                $imgTagWidth = $this->getImgTagWidthValue();
-                if (!empty($imgTagWidth)) {
+                $targetWidth = $image->getTargetWidth();
+                if (!empty($targetWidth)) {
 
-                    if (!empty($imgTagHeight)) {
-                        $imgTagWidth = $this->checkWidthAndHeightRatioAndReturnTheGoodValue($imgTagWidth, $imgTagHeight);
+                    if (!empty($targetHeight)) {
+                        $image->checkLogicalRatioAgainstTargetRatio($targetWidth, $targetHeight);
                     }
-                    $this->tagAttributes->addHtmlAttributeValue("width", $imgTagWidth . $htmlLengthUnit);
+                    $attributes->addHtmlAttributeValue("width", $targetWidth . $htmlLengthUnit);
                 }
 
                 /**
@@ -252,14 +177,14 @@ class RasterImageLink extends MediaLink
                  */
                 foreach (self::BREAKPOINTS as $breakpointWidth) {
 
-                    if ($imgTagWidth > $breakpointWidth) {
+                    if ($targetWidth > $breakpointWidth) {
 
                         if (!empty($srcSet)) {
                             $srcSet .= ", ";
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $breakpointWidthMinusMargin);
+                        $xsmUrl = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND, $breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -269,14 +194,14 @@ class RasterImageLink extends MediaLink
 
                 /**
                  * Add the last size
-                 * If the image is really small, srcset and sizes are empty
+                 * If the target image is really small, srcset and sizes are empty
                  */
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $imgTagWidth);
-                    $srcSet .= "$srcUrl {$imgTagWidth}w";
-                    $sizes .= "{$imgTagWidth}px";
+                    $srcUrl = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND, $targetWidth);
+                    $srcSet .= "$srcUrl {$targetWidth}w";
+                    $sizes .= "{$targetWidth}px";
                 }
 
                 /**
@@ -290,8 +215,8 @@ class RasterImageLink extends MediaLink
                      */
                     LazyLoad::addLozadSnippet();
                     PluginUtility::getSnippetManager()->attachJavascriptSnippetForBar("lozad-raster");
-                    $this->tagAttributes->addClassName(self::LAZY_CLASS);
-                    $this->tagAttributes->addClassName(LazyLoad::LAZY_CLASS);
+                    $attributes->addClassName(self::LAZY_CLASS);
+                    $attributes->addClassName(LazyLoad::LAZY_CLASS);
 
                     /**
                      * A small image has no srcset
@@ -306,36 +231,36 @@ class RasterImageLink extends MediaLink
                          * a bad reserved space for the image
                          * We use a svg instead
                          */
-                        $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
-                        $this->tagAttributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($imgTagWidth,$imgTagHeight));
+                        $attributes->addHtmlAttributeValue("src", $srcValue);
+                        $attributes->addHtmlAttributeValue("srcset", LazyLoad::getPlaceholder($targetWidth, $targetHeight));
                         /**
                          * We use `data-sizes` and not `sizes`
                          * because `sizes` without `srcset`
                          * shows the broken image symbol
                          * Javascript changes them at the same time
                          */
-                        $this->tagAttributes->addHtmlAttributeValue("data-sizes", $sizes);
-                        $this->tagAttributes->addHtmlAttributeValue("data-srcset", $srcSet);
+                        $attributes->addHtmlAttributeValue("data-sizes", $sizes);
+                        $attributes->addHtmlAttributeValue("data-srcset", $srcSet);
 
                     } else {
 
                         /**
                          * Small image but there is no little improvement
                          */
-                        $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
+                        $attributes->addHtmlAttributeValue("data-src", $srcValue);
 
                     }
 
-                    LazyLoad::addPlaceholderBackground($this->tagAttributes);
+                    LazyLoad::addPlaceholderBackground($attributes);
 
 
                 } else {
 
                     if (!empty($srcSet)) {
-                        $this->tagAttributes->addHtmlAttributeValue("srcset", $srcSet);
-                        $this->tagAttributes->addHtmlAttributeValue("sizes", $sizes);
+                        $attributes->addHtmlAttributeValue("srcset", $srcSet);
+                        $attributes->addHtmlAttributeValue("sizes", $sizes);
                     } else {
-                        $this->tagAttributes->addHtmlAttributeValue("src", $srcValue);
+                        $attributes->addHtmlAttributeValue("src", $srcValue);
                     }
 
                 }
@@ -346,9 +271,9 @@ class RasterImageLink extends MediaLink
                 $lazyLoad = $this->getLazyLoad();
                 if ($lazyLoad) {
 
-                    LazyLoad::addPlaceholderBackground($this->tagAttributes);
-                    $this->tagAttributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder());
-                    $this->tagAttributes->addHtmlAttributeValue("data-src", $srcValue);
+                    LazyLoad::addPlaceholderBackground($attributes);
+                    $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder());
+                    $attributes->addHtmlAttributeValue("data-src", $srcValue);
 
                 }
 
@@ -358,15 +283,19 @@ class RasterImageLink extends MediaLink
             /**
              * Title (ie alt)
              */
-            if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
-                $title = $this->tagAttributes->getValueAndRemove(TagAttributes::TITLE_KEY);
-                $this->tagAttributes->addHtmlAttributeValueIfNotEmpty("alt", $title);
-            }
+            $attributes->addHtmlAttributeValueIfNotEmpty("alt", $image->getAltNotEmpty());
+
+            /**
+             * TODO: Side effect of the fact that we use the same attributes
+             * Title attribute of a media is the alt of an image
+             * And title should not be in an image tag
+             */
+            $attributes->removeAttributeIfPresent(TagAttributes::TITLE_KEY);
 
             /**
              * Create the img element
              */
-            $htmlAttributes = $this->tagAttributes->toHTMLAttributeString();
+            $htmlAttributes = $attributes->toHTMLAttributeString();
             $imgHTML = '<img ' . $htmlAttributes . '/>';
 
         } else {
@@ -376,113 +305,6 @@ class RasterImageLink extends MediaLink
         }
 
         return $imgHTML;
-    }
-
-    /**
-     * @return int - the width of the image from the file
-     */
-    public
-    function getMediaWidth()
-    {
-        $this->analyzeImageIfNeeded();
-        return $this->imageWidth;
-    }
-
-    /**
-     * @return int - the height of the image from the file
-     */
-    public
-    function getMediaHeight()
-    {
-        $this->analyzeImageIfNeeded();
-        return $this->imageWeight;
-    }
-
-    private
-    function analyzeImageIfNeeded()
-    {
-
-        if (!$this->wasAnalyzed) {
-
-            if ($this->exists()) {
-
-                /**
-                 * Based on {@link media_image_preview_size()}
-                 * $dimensions = media_image_preview_size($this->id, '', false);
-                 */
-                $imageInfo = array();
-                $imageSize = getimagesize($this->getFileSystemPath(), $imageInfo);
-                if ($imageSize === false) {
-                    $this->analyzable = false;
-                    LogUtility::msg("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                } else {
-                    $this->analyzable = true;
-                    $this->imageWidth = (int)$imageSize[0];
-                    if (empty($this->imageWidth)) {
-                        $this->analyzable = false;
-                    }
-                    $this->imageWeight = (int)$imageSize[1];
-                    if (empty($this->imageWeight)) {
-                        $this->analyzable = false;
-                    }
-                    $this->imageType = (int)$imageSize[2];
-                    $this->mime = $imageSize[3];
-                }
-            }
-        }
-        $this->wasAnalyzed = true;
-    }
-
-
-    /**
-     *
-     * @return bool true if we could extract the dimensions
-     */
-    public
-    function isAnalyzable()
-    {
-        $this->analyzeImageIfNeeded();
-        return $this->analyzable;
-
-    }
-
-
-    public function getRequestedHeight()
-    {
-        $requestedHeight = parent::getRequestedHeight();
-        if (!empty($requestedHeight)) {
-            // it should not be bigger than the media Height
-            $mediaHeight = $this->getMediaHeight();
-            if (!empty($mediaHeight)) {
-                if ($requestedHeight > $mediaHeight) {
-                    LogUtility::msg("For the image ($this), the requested height of ($requestedHeight) can not be bigger than the intrinsic height of ($mediaHeight). The height was then set to its natural height ($mediaHeight)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    $requestedHeight = $mediaHeight;
-                }
-            }
-        }
-        return $requestedHeight;
-    }
-
-    public function getRequestedWidth()
-    {
-        $requestedWidth = parent::getRequestedWidth();
-        if (!empty($requestedWidth)) {
-            // it should not be bigger than the media Height
-            $mediaWidth = $this->getMediaWidth();
-            if (!empty($mediaWidth)) {
-                if ($requestedWidth > $mediaWidth) {
-                    global $ID;
-                    if ($ID != "wiki:syntax") {
-                        // There is a bug in the wiki syntax page
-                        // {{wiki:dokuwiki-128.png?200x50}}
-                        // https://forum.dokuwiki.org/d/19313-bugtypo-how-to-make-a-request-to-change-the-syntax-page-on-dokuwikii
-                        LogUtility::msg("For the image ($this), the requested width of ($requestedWidth) can not be bigger than the intrinsic width of ($mediaWidth). The width was then set to its natural width ($mediaWidth)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    }
-                    $requestedWidth = $mediaWidth;
-                }
-            }
-        }
-        return $requestedWidth;
     }
 
 
@@ -503,7 +325,7 @@ class RasterImageLink extends MediaLink
      * @return string sizes with a dpi correction if
      */
     private
-    function getSizes($screenWidth, $imageWidth)
+    function getSizes($screenWidth, $imageWidth): string
     {
 
         if ($this->getWithDpiCorrection()) {
@@ -528,7 +350,7 @@ class RasterImageLink extends MediaLink
      * @return bool
      */
     private
-    function getWithDpiCorrection()
+    function getWithDpiCorrection(): bool
     {
         /**
          * Support for retina means no DPI correction

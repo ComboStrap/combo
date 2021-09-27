@@ -11,13 +11,31 @@ use DateTime;
  * Class Is8601Date
  * @package ComboStrap
  * Format used by Google, Sqlite and others
+ *
+ * This is the date class of Combostrap
+ * that takes a valid input string
+ * and output an iso string
  */
 class Iso8601Date
 {
+    public const CANONICAL = "date";
     /**
      * @var DateTime|false
      */
     private $dateTime;
+
+    /**
+     * ATOM = IS08601
+     * See {@link Iso8601Date::getFormat()} for more information
+     */
+    private const VALID_FORMATS = [
+        \DateTimeInterface::ATOM,
+        'Y-m-d H:i:sP',
+        'Y-m-d H:i:s',
+        'Y-m-d H:i',
+        'Y-m-d H',
+        'Y-m-d',
+    ];
 
 
     /**
@@ -38,54 +56,80 @@ class Iso8601Date
 
     }
 
-    public static function create($string = null)
+    public static function create($dateString = null): Iso8601Date
     {
-        if ($string === null) {
+
+        $original = $dateString;
+
+        if ($dateString === null) {
             return new Iso8601Date();
         }
-
 
         /**
          * Time ?
          * (ie only YYYY-MM-DD)
          */
-        if (strlen($string) <= 10) {
+        if (strlen($dateString) <= 10) {
             /**
              * We had the time to 00:00:00
              * because {@link DateTime::createFromFormat} with a format of
              * Y-m-d will be using the actual time otherwise
              *
              */
-            $string .= "T00:00:00";
+            $dateString .= "T00:00:00";
+        }
+
+        /**
+         * Space as T
+         */
+        $dateString = str_replace(" ", "T", $dateString);
+
+
+        if (strlen($dateString) <= 13) {
+            /**
+             * We had the time to 00:00:00
+             * because {@link DateTime::createFromFormat} with a format of
+             * Y-m-d will be using the actual time otherwise
+             *
+             */
+            $dateString .= ":00:00";
+        }
+
+        if (strlen($dateString) <= 16) {
+            /**
+             * We had the time to 00:00:00
+             * because {@link DateTime::createFromFormat} with a format of
+             * Y-m-d will be using the actual time otherwise
+             *
+             */
+            $dateString .= ":00";
         }
 
         /**
          * Timezone
          */
-        if (strlen($string) <= 19) {
+        if (strlen($dateString) <= 19) {
             /**
              * Because this text metadata may be used in other part of the application
              * We add the timezone to make it whole
              * And to have a consistent value
              */
-            $string .= date('P');
+            $dateString .= date('P');
         }
 
-        /**
-         * Date validation
-         * Atom is the valid ISO format (and not IS8601 due to backward compatibility)
-         *
-         * See:
-         * https://www.php.net/manual/en/class.datetimeinterface.php#datetime.constants.iso8601
-         */
-        $dateTime = DateTime::createFromFormat(DateTime::ATOM, $string);
+
+        $dateTime = DateTime::createFromFormat(DateTime::ATOM, $dateString);
+        if ($dateTime === false) {
+            throw new \RuntimeException("The date string ($original) is not one of the valid date format. " . join(", ", self::VALID_FORMATS));
+        }
         return new Iso8601Date($dateTime);
+
     }
 
-    public static function createFromTimestamp($timestamp)
+    public static function createFromTimestamp($timestamp): Iso8601Date
     {
-       $dateTime = new DateTime();
-       $dateTime->setTimestamp($timestamp);
+        $dateTime = new DateTime();
+        $dateTime->setTimestamp($timestamp);
         return new Iso8601Date($dateTime);
     }
 
@@ -99,7 +143,7 @@ class Iso8601Date
      * This format is used by Sqlite, Google and is pretty the standard everywhere
      * https://www.w3.org/TR/NOTE-datetime
      */
-    public static function getFormat()
+    public static function getFormat(): string
     {
         return DATE_ATOM;
     }
@@ -129,7 +173,7 @@ class Iso8601Date
      * @return string
      * @link https://php.net/manual/en/datetime.format.php
      */
-    public function format($string)
+    public function format($string): string
     {
         return $this->getDateTime()->format($string);
     }

@@ -226,9 +226,9 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 /**
                  * Delete the separator `|` between the ref and the description if any
                  */
-                $tag = new Tag(self::TAG, array(), $state, $handler);
-                $parent = $tag->getParent();
-                if ($parent->getName() == self::TAG) {
+                $tag = CallStack::createFromHandler( $handler);
+                $parent = $tag->moveToParent();
+                if ($parent->getTagName() == self::TAG) {
                     if (strpos($match, '|') === 0) {
                         $data[PluginUtility::PAYLOAD] = substr($match, 1);
                     }

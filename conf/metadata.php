@@ -313,4 +313,7 @@ $meta[action_plugin_combo_profile::CONF_ENABLE_PROFILE_DELETE_FORM] = array("ono
  */
 $meta[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = array("onoff");
 
-
+/**
+ * Cache
+ */
+$meta[action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED] = array("onoff");

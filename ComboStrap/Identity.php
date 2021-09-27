@@ -60,6 +60,7 @@ class Identity
         } else {
             global $INPUT;
             $INPUT->server->set('REMOTE_USER', $user);
+            // same as $_SERVER['REMOTE_USER'] = $user;
         }
 
         // $_SERVER[] = $user;

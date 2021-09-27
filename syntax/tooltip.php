@@ -2,7 +2,6 @@
 
 
 use ComboStrap\Bootstrap;
-use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;

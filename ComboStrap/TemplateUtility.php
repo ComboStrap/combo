@@ -114,7 +114,12 @@ class TemplateUtility
 
     }
 
-    public static function renderInstructionsTemplateFromDataArray(array $namespaceTemplateInstructions, array $array)
+    /**
+     * @param Call[] $namespaceTemplateInstructions
+     * @param array $array - the data array
+     * @return array - native call stack instructions
+     */
+    public static function renderInstructionsTemplateFromDataArray(array $namespaceTemplateInstructions, array $array): array
     {
 
         $instructions = [];
@@ -141,7 +146,7 @@ class TemplateUtility
      * @param array $array
      * @return string
      */
-    public static function renderStringTemplateFromDataArray($pageTemplate, array $array)
+    public static function renderStringTemplateFromDataArray($pageTemplate, array $array): string
     {
 
         $template = Template::create($pageTemplate);
@@ -162,7 +167,7 @@ class TemplateUtility
     public static function getMetadataDataFromPage(Page $page)
     {
 
-        $array = $page->getMetadataStandard();
+        $array = $page->getMetadataForRendering();
         /**
          * @deprecated for path
          */
@@ -179,6 +184,8 @@ class TemplateUtility
         return $array;
 
     }
+
+
 
 
 }

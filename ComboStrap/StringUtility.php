@@ -18,7 +18,7 @@ class StringUtility
      * @param $length
      * @return string
      */
-    static function truncateString($myString, $length)
+    static function truncateString($myString, $length): string
     {
 
         if (strlen($myString) > $length) {

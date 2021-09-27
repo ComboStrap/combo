@@ -236,4 +236,9 @@ $lang[action_plugin_combo_profile::CONF_ENABLE_PROFILE_DELETE_FORM] = PluginUtil
  */
 $lang[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = PluginUtility::getUrl(syntax_plugin_combo_comment::CANONICAL, "If enable, the comments will be present in the created page as comment (ie not visible but present)");
 
+/**
+ * Smart cache
+ */
+$lang[action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED] = PluginUtility::getUrl(action_plugin_combo_cache::CANONICAL, "If disabled, the smart image browser cache will be disabled");
+
 ?>

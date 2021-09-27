@@ -12,8 +12,7 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/ConfUtility.php');
-require_once(__DIR__ . '/SvgImageLink.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
 
 /**

@@ -155,7 +155,7 @@ class CacheMedia
         $this->fileCache->storeCache($content);
     }
 
-    public function getFile()
+    public function getFile(): File
     {
         return File::createFromPath($this->fileCache->cache);
     }

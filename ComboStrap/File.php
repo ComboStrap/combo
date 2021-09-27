@@ -16,7 +16,7 @@ namespace ComboStrap;
 class File
 {
 
-    private $path;
+    protected $path;
 
 
     /**
@@ -55,11 +55,11 @@ class File
     }
 
     /**
-     * @return false|int - unix time stamp
+     * @return \DateTime - The date time
      */
-    public function getModifiedTime()
+    public function getModifiedTime(): \DateTime
     {
-        return filemtime($this->path);
+        return Iso8601Date::createFromTimestamp(filemtime($this->path))->getDateTime();
     }
 
     /**
@@ -85,14 +85,22 @@ class File
         return pathinfo($this->path, PATHINFO_BASENAME);
     }
 
-    public function isImage()
+    public function isImage(): bool
     {
         return substr($this->getMime(), 0, 5) == 'image';
     }
 
     public function getMime()
     {
-        return mimetype($this->getBaseName(), false)[1];
+        if ($this->getExtension() == ImageSvg::EXTENSION) {
+            /**
+             * Svg is authorized when viewing but is not part
+             * of the {@link File::getKnownMime()}
+             */
+            return ImageSvg::MIME;
+        } else {
+            return mimetype($this->getBaseName(), false)[1];
+        }
     }
 
     public function getKnownMime()

@@ -36,7 +36,7 @@ class DokuPath extends File
      */
     private $finalType;
     /**
-     * @var string|null
+     * @var string|null - ie mtime
      */
     private $rev;
 
@@ -77,7 +77,7 @@ class DokuPath extends File
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
      */
-    protected function __construct($absolutePath, $type, $rev = null)
+    protected function __construct($absolutePath, string $type, $rev = null)
     {
 
         if (empty($absolutePath)) {
@@ -98,7 +98,7 @@ class DokuPath extends File
         } else {
 
             if (substr($absolutePath, 0, 1) != DokuPath::PATH_SEPARATOR) {
-                if(PluginUtility::isDevOrTest()) {
+                if (PluginUtility::isDevOrTest()) {
                     // Feel too much the log, test are not seeing anything, may be minimap ?
                     LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
                 }
@@ -261,14 +261,27 @@ class DokuPath extends File
         }
     }
 
-    public static function createMediaPathFromId($id)
+    public static function createMediaPathFromId($id): DokuPath
     {
         return self::createMediaPathFromAbsolutePath(DokuPath::PATH_SEPARATOR . $id);
     }
 
-    public static function createPagePathFromId($id)
+
+    public static function createPagePathFromId($id): DokuPath
     {
         return new DokuPath(DokuPath::PATH_SEPARATOR . $id, self::PAGE_TYPE);
+    }
+
+    /**
+     * If the path does not have a root separator,
+     * it's added
+     * @param string $path
+     */
+    public static function addRootSeparatorIfNotPresent(string &$path)
+    {
+        if (substr($path, 0, 1) !== ":") {
+            $path = DokuPath::PATH_SEPARATOR . $path;
+        }
     }
 
 
@@ -291,8 +304,7 @@ class DokuPath extends File
     /**
      * @return bool true if this id represents a page
      */
-    public
-    function isPage()
+    public function isPage(): bool
     {
 
         if (
@@ -308,8 +320,7 @@ class DokuPath extends File
     }
 
 
-    public
-    function isGlob()
+    public function isGlob(): bool
     {
         /**
          * {@link search_universal} triggers ACL check
@@ -406,7 +417,7 @@ class DokuPath extends File
      *   * page with media for media
      */
     public
-    function getRelatedPages()
+    function getRelatedPages(): array
     {
         $absoluteId = $this->getId();
         if ($this->finalType == self::MEDIA_TYPE) {
@@ -431,6 +442,34 @@ class DokuPath extends File
         }
         return $relativeSystemPath;
 
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->getAuthAclValue() >= AUTH_READ;
+    }
+
+    /**
+     * @return int - An AUTH_ value for this page for the current logged user
+     * See the file defines.php
+     *
+     */
+    public function getAuthAclValue(): int
+    {
+        return auth_quickaclcheck($this->getId());
+    }
+
+    /**
+     * A buster value used in URL
+     * to avoid cache (cache bursting)
+     *
+     * It is unique for each version of the path
+     *
+     * @return string
+     */
+    public function getBuster(): string
+    {
+        return strval($this->getModifiedTime()->getTimestamp());
     }
 
 }

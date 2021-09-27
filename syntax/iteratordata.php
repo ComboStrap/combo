@@ -77,7 +77,11 @@ class syntax_plugin_combo_iteratordata extends DokuWiki_Syntax_Plugin
 
     public function accepts($mode)
     {
-        return syntax_plugin_combo_preformatted::disablePreformatted($mode);
+        /**
+         * For whatever reason, we get the {@link \dokuwiki\Parsing\ParserMode\Quotes `_doublequoteclosing`}
+         * mode
+         */
+        return false;
     }
 
 

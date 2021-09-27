@@ -13,7 +13,7 @@ class Prism
     /**
      * The class used to mark the added prism code
      */
-    const BASE_PRISM_CDN = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/";
+    const BASE_PRISM_CDN = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0";
     /**
      * The default prompt for bash
      */
@@ -34,11 +34,11 @@ class Prism
     const PRISM_THEME = "prism";
 
     /**
-     * @var string[] https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism-{theme}.min.css
+     * @var string[] https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-{theme}.min.css
      *
      * or default
      *
-     * https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism.min.css
+     * https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css
      *
      * or
      *
@@ -47,14 +47,14 @@ class Prism
      * from https://cdnjs.com/libraries/prism
      */
     const THEMES_INTEGRITY = [
-        Prism::PRISM_THEME => "sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==",
-        "coy" => "sha512-CKzEMG9cS0+lcH4wtn/UnxnmxkaTFrviChikDEk1MAWICCSN59sDWIF0Q5oDgdG9lxVrvbENSV1FtjLiBnMx7Q==",
-        "dark" => "sha512-Njdz7T/p6Ud1FiTMqH87bzDxaZBsVNebOWmacBjMdgWyeIhUSFU4V52oGwo3sT+ud+lyIE98sS291/zxBfozKw==",
-        "funky" => "sha512-q59Usnbm/Dz3MeqoMEATHqIwozatJmXr/bFurDR7hpB5e2KxU+j2mp89Am9wq9jwZRaikpnKGHw4LP/Kr9soZQ==",
-        "okaidia" => "sha512-mIs9kKbaw6JZFfSuo+MovjU+Ntggfoj8RwAmJbVXQ5mkAX5LlgETQEweFPI18humSPHymTb5iikEOKWF7I8ncQ==",
-        "solarizedlight" => "sha512-fibfhB71IpdEKqLKXP/96WuX1cTMmvZioYp7T6I+lTbvJrrjEGeyYdAf09GHpFptF8toQ32woGZ8bw9+HjZc0A==",
-        "tomorrow" => "sha512-vswe+cgvic/XBoF1OcM/TeJ2FW0OofqAVdCZiEYkd6dwGXthvkSFWOoGGJgS2CW70VK5dQM5Oh+7ne47s74VTg==",
-        "twilight" => "sha512-akb4nfKzpmhujLUyollw5waBPeohuVf0Z5+cL+4Ngc4Db+V8szzx6ZTujguFjpmD076W8LImVIbOblmQ+vZMKA=="
+        Prism::PRISM_THEME => "sha256-ko4j5rn874LF8dHwW29/xabhh8YBleWfvxb8nQce4Fc=",
+        "coy" => "sha256-0I7KRu3ythnGB35kGsiGUugMkxcKhiBPrucGSiUwMZA=",
+        "dark" => "sha256-8G4aO4AImqFesmM5ePmFnhImR073326PFC3HTanuXoc=",
+        "funky" => "sha256-Aggb3zTcrFLDeGFJwD0w1ZhWfGb747mqtpk364aIwqw=",
+        "okaidia" => "sha256-nwDipdLn93O1CZGoRDor0i4CLmDQb+mdg/yaYMUCuLM=",
+        "solarizedlight" => "sha256-278ChCYdhj8w7EmLSI3+/Z0GIaUwPzWEPIntaHH086I=",
+        "tomorrow" => "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
+        "twilight" => "sha256-vF3CcT1ZU/pt1qw8MIUaPvse3WGu7ZarZJHCZqOnQc8="
     ];
 
     /**
@@ -86,26 +86,50 @@ class Prism
          * We miss a bottom margin
          * as a paragraph
          */
-        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_NAME );
+        PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::SNIPPET_NAME);
 
         /**
          * Javascript
          */
         $tags = array();
-        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/components/prism-core.min.js");
-        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js");
+        $tags['script'][] = array(
+            "src" => "$BASE_PRISM_CDN/components/prism-core.min.js",
+            "integrity" => "sha256-vlRYHThwdq55dA+n1BKQRzzLwFtH9VINdSI68+5JhpU=",
+            "crossorigin" => "anonymous"
+        );
+        $tags['script'][] = array(
+            "src" => "$BASE_PRISM_CDN/plugins/toolbar/prism-toolbar.min.js",
+            "integrity" => "sha256-FyIVdIHL0+ppj4Q4Ft05K3wyCsYikpHIDGI7dcaBalU=",
+            "crossorigin" => "anonymous"
+        );
         // https://prismjs.com/plugins/normalize-whitespace/
-        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js");
+        $tags['script'][] = array(
+            "src" => "$BASE_PRISM_CDN/plugins/normalize-whitespace/prism-normalize-whitespace.min.js",
+            "integrity" => "sha256-gBzABGbXfQYYnyr8xmDFjx6KGO9dBYuypG1QBjO76pY=",
+            "crossorigin" => "anonymous"
+        );
         // https://prismjs.com/plugins/show-language/
-        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js");
+        $tags['script'][] = array(
+            "src" => "$BASE_PRISM_CDN/plugins/show-language/prism-show-language.min.js",
+            "integrity" => "sha256-Z3GTw2RIadLG7KyP/OYB+aAxVYzvg2PByKzYrJlA1EM=",
+            "crossorigin" => "anonymous"
+        );
         // https://prismjs.com/plugins/command-line/
-        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js");
+        $tags['script'][] = array(
+            "src" => "$BASE_PRISM_CDN/plugins/command-line/prism-command-line.min.js",
+            "integrity" => "sha256-9WlakH0Upf3N8DDteHlbeKCHxSsljby+G9ucUCQNiU0=",
+            "crossorigin" => "anonymous"
+        );
         //https://prismjs.com/plugins/line-numbers/
-        $tags['script'][] = array("src" => "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js");
+        $tags['script'][] = array(
+            "src" => "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js",
+            "integrity" => "sha256-K837BwIyiXo5k/9fCYgqUyA14bN4/Ve9P2SIT0KmZD0=",
+            "crossorigin" => "anonymous"
+            );
         // https://prismjs.com/plugins/download-button/-->
         $tags['script'][] = array(
             "src" => "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
-            "integrity" => "sha512-rGJwSZEEYPBQjqYxrdg6Ug/6i763XQogKx+N/GF1rCGvfmhIlIUFxCjc4FmEdCu5dvovqxHsoe3IPMKP+KlgNQ==",
+            "integrity" => "sha256-CQyVQ5ejeTshlzOS/eCiry40br9f4fQ9jb5e4qPl7ZA=",
             "crossorigin" => "anonymous"
         );
 
@@ -123,11 +147,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const baseCdn = "$BASE_PRISM_CDN";
     const stylesheets = [
         ["themes/$themeStyleSheet", "$themeIntegrity"],
-        ["plugins/toolbar/prism-toolbar.min.css","sha512-DSAA0ziYwggOJ3QyWFZhIaU8bSwQLyfnyIrmShRLBdJMtiYKT7Ju35ujBCZ6ApK3HURt34p2xNo+KX9ebQNEPQ=="],
+        ["plugins/toolbar/prism-toolbar.css","sha256-kK4/JIYJUKI4Zdg9ZQ7FYyRIqeWPfYKi5QZHO2n/lJI="],
         /*https://prismjs.com/plugins/command-line/*/
-        ["plugins/command-line/prism-command-line.min.css","sha512-4Y1uID1tEWeqDdbb7452znwjRVwseCy9kK9BNA7Sv4PlMroQzYRznkoWTfRURSADM/SbfZSbv/iW5sNpzSbsYg=="],
+        ["plugins/command-line/prism-command-line.css","sha256-UvoA9bIYCYQkCMTYG5p2LM8ZpJmnC4G8k0oIc89nuQA="],
         /*https://prismjs.com/plugins/line-numbers/*/
-        ["plugins/line-numbers/prism-line-numbers.min.css","sha512-cbQXwDFK7lj2Fqfkuxbo5iD1dSbLlJGXGpfTDqbggqjHJeyzx88I3rfwjS38WJag/ihH7lzuGlGHpDBymLirZQ=="]
+        ["plugins/line-numbers/prism-line-numbers.css","sha256-ye8BkHf2lHXUtqZ18U0KI3xjJ1Yv7P8lvdKBt9xmVJM="]
     ];
 
     stylesheets.forEach(stylesheet => {
@@ -251,7 +275,6 @@ EOD;
         }
 
 
-
         /**
          * Add prism theme
          */
@@ -266,7 +289,7 @@ EOD;
             $logicalTag = $attributes->getLogicalTag();
         }
         // for the https://combostrap.com/styling/userstyle
-        $attributes->setLogicalTag($logicalTag."-container");
+        $attributes->setLogicalTag($logicalTag . "-container");
 
         /**
          * The child element (code) of the `pre` element

@@ -50,6 +50,7 @@ class Page extends DokuPath
     const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
     const WEBSITE_TYPE = "website";
     const ARTICLE_TYPE = "article";
+    const EVENT_TYPE = "event";
     const ORGANIZATION_TYPE = "organization";
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
@@ -79,7 +80,6 @@ class Page extends DokuPath
 
     const CURRENT_METADATA = "current";
     const PERSISTENT_METADATA = "persistent";
-    const PAGE_TYPE_META_PROPERTY = "type";
     const IMAGE_META_PROPERTY = 'image';
     const COUNTRY_META_PROPERTY = "country";
     const LANG_META_PROPERTY = "lang";
@@ -424,10 +424,10 @@ class Page extends DokuPath
     /**
      * Persist a page in the database
      */
-    function processAndPersistInDb()
+    function processAndPersistInDb(): Page
     {
 
-        $canonical = p_get_metadata($this->getId(), "canonical");
+        $canonical = p_get_metadata($this->getId(), Page::CANONICAL_PROPERTY);
         if ($canonical != "") {
 
             // Do we have a page attached to this canonical
@@ -505,7 +505,7 @@ class Page extends DokuPath
     }
 
     private
-    function setCanonical($canonical)
+    function setCanonical($canonical): Page
     {
         $this->canonical = $canonical;
         return $this;
@@ -675,7 +675,7 @@ class Page extends DokuPath
     }
 
     public
-    function saveAnalytics(array $analytics)
+    function persistAnalytics(array $analytics)
     {
 
         $sqlite = Sqlite::getSqlite();
@@ -683,28 +683,58 @@ class Page extends DokuPath
             /**
              * Sqlite Plugin installed
              */
-
             $json = json_encode($analytics, JSON_PRETTY_PRINT);
             /**
-             * Same data as {@link Page::getMetadataStandard()}
+             * Same data as {@link Page::getMetadataForRendering()}
              */
             $entry = array(
                 'CANONICAL' => $this->getCanonical(),
                 'ANALYTICS' => $json,
-                'PATH'=>$this->getAbsolutePath(),
-                'NAME'=>$this->getName(),
-                'TITLE'=>$this->getTitleNotEmpty(),
-                'H1'=>$this->getH1NotEmpty(),
-                'DATE_CREATED'=>$this->getCreatedDateString(),
-                'DATE_MODIFIED'=>$this->getModifiedDateString(),
-                'DATE_PUBLISHED'=>$this->getPublishedTimeAsString(),
-                'ID' => $this->getId()
+                'PATH' => $this->getAbsolutePath(),
+                'NAME' => $this->getName(),
+                'TITLE' => $this->getTitleNotEmpty(),
+                'H1' => $this->getH1NotEmpty(),
+                'DATE_CREATED' => $this->getCreatedDateString(),
+                'DATE_MODIFIED' => $this->getModifiedDateString(),
+                'DATE_PUBLISHED' => $this->getPublishedTimeAsString(),
+                'DATE_START' => $this->getEndDateAsString(),
+                'DATE_END' => $this->getStartDateAsString(),
+                'COUNTRY' => $this->getCountry(),
+                'LANG' => $this->getLang(),
+                'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 0 : 1),
+                'TYPE' => $this->getType(),
+                'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
+                'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],
+                'ID' => $this->getId(),
             );
             $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
             if ($sqlite->res2single($res) == 1) {
                 // Upset not supported on all version
                 //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-                $update = 'update PAGES SET CANONICAL = ?, ANALYTICS = ?, PATH = ?, NAME = ?, TITLE = ?, H1 = ?, DATE_CREATED = ?, DATE_MODIFIED = ?, DATE_PUBLISHED = ? where ID=?';
+                $update = <<<EOF
+update
+    PAGES
+SET
+    CANONICAL = ?,
+    ANALYTICS = ?,
+    PATH = ?,
+    NAME = ?,
+    TITLE = ?,
+    H1 = ?,
+    DATE_CREATED = ?,
+    DATE_MODIFIED = ?,
+    DATE_PUBLISHED = ?,
+    DATE_START = ?,
+    DATE_END = ?,
+    COUNTRY = ?,
+    LANG = ?,
+    IS_LOW_QUALITY = ?,
+    TYPE = ?,
+    WORD_COUNT = ?,
+    BACKLINK_COUNT = ?
+where
+    ID=?
+EOF;
                 $res = $sqlite->query($update, $entry);
             } else {
                 $res = $sqlite->storeEntry('PAGES', $entry);
@@ -872,7 +902,7 @@ class Page extends DokuPath
      */
 
     public
-    function setLowQualityIndicator($newIndicator)
+    function setLowQualityIndicator(bool $newIndicator)
     {
         $actualIndicator = $this->getLowQualityIndicator();
         if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
@@ -901,6 +931,7 @@ class Page extends DokuPath
 
     /**
      * @return Page[] the backlinks
+     * Duplicate of related
      */
     public
     function getBacklinks()
@@ -912,21 +943,12 @@ class Page extends DokuPath
         return $backlinks;
     }
 
-    /**
-     * @return int - An AUTH_ value for this page for the current logged user
-     *
-     */
-    public
-    function getAuthAclValue()
-    {
-        return auth_quickaclcheck($this->getId());
-    }
 
     /**
      * Low page quality
      * @return bool true if this is a low internal page rank
      */
-    function isLowQualityPage()
+    function isLowQualityPage(): bool
     {
 
         $lowQualityIndicator = $this->getLowQualityIndicator();
@@ -1185,7 +1207,7 @@ class Page extends DokuPath
                 if (!media_isexternal($firstImageId)) {
                     $pathId = DokuPath::PATH_SEPARATOR . $firstImageId;
                 }
-                return MediaLink::createMediaLinkFromNonQualifiedPath($pathId);
+                return Image::createImageFromAbsolutePath($pathId);
             }
         }
         return null;
@@ -1226,10 +1248,10 @@ class Page extends DokuPath
      * An array of local/internal images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
-     * @return MediaLink[]
+     * @return Image[]
      */
     public
-    function getLocalImageSet()
+    function getLocalImageSet(): array
     {
 
         /**
@@ -1241,11 +1263,13 @@ class Page extends DokuPath
         $images = array();
         if (!empty($imageMeta)) {
             if (is_array($imageMeta)) {
-                foreach ($imageMeta as $imageIdFromMeta) {
-                    $images[] = MediaLink::createMediaLinkFromNonQualifiedPath($imageIdFromMeta);
+                foreach ($imageMeta as $key => $imageIdFromMeta) {
+                    DokuPath::addRootSeparatorIfNotPresent($imageIdFromMeta);
+                    $images[$key] = Image::createImageFromAbsolutePath($imageIdFromMeta);
                 }
             } else {
-                $images = array(MediaLink::createMediaLinkFromNonQualifiedPath($imageMeta));
+                DokuPath::addRootSeparatorIfNotPresent($imageMeta);
+                $images = array(Image::createImageFromAbsolutePath($imageMeta));
             }
         } else {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
@@ -1263,10 +1287,10 @@ class Page extends DokuPath
 
 
     /**
-     * @return MediaLink
+     * @return Image
      */
     public
-    function getImage()
+    function getImage(): ?Image
     {
 
         $images = $this->getLocalImageSet();
@@ -1344,8 +1368,7 @@ class Page extends DokuPath
      *
      * @return DateTime
      */
-    public
-    function getCreatedTime()
+    public function getCreatedTime(): ?DateTime
     {
         $createdMeta = $this->getPersistentMetadata('date')['created'];
         if (empty($createdMeta)) {
@@ -1365,12 +1388,11 @@ class Page extends DokuPath
      *
      * @return DateTime
      */
-    public
-    function getModifiedTime()
+    public function getModifiedTime(): \DateTime
     {
         $modified = $this->getCurrentMetadata('date')['modified'];
         if (empty($modified)) {
-            return null;
+            return parent::getModifiedTime();
         } else {
             $datetime = new DateTime();
             $datetime->setTimestamp($modified);
@@ -1498,9 +1520,10 @@ class Page extends DokuPath
     }
 
     public
-    function getPublishedTime()
+    function getPublishedTime(): ?DateTime
     {
-        $persistentMetadata = $this->getPersistentMetadata(Publication::DATE_PUBLISHED);
+        $property = Publication::DATE_PUBLISHED;
+        $persistentMetadata = $this->getPersistentMetadata($property);
         if (empty($persistentMetadata)) {
             /**
              * Old metadata key
@@ -1517,7 +1540,7 @@ class Page extends DokuPath
              * Should not happen as the data is validate in entry
              * at the {@link \syntax_plugin_combo_frontmatter}
              */
-            LogUtility::msg("The published date ($persistentMetadata) of the page ($this) is not a valid ISO date.", LogUtility::LVL_MSG_ERROR, Publication::CANONICAL);
+            LogUtility::msg("The published date property ($property) of the page ($this) has a value  ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
             return null;
         }
         return $dateTime;
@@ -1568,7 +1591,7 @@ class Page extends DokuPath
      * @return string|null - the locale facebook way
      */
     public
-    function getLocale()
+    function getLocale($default = null): ?string
     {
         $lang = $this->getLang();
         if (!empty($lang)) {
@@ -1579,7 +1602,7 @@ class Page extends DokuPath
             }
             return $lang . "_" . strtoupper($country);
         }
-        return null;
+        return $default;
     }
 
     private
@@ -1851,9 +1874,16 @@ class Page extends DokuPath
     }
 
     public
+    function getPageName()
+    {
+        return p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+
+    }
+
+    public
     function getPageNameNotEmpty()
     {
-        $name = p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+        $name = $this->getPageName();
         if (!blank($name)) {
             return $name;
         } else {
@@ -1878,7 +1908,7 @@ class Page extends DokuPath
      * @return array - return the standard / generated metadata
      * used in templating
      */
-    public function getMetadataStandard()
+    public function getMetadataForRendering()
     {
 
 
@@ -1900,7 +1930,6 @@ class Page extends DokuPath
         $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
         $array[self::TYPE_META_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
-
 
 
         $array[Analytics::DATE_CREATED] = $this->getCreatedDateString();
@@ -1925,9 +1954,61 @@ class Page extends DokuPath
         );
     }
 
-    private function getPublishedTimeAsString()
+    private function getPublishedTimeAsString(): ?string
     {
-        return $this->getPublishedTime()!==null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
+        return $this->getPublishedTime() !== null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
+    }
+
+    public function getEndDateAsString(): ?string
+    {
+        return $this->getEndDate() !== null ? $this->getEndDate()->format(Iso8601Date::getFormat()) : null;
+    }
+
+    public function getEndDate(): ?DateTime
+    {
+        $dateEndProperty = Analytics::DATE_END;
+        $persistentMetadata = $this->getPersistentMetadata($dateEndProperty);
+        if (empty($persistentMetadata)) {
+            return null;
+        }
+
+        // Ms level parsing
+        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
+        if ($dateTime === false) {
+            /**
+             * Should not happen as the data is validate in entry
+             * at the {@link \syntax_plugin_combo_frontmatter}
+             */
+            LogUtility::msg("The property $dateEndProperty of the page ($this) has a value ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+            return null;
+        }
+        return $dateTime;
+    }
+
+    public function getStartDateAsString(): ?string
+    {
+        return $this->getStartDate() !== null ? $this->getStartDate()->format(Iso8601Date::getFormat()) : null;
+    }
+
+    public function getStartDate(): ?DateTime
+    {
+        $dateStartProperty = Analytics::DATE_START;
+        $persistentMetadata = $this->getPersistentMetadata($dateStartProperty);
+        if (empty($persistentMetadata)) {
+            return null;
+        }
+
+        // Ms level parsing
+        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
+        if ($dateTime === false) {
+            /**
+             * Should not happen as the data is validate in entry
+             * at the {@link \syntax_plugin_combo_frontmatter}
+             */
+            LogUtility::msg("The start date property $dateStartProperty of the page ($this) has a value ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+            return null;
+        }
+        return $dateTime;
     }
 
 

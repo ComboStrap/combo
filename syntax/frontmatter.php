@@ -31,9 +31,6 @@ use ComboStrap\Publication;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-if (!defined('DOKU_INC')) {
-    die();
-}
 
 /**
  * All DokuWiki plugins to extend the parser/rendering mechanism
@@ -180,16 +177,38 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                  * Add the time part if not present
                  */
                 if (isset($jsonArray[Publication::DATE_PUBLISHED])) {
-                    $datePublishedString = $jsonArray[Publication::DATE_PUBLISHED];
-                    $datePublished = Iso8601Date::create($datePublishedString);
-                    if (!$datePublished->isValidDateEntry()) {
-                        LogUtility::msg("The published date ($datePublishedString) is not a valid ISO date supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $dateAsString = $jsonArray[Publication::DATE_PUBLISHED];
+                    $dateObject = Iso8601Date::create($dateAsString);
+                    if (!$dateObject->isValidDateEntry()) {
+                        LogUtility::msg("The published date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
                         unset($jsonArray[Publication::DATE_PUBLISHED]);
                     } else {
-                        $jsonArray[Publication::DATE_PUBLISHED] = "$datePublished";
+                        $jsonArray[Publication::DATE_PUBLISHED] = "$dateObject";
                     }
-
                 }
+
+                if (isset($jsonArray[Analytics::DATE_START])) {
+                    $dateAsString = $jsonArray[Analytics::DATE_START];
+                    $dateObject = Iso8601Date::create($dateAsString);
+                    if (!$dateObject->isValidDateEntry()) {
+                        LogUtility::msg("The start date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+                        unset($jsonArray[Analytics::DATE_START]);
+                    } else {
+                        $jsonArray[Analytics::DATE_START] = "$dateObject";
+                    }
+                }
+
+                if (isset($jsonArray[Analytics::DATE_END])) {
+                    $dateAsString = $jsonArray[Analytics::DATE_END];
+                    $dateObject = Iso8601Date::create($dateAsString);
+                    if (!$dateObject->isValidDateEntry()) {
+                        LogUtility::msg("The end date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+                        unset($jsonArray[Analytics::DATE_END]);
+                    } else {
+                        $jsonArray[Analytics::DATE_END] = "$dateObject";
+                    }
+                }
+
                 $result[PluginUtility::ATTRIBUTES] = $jsonArray;
             }
 

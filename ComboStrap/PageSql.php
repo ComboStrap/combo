@@ -16,6 +16,8 @@ require_once(__DIR__ . '/PluginUtility.php');
 
 class PageSql
 {
+    const CANONICAL = "sql";
+
     private $sql;
     /**
      * @var PageSqlTreeListener
@@ -50,7 +52,7 @@ class PageSql
          * Performs a walk on the given parse tree starting at the root
          * and going down recursively with depth-first search.
          */
-        $this->listener = new PageSqlTreeListener($lexer, $parser);
+        $this->listener = new PageSqlTreeListener($lexer, $parser,$this->sql);
         ParseTreeWalker::default()->walk($this->listener, $tree);
         return $this;
     }
@@ -65,7 +67,7 @@ class PageSql
         return $this->listener->getParameters();
     }
 
-    public function getColumns()
+    public function getColumns(): array
     {
         return $this->listener->getColumns();
     }

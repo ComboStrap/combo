@@ -16,6 +16,7 @@ namespace ComboStrap;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
+use dokuwiki\Utf8\Conversion;
 use syntax_plugin_combo_tooltip;
 
 require_once(__DIR__ . '/TemplateUtility.php');
@@ -276,9 +277,9 @@ class LinkUtility
 
     }
 
-    public static function createFromPageId($id,&$tagAttributes = null)
+    public static function createFromPageId($id, &$tagAttributes = null)
     {
-        return new LinkUtility(":$id",$tagAttributes);
+        return new LinkUtility(":$id", $tagAttributes);
     }
 
     /**
@@ -602,7 +603,7 @@ EOF;
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->emailObfuscation($this->dokuwikiUrl->getPathOrId());
+            $emailAddress = $this->obfuscateEmail($this->dokuwikiUrl->getPathOrId());
             $this->attributes->addHtmlAttributeValue("title", $emailAddress);
         }
 
@@ -679,10 +680,10 @@ EOF;
             /**
              * Internal link count
              */
-            if (!array_key_exists(Analytics::INTERNAL_LINKS_COUNT, $stats)) {
-                $stats[Analytics::INTERNAL_LINKS_COUNT] = 0;
+            if (!array_key_exists(Analytics::INTERNAL_LINK_COUNT, $stats)) {
+                $stats[Analytics::INTERNAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::INTERNAL_LINKS_COUNT]++;
+            $stats[Analytics::INTERNAL_LINK_COUNT]++;
 
 
             /**
@@ -690,7 +691,7 @@ EOF;
              */
             $id = $this->getInternalPage()->getId();
             if (!$this->getInternalPage()->exists()) {
-                $stats[Analytics::INTERNAL_LINKS_BROKEN_COUNT]++;
+                $stats[Analytics::INTERNAL_LINK_BROKEN_COUNT]++;
                 $stats[Analytics::INFO][] = "The internal link `{$id}` does not exist";
             }
 
@@ -709,31 +710,31 @@ EOF;
 
         } else if ($this->getType() == self::TYPE_EXTERNAL) {
 
-            if (!array_key_exists(Analytics::EXTERNAL_LINKS_COUNT, $stats)) {
-                $stats[Analytics::EXTERNAL_LINKS_COUNT] = 0;
+            if (!array_key_exists(Analytics::EXTERNAL_LINK_COUNT, $stats)) {
+                $stats[Analytics::EXTERNAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::EXTERNAL_LINKS_COUNT]++;
+            $stats[Analytics::EXTERNAL_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_LOCAL) {
 
-            if (!array_key_exists(Analytics::LOCAL_LINKS_COUNT, $stats)) {
-                $stats[Analytics::LOCAL_LINKS_COUNT] = 0;
+            if (!array_key_exists(Analytics::LOCAL_LINK_COUNT, $stats)) {
+                $stats[Analytics::LOCAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::LOCAL_LINKS_COUNT]++;
+            $stats[Analytics::LOCAL_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_INTERWIKI) {
 
-            if (!array_key_exists(Analytics::INTERWIKI_LINKS_COUNT, $stats)) {
-                $stats[Analytics::INTERWIKI_LINKS_COUNT] = 0;
+            if (!array_key_exists(Analytics::INTERWIKI_LINK_COUNT, $stats)) {
+                $stats[Analytics::INTERWIKI_LINK_COUNT] = 0;
             }
-            $stats[Analytics::INTERWIKI_LINKS_COUNT]++;
+            $stats[Analytics::INTERWIKI_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_EMAIL) {
 
-            if (!array_key_exists(Analytics::EMAILS_COUNT, $stats)) {
-                $stats[Analytics::EMAILS_COUNT] = 0;
+            if (!array_key_exists(Analytics::EMAIL_COUNT, $stats)) {
+                $stats[Analytics::EMAIL_COUNT] = 0;
             }
-            $stats[Analytics::EMAILS_COUNT]++;
+            $stats[Analytics::EMAIL_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_WINDOWS_SHARE) {
 
@@ -796,7 +797,7 @@ EOF;
                     $name = TemplateUtility::renderStringTemplateForPageId($name, $this->dokuwikiUrl->getPathOrId());
                 }
                 if (empty($name)) {
-                    $name = $this->getInternalPage()->getName();
+                    $name = $this->getInternalPage()->getPageNameNotEmpty();
                     if (useHeading('content')) {
                         $page = $this->getInternalPage();
                         $h1 = $page->getH1();
@@ -936,24 +937,21 @@ EOF;
                  * {@link PluginTrait::email()
                  */
                 // common.php#obfsucate implements the $conf['mailguard']
-                $emailRef = $this->getDokuwikiUrl()->getPathOrId();
+                $uri = $this->getDokuwikiUrl()->getPathOrId();
+                $uri = $this->obfuscateEmail($uri);
+                $uri = urlencode($uri);
                 $queryParameters = $this->getDokuwikiUrl()->getQueryParameters();
                 if (sizeof($queryParameters) > 0) {
-                    $emailRef .= "?";
+                    $uri .= "?";
                     foreach ($queryParameters as $key => $value) {
+                        $value = urlencode($value);
+                        $key = urlencode($key);
                         if (in_array($key, self::EMAIL_VALID_PARAMETERS)) {
-                            $emailRef .= "$key=$value";
+                            $uri .= "$key=$value";
                         }
                     }
                 }
-                $address = $this->emailObfuscation($this->ref);
-                // Encode only if visible, the hex option
-                // should not be encoded (otherwise, double up with the & characters)
-                global $conf;
-                if ($conf['mailguard'] == 'visible') {
-                    $address = rawurlencode($address);
-                }
-                $url = 'mailto:' . $address;
+                $url = 'mailto:' . $uri;
                 break;
             case self::TYPE_LOCAL:
                 $url = '#' . $this->renderer->_headerToLink($this->ref);
@@ -1024,45 +1022,50 @@ EOF;
     }
 
     private
-    function emailObfuscation($input)
+    function obfuscateEmail($email, $inAttribute = true): string
     {
-        return obfuscate($input);
+        /**
+         * adapted from {@link obfuscate()} in common.php
+         */
+        global $conf;
+
+        $mailGuard = $conf['mailguard'];
+        if ($mailGuard === "hex" && $inAttribute) {
+            $mailGuard = "visible";
+        }
+        switch ($mailGuard) {
+            case 'visible' :
+                $obfuscate = array('@' => ' [at] ', '.' => ' [dot] ', '-' => ' [dash] ');
+                return strtr($email, $obfuscate);
+
+            case 'hex' :
+                return Conversion::toHtml($email, true);
+
+            case 'none' :
+            default :
+                return $email;
+        }
     }
 
     public
-    function renderClosingTag()
+    function renderClosingTag(): string
     {
         $HTMLTag = $this->getHTMLTag();
         return "</$HTMLTag>";
     }
 
     public
-    function isRelative()
+    function isRelative(): bool
     {
         return strpos($this->path, ':') !== 0;
     }
 
     public
-    function getDokuwikiUrl()
+    function getDokuwikiUrl(): DokuwikiUrl
     {
         return $this->dokuwikiUrl;
     }
 
-
-    /**
-     * @param $input
-     * @return string|string[] Encode
-     */
-    private
-    function urlEncoded($input)
-    {
-        /**
-         * URL encoded
-         */
-        $input = str_replace('&', '&amp;', $input);
-        $input = str_replace('&amp;amp;', '&amp;', $input);
-        return $input;
-    }
 
     public
     static function getHtmlClassInternalLink()
@@ -1109,9 +1112,17 @@ EOF;
         }
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->ref;
+    }
+
+    private
+    function getEmailObfuscationConfiguration()
+    {
+        global $conf;
+        return $conf['mailguard'];
     }
 
 

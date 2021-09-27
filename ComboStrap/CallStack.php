@@ -273,7 +273,7 @@ class CallStack
      * @return Call the deleted call
      */
     public
-    function deleteActualCallAndPrevious()
+    function deleteActualCallAndPrevious(): ?Call
     {
 
         $actualCall = $this->getActualCall();
@@ -532,7 +532,7 @@ class CallStack
      * @return Call the inserted call
      */
     public
-    function insertBefore($call)
+    function insertBefore(Call $call): Call
     {
         if ($this->endWasReached) {
 

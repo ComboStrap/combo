@@ -157,7 +157,8 @@ class Background
                     }
 
                     $media = MediaLink::createFromCallStackArray($backgroundImageValue);
-                    $url = $media->getUrl(DokuwikiUrl::URL_AND, $media->getRequestedWidth());
+                    $image = $media->getDefaultImage();
+                    $url = $image->getUrl(DokuwikiUrl::URL_AND, $image->getTargetWidth());
                     if ($url !== false) {
 
                         $backgroundImageStyleValue = "url(" . $url . ")";
@@ -176,7 +177,16 @@ class Background
             if ($tagAttributes->hasComponentAttribute(Opacity::OPACITY_ATTRIBUTE)) {
                 $opacity = $tagAttributes->getValueAndRemove(Opacity::OPACITY_ATTRIBUTE);
                 $finalOpacity = 1 - $opacity;
-                $backgroundImageStyleValue = "linear-gradient(to right, rgba(255,255,255, $finalOpacity) 0 100%)," . $backgroundImageStyleValue;
+                /**
+                 * In the argument of linear-gradient, we don't use `0 100%` to apply the
+                 * same image everywhere
+                 *
+                 * because the validator https://validator.w3.org/ would complain with
+                 * `
+                 * CSS: background-image: too few values for the property linear-gradient.
+                 * `
+                 */
+                $backgroundImageStyleValue = "linear-gradient(to right, rgba(255,255,255, $finalOpacity) 0 50%, rgba(255,255,255, $finalOpacity) 50% 100%)," . $backgroundImageStyleValue;
             }
             $tagAttributes->addStyleDeclaration(self::BACKGROUND_IMAGE, $backgroundImageStyleValue);
         }

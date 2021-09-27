@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Image;
 use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -146,13 +147,13 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
          */
         $twitterImages = $page->getLocalImageSet();
         if (empty($twitterImages)) {
-            $defaultImageIdConf = cleanID(PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE));
+            $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = MediaLink::createMediaLinkFromNonQualifiedPath($defaultImageIdConf);
+                $twitterImage = Image::createImageFromAbsolutePath($defaultImageIdConf);
                 if ($twitterImage->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {
-                    if ($defaultImageIdConf != "apple-touch-icon.png") {
+                    if ($defaultImageIdConf != ":apple-touch-icon.png") {
                         LogUtility::msg("The default twitter image ($defaultImageIdConf) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     }
                 }
@@ -163,7 +164,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
             foreach ($twitterImages as $twitterImage) {
                 if ($twitterImage->exists()) {
                     $twitterMeta[self::META_IMAGE] = $twitterImage->getAbsoluteUrl();
-                    $title = $twitterImage->getTagAttributes()->getComponentAttributeValue(TagAttributes::TITLE_KEY);
+                    $title = $twitterImage->getAltNotEmpty();
                     if (!empty($title)) {
                         $twitterMeta[self::META_IMAGE_ALT] = $title;
                     }

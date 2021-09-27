@@ -37,22 +37,30 @@ class Site
     /**
      * @return string|null the html img tag or null
      */
-    public static function getLogoImgHtmlTag($tagAttributes = null)
+    public static function getLogoImgHtmlTag($tagAttributes = null): ?string
     {
         $logoIds = self::getLogoIds();
         foreach ($logoIds as $logoId) {
-            $mediaLink = MediaLink::createMediaLinkFromNonQualifiedPath($logoId, null, $tagAttributes);
-            $mediaLink->setLazyLoad(false);
-            if ($mediaLink->exists()) {
+            if ($logoId->exists()) {
+                $mediaLink = MediaLink::createMediaLinkFromNonQualifiedPath($logoId->getAbsolutePath(), null, $tagAttributes);
+                $mediaLink->setLazyLoad(false);
                 return $mediaLink->renderMediaTag();
             }
         }
         return null;
     }
 
-    private static function getLogoIds()
+    /**
+     * @return Image[]
+     */
+    private static function getLogoIds(): array
     {
-        return PluginUtility::mergeAttributes(self::PNG_LOGO_IDS,self::SVG_LOGO_IDS);
+        $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS,self::SVG_LOGO_IDS);
+        $logos = [];
+        foreach ($logosPaths as $logoPath){
+            $logos[]=Image::createImageFromAbsolutePath($logoPath);
+        }
+        return $logos;
     }
 
 

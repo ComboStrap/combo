@@ -15,7 +15,7 @@ namespace ComboStrap;
 use dokuwiki\Extension\SyntaxPlugin;
 use syntax_plugin_combo_media;
 
-require_once(__DIR__ . '/DokuPath.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  * Class InternalMedia
@@ -30,9 +30,11 @@ require_once(__DIR__ . '/DokuPath.php');
  * and therefore determine the function in an render
  * (ie {@link \Doku_Renderer::internalmedialink()} or {@link \Doku_Renderer::externalmedialink()}
  *
- * It's a HTML tag and a URL (in the dokuwiki mode) build around its file system path
+ * This is a link to a media (pdf, image, ...).
+ * It's used to check the media type and to
+ * take over if the media type is an image
  */
-abstract class MediaLink extends DokuPath
+abstract class MediaLink
 {
 
 
@@ -59,8 +61,8 @@ abstract class MediaLink extends DokuPath
      * or internal
      */
     const NON_URL_ATTRIBUTES = [
-        self::ALIGN_KEY,
-        self::LINKING_KEY,
+        MediaLink::ALIGN_KEY,
+        MediaLink::LINKING_KEY,
         TagAttributes::TITLE_KEY,
         Hover::ON_HOVER_ATTRIBUTE,
         Animation::ON_VIEW_ATTRIBUTE,
@@ -116,34 +118,25 @@ abstract class MediaLink extends DokuPath
 
 
     /**
-     * @var TagAttributes
+     * The path of the media
+     * @var Media[]
      */
-    protected $tagAttributes;
+    private $media;
 
 
     /**
      * Image constructor.
-     * @param $ref
-     * @param TagAttributes $tagAttributes
-     * @param string $rev - mtime
+     * @param Image $media
      *
      * Protected and not private
      * to allow cascading init
      * If private, the parent attributes are null
-     *
      */
-    protected function __construct($absolutePath, $tagAttributes = null, $rev = null)
+    protected function __construct(Media $media)
     {
-
-        parent::__construct($absolutePath, DokuPath::MEDIA_TYPE, $rev);
-
-        if ($tagAttributes == null) {
-            $this->tagAttributes = TagAttributes::createEmpty();
-        } else {
-            $this->tagAttributes = $tagAttributes;
-        }
-
+        $this->media = $media;
     }
+
 
 
     /**
@@ -300,7 +293,7 @@ abstract class MediaLink extends DokuPath
             Dimension::WIDTH_KEY => $parsedAttributes[Dimension::WIDTH_KEY],
             Dimension::HEIGHT_KEY => $parsedAttributes[Dimension::HEIGHT_KEY],
             CacheMedia::CACHE_KEY => $parsedAttributes[CacheMedia::CACHE_KEY],
-            'title' => $description,
+            TagAttributes::TITLE_KEY => $description,
             MediaLink::ALIGN_KEY => $align,
             MediaLink::LINKING_KEY => $parsedAttributes[MediaLink::LINKING_KEY],
         );
@@ -378,13 +371,19 @@ abstract class MediaLink extends DokuPath
          * Resolution
          */
         $qualifiedPath = $nonQualifiedPath;
-        if(!media_isexternal($qualifiedPath)) {
+        if (!media_isexternal($qualifiedPath)) {
             global $ID;
             $qualifiedId = $nonQualifiedPath;
             resolve_mediaid(getNS($ID), $qualifiedId, $exists);
             $qualifiedPath = DokuPath::PATH_SEPARATOR . $qualifiedId;
         }
 
+
+        return self::createMediaLinkFromAbsolutePath($qualifiedPath,$rev,$tagAttributes);
+    }
+
+    public static function createMediaLinkFromAbsolutePath($qualifiedPath, $rev = null, $tagAttributes = null)
+    {
         /**
          * Processing
          */
@@ -403,24 +402,24 @@ abstract class MediaLink extends DokuPath
 
         if (substr($mime, 0, 5) == 'image') {
             if (substr($mime, 6) == "svg+xml") {
-                // The require is here because Svg Image Link is child of Internal Media Link (extends)
-                require_once(__DIR__ . '/SvgImageLink.php');
-                $internalMedia = new SvgImageLink($qualifiedPath, $tagAttributes, $rev);
+
+                $svgImage = new ImageSvg($qualifiedPath, $rev, $tagAttributes);
+                $internalMedia = new SvgImageLink($svgImage);
             } else {
-                // The require is here because Raster Image Link is child of Internal Media Link (extends)
-                require_once(__DIR__ . '/RasterImageLink.php');
-                $internalMedia = new RasterImageLink($qualifiedPath, $tagAttributes);
+                $rasterImage = new ImageRaster($qualifiedPath, $rev, $tagAttributes);
+                $internalMedia = new RasterImageLink($rasterImage );
             }
         } else {
             if ($mime == false) {
-                LogUtility::msg("The mime type of the media ($nonQualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR, "support");
-                $internalMedia = new RasterImageLink($qualifiedPath, $tagAttributes);
+                LogUtility::msg("The mime type of the media ($qualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
+                $media = new ImageRaster($qualifiedPath, $rev, $tagAttributes);
+                $internalMedia = new RasterImageLink($media);
             } else {
-                LogUtility::msg("The type ($mime) of media ($nonQualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                $internalMedia = new ThirdMediaLink($qualifiedPath, $tagAttributes);
+                LogUtility::msg("The type ($mime) of media ($qualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
+                $media = Media::create($qualifiedPath, $rev, $tagAttributes);
+                $internalMedia = new ThirdMediaLink($media);
             }
         }
-
 
         return $internalMedia;
     }
@@ -440,8 +439,7 @@ abstract class MediaLink extends DokuPath
      *
      * @return array of key string and value
      */
-    public
-    function toCallStackArray()
+    public function toCallStackArray(): array
     {
         /**
          * Trying to stay inline with the dokuwiki key
@@ -450,29 +448,18 @@ abstract class MediaLink extends DokuPath
          * src is a path (not an id)
          */
         $array = array(
-            DokuPath::PATH_ATTRIBUTE => $this->getPath()
+            DokuPath::PATH_ATTRIBUTE => $this->getMedia()->getPath()
         );
 
 
         // Add the extra attribute
-        return array_merge($this->tagAttributes->toCallStackArray(), $array);
+        return array_merge($this->getMedia()->getAttributes()->toCallStackArray(), $array);
 
 
     }
 
 
-    /**
-     * @return string the wiki syntax
-     */
-    public
-    function getMarkupSyntax()
-    {
-        $descriptionPart = "";
-        if ($this->tagAttributes->hasComponentAttribute(TagAttributes::TITLE_KEY)) {
-            $descriptionPart = "|" . $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
-        }
-        return '{{:' . $this->getId() . $descriptionPart . '}}';
-    }
+
 
 
     public
@@ -482,133 +469,100 @@ abstract class MediaLink extends DokuPath
     }
 
 
-    public
-    function getRequestedHeight()
-    {
-        return $this->tagAttributes->getValue(Dimension::HEIGHT_KEY);
-    }
-
-
-    /**
-     * The requested width
-     */
-    public
-    function getRequestedWidth()
-    {
-        return $this->tagAttributes->getValue(Dimension::WIDTH_KEY);
-    }
-
-
-    public
-    function getCache()
-    {
-        return $this->tagAttributes->getValue(CacheMedia::CACHE_KEY);
-    }
-
-    protected
-    function getTitle()
-    {
-        return $this->tagAttributes->getValue(TagAttributes::TITLE_KEY);
-    }
-
 
     public
     function __toString()
     {
-        return $this->getId();
+        return $this->getMedia()->getId();
     }
 
     private
     function getAlign()
     {
-        return $this->getTagAttributes()->getComponentAttributeValue(self::ALIGN_KEY, null);
+        return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::ALIGN_KEY);
     }
 
     private
     function getLinking()
     {
-        return $this->getTagAttributes()->getComponentAttributeValue(self::LINKING_KEY, null);
+        return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::LINKING_KEY);
     }
 
 
-    public
-    function &getTagAttributes()
-    {
-        return $this->tagAttributes;
-    }
 
     /**
      * @return string - the HTML of the image inside a link if asked
      */
     public
-    function renderMediaTagWithLink()
+    function renderMediaTagWithLink(): string
     {
 
         /**
          * Link to the media
          *
          */
-        $imageLink = TagAttributes::createEmpty();
+        $mediaLink = TagAttributes::createEmpty();
         // https://www.dokuwiki.org/config:target
         global $conf;
         $target = $conf['target']['media'];
-        $imageLink->addHtmlAttributeValueIfNotEmpty("target", $target);
+        $mediaLink->addHtmlAttributeValueIfNotEmpty("target", $target);
         if (!empty($target)) {
-            $imageLink->addHtmlAttributeValue("rel", 'noopener');
+            $mediaLink->addHtmlAttributeValue("rel", 'noopener');
         }
 
         /**
          * Do we add a link to the image ?
          */
-        $linking = $this->tagAttributes->getValue(self::LINKING_KEY);
+        $media = $this->getMedia();
+        $linking = $this->getLinking();
         switch ($linking) {
             case self::LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(
-                    $this->getId(),
+                    $media->getId(),
                     array(
-                        'id' => $this->getId(),
-                        'cache' => $this->getCache(),
-                        'rev' => $this->getRevision()
+                        'id' => $media->getId(),
+                        'cache' => $media->getCache(),
+                        'rev' => $media->getRevision()
                     )
                 );
-                $imageLink->addHtmlAttributeValue("href", $src);
-                $title = $this->getTitle();
+                $mediaLink->addHtmlAttributeValue("href", $src);
+                $title = $media->getTitle();
                 if (empty($title)) {
-                    $title = $this->getBaseName();
+                    $title = $media->getBaseName();
                 }
-                return $imageLink->toHtmlEnterTag("a") . $title . "</a>";
+                return $mediaLink->toHtmlEnterTag("a") . $title . "</a>";
             case self::LINKING_NOLINK_VALUE:
                 return $this->renderMediaTag();
             default:
             case self::LINKING_DIRECT_VALUE:
                 //directly to the image
                 $src = ml(
-                    $this->getId(),
+                    $media->getId(),
                     array(
-                        'id' => $this->getId(),
-                        'cache' => $this->getCache(),
-                        'rev' => $this->getRevision()
+                        'id' => $media->getId(),
+                        'cache' => $media->getCache(),
+                        'rev' => $media->getRevision()
                     ),
                     true
                 );
-                $imageLink->addHtmlAttributeValue("href", $src);
-                return $imageLink->toHtmlEnterTag("a") .
+                $mediaLink->addHtmlAttributeValue("href", $src);
+                return $mediaLink->toHtmlEnterTag("a") .
                     $this->renderMediaTag() .
                     "</a>";
 
             case self::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
                 $src = ml(
-                    $this->getId(),
+                    $media->getId(),
                     array(
-                        'id' => $this->getId(),
-                        'cache' => $this->getCache(),
-                        'rev' => $this->getRevision()
+                        'id' => $media->getId(),
+                        'cache' => $media->getCache(),
+                        'rev' => $media->getRevision()
                     ),
                     false
                 );
-                $imageLink->addHtmlAttributeValue("href", $src);
-                return $imageLink->toHtmlEnterTag("a") .
+                $mediaLink->addHtmlAttributeValue("href", $src);
+                return $mediaLink->toHtmlEnterTag("a") .
                     $this->renderMediaTag() .
                     "</a>";
 
@@ -617,230 +571,24 @@ abstract class MediaLink extends DokuPath
 
     }
 
-    /**
-     * @param $imgTagHeight
-     * @param $imgTagWidth
-     * @return float|mixed
-     */
-    public
-    function checkWidthAndHeightRatioAndReturnTheGoodValue($imgTagWidth, $imgTagHeight)
-    {
-        /**
-         * Check of height and width dimension
-         * as specified here
-         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
-         */
-        $targetRatio = $this->getTargetRatio();
-        if (!(
-            $imgTagHeight * $targetRatio >= $imgTagWidth - 0.5
-            &&
-            $imgTagHeight * $targetRatio <= $imgTagWidth + 0.5
-        )) {
-            // check the second statement
-            if (!(
-                $imgTagWidth / $targetRatio >= $imgTagHeight - 0.5
-                &&
-                $imgTagWidth / $targetRatio <= $imgTagHeight + 0.5
-            )) {
-                $requestedHeight = $this->getRequestedHeight();
-                $requestedWidth = $this->getRequestedWidth();
-                if (
-                    !empty($requestedHeight)
-                    && !empty($requestedWidth)
-                ) {
-                    /**
-                     * The user has asked for a width and height
-                     */
-                    $imgTagWidth = round($imgTagHeight * $targetRatio);
-                    LogUtility::msg("The width ($requestedWidth) and height ($requestedHeight) specified on the image ($this) does not follow the natural ratio as <a href=\"https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height\">required by HTML</a>. The width was then set to ($imgTagWidth).", LogUtility::LVL_MSG_INFO, self::CANONICAL);
-                } else {
-                    /**
-                     * Programmatic error from the developer
-                     */
-                    $imgTagRatio = $imgTagWidth / $imgTagHeight;
-                    LogUtility::msg("Internal Error: The width ($imgTagWidth) and height ($imgTagHeight) calculated for the image ($this) does not pass the ratio test. They have a ratio of ($imgTagRatio) while the natural dimension ratio is ($targetRatio)");
-                }
-            }
-        }
-        return $imgTagWidth;
-    }
-
-    /**
-     * Target ratio as explained here
-     * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
-     * @return float|int|false
-     * false if the image is not supported
-     *
-     * It's needed for an img tag to set the img `width` and `height` that pass the
-     * {@link MediaLink::checkWidthAndHeightRatioAndReturnTheGoodValue() check}
-     * to avoid layout shift
-     *
-     */
-    protected function getTargetRatio()
-    {
-        if ($this->getMediaHeight() == null || $this->getMediaWidth() == null) {
-            return false;
-        } else {
-            return $this->getMediaWidth() / $this->getMediaHeight();
-        }
-    }
-
-    /**
-     * Return the height that the image should take on the screen
-     * for the specified size
-     *
-     * @param null $localRequestedWidth - the width to derive the height from (in case the image is created for responsive lazy loading)
-     * if not specified, the requested width and if not specified the intrinsic width
-     * @return int the height value attribute in a img
-     */
-    public
-    function getImgTagHeightValue($localRequestedWidth = null)
-    {
-
-        /**
-         * Cropping is not yet supported.
-         */
-        $requestedHeight = $this->getRequestedHeight();
-        $requestedWidth = $this->getRequestedWidth();
-        if (
-            $requestedHeight != null
-            && $requestedHeight != 0
-            && $requestedWidth != null
-            && $requestedWidth != 0
-        ) {
-            global $ID;
-            if ($ID != "wiki:syntax") {
-                /**
-                 * Cropping
-                 */
-                LogUtility::msg("The width and height has been set on the image ($this) but we don't support yet cropping. Set only the width or the height (0x250)", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
-            }
-        }
-
-        /**
-         * If resize by height, the img tag height is the requested height
-         */
-        if ($localRequestedWidth == null) {
-            if ($requestedHeight != null) {
-                return $requestedHeight;
-            } else {
-                $localRequestedWidth = $this->getRequestedWidth();
-                if (empty($localRequestedWidth)) {
-                    $localRequestedWidth = $this->getMediaWidth();
-                }
-            }
-        }
-
-        /**
-         * Computation
-         */
-        $computedHeight = $this->getRequestedHeight();
-        $targetRatio = $this->getTargetRatio();
-        if ($targetRatio !== false) {
-
-            /**
-             * Scale the height by target ratio
-             */
-            $computedHeight = $localRequestedWidth / $this->getTargetRatio();
-
-            /**
-             * Check
-             */
-            if ($requestedHeight != null) {
-                if ($requestedHeight < $computedHeight) {
-                    LogUtility::msg("The computed height cannot be greater than the requested height");
-                }
-            }
-
-        }
 
 
-        /**
-         * Rounding to integer
-         * The fetch.php file takes int as value for width and height
-         * making a rounding if we pass a double (such as 37.5)
-         * This is important because the security token is based on width and height
-         * and therefore the fetch will failed
-         *
-         * And not directly {@link intval} because it will make from 3.6, 3 and not 4
-         */
-        return intval(round($computedHeight));
 
-    }
-
-    /**
-     * @return int - the width value attribute in a img (in CSS pixel that the image should takes)
-     */
-    public
-    function getImgTagWidthValue()
-    {
-        $linkWidth = $this->getRequestedWidth();
-        if (empty($linkWidth)) {
-            if (empty($this->getRequestedHeight())) {
-
-                $linkWidth = $this->getMediaWidth();
-
-            } else {
-
-                // Height is not empty
-                // We derive the width from it
-                if ($this->getMediaHeight() != 0
-                    && !empty($this->getMediaHeight())
-                    && !empty($this->getMediaWidth())
-                ) {
-                    $linkWidth = $this->getMediaWidth() * ($this->getRequestedHeight() / $this->getMediaHeight());
-                }
-
-            }
-        }
-        /**
-         * Rounding to integer
-         * The fetch.php file takes int as value for width and height
-         * making a rounding if we pass a double (such as 37.5)
-         * This is important because the security token is based on width and height
-         * and therefore the fetch will failed
-         *
-         * And this is also ask by the specification
-         * a non-null positive integer
-         * https://html.spec.whatwg.org/multipage/embedded-content-other.html#attr-dim-height
-         *
-         * And not {@link intval} because it will make from 3.6, 3 and not 4
-         */
-        return intval(round($linkWidth));
-    }
 
     /**
      * @return string - the HTML of the image
      */
-    public abstract function renderMediaTag();
+    public abstract function renderMediaTag(): string;
+
 
     /**
-     * The Url
-     * @return mixed
+     * The file
+     * @return Media
      */
-    public abstract function getAbsoluteUrl();
-
-    /**
-     * For a raster image, the internal width
-     * for a svg, the defined viewBox
-     *
-     * This is needed to calculate the {@link MediaLink::getTargetRatio() target ratio}
-     * and pass them to the img tag to avoid layout shift
-     *
-     * @return mixed
-     */
-    public abstract function getMediaWidth();
-
-    /**
-     * For a raster image, the internal height
-     * for a svg, the defined `viewBox` value
-     *
-     * This is needed to calculate the {@link MediaLink::getTargetRatio() target ratio}
-     * and pass them to the img tag to avoid layout shift
-     *
-     * @return mixed
-     */
-    public abstract function getMediaHeight();
+    public function getMedia(): Media
+    {
+        return $this->media;
+    }
 
 
 }

@@ -12,6 +12,7 @@ use Antlr\Antlr4\Runtime\Tree\TerminalNode;
 use ComboStrap\PageSqlParser\PageSqlLexer;
 use ComboStrap\PageSqlParser\PageSqlParser;
 
+
 /**
  * Class SqlTreeListener
  * @package ComboStrap\LogicalSqlAntlr
@@ -56,18 +57,24 @@ final class PageSqlTreeListener implements ParseTreeListener
     /**
      * @var array
      */
-    private $columns;
+    private $columns = [];
+    /**
+     * @var string
+     */
+    private $pageSqlString;
 
     /**
      * SqlTreeListener constructor.
      *
      * @param PageSqlLexer $lexer
      * @param PageSqlParser $parser
+     * @param string $sql
      */
-    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser)
+    public function __construct(PageSqlLexer $lexer, PageSqlParser $parser, string $sql)
     {
         $this->lexer = $lexer;
         $this->parser = $parser;
+        $this->pageSqlString = $sql;
     }
 
 
@@ -157,6 +164,7 @@ final class PageSqlTreeListener implements ParseTreeListener
                     $this->physicalSql .= " {$text}\n";
                 }
                 return;
+            case PageSqlParser::LIMIT:
             case PageSqlParser:: NOT:
                 $this->physicalSql .= "{$text} ";
                 return;
@@ -177,9 +185,6 @@ final class PageSqlTreeListener implements ParseTreeListener
                         $this->physicalSql .= "{$text}";
                         return;
                 }
-            case PageSqlParser::LIMIT:
-                $this->physicalSql .= "{$text} ";
-                return;
             case PageSqlParser::ESCAPE:
                 $this->physicalSql .= " {$text} ";
                 return;
@@ -205,6 +210,16 @@ final class PageSqlTreeListener implements ParseTreeListener
     public
     function visitErrorNode(ErrorNode $node): void
     {
+        $charPosition = $node->getSymbol()->getStartIndex();
+        $textMakingTheError = $node->getText(); // $this->lexer->getText();
+
+        $position = "at position: $charPosition";
+        if ($charPosition != 0) {
+            $position .= ", in `" . substr($this->pageSqlString, $charPosition, -1)."`";
+        }
+        $message = "PageSql Parsing Error: The token `$textMakingTheError` was unexpected ($position).";
+        throw new \RuntimeException($message);
+
     }
 
 
@@ -310,7 +325,6 @@ final class PageSqlTreeListener implements ParseTreeListener
     {
         return $this->physicalSql;
     }
-
 
 
 }

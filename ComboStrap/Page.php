@@ -1931,9 +1931,17 @@ EOF;
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
         $array[self::TYPE_META_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
 
+        /**
+         * When creating a page, the file
+         * may not be saved, causing a
+         * filemtime(): stat failed for pages/test.txt in lib\plugins\combo\ComboStrap\File.php on line 62
+         *
+         */
+        if($this->exists()) {
+            $array[Analytics::DATE_CREATED] = $this->getCreatedDateString();
+            $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateString();
+        }
 
-        $array[Analytics::DATE_CREATED] = $this->getCreatedDateString();
-        $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateString();
         $array[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
 
         return $array;

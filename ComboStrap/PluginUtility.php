@@ -468,9 +468,10 @@ class PluginUtility
      * and a {@link Lexer::addSpecialPattern} state
      * where the tag is just replaced
      */
-    public static function getEmptyTagPattern($tag)
+    public static function getEmptyTagPattern($tag): string
     {
-        return '<' . $tag . '.*?/>';
+
+        return '<' . $tag . '[^>]*/>';
     }
 
     /**

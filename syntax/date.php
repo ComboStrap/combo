@@ -35,7 +35,11 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
 
     function getType()
     {
-        return 'protected';
+        /**
+         * Not protected otherwise
+         * a lot of text component such as italic, itext will not work
+         */
+        return 'formatting';
     }
 
     /**
@@ -151,7 +155,18 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                          * The date (null if none)
                          */
                         $date = $tagAttributes->getComponentAttributeValue(self::DATE_ATTRIBUTE);
-                        $timeStamp = Iso8601Date::create($date)->getDateTime()->getTimestamp();
+                        /**
+                         * Date may be wrong
+                         */
+                        try {
+                            $dateTime = Iso8601Date::create($date);
+                        } catch (Exception $e) {
+                            LogUtility::msg("The string date ($date) is not a valid date",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                            $renderer->doc .= "<span class=\"text-danger\">String Date value not valid ($date)</span>";
+                            return false;
+                        }
+
+                        $timeStamp = $dateTime->getDateTime()->getTimestamp();
                         /**
                          * The format
                          */

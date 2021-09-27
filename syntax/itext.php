@@ -53,7 +53,7 @@ class syntax_plugin_combo_itext extends DokuWiki_Syntax_Plugin
      */
     function getAllowedTypes()
     {
-        return array('formatting', 'substition');
+        return array('formatting', 'substition', 'protected');
     }
 
 

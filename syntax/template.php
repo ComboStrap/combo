@@ -246,9 +246,17 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                         /**
                          * Capture Variable Names
                          */
-                        $capturedContent = $actualCall->getCapturedContent();
-                        if(!empty($capturedContent)) {
-                            $template = Template::create($capturedContent);
+                        $textWithVariables = $actualCall->getCapturedContent();
+                        $attributes = $actualCall->getAttributes();
+                        if($attributes!=null) {
+                            $sep = " ";
+                            foreach ($attributes as $key => $attribute) {
+                                $textWithVariables .= $sep . $key . $sep . $attribute;
+                            }
+                        }
+
+                        if (!empty($textWithVariables)) {
+                            $template = Template::create($textWithVariables);
                             $variablesDetected = $template->getVariablesDetected();
                             $variableNames = array_merge($variableNames, $variablesDetected);
                         }

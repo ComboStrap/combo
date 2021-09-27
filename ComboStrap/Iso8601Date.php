@@ -118,7 +118,7 @@ class Iso8601Date
         }
 
 
-        $dateTime = DateTime::createFromFormat(DateTime::ATOM, $dateString);
+        $dateTime = DateTime::createFromFormat(self::getFormat(), $dateString);
         if ($dateTime === false) {
             throw new \RuntimeException("The date string ($original) is not one of the valid date format. " . join(", ", self::VALID_FORMATS));
         }

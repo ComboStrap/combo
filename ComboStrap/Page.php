@@ -701,7 +701,7 @@ class Page extends DokuPath
                 'DATE_END' => $this->getStartDateAsString(),
                 'COUNTRY' => $this->getCountry(),
                 'LANG' => $this->getLang(),
-                'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 0 : 1),
+                'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 1 : 0),
                 'TYPE' => $this->getType(),
                 'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
                 'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],

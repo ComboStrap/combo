@@ -47,7 +47,12 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * We do it after because if there is an error
          * We will not stop the Dokuwiki Processing
          */
-        $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_refresh_analytics', array());
+        $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_background_refresh_analytics', array());
+
+        /**
+         * Index
+         */
+        $controller->register_hook('INDEXER_PAGE_ADD', 'AFTER', $this, 'update_index', array());
 
         /**
          * Add a icon in the page tools menu
@@ -65,9 +70,18 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
     }
 
-    public function handle_refresh_analytics(Doku_Event $event, $param)
+    public function handle_background_refresh_analytics(Doku_Event $event, $param)
     {
 
+        /**
+         * Process the analytics to refresh
+         */
+        $this->analyticsBatchBackgroundRefresh();
+
+    }
+
+    public function update_index(Doku_Event $event, $param)
+    {
         /**
          * Check that the actual page has analytics data
          * (if there is a cache, it's pretty quick)
@@ -80,14 +94,21 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         }
         $page = Page::createPageFromId($id);
         if ($page->shouldAnalyticsProcessOccurs()) {
-            $page->processAnalytics();
+            $page->refreshAnalytics();
+            /**
+             * TODO: Add reference
+             */
         }
 
         /**
-         * Process the analytics to refresh
+         * From {@link idx_addPage}
+         * They receive even the deleted page
          */
-        $this->analyticsBatchBackgroundRefresh();
+        if (!$page->exists()) {
 
+            //  $result = $Indexer->deletePage($page);
+
+        }
     }
 
     public function handle_rail_bar(Doku_Event $event, $param)
@@ -136,7 +157,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         $refreshCounter = 0;
         foreach ($rows as $row) {
             $page = Page::createPageFromId($row['ID']);
-            $page->processAnalytics();
+            $page->refreshAnalytics();
             $refreshCounter++;
             if ($refreshCounter >= $maxRefresh) {
                 break;
@@ -193,11 +214,11 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         /**
          * Process to update the backlinks
          */
-        $linksChanged = array_fill_keys($addedLinks,"added");
+        $linksChanged = array_fill_keys($addedLinks, "added");
         foreach ($linksBefore as $deletedLink => $deletedLinkPageExists) {
             $linksChanged[$deletedLink] = 'deleted';
         }
-        foreach ($linksChanged as  $changedLink => $status) {
+        foreach ($linksChanged as $changedLink => $status) {
             /**
              * We delete the cache
              * We don't update the analytics

@@ -191,7 +191,7 @@ EOF;
             $pageCounter++;
             echo "Processing the page {$id} ($pageCounter / $totalNumberOfPages)\n";
 
-            $data = Analytics::processAndGetDataAsArray($id, $cache);
+            $data = Analytics::getDataAsArray($id, $cache);
             if (!empty($fileHandle)) {
                 $statistics = $data[Analytics::STATISTICS];
                 $row = array(

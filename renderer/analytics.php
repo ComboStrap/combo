@@ -575,7 +575,6 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         );
         $json_encoded = json_encode($finalStats, JSON_PRETTY_PRINT);
 
-        $this->page->persistAnalytics($finalStats);
         $this->doc .= $json_encoded;
 
     }

@@ -94,6 +94,6 @@ class RenderUtility
     public
     static function renderId2Json($pageId)
     {
-        return Analytics::processAndGetDataAsJson($pageId);
+        return Analytics::getDataAsJsonObject($pageId);
     }
 }

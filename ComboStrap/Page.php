@@ -675,80 +675,6 @@ class Page extends DokuPath
         return null;
     }
 
-    public
-    function persistAnalytics(array $analytics)
-    {
-
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-            /**
-             * Sqlite Plugin installed
-             */
-            $json = json_encode($analytics, JSON_PRETTY_PRINT);
-            /**
-             * Same data as {@link Page::getMetadataForRendering()}
-             */
-            $entry = array(
-                'CANONICAL' => $this->getCanonical(),
-                'ANALYTICS' => $json,
-                'PATH' => $this->getAbsolutePath(),
-                'NAME' => $this->getName(),
-                'TITLE' => $this->getTitleNotEmpty(),
-                'H1' => $this->getH1NotEmpty(),
-                'DATE_CREATED' => $this->getCreatedDateString(),
-                'DATE_MODIFIED' => $this->getModifiedDateString(),
-                'DATE_PUBLISHED' => $this->getPublishedTimeAsString(),
-                'DATE_START' => $this->getEndDateAsString(),
-                'DATE_END' => $this->getStartDateAsString(),
-                'COUNTRY' => $this->getCountry(),
-                'LANG' => $this->getLang(),
-                'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 1 : 0),
-                'TYPE' => $this->getType(),
-                'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
-                'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],
-                'IS_HOME' => ($this->isNamespaceHomePage() === true ? 1 : 0),
-                'ID' => $this->getId(),
-            );
-            $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
-            if ($sqlite->res2single($res) == 1) {
-                // Upset not supported on all version
-                //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-                $update = <<<EOF
-update
-    PAGES
-SET
-    CANONICAL = ?,
-    ANALYTICS = ?,
-    PATH = ?,
-    NAME = ?,
-    TITLE = ?,
-    H1 = ?,
-    DATE_CREATED = ?,
-    DATE_MODIFIED = ?,
-    DATE_PUBLISHED = ?,
-    DATE_START = ?,
-    DATE_END = ?,
-    COUNTRY = ?,
-    LANG = ?,
-    IS_LOW_QUALITY = ?,
-    TYPE = ?,
-    WORD_COUNT = ?,
-    BACKLINK_COUNT = ?,
-    IS_HOME = ?
-where
-    ID=?
-EOF;
-                $res = $sqlite->query($update, $entry);
-            } else {
-                $res = $sqlite->storeEntry('PAGES', $entry);
-            }
-            if (!$res) {
-                LogUtility::msg("There was a problem during the upsert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $sqlite->res_close($res);
-        }
-
-    }
 
     /**
      * @param string $mode delete the cache for the format XHTML and {@link renderer_plugin_combo_analytics::RENDERER_NAME_MODE}
@@ -844,14 +770,19 @@ EOF;
     }
 
     /**
-     * Delete the cache, process the analytics
-     * and return it
-     * If you want the analytics from the cache use {@link Page::getAnalyticsFromFs()}
-     * instead
+     * Delete the cache,
+     * Process the analytics
+     * Save it in the Db
+     * Delete from the page to refresh if any
+     *
+     * If you want the analytics:
+     *   * from the cache use {@link Page::getAnalyticsFromFs()}
+     *   * from the db use {@link Page::getAnalyticsFromDb()}
+     *
      * @return mixed analytics as array
      */
     public
-    function processAnalytics()
+    function refreshAnalytics()
     {
 
         /**
@@ -859,10 +790,87 @@ EOF;
          * (The delete is normally not needed, just to be sure)
          */
         $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-        $analytics = Analytics::processAndGetDataAsArray($this->getId(), true);
 
         /**
-         * Delete from the table
+         * Render and save on the file system
+         */
+        $analytics = Analytics::getDataAsArray($this->getId(), true);
+
+        /**
+         * Persist on the DB
+         */
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite != null) {
+            /**
+             * Sqlite Plugin installed
+             */
+            $json = json_encode($analytics, JSON_PRETTY_PRINT);
+            /**
+             * Same data as {@link Page::getMetadataForRendering()}
+             */
+            $entry = array(
+                'CANONICAL' => $this->getCanonical(),
+                'ANALYTICS' => $json,
+                'PATH' => $this->getAbsolutePath(),
+                'NAME' => $this->getName(),
+                'TITLE' => $this->getTitleNotEmpty(),
+                'H1' => $this->getH1NotEmpty(),
+                'DATE_CREATED' => $this->getCreatedDateString(),
+                'DATE_MODIFIED' => $this->getModifiedDateString(),
+                'DATE_PUBLISHED' => $this->getPublishedTimeAsString(),
+                'DATE_START' => $this->getEndDateAsString(),
+                'DATE_END' => $this->getStartDateAsString(),
+                'COUNTRY' => $this->getCountry(),
+                'LANG' => $this->getLang(),
+                'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 1 : 0),
+                'TYPE' => $this->getType(),
+                'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
+                'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],
+                'IS_HOME' => ($this->isNamespaceHomePage() === true ? 1 : 0),
+                'ID' => $this->getId(),
+            );
+            $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
+            if ($sqlite->res2single($res) == 1) {
+                // Upset not supported on all version
+                //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
+                $update = <<<EOF
+update
+    PAGES
+SET
+    CANONICAL = ?,
+    ANALYTICS = ?,
+    PATH = ?,
+    NAME = ?,
+    TITLE = ?,
+    H1 = ?,
+    DATE_CREATED = ?,
+    DATE_MODIFIED = ?,
+    DATE_PUBLISHED = ?,
+    DATE_START = ?,
+    DATE_END = ?,
+    COUNTRY = ?,
+    LANG = ?,
+    IS_LOW_QUALITY = ?,
+    TYPE = ?,
+    WORD_COUNT = ?,
+    BACKLINK_COUNT = ?,
+    IS_HOME = ?
+where
+    ID=?
+EOF;
+                $res = $sqlite->query($update, $entry);
+            } else {
+                $res = $sqlite->storeEntry('PAGES', $entry);
+            }
+            if (!$res) {
+                LogUtility::msg("There was a problem during the upsert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            }
+            $sqlite->res_close($res);
+        }
+
+
+        /**
+         * Delete from the refresh table
          */
         $sqlite = Sqlite::getSqlite();
         if ($sqlite != null) {
@@ -890,12 +898,12 @@ EOF;
              * Note for dev: because cache is off in dev environment,
              * you will get it always processed
              */
-            return Analytics::processAndGetDataAsArray($this->getId(), $cache);
+            return Analytics::getDataAsArray($this->getId(), $cache);
         } else {
             /**
              * Process analytics delete at the same a asked refresh
              */
-            return $this->processAnalytics();
+            return $this->refreshAnalytics();
         }
     }
 
@@ -983,13 +991,13 @@ EOF;
     }
 
     /**
-     * @return bool - if a {@link Page::processAnalytics()} for the page should occurs
+     * @return bool - if a {@link Page::refreshAnalytics()} for the page should occurs
      */
     public
-    function shouldAnalyticsProcessOccurs()
+    function shouldAnalyticsProcessOccurs(): bool
     {
         /**
-         * If cache is on
+         * If render cache is on
          */
         global $conf;
         if ($conf['cachetime'] !== -1) {
@@ -1002,7 +1010,7 @@ EOF;
         }
 
         /**
-         * Check Db
+         * Check if Analytics is null in Db
          */
         $sqlite = Sqlite::getSqlite();
         if ($sqlite != null) {

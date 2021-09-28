@@ -148,7 +148,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     'name' => Site::getTitle()
                 );
 
-                if ($page->isHomePage()) {
+                if ($page->isNamespaceHomePage()) {
 
                     $ldJson['potentialAction'] = array(
                         '@type' => 'SearchAction',

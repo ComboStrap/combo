@@ -270,7 +270,7 @@ class Page extends DokuPath
     public
     function getUrl()
     {
-        if ($this->isHomePage()) {
+        if ($this->isNamespaceHomePage()) {
             $url = DOKU_URL;
         } else {
             $url = wl($this->getId(), '', true, '&');
@@ -706,6 +706,7 @@ class Page extends DokuPath
                 'TYPE' => $this->getType(),
                 'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
                 'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],
+                'IS_HOME' => ($this->isNamespaceHomePage() === true ? 1 : 0),
                 'ID' => $this->getId(),
             );
             $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
@@ -732,7 +733,8 @@ SET
     IS_LOW_QUALITY = ?,
     TYPE = ?,
     WORD_COUNT = ?,
-    BACKLINK_COUNT = ?
+    BACKLINK_COUNT = ?,
+    IS_HOME = ?
 where
     ID=?
 EOF;
@@ -1178,7 +1180,7 @@ EOF;
         if (isset($type)) {
             return $type;
         } else {
-            if ($this->isHomePage()) {
+            if ($this->isNamespaceHomePage()) {
                 return self::WEBSITE_TYPE;
             } else {
                 $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE);
@@ -1483,7 +1485,7 @@ EOF;
      * @return bool
      */
     public
-    function isHomePage()
+    function isNamespaceHomePage(): bool
     {
         global $conf;
         $startPageName = $conf['start'];
@@ -1938,7 +1940,7 @@ EOF;
          * filemtime(): stat failed for pages/test.txt in lib\plugins\combo\ComboStrap\File.php on line 62
          *
          */
-        if($this->exists()) {
+        if ($this->exists()) {
             $array[Analytics::DATE_CREATED] = $this->getCreatedDateString();
             $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateString();
         }

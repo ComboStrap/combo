@@ -27,6 +27,7 @@ require_once(__DIR__ . '/ComboStrap/PluginUtility.php');
  */
 ini_set('memory_limit', '256M');
 
+
 /**
  * Class cli_plugin_combo
  *
@@ -37,7 +38,10 @@ ini_set('memory_limit', '256M');
  *
  * ```
  * docker exec -ti $(CONTAINER) /bin/bash
- * ./bin/plugin.php combo -c
+ * ```
+ * ```
+ * set animal=foo
+ * php ./bin/plugin.php combo --help
  * ```
  * or via the IDE
  *
@@ -57,11 +61,18 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
      */
     protected function setup(Options $options)
     {
-        $options->setHelp(
-            "Manage the analytics database\n\n" .
-            "analytics\n" .
-            "sync"
-        );
+        $help=<<<EOF
+Commands for the Combo Plugin.
+
+If you want to use it for an animal farm, you need to set it first in a environment variable
+
+```dos
+set animal=foo
+php ./bin/plugin.php combo --help
+```
+EOF;
+
+        $options->setHelp($help);
         $options->registerOption('version', 'print version', 'v');
         $options->registerCommand(self::ANALYTICS, "Update the analytics data");
         $options->registerOption(
@@ -78,6 +89,10 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
             'cache',
             "Optional, returns from the cache if set",
             'c', false);
+        $options->registerOption(
+            'animal',
+            "Optional, set the animal to use",
+            'a', false);
         $options->registerOption(
             'dry',
             "Optional, dry-run",
@@ -112,7 +127,9 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
                 $this->syncPages();
                 break;
             default:
-                throw new \RuntimeException("Combo: Command unknown (" . $cmd . ")");
+                fwrite(STDERR, "Combo: Command unknown (" . $cmd . ")");
+                $options->help();
+                exit(1);
         }
 
 
@@ -203,7 +220,6 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
         }
 
     }
-
 
 
     private function syncPages()

@@ -83,6 +83,7 @@ class Page extends DokuPath
     const IMAGE_META_PROPERTY = 'image';
     const COUNTRY_META_PROPERTY = "country";
     const LANG_META_PROPERTY = "lang";
+    const LAYOUT_PROPERTY = "layout";
 
 
     private $canonical;

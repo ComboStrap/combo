@@ -395,6 +395,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             Analytics::NAME,
             CacheManager::DATE_CACHE_EXPIRATION_META_KEY,
             action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
+            Page::LAYOUT_PROPERTY
 
         ];
         $meta = p_read_metadata($ID);

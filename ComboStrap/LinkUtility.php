@@ -904,7 +904,11 @@ EOF;
                     }
                 }
                 if ($this->dokuwikiUrl->getFragment() != null) {
-                    $url .= '#' . $this->dokuwikiUrl->getFragment();
+                    /**
+                     * pageutils (transform a fragment in section id)
+                     */
+                    $check = false;
+                    $url .= '#' . sectionID($this->dokuwikiUrl->getFragment(),$check);
                 }
                 break;
             case self::TYPE_INTERWIKI:

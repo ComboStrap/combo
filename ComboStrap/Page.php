@@ -659,14 +659,24 @@ class Page extends DokuPath
 
         if ($this->exists()) {
 
-
             $cache = $this->getInstructionsCache();
             $cache->removeCache();
+            $this->deleteRenderCache($mode);
+
+        }
+    }
+
+    public
+    function deleteRenderCache($mode = "xhtml")
+    {
+
+        if ($this->exists()) {
 
             $cache = $this->getRenderCache($mode);
             $cache->removeCache();
 
         }
+
     }
 
 
@@ -997,7 +1007,7 @@ EOF;
             }
             $count = intval($sqlite->res2single($res));
             $sqlite->res_close($res);
-            if ($count >= 1) {
+            if ($count == 0) {
                 return true;
             }
         }

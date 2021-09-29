@@ -136,7 +136,18 @@ class File
     }
 
 
-
+    /**
+     * A buster value used in URL
+     * to avoid cache (cache bursting)
+     *
+     * It is unique for each version of the path
+     *
+     * @return string
+     */
+    public function getBuster(): string
+    {
+        return strval($this->getModifiedTime()->getTimestamp());
+    }
 
 
 }

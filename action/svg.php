@@ -113,7 +113,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
         $pathId = DokuPath::IdToAbsolutePath($id);
         $svgImage = new ImageSvg($pathId, $rev, $tagAttributes);
         try {
-            $event->data['file'] = $svgImage->getSvgFile();
+            $event->data['file'] = $svgImage->getSvgFile()->getFileSystemPath();
         } catch (RuntimeException $e) {
 
             $event->data['file'] = PluginUtility::getResourceBaseUrl()."/images/error-bad-format.svg";

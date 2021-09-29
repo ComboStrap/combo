@@ -139,9 +139,9 @@ class ImageSvg extends Image
     /**
      * Return the svg file transformed by the attributes
      * from cache if possible. Used when making a fetch with the URL
-     * @return mixed
+     * @return File
      */
-    public function getSvgFile()
+    public function getSvgFile(): File
     {
 
         $cache = new CacheMedia($this, $this->getAttributes());
@@ -149,8 +149,21 @@ class ImageSvg extends Image
             $content = $this->getSvgDocument()->getXmlText($this->getAttributes());
             $cache->storeCache($content);
         }
-        return $cache->getFile()->getFileSystemPath();
+        return File::createFromPath($cache->getFile()->getFileSystemPath());
 
     }
+
+    /**
+     * The buster is based on the cache file
+     * because the cache is configuration dependend
+     * It the user changes the configuration, the svg file is generated
+     * again and the browser cache should be deleted (ie the buster regenerated)
+     * @return string
+     */
+    public function getBuster(): string
+    {
+        return  $this->getSvgFile()->getBuster();
+    }
+
 
 }

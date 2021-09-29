@@ -113,6 +113,10 @@ class CacheMedia
     }
 
 
+    /**
+     * Cache file depends on code version and configuration
+     * @return bool
+     */
     public function isCacheUsable()
     {
         if ($this->maxAge == 0) {

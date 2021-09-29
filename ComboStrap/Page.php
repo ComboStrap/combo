@@ -8,6 +8,7 @@ use DateTime;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Extension\SyntaxPlugin;
+use Ramsey\Uuid\Uuid;
 use renderer_plugin_combo_analytics;
 use RuntimeException;
 
@@ -84,6 +85,8 @@ class Page extends DokuPath
     const COUNTRY_META_PROPERTY = "country";
     const LANG_META_PROPERTY = "lang";
     const LAYOUT_PROPERTY = "layout";
+    const UUID_ATTRIBUTE = "uuid";
+    const UUID4_PATTERN = "/^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i";
 
 
     private $canonical;
@@ -328,7 +331,7 @@ class Page extends DokuPath
      * Does the page is known in the pages table
      * @return int
      */
-    function existInDb()
+    function existInDb(): int
     {
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $this->getId());
@@ -425,83 +428,47 @@ class Page extends DokuPath
     /**
      * Persist a page in the database
      */
-    function processAndPersistInDb(): Page
+    function persistInDb(): Page
     {
+        if (!$this->exists()) {
+            LogUtility::msg("The page ($this) does not exist and cannot be replicated to the database.");
+            return $this;
+        }
 
-        $canonical = p_get_metadata($this->getId(), Page::CANONICAL_PROPERTY);
-        if ($canonical != "") {
+        list($primaryKey, $primaryKeyValue) = $this->getDatabasePrimaryKeyAndItsValue();
 
-            // Do we have a page attached to this canonical
-            $sqlite = Sqlite::getSqlite();
-            $res = $sqlite->query("select ID from pages where CANONICAL = ?", $canonical);
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite === null) {
+            return $this;
+        }
+
+        $row = array(
+            "CANONICAL" => $this->getCanonical(),
+            "PATH" => $this->getPath(),
+            "UUID" => $this->getUuid(),
+            "ID" => $this->getId()
+        );
+
+        if ($primaryKey !== null) {
+
+            // Update
+            $row[$primaryKey] = $primaryKeyValue;
+            $statement = "update pages set canonical = ?, path = ?, UUID = ?, ID = ? where $primaryKey = ?";
+            $res = $sqlite->query($statement, $row);
             if (!$res) {
-                LogUtility::msg("An exception has occurred with the search id from canonical");
-            }
-            $idInDb = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-            if ($idInDb && $idInDb != $this->getId()) {
-                // If the page does not exist anymore we delete it
-                if (!page_exists($idInDb)) {
-                    $res = $sqlite->query("delete from pages where ID = ?", $idInDb);
-                    if (!$res) {
-                        LogUtility::msg("An exception has occurred during the deletion of the page");
-                    }
-                    $sqlite->res_close($res);
-
-                } else {
-                    LogUtility::msg("The page ($this) and the page ($idInDb) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR, "url:manager");
-                    /**
-                     * Check if the error may come from the auto-canonical
-                     * (Never ever save generated data)
-                     */
-                    $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
-                    if ($canonicalLastNamesCount > 0) {
-                        $this->unsetMetadata(Page::CANONICAL_PROPERTY);
-                        Page::createPageFromQualifiedPath($idInDb)->unsetMetadata(Page::CANONICAL_PROPERTY);
-                    }
-                }
-                $this->persistPageAlias($canonical, $idInDb);
+                LogUtility::msg("There was a problem during page update");
             }
 
-            // Do we have a canonical on this page
-            $res = $sqlite->query("select canonical from pages where ID = ?", $this->getId());
+        } else {
+
+            $res = $sqlite->storeEntry('pages', $row);
             if (!$res) {
-                LogUtility::msg("An exception has occurred with the query");
+                LogUtility::msg("There was a problem during pages insertion");
             }
-            $canonicalInDb = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-
-            $row = array(
-                "CANONICAL" => $canonical,
-                "ID" => $this->getId()
-            );
-            if ($canonicalInDb && $canonicalInDb != $canonical) {
-
-                // Persist alias
-                $this->persistPageAlias($canonical, $this->getId());
-
-                // Update
-                $statement = 'update pages set canonical = ? where id = ?';
-                $res = $sqlite->query($statement, $row);
-                if (!$res) {
-                    LogUtility::msg("There was a problem during page update");
-                }
-                $sqlite->res_close($res);
-
-            } else {
-
-                if ($canonicalInDb == false) {
-                    $res = $sqlite->storeEntry('pages', $row);
-                    if (!$res) {
-                        LogUtility::msg("There was a problem during pages insertion");
-                    }
-                    $sqlite->res_close($res);
-                }
-
-            }
-
 
         }
+        $sqlite->res_close($res);
+
         return $this;
     }
 
@@ -554,7 +521,7 @@ class Page extends DokuPath
      * @return string
      */
     public
-    function getCanonical()
+    function getCanonical(): ?string
     {
         if (empty($this->canonical)) {
 
@@ -647,10 +614,17 @@ class Page extends DokuPath
          * This is not a {@link Page::renderMetadata()}
          */
         if ($this->metadatas == null) {
-            $this->metadatas = p_read_metadata($this->getId());
+            $this->metadatas = $this->readMetadatas();
         }
         return $this->metadatas;
 
+    }
+
+    public
+    function readMetadatas()
+    {
+        $this->metadatas = p_read_metadata($this->getId());
+        return $this->metadatas;
     }
 
     /**
@@ -827,6 +801,7 @@ class Page extends DokuPath
                 'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
                 'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],
                 'IS_HOME' => ($this->isNamespaceHomePage() === true ? 1 : 0),
+                Page::UUID_ATTRIBUTE => $this->getUuid(),
                 'ID' => $this->getId(),
             );
             $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
@@ -854,7 +829,8 @@ SET
     TYPE = ?,
     WORD_COUNT = ?,
     BACKLINK_COUNT = ?,
-    IS_HOME = ?
+    IS_HOME = ?,
+    UUID = ?
 where
     ID=?
 EOF;
@@ -1545,7 +1521,7 @@ EOF;
             }
         }
         // Ms level parsing
-        $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $persistentMetadata);
+        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
         if ($dateTime === false) {
             /**
              * Should not happen as the data is validate in entry
@@ -1971,6 +1947,7 @@ EOF;
                 $key => $value
             ]
         );
+        $this->readMetadatas();
     }
 
     private function getPublishedTimeAsString(): ?string
@@ -2028,6 +2005,191 @@ EOF;
             return null;
         }
         return $dateTime;
+    }
+
+    public function getUuid()
+    {
+        $uuid = $this->getMetadata(Page::UUID_ATTRIBUTE);
+
+        if ($uuid === null || !is_string($uuid) ||
+            (!preg_match(self::UUID4_PATTERN, $uuid))
+        ) {
+            $uuid = Uuid::uuid4()->toString();
+            $this->setMetadata(Page::UUID_ATTRIBUTE, $uuid);
+        }
+        return $uuid;
+    }
+
+    /**
+     * Return a array where the first element is the primary key column
+     * and the second the value
+     *
+     * If the first element is null, no row was found in the database
+     *
+     * @return array|null[]|string[]
+     */
+    private function getDatabasePrimaryKeyAndItsValue(): array
+    {
+
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite === null) {
+            return [null, null];
+        }
+
+        // Do we have a page attached to this uuid
+        $uuid = $this->getUuid();
+        $res = $sqlite->query("select ID from pages where UUID = ?", $uuid);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the page search from UUID");
+        }
+        $IdsInDb = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        switch (sizeof($IdsInDb)) {
+            case 0:
+                break;
+            case 1:
+                $id = $IdsInDb[0]["ID"];
+                if ($id === $this->getId()) {
+                    return [Page::UUID_ATTRIBUTE, $uuid];
+                } else {
+                    LogUtility::msg("The page ($this) and the page ($id) have the same UUID ($uuid)", LogUtility::LVL_MSG_ERROR);
+                }
+                break;
+            default:
+                $existingPages = implode(", ", $IdsInDb);
+                LogUtility::msg("The pages ($existingPages) have all the same UUID ($uuid)", LogUtility::LVL_MSG_ERROR);
+        }
+
+        // Do we have a page attached to the canonical
+        $canonical = $this->getCanonical();
+        if ($canonical != null) {
+            $res = $sqlite->query("select ID from pages where CANONICAL = ?", $canonical);
+            if (!$res) {
+                LogUtility::msg("An exception has occurred with the page search from CANONICAL");
+            }
+            $IdsInDb = $sqlite->res2arr($res);
+            $sqlite->res_close($res);
+
+            switch (sizeof($IdsInDb)) {
+                case 0:
+                    break;
+                case 1:
+                    $id = $IdsInDb[0]["ID"];
+                    if ($id === $this->getPath()) {
+                        return [Page::CANONICAL_PROPERTY, $canonical];
+                    } else {
+                        LogUtility::msg("The page ($this) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
+                    }
+                    break;
+                default:
+                    $existingPages = [];
+                    foreach ($IdsInDb as $idInDb) {
+                        $pageInDb = Page::createPageFromId($idInDb);
+                        if (!$pageInDb->exists()) {
+
+                            /**
+                             * TODO: Handle a page move with the move plugin instead
+                             */
+                            $pageInDb->deleteInDb();
+                            $this->persistPageAlias($canonical, $idInDb);
+
+                        } else {
+
+                            /**
+                             * Check if the error may come from the auto-canonical
+                             * (Never ever save generated data)
+                             */
+                            $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
+                            if ($canonicalLastNamesCount > 0) {
+                                $this->unsetMetadata(Page::CANONICAL_PROPERTY);
+                                Page::createPageFromQualifiedPath($IdsInDb)->unsetMetadata(Page::CANONICAL_PROPERTY);
+                            }
+
+                            $existingPages[] = $idInDb;
+                        }
+                    }
+                    if (sizeof($existingPages) === 1) {
+                        return [Page::CANONICAL_PROPERTY, $canonical];
+                    } else {
+                        $existingPages = implode(", ", $existingPages);
+                        LogUtility::msg("The existing pages ($existingPages) have all the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
+                    }
+            }
+
+        }
+
+        // Do we have a page attached to the path
+        $path = $this->getPath();
+        $res = $sqlite->query("select ID from pages where PATH = ?", $path);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the page search from a PATH");
+        }
+        $IdsInDb = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        switch (sizeof($IdsInDb)) {
+            case 0:
+                break;
+            case 1:
+                $id = $IdsInDb[0]["ID"];
+                if ($id === $this->getId()) {
+                    return [Page::PATH_ATTRIBUTE, $path];
+                } else {
+                    LogUtility::msg("The page ($this) and the page ($id) have the same path ($path)", LogUtility::LVL_MSG_ERROR);
+                }
+                break;
+            default:
+                $existingPages = [];
+                foreach ($IdsInDb as $idInDb) {
+                    $pageInDb = Page::createPageFromId($idInDb);
+                    if (!$pageInDb->exists()) {
+
+                        /**
+                         * TODO: Handle a page move with the move plugin instead
+                         */
+                        $pageInDb->deleteInDb();
+                        $this->persistPageAlias($canonical, $idInDb);
+
+                    } else {
+
+                        $existingPages[] = $idInDb;
+                    }
+                }
+                if (sizeof($existingPages) === 1) {
+                    return [Page::PATH_ATTRIBUTE, $path];
+                } else {
+                    $existingPages = implode(", ", $existingPages);
+                    LogUtility::msg("The existing pages ($existingPages) have all the same path ($path)", LogUtility::LVL_MSG_ERROR);
+                }
+
+        }
+
+        /**
+         * Do we have a page attached to this ID
+         * @deprecated
+         */
+        $id = $this->getId();
+        $res = $sqlite->query("select ID from pages where ID = ?", $id);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the page search from UUID");
+        }
+        $IdsInDb = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        switch (sizeof($IdsInDb)) {
+            case 0:
+                break;
+            case 1:
+                return ["id", $id];
+            default:
+                LogUtility::msg("The database has " . sizeof($IdsInDb) . " records with the same id ($id)", LogUtility::LVL_MSG_ERROR);
+                break;
+
+        }
+
+        /**
+         * Nothing
+         */
+        return [null, null];
+
     }
 
 

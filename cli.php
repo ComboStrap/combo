@@ -185,13 +185,19 @@ EOF;
         }
         $pageCounter = 0;
         $totalNumberOfPages = sizeof($pages);
-        while ($page = array_shift($pages)) {
-            $id = $page['id'];
+        while ($pageArray = array_shift($pages)) {
+            $id = $pageArray['id'];
+            $page = Page::createPageFromId($id);
 
             $pageCounter++;
             echo "Processing the page {$id} ($pageCounter / $totalNumberOfPages)\n";
 
-            $data = Analytics::getDataAsArray($id, $cache);
+            if ($page->shouldAnalyticsProcessOccurs()) {
+                $data = $page->refreshAnalytics();
+            } else {
+                $data = Analytics::getDataAsArray($page->getId(), true);
+            }
+
             if (!empty($fileHandle)) {
                 $statistics = $data[Analytics::STATISTICS];
                 $row = array(

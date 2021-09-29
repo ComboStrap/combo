@@ -1,7 +1,6 @@
 <?php
 
 
-use ComboStrap\Background;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;

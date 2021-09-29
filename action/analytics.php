@@ -93,12 +93,6 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
             $id = $ID;
         }
         $page = Page::createPageFromId($id);
-        if ($page->shouldAnalyticsProcessOccurs()) {
-            $page->refreshAnalytics();
-            /**
-             * TODO: Add reference
-             */
-        }
 
         /**
          * From {@link idx_addPage}
@@ -106,9 +100,18 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          */
         if (!$page->exists()) {
 
-            //  $result = $Indexer->deletePage($page);
-
+            $page->deleteInDb();
+            return;
         }
+
+        if ($page->shouldAnalyticsProcessOccurs()) {
+            $page->refreshAnalytics();
+            /**
+             * TODO: Add reference
+             */
+        }
+
+
     }
 
     public function handle_rail_bar(Doku_Event $event, $param)

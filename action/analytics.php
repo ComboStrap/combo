@@ -108,7 +108,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         }
         $analytics = $page->getAnalytics();
         if ($analytics->shouldAnalyticsProcessOccurs()) {
-            $analytics->refreshAnalytics();
+            $analytics->replicate();
             /**
              * TODO: Add reference
              */
@@ -163,7 +163,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         $refreshCounter = 0;
         foreach ($rows as $row) {
             $page = Page::createPageFromId($row['ID']);
-            $page->getAnalytics()->refreshAnalytics();
+            $page->getAnalytics()->replicate();
             $refreshCounter++;
             if ($refreshCounter >= $maxRefresh) {
                 break;

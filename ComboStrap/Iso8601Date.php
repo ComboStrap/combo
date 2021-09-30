@@ -178,5 +178,10 @@ class Iso8601Date
         return $this->getDateTime()->format($string);
     }
 
+    public function toString()
+    {
+        return $this->__toString();
+    }
+
 
 }

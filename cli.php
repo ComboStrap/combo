@@ -52,7 +52,7 @@ ini_set('memory_limit', '256M');
  */
 class cli_plugin_combo extends DokuWiki_CLI_Plugin
 {
-    const ANALYTICS = "analytics";
+    const REPLICATE = "replicate";
     const SYNC = "sync";
 
     /**
@@ -74,7 +74,7 @@ EOF;
 
         $options->setHelp($help);
         $options->registerOption('version', 'print version', 'v');
-        $options->registerCommand(self::ANALYTICS, "Update the analytics data");
+        $options->registerCommand(self::REPLICATE, "Update the data in the database");
         $options->registerOption(
             'namespaces',
             "If no namespace is given, the root namespace is assumed.",
@@ -97,7 +97,7 @@ EOF;
             'dry',
             "Optional, dry-run",
             'd', false);
-        $options->registerCommand(self::SYNC, "Sync the database");
+        $options->registerCommand(self::SYNC, "Sync the database (ie delete the non-existent pages in the database)");
 
     }
 
@@ -115,16 +115,16 @@ EOF;
         $depth = $options->getOpt('depth', 0);
         $cmd = $options->getCmd();
         if ($cmd == "") {
-            $cmd = self::ANALYTICS;
+            $cmd = self::REPLICATE;
         }
         switch ($cmd) {
-            case self::ANALYTICS:
+            case self::REPLICATE:
                 $output = $options->getOpt('output', '');
                 //if ($output == '-') $output = 'php://stdout';
-                $this->updateAnalyticsData($namespaces, $output, $cache, $depth);
+                $this->replicate($namespaces, $output, $cache, $depth);
                 break;
             case self::SYNC:
-                $this->syncPages();
+                $this->sync();
                 break;
             default:
                 fwrite(STDERR, "Combo: Command unknown (" . $cmd . ")");
@@ -141,7 +141,7 @@ EOF;
      * @param bool $cache
      * @param int $depth recursion depth. 0 for unlimited
      */
-    private function updateAnalyticsData($namespaces = array(), $output = null, $cache = false, $depth = 0)
+    private function replicate($namespaces = array(), $output = null, $cache = false, $depth = 0)
     {
 
         $fileHandle = null;
@@ -194,7 +194,7 @@ EOF;
             echo "Processing the page {$id} ($pageCounter / $totalNumberOfPages)\n";
 
             if ($analytics->shouldAnalyticsProcessOccurs()) {
-                $data = $analytics->refreshAnalytics()->toArray();
+                $data = $analytics->replicate()->toArray();
             } else {
                 $data = $analytics->getJsonData( true)->toArray();
             }
@@ -229,7 +229,7 @@ EOF;
     }
 
 
-    private function syncPages()
+    private function sync()
     {
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query("select ID from pages");

@@ -64,6 +64,7 @@ class Analytics
     const DATE_CREATED = 'date_created';
     const DATE_END = "date_end";
     const DATE_START = "date_start";
+    const DATE_REPLICATION = "date_replication";
     private $page;
 
     /**
@@ -88,7 +89,7 @@ class Analytics
      *
      * @return mixed analytics as array
      */
-    public function refreshAnalytics()
+    public function replicate()
     {
 
         /**
@@ -120,6 +121,10 @@ class Analytics
             /**
              * Same data as {@link Page::getMetadataForRendering()}
              */
+
+            $replicationDate = Iso8601Date::create()->toString();
+            $this->page->setMetadata(Analytics::DATE_REPLICATION, $replicationDate);
+
             $entry = array(
                 'CANONICAL' => $page->getCanonical(),
                 'ANALYTICS' => $json,
@@ -140,6 +145,7 @@ class Analytics
                 'BACKLINK_COUNT' => $jsonAsArray[Analytics::INTERNAL_BACKLINK_COUNT],
                 'IS_HOME' => ($page->isNamespaceHomePage() === true ? 1 : 0),
                 Page::UUID_ATTRIBUTE => $page->getUuid(),
+                Analytics::DATE_REPLICATION => $replicationDate,
                 'ID' => $page->getId(),
             );
             $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $page->getId());
@@ -168,7 +174,8 @@ SET
     WORD_COUNT = ?,
     BACKLINK_COUNT = ?,
     IS_HOME = ?,
-    UUID = ?
+    UUID = ?,
+    DATE_REPLICATION = ?
 where
     ID=?
 EOF;
@@ -201,7 +208,7 @@ EOF;
 
 
     /**
-     * @return bool - if a {@link Analytics::refreshAnalytics()} for the page should occurs
+     * @return bool - if a {@link Analytics::replicate()} for the page should occurs
      */
     public
     function shouldAnalyticsProcessOccurs(): bool
@@ -329,7 +336,6 @@ EOF;
         }
 
     }
-
 
 
     /**

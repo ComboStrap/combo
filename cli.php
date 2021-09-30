@@ -53,6 +53,7 @@ ini_set('memory_limit', '256M');
 class cli_plugin_combo extends DokuWiki_CLI_Plugin
 {
     const REPLICATE = "replicate";
+    const ANALYTICS = "analytics";
     const SYNC = "sync";
 
     /**
@@ -61,7 +62,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
      */
     protected function setup(Options $options)
     {
-        $help=<<<EOF
+        $help = <<<EOF
 Commands for the Combo Plugin.
 
 If you want to use it for an animal farm, you need to set it first in a environment variable
@@ -74,7 +75,8 @@ EOF;
 
         $options->setHelp($help);
         $options->registerOption('version', 'print version', 'v');
-        $options->registerCommand(self::REPLICATE, "Update the data in the database");
+        $options->registerCommand(self::REPLICATE, "Replicate the data into the database");
+        $options->registerCommand(self::ANALYTICS, "Start the analytics and export optionally the data");
         $options->registerOption(
             'namespaces',
             "If no namespace is given, the root namespace is assumed.",
@@ -137,11 +139,46 @@ EOF;
 
     /**
      * @param array $namespaces
-     * @param $output
-     * @param bool $cache
+     * @param bool $rebuild
      * @param int $depth recursion depth. 0 for unlimited
      */
-    private function replicate($namespaces = array(), $output = null, $cache = false, $depth = 0)
+    private function replicate($namespaces = array(), $rebuild = false, $depth = 0)
+    {
+
+        /**
+         * Run as admin to overcome the fact that
+         * anonymous user cannot see all links and backlinks
+         */
+        global $USERINFO;
+        $USERINFO['grps'] = array('admin');
+        global $INPUT;
+        $INPUT->server->set('REMOTE_USER', "cli");
+
+        $pages = FsWikiUtility::getPages($namespaces, $depth);
+
+        $pageCounter = 0;
+        $totalNumberOfPages = sizeof($pages);
+        while ($pageArray = array_shift($pages)) {
+            $id = $pageArray['id'];
+            $page = Page::createPageFromId($id);
+
+            $pageCounter++;
+            $replicate = $page->getReplicate();
+            if ($replicate->shouldReplicate() || $rebuild) {
+                echo "The page {$id} ($pageCounter / $totalNumberOfPages) was replicated\n";
+                $replicate->replicate();
+            } else {
+                echo "The page {$id} ($pageCounter / $totalNumberOfPages) was not replicated\n";
+            }
+
+        }
+        if (!empty($fileHandle)) {
+            fclose($fileHandle);
+        }
+
+    }
+
+    private function analytics($namespaces = array(), $output = null, $cache = false, $depth = 0)
     {
 
         $fileHandle = null;
@@ -188,16 +225,17 @@ EOF;
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
             $page = Page::createPageFromId($id);
-            $analytics = $page->getAnalytics();
+
+
 
             $pageCounter++;
-            echo "Processing the page {$id} ($pageCounter / $totalNumberOfPages)\n";
+            echo "Analytics Processing for the page {$id} ($pageCounter / $totalNumberOfPages)\n";
 
-            if ($analytics->shouldAnalyticsProcessOccurs()) {
-                $data = $analytics->replicate()->toArray();
-            } else {
-                $data = $analytics->getJsonData( true)->toArray();
-            }
+            /**
+             * Analytics
+             */
+            $analytics = $page->getAnalytics();
+            $data = $analytics->getJsonData()->toArray();
 
             if (!empty($fileHandle)) {
                 $statistics = $data[Analytics::STATISTICS];
@@ -221,6 +259,7 @@ EOF;
                 );
                 fwrite($fileHandle, implode(",", $row) . PHP_EOL);
             }
+
         }
         if (!empty($fileHandle)) {
             fclose($fileHandle);

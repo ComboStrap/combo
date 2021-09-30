@@ -1923,9 +1923,14 @@ class Page extends DokuPath
 
     }
 
-    public function getAnalytics()
+    public function getAnalytics(): Analytics
     {
         return new Analytics($this);
+    }
+
+    public function getReplicate(): DatabaseReplicate
+    {
+        return new DatabaseReplicate($this);
     }
 
 

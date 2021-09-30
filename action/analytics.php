@@ -96,7 +96,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         $page = Page::createPageFromId($id);
 
 
-
+        $replicate = $page->getReplicate();
         /**
          * From {@link idx_addPage}
          * They receive even the deleted page
@@ -232,7 +232,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
              */
             $addedPage = Page::createPageFromId($changedLink);
             $reason = "The backlink {$changedLink} from the page {$pageId} was {$status}";
-            Analytics::deleteCacheAndAskAnalyticsRefresh($reason, $addedPage);
+            Analytics::createAnalyticsRequest($reason, $addedPage);
 
         }
 

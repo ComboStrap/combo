@@ -95,20 +95,19 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         }
         $page = Page::createPageFromId($id);
 
-
-        $replicate = $page->getReplicate();
         /**
          * From {@link idx_addPage}
          * They receive even the deleted page
          */
+        $replicator = $page->getReplicator();
         if (!$page->exists()) {
 
-            $page->deleteInDb();
+            $replicator->delete();
             return;
         }
-        $analytics = $page->getAnalytics();
-        if ($analytics->shouldAnalyticsProcessOccurs()) {
-            $analytics->replicate();
+
+        if ($replicator->shouldReplicate()) {
+            $replicator->replicate();
             /**
              * TODO: Add reference
              */
@@ -226,18 +225,29 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         }
         foreach ($linksChanged as $changedLink => $status) {
             /**
-             * We delete the cache
-             * We don't update the analytics
-             * because we want speed
+             * We delete the analytics data
              */
-            $addedPage = Page::createPageFromId($changedLink);
-            $reason = "The backlink {$changedLink} from the page {$pageId} was {$status}";
-            Analytics::createAnalyticsRequest($reason, $addedPage);
+            $page = Page::createPageFromId($changedLink);
+            $page->getAnalytics()->delete();
+            $message = "The analytics of the page ($changedLink) was deleted because a backlink from the page {$pageId} was {$status}";
+            $page->getReplicator()->createReplicationRequest($message);
 
         }
 
     }
 
+    public function isInRefreshTable(): bool
+    {
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->page->getId());
+        if (!$res) {
+            LogUtility::msg("There was a problem during the select analytics to refresh: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $value = $sqlite->res2single($res);
+        $sqlite->res_close($res);
+        return $value === "1";
+
+    }
 
 }
 

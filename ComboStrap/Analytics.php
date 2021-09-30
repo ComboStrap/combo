@@ -76,8 +76,6 @@ class Analytics
     }
 
 
-
-
     /**
      * @return bool - if a {@link Analytics::render(false)} for the page should occurs
      */
@@ -96,69 +94,11 @@ class Analytics
             }
         }
 
-        /**
-         * Check the refresh table
-         */
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-            return $this->isInRefreshTable();
-        }
 
         return false;
     }
 
-    public function isInRefreshTable(): bool
-    {
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->page->getId());
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select analytics to refresh: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $value = $sqlite->res2single($res);
-        $sqlite->res_close($res);
-        return $value === "1";
 
-    }
-
-    /**
-     * Ask to refresh the analytics
-     * @param $reason - a string with the reason
-     */
-    public function createAnalyticsRequest($reason)
-    {
-        $this->deleteCache();
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-
-            /**
-             * Check if exists
-             */
-            $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->page->getId()));
-            if (!$res) {
-                LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $result = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-
-            /**
-             * If not insert
-             */
-            if ($result != 1) {
-                $entry = array(
-                    "ID" => $this->page->getId(),
-                    "TIMESTAMP" => Iso8601Date::create()->toString(),
-                    "REASON" => $reason
-                );
-                $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
-                if (!$res) {
-                    LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-                }
-                $sqlite->res_close($res);
-            }
-
-        }
-
-    }
 
     public function isCached(): bool
     {
@@ -167,38 +107,16 @@ class Analytics
         return file_exists($cacheFile);
     }
 
-    /**
-     * @return Json|null the analytics array or null if not in db
-     */
-    public function getJsonDataFromDb(): ?Json
-    {
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite === null) {
-            return null;
-        }
-        $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->page->getId());
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the pages selection query");
-        }
-        $jsonString = trim($sqlite->res2single($res));
-        $sqlite->res_close($res);
-        if (!empty($jsonString)) {
-            return Json::createFromString($jsonString);
-        } else {
-            return null;
-        }
-
-    }
-
 
     /**
-     * @param bool $cache - if true, the analytics json rendering file will be retrieved from cache
+     * Generate the analytics file and return the data
+     *
      * @return null|Json
      *
      * The p_render function was seen from the {@link p_cached_output} function
      * used the in the switch of the {@link \dokuwiki\Action\Export::preProcess()} function
      */
-    function render($cache = false): ?Json
+    function render(): ?Json
     {
         if (!$this->page->exists()) {
             return null;
@@ -206,51 +124,29 @@ class Analytics
         global $ID;
         $oldId = $ID;
         $ID = $this->page->getId();
-        if (!$cache || $this->shouldAnalyticsProcessOccurs()) {
-            $this->deleteCache();
-        }
 
         $result = p_cached_output($this->page->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE, $this->page->getId());
 
         $ID = $oldId;
 
-        /**
-         * Delete from the refresh table
-         */
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-            $res = $sqlite->query("DELETE FROM ANALYTICS_TO_REFRESH where ID = ?", $this->page->getId());
-            if (!$res) {
-                LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $sqlite->res_close($res);
-
-        }
-
-
         return Json::createFromString($result);
 
     }
 
-    public function getJsonData(bool $bool = true): ?Json
+    /**
+     * Return the JSON analytics data
+     * @return Json|null
+     */
+    public function getData(): ?Json
     {
-        return $this->render($bool);
+        return $this->render();
     }
 
-    private function deleteRenderCache()
+    public function delete()
     {
         $this->page->deleteRenderCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
     }
 
-    private function deleteCache()
-    {
-        $this->page->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-    }
-
-    private function cacheIsStale()
-    {
-
-    }
 
 
 }

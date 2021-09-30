@@ -313,18 +313,7 @@ class Page extends DokuPath
 
     }
 
-    /**
-     * Delete Page
-     */
-    function deleteInDb()
-    {
 
-        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->getId());
-        if (!$res) {
-            LogUtility::msg("Something went wrong when deleting a page");
-        }
-
-    }
 
 
     /**
@@ -1928,9 +1917,9 @@ class Page extends DokuPath
         return new Analytics($this);
     }
 
-    public function getReplicate(): DatabaseReplicate
+    public function getReplicator(): DatabaseReplicator
     {
-        return new DatabaseReplicate($this);
+        return new DatabaseReplicator($this);
     }
 
 

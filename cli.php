@@ -163,7 +163,7 @@ EOF;
             $page = Page::createPageFromId($id);
 
             $pageCounter++;
-            $replicate = $page->getReplicate();
+            $replicate = $page->getReplicator();
             if ($replicate->shouldReplicate() || $rebuild) {
                 echo "The page {$id} ($pageCounter / $totalNumberOfPages) was replicated\n";
                 $replicate->replicate();
@@ -235,7 +235,7 @@ EOF;
              * Analytics
              */
             $analytics = $page->getAnalytics();
-            $data = $analytics->getJsonData()->toArray();
+            $data = $analytics->getData()->toArray();
 
             if (!empty($fileHandle)) {
                 $statistics = $data[Analytics::STATISTICS];

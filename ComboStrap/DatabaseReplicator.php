@@ -8,7 +8,7 @@ namespace ComboStrap;
  * Class Replicate
  * @package ComboStrap
  */
-class DatabaseReplicate
+class DatabaseReplicator
 {
     public const DATE_REPLICATION = "date_replication";
     /**
@@ -48,7 +48,7 @@ class DatabaseReplicate
         /**
          * Render and save on the file system
          */
-        $analyticsJson = $this->page->getAnalytics()->getJsonData();
+        $analyticsJson = $this->page->getAnalytics()->getData();
 
         /**
          * Persist on the DB
@@ -138,12 +138,86 @@ EOF;
         }
 
 
-
     }
 
     public function shouldReplicate(): bool
     {
         return true;
+    }
+
+    public function delete()
+    {
+
+
+        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->page->getId());
+        if (!$res) {
+            LogUtility::msg("Something went wrong when deleting a page");
+        }
+
+
+    }
+
+    /**
+     * @return Json|null the analytics array or null if not in db
+     */
+    public function getJsonDataFromDb(): ?Json
+    {
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite === null) {
+            return null;
+        }
+        $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->page->getId());
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the pages selection query");
+        }
+        $jsonString = trim($sqlite->res2single($res));
+        $sqlite->res_close($res);
+        if (!empty($jsonString)) {
+            return Json::createFromString($jsonString);
+        } else {
+            return null;
+        }
+
+    }
+
+    /**
+     * Ask a replication in the background
+     * @param $reason - a string with the reason
+     */
+    public function createReplicationRequest($reason)
+    {
+
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite != null) {
+
+            /**
+             * Check if exists
+             */
+            $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->page->getId()));
+            if (!$res) {
+                LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            }
+            $result = $sqlite->res2single($res);
+            $sqlite->res_close($res);
+
+            /**
+             * If not insert
+             */
+            if ($result != 1) {
+                $entry = array(
+                    "ID" => $this->page->getId(),
+                    "TIMESTAMP" => Iso8601Date::create()->toString(),
+                    "REASON" => $reason
+                );
+                $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
+                if (!$res) {
+                    LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+                }
+                $sqlite->res_close($res);
+            }
+
+        }
+
     }
 
 }

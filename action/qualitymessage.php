@@ -108,7 +108,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
         if ($page->exists()) {
 
-            $analyticsArray = $page->getAnalytics()->getJsonData()->toArray();
+            $analyticsArray = $page->getAnalytics()->getData()->toArray();
             $rules = $analyticsArray[Analytics::QUALITY][Analytics::RULES];
 
 
@@ -151,7 +151,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 $message = new Message($plugin);
                 $message->addContent("<p>Well played, you got a " . PluginUtility::getUrl("quality:score", "quality score") . " of {$qualityScore} !</p>");
                 if ($page->isLowQualityPage()) {
-                    $analyticsArray = $page->getAnalytics()->getJsonData()->toArray();
+                    $analyticsArray = $page->getAnalytics()->getData()->toArray();
                     $mandatoryFailedRules = $analyticsArray[Analytics::QUALITY][Analytics::FAILED_MANDATORY_RULES];
                     $rulesUrl = PluginUtility::getUrl("quality:rule", "rules");
                     $lqPageUrl = PluginUtility::getUrl("low_quality_page", "low quality page");

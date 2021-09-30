@@ -29,7 +29,7 @@ class Json
     /**
      * @return mixed
      */
-    public function getDataAsJsonObject()
+    public function toJsonObject()
     {
 
         return json_decode($this->jsonString);

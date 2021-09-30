@@ -121,7 +121,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         $targetPage = Page::createPageFromId($ID);
         if ($targetPage->exists()) {
             action_plugin_combo_urlmessage::unsetNotification();
-            $targetPage->persistInDb();
             return false;
         }
 

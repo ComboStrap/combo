@@ -106,9 +106,14 @@ class DatabaseReplicator
              * If the primary key is null, no record was found
              */
             list($primaryKey, $primaryKeyValue) = $this->getPrimaryKeyAndItsValue();
-            if ($primaryKey != null) {
+            if ($primaryKey !== null) {
 
-                $record[$primaryKey] = $primaryKeyValue;
+                /**
+                 * We just add the primary key
+                 * otherwise as this is a associative
+                 * array, we will miss a value for the update statement
+                 */
+                $record[] = $primaryKeyValue;
                 // Upset not supported on all version
                 //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
                 $update = <<<EOF
@@ -134,36 +139,52 @@ SET
     BACKLINK_COUNT = ?,
     IS_HOME = ?,
     UUID = ?,
-    DATE_REPLICATION = ?
+    DATE_REPLICATION = ?,
     ID = ?
 where
-    $primaryKey=?
+    $primaryKey = ?
 EOF;
                 $res = $sqlite->query($update, $record);
+
+                if ($res === false) {
+                    $errorInfo = $sqlite->getAdapter()->getDb()->errorInfo();
+                    $message = "";
+                    $errorCode = $errorInfo[0];
+                    if ($errorCode === '0000') {
+                        $message = ("No rows were updated");
+                    }
+                    $errorInfoAsString = var_export($errorInfo, true);
+                    LogUtility::msg("There was a problem during the upsert. $message. : {$errorInfoAsString}");
+                }
+
+
             } else {
+
                 $res = $sqlite->storeEntry('PAGES', $record);
+                if ($res === false) {
+                    $errorInfo = $sqlite->getAdapter()->getDb()->errorInfo();
+                    $errorInfoAsString = var_export($errorInfo, true);
+                    LogUtility::msg("There was a problem during the insert. : {$errorInfoAsString}");
+                }
+
             }
-            /**
-             * Successful
-             */
-            if (!$res) {
-                LogUtility::msg("There was a problem during the upsert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            } else {
+
+            if ($res !== false) {
                 $this->page->setMetadata(self::DATE_REPLICATION, $replicationDate);
             }
-
             $sqlite->res_close($res);
+
         }
-
-
     }
 
-    public function shouldReplicate(): bool
+    public
+    function shouldReplicate(): bool
     {
         return true;
     }
 
-    public function delete()
+    public
+    function delete()
     {
 
         $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->page->getId());
@@ -176,7 +197,8 @@ EOF;
     /**
      * @return Json|null the analytics array or null if not in db
      */
-    public function getAnalyticsData(): ?Json
+    public
+    function getAnalyticsData(): ?Json
     {
         $sqlite = Sqlite::getSqlite();
         if ($sqlite === null) {
@@ -200,7 +222,8 @@ EOF;
      * Ask a replication in the background
      * @param $reason - a string with the reason
      */
-    public function createReplicationRequest($reason)
+    public
+    function createReplicationRequest($reason)
     {
 
         $sqlite = Sqlite::getSqlite();
@@ -244,7 +267,8 @@ EOF;
      *
      * @return array|null[]|string[]
      */
-    private function getPrimaryKeyAndItsValue(): array
+    private
+    function getPrimaryKeyAndItsValue(): array
     {
 
         $sqlite = Sqlite::getSqlite();

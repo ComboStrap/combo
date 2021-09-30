@@ -1,11 +1,8 @@
 <?php
 
-use ComboStrap\Analytics;
 use Combostrap\AnalyticsMenuItem;
 use ComboStrap\Identity;
-use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\Sqlite;
 
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
@@ -36,24 +33,6 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     public function register(Doku_Event_Handler $controller)
     {
 
-        /**
-         * Analytics to refresh because they have lost or gain a backlinks
-         * are done via Sqlite table (The INDEXER_TASKS_RUN gives a way to
-         * manipulate this queue)
-         *
-         * There is no need to do it at page write
-         * https://www.dokuwiki.org/devel:event:io_wikipage_write
-         * because after the page is written, the page is shown and trigger the index tasks run
-         *
-         * We do it after because if there is an error
-         * We will not stop the Dokuwiki Processing
-         */
-        $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_background_refresh_analytics', array());
-
-        /**
-         * Index
-         */
-        $controller->register_hook('INDEXER_PAGE_ADD', 'AFTER', $this, 'update_index', array());
 
         /**
          * Add a icon in the page tools menu
@@ -71,50 +50,6 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
     }
 
-    public function handle_background_refresh_analytics(Doku_Event $event, $param)
-    {
-
-        /**
-         * Process the analytics to refresh
-         */
-        $this->analyticsBatchBackgroundRefresh();
-
-    }
-
-    public function update_index(Doku_Event $event, $param)
-    {
-        /**
-         * Check that the actual page has analytics data
-         * (if there is a cache, it's pretty quick)
-         */
-        global $ID;
-        if ($ID == null) {
-            $id = $event->data['page'];
-        } else {
-            $id = $ID;
-        }
-        $page = Page::createPageFromId($id);
-
-        /**
-         * From {@link idx_addPage}
-         * They receive even the deleted page
-         */
-        $replicator = $page->getReplicator();
-        if (!$page->exists()) {
-
-            $replicator->delete();
-            return;
-        }
-
-        if ($replicator->shouldReplicate()) {
-            $replicator->replicate();
-            /**
-             * TODO: Add reference
-             */
-        }
-
-
-    }
 
     public function handle_rail_bar(Doku_Event $event, $param)
     {
@@ -138,38 +73,6 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
     }
 
-    private function analyticsBatchBackgroundRefresh()
-    {
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT ID FROM ANALYTICS_TO_REFRESH");
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $rows = $sqlite->res2arr($res, true);
-        $sqlite->res_close($res);
-
-        /**
-         * In case of a start or if there is a recursive bug
-         * We don't want to take all the resources
-         */
-        $maxRefresh = 10; // by default, there is 5 pages in a default dokuwiki installation in the wiki namespace
-        $maxRefreshLow = 2;
-        $pagesToRefresh = sizeof($rows);
-        if ($pagesToRefresh > $maxRefresh) {
-            LogUtility::msg("There is {$pagesToRefresh} pages to refresh in the queue (table `ANALYTICS_TO_REFRESH`). This is more than {$maxRefresh} pages. Batch background Analytics refresh was reduced to {$maxRefreshLow} pages to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
-            $maxRefresh = $maxRefreshLow;
-        }
-        $refreshCounter = 0;
-        foreach ($rows as $row) {
-            $page = Page::createPageFromId($row['ID']);
-            $page->getAnalytics()->replicate();
-            $refreshCounter++;
-            if ($refreshCounter >= $maxRefresh) {
-                break;
-            }
-        }
-
-    }
 
     /**
      * Generate the statistics for the internal link added or deleted
@@ -223,31 +126,22 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         foreach ($linksBefore as $deletedLink => $deletedLinkPageExists) {
             $linksChanged[$deletedLink] = 'deleted';
         }
-        foreach ($linksChanged as $changedLink => $status) {
+        foreach ($linksChanged as $referentPageId => $status) {
             /**
-             * We delete the analytics data
+             * We delete the analytics data of the referent page
              */
-            $page = Page::createPageFromId($changedLink);
+            $page = Page::createPageFromId($referentPageId);
             $page->getAnalytics()->delete();
-            $message = "The analytics of the page ($changedLink) was deleted because a backlink from the page {$pageId} was {$status}";
+            /**
+             * Replication
+             */
+            $message = "The analytics of the page ($referentPageId) was deleted because a backlink from the page {$pageId} was {$status}";
             $page->getReplicator()->createReplicationRequest($message);
 
         }
 
     }
 
-    public function isInRefreshTable(): bool
-    {
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->page->getId());
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select analytics to refresh: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $value = $sqlite->res2single($res);
-        $sqlite->res_close($res);
-        return $value === "1";
-
-    }
 
 }
 

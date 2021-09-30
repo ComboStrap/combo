@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Analytics;
 use Combostrap\AnalyticsMenuItem;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
@@ -94,6 +95,8 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         }
         $page = Page::createPageFromId($id);
 
+
+
         /**
          * From {@link idx_addPage}
          * They receive even the deleted page
@@ -103,9 +106,9 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
             $page->deleteInDb();
             return;
         }
-
-        if ($page->shouldAnalyticsProcessOccurs()) {
-            $page->refreshAnalytics();
+        $analytics = $page->getAnalytics();
+        if ($analytics->shouldAnalyticsProcessOccurs()) {
+            $analytics->refreshAnalytics();
             /**
              * TODO: Add reference
              */
@@ -160,7 +163,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         $refreshCounter = 0;
         foreach ($rows as $row) {
             $page = Page::createPageFromId($row['ID']);
-            $page->refreshAnalytics();
+            $page->getAnalytics()->refreshAnalytics();
             $refreshCounter++;
             if ($refreshCounter >= $maxRefresh) {
                 break;
@@ -229,7 +232,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
              */
             $addedPage = Page::createPageFromId($changedLink);
             $reason = "The backlink {$changedLink} from the page {$pageId} was {$status}";
-            $addedPage->deleteCacheAndAskAnalyticsRefresh($reason);
+            Analytics::deleteCacheAndAskAnalyticsRefresh($reason, $addedPage);
 
         }
 

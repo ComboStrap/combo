@@ -576,30 +576,6 @@ class Page extends DokuPath
     }
 
     /**
-     * @return array|null the analytics array or null if not in db
-     */
-    public
-    function getAnalyticsFromDb()
-    {
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite == null) {
-            return array();
-        }
-        $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->getId());
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the pages selection query");
-        }
-        $jsonString = trim($sqlite->res2single($res));
-        $sqlite->res_close($res);
-        if (!empty($jsonString)) {
-            return json_decode($jsonString, true);
-        } else {
-            return null;
-        }
-
-    }
-
-    /**
      * Return the metadata stored in the file system
      * @return array|array[]
      */
@@ -680,15 +656,6 @@ class Page extends DokuPath
     }
 
 
-    public
-    function isAnalyticsCached()
-    {
-
-        $cache = new CacheRenderer($this->getId(), $this->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-        $cacheFile = $cache->cache;
-        return file_exists($cacheFile);
-    }
-
     /**
      *
      * @return string - the full path to the meta file
@@ -697,200 +664,6 @@ class Page extends DokuPath
     function getMetaFile()
     {
         return metaFN($this->getId(), '.meta');
-    }
-
-    /**
-     * @param $reason - a string with the reason
-     */
-    public
-    function deleteCacheAndAskAnalyticsRefresh($reason)
-    {
-        $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-
-            /**
-             * Check if exists
-             */
-            $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->getId()));
-            if (!$res) {
-                LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $result = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-
-            /**
-             * If not insert
-             */
-            if ($result != 1) {
-                $entry = array(
-                    "ID" => $this->getId(),
-                    "TIMESTAMP" => date('Y-m-d H:i:s', time()),
-                    "REASON" => $reason
-                );
-                $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
-                if (!$res) {
-                    LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-                }
-                $sqlite->res_close($res);
-            }
-
-        }
-
-    }
-
-    public
-    function isAnalyticsStale()
-    {
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $value = $sqlite->res2single($res);
-        $sqlite->res_close($res);
-        return $value === "1";
-
-    }
-
-    /**
-     * Delete the cache,
-     * Process the analytics
-     * Save it in the Db
-     * Delete from the page to refresh if any
-     *
-     * If you want the analytics:
-     *   * from the cache use {@link Page::getAnalyticsFromFs()}
-     *   * from the db use {@link Page::getAnalyticsFromDb()}
-     *
-     * @return mixed analytics as array
-     */
-    public
-    function refreshAnalytics()
-    {
-
-        /**
-         * Refresh and cache
-         * (The delete is normally not needed, just to be sure)
-         */
-        $this->deleteCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-
-        /**
-         * Render and save on the file system
-         */
-        $analytics = Analytics::getDataAsArray($this->getId(), true);
-
-        /**
-         * Persist on the DB
-         */
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-            /**
-             * Sqlite Plugin installed
-             */
-            $json = json_encode($analytics, JSON_PRETTY_PRINT);
-            /**
-             * Same data as {@link Page::getMetadataForRendering()}
-             */
-            $entry = array(
-                'CANONICAL' => $this->getCanonical(),
-                'ANALYTICS' => $json,
-                'PATH' => $this->getAbsolutePath(),
-                'NAME' => $this->getName(),
-                'TITLE' => $this->getTitleNotEmpty(),
-                'H1' => $this->getH1NotEmpty(),
-                'DATE_CREATED' => $this->getCreatedDateString(),
-                'DATE_MODIFIED' => $this->getModifiedDateString(),
-                'DATE_PUBLISHED' => $this->getPublishedTimeAsString(),
-                'DATE_START' => $this->getEndDateAsString(),
-                'DATE_END' => $this->getStartDateAsString(),
-                'COUNTRY' => $this->getCountry(),
-                'LANG' => $this->getLang(),
-                'IS_LOW_QUALITY' => ($this->isLowQualityPage() === true ? 1 : 0),
-                'TYPE' => $this->getType(),
-                'WORD_COUNT' => $analytics[Analytics::WORD_COUNT],
-                'BACKLINK_COUNT' => $analytics[Analytics::INTERNAL_BACKLINK_COUNT],
-                'IS_HOME' => ($this->isNamespaceHomePage() === true ? 1 : 0),
-                Page::UUID_ATTRIBUTE => $this->getUuid(),
-                'ID' => $this->getId(),
-            );
-            $res = $sqlite->query("SELECT count(*) FROM PAGES where ID = ?", $this->getId());
-            if ($sqlite->res2single($res) == 1) {
-                // Upset not supported on all version
-                //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-                $update = <<<EOF
-update
-    PAGES
-SET
-    CANONICAL = ?,
-    ANALYTICS = ?,
-    PATH = ?,
-    NAME = ?,
-    TITLE = ?,
-    H1 = ?,
-    DATE_CREATED = ?,
-    DATE_MODIFIED = ?,
-    DATE_PUBLISHED = ?,
-    DATE_START = ?,
-    DATE_END = ?,
-    COUNTRY = ?,
-    LANG = ?,
-    IS_LOW_QUALITY = ?,
-    TYPE = ?,
-    WORD_COUNT = ?,
-    BACKLINK_COUNT = ?,
-    IS_HOME = ?,
-    UUID = ?
-where
-    ID=?
-EOF;
-                $res = $sqlite->query($update, $entry);
-            } else {
-                $res = $sqlite->storeEntry('PAGES', $entry);
-            }
-            if (!$res) {
-                LogUtility::msg("There was a problem during the upsert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $sqlite->res_close($res);
-        }
-
-
-        /**
-         * Delete from the refresh table
-         */
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-            $res = $sqlite->query("DELETE FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
-            if (!$res) {
-                LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $sqlite->res_close($res);
-
-        }
-        return $analytics;
-
-    }
-
-    /**
-     * @param bool $cache
-     * @return mixed
-     *
-     */
-    public
-    function getAnalyticsFromFs($cache = true)
-    {
-        if ($cache) {
-            /**
-             * Note for dev: because cache is off in dev environment,
-             * you will get it always processed
-             */
-            return Analytics::getDataAsArray($this->getId(), $cache);
-        } else {
-            /**
-             * Process analytics delete at the same a asked refresh
-             */
-            return $this->refreshAnalytics();
-        }
     }
 
     /**
@@ -974,58 +747,6 @@ EOF;
             return filter_var($low, FILTER_VALIDATE_BOOLEAN);
         }
 
-    }
-
-    /**
-     * @return bool - if a {@link Page::refreshAnalytics()} for the page should occurs
-     */
-    public
-    function shouldAnalyticsProcessOccurs(): bool
-    {
-        /**
-         * If render cache is on
-         */
-        global $conf;
-        if ($conf['cachetime'] !== -1) {
-            /**
-             * If there is no cache
-             */
-            if (!$this->isAnalyticsCached()) {
-                return true;
-            }
-        }
-
-        /**
-         * Check if Analytics is null in Db
-         */
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-
-            $res = $sqlite->query("select count(1) from pages where ID = ? and ANALYTICS is null", $this->getId());
-            if (!$res) {
-                LogUtility::msg("An exception has occurred with the analytics detection");
-            }
-            $count = intval($sqlite->res2single($res));
-            $sqlite->res_close($res);
-            if ($count == 0) {
-                return true;
-            }
-        }
-
-        /**
-         * Check the refresh table
-         */
-        if ($sqlite != null) {
-            $res = $sqlite->query("SELECT count(*) FROM ANALYTICS_TO_REFRESH where ID = ?", $this->getId());
-            if (!$res) {
-                LogUtility::msg("There was a problem during the delete: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $count = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-            return $count >= 1;
-        }
-
-        return false;
     }
 
 
@@ -1960,7 +1681,7 @@ EOF;
         $this->readMetadatas();
     }
 
-    private function getPublishedTimeAsString(): ?string
+    public function getPublishedTimeAsString(): ?string
     {
         return $this->getPublishedTime() !== null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
     }
@@ -2200,6 +1921,11 @@ EOF;
          */
         return [null, null];
 
+    }
+
+    public function getAnalytics()
+    {
+        return new Analytics($this);
     }
 
 

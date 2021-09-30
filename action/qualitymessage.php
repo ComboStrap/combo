@@ -52,7 +52,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        if(!$this->getConf(self::CONF_DISABLE_QUALITY_MONITORING)) {
+        if (!$this->getConf(self::CONF_DISABLE_QUALITY_MONITORING)) {
             $controller->register_hook(
                 'TPL_ACT_RENDER',
                 'BEFORE',
@@ -107,8 +107,9 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
         }
 
         if ($page->exists()) {
-            $analytics = $page->getAnalyticsFromFs();
-            $rules = $analytics[Analytics::QUALITY][Analytics::RULES];
+
+            $analyticsArray = $page->getAnalytics()->getJsonData()->toArray();
+            $rules = $analyticsArray[Analytics::QUALITY][Analytics::RULES];
 
 
             /**
@@ -116,7 +117,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
              * array_key_exists() expects parameter 2 to be array,
              * null given in /opt/www/datacadamia.com/lib/plugins/combo/action/qualitymessage.php on line 113
              */
-            if ($rules==null){
+            if ($rules == null) {
                 return null;
             }
 
@@ -146,12 +147,12 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
             if (sizeof($qualityInfoRules) > 0) {
 
-                $qualityScore = $analytics[Analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
+                $qualityScore = $analyticsArray[Analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
                 $message = new Message($plugin);
                 $message->addContent("<p>Well played, you got a " . PluginUtility::getUrl("quality:score", "quality score") . " of {$qualityScore} !</p>");
                 if ($page->isLowQualityPage()) {
-                    $analytics = $page->getAnalyticsFromFs(true);
-                    $mandatoryFailedRules = $analytics[Analytics::QUALITY][Analytics::FAILED_MANDATORY_RULES];
+                    $analyticsArray = $page->getAnalytics()->getJsonData()->toArray();
+                    $mandatoryFailedRules = $analyticsArray[Analytics::QUALITY][Analytics::FAILED_MANDATORY_RULES];
                     $rulesUrl = PluginUtility::getUrl("quality:rule", "rules");
                     $lqPageUrl = PluginUtility::getUrl("low_quality_page", "low quality page");
                     $message->addContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");

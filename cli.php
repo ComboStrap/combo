@@ -188,14 +188,15 @@ EOF;
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
             $page = Page::createPageFromId($id);
+            $analytics = $page->getAnalytics();
 
             $pageCounter++;
             echo "Processing the page {$id} ($pageCounter / $totalNumberOfPages)\n";
 
-            if ($page->shouldAnalyticsProcessOccurs()) {
-                $data = $page->refreshAnalytics();
+            if ($analytics->shouldAnalyticsProcessOccurs()) {
+                $data = $analytics->refreshAnalytics()->toArray();
             } else {
-                $data = Analytics::getDataAsArray($page->getId(), true);
+                $data = $analytics->getJsonData( true)->toArray();
             }
 
             if (!empty($fileHandle)) {

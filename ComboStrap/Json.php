@@ -16,6 +16,11 @@ class Json
         $this->jsonString = $jsonString;
     }
 
+    public static function createEmpty(): Json
+    {
+        return new Json("");
+    }
+
     public function normalized()
     {
         return json_encode(json_decode($this->jsonString), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

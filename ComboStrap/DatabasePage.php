@@ -8,7 +8,7 @@ namespace ComboStrap;
  * Class Replicate
  * @package ComboStrap
  */
-class DatabaseReplicator
+class DatabasePage
 {
     /**
      * The attribute in the metadata and in the database
@@ -66,7 +66,7 @@ class DatabaseReplicator
             return;
         }
 
-        $res = $this->replicateReference($replicationDate);
+        $res = $this->replicatePageReference();
         if ($res === false) {
             return;
         }
@@ -118,16 +118,16 @@ class DatabaseReplicator
     public
     function getAnalyticsData(): ?Json
     {
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite === null) {
+
+        if ($this->sqlite === null) {
             return null;
         }
-        $res = $sqlite->query("select ANALYTICS from pages where ID = ? ", $this->page->getId());
+        $res = $this->sqlite->query("select ANALYTICS from pages where ID = ? ", $this->page->getId());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the analytics page ({$this->page}) selection query");
         }
-        $jsonString = trim($sqlite->res2single($res));
-        $sqlite->res_close($res);
+        $jsonString = trim($this->sqlite->res2single($res));
+        $this->sqlite->res_close($res);
         if (!empty($jsonString)) {
             return Json::createFromString($jsonString);
         } else {
@@ -144,20 +144,19 @@ class DatabaseReplicator
     function createReplicationRequest($reason)
     {
 
-        $sqlite = $this->sqlite;
-        if ($sqlite === null) {
+        if ($this->sqlite === null) {
             return;
         }
 
         /**
          * Check if exists
          */
-        $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->page->getId()));
+        $res = $this->sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->page->getId()));
         if (!$res) {
-            LogUtility::msg("There was a problem during the select ANALYTICS_TO_REFRESH: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            LogUtility::msg("There was a problem during the select ANALYTICS_TO_REFRESH: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
         }
-        $result = $sqlite->res2single($res);
-        $sqlite->res_close($res);
+        $result = $this->sqlite->res2single($res);
+        $this->sqlite->res_close($res);
         if ($result >= 1) {
             return;
         }
@@ -170,11 +169,11 @@ class DatabaseReplicator
             "TIMESTAMP" => Iso8601Date::createFromString()->toString(),
             "REASON" => $reason
         );
-        $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
+        $res = $this->sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
         if (!$res) {
-            LogUtility::msg("There was a problem during the insert into ANALYTICS_TO_REFRESH: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            LogUtility::msg("There was a problem during the insert into ANALYTICS_TO_REFRESH: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
         }
-        $sqlite->res_close($res);
+        $this->sqlite->res_close($res);
 
 
     }
@@ -354,7 +353,7 @@ class DatabaseReplicator
 
     public function getReplicationDate()
     {
-        $stringReplicationDate = $this->page->getMetadata(DatabaseReplicator::DATE_REPLICATION);
+        $stringReplicationDate = $this->page->getMetadata(DatabasePage::DATE_REPLICATION);
         if (empty($stringReplicationDate)) {
             return null;
         } else {
@@ -480,14 +479,98 @@ EOF;
 
     }
 
-    private function replicateReference(string $replicationDate)
+    private function replicatePageReference(): bool
     {
+        $internalPageReferences = $this->page->getInternalReferencedPages();
+        if ($internalPageReferences == null) {
+            return true;
+        }
+        $internalPageReferencesInDb = $this->getInternalPageReference();
+        foreach ($internalPageReferences as $internalPageReference ) {
+            if (!$internalPageReference->exists()) {
+                continue;
+            }
+            if (in_array($internalPageReference, $internalPageReferencesInDb, true)) {
+                $offset = array_search($internalPageReference, array_keys($internalPageReferencesInDb), true);
+                unset($internalPageReferencesInDb[$offset]);
+            } else {
+                $record = [
+                    "SOURCE_ID" => $this->page->getId(),
+                    "TARGET_ID" => $internalPageReference
+                ];
+                $res = $this->sqlite->storeEntry('PAGE_REFERENCES', $record);
+                if ($res === false) {
+                    $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
+                    $errorInfoAsString = var_export($errorInfo, true);
+                    LogUtility::msg("There was a problem during the page references insert : {$errorInfoAsString}");
+                    return $res;
+                }
+            }
+        }
+        $delete = <<<EOF
+delete from PAGE_REFERENCES where SOURCE_ID = ? and TARGET_ID = ?
+EOF;
+
+        foreach ($internalPageReferencesInDb as $internalLinkId) {
+            $row = [
+                "SOURCE_ID" => $this->page->getId(),
+                "TARGET_ID" => $internalLinkId
+            ];
+            $res = $this->sqlite->query($delete, $row);
+
+            if ($res === false) {
+                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
+                $message = "";
+                $errorCode = $errorInfo[0];
+                if ($errorCode === '0000') {
+                    $message = ("No rows were deleted");
+                }
+                $errorInfoAsString = var_export($errorInfo, true);
+                LogUtility::msg("There was a problem during the reference delete. $message. : {$errorInfoAsString}");
+                return false;
+            }
+        }
+
+        return true;
 
     }
 
-    public function getBacklinkCount()
+    public function getBacklinkCount(): ?int
     {
-        return 0;
+        if ($this->sqlite === null) {
+            return null;
+        }
+        $res = $this->sqlite->query("select count(1) from PAGE_REFERENCES where TARGET_ID = ? ", $this->page->getId());
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the backlinks count select ({$this->page})");
+        }
+        $count = $this->sqlite->res2single($res);
+        $this->sqlite->res_close($res);
+        return intval($count);
+
+    }
+
+    /**
+     * @return Page[]
+     */
+    private function getInternalPageReference(): array
+    {
+
+        if ($this->sqlite === null) {
+            return [];
+        }
+        $res = $this->sqlite->query("select TARGET_ID from PAGE_REFERENCES where SOURCE_ID = ? ", $this->page->getPath());
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the PAGE_REFERENCES ({$this->page}) selection query");
+        }
+        $targetPath = $this->sqlite->res2arr($res);
+        $this->sqlite->res_close($res);
+        $targetPaths = [];
+        foreach ($targetPath as $row) {
+            $targetPaths[] = Page::createPageFromId($row["TARGET_ID"]);
+        }
+        return $targetPaths;
+
     }
 
 

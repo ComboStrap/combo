@@ -123,10 +123,10 @@ class Analytics
      * The p_render function was seen from the {@link p_cached_output} function
      * used the in the switch of the {@link \dokuwiki\Action\Export::preProcess()} function
      */
-    function render(): ?Json
+    function render(): Json
     {
         if (!$this->page->exists()) {
-            return null;
+            return Json::createEmpty();
         }
         global $ID;
         $oldId = $ID;
@@ -142,9 +142,9 @@ class Analytics
 
     /**
      * Return the JSON analytics data
-     * @return Json|null
+     * @return Json
      */
-    public function getData(): ?Json
+    public function getData(): Json
     {
         return $this->render();
     }

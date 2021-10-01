@@ -314,8 +314,6 @@ class Page extends DokuPath
     }
 
 
-
-
     /**
      * Does the page is known in the pages table
      * @return int
@@ -413,7 +411,6 @@ class Page extends DokuPath
         return self::createPageFromId($canonical);
 
     }
-
 
 
     private
@@ -549,9 +546,9 @@ class Page extends DokuPath
 
     /**
      *
-     * @return mixed the internal links or null
+     * @return Page[] the internal links or null
      */
-    public function getInternalLinks()
+    public function getInternalReferencedPages(): array
     {
         $metadata = $this->getMetadatas();
         if (key_exists(self::CURRENT_METADATA, $metadata)) {
@@ -560,12 +557,16 @@ class Page extends DokuPath
                 $relation = $current['relation'];
                 if (is_array($relation)) {
                     if (key_exists('references', $relation)) {
-                        return $relation['references'];
+                        $pages = [];
+                        foreach (array_keys($relation['references']) as $referencePageId) {
+                            $pages[] = Page::createPageFromId($referencePageId);
+                        }
+                        return $pages;
                     }
                 }
             }
         }
-        return null;
+        return [];
     }
 
 
@@ -645,9 +646,11 @@ class Page extends DokuPath
     /**
      * @return Page[] the backlinks
      * Duplicate of related
+     *
+     * Same as {@link DokuPath::getReferencedBy()} ?
      */
     public
-    function getBacklinks()
+    function getBacklinks(): array
     {
         $backlinks = array();
         foreach (ft_backlinks($this->getId()) as $backlinkId) {
@@ -1695,17 +1698,15 @@ class Page extends DokuPath
     }
 
 
-
     public function getAnalytics(): Analytics
     {
         return new Analytics($this);
     }
 
-    public function getReplicator(): DatabaseReplicator
+    public function getReplicator(): DatabasePage
     {
-        return new DatabaseReplicator($this);
+        return new DatabasePage($this);
     }
-
 
 
 }

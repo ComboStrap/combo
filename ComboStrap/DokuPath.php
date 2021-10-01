@@ -417,7 +417,7 @@ class DokuPath extends File
      *   * page with media for media
      */
     public
-    function getRelatedPages(): array
+    function getReferencedBy(): array
     {
         $absoluteId = $this->getId();
         if ($this->finalType == self::MEDIA_TYPE) {

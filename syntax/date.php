@@ -161,7 +161,7 @@ class syntax_plugin_combo_date extends DokuWiki_Syntax_Plugin
                          * Date may be wrong
                          */
                         try {
-                            $dateTime = Iso8601Date::create($date);
+                            $dateTime = Iso8601Date::createFromString($date);
                         } catch (Exception $e) {
                             LogUtility::msg("The string date ($date) is not a valid date",LogUtility::LVL_MSG_ERROR,self::CANONICAL);
                             $renderer->doc .= "<span class=\"text-danger\">String Date value not valid ($date)</span>";

@@ -56,7 +56,7 @@ class Iso8601Date
 
     }
 
-    public static function create($dateString = null): Iso8601Date
+    public static function createFromString($dateString = null): Iso8601Date
     {
 
         $original = $dateString;

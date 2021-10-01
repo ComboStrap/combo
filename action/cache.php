@@ -138,7 +138,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
             $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRATION_META_KEY, METADATA_DONT_RENDER);
             if ($expirationStringDate !== null) {
 
-                $expirationDate = Iso8601Date::create($expirationStringDate)->getDateTime();
+                $expirationDate = Iso8601Date::createFromString($expirationStringDate)->getDateTime();
                 $actualDate = new DateTime();
                 if ($expirationDate < $actualDate) {
                     /**

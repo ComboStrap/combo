@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 
+use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;
 use renderer_plugin_combo_analytics;
 
@@ -65,6 +66,10 @@ class Analytics
     const DATE_END = "date_end";
     const DATE_START = "date_start";
     private $page;
+    /**
+     * @var CacheRenderer
+     */
+    private $cacheFile;
 
     /**
      *
@@ -73,6 +78,10 @@ class Analytics
     public function __construct(Page $page)
     {
         $this->page = $page;
+        $cache = new CacheRenderer($this->page->getId(), $this->page->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
+
+        $this->cacheFile = File::createFromPath($cache->cache);
+
     }
 
 
@@ -102,9 +111,7 @@ class Analytics
 
     public function isCached(): bool
     {
-        $cache = new CacheRenderer($this->page->getId(), $this->page->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-        $cacheFile = $cache->cache;
-        return file_exists($cacheFile);
+        return $this->cacheFile->exists();
     }
 
 
@@ -147,6 +154,14 @@ class Analytics
         $this->page->deleteRenderCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
     }
 
+    public function getModifiedTime()
+    {
+        if($this->cacheFile->exists()){
+            return $this->cacheFile->getModifiedTime();
+        } else {
+            return null;
+        }
+    }
 
 
 }

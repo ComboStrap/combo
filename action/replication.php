@@ -58,11 +58,6 @@ class action_plugin_combo_replication extends DokuWiki_Action_Plugin
     public function handle_background_refresh_analytics(Doku_Event $event, $param)
     {
 
-        /**
-         * Process the analytics to refresh
-         */
-        $this->analyticsBatchBackgroundRefresh();
-
 
         /**
          * Check that the actual page has analytics data
@@ -93,6 +88,12 @@ class action_plugin_combo_replication extends DokuWiki_Action_Plugin
              * TODO: Add reference
              */
         }
+
+
+        /**
+         * Process the analytics to refresh
+         */
+        $this->analyticsBatchBackgroundRefresh();
 
 
     }

@@ -534,14 +534,14 @@ class Page extends DokuPath
          * This is not a {@link Page::renderMetadata()}
          */
         if ($this->metadatas == null) {
-            $this->metadatas = $this->readMetadatas();
+            $this->metadatas = $this->updateMemoryMetaFromDisk();
         }
         return $this->metadatas;
 
     }
 
     public
-    function readMetadatas()
+    function updateMemoryMetaFromDisk()
     {
         $this->metadatas = p_read_metadata($this->getId());
         return $this->metadatas;
@@ -1622,7 +1622,7 @@ class Page extends DokuPath
                 $key => $value
             ]
         );
-        $this->readMetadatas();
+        $this->updateMemoryMetaFromDisk();
     }
 
     public function getPublishedTimeAsString(): ?string
@@ -1706,6 +1706,7 @@ class Page extends DokuPath
     {
         return new DatabaseReplicator($this);
     }
+
 
 
 }

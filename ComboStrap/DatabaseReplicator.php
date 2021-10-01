@@ -69,7 +69,7 @@ class DatabaseReplicator
             /**
              * Replication Date
              */
-            $replicationDate = Iso8601Date::create()->toString();
+            $replicationDate = Iso8601Date::createFromString()->toString();
 
 
             /**
@@ -180,7 +180,22 @@ EOF;
     public
     function shouldReplicate(): bool
     {
-        return true;
+        /**
+         * When the file does not exist
+         */
+        $modifiedTime = $this->page->getAnalytics()->getModifiedTime();
+        if ($modifiedTime === null) {
+            return true;
+        }
+        /**
+         * When the file exists
+         */
+        $dateReplication = $this->getDateReplication();
+        if ($modifiedTime > $dateReplication) {
+            return true;
+        }
+        return false;
+
     }
 
     public
@@ -245,7 +260,7 @@ EOF;
             if ($result != 1) {
                 $entry = array(
                     "ID" => $this->page->getId(),
-                    "TIMESTAMP" => Iso8601Date::create()->toString(),
+                    "TIMESTAMP" => Iso8601Date::createFromString()->toString(),
                     "REASON" => $reason
                 );
                 $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
@@ -431,6 +446,16 @@ EOF;
          */
         return [null, null];
 
+    }
+
+    public function getDateReplication()
+    {
+        $stringReplicationDate = $this->page->getMetadata(DatabaseReplicator::DATE_REPLICATION);
+        if (empty($stringReplicationDate)) {
+            return null;
+        } else {
+            return Iso8601Date::createFromString($stringReplicationDate)->getDateTime();
+        }
     }
 
 

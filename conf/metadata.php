@@ -317,3 +317,8 @@ $meta[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = array("onoff");
  * Cache
  */
 $meta[action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED] = array("onoff");
+
+/**
+ * Link Wizard
+ */
+$meta[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = array("onoff");

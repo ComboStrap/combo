@@ -358,3 +358,9 @@ $conf['outputComment'] = 0;
  * {@link action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED}
  */
 $conf["staticCacheEnabled"] = 1;
+
+
+/**
+ * {@link action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD}
+ */
+$conf["enableEnhancedLinkWizard"] = 1;

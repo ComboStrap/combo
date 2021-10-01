@@ -45,7 +45,7 @@ class DatabasePage
     {
 
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT ID FROM ANALYTICS_TO_REFRESH");
+        $res = $sqlite->query("SELECT ID FROM PAGES_TO_REPLICATE");
         if (!$res) {
             LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
         }
@@ -60,7 +60,7 @@ class DatabasePage
         $maxRefreshLow = 2;
         $pagesToRefresh = sizeof($rows);
         if ($pagesToRefresh > $maxRefresh) {
-            LogUtility::msg("There is {$pagesToRefresh} pages to refresh in the queue (table `ANALYTICS_TO_REFRESH`). This is more than {$maxRefresh} pages. Batch background Analytics refresh was reduced to {$maxRefreshLow} pages to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
+            LogUtility::msg("There is {$pagesToRefresh} pages to refresh in the queue (table `PAGES_TO_REPLICATE`). This is more than {$maxRefresh} pages. Batch background Analytics refresh was reduced to {$maxRefreshLow} pages to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
             $maxRefresh = $maxRefreshLow;
         }
         $refreshCounter = 0;
@@ -208,9 +208,9 @@ class DatabasePage
         /**
          * Check if exists
          */
-        $res = $this->sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->page->getId()));
+        $res = $this->sqlite->query("select count(1) from PAGES_TO_REPLICATE where ID = ?", array('ID' => $this->page->getId()));
         if (!$res) {
-            LogUtility::msg("There was a problem during the select ANALYTICS_TO_REFRESH: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
+            LogUtility::msg("There was a problem during the select PAGES_TO_REPLICATE: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
         }
         $result = $this->sqlite->res2single($res);
         $this->sqlite->res_close($res);
@@ -226,9 +226,9 @@ class DatabasePage
             "TIMESTAMP" => Iso8601Date::createFromString()->toString(),
             "REASON" => $reason
         );
-        $res = $this->sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
+        $res = $this->sqlite->storeEntry('PAGES_TO_REPLICATE', $entry);
         if (!$res) {
-            LogUtility::msg("There was a problem during the insert into ANALYTICS_TO_REFRESH: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
+            LogUtility::msg("There was a problem during the insert into PAGES_TO_REPLICATE: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
         }
         $this->sqlite->res_close($res);
 

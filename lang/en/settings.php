@@ -241,4 +241,9 @@ $lang[syntax_plugin_combo_comment::CONF_OUTPUT_COMMENT] = PluginUtility::getUrl(
  */
 $lang[action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED] = PluginUtility::getUrl(action_plugin_combo_cache::CANONICAL, "If disabled, the smart image browser cache will be disabled");
 
+/**
+ * Link Wizard
+ */
+$lang[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = PluginUtility::getUrl(syntax_plugin_combo_link::TAG, "If unchecked, the link wizard will not search for the term in the path, title, heading and name of the pages");
+
 ?>

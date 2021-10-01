@@ -120,6 +120,7 @@ class DatabasePage
     public
     function shouldReplicate(): bool
     {
+
         /**
          * When the file does not exist
          */
@@ -134,6 +135,25 @@ class DatabasePage
         if ($modifiedTime > $dateReplication) {
             return true;
         }
+
+        /**
+         * When the database version file is higher
+         */
+        $version = File::createFromPath(__DIR__ . "/../db/latest.version");
+        $versionModifiedTime = $version->getModifiedTime();
+        if ($versionModifiedTime > $dateReplication) {
+            return true;
+        }
+
+        /**
+         * When the class date time is higher
+         */
+        $code = File::createFromPath(__DIR__ . "/DatabasePage.php");
+        $codeModified = $code->getModifiedTime();
+        if ($codeModified > $dateReplication) {
+            return true;
+        }
+
         return false;
 
     }

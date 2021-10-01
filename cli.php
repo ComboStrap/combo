@@ -67,6 +67,7 @@ Commands for the Combo Plugin.
 
 If you want to use it for an animal farm, you need to set it first in a environment variable
 
+Example:
 ```dos
 set animal=foo
 php ./bin/plugin.php combo --help
@@ -88,13 +89,9 @@ EOF;
             "Optional, where to store the analytical data as csv eg. a filename.",
             'o', 'file');
         $options->registerOption(
-            'cache',
-            "Optional, returns from the cache if set",
-            'c', false);
-        $options->registerOption(
-            'animal',
-            "Optional, set the animal to use",
-            'a', false);
+            'rebuild',
+            "Rebuild the database",
+            'r', false);
         $options->registerOption(
             'dry',
             "Optional, dry-run",
@@ -113,17 +110,21 @@ EOF;
         $namespaces = array_map('cleanID', $options->getArgs());
         if (!count($namespaces)) $namespaces = array(''); //import from top
 
-        $cache = $options->getOpt('cache', false);
+
         $depth = $options->getOpt('depth', 0);
         $cmd = $options->getCmd();
-        if ($cmd == "") {
+        if ($cmd === "") {
             $cmd = self::REPLICATE;
         }
         switch ($cmd) {
             case self::REPLICATE:
+                $rebuild = $options->getOpt('rebuild', false);
+                $this->replicate($namespaces, $rebuild, $depth);
+                break;
+            case self::ANALYTICS:
                 $output = $options->getOpt('output', '');
                 //if ($output == '-') $output = 'php://stdout';
-                $this->replicate($namespaces, $output, $cache, $depth);
+                $this->analytics($namespaces, $output,  $depth);
                 break;
             case self::SYNC:
                 $this->sync();
@@ -168,7 +169,7 @@ EOF;
                 echo "The page {$id} ($pageCounter / $totalNumberOfPages) was replicated\n";
                 $replicate->replicate();
             } else {
-                echo "The page {$id} ($pageCounter / $totalNumberOfPages) was not replicated\n";
+                echo "The page {$id} ($pageCounter / $totalNumberOfPages) was up to date\n";
             }
 
         }
@@ -178,7 +179,7 @@ EOF;
 
     }
 
-    private function analytics($namespaces = array(), $output = null, $cache = false, $depth = 0)
+    private function analytics($namespaces = array(), $output = null, $depth = 0)
     {
 
         $fileHandle = null;

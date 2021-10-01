@@ -85,7 +85,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 
         $pageId = $event->data['page'];
         $page = Page::createPageFromId($pageId);
-        $links = $page->getInternalLinksFromMeta();
+        $links = $page->getInternalLinks();
         if ($links !== null) {
             $this->linksBeforeByPage[$pageId] = $links;
         } else {

@@ -19,6 +19,10 @@ class DatabaseReplicator
      * @var Page
      */
     private $page;
+    /**
+     * @var \helper_plugin_sqlite|null
+     */
+    private $sqlite;
 
     /**
      * Replicate constructor.
@@ -27,6 +31,11 @@ class DatabaseReplicator
     public function __construct(Page $page)
     {
         $this->page = $page;
+        /**
+         * Persist on the DB
+         */
+        $this->sqlite = Sqlite::getSqlite();
+
     }
 
     /**
@@ -43,138 +52,32 @@ class DatabaseReplicator
      */
     public function replicate()
     {
-
-        /**
-         * Convenient variable
-         */
-        $page = $this->page;
-
-        /**
-         * Render and save on the file system
-         */
-        $analyticsJson = $this->page->getAnalytics()->getData();
-
-        /**
-         * Persist on the DB
-         */
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-            /**
-             * Sqlite Plugin installed
-             */
-            $json = $analyticsJson->toString();
-            $jsonAsArray = $analyticsJson->toArray();
-
-
-            /**
-             * Replication Date
-             */
-            $replicationDate = Iso8601Date::createFromString()->toString();
-
-
-            /**
-             * Same data as {@link Page::getMetadataForRendering()}
-             */
-            $record = array(
-                'CANONICAL' => $page->getCanonical(),
-                'ANALYTICS' => $json,
-                'PATH' => $page->getAbsolutePath(),
-                'NAME' => $page->getName(),
-                'TITLE' => $page->getTitleNotEmpty(),
-                'H1' => $page->getH1NotEmpty(),
-                'DATE_CREATED' => $page->getCreatedDateString(),
-                'DATE_MODIFIED' => $page->getModifiedDateString(),
-                'DATE_PUBLISHED' => $page->getPublishedTimeAsString(),
-                'DATE_START' => $page->getEndDateAsString(),
-                'DATE_END' => $page->getStartDateAsString(),
-                'COUNTRY' => $page->getCountry(),
-                'LANG' => $page->getLang(),
-                'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
-                'TYPE' => $page->getType(),
-                'WORD_COUNT' => $jsonAsArray[Analytics::WORD_COUNT],
-                'BACKLINK_COUNT' => $jsonAsArray[Analytics::INTERNAL_BACKLINK_COUNT],
-                'IS_HOME' => ($page->isNamespaceHomePage() === true ? 1 : 0),
-                Page::UUID_ATTRIBUTE => $page->getUuid(),
-                self::DATE_REPLICATION => $replicationDate,
-                'ID' => $page->getId(),
-            );
-
-            /**
-             * Primary key has moved during the time
-             * It should be the UUID but not for older version
-             *
-             * If the primary key is null, no record was found
-             */
-            list($primaryKey, $primaryKeyValue) = $this->getPrimaryKeyAndItsValue();
-            if ($primaryKey !== null) {
-
-                /**
-                 * We just add the primary key
-                 * otherwise as this is a associative
-                 * array, we will miss a value for the update statement
-                 */
-                $record[] = $primaryKeyValue;
-                // Upset not supported on all version
-                //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-                $update = <<<EOF
-update
-    PAGES
-SET
-    CANONICAL = ?,
-    ANALYTICS = ?,
-    PATH = ?,
-    NAME = ?,
-    TITLE = ?,
-    H1 = ?,
-    DATE_CREATED = ?,
-    DATE_MODIFIED = ?,
-    DATE_PUBLISHED = ?,
-    DATE_START = ?,
-    DATE_END = ?,
-    COUNTRY = ?,
-    LANG = ?,
-    IS_LOW_QUALITY = ?,
-    TYPE = ?,
-    WORD_COUNT = ?,
-    BACKLINK_COUNT = ?,
-    IS_HOME = ?,
-    UUID = ?,
-    DATE_REPLICATION = ?,
-    ID = ?
-where
-    $primaryKey = ?
-EOF;
-                $res = $sqlite->query($update, $record);
-
-                if ($res === false) {
-                    $errorInfo = $sqlite->getAdapter()->getDb()->errorInfo();
-                    $message = "";
-                    $errorCode = $errorInfo[0];
-                    if ($errorCode === '0000') {
-                        $message = ("No rows were updated");
-                    }
-                    $errorInfoAsString = var_export($errorInfo, true);
-                    LogUtility::msg("There was a problem during the upsert. $message. : {$errorInfoAsString}");
-                }
-
-
-            } else {
-
-                $res = $sqlite->storeEntry('PAGES', $record);
-                if ($res === false) {
-                    $errorInfo = $sqlite->getAdapter()->getDb()->errorInfo();
-                    $errorInfoAsString = var_export($errorInfo, true);
-                    LogUtility::msg("There was a problem during the insert. : {$errorInfoAsString}");
-                }
-
-            }
-
-            if ($res !== false) {
-                $this->page->setMetadata(self::DATE_REPLICATION, $replicationDate);
-            }
-            $sqlite->res_close($res);
-
+        if ($this->sqlite === null) {
+            return;
         }
+
+
+        /**
+         * Replication Date
+         */
+        $replicationDate = Iso8601Date::createFromString()->toString();
+        $res = $this->replicatePage($replicationDate);
+        if ($res === false) {
+            return;
+        }
+
+        $res = $this->replicateReference($replicationDate);
+        if ($res === false) {
+            return;
+        }
+
+
+        /**
+         * Set the replication date
+         */
+        $this->page->setMetadata(self::DATE_REPLICATION, $replicationDate);
+
+
     }
 
     public
@@ -190,7 +93,7 @@ EOF;
         /**
          * When the file exists
          */
-        $dateReplication = $this->getDateReplication();
+        $dateReplication = $this->getReplicationDate();
         if ($modifiedTime > $dateReplication) {
             return true;
         }
@@ -241,36 +144,38 @@ EOF;
     function createReplicationRequest($reason)
     {
 
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite != null) {
-
-            /**
-             * Check if exists
-             */
-            $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->page->getId()));
-            if (!$res) {
-                LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-            }
-            $result = $sqlite->res2single($res);
-            $sqlite->res_close($res);
-
-            /**
-             * If not insert
-             */
-            if ($result != 1) {
-                $entry = array(
-                    "ID" => $this->page->getId(),
-                    "TIMESTAMP" => Iso8601Date::createFromString()->toString(),
-                    "REASON" => $reason
-                );
-                $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
-                if (!$res) {
-                    LogUtility::msg("There was a problem during the insert: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-                }
-                $sqlite->res_close($res);
-            }
-
+        $sqlite = $this->sqlite;
+        if ($sqlite === null) {
+            return;
         }
+
+        /**
+         * Check if exists
+         */
+        $res = $sqlite->query("select count(1) from ANALYTICS_TO_REFRESH where ID = ?", array('ID' => $this->page->getId()));
+        if (!$res) {
+            LogUtility::msg("There was a problem during the select ANALYTICS_TO_REFRESH: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $result = $sqlite->res2single($res);
+        $sqlite->res_close($res);
+        if ($result >= 1) {
+            return;
+        }
+
+        /**
+         * If not present
+         */
+        $entry = array(
+            "ID" => $this->page->getId(),
+            "TIMESTAMP" => Iso8601Date::createFromString()->toString(),
+            "REASON" => $reason
+        );
+        $res = $sqlite->storeEntry('ANALYTICS_TO_REFRESH', $entry);
+        if (!$res) {
+            LogUtility::msg("There was a problem during the insert into ANALYTICS_TO_REFRESH: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $sqlite->res_close($res);
+
 
     }
 
@@ -286,20 +191,20 @@ EOF;
     function getPrimaryKeyAndItsValue(): array
     {
 
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite === null) {
+
+        if ($this->sqlite === null) {
             return [null, null];
         }
 
         $page = $this->page;
         // Do we have a page attached to this uuid
         $uuid = $page->getUuid();
-        $res = $sqlite->query("select ID from pages where UUID = ?", $uuid);
+        $res = $this->sqlite->query("select ID from pages where UUID = ?", $uuid);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from UUID");
         }
-        $IdsInDb = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
+        $IdsInDb = $this->sqlite->res2arr($res);
+        $this->sqlite->res_close($res);
         switch (sizeof($IdsInDb)) {
             case 0:
                 break;
@@ -319,12 +224,12 @@ EOF;
         // Do we have a page attached to the canonical
         $canonical = $page->getCanonical();
         if ($canonical != null) {
-            $res = $sqlite->query("select ID from pages where CANONICAL = ?", $canonical);
+            $res = $this->sqlite->query("select ID from pages where CANONICAL = ?", $canonical);
             if (!$res) {
                 LogUtility::msg("An exception has occurred with the page search from CANONICAL");
             }
-            $IdsInDb = $sqlite->res2arr($res);
-            $sqlite->res_close($res);
+            $IdsInDb = $this->sqlite->res2arr($res);
+            $this->sqlite->res_close($res);
 
             switch (sizeof($IdsInDb)) {
                 case 0:
@@ -376,12 +281,12 @@ EOF;
 
         // Do we have a page attached to the path
         $path = $page->getPath();
-        $res = $sqlite->query("select ID from pages where PATH = ?", $path);
+        $res = $this->sqlite->query("select ID from pages where PATH = ?", $path);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from a PATH");
         }
-        $IdsInDb = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
+        $IdsInDb = $this->sqlite->res2arr($res);
+        $this->sqlite->res_close($res);
         switch (sizeof($IdsInDb)) {
             case 0:
                 break;
@@ -424,12 +329,12 @@ EOF;
          * @deprecated
          */
         $id = $page->getId();
-        $res = $sqlite->query("select ID from pages where ID = ?", $id);
+        $res = $this->sqlite->query("select ID from pages where ID = ?", $id);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from UUID");
         }
-        $IdsInDb = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
+        $IdsInDb = $this->sqlite->res2arr($res);
+        $this->sqlite->res_close($res);
         switch (sizeof($IdsInDb)) {
             case 0:
                 break;
@@ -442,13 +347,13 @@ EOF;
         }
 
         /**
-         * Nothing
+         * No rows found
          */
         return [null, null];
 
     }
 
-    public function getDateReplication()
+    public function getReplicationDate()
     {
         $stringReplicationDate = $this->page->getMetadata(DatabaseReplicator::DATE_REPLICATION);
         if (empty($stringReplicationDate)) {
@@ -456,6 +361,134 @@ EOF;
         } else {
             return Iso8601Date::createFromString($stringReplicationDate)->getDateTime();
         }
+    }
+
+    /**
+     * @param string $replicationDate
+     * @return bool|mixed|\SQLiteResult
+     */
+    public function replicatePage(string $replicationDate)
+    {
+        /**
+         * Convenient variable
+         */
+        $page = $this->page;
+
+        /**
+         * Render and save on the file system
+         */
+        $analyticsJson = $this->page->getAnalytics()->getData();
+        $analyticsJsonAsString = $analyticsJson->toString();
+        $analyticsJsonAsArray = $analyticsJson->toArray();
+        /**
+         * Same data as {@link Page::getMetadataForRendering()}
+         */
+        $record = array(
+            'CANONICAL' => $page->getCanonical(),
+            'ANALYTICS' => $analyticsJsonAsString,
+            'PATH' => $page->getAbsolutePath(),
+            'NAME' => $page->getName(),
+            'TITLE' => $page->getTitleNotEmpty(),
+            'H1' => $page->getH1NotEmpty(),
+            'DATE_CREATED' => $page->getCreatedDateString(),
+            'DATE_MODIFIED' => $page->getModifiedDateString(),
+            'DATE_PUBLISHED' => $page->getPublishedTimeAsString(),
+            'DATE_START' => $page->getEndDateAsString(),
+            'DATE_END' => $page->getStartDateAsString(),
+            'COUNTRY' => $page->getCountry(),
+            'LANG' => $page->getLang(),
+            'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
+            'TYPE' => $page->getType(),
+            'WORD_COUNT' => $analyticsJsonAsArray[Analytics::WORD_COUNT],
+            'BACKLINK_COUNT' => $analyticsJsonAsArray[Analytics::INTERNAL_BACKLINK_COUNT],
+            'IS_HOME' => ($page->isNamespaceHomePage() === true ? 1 : 0),
+            Page::UUID_ATTRIBUTE => $page->getUuid(),
+            self::DATE_REPLICATION => $replicationDate,
+            'ID' => $page->getId(),
+        );
+
+        /**
+         * Primary key has moved during the time
+         * It should be the UUID but not for older version
+         *
+         * If the primary key is null, no record was found
+         */
+        list($primaryKey, $primaryKeyValue) = $this->getPrimaryKeyAndItsValue();
+        if ($primaryKey !== null) {
+
+            /**
+             * We just add the primary key
+             * otherwise as this is a associative
+             * array, we will miss a value for the update statement
+             */
+            $record[] = $primaryKeyValue;
+            // Upset not supported on all version
+            //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
+            $update = <<<EOF
+update
+    PAGES
+SET
+    CANONICAL = ?,
+    ANALYTICS = ?,
+    PATH = ?,
+    NAME = ?,
+    TITLE = ?,
+    H1 = ?,
+    DATE_CREATED = ?,
+    DATE_MODIFIED = ?,
+    DATE_PUBLISHED = ?,
+    DATE_START = ?,
+    DATE_END = ?,
+    COUNTRY = ?,
+    LANG = ?,
+    IS_LOW_QUALITY = ?,
+    TYPE = ?,
+    WORD_COUNT = ?,
+    BACKLINK_COUNT = ?,
+    IS_HOME = ?,
+    UUID = ?,
+    DATE_REPLICATION = ?,
+    ID = ?
+where
+    $primaryKey = ?
+EOF;
+            $res = $this->sqlite->query($update, $record);
+
+            if ($res === false) {
+                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
+                $message = "";
+                $errorCode = $errorInfo[0];
+                if ($errorCode === '0000') {
+                    $message = ("No rows were updated");
+                }
+                $errorInfoAsString = var_export($errorInfo, true);
+                LogUtility::msg("There was a problem during the upsert. $message. : {$errorInfoAsString}");
+            }
+
+
+        } else {
+
+            $res = $this->sqlite->storeEntry('PAGES', $record);
+            if ($res === false) {
+                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
+                $errorInfoAsString = var_export($errorInfo, true);
+                LogUtility::msg("There was a problem during the insert. : {$errorInfoAsString}");
+            }
+
+        }
+        $this->sqlite->res_close($res);
+        return $res;
+
+    }
+
+    private function replicateReference(string $replicationDate)
+    {
+
+    }
+
+    public function getBacklinkCount()
+    {
+        return 0;
     }
 
 

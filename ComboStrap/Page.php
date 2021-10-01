@@ -551,8 +551,7 @@ class Page extends DokuPath
      *
      * @return mixed the internal links or null
      */
-    public
-    function getInternalLinksFromMeta()
+    public function getInternalLinks()
     {
         $metadata = $this->getMetadatas();
         if (key_exists(self::CURRENT_METADATA, $metadata)) {

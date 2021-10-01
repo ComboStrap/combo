@@ -39,6 +39,43 @@ class DatabasePage
     }
 
     /**
+     * process all replication request, created with {@link DatabasePage::createReplicationRequest()}
+     */
+    public static function processReplicationRequest()
+    {
+
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("SELECT ID FROM ANALYTICS_TO_REFRESH");
+        if (!$res) {
+            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+        }
+        $rows = $sqlite->res2arr($res, true);
+        $sqlite->res_close($res);
+
+        /**
+         * In case of a start or if there is a recursive bug
+         * We don't want to take all the resources
+         */
+        $maxRefresh = 10; // by default, there is 5 pages in a default dokuwiki installation in the wiki namespace
+        $maxRefreshLow = 2;
+        $pagesToRefresh = sizeof($rows);
+        if ($pagesToRefresh > $maxRefresh) {
+            LogUtility::msg("There is {$pagesToRefresh} pages to refresh in the queue (table `ANALYTICS_TO_REFRESH`). This is more than {$maxRefresh} pages. Batch background Analytics refresh was reduced to {$maxRefreshLow} pages to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
+            $maxRefresh = $maxRefreshLow;
+        }
+        $refreshCounter = 0;
+        foreach ($rows as $row) {
+            $page = Page::createPageFromId($row['ID']);
+            $page->getReplicator()->replicate();
+            $refreshCounter++;
+            if ($refreshCounter >= $maxRefresh) {
+                break;
+            }
+        }
+
+    }
+
+    /**
      * Delete the cache,
      * Process the analytics
      * Save it in the Db
@@ -486,7 +523,7 @@ EOF;
             return true;
         }
         $internalPageReferencesInDb = $this->getInternalPageReference();
-        foreach ($internalPageReferences as $internalPageReference ) {
+        foreach ($internalPageReferences as $internalPageReference) {
             if (!$internalPageReference->exists()) {
                 continue;
             }

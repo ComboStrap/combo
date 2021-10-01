@@ -559,7 +559,7 @@ class Page extends DokuPath
                     if (key_exists('references', $relation)) {
                         $pages = [];
                         foreach (array_keys($relation['references']) as $referencePageId) {
-                            $pages[] = Page::createPageFromId($referencePageId);
+                            $pages[$referencePageId] = Page::createPageFromId($referencePageId);
                         }
                         return $pages;
                     }

@@ -28,7 +28,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     /**
      * @var array
      */
-    protected $linksBeforeByPage = array();
+    protected $pageReferencedBefore = array();
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -86,12 +86,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
         $pageId = $event->data['page'];
         $page = Page::createPageFromId($pageId);
         $links = $page->getInternalReferencedPages();
-        if ($links !== null) {
-            $this->linksBeforeByPage[$pageId] = $links;
-        } else {
-            $this->linksBeforeByPage[$pageId] = array();
-        }
-
+        $this->pageReferencedBefore[$pageId] = $links;
 
     }
 
@@ -104,18 +99,18 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
     {
 
         $pageId = $event->data['page'];
-        $linksAfter = $event->data['current']['relation']['references'];
-        if ($linksAfter == null) {
-            $linksAfter = array();
+        $pagesReferencedAfter = $event->data['current']['relation']['references'];
+        if ($pagesReferencedAfter == null) {
+            $pagesReferencedAfter = array();
         }
-        $linksBefore = $this->linksBeforeByPage[$pageId];
-        unset($this->linksBeforeByPage[$pageId]);
+        $pagesReferencedBefore = $this->pageReferencedBefore[$pageId];
+        unset($this->pageReferencedBefore[$pageId]);
         $addedLinks = array();
-        foreach ($linksAfter as $linkAfter => $exist) {
-            if (array_key_exists($linkAfter, $linksBefore)) {
-                unset($linksBefore[$linkAfter]);
+        foreach ($pagesReferencedAfter as $pageReferencedAfter => $exist) {
+            if (array_key_exists($pageReferencedAfter, $pagesReferencedBefore)) {
+                unset($pagesReferencedBefore[$pageReferencedAfter]);
             } else {
-                $addedLinks[] = $linkAfter;
+                $addedLinks[] = $pageReferencedAfter;
             }
         }
 
@@ -123,7 +118,7 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          * Process to update the backlinks
          */
         $linksChanged = array_fill_keys($addedLinks, "added");
-        foreach ($linksBefore as $deletedLink => $deletedLinkPageExists) {
+        foreach ($pagesReferencedBefore as $deletedLink => $deletedLinkPageExists) {
             $linksChanged[$deletedLink] = 'deleted';
         }
         foreach ($linksChanged as $referentPageId => $status) {

@@ -609,6 +609,12 @@ EOF;
 
     }
 
+    /**
+     * Sqlite is much quicker than the Dokuwiki Internal Index
+     * We use it every time that we can
+     *
+     * @return int|null
+     */
     public function getBacklinkCount(): ?int
     {
         if ($this->sqlite === null) {

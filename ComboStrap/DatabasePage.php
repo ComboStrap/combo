@@ -53,7 +53,7 @@ class DatabasePage
         }
         $rows = $sqlite->res2arr($res, true);
         $sqlite->res_close($res);
-        if(sizeof($rows)===0){
+        if (sizeof($rows) === 0) {
             LogUtility::msg("No replication requests found", LogUtility::LVL_MSG_INFO);
             return;
         }
@@ -72,9 +72,17 @@ class DatabasePage
         $totalRequests = sizeof($rows);
         foreach ($rows as $row) {
             $refreshCounter++;
-            $page = Page::createPageFromId($row['ID']);
-            $page->getDatabasePage()->replicate();
-            LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
+            $id = $row['ID'];
+            $page = Page::createPageFromId($id);
+            $result = $page->getDatabasePage()->replicate();
+            if ($result) {
+                LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
+                $res = $sqlite->query("DELETE FROM PAGES_TO_REPLICATE where ID = ?",$id);
+                if (!$res) {
+                    LogUtility::msg("There was a problem during the delete of the replication request: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+                }
+                $sqlite->res_close($res);
+            }
             if ($refreshCounter >= $maxRefresh) {
                 break;
             }
@@ -94,10 +102,10 @@ class DatabasePage
      *
      *
      */
-    public function replicate()
+    public function replicate(): bool
     {
         if ($this->sqlite === null) {
-            return;
+            return false;
         }
 
 
@@ -107,12 +115,12 @@ class DatabasePage
         $replicationDate = Iso8601Date::createFromString()->toString();
         $res = $this->replicatePage($replicationDate);
         if ($res === false) {
-            return;
+            return false;
         }
 
         $res = $this->replicatePageReference();
         if ($res === false) {
-            return;
+            return false;
         }
 
 
@@ -120,7 +128,7 @@ class DatabasePage
          * Set the replication date
          */
         $this->page->setMetadata(self::DATE_REPLICATION, $replicationDate);
-
+        return true;
 
     }
 
@@ -545,22 +553,21 @@ EOF;
 
     private function replicatePageReference(): bool
     {
-        $internalPageReferences = $this->page->getInternalReferencedPages();
-        if ($internalPageReferences == null) {
+        $referencedPagesIndex = $this->page->getInternalReferencedPages();
+        if ($referencedPagesIndex == null) {
             return true;
         }
-        $internalPageReferencesInDb = $this->getInternalReferencedPages();
-        foreach ($internalPageReferences as $internalPageReference) {
+        $referencedPagesDb = $this->getInternalReferencedPages();
+        foreach ($referencedPagesIndex as $internalPageReference) {
             if (!$internalPageReference->exists()) {
                 continue;
             }
-            if (in_array($internalPageReference, $internalPageReferencesInDb, true)) {
-                $offset = array_search($internalPageReference, array_keys($internalPageReferencesInDb), true);
-                unset($internalPageReferencesInDb[$offset]);
+            if (in_array($internalPageReference->getId(), array_keys($referencedPagesDb), true)) {
+                unset($referencedPagesDb[$internalPageReference->getId()]);
             } else {
                 $record = [
                     "SOURCE_ID" => $this->page->getId(),
-                    "TARGET_ID" => $internalPageReference
+                    "TARGET_ID" => $internalPageReference->getId()
                 ];
                 $res = $this->sqlite->storeEntry('PAGE_REFERENCES', $record);
                 if ($res === false) {
@@ -570,17 +577,17 @@ EOF;
                     return $res;
                 }
                 $reason = "The page ($this->page) has added a a backlink to the page {$internalPageReference}";
-                Page::createPageFromId($internalPageReference)->getDatabasePage()->createReplicationRequest($reason);
+                $internalPageReference->getDatabasePage()->createReplicationRequest($reason);
             }
         }
         $delete = <<<EOF
 delete from PAGE_REFERENCES where SOURCE_ID = ? and TARGET_ID = ?
 EOF;
 
-        foreach ($internalPageReferencesInDb as $internalLinkId) {
+        foreach ($referencedPagesDb as $internalPageReference) {
             $row = [
                 "SOURCE_ID" => $this->page->getId(),
-                "TARGET_ID" => $internalLinkId
+                "TARGET_ID" => $internalPageReference->getId()
             ];
             $res = $this->sqlite->query($delete, $row);
 
@@ -596,8 +603,8 @@ EOF;
                 return false;
             }
 
-            $reason = "The page ($this->page) has deleted a a backlink to the page {$internalLinkId}";
-            Page::createPageFromId($internalLinkId)->getDatabasePage()->createReplicationRequest($reason);
+            $reason = "The page ($this->page) has deleted a a backlink to the page {$internalPageReference}";
+            $internalPageReference->getDatabasePage()->createReplicationRequest($reason);
         }
 
         return true;
@@ -628,7 +635,7 @@ EOF;
         if ($this->sqlite === null) {
             return [];
         }
-        $res = $this->sqlite->query("select TARGET_ID from PAGE_REFERENCES where SOURCE_ID = ? ", $this->page->getPath());
+        $res = $this->sqlite->query("select TARGET_ID from PAGE_REFERENCES where SOURCE_ID = ? ", $this->page->getId());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the PAGE_REFERENCES ({$this->page}) selection query");
         }
@@ -636,7 +643,8 @@ EOF;
         $this->sqlite->res_close($res);
         $targetPaths = [];
         foreach ($targetPath as $row) {
-            $targetPaths[] = Page::createPageFromId($row["TARGET_ID"]);
+            $targetId = $row["TARGET_ID"];
+            $targetPaths[$targetId] = Page::createPageFromId($targetId);
         }
         return $targetPaths;
 

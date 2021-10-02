@@ -248,7 +248,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                          */
                         $textWithVariables = $actualCall->getCapturedContent();
                         $attributes = $actualCall->getAttributes();
-                        if($attributes!=null) {
+                        if ($attributes != null) {
                             $sep = " ";
                             foreach ($attributes as $key => $attribute) {
                                 $textWithVariables .= $sep . $key . $sep . $attribute;
@@ -354,8 +354,6 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                             $targetRow = [];
                             foreach ($variableNames as $variableName) {
 
-                                $lowerColumn = strtolower($variableName);
-
                                 if ($variableName === Page::IMAGE_META_PROPERTY) {
                                     LogUtility::msg("To add an image, you must use the page image component, not the image metadata", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
                                     continue;
@@ -364,12 +362,10 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                 /**
                                  * Data in the pages tables
                                  */
-                                if (!in_array($lowerColumn, self::ATTRIBUTES_IN_PAGE_TABLE)) {
+                                if (isset($sourceRow[strtoupper($variableName)])) {
                                     $data = $sourceRow[strtoupper($variableName)];
-                                    if (!empty($data)) {
-                                        $targetRow[$variableName] = $data;
-                                        continue;
-                                    }
+                                    $targetRow[$variableName] = $data;
+                                    continue;
                                 }
 
                                 /**
@@ -394,7 +390,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                                 /**
                                  * Bad luck
                                  */
-                                $targetRow[$variableName] = "$variableName attribute was not found in the <a href=\"https://combostrap.com/metadata\">metadata</a> for the page (:$id)";
+                                $targetRow[$variableName] = "$variableName attribute is unknown.";
 
 
                             }

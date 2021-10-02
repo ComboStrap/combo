@@ -132,8 +132,11 @@ final class PageSqlTreeListener implements ParseTreeListener
                         break;
                     case
                     PageSqlParser::RULE_orderBys:
-                        $text = strtolower($text);
-                        $this->physicalSql .= "\t{$text} ";
+                        $variableName = strtolower($text);
+                        if ($this->type === self::BACKLINKS) {
+                            $variableName = "p." . $variableName;
+                        }
+                        $this->physicalSql .= "\t{$variableName} ";
                         break;
                     case PageSqlParser::RULE_columns:
                         $this->columns[] = $text;

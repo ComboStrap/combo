@@ -468,7 +468,7 @@ class DatabasePage
             'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
             'TYPE' => $page->getType(),
             'WORD_COUNT' => $analyticsJsonAsArray[Analytics::WORD_COUNT],
-            'BACKLINK_COUNT' => $analyticsJsonAsArray[Analytics::INTERNAL_BACKLINK_COUNT],
+            'BACKLINK_COUNT' => $this->getBacklinkCount(),
             'IS_HOME' => ($page->isNamespaceHomePage() === true ? 1 : 0),
             Page::UUID_ATTRIBUTE => $page->getUuid(),
             self::DATE_REPLICATION => $replicationDate,

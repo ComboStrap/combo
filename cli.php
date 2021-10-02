@@ -91,9 +91,9 @@ EOF;
             "Optional, where to store the analytical data as csv eg. a filename.",
             'o', 'file');
         $options->registerOption(
-            'rebuild',
-            "Rebuild the database",
-            'r', false);
+            'force',
+            "Replicate with force",
+            'f', false);
         $options->registerOption(
             'dry',
             "Optional, dry-run",
@@ -120,8 +120,8 @@ EOF;
         }
         switch ($cmd) {
             case self::REPLICATE:
-                $rebuild = $options->getOpt('rebuild', false);
-                $this->replicate($namespaces, $rebuild, $depth);
+                $force = $options->getOpt('force', false);
+                $this->replicate($namespaces, $force, $depth);
                 break;
             case self::ANALYTICS:
                 $output = $options->getOpt('output', '');

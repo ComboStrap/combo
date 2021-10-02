@@ -26,6 +26,7 @@ use ComboStrap\PageSqlParser\PageSqlParser;
  */
 final class PageSqlTreeListener implements ParseTreeListener
 {
+    const BACKLINKS = "backlinks";
     /**
      * @var PageSqlLexer
      */
@@ -62,6 +63,11 @@ final class PageSqlTreeListener implements ParseTreeListener
      * @var string
      */
     private $pageSqlString;
+    /**
+     * backlinks or pages
+     * @var string
+     */
+    private $type;
 
     /**
      * SqlTreeListener constructor.
@@ -115,7 +121,13 @@ final class PageSqlTreeListener implements ParseTreeListener
 
                         // variable name
                         $variableName = strtolower($text);
-                        $this->physicalSql .= "\t{$variableName} ";
+                        if (substr($this->physicalSql, -1) === "n") {
+                            $this->physicalSql .= "\t";
+                        }
+                        if($this->type===self::BACKLINKS){
+                            $variableName = "p.".$variableName;
+                        }
+                        $this->physicalSql .= "{$variableName} ";
 
                         break;
                     case
@@ -215,7 +227,7 @@ final class PageSqlTreeListener implements ParseTreeListener
 
         $position = "at position: $charPosition";
         if ($charPosition != 0) {
-            $position .= ", in `" . substr($this->pageSqlString, $charPosition, -1)."`";
+            $position .= ", in `" . substr($this->pageSqlString, $charPosition, -1) . "`";
         }
         $message = "PageSql Parsing Error: The token `$textMakingTheError` was unexpected ($position).";
         throw new \RuntimeException($message);
@@ -248,7 +260,14 @@ final class PageSqlTreeListener implements ParseTreeListener
                 $this->physicalSql .= "from\n";
                 break;
             case PageSqlParser::RULE_predicates:
-                $this->physicalSql .= "where\n";
+                if ($this->type === self::BACKLINKS) {
+                    /**
+                     * Backlinks query adds already a where clause
+                     */
+                    $this->physicalSql .= "\tand ";
+                } else {
+                    $this->physicalSql .= "where\n";
+                }
                 break;
             case PageSqlParser::RULE_functionNames:
                 // Print the function name
@@ -256,7 +275,21 @@ final class PageSqlTreeListener implements ParseTreeListener
                 break;
             case PageSqlParser::RULE_tableNames:
                 // Print the table name
-                $this->physicalSql .= "\t{$ctx->getText()}\n";
+                $tableName = strtolower($ctx->getText());
+                $this->type = $tableName;
+                if ($tableName === self::BACKLINKS) {
+                    $tableName = <<<EOF
+    pages p
+    join page_references pr on pr.source_id = p.id
+where
+    pr.target_id = ?
+
+EOF;
+
+                } else {
+                    $tableName = "\t$tableName\n";
+                }
+                $this->physicalSql .= $tableName;
                 break;
         }
 

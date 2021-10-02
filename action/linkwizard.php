@@ -53,6 +53,9 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
             return;
         }
         $id = $event->data["id"];
+        if(strlen($id)<3){
+            return;
+        }
         $pattern = "*$id*";
         $patterns = [$pattern,$pattern,$pattern,$pattern];
         $query = <<<EOF

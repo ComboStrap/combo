@@ -108,7 +108,6 @@ class DatabasePage
             return false;
         }
 
-
         /**
          * Replication Date
          */
@@ -122,7 +121,6 @@ class DatabasePage
         if ($res === false) {
             return false;
         }
-
 
         /**
          * Set the replication date

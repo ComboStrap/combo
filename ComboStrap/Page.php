@@ -653,8 +653,12 @@ class Page extends DokuPath
     function getBacklinks(): array
     {
         $backlinks = array();
+        /**
+         * Same as
+         * idx_get_indexer()->lookupKey('relation_references', $ID);
+         */
         foreach (ft_backlinks($this->getId()) as $backlinkId) {
-            $backlinks[] = Page::createPageFromId($backlinkId);
+            $backlinks[$backlinkId] = Page::createPageFromId($backlinkId);
         }
         return $backlinks;
     }

@@ -390,12 +390,12 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Internal Backlinks rule
          *
-         * If a page is a low quality page, if the process run
-         * anonymous, we will not see all {@link ft_backlinks()}
-         * we use then the index directly to avoid confusion
+         * We used the database table to get the backlinks
+         * because the replication is based on it
+         * If the dokuwiki index is not up to date, we may got
+         * inconsistency
          */
-        $backlinks = idx_get_indexer()->lookupKey('relation_references', $ID);
-        $countBacklinks = count($backlinks);
+        $countBacklinks = Page::createPageFromId($ID)->getDatabasePage()->getBacklinkCount();
         $statExport[Analytics::INTERNAL_BACKLINK_COUNT] = $countBacklinks;
         $backlinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_BACKLINK_FACTOR, 1);
         if ($countBacklinks == 0) {

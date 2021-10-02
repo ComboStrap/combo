@@ -124,8 +124,8 @@ final class PageSqlTreeListener implements ParseTreeListener
                         if (substr($this->physicalSql, -1) === "n") {
                             $this->physicalSql .= "\t";
                         }
-                        if($this->type===self::BACKLINKS){
-                            $variableName = "p.".$variableName;
+                        if ($this->type === self::BACKLINKS) {
+                            $variableName = "p." . $variableName;
                         }
                         $this->physicalSql .= "{$variableName} ";
 
@@ -285,7 +285,11 @@ where
     pr.target_id = ?
 
 EOF;
-
+                    $id = PluginUtility::getPageId();
+                    if (empty($id)) {
+                        LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
+                    }
+                    $this->parameters[]=$id;
                 } else {
                     $tableName = "\t$tableName\n";
                 }

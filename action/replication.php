@@ -76,7 +76,7 @@ class action_plugin_combo_replication extends DokuWiki_Action_Plugin
          * From {@link idx_addPage}
          * They receive even the deleted page
          */
-        $replicator = $page->getReplicator();
+        $replicator = $page->getDatabasePage();
         if (!$page->exists()) {
 
             $replicator->delete();

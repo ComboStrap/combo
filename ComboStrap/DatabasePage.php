@@ -40,8 +40,10 @@ class DatabasePage
 
     /**
      * process all replication request, created with {@link DatabasePage::createReplicationRequest()}
+     *
+     * by default, there is 5 pages in a default dokuwiki installation in the wiki namespace)
      */
-    public static function processReplicationRequest()
+    public static function processReplicationRequest($maxRefresh = 10)
     {
 
         $sqlite = Sqlite::getSqlite();
@@ -51,12 +53,15 @@ class DatabasePage
         }
         $rows = $sqlite->res2arr($res, true);
         $sqlite->res_close($res);
+        if(sizeof($rows)===0){
+            LogUtility::msg("No replication requests found", LogUtility::LVL_MSG_INFO);
+            return;
+        }
 
         /**
          * In case of a start or if there is a recursive bug
          * We don't want to take all the resources
          */
-        $maxRefresh = 10; // by default, there is 5 pages in a default dokuwiki installation in the wiki namespace
         $maxRefreshLow = 2;
         $pagesToRefresh = sizeof($rows);
         if ($pagesToRefresh > $maxRefresh) {
@@ -64,10 +69,12 @@ class DatabasePage
             $maxRefresh = $maxRefreshLow;
         }
         $refreshCounter = 0;
+        $totalRequests = sizeof($rows);
         foreach ($rows as $row) {
-            $page = Page::createPageFromId($row['ID']);
-            $page->getReplicator()->replicate();
             $refreshCounter++;
+            $page = Page::createPageFromId($row['ID']);
+            $page->getDatabasePage()->replicate();
+            LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
             if ($refreshCounter >= $maxRefresh) {
                 break;
             }
@@ -542,7 +549,7 @@ EOF;
         if ($internalPageReferences == null) {
             return true;
         }
-        $internalPageReferencesInDb = $this->getInternalPageReference();
+        $internalPageReferencesInDb = $this->getInternalReferencedPages();
         foreach ($internalPageReferences as $internalPageReference) {
             if (!$internalPageReference->exists()) {
                 continue;
@@ -562,6 +569,8 @@ EOF;
                     LogUtility::msg("There was a problem during the page references insert : {$errorInfoAsString}");
                     return $res;
                 }
+                $reason = "The page ($this->page) has added a a backlink to the page {$internalPageReference}";
+                Page::createPageFromId($internalPageReference)->getDatabasePage()->createReplicationRequest($reason);
             }
         }
         $delete = <<<EOF
@@ -586,6 +595,9 @@ EOF;
                 LogUtility::msg("There was a problem during the reference delete. $message. : {$errorInfoAsString}");
                 return false;
             }
+
+            $reason = "The page ($this->page) has deleted a a backlink to the page {$internalLinkId}";
+            Page::createPageFromId($internalLinkId)->getDatabasePage()->createReplicationRequest($reason);
         }
 
         return true;
@@ -610,7 +622,7 @@ EOF;
     /**
      * @return Page[]
      */
-    private function getInternalPageReference(): array
+    private function getInternalReferencedPages(): array
     {
 
         if ($this->sqlite === null) {

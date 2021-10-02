@@ -68,7 +68,7 @@ class LogUtility
         /**
          * Log to frontend
          */
-        self::log2FrontEnd($message, $level, $canonical, true);
+        self::log2FrontEnd($message, $level, $canonical);
 
         /**
          * Log level passed for a page (only for file used)
@@ -82,7 +82,7 @@ class LogUtility
         /**
          * TODO: Make it a configuration ?
          */
-        if($level >= self::LVL_MSG_WARNING) {
+        if ($level >= self::LVL_MSG_WARNING) {
             self::log2file($message, $level, $canonical);
         }
 
@@ -139,7 +139,7 @@ class LogUtility
      * @param $canonical
      * @param bool $withIconURL
      */
-    public static function log2FrontEnd($message, $level, $canonical="support", $withIconURL = true)
+    public static function log2FrontEnd($message, $level, $canonical = "support", $withIconURL = true)
     {
         /**
          * If we are not in the console
@@ -147,14 +147,14 @@ class LogUtility
          * we test that the message comes in the front end
          * (example {@link \plugin_combo_frontmatter_test}
          */
-        $isCLI = (php_sapi_name() == 'cli');
-        $print = true;
+        $isCLI = (php_sapi_name() === 'cli');
+
         if ($isCLI) {
-            if (!defined('DOKU_UNITTEST')) {
-                $print = false;
-            }
-        }
-        if ($print) {
+
+            echo "$message\n";
+
+        } else {
+
             $htmlMsg = PluginUtility::getUrl("", PluginUtility::$PLUGIN_NAME, $withIconURL);
             if ($canonical != null) {
                 $htmlMsg = PluginUtility::getUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
@@ -168,7 +168,7 @@ class LogUtility
              * is not good, creating a recursive call.
              */
             $id = PluginUtility::getPageId();
-            if ($id!=null) {
+            if ($id != null) {
                 $page = Page::createPageFromId($id);
                 if ($page != null) {
                     $htmlMsg .= " - " . $page->getAnchorLink();

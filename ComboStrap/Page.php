@@ -1703,7 +1703,7 @@ class Page extends DokuPath
         return new Analytics($this);
     }
 
-    public function getReplicator(): DatabasePage
+    public function getDatabasePage(): DatabasePage
     {
         return new DatabasePage($this);
     }

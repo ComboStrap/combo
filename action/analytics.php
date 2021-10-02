@@ -25,10 +25,6 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
 {
 
-    /**
-     * @var array
-     */
-    protected $pageReferencedBefore = array();
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -40,13 +36,6 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'handle_rail_bar');
 
-        /**
-         * Check the internal link that have been
-         * added or deleted to update the backlinks statistics
-         * if a link has been added or deleted
-         */
-        $controller->register_hook('PARSER_METADATA_RENDER', 'AFTER', $this, 'handle_meta_renderer_after', array());
-        $controller->register_hook('PARSER_METADATA_RENDER', 'BEFORE', $this, 'handle_meta_renderer_before', array());
 
     }
 
@@ -70,70 +59,6 @@ class action_plugin_combo_analytics extends DokuWiki_Action_Plugin
             return;
         }
         array_splice($event->data['items'], -1, 0, array(new AnalyticsMenuItem()));
-
-    }
-
-
-    /**
-     * Generate the statistics for the internal link added or deleted
-     *
-     * @param Doku_Event $event
-     * @param $param
-     */
-    public function handle_meta_renderer_before(Doku_Event $event, $param)
-    {
-
-        $pageId = $event->data['page'];
-        $page = Page::createPageFromId($pageId);
-        $links = $page->getInternalReferencedPages();
-        $this->pageReferencedBefore[$pageId] = $links;
-
-    }
-
-    /**
-     * Save the links before metadata render
-     * @param Doku_Event $event
-     * @param $param
-     */
-    public function handle_meta_renderer_after(Doku_Event $event, $param)
-    {
-
-        $pageId = $event->data['page'];
-        $pagesReferencedAfter = $event->data['current']['relation']['references'];
-        if ($pagesReferencedAfter == null) {
-            $pagesReferencedAfter = array();
-        }
-        $pagesReferencedBefore = $this->pageReferencedBefore[$pageId];
-        unset($this->pageReferencedBefore[$pageId]);
-        $addedLinks = array();
-        foreach ($pagesReferencedAfter as $pageReferencedAfter => $exist) {
-            if (array_key_exists($pageReferencedAfter, $pagesReferencedBefore)) {
-                unset($pagesReferencedBefore[$pageReferencedAfter]);
-            } else {
-                $addedLinks[] = $pageReferencedAfter;
-            }
-        }
-
-        /**
-         * Process to update the backlinks
-         */
-        $linksChanged = array_fill_keys($addedLinks, "added");
-        foreach ($pagesReferencedBefore as $deletedLink => $deletedLinkPageExists) {
-            $linksChanged[$deletedLink] = 'deleted';
-        }
-        foreach ($linksChanged as $referentPageId => $status) {
-            /**
-             * We delete the analytics data of the referent page
-             */
-            $page = Page::createPageFromId($referentPageId);
-            $page->getAnalytics()->delete();
-            /**
-             * Replication
-             */
-            $message = "The analytics of the page ($referentPageId) was deleted because a backlink from the page {$pageId} was {$status}";
-            $page->getReplicator()->createReplicationRequest($message);
-
-        }
 
     }
 

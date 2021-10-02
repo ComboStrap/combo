@@ -12,7 +12,9 @@
 if (!defined('DOKU_INC')) die();
 
 use ComboStrap\Analytics;
+use ComboStrap\DatabasePage;
 use ComboStrap\FsWikiUtility;
+use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
@@ -124,7 +126,7 @@ EOF;
             case self::ANALYTICS:
                 $output = $options->getOpt('output', '');
                 //if ($output == '-') $output = 'php://stdout';
-                $this->analytics($namespaces, $output,  $depth);
+                $this->analytics($namespaces, $output, $depth);
                 break;
             case self::SYNC:
                 $this->sync();
@@ -164,18 +166,20 @@ EOF;
             $page = Page::createPageFromId($id);
 
             $pageCounter++;
-            $replicate = $page->getReplicator();
+            $replicate = $page->getDatabasePage();
             if ($replicate->shouldReplicate() || $rebuild) {
-                echo "The page {$id} ($pageCounter / $totalNumberOfPages) was replicated\n";
+                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) was replicated", LogUtility::LVL_MSG_INFO);
                 $replicate->replicate();
             } else {
-                echo "The page {$id} ($pageCounter / $totalNumberOfPages) was up to date\n";
+                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) was up to date", LogUtility::LVL_MSG_INFO);
             }
 
         }
-        if (!empty($fileHandle)) {
-            fclose($fileHandle);
-        }
+        /**
+         * Process all backlinks
+         */
+        echo "Processing Replication Request\n";
+        DatabasePage::processReplicationRequest(PHP_INT_MAX);
 
     }
 
@@ -226,7 +230,6 @@ EOF;
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
             $page = Page::createPageFromId($id);
-
 
 
             $pageCounter++;

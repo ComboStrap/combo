@@ -1712,5 +1712,11 @@ class Page extends DokuPath
         return new DatabasePage($this);
     }
 
+    public function canBeUpdatedByCurrentUser(): bool
+    {
+
+        return auth_quickaclcheck($this->getId()) >= AUTH_EDIT;
+    }
+
 
 }

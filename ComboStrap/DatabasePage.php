@@ -615,8 +615,12 @@ EOF;
         }
     }
 
-    private function upsertAttributes(array $attributes)
+    private function upsertAttributes(array $attributes): bool
     {
+
+        if($this->sqlite===null){
+            return false;
+        }
 
         if (empty($attributes)) {
             LogUtility::msg("The page database attribute passed should not be empty");

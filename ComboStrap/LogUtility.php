@@ -89,11 +89,7 @@ class LogUtility
         /**
          * If test, we throw an error
          */
-        if (defined('DOKU_UNITTEST')
-            && ($level >= self::LVL_MSG_WARNING)
-        ) {
-            throw new LogException(PluginUtility::$PLUGIN_NAME . " - " . $message);
-        }
+        self::throwErrorIfTest($level,$message);
     }
 
     /**
@@ -109,7 +105,7 @@ class LogUtility
     static function log2file($msg, $logLevel = self::LVL_MSG_INFO, $canonical = null)
     {
 
-        if (defined('DOKU_UNITTEST') || $logLevel >= self::LVL_MSG_WARNING) {
+        if (PluginUtility::isTest() || $logLevel >= self::LVL_MSG_WARNING) {
 
             $prefix = PluginUtility::$PLUGIN_NAME;
             if (!empty($canonical)) {
@@ -129,6 +125,11 @@ class LogUtility
                 fwrite($fh, date('c') . $sep . self::LVL_NAME[$logLevel] . $sep . $msg . $sep . $INPUT->server->str('REMOTE_ADDR') . $sep . $id . "\n");
                 fclose($fh);
             }
+
+
+            self::throwErrorIfTest($logLevel, $msg);
+
+
         }
 
     }
@@ -206,5 +207,14 @@ class LogUtility
     public static function log2BrowserConsole($message)
     {
         // TODO
+    }
+
+    private static function throwErrorIfTest($level, $message)
+    {
+        if (PluginUtility::isTest()
+            && ($level >= self::LVL_MSG_WARNING)
+        ) {
+            throw new LogException(PluginUtility::$PLUGIN_NAME . " - " . $message);
+        }
     }
 }

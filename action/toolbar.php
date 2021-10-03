@@ -49,9 +49,10 @@ class action_plugin_combo_toolbar extends DokuWiki_Action_Plugin
         $frontmatterInsert = <<<EOF
 ---json
 {
+    "name":"short name",
     "canonical":"unique:name",
-    "title":"A title for the search page result engine",
-     "description":"A description for the search page result engine"
+    "title":"A title for template iteration and search page engine",
+    "description":"A description for template iteration and search page engine"
 }
 ---
 EOF;

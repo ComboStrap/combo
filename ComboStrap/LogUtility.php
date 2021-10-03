@@ -147,42 +147,55 @@ class LogUtility
          * we test that the message comes in the front end
          * (example {@link \plugin_combo_frontmatter_test}
          */
-        $isCLI = (php_sapi_name() === 'cli');
-
-        if ($isCLI) {
-
-            echo "$message\n";
-
+        $isTerminal = (php_sapi_name() === 'cli');
+        if ($isTerminal) {
+            if (!defined('DOKU_UNITTEST')) {
+                /**
+                 * such as {@link cli_plugin_combo}
+                 */
+                $userAgent = "cli";
+            } else {
+                $userAgent = "phpunit";
+            }
         } else {
+            $userAgent = "browser";
+        }
 
-            $htmlMsg = PluginUtility::getUrl("", PluginUtility::$PLUGIN_NAME, $withIconURL);
-            if ($canonical != null) {
-                $htmlMsg = PluginUtility::getUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
-            }
-
-            /**
-             * Adding page - context information
-             * We are not creating the page
-             * direction from {@link Page::createRequestedPageFromEnvironment()}
-             * because it throws an error message when the environment
-             * is not good, creating a recursive call.
-             */
-            $id = PluginUtility::getPageId();
-            if ($id != null) {
-                $page = Page::createPageFromId($id);
-                if ($page != null) {
-                    $htmlMsg .= " - " . $page->getAnchorLink();
+        switch ($userAgent) {
+            case "cli":
+                echo "$message\n";
+                break;
+            case "phpunit":
+            case "browser":
+            default:
+                $htmlMsg = PluginUtility::getUrl("", PluginUtility::$PLUGIN_NAME, $withIconURL);
+                if ($canonical != null) {
+                    $htmlMsg = PluginUtility::getUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
                 }
-            }
 
-            /**
-             *
-             */
-            $htmlMsg .= " - " . $message;
-            if ($level > self::LVL_MSG_DEBUG) {
-                $dokuWikiLevel = self::LVL_TO_MSG_LEVEL[$level];
-                msg($htmlMsg, $dokuWikiLevel, '', '', MSG_USERS_ONLY);
-            }
+                /**
+                 * Adding page - context information
+                 * We are not creating the page
+                 * direction from {@link Page::createRequestedPageFromEnvironment()}
+                 * because it throws an error message when the environment
+                 * is not good, creating a recursive call.
+                 */
+                $id = PluginUtility::getPageId();
+                if ($id != null) {
+                    $page = Page::createPageFromId($id);
+                    if ($page != null) {
+                        $htmlMsg .= " - " . $page->getAnchorLink();
+                    }
+                }
+
+                /**
+                 *
+                 */
+                $htmlMsg .= " - " . $message;
+                if ($level > self::LVL_MSG_DEBUG) {
+                    $dokuWikiLevel = self::LVL_TO_MSG_LEVEL[$level];
+                    msg($htmlMsg, $dokuWikiLevel, '', '', MSG_USERS_ONLY);
+                }
         }
     }
 

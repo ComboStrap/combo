@@ -210,7 +210,14 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 }
 
                 $result[PluginUtility::ATTRIBUTES] = $jsonArray;
+
+                /**
+                 * Database update
+                 */
+                Page::createPageFromCurrentId()->getDatabasePage()->upsertModifiableAttributes($jsonArray);
+
             }
+
 
             /**
              * End position is the length of the match + 1 for the newline
@@ -260,6 +267,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     $renderer->finishSectionEdit($endPosition);
                 }
                 break;
+
             case renderer_plugin_combo_analytics::RENDERER_FORMAT:
 
                 if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
@@ -306,6 +314,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     "creator",
                     "contributor"
                 ];
+
 
                 foreach ($jsonArray as $key => $value) {
 
@@ -411,8 +420,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
     private function updateImageStatistics($value, $renderer)
     {
-        if(is_array($value)){
-            foreach($value as $subImage){
+        if (is_array($value)) {
+            foreach ($value as $subImage) {
                 $this->updateImageStatistics($subImage, $renderer);
             }
         } else {
@@ -426,7 +435,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     {
         if (is_array($value)) {
             foreach ($value as $subImageValue) {
-                $this->aggregateImageValues($imageValues,$subImageValue);
+                $this->aggregateImageValues($imageValues, $subImageValue);
             }
         } else {
             $imageValues[] = $value;

@@ -16,6 +16,24 @@ class DatabasePage
     public const DATE_REPLICATION = "date_replication";
 
     /**
+     * Attribute that are modifiable in the database
+     */
+    public const MODIFIABLE_ATTRIBUTES =
+        [
+            Analytics::DESCRIPTION,
+            Analytics::CANONICAL,
+            Analytics::NAME,
+            Analytics::TITLE,
+            Analytics::H1,
+            Publication::DATE_PUBLISHED,
+            Analytics::DATE_START,
+            Analytics::DATE_END,
+            Page::COUNTRY_META_PROPERTY,
+            Page::LANG_META_PROPERTY
+        ];
+    const ANALYTICS_ATTRIBUTE = "ANALYTICS";
+
+    /**
      * @var Page
      */
     private $page;
@@ -77,7 +95,7 @@ class DatabasePage
             $result = $page->getDatabasePage()->replicate();
             if ($result) {
                 LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
-                $res = $sqlite->query("DELETE FROM PAGES_TO_REPLICATE where ID = ?",$id);
+                $res = $sqlite->query("DELETE FROM PAGES_TO_REPLICATE where ID = ?", $id);
                 if (!$res) {
                     LogUtility::msg("There was a problem during the delete of the replication request: {$sqlite->getAdapter()->getDb()->errorInfo()}");
                 }
@@ -189,16 +207,8 @@ class DatabasePage
     function getAnalyticsData(): ?Json
     {
 
-        if ($this->sqlite === null) {
-            return null;
-        }
-        $res = $this->sqlite->query("select ANALYTICS from pages where ID = ? ", $this->page->getId());
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the analytics page ({$this->page}) selection query");
-        }
-        $jsonString = trim($this->sqlite->res2single($res));
-        $this->sqlite->res_close($res);
-        if (!empty($jsonString)) {
+        $jsonString = $this->getAttribute(self::ANALYTICS_ATTRIBUTE);
+        if ($jsonString !== null) {
             return Json::createFromString($jsonString);
         } else {
             return null;
@@ -433,9 +443,9 @@ class DatabasePage
 
     /**
      * @param string $replicationDate
-     * @return bool|mixed|\SQLiteResult
+     * @return bool
      */
-    public function replicatePage(string $replicationDate)
+    public function replicatePage(string $replicationDate): bool
     {
         /**
          * Convenient variable
@@ -452,21 +462,21 @@ class DatabasePage
          * Same data as {@link Page::getMetadataForRendering()}
          */
         $record = array(
-            'CANONICAL' => $page->getCanonical(),
-            'ANALYTICS' => $analyticsJsonAsString,
+            Analytics::CANONICAL => $page->getCanonical(),
+            self::ANALYTICS_ATTRIBUTE => $analyticsJsonAsString,
             'PATH' => $page->getAbsolutePath(),
-            'NAME' => $page->getName(),
-            'TITLE' => $page->getTitleNotEmpty(),
-            'H1' => $page->getH1NotEmpty(),
-            'DATE_CREATED' => $page->getCreatedDateString(),
-            'DATE_MODIFIED' => $page->getModifiedDateString(),
-            'DATE_PUBLISHED' => $page->getPublishedTimeAsString(),
-            'DATE_START' => $page->getEndDateAsString(),
-            'DATE_END' => $page->getStartDateAsString(),
-            'COUNTRY' => $page->getCountry(),
-            'LANG' => $page->getLang(),
+            Analytics::NAME => $page->getPageNameNotEmpty(),
+            Analytics::TITLE => $page->getTitleNotEmpty(),
+            Analytics::H1 => $page->getH1NotEmpty(),
+            Analytics::DATE_CREATED => $page->getCreatedDateString(),
+            Analytics::DATE_MODIFIED => $page->getModifiedDateString(),
+            Publication::DATE_PUBLISHED => $page->getPublishedTimeAsString(),
+            Analytics::DATE_START => $page->getEndDateAsString(),
+            Analytics::DATE_END => $page->getStartDateAsString(),
+            Page::COUNTRY_META_PROPERTY => $page->getCountry(),
+            Page::LANG_META_PROPERTY => $page->getLang(),
             'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
-            'TYPE' => $page->getType(),
+            Page::PAGE_TYPE => $page->getType(),
             'WORD_COUNT' => $analyticsJsonAsArray[Analytics::WORD_COUNT],
             'BACKLINK_COUNT' => $this->getBacklinkCount(),
             'IS_HOME' => ($page->isNamespaceHomePage() === true ? 1 : 0),
@@ -475,77 +485,7 @@ class DatabasePage
             'ID' => $page->getId(),
         );
 
-        /**
-         * Primary key has moved during the time
-         * It should be the UUID but not for older version
-         *
-         * If the primary key is null, no record was found
-         */
-        $rowId = $this->getRowId();
-        if ($rowId !== null) {
-
-            /**
-             * We just add the primary key
-             * otherwise as this is a associative
-             * array, we will miss a value for the update statement
-             */
-            $record["ROWID"] = $rowId;
-            // Upset not supported on all version
-            //$upsert = 'insert into PAGES (ID,CANONICAL,ANALYTICS) values (?,?,?) on conflict (ID,CANONICAL) do update set ANALYTICS = EXCLUDED.ANALYTICS';
-            $update = <<<EOF
-update
-    PAGES
-SET
-    CANONICAL = ?,
-    ANALYTICS = ?,
-    PATH = ?,
-    NAME = ?,
-    TITLE = ?,
-    H1 = ?,
-    DATE_CREATED = ?,
-    DATE_MODIFIED = ?,
-    DATE_PUBLISHED = ?,
-    DATE_START = ?,
-    DATE_END = ?,
-    COUNTRY = ?,
-    LANG = ?,
-    IS_LOW_QUALITY = ?,
-    TYPE = ?,
-    WORD_COUNT = ?,
-    BACKLINK_COUNT = ?,
-    IS_HOME = ?,
-    UUID = ?,
-    DATE_REPLICATION = ?,
-    ID = ?
-where
-    ROWID = ?
-EOF;
-            $res = $this->sqlite->query($update, $record);
-
-            if ($res === false) {
-                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
-                $message = "";
-                $errorCode = $errorInfo[0];
-                if ($errorCode === '0000') {
-                    $message = ("No rows were updated");
-                }
-                $errorInfoAsString = var_export($errorInfo, true);
-                LogUtility::msg("There was a problem during the upsert. $message. : {$errorInfoAsString}");
-            }
-
-
-        } else {
-
-            $res = $this->sqlite->storeEntry('PAGES', $record);
-            if ($res === false) {
-                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
-                $errorInfoAsString = var_export($errorInfo, true);
-                LogUtility::msg("There was a problem during the insert. : {$errorInfoAsString}");
-            }
-
-        }
-        $this->sqlite->res_close($res);
-        return $res;
+        return $this->upsertAttributes($record);
 
     }
 
@@ -652,6 +592,117 @@ EOF;
         }
         return $targetPaths;
 
+    }
+
+    /**
+     * @param array $attributes
+     * @return bool when an update as occurred
+     */
+    public function upsertModifiableAttributes(array $attributes): bool
+    {
+        $databaseFields = [];
+        foreach ($attributes as $key => $value) {
+            $lower = strtolower($key);
+            if (in_array($lower, DatabasePage::MODIFIABLE_ATTRIBUTES)) {
+                $databaseFields[$key] = $value;
+            }
+        }
+        if (!empty($databaseFields)) {
+            return $this->upsertAttributes($databaseFields);
+        } else {
+            return false;
+        }
+    }
+
+    private function upsertAttributes(array $attributes)
+    {
+
+        if (empty($attributes)) {
+            LogUtility::msg("The page database attribute passed should not be empty");
+            return false;
+        }
+
+        $values = [];
+        $columnClauses = [];
+        foreach ($attributes as $key => $value) {
+            $columnClauses[] = "$key = ?";
+            $values[$key] = $value;
+        }
+
+        /**
+         * Primary key has moved during the time
+         * It should be the UUID but not for older version
+         *
+         * If the primary key is null, no record was found
+         */
+        $rowId = $this->getRowId();
+        if ($rowId != null) {
+            /**
+             * We just add the primary key
+             * otherwise as this is a associative
+             * array, we will miss a value for the update statement
+             */
+            $values["ROWID"] = $rowId;
+
+            $updateStatement = "update PAGES SET " . implode($columnClauses, ", ") . " where ROWID = ?";
+            $res = $this->sqlite->query($updateStatement, $values);
+            $this->sqlite->res_close($res);
+            if ($res === false) {
+                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
+                $message = "";
+                $errorCode = $errorInfo[0];
+                if ($errorCode === '0000') {
+                    $message = ("No rows were updated");
+                }
+                $errorInfoAsString = var_export($errorInfo, true);
+                LogUtility::msg("There was a problem during the page attribute updates. $message. : {$errorInfoAsString}");
+                return false;
+            }
+
+        } else {
+            $values["id"] = $this->page->getId();
+            $values[Analytics::PATH] = $this->page->getPath();
+            /**
+             * TODO: Canonical should be able to be null
+             * When the not null constraint on canonical is deleted, we can delete
+             * the line below
+             */
+            $values[Analytics::CANONICAL] = $this->page->getCanonical();
+            $res = $this->sqlite->storeEntry('PAGES', $values);
+            $this->sqlite->res_close($res);
+            if ($res === false) {
+                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
+                $errorInfoAsString = var_export($errorInfo, true);
+                LogUtility::msg("There was a problem during the updateAttributes insert. : {$errorInfoAsString}");
+                return false;
+            }
+        }
+        return true;
+
+    }
+
+    public function getDescription()
+    {
+        return $this->getAttribute(Analytics::DESCRIPTION);
+    }
+
+    private function getAttribute(string $attribute)
+    {
+        if ($this->sqlite === null) {
+            return null;
+        }
+        $res = $this->sqlite->query("select $attribute from pages where ID = ? ", $this->page->getId());
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the retrieve of the attribute $attribute for the page ({$this->page}) selection query");
+        }
+        $value = $this->sqlite->res2single($res);
+        $this->sqlite->res_close($res);
+        if ($value === false) {
+            // Sqlite does not have the false datatype (ouff)
+            return null;
+        } else {
+            return $value;
+        }
     }
 
 

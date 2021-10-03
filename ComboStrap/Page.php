@@ -829,7 +829,7 @@ class Page extends DokuPath
 
 
     public
-    function upsertContent($content, $summary = "Default")
+    function upsertContent($content, $summary = "Default"): Page
     {
         saveWikiText($this->getId(), $content, $summary);
         return $this;

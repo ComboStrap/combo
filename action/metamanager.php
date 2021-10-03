@@ -2,6 +2,7 @@
 
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
 
@@ -83,6 +84,51 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $page->upsertMetadata($jsonArray);
 
         header("Status: 200");
+
+        /**
+         * Page modification is any
+         */
+        $content = $page->getContent();
+        $pattern = syntax_plugin_combo_frontmatter::PATTERN;
+        $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
+
+        /**
+         * The split normally returns an array
+         * where the first element is empty followed by the frontmatter
+         */
+        $emptyString = array_shift($split);
+        if (!empty($emptyString)) {
+            return;
+        }
+
+        $frontMatter = array_shift($split);
+        $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
+        if (!(strpos($frontMatter, $frontMatterStartTag) === 0)) {
+            return;
+        }
+        $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
+        $frontMatterMetadata = array_merge($frontMatterMetadata, $jsonArray);
+        $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        /**
+         * Building the document again
+         */
+        $restDocument = "";
+        while(($element = array_shift($split))!=null){
+            $restDocument .= $element;
+        }
+
+        /**
+         * Build the new document
+         */
+        $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
+        $newPageContent =<<<EOF
+$frontMatterStartTag
+$frontMatterJsonString
+$frontMatterEndTag$restDocument
+EOF;
+
+        $page->upsertContent($newPageContent,"Metadata manager upsert");
 
 
     }

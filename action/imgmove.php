@@ -75,7 +75,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * is {@link helper_plugin_move_handler::media()}
          *
          */
-        $jsonArray = syntax_plugin_combo_frontmatter::FrontMatterMatchToAssociativeArray($match);
+        $jsonArray = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($match);
         if ($jsonArray === null) {
             return $match;
         } else {

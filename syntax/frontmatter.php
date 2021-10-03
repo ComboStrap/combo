@@ -56,12 +56,13 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const START_TAG = '---json';
     const END_TAG = '---';
     const METADATA_IMAGE_CANONICAL = "metadata:image";
+    const PATTERN = self::START_TAG . '.*?' . self::END_TAG;
 
     /**
      * @param $match
      * @return array|mixed - null if decodage problem, empty array if no json or an associative array
      */
-    public static function FrontMatterMatchToAssociativeArray($match)
+    public static function frontMatterMatchToAssociativeArray($match)
     {
         // strip
         //   from start `---json` + eol = 8
@@ -70,7 +71,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
         // Empty front matter
         if (trim($jsonString) == "") {
-            self::deleteKnownMetaThatAreNoMorePresent();
             return [];
         }
 
@@ -127,7 +127,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     {
         if ($mode == "base") {
             // only from the top
-            $this->Lexer->addSpecialPattern(self::START_TAG . '.*?' . self::END_TAG, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
+            $this->Lexer->addSpecialPattern(self::PATTERN, $mode, PluginUtility::getModeFromTag($this->getPluginComponent()));
         }
     }
 
@@ -150,7 +150,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         if ($state == DOKU_LEXER_SPECIAL) {
 
 
-            $jsonArray = self::FrontMatterMatchToAssociativeArray($match);
+            $jsonArray = self::frontMatterMatchToAssociativeArray($match);
 
 
             $result = [];
@@ -308,7 +308,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     Publication::OLD_META_KEY,
                     Publication::DATE_PUBLISHED,
                     Analytics::NAME,
-                    CacheManager::DATE_CACHE_EXPIRATION_META_KEY,
                     action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
                     Page::LAYOUT_PROPERTY
                 ];

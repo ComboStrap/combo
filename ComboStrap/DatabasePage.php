@@ -711,5 +711,10 @@ EOF;
         }
     }
 
+    public function getPageName()
+    {
+        return $this->getAttribute(Page::NAME_PROPERTY);
+    }
+
 
 }

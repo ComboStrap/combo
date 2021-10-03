@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use dokuwiki\Cache\CacheInstructions;
@@ -11,6 +12,8 @@ use dokuwiki\Extension\SyntaxPlugin;
 use Ramsey\Uuid\Uuid;
 use renderer_plugin_combo_analytics;
 use RuntimeException;
+use syntax_plugin_combo_disqus;
+use syntax_plugin_combo_frontmatter;
 
 
 /**
@@ -1716,6 +1719,96 @@ class Page extends DokuPath
     {
 
         return auth_quickaclcheck($this->getId()) >= AUTH_EDIT;
+    }
+
+    public function upsertMetadata($attributes)
+    {
+
+        /**
+         * Validate the dates and get them in iso format
+         */
+        foreach ($attributes as $key => $value) {
+            $lowerKey = strtolower($key);
+            if (strpos($lowerKey, 'date') === 0) {
+                $dateObject = Iso8601Date::createFromString($value);
+                if (!$dateObject->isValidDateEntry()) {
+                    LogUtility::msg("The date value ($value) for the key ($key) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+                    unset($attributes[$key]);
+                    continue;
+                }
+            }
+
+            if ($lowerKey === Page::CANONICAL_PROPERTY) {
+                // Canonical should be lowercase
+                $attributes[$key] = strtolower($value);
+            }
+
+        }
+
+        /**
+         * File system metadata
+         */
+        $this->upsertModifiableMetadata($attributes);
+
+        /**
+         * Database update
+         */
+        $this->getDatabasePage()->upsertModifiableAttributes($attributes);
+
+    }
+
+    /**
+     * Modify metadata in `.meta` local file
+     * @param $attributes
+     */
+    private function upsertModifiableMetadata($attributes)
+    {
+        $notModifiableMeta = [
+            "date",
+            "user",
+            "last_change",
+            "creator",
+            "contributor"
+        ];
+
+
+        foreach ($attributes as $key => $value) {
+
+            $lowerCaseKey = trim(strtolower($key));
+
+            // Not modifiable metadata
+            if (in_array($lowerCaseKey, $notModifiableMeta)) {
+                LogUtility::msg("The metadata ($lowerCaseKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
+                continue;
+            }
+
+            switch ($lowerCaseKey) {
+
+                case Page::DESCRIPTION_PROPERTY:
+                    /**
+                     * Overwrite also the actual description
+                     */
+                    p_set_metadata($this->getId(), array(Page::DESCRIPTION_PROPERTY => array(
+                        "abstract" => $value,
+                        "origin" => syntax_plugin_combo_frontmatter::CANONICAL
+                    )));
+                    /**
+                     * Continue because
+                     * the description value was already stored
+                     * We don't want to override it
+                     * And continue 2 because continue == break in a switch
+                     */
+                    continue 2;
+
+
+            }
+            // Set the value persistently
+            p_set_metadata($this->getId(), array($lowerCaseKey => $value));
+
+        }
+
+
+
     }
 
 

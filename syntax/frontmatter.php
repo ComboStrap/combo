@@ -21,6 +21,7 @@
  */
 
 use ComboStrap\Analytics;
+use ComboStrap\ArrayUtility;
 use ComboStrap\CacheManager;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
@@ -166,55 +167,26 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 }
 
                 $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+
+                $page = Page::createPageFromCurrentId();
+
                 /**
-                 * Published is an alias for date published
+                 * Published is an old alias for date published
                  */
                 if (isset($jsonArray[Publication::OLD_META_KEY])) {
                     $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray[Publication::OLD_META_KEY];
                     unset($jsonArray[Publication::OLD_META_KEY]);
                 }
+
                 /**
-                 * Add the time part if not present
+                 * Upsert the meta
                  */
-                if (isset($jsonArray[Publication::DATE_PUBLISHED])) {
-                    $dateAsString = $jsonArray[Publication::DATE_PUBLISHED];
-                    $dateObject = Iso8601Date::createFromString($dateAsString);
-                    if (!$dateObject->isValidDateEntry()) {
-                        LogUtility::msg("The published date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-                        unset($jsonArray[Publication::DATE_PUBLISHED]);
-                    } else {
-                        $jsonArray[Publication::DATE_PUBLISHED] = "$dateObject";
-                    }
-                }
+                $page->upsertMetadata($jsonArray);
 
-                if (isset($jsonArray[Analytics::DATE_START])) {
-                    $dateAsString = $jsonArray[Analytics::DATE_START];
-                    $dateObject = Iso8601Date::createFromString($dateAsString);
-                    if (!$dateObject->isValidDateEntry()) {
-                        LogUtility::msg("The start date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-                        unset($jsonArray[Analytics::DATE_START]);
-                    } else {
-                        $jsonArray[Analytics::DATE_START] = "$dateObject";
-                    }
-                }
-
-                if (isset($jsonArray[Analytics::DATE_END])) {
-                    $dateAsString = $jsonArray[Analytics::DATE_END];
-                    $dateObject = Iso8601Date::createFromString($dateAsString);
-                    if (!$dateObject->isValidDateEntry()) {
-                        LogUtility::msg("The end date ($dateAsString) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-                        unset($jsonArray[Analytics::DATE_END]);
-                    } else {
-                        $jsonArray[Analytics::DATE_END] = "$dateObject";
-                    }
-                }
-
+                /**
+                 * Return them
+                 */
                 $result[PluginUtility::ATTRIBUTES] = $jsonArray;
-
-                /**
-                 * Database update
-                 */
-                Page::createPageFromCurrentId()->getDatabasePage()->upsertModifiableAttributes($jsonArray);
 
             }
 
@@ -303,71 +275,55 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     return false;
                 }
 
-                global $ID;
+                /**
+                 * Register media in index
+                 */
                 $jsonArray = $data[PluginUtility::ATTRIBUTES];
-
-
-                $notModifiableMeta = [
-                    "date",
-                    "user",
-                    "last_change",
-                    "creator",
-                    "contributor"
-                ];
-
-
-                foreach ($jsonArray as $key => $value) {
-
-                    $lowerCaseKey = trim(strtolower($key));
-
-                    // Not modifiable metadata
-                    if (in_array($lowerCaseKey, $notModifiableMeta)) {
-                        LogUtility::msg("Front Matter: The metadata ($lowerCaseKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
-                        continue;
+                if (isset($jsonArray[Page::IMAGE_META_PROPERTY])) {
+                    $value = $jsonArray[Page::IMAGE_META_PROPERTY];
+                    $imageValues = [];
+                    ArrayUtility::toFlatArray($imageValues, $value);
+                    foreach ($imageValues as $imageValue) {
+                        $media = MediaLink::createFromRenderMatch($imageValue);
+                        $attributes = $media->toCallStackArray();
+                        syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
                     }
-
-                    switch ($lowerCaseKey) {
-
-                        case Page::DESCRIPTION_PROPERTY:
-                            /**
-                             * Overwrite also the actual description
-                             */
-                            p_set_metadata($ID, array(Page::DESCRIPTION_PROPERTY => array(
-                                "abstract" => $value,
-                                "origin" => syntax_plugin_combo_frontmatter::CANONICAL
-                            )));
-                            /**
-                             * Continue because
-                             * the description value was already stored
-                             * We don't want to override it
-                             * And continue 2 because continue == break in a switch
-                             */
-                            continue 2;
-
-
-                        // Canonical should be lowercase
-                        case Page::CANONICAL_PROPERTY:
-                            $value = strtolower($value);
-                            break;
-
-                        case Page::IMAGE_META_PROPERTY:
-
-                            $imageValues = [];
-                            $this->aggregateImageValues($imageValues, $value);
-                            foreach ($imageValues as $imageValue) {
-                                $media = MediaLink::createFromRenderMatch($imageValue);
-                                $attributes = $media->toCallStackArray();
-                                syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
-                            }
-                            break;
-
-                    }
-                    // Set the value persistently
-                    p_set_metadata($ID, array($lowerCaseKey => $value));
-
                 }
 
-                $this->deleteKnownMetaThatAreNoMorePresent($jsonArray);
+                /**
+                 * Delete the controlled meta that are no more present in the frontmatter
+                 * if they exists
+                 * The managed meta with the exception of
+                 * the {@link action_plugin_combo_metadescription::DESCRIPTION_META_KEY description}
+                 * because it's already managed by dokuwiki in description['abstract']
+                 */
+                $managedMeta = [
+                    Page::CANONICAL_PROPERTY,
+                    Page::TYPE_META_PROPERTY,
+                    Page::IMAGE_META_PROPERTY,
+                    Page::COUNTRY_META_PROPERTY,
+                    Page::LANG_META_PROPERTY,
+                    Analytics::TITLE,
+                    syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
+                    Publication::OLD_META_KEY,
+                    Publication::DATE_PUBLISHED,
+                    Analytics::NAME,
+                    CacheManager::DATE_CACHE_EXPIRATION_META_KEY,
+                    action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
+                    Page::LAYOUT_PROPERTY
+                ];
+
+                global $ID;
+                $meta = p_read_metadata($ID);
+                foreach ($managedMeta as $metaKey) {
+                    if (!array_key_exists($metaKey, $jsonArray)) {
+                        if (isset($meta['persistent'][$metaKey])) {
+                            unset($meta['persistent'][$metaKey]);
+                        }
+                    }
+                }
+                p_save_metadata($ID, $meta);
+
 
                 break;
 
@@ -375,48 +331,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         return true;
     }
 
-    /**
-     *
-     * @param array $json - The Json
-     * Delete the controlled meta that are no more present if they exists
-     * @return bool
-     */
-    static public
-    function deleteKnownMetaThatAreNoMorePresent(array $json = array())
-    {
-        global $ID;
 
-        /**
-         * The managed meta with the exception of
-         * the {@link action_plugin_combo_metadescription::DESCRIPTION_META_KEY description}
-         * because it's already managed by dokuwiki in description['abstract']
-         */
-        $managedMeta = [
-            Page::CANONICAL_PROPERTY,
-            Page::TYPE_META_PROPERTY,
-            Page::IMAGE_META_PROPERTY,
-            Page::COUNTRY_META_PROPERTY,
-            Page::LANG_META_PROPERTY,
-            Analytics::TITLE,
-            syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
-            Publication::OLD_META_KEY,
-            Publication::DATE_PUBLISHED,
-            Analytics::NAME,
-            CacheManager::DATE_CACHE_EXPIRATION_META_KEY,
-            action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
-            Page::LAYOUT_PROPERTY
-
-        ];
-        $meta = p_read_metadata($ID);
-        foreach ($managedMeta as $metaKey) {
-            if (!array_key_exists($metaKey, $json)) {
-                if (isset($meta['persistent'][$metaKey])) {
-                    unset($meta['persistent'][$metaKey]);
-                }
-            }
-        }
-        return p_save_metadata($ID, $meta);
-    }
 
     private function updateImageStatistics($value, $renderer)
     {
@@ -428,17 +343,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             $media = MediaLink::createFromRenderMatch($value);
             $attributes = $media->toCallStackArray();
             syntax_plugin_combo_media::updateStatistics($attributes, $renderer);
-        }
-    }
-
-    private function aggregateImageValues(array &$imageValues, $value)
-    {
-        if (is_array($value)) {
-            foreach ($value as $subImageValue) {
-                $this->aggregateImageValues($imageValues, $subImageValue);
-            }
-        } else {
-            $imageValues[] = $value;
         }
     }
 

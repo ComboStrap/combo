@@ -79,6 +79,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             LogUtility::log2file("The json received is not conform ($jsonString)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return;
         }
+
+        $page->upsertMetadata($jsonArray);
+
         header("Status: 200");
 
 

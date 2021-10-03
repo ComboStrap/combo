@@ -80,4 +80,19 @@ class ArrayUtility
         reset($array);
         return $key;
     }
+
+    /**
+     * @param array $flatArray - the returned flat array
+     * @param array|string $value - the value to return as a flat array
+     */
+    public static function toFlatArray(array &$flatArray, $value)
+    {
+        if (is_array($value)) {
+            foreach ($value as $subImageValue) {
+                self::toFlatArray($flatArray, $subImageValue);
+            }
+        } else {
+            $flatArray[] = $value;
+        }
+    }
 }

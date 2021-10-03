@@ -29,7 +29,8 @@ class DatabasePage
             Analytics::DATE_START,
             Analytics::DATE_END,
             Page::COUNTRY_META_PROPERTY,
-            Page::LANG_META_PROPERTY
+            Page::LANG_META_PROPERTY,
+            Page::TYPE_META_PROPERTY
         ];
     const ANALYTICS_ATTRIBUTE = "ANALYTICS";
 
@@ -476,7 +477,7 @@ class DatabasePage
             Page::COUNTRY_META_PROPERTY => $page->getCountry(),
             Page::LANG_META_PROPERTY => $page->getLang(),
             'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
-            Page::PAGE_TYPE => $page->getType(),
+            Page::TYPE_META_PROPERTY => $page->getType(),
             'WORD_COUNT' => $analyticsJsonAsArray[Analytics::WORD_COUNT],
             'BACKLINK_COUNT' => $this->getBacklinkCount(),
             'IS_HOME' => ($page->isNamespaceHomePage() === true ? 1 : 0),
@@ -662,6 +663,7 @@ EOF;
         } else {
             $values["id"] = $this->page->getId();
             $values[Analytics::PATH] = $this->page->getPath();
+            $values[Page::UUID_ATTRIBUTE] = $this->page->getUuid();
             /**
              * TODO: Canonical should be able to be null
              * When the not null constraint on canonical is deleted, we can delete

@@ -81,7 +81,7 @@ $conf['icons_namespace'] = ":combostrap:icons";
  * Default library
  * See {@link Icon::CONF_DEFAULT_ICON_LIBRARYE}
  */
-$conf['defaultIconLibrary'] = "md";
+$conf['defaultIconLibrary'] = "mdi";
 
 /**
  * Css Optimization

@@ -73,7 +73,7 @@ $meta[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = arra
  */
 require_once(__DIR__ . '/../syntax/icon.php');
 $meta[Icon::CONF_ICONS_MEDIA_NAMESPACE] = array('string');
-$meta[Icon::CONF_DEFAULT_ICON_LIBRARY] = array('multichoice', '_choices' => array_keys(Icon::LIBRARY_ACRONYM));
+$meta[Icon::CONF_DEFAULT_ICON_LIBRARY] = array('multichoice', '_choices' => array_keys(Icon::PUBLIC_LIBRARY_ACRONYM));
 
 
 /**

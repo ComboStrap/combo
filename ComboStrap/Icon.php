@@ -53,9 +53,21 @@ class Icon
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
-    const LIBRARY_ACRONYM = array(
-        "bs" => self::BOOTSTRAP,
-        "md" => self::MATERIAL_DESIGN,
+
+    /**
+     * Deprecated library acronym / name
+     */
+    const DEPRECATED_LIBRARY_ACRONYM = array(
+        "bs" => self::BOOTSTRAP, // old one (deprecated) - the good acronym is bi (seen also in the class)
+        "md" => self::MATERIAL_DESIGN
+    );
+
+    /**
+     * Public known acronym / name (Used in the configuration)
+     */
+    const PUBLIC_LIBRARY_ACRONYM = array(
+        "bi" => self::BOOTSTRAP,
+        "mdi" => self::MATERIAL_DESIGN,
         "fe" => self::FEATHER,
         "codicon" => self::CODE_ICON,
         "logos" => self::LOGOS
@@ -154,7 +166,7 @@ class Icon
                 }
 
                 // Get the qualified library name
-                $acronymLibraries = self::LIBRARY_ACRONYM;
+                $acronymLibraries = self::getLibraries();
                 if (isset($acronymLibraries[$library])) {
                     $library = $acronymLibraries[$library];
                 }
@@ -262,6 +274,11 @@ class Icon
 
         }
 
+    }
+
+    private static function getLibraries()
+    {
+        return array_merge(self::PUBLIC_LIBRARY_ACRONYM,self::DEPRECATED_LIBRARY_ACRONYM);
     }
 
 

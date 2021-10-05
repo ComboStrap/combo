@@ -1,5 +1,7 @@
 <?php
 
+use ComboStrap\Identity;
+use ComboStrap\MetadataMenuItem;
 use ComboStrap\MetadataUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -33,6 +35,11 @@ class action_plugin_combo_metadataviewer extends DokuWiki_Action_Plugin
         /* This will call the function _displayMetaMessage */
         $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, '_displayMetaViewer', array());
 
+        /**
+         * Add a icon in the page tools menu
+         * https://www.dokuwiki.org/devel:event:menu_items_assembly
+         */
+        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'handle_rail_bar');
 
     }
 
@@ -50,6 +57,28 @@ class action_plugin_combo_metadataviewer extends DokuWiki_Action_Plugin
             print MetadataUtility::getHtmlMetadataBox($this);
 
         }
+
+    }
+
+    public function handle_rail_bar(Doku_Event $event, $param)
+    {
+
+        if (!Identity::isWriter()) {
+            return;
+        }
+
+        /**
+         * The `view` property defines the menu that is currently built
+         * https://www.dokuwiki.org/devel:menus
+         * If this is not the page menu, return
+         */
+        if ($event->data['view'] != 'page') return;
+
+        global $INFO;
+        if (!$INFO['exists']) {
+            return;
+        }
+        array_splice($event->data['items'], -1, 0, array(new MetadataMenuItem()));
 
     }
 

@@ -75,6 +75,7 @@ require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
 require_once(__DIR__ . '/MetadataUtility.php');
+require_once(__DIR__ . '/MetadataMenuItem.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');
 require_once(__DIR__ . '/NavBarUtility.php');

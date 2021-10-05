@@ -22,7 +22,7 @@ window.addEventListener("DOMContentLoaded", function () {
                         //   * response.text()
                         // are promise, you need to pass them to a callback to get the value
                         response.json().then(function (data) {
-                            console.log(data);
+
                             const modalRoot = document.createElement("div");
                             document.body.appendChild(modalRoot);
                             modalRoot.classList.add("modal", "fade");
@@ -44,7 +44,7 @@ window.addEventListener("DOMContentLoaded", function () {
                             modalDialog.appendChild(modalContent);
                             const modalBody = document.createElement("div");
                             modalBody.classList.add("modal-body");
-                            modalBody.innerHTML = data;
+                            modalBody.innerHTML = JSON.stringify(data) ;
                             modalContent.appendChild(modalBody);
                             options = {
                                 "backdrop": true,

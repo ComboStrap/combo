@@ -3,7 +3,6 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use dokuwiki\Cache\CacheInstructions;
@@ -12,7 +11,6 @@ use dokuwiki\Extension\SyntaxPlugin;
 use Ramsey\Uuid\Uuid;
 use renderer_plugin_combo_analytics;
 use RuntimeException;
-use syntax_plugin_combo_disqus;
 use syntax_plugin_combo_frontmatter;
 
 
@@ -1615,6 +1613,9 @@ class Page extends DokuPath
         }
 
         $array[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
+        $array[Analytics::DATE_START] = $this->getStartDateAsString();
+        $array[Analytics::DATE_END] = $this->getStartDateAsString();
+        $array[Page::LAYOUT_PROPERTY] = $this->getMetadata(Page::LAYOUT_PROPERTY);
 
         return $array;
 

@@ -44,7 +44,7 @@ class CacheMedia
     /**
      * Cache constructor.
      */
-    public function __construct(File $path, TagAttributes &$tagAttributes)
+    public function __construct(File $path, TagAttributes $tagAttributes)
     {
 
         $this->path = $path;

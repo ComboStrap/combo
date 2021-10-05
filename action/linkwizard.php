@@ -42,7 +42,11 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
     function searchPage(Doku_Event $event, $params)
     {
         global $INPUT;
-        if ($INPUT->post->str('call') !== "linkwiz") {
+        /**
+         * linkwiz is the editor toolbar action
+         * qsearch is the search button
+         */
+        if (!(in_array($INPUT->post->str('call'), [ "linkwiz","qsearch"]))) {
             return;
         }
         if(PluginUtility::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD,1)===0){

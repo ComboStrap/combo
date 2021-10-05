@@ -39,24 +39,33 @@ class Icon
     const ICON_LIBRARY_URLS = array(
         self::BOOTSTRAP => "https://raw.githubusercontent.com/twbs/icons/main/icons",
         self::MATERIAL_DESIGN => "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg",
-        self::FEATHER => "https://raw.githubusercontent.com/feathericons/feather/master/icons"
+        self::FEATHER => "https://raw.githubusercontent.com/feathericons/feather/master/icons",
+        self::CODE_ICON => "https://raw.githubusercontent.com/microsoft/vscode-codicons/main/src/icons/",
+        self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos/",
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
         self::BOOTSTRAP => "https://icons.getbootstrap.com/",
         self::MATERIAL_DESIGN => "https://materialdesignicons.com/",
-        self::FEATHER => "https://feathericons.com/"
+        self::FEATHER => "https://feathericons.com/",
+        self::CODE_ICON => "https://microsoft.github.io/vscode-codicons/",
+        self::LOGOS => "https://svgporn.com/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
     const LIBRARY_ACRONYM = array(
         "bs" => self::BOOTSTRAP,
         "md" => self::MATERIAL_DESIGN,
-        "fe" => self::FEATHER
+        "fe" => self::FEATHER,
+        "codicon" => self::CODE_ICON,
+        "logos" => self::LOGOS
     );
+
     const FEATHER = "feather";
     const BOOTSTRAP = "bootstrap";
     const MATERIAL_DESIGN = "material-design";
+    const CODE_ICON =  "codicon";
+    const LOGOS = "logos";
 
 
     /**

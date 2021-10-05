@@ -155,7 +155,7 @@ class ImageSvg extends Image
 
     /**
      * The buster is based on the cache file
-     * because the cache is configuration dependend
+     * because the cache is configuration dependent
      * It the user changes the configuration, the svg file is generated
      * again and the browser cache should be deleted (ie the buster regenerated)
      * @return string

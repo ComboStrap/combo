@@ -1205,8 +1205,9 @@ class Page extends DokuPath
             }
         }
         // Ms level parsing
-        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
-        if ($dateTime === false) {
+        try {
+            $dateTime = Iso8601Date::createFromString($persistentMetadata)->getDateTime();
+        } catch (\Exception $e) {
             /**
              * Should not happen as the data is validate in entry
              * at the {@link \syntax_plugin_combo_frontmatter}
@@ -1653,8 +1654,10 @@ class Page extends DokuPath
         }
 
         // Ms level parsing
-        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
-        if ($dateTime === false) {
+        // Ms level parsing
+        try {
+            $dateTime = Iso8601Date::createFromString($persistentMetadata)->getDateTime();
+        } catch (\Exception $e) {
             /**
              * Should not happen as the data is validate in entry
              * at the {@link \syntax_plugin_combo_frontmatter}
@@ -1679,8 +1682,9 @@ class Page extends DokuPath
         }
 
         // Ms level parsing
-        $dateTime = DateTime::createFromFormat(Iso8601Date::getFormat(), $persistentMetadata);
-        if ($dateTime === false) {
+        try {
+            $dateTime = Iso8601Date::createFromString($persistentMetadata)->getDateTime();
+        } catch (\Exception $e) {
             /**
              * Should not happen as the data is validate in entry
              * at the {@link \syntax_plugin_combo_frontmatter}
@@ -1806,7 +1810,6 @@ class Page extends DokuPath
             p_set_metadata($this->getId(), array($lowerCaseKey => $value));
 
         }
-
 
 
     }

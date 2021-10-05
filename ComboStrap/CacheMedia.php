@@ -59,17 +59,17 @@ class CacheMedia
              * The cache attribute are not part of the key
              * obviously
              */
-            if (in_array($name,[
+            if (in_array($name, [
                 CacheMedia::CACHE_KEY,
                 CacheMedia::CACHE_BUSTER_KEY,
-            ])){
+            ])) {
                 continue;
             }
 
             /**
              * Normalize name (from w to width)
              */
-            $name =  TagAttributes::AttributeNameFromDokuwikiToCombo($name);
+            $name = TagAttributes::AttributeNameFromDokuwikiToCombo($name);
 
             $cacheKey .= "&" . $name . "=" . $value;
 
@@ -122,12 +122,14 @@ class CacheMedia
         if ($this->maxAge == 0) {
             return false;
         } else {
-            $dependencies = array(
-                'files' => [
-                    $this->path->getFileSystemPath(),
-                    Resources::getComboHome() . "/plugin.info.txt"
-                ]
-            );
+            $files = [];
+            if ($this->path->getExtension() === "svg") {
+                // svg generation depends on configuration
+                $files = getConfigFiles('main');
+            }
+            $files[] = $this->path->getFileSystemPath();
+            $files[] = Resources::getComboHome() . "/plugin.info.txt";
+            $dependencies = array('files' => $files);
             if ($this->maxAge != null) {
                 $dependencies['age'] = $this->maxAge;
             }

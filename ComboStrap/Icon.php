@@ -42,6 +42,7 @@ class Icon
         self::FEATHER => "https://raw.githubusercontent.com/feathericons/feather/master/icons",
         self::CODE_ICON => "https://raw.githubusercontent.com/microsoft/vscode-codicons/main/src/icons/",
         self::LOGOS => "https://raw.githubusercontent.com/gilbarbara/logos/master/logos/",
+        self::CARBON => "https://raw.githubusercontent.com/carbon-design-system/carbon/main/packages/icons/src/svg/32/"
     );
 
     const ICON_LIBRARY_WEBSITE_URLS = array(
@@ -49,7 +50,8 @@ class Icon
         self::MATERIAL_DESIGN => "https://materialdesignicons.com/",
         self::FEATHER => "https://feathericons.com/",
         self::CODE_ICON => "https://microsoft.github.io/vscode-codicons/",
-        self::LOGOS => "https://svgporn.com/"
+        self::LOGOS => "https://svgporn.com/",
+        self::CARBON => "https://www.carbondesignsystem.com/guidelines/icons/library/"
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
@@ -70,14 +72,16 @@ class Icon
         "mdi" => self::MATERIAL_DESIGN,
         "fe" => self::FEATHER,
         "codicon" => self::CODE_ICON,
-        "logos" => self::LOGOS
+        "logos" => self::LOGOS,
+        "carbon" => self::CARBON
     );
 
     const FEATHER = "feather";
     const BOOTSTRAP = "bootstrap";
     const MATERIAL_DESIGN = "material-design";
-    const CODE_ICON =  "codicon";
+    const CODE_ICON = "codicon";
     const LOGOS = "logos";
+    const CARBON = "carbon";
 
 
     /**
@@ -278,7 +282,7 @@ class Icon
 
     private static function getLibraries()
     {
-        return array_merge(self::PUBLIC_LIBRARY_ACRONYM,self::DEPRECATED_LIBRARY_ACRONYM);
+        return array_merge(self::PUBLIC_LIBRARY_ACRONYM, self::DEPRECATED_LIBRARY_ACRONYM);
     }
 
 

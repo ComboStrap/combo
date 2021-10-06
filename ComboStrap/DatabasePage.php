@@ -35,6 +35,12 @@ class DatabasePage
     const ANALYTICS_ATTRIBUTE = "ANALYTICS";
 
     /**
+     * For whatever reason, the row id is lowercase
+     */
+    const ROWID = "rowid";
+    const CANONICAL = "replication";
+
+    /**
      * @var Page
      */
     private $page;
@@ -290,7 +296,7 @@ class DatabasePage
             case 1:
                 $id = $rows[0]["ID"];
                 if ($id === $page->getId()) {
-                    return $rows[0]["ROWID"];
+                    return intval($rows[0][self::ROWID]);
                 } else {
                     LogUtility::msg("The page ($page) and the page ($id) have the same UUID ($uuid)", LogUtility::LVL_MSG_ERROR);
                 }
@@ -316,7 +322,7 @@ class DatabasePage
                 case 1:
                     $id = $rows[0]["ID"];
                     if ($id === $page->getPath()) {
-                        return $rows[0]["ROWID"];
+                        return intval($rows[0][self::ROWID]);
                     } else {
                         LogUtility::msg("The page ($page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
                     }
@@ -350,7 +356,7 @@ class DatabasePage
                         }
                     }
                     if (sizeof($existingPages) === 1) {
-                        return $existingPages[0]["ROWID"];
+                        return $existingPages[0][self::ROWID];
                     } else {
                         $existingPages = implode(", ", $existingPages);
                         LogUtility::msg("The existing pages ($existingPages) have all the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
@@ -373,7 +379,7 @@ class DatabasePage
             case 1:
                 $id = $rows[0]["ID"];
                 if ($id === $page->getId()) {
-                    return $rows[0]["ROWID"];
+                    return intval($rows[0][self::ROWID]);
                 } else {
                     LogUtility::msg("The page ($page) and the page ($id) have the same path ($path)", LogUtility::LVL_MSG_ERROR);
                 }
@@ -395,7 +401,7 @@ class DatabasePage
                     }
                 }
                 if (sizeof($existingPages) === 1) {
-                    return $existingPages[0]["ROWID"];
+                    return intval($existingPages[0][self::ROWID]);
                 } else {
                     $existingPages = implode(", ", $existingPages);
                     LogUtility::msg("The existing pages ($existingPages) have all the same path ($path)", LogUtility::LVL_MSG_ERROR);
@@ -418,7 +424,7 @@ class DatabasePage
             case 0:
                 break;
             case 1:
-                return $rows[0]["ROWID"];
+                return intval($rows[0][self::ROWID]);
             default:
                 LogUtility::msg("The database has " . sizeof($rows) . " records with the same id ($id)", LogUtility::LVL_MSG_ERROR);
                 break;
@@ -618,7 +624,7 @@ EOF;
     private function upsertAttributes(array $attributes): bool
     {
 
-        if($this->sqlite===null){
+        if ($this->sqlite === null) {
             return false;
         }
 
@@ -647,11 +653,10 @@ EOF;
              * otherwise as this is a associative
              * array, we will miss a value for the update statement
              */
-            $values["ROWID"] = $rowId;
+            $values[self::ROWID] = $rowId;
 
             $updateStatement = "update PAGES SET " . implode($columnClauses, ", ") . " where ROWID = ?";
             $res = $this->sqlite->query($updateStatement, $values);
-            $this->sqlite->res_close($res);
             if ($res === false) {
                 $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
                 $message = "";
@@ -660,9 +665,15 @@ EOF;
                     $message = ("No rows were updated");
                 }
                 $errorInfoAsString = var_export($errorInfo, true);
+                $this->sqlite->res_close($res);
                 LogUtility::msg("There was a problem during the page attribute updates. $message. : {$errorInfoAsString}");
                 return false;
             }
+            $countChanges = $this->sqlite->countChanges($res);
+            if($countChanges!==1){
+                LogUtility::msg("The database replication has not update exactly one record but ($countChanges) record", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            }
+            $this->sqlite->res_close($res);
 
         } else {
             $values["id"] = $this->page->getId();
@@ -714,6 +725,37 @@ EOF;
     public function getPageName()
     {
         return $this->getAttribute(Page::NAME_PROPERTY);
+    }
+
+    public function exists(): bool
+    {
+        return $this->getRowId() !== null;
+    }
+
+    public function moveTo($targetId)
+    {
+        if(!$this->exists()){
+            LogUtility::msg("The database page ($this) does not exist and cannot be moved to ($targetId)",LogUtility::LVL_MSG_ERROR);
+        }
+        $attributes = [
+            "id" => $targetId,
+            Page::PATH_ATTRIBUTE=>":${$targetId}",
+            Page::UUID_ATTRIBUTE=>$this->page->getUuid()
+        ];
+
+        $this->upsertAttributes($attributes);
+        /**
+         * The UUID is created on page creation
+         * We need to update it on the target page
+         */
+        $targetPage = Page::createPageFromId($targetId);
+        $targetPage->setUuid($this->page->getUuid());
+
+    }
+
+    public function __toString()
+    {
+        return $this->page->__toString();
     }
 
 

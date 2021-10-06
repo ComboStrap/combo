@@ -344,16 +344,16 @@ class Page extends DokuPath
     function persistPageAlias($canonical, $alias)
     {
 
-        if(empty($canonical)){
-            LogUtility::msg("Alias: To create an alias, the canonical should not be empty",LogUtility::LVL_MSG_ERROR);
+        if (empty($canonical)) {
+            LogUtility::msg("Alias: To create an alias, the canonical should not be empty", LogUtility::LVL_MSG_ERROR);
             return;
         }
-        if(empty($alias)){
-            LogUtility::msg("Alias: To create an alias, the alias value should not be empty",LogUtility::LVL_MSG_ERROR);
+        if (empty($alias)) {
+            LogUtility::msg("Alias: To create an alias, the alias value should not be empty", LogUtility::LVL_MSG_ERROR);
             return;
         }
-        if(!is_string($alias)){
-            LogUtility::msg("Alias: To create an alias, the alias value should a string. Value: ".var_export($alias,true),LogUtility::LVL_MSG_ERROR);
+        if (!is_string($alias)) {
+            LogUtility::msg("Alias: To create an alias, the alias value should a string. Value: " . var_export($alias, true), LogUtility::LVL_MSG_ERROR);
             return;
         }
 
@@ -1714,17 +1714,37 @@ class Page extends DokuPath
         return $dateTime;
     }
 
-    public function getUuid()
+    /**
+     * A UUID or null if the page does not exists
+     * @return string|null
+     */
+    public function getUuid(): ?string
     {
+
         $uuid = $this->getMetadata(Page::UUID_ATTRIBUTE);
 
+        /**
+         * UUID are created only for existing pages
+         * (It avoids the conflict of UUID when page are moved)
+         */
+        if ($uuid === null && !$this->exists()) {
+            return null;
+        }
+
+
+        /**
+         * Bug that caused to create bad uuid
+         * (Should be deleted in the future)
+         */
         if ($uuid === null || !is_string($uuid) ||
             (!preg_match(self::UUID4_PATTERN, $uuid))
         ) {
             $uuid = Uuid::uuid4()->toString();
             $this->setMetadata(Page::UUID_ATTRIBUTE, $uuid);
         }
+
         return $uuid;
+
     }
 
 
@@ -1839,6 +1859,15 @@ class Page extends DokuPath
         $startPageName = $conf['start'];
         return $this->getPath() === ":$startPageName";
 
+    }
+
+    /**
+     * Used when the page is moved to take the UUID of the source
+     * @param string $uuid
+     */
+    public function setUuid(string $uuid)
+    {
+        $this->setMetadata(Page::UUID_ATTRIBUTE, $uuid);
     }
 
 

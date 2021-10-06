@@ -49,44 +49,98 @@ window.addEventListener("DOMContentLoaded", function () {
                             let formId = call + id;
                             let htmlForm = `<form id="${formId}">`;
                             let htmlValue;
-                            let unModifiableMetas = ["path", "date_created", "date_modified","uuid"];
+                            let unModifiableMetas = ["path", "date_created", "date_modified", "uuid"];
                             let disabled;
                             let label;
                             let inputType;
                             let metadataValue;
+                            let htmlElement;
+                            let selectValues = [];
+                            let defaultGeneratedValue;
                             for (const metadata in jsonMetaDataObject) {
                                 if (jsonMetaDataObject.hasOwnProperty(metadata)) {
                                     let id = `colForm${metadata}`;
                                     metadataValue = jsonMetaDataObject[metadata];
-                                    if (metadata.slice(0, 4) === "date") {
-                                        if (metadataValue !== null) {
-                                            metadataValue = metadataValue.slice(0, 19);
-                                        }
-                                        inputType = "datetime-local"
-                                    } else {
-                                        inputType = "text"
-                                    }
 
-                                    if (metadataValue !== null) {
-                                        htmlValue = `value="${metadataValue}"`;
-                                    } else {
-                                        htmlValue = `placeholder="${metadata}"`;
-                                    }
-                                    if (unModifiableMetas.includes(metadata)) {
-                                        disabled = "disabled";
-                                    } else {
-                                        disabled = "";
-                                    }
+                                    /**
+                                     * The label and the first cell
+                                     * @type {string}
+                                     */
                                     label = metadata.replace("_", " ");
                                     label = label.charAt(0).toUpperCase() + label.slice(1);
+                                    htmlForm += `<div class="row mb-3">
+                                        <label for="${id}" class="col-sm-2 col-form-label">${label}</label>
+                                        <div class="col-sm-10">`;
+                                    /**
+                                     * The creation of the form element
+                                     */
+                                    switch (metadata) {
+                                        case "type":
+                                            /**
+                                             * Select element
+                                             * @type {string}
+                                             */
+                                            htmlElement = "select";
+                                            selectValues = ["default", "article", "news", "blog", "website", "event", "home"];
+                                            defaultGeneratedValue = "home";
 
-                                    htmlForm += `
-<div class="row mb-3">
-  <label for="${id}" class="col-sm-2 col-form-label">${label}</label>
-  <div class="col-sm-10">
-    <input type="${inputType}" class="form-control" id="${id}" ${htmlValue} ${disabled}>
-  </div>
-</div>`;
+                                            htmlForm += `<select class="form-select" aria-label="${label}">`;
+                                            let selected = "";
+                                            if(metadataValue===null){
+                                                selected = "selected";
+                                            }
+                                            htmlForm +=`<option ${selected}>Default (${defaultGeneratedValue})</option>`;
+                                            for (let selectedValueIndex in selectValues) {
+                                                let selectValue = selectValues[selectedValueIndex];
+                                                if(selectValue===metadataValue){
+                                                    selected = "selected";
+                                                } else {
+                                                    selected = "";
+                                                }
+                                                htmlForm +=`<option value="${selectValue}" ${selected}>${selectValue}</option>`;
+                                            }
+                                            htmlForm +=`</select>`;
+                                            break;
+                                        default:
+                                            /**
+                                             * Input Element
+                                             * @type {string}
+                                             */
+                                            htmlElement = "input";
+                                            inputType = "text";
+
+                                            /**
+                                             * Date ?
+                                             */
+                                            if (metadata.slice(0, 4) === "date") {
+                                                if (metadataValue !== null) {
+                                                    metadataValue = metadataValue.slice(0, 19);
+                                                }
+                                                inputType = "datetime-local";
+
+                                            }
+
+                                            if (metadataValue !== null) {
+                                                htmlValue = `value="${metadataValue}"`;
+                                            } else {
+                                                htmlValue = `placeholder="${metadata}"`;
+                                            }
+                                            if (unModifiableMetas.includes(metadata)) {
+                                                disabled = "disabled";
+                                            } else {
+                                                disabled = "";
+                                            }
+
+                                            htmlForm += `<input type="${inputType}" class="form-control" id="${id}" ${htmlValue} ${disabled}>`;
+
+                                            break;
+                                    }
+                                    /**
+                                     * The cloture of the cell and row
+                                     * for the actual element
+                                     * @type {string}
+                                     */
+                                    htmlForm += `</div></div>`;
                                 }
                             }
                             htmlForm += "</form>"

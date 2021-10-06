@@ -99,17 +99,22 @@ class DatabasePage
             $refreshCounter++;
             $id = $row['ID'];
             $page = Page::createPageFromId($id);
-            $result = $page->getDatabasePage()->replicate();
-            if ($result) {
-                LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
-                $res = $sqlite->query("DELETE FROM PAGES_TO_REPLICATE where ID = ?", $id);
-                if (!$res) {
-                    LogUtility::msg("There was a problem during the delete of the replication request: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+            /**
+             * The page may have moved
+             */
+            if($page->exists()) {
+                $result = $page->getDatabasePage()->replicate();
+                if ($result) {
+                    LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
+                    $res = $sqlite->query("DELETE FROM PAGES_TO_REPLICATE where ID = ?", $id);
+                    if (!$res) {
+                        LogUtility::msg("There was a problem during the delete of the replication request: {$sqlite->getAdapter()->getDb()->errorInfo()}");
+                    }
+                    $sqlite->res_close($res);
                 }
-                $sqlite->res_close($res);
-            }
-            if ($refreshCounter >= $maxRefresh) {
-                break;
+                if ($refreshCounter >= $maxRefresh) {
+                    break;
+                }
             }
         }
 
@@ -130,6 +135,11 @@ class DatabasePage
     public function replicate(): bool
     {
         if ($this->sqlite === null) {
+            return false;
+        }
+
+        if(!$this->page->exists()){
+            LogUtility::msg("You can't replicate the non-existing page ($this->page) on the file system");
             return false;
         }
 

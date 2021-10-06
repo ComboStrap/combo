@@ -7,7 +7,7 @@ require_once(__DIR__ . '/../ComboStrap/LinkUtility.php');
 /**
  * Set the home of the web site documentation
  */
-class action_plugin_combo_home extends DokuWiki_Action_Plugin
+class action_plugin_combo_directorylayout extends DokuWiki_Action_Plugin
 {
 
     /**

@@ -2,8 +2,11 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\File;
 use ComboStrap\LinkUtility;
+use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\Site;
 
 
 /**
@@ -23,7 +26,8 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         /**
          * To rewrite the page meta in the database
          */
-        $controller->register_hook('PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this, 'handle_rename', array());
+        $controller->register_hook('PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this, 'handle_rename_before', array());
+        $controller->register_hook('PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this, 'handle_rename_after', array());
         /**
          * To rewrite the link
          */
@@ -36,8 +40,39 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
      * @param $params
      *
      */
-    function handle_rename(Doku_Event $event, $params)
+    function handle_rename_before(Doku_Event $event, $params)
     {
+        /**
+         * Check that the lock file is not older than 10 minutes
+         */
+        $lockFile = File::createFromPath(Site::getDataDirectory() . "/locks_plugin_move.lock");
+        if ($lockFile->exists()) {
+            $lockFileDateTimeModified = $lockFile->getModifiedTime();
+            $lockFileModifiedTimestamp = $lockFileDateTimeModified->getTimestamp();
+            $now = time();
+
+            /**
+             * Lock file bigger than 5 minutes
+             * Is not really possible
+             */
+            $ageInMinute = ($now - $lockFileModifiedTimestamp)/60;
+            if ($ageInMinute > 5) {
+                $event->preventDefault();
+                LogUtility::msg("The move lockfile ($lockFile) exists and is older than 10 minutes (exactly $ageInMinute minutes), you should finish the first move or delete this file before a move. The Move was canceled.");
+            }
+        }
+
+    }
+
+    /**
+     * Handle the rename of a page
+     * @param Doku_Event $event - https://www.dokuwiki.org/plugin:move#for_plugin_authors
+     * @param $params
+     *
+     */
+    function handle_rename_after(Doku_Event $event, $params)
+    {
+
         /**
          * $event->data
          * src_id ⇒ string – the original ID of the page

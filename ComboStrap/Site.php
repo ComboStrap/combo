@@ -290,5 +290,11 @@ class Site
         return $conf['cachetime'] !== -1;
     }
 
+    public static function getDataDirectory()
+    {
+        global $conf;
+        return $conf['datadir'];
+    }
+
 
 }

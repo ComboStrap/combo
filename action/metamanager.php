@@ -4,6 +4,7 @@ use ComboStrap\Analytics;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
+use ComboStrap\Publication;
 
 if (!defined('DOKU_INC')) die();
 
@@ -205,7 +206,7 @@ EOF;
                 // H1
                 $metasH1Value[self::VALUE_ATTRIBUTE] = $page->getH1();
                 $metasH1Value[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getH1NotEmpty();
-                $metasTitle[self::MUTABLE_ATTRIBUTE] = true;
+                $metasH1Value[self::MUTABLE_ATTRIBUTE] = true;
                 $metas[Analytics::H1] = $metasH1Value;
 
                 // Description
@@ -221,6 +222,41 @@ EOF;
                 $metasPageType[self::VALUES_ATTRIBUTE] = ["article", "news", "blog", "website", "event", "home"];
                 $metas[Page::TYPE_META_PROPERTY] = $metasPageType;
 
+                // Published Date
+                $publishedDate[self::VALUE_ATTRIBUTE] = $page->getPublishedTimeAsString();
+                $publishedDate[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
+                $publishedDate[self::MUTABLE_ATTRIBUTE] = true;
+                $metas[Publication::DATE_PUBLISHED] = $publishedDate;
+
+                // Start Date
+                $startDate[self::VALUE_ATTRIBUTE] = $page->getStartDate();
+                $startDate[self::MUTABLE_ATTRIBUTE] = true;
+                $metas[Analytics::DATE_START] = $startDate;
+
+                // End Date
+                $endDate[self::VALUE_ATTRIBUTE] = $page->getEndDate();
+                $endDate[self::MUTABLE_ATTRIBUTE] = true;
+                $metas[Analytics::DATE_END] = $endDate;
+
+                // Layout
+                $layout[self::VALUE_ATTRIBUTE] = $page->getLayout();
+                $layout[self::MUTABLE_ATTRIBUTE] = true;
+                $layout[self::DEFAULT_VALUE_ATTRIBUTE] = "holy";
+                $layout[self::VALUES_ATTRIBUTE] = ["holy", "median", "landing"];
+                $metas[Page::LAYOUT_PROPERTY] = $layout;
+
+                // Is low quality page
+                $isLowQualityPage[self::VALUE_ATTRIBUTE] = $page->getLowQualityIndicator();
+                $isLowQualityPage[self::MUTABLE_ATTRIBUTE] = true;
+                $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getAnalytics()->getData()->toArray()[Analytics::QUALITY][Analytics::LOW];
+                $metas[Page::LOW_QUALITY_PAGE_INDICATOR] = $isLowQualityPage;
+
+                // Quality Monitoring
+                $isQualityMonitoringOn[self::VALUE_ATTRIBUTE] = $page->isQualityMonitored();
+                $isQualityMonitoringOn[self::MUTABLE_ATTRIBUTE] = true;
+                $isQualityMonitoringOn[self::DEFAULT_VALUE_ATTRIBUTE] = !$this->getConf(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING);
+                $metas[action_plugin_combo_qualitymessage::DISABLE_INDICATOR] = $isQualityMonitoringOn;
+
 
                 echo json_encode($metas);
                 return;
@@ -229,5 +265,7 @@ EOF;
         }
 
     }
+
+
 
 }

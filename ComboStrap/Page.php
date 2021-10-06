@@ -1891,5 +1891,10 @@ class Page extends DokuPath
         return null;
     }
 
+    public function getLayout()
+    {
+        return $this->getMetadata(Page::LAYOUT_PROPERTY);
+    }
+
 
 }

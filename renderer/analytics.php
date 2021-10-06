@@ -494,7 +494,8 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * If the low level is not set manually
          */
-        if (empty($this->metadata[Page::LOW_QUALITY_PAGE_INDICATOR])) {
+        $lowLevel = $this->page->getLowQualityIndicator();
+        if (empty($lowLevel)) {
             $lowLevel = false;
             $brokenRulesCount = sizeof($mandatoryRulesBroken);
             if ($brokenRulesCount > 0) {
@@ -503,8 +504,6 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             } else {
                 $quality["message"] = "No mandatory rules broken";
             }
-        } else {
-            $lowLevel = filter_var($this->metadata[Page::LOW_QUALITY_PAGE_INDICATOR], FILTER_VALIDATE_BOOLEAN);
         }
         if (!$this->page->isSlot()) {
             $this->page->setLowQualityIndicator($lowLevel);

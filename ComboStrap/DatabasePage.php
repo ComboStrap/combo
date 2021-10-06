@@ -315,7 +315,7 @@ class DatabasePage
         }
 
         // Do we have a page attached to the canonical
-        $canonical = $page->getCanonical();
+        $canonical = $page->getCanonicalOrDefault();
         if ($canonical != null) {
             $res = $this->sqlite->query("select ROWID, ID from pages where CANONICAL = ?", $canonical);
             if (!$res) {
@@ -475,21 +475,21 @@ class DatabasePage
          * Same data as {@link Page::getMetadataForRendering()}
          */
         $record = array(
-            Analytics::CANONICAL => $page->getCanonical(),
+            Analytics::CANONICAL => $page->getCanonicalOrDefault(),
             self::ANALYTICS_ATTRIBUTE => $analyticsJsonAsString,
             'PATH' => $page->getAbsolutePath(),
             Analytics::NAME => $page->getPageNameNotEmpty(),
             Analytics::TITLE => $page->getTitleNotEmpty(),
             Analytics::H1 => $page->getH1NotEmpty(),
-            Analytics::DATE_CREATED => $page->getCreatedDateString(),
-            Analytics::DATE_MODIFIED => $page->getModifiedDateString(),
+            Analytics::DATE_CREATED => $page->getCreatedDateAsString(),
+            Analytics::DATE_MODIFIED => $page->getModifiedDateAsString(),
             Publication::DATE_PUBLISHED => $page->getPublishedTimeAsString(),
             Analytics::DATE_START => $page->getEndDateAsString(),
             Analytics::DATE_END => $page->getStartDateAsString(),
             Page::COUNTRY_META_PROPERTY => $page->getCountry(),
             Page::LANG_META_PROPERTY => $page->getLang(),
             'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
-            Page::TYPE_META_PROPERTY => $page->getType(),
+            Page::TYPE_META_PROPERTY => $page->getTypeNotEmpty(),
             'WORD_COUNT' => $analyticsJsonAsArray[Analytics::WORD_COUNT],
             'BACKLINK_COUNT' => $this->getBacklinkCount(),
             'IS_HOME' => ($page->isHomePage() === true ? 1 : 0),
@@ -690,7 +690,7 @@ EOF;
              * When the not null constraint on canonical is deleted, we can delete
              * the line below
              */
-            $values[Analytics::CANONICAL] = $this->page->getCanonical();
+            $values[Analytics::CANONICAL] = $this->page->getCanonicalOrDefault();
             $res = $this->sqlite->storeEntry('PAGES', $values);
             $this->sqlite->res_close($res);
             if ($res === false) {

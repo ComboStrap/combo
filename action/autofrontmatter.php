@@ -33,7 +33,7 @@ class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
     public function handle_new_page(Doku_Event $event, $param){
 
         $page = Page::createPageFromCurrentId();
-        $canonical = $page->getCanonical();
+        $canonical = $page->getCanonicalOrDefault();
         $event->data["tpl"] = <<<EOF
 ---json
 {

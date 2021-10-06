@@ -129,10 +129,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             return;
         }
 
-        $type = $page->getType();
-        if (empty($type)) {
-            return;
-        }
+        $type = $page->getTypeNotEmpty();
         switch (strtolower($type)) {
             case Page::WEBSITE_TYPE:
 

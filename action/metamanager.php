@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Analytics;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -17,6 +18,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const CALL_ID = "combo-meta-manager";
     const JSON_PARAM = "json";
     const CANONICAL = "meta-manager";
+
+    /**
+     * The JSON attribute for each parameter
+     */
+    const VALUE_ATTRIBUTE = "value";
+    const DEFAULT_VALUE_ATTRIBUTE = "default";
+    const MUTABLE_ATTRIBUTE = "mutable";
+    const VALUES_ATTRIBUTE = "values";
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -153,7 +162,66 @@ EOF;
             case "GET":
                 header('Content-type: application/json');
                 header("Status: 200");
-                $metas = $page->getMetadataForRendering();
+                $metas = [];
+
+                // Path
+                $metasPath[self::VALUE_ATTRIBUTE] = $page->getPath();
+                $metasPath[self::MUTABLE_ATTRIBUTE] = false;
+                $metas[Analytics::PATH] = $metasPath;
+
+                // UUID
+                $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
+                $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
+                $metas[Page::UUID_ATTRIBUTE] = $metasUuid;
+
+                // Created Date
+                $dateCreated[self::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
+                $dateCreated[self::MUTABLE_ATTRIBUTE] = false;
+                $metas[Analytics::DATE_CREATED] = $dateCreated;
+
+                // Modified Date
+                $modifiedCreated[self::VALUE_ATTRIBUTE] = $page->getModifiedDateAsString();
+                $modifiedCreated[self::MUTABLE_ATTRIBUTE] = false;
+                $metas[Analytics::DATE_MODIFIED] = $modifiedCreated;
+
+                // Canonical
+                $metasCanonical[self::VALUE_ATTRIBUTE] = $page->getCanonical();
+                $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
+                $metasCanonical[self::MUTABLE_ATTRIBUTE] = true;
+                $metas[Analytics::CANONICAL] = $metasCanonical;
+
+                // Name
+                $metasName[self::VALUE_ATTRIBUTE] = $page->getPageName();
+                $metasName[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getPageNameNotEmpty();
+                $metasName[self::MUTABLE_ATTRIBUTE] = true;
+                $metas[Analytics::NAME] = $metasName;
+
+                // Title
+                $metasTitle[self::VALUE_ATTRIBUTE] = $page->getTitle();
+                $metasTitle[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getTitleNotEmpty();
+                $metasTitle[self::MUTABLE_ATTRIBUTE] = true;
+                $metas[Analytics::TITLE] = $metasTitle;
+
+                // H1
+                $metasH1Value[self::VALUE_ATTRIBUTE] = $page->getH1();
+                $metasH1Value[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getH1NotEmpty();
+                $metasTitle[self::MUTABLE_ATTRIBUTE] = true;
+                $metas[Analytics::H1] = $metasH1Value;
+
+                // Description
+                $metasDescription[self::VALUE_ATTRIBUTE] = $page->getDescription();
+                $metasDescription[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDescriptionOrElseDokuWiki();
+                $metasDescription[self::MUTABLE_ATTRIBUTE] = true;
+                $metas[Analytics::DESCRIPTION] = $metasDescription;
+
+                // Page Type
+                $metasPageType[self::VALUE_ATTRIBUTE] = $page->getType();
+                $metasPageType[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getTypeNotEmpty();
+                $metasPageType[self::MUTABLE_ATTRIBUTE] = true;
+                $metasPageType[self::VALUES_ATTRIBUTE] = ["article", "news", "blog", "website", "event", "home"];
+                $metas[Page::TYPE_META_PROPERTY] = $metasPageType;
+
+
                 echo json_encode($metas);
                 return;
 

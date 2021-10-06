@@ -477,58 +477,16 @@ class Page extends DokuPath
      * @return string
      */
     public
-    function getCanonical(): ?string
+    function getCanonicalOrDefault(): ?string
     {
-        if (empty($this->canonical)) {
 
-            $this->canonical = $this->getPersistentMetadata(Page::CANONICAL_PROPERTY);
-
-            /**
-             * The last part of the id as canonical
-             */
-            // How many last parts are taken into account in the canonical processing (2 by default)
-            $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
-            if (empty($this->canonical) && $canonicalLastNamesCount > 0) {
-                /**
-                 * Takes the last names part
-                 */
-                $namesOriginal = $this->getNames();
-                /**
-                 * Delete the identical names at the end
-                 * To resolve this problem
-                 * The page (viz:viz) and the page (data:viz:viz) have the same canonical.
-                 * The page (viz:viz) will get the canonical viz
-                 * The page (data:viz) will get the canonical  data:viz
-                 */
-                $i = sizeof($namesOriginal) - 1;
-                $names = $namesOriginal;
-                while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
-                    unset($names[$i]);
-                    $i--;
-                    if ($i <= 0) {
-                        break;
-                    }
-                }
-                /**
-                 * Minimal length check
-                 */
-                $namesLength = sizeof($names);
-                if ($namesLength > $canonicalLastNamesCount) {
-                    $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
-                }
-                /**
-                 * If this is a start page, delete the name
-                 * ie javascript:start will become javascript
-                 */
-                if ($this->isStartPage()) {
-                    $names = array_slice($names, 0, $namesLength - 1);
-                }
-                $this->canonical = implode(":", $names);
-                p_set_metadata($this->getId(), array(Page::CANONICAL_PROPERTY => $this->canonical));
-            }
-
+        $canonical = $this->getCanonical();
+        if(!empty($canonical)){
+            return $canonical;
+        } else {
+            return $this->getDefaultCanonical();
         }
-        return $this->canonical;
+
     }
 
     /**
@@ -795,7 +753,7 @@ class Page extends DokuPath
     }
 
     public
-    function getDescription()
+    function getDescription(): ?string
     {
 
         $this->processDescriptionIfNeeded();
@@ -813,7 +771,7 @@ class Page extends DokuPath
      * @return string - the description or the dokuwiki generated description
      */
     public
-    function getDescriptionOrElseDokuWiki()
+    function getDescriptionOrElseDokuWiki(): ?string
     {
         $this->processDescriptionIfNeeded();
         return $this->description;
@@ -854,7 +812,7 @@ class Page extends DokuPath
     }
 
     public
-    function getType()
+    function getTypeNotEmpty()
     {
         $type = $this->getPersistentMetadata(self::TYPE_META_PROPERTY);
         if (isset($type)) {
@@ -1034,7 +992,7 @@ class Page extends DokuPath
      * @return string|null
      */
     public
-    function getModifiedDateString()
+    function getModifiedDateAsString()
     {
         $modified = $this->getModifiedTime();
         return $modified != null ? $modified->format(Iso8601Date::getFormat()) : null;
@@ -1090,7 +1048,7 @@ class Page extends DokuPath
      * @return null|string
      */
     public
-    function getCreatedDateString()
+    function getCreatedDateAsString()
     {
 
         $created = $this->getCreatedTime();
@@ -1256,8 +1214,8 @@ class Page extends DokuPath
     public
     function getCanonicalUrl()
     {
-        if (!empty($this->getCanonical())) {
-            return getBaseURL(true) . strtr($this->getCanonical(), ':', '/');
+        if (!empty($this->getCanonicalOrDefault())) {
+            return getBaseURL(true) . strtr($this->getCanonicalOrDefault(), ':', '/');
         }
         return null;
     }
@@ -1312,18 +1270,14 @@ class Page extends DokuPath
                         // suppress the carriage return
                         $temporaryDescription = str_replace("\n", " ", $descriptionArray['abstract']);
                         // suppress the h1
-                        $temporaryDescription = str_replace($this->getH1(), "", $temporaryDescription);
+                        $temporaryDescription = str_replace($this->getH1NotEmpty(), "", $temporaryDescription);
                         // Suppress the star, the tab, About
                         $temporaryDescription = preg_replace('/(\*|\t|About)/im', "", $temporaryDescription);
                         // Suppress all double space and trim
                         $temporaryDescription = trim(preg_replace('/  /m', " ", $temporaryDescription));
-                        $this->description = $temporaryDescription;
-
-                    } else {
-
-                        $this->description = $temporaryDescription;
 
                     }
+                    $this->description = $temporaryDescription;
                 }
 
             }
@@ -1331,8 +1285,7 @@ class Page extends DokuPath
 
     }
 
-    public
-    function hasXhtmlCache()
+    public function hasXhtmlCache(): bool
     {
 
         $renderCache = $this->getRenderCache("xhtml");
@@ -1340,8 +1293,7 @@ class Page extends DokuPath
 
     }
 
-    public
-    function hasInstructionCache()
+    public function hasInstructionCache(): bool
     {
 
         $instructionCache = $this->getInstructionsCache();
@@ -1613,11 +1565,11 @@ class Page extends DokuPath
         $title = str_replace('"', "'", $title);
         $array[Analytics::TITLE] = $title;
         $array[Page::UUID_ATTRIBUTE] = $this->getUuid();
-        $array[Page::CANONICAL_PROPERTY] = $this->getCanonical();
+        $array[Page::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
         $array[Analytics::PATH] = $this->getAbsolutePath();
         $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
-        $array[self::TYPE_META_PROPERTY] = $this->getType() !== null ? $this->getType() : "";
+        $array[self::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
 
         /**
          * When creating a page, the file
@@ -1626,8 +1578,8 @@ class Page extends DokuPath
          *
          */
         if ($this->exists()) {
-            $array[Analytics::DATE_CREATED] = $this->getCreatedDateString();
-            $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateString();
+            $array[Analytics::DATE_CREATED] = $this->getCreatedDateAsString();
+            $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateAsString();
         }
 
         $array[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
@@ -1869,12 +1821,74 @@ class Page extends DokuPath
     public function setUuid(?string $uuid): Page
     {
         if ($uuid == null) {
-            LogUtility::msg("A uuid can not null when setting it (Page: $this)",LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("A uuid can not null when setting it (Page: $this)", LogUtility::LVL_MSG_ERROR);
             return $this;
         }
         $this->setMetadata(Page::UUID_ATTRIBUTE, $uuid);
         return $this;
 
+    }
+
+    public function getType()
+    {
+        return $this->getPersistentMetadata(self::TYPE_META_PROPERTY);
+    }
+
+    public function getCanonical()
+    {
+        return $this->getPersistentMetadata(Page::CANONICAL_PROPERTY);
+    }
+
+    /**
+     * Create a canonical from the last page path part.
+     *
+     * @return string|null
+     */
+    public function getDefaultCanonical(): ?string
+    {
+        /**
+         * The last part of the id as canonical
+         */
+        // How many last parts are taken into account in the canonical processing (2 by default)
+        $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
+        if (empty($this->canonical) && $canonicalLastNamesCount > 0) {
+            /**
+             * Takes the last names part
+             */
+            $namesOriginal = $this->getNames();
+            /**
+             * Delete the identical names at the end
+             * To resolve this problem
+             * The page (viz:viz) and the page (data:viz:viz) have the same canonical.
+             * The page (viz:viz) will get the canonical viz
+             * The page (data:viz) will get the canonical  data:viz
+             */
+            $i = sizeof($namesOriginal) - 1;
+            $names = $namesOriginal;
+            while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
+                unset($names[$i]);
+                $i--;
+                if ($i <= 0) {
+                    break;
+                }
+            }
+            /**
+             * Minimal length check
+             */
+            $namesLength = sizeof($names);
+            if ($namesLength > $canonicalLastNamesCount) {
+                $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
+            }
+            /**
+             * If this is a start page, delete the name
+             * ie javascript:start will become javascript
+             */
+            if ($this->isStartPage()) {
+                $names = array_slice($names, 0, $namesLength - 1);
+            }
+            return implode(":", $names);
+        }
+        return null;
     }
 
 

@@ -137,7 +137,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                         $disqusIdentifier = $page->getId();
                     }
 
-                    $canonical = $page->getCanonical();
+                    $canonical = $page->getCanonicalOrDefault();
                     if (!empty($canonical)) {
                         $disqusIdentifier = $canonical;
                     }

@@ -99,7 +99,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         /**
          * Type of page
          */
-        $pageType = $page->getType();
+        $pageType = $page->getTypeNotEmpty();
         switch ($pageType) {
             case Page::ARTICLE_TYPE:
                 // https://ogp.me/#type_article

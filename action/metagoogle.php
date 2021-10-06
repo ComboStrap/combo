@@ -188,8 +188,9 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             case Page::BLOG_TYPE:
             case self::NEWSARTICLE_SCHEMA_ORG_LOWERCASE:
             case self::BLOGPOSTING_SCHEMA_ORG_LOWERCASE:
+            case PAGE::HOME_TYPE:
 
-                $schemaType = "Article";
+
                 switch (strtolower($type)) {
                     case Page::NEWS_TYPE:
                     case self::NEWSARTICLE_SCHEMA_ORG_LOWERCASE:
@@ -198,6 +199,10 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     case Page::BLOG_TYPE:
                     case self::BLOGPOSTING_SCHEMA_ORG_LOWERCASE:
                         $schemaType = "BlogPosting";
+                        break;
+                    case PAGE::HOME_TYPE:
+                        // https://schema.org/WebPage
+                        $schemaType = "WebPage";
                         break;
                 }
                 // https://developers.google.com/search/docs/data-types/article
@@ -281,13 +286,6 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 self::addImage($ldJson, $page);
                 break;
 
-            case PAGE::HOME_TYPE:
-                // https://developers.google.com/search/docs/data-types/article
-                // https://schema.org/Article
-                $ldJson = array(
-                    "@context" => "https://schema.org",
-                    "@type" => "Event");
-                break;
 
             default:
 

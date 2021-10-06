@@ -332,7 +332,7 @@ class DatabasePage
                              * TODO: Handle a page move with the move plugin instead
                              */
                             $this->delete();
-                            $page->persistPageAlias($canonical, $row);
+                            $page->persistPageAlias($canonical, $id);
 
                         } else {
 
@@ -480,7 +480,7 @@ class DatabasePage
             Page::TYPE_META_PROPERTY => $page->getType(),
             'WORD_COUNT' => $analyticsJsonAsArray[Analytics::WORD_COUNT],
             'BACKLINK_COUNT' => $this->getBacklinkCount(),
-            'IS_HOME' => ($page->isNamespaceHomePage() === true ? 1 : 0),
+            'IS_HOME' => ($page->isHomePage() === true ? 1 : 0),
             Page::UUID_ATTRIBUTE => $page->getUuid(),
             self::DATE_REPLICATION => $replicationDate,
             'ID' => $page->getId(),

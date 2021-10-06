@@ -49,7 +49,7 @@ window.addEventListener("DOMContentLoaded", function () {
                             let formId = call + id;
                             let htmlForm = `<form id="${formId}">`;
                             let htmlValue;
-                            let unModifiableMetas = ["path", "date_created", "date_modified"];
+                            let unModifiableMetas = ["path", "date_created", "date_modified","uuid"];
                             let disabled;
                             let label;
                             let inputType;

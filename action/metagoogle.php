@@ -142,13 +142,13 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                  */
 
                 $ldJson = array(
-                    '@context' => 'http://schema.org',
+                    '@context' => 'https://schema.org',
                     '@type' => 'WebSite',
                     'url' => Site::getUrl(),
                     'name' => Site::getTitle()
                 );
 
-                if ($page->isNamespaceHomePage()) {
+                if ($page->isRootHomePage()) {
 
                     $ldJson['potentialAction'] = array(
                         '@type' => 'SearchAction',
@@ -279,6 +279,14 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
 
                 self::addImage($ldJson, $page);
+                break;
+
+            case PAGE::HOME_TYPE:
+                // https://developers.google.com/search/docs/data-types/article
+                // https://schema.org/Article
+                $ldJson = array(
+                    "@context" => "https://schema.org",
+                    "@type" => "Event");
                 break;
 
             default:

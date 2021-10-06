@@ -865,7 +865,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * Page
                  */
                 $page = Page::createPageFromQualifiedPath($actualPageOrNamespacePath);
-                if ($page->isNamespaceHomePage()) {
+                if ($page->isHomePage()) {
                     $homePage = $page;
                 } else {
                     $nonHomePages[] = $page;

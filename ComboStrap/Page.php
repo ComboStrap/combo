@@ -56,6 +56,7 @@ class Page extends DokuPath
     const ORGANIZATION_TYPE = "organization";
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
+    const HOME_TYPE = "home";
     const NAME_PROPERTY = "name";
     const DESCRIPTION_PROPERTY = "description";
     const TYPE_META_PROPERTY = "type";
@@ -274,7 +275,7 @@ class Page extends DokuPath
     public
     function getUrl()
     {
-        if ($this->isNamespaceHomePage()) {
+        if ($this->isHomePage()) {
             $url = DOKU_URL;
         } else {
             $url = wl($this->getId(), '', true, '&');
@@ -342,6 +343,19 @@ class Page extends DokuPath
     public
     function persistPageAlias($canonical, $alias)
     {
+
+        if(empty($canonical)){
+            LogUtility::msg("Alias: To create an alias, the canonical should not be empty",LogUtility::LVL_MSG_ERROR);
+            return;
+        }
+        if(empty($alias)){
+            LogUtility::msg("Alias: To create an alias, the alias value should not be empty",LogUtility::LVL_MSG_ERROR);
+            return;
+        }
+        if(!is_string($alias)){
+            LogUtility::msg("Alias: To create an alias, the alias value should a string. Value: ".var_export($alias,true),LogUtility::LVL_MSG_ERROR);
+            return;
+        }
 
         $row = array(
             "CANONICAL" => $canonical,
@@ -846,8 +860,10 @@ class Page extends DokuPath
         if (isset($type)) {
             return $type;
         } else {
-            if ($this->isNamespaceHomePage()) {
+            if ($this->isRootHomePage()) {
                 return self::WEBSITE_TYPE;
+            } else if ($this->isHomePage()) {
+                return self::HOME_TYPE;
             } else {
                 $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE);
                 if (!empty($defaultPageTypeConf)) {
@@ -1151,7 +1167,7 @@ class Page extends DokuPath
      * @return bool
      */
     public
-    function isNamespaceHomePage(): bool
+    function isHomePage(): bool
     {
         global $conf;
         $startPageName = $conf['start'];
@@ -1596,6 +1612,8 @@ class Page extends DokuPath
          */
         $title = str_replace('"', "'", $title);
         $array[Analytics::TITLE] = $title;
+        $array[Page::UUID_ATTRIBUTE] = $this->getUuid();
+        $array[Page::CANONICAL_PROPERTY] = $this->getCanonical();
         $array[Analytics::PATH] = $this->getAbsolutePath();
         $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
@@ -1812,6 +1830,14 @@ class Page extends DokuPath
 
         }
 
+
+    }
+
+    public function isRootHomePage(): bool
+    {
+        global $conf;
+        $startPageName = $conf['start'];
+        return $this->getPath() === ":$startPageName";
 
     }
 

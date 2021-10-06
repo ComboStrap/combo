@@ -48,7 +48,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * Shared check between post and get HTTP method
          */
         $requestMethod = $_SERVER['REQUEST_METHOD'];
-        if ($requestMethod==="POST") {
+        if ($requestMethod === "POST") {
             $id = $_POST["id"];
         } else {
             $id = $_GET["id"];
@@ -94,54 +94,61 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     return;
                 }
 
-                $page->upsertMetadata($jsonArray);
-
-                header("Status: 200");
 
                 /**
-                 * Page modification is any
+                 * Page modification if any
                  */
                 $content = $page->getContent();
-                $pattern = syntax_plugin_combo_frontmatter::PATTERN;
-                $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
-
-                /**
-                 * The split normally returns an array
-                 * where the first element is empty followed by the frontmatter
-                 */
-                $emptyString = array_shift($split);
-                if (!empty($emptyString)) {
-                    return;
-                }
-
-                $frontMatter = array_shift($split);
                 $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
-                if (!(strpos($frontMatter, $frontMatterStartTag) === 0)) {
-                    return;
-                }
-                $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
-                $frontMatterMetadata = array_merge($frontMatterMetadata, $jsonArray);
-                $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                if (strpos($content, $frontMatterStartTag) === 0) {
 
-                /**
-                 * Building the document again
-                 */
-                $restDocument = "";
-                while (($element = array_shift($split)) != null) {
-                    $restDocument .= $element;
-                }
+                    $pattern = syntax_plugin_combo_frontmatter::PATTERN;
+                    $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
 
-                /**
-                 * Build the new document
-                 */
-                $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-                $newPageContent = <<<EOF
+                    /**
+                     * The split normally returns an array
+                     * where the first element is empty followed by the frontmatter
+                     */
+                    $emptyString = array_shift($split);
+                    if (!empty($emptyString)) {
+                        return;
+                    }
+
+                    $frontMatter = array_shift($split);
+
+                    $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
+                    $frontMatterMetadata = array_merge($frontMatterMetadata, $jsonArray);
+                    $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+                    /**
+                     * Building the document again
+                     */
+                    $restDocument = "";
+                    while (($element = array_shift($split)) != null) {
+                        $restDocument .= $element;
+                    }
+
+                    /**
+                     * Build the new document
+                     */
+                    $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
+                    $newPageContent = <<<EOF
 $frontMatterStartTag
 $frontMatterJsonString
 $frontMatterEndTag$restDocument
 EOF;
+                    $page->upsertContent($newPageContent, "Metadata manager upsert");
+                }
 
-                $page->upsertContent($newPageContent, "Metadata manager upsert");
+
+                /**
+                 * Upsert metadata after the page content modification
+                 * to not trigger another modification because of the replication date
+                 */
+                $page->upsertMetadata($jsonArray);
+
+                header("Status: 200");
+
                 return;
             case "GET":
                 header('Content-type: application/json');

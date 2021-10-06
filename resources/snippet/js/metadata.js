@@ -6,8 +6,10 @@ window.addEventListener("DOMContentLoaded", function () {
             event.preventDefault();
 
             const url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
-            url.searchParams.set("call", "combo-meta-manager");
-            url.searchParams.set("id", JSINFO.id);
+            let call = "combo-meta-manager";
+            let id = JSINFO.id;
+            url.searchParams.set("call", call);
+            url.searchParams.set("id", id);
             fetch(url.toString(), {method: 'GET'})
                 .then(
                     function (response) {
@@ -21,7 +23,7 @@ window.addEventListener("DOMContentLoaded", function () {
                         //   * response.json()
                         //   * response.text()
                         // are promise, you need to pass them to a callback to get the value
-                        response.json().then(function (data) {
+                        response.json().then(function (jsonMetaDataObject) {
 
                             const modalRoot = document.createElement("div");
                             document.body.appendChild(modalRoot);
@@ -44,8 +46,61 @@ window.addEventListener("DOMContentLoaded", function () {
                             modalDialog.appendChild(modalContent);
                             const modalBody = document.createElement("div");
                             modalBody.classList.add("modal-body");
-                            modalBody.innerHTML = JSON.stringify(data) ;
+                            let formId = call + id;
+                            let htmlForm = `<form id="${formId}">`;
+                            let htmlValue;
+                            let unModifiableMetas = ["path", "date_created", "date_modified"];
+                            let disabled;
+                            let label;
+                            let inputType;
+                            let metadataValue;
+                            for (const metadata in jsonMetaDataObject) {
+                                if (jsonMetaDataObject.hasOwnProperty(metadata)) {
+                                    let id = `colForm${metadata}`;
+                                    metadataValue = jsonMetaDataObject[metadata];
+                                    if (metadata.slice(0, 4) === "date") {
+                                        if (metadataValue !== null) {
+                                            metadataValue = metadataValue.slice(0, 19);
+                                        }
+                                        inputType = "datetime-local"
+                                    } else {
+                                        inputType = "text"
+                                    }
+
+                                    if (metadataValue !== null) {
+                                        htmlValue = `value="${metadataValue}"`;
+                                    } else {
+                                        htmlValue = `placeholder="${metadata}"`;
+                                    }
+                                    if (unModifiableMetas.includes(metadata)) {
+                                        disabled = "disabled";
+                                    } else {
+                                        disabled = "";
+                                    }
+                                    label = metadata.replace("_", " ");
+                                    label = label.charAt(0).toUpperCase() + label.slice(1);
+
+                                    htmlForm += `
+<div class="row mb-3">
+  <label for="${id}" class="col-sm-2 col-form-label">${label}</label>
+  <div class="col-sm-10">
+    <input type="${inputType}" class="form-control" id="${id}" ${htmlValue} ${disabled}>
+  </div>
+</div>`;
+                                }
+                            }
+                            htmlForm += "</form>"
+                            modalBody.innerHTML = htmlForm;
                             modalContent.appendChild(modalBody);
+
+                            const modalFooter = document.createElement("div");
+                            modalFooter.classList.add("modal-footer");
+                            modalFooter.innerHTML = `
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+<button type="submit" form="${formId}" class="btn btn-primary">Submit</button>
+`;
+                            modalContent.appendChild(modalFooter);
+
                             options = {
                                 "backdrop": true,
                                 "keyboard": true,

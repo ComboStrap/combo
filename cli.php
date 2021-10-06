@@ -285,7 +285,7 @@ EOF;
             $id = $row['ID'];
             if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
-                Page::createPageFromId($id)->deleteInDb();
+                Page::createPageFromId($id)->getDatabasePage()->delete();
             }
         }
 

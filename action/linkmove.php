@@ -1,11 +1,9 @@
 <?php
 
-use ComboStrap\LinkUtility;
-use ComboStrap\PluginUtility;
-
-if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
-require_once(__DIR__ . '/../ComboStrap/LinkUtility.php');
+
+use ComboStrap\LinkUtility;
+
 
 /**
  * Class action_plugin_combo_move

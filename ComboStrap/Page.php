@@ -1863,11 +1863,18 @@ class Page extends DokuPath
 
     /**
      * Used when the page is moved to take the UUID of the source
-     * @param string $uuid
+     * @param string|null $uuid
+     * @return Page
      */
-    public function setUuid(string $uuid)
+    public function setUuid(?string $uuid): Page
     {
+        if ($uuid == null) {
+            LogUtility::msg("A uuid can not null when setting it (Page: $this)",LogUtility::LVL_MSG_ERROR);
+            return $this;
+        }
         $this->setMetadata(Page::UUID_ATTRIBUTE, $uuid);
+        return $this;
+
     }
 
 

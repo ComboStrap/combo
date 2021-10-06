@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\DatabasePage;
 use ComboStrap\File;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
@@ -26,8 +27,8 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         /**
          * To rewrite the page meta in the database
          */
-        $controller->register_hook('PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this, 'handle_rename_before', array());
-        $controller->register_hook('PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this, 'handle_rename_after', array());
+        $controller->register_hook('PLUGIN_MOVE_PAGE_RENAME', 'BEFORE', $this, 'handle_rename_before', array());
+
         /**
          * To rewrite the link
          */
@@ -59,31 +60,30 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             if ($ageInMinute > 5) {
                 $event->preventDefault();
                 LogUtility::msg("The move lockfile ($lockFile) exists and is older than 10 minutes (exactly $ageInMinute minutes), you should finish the first move or delete this file before a move. The Move was canceled.");
+                return;
             }
         }
 
-    }
-
-    /**
-     * Handle the rename of a page
-     * @param Doku_Event $event - https://www.dokuwiki.org/plugin:move#for_plugin_authors
-     * @param $params
-     *
-     */
-    function handle_rename_after(Doku_Event $event, $params)
-    {
-
         /**
+         * The move is done before otherwise the metadata have moved
+         * and the metadata uuid will then be null
+         *
          * $event->data
          * src_id ⇒ string – the original ID of the page
          * dst_id ⇒ string – the new ID of the page
          */
         $id = $event->data["src_id"];
         $targetId = $event->data["dst_id"];
-        $page = Page::createPageFromId($id);
-        $page->getDatabasePage()->moveTo($targetId);
+        try {
+            $page = Page::createPageFromId($id);
+            $page->getDatabasePage()->moveTo($targetId);
+        } catch (Exception $exception){
+            // We catch the errors if any to not stop the move
+            LogUtility::msg("An error occurred during the move replication to the database. Error message was: ".$exception->getMessage(),LogUtility::LVL_MSG_ERROR, DatabasePage::REPLICATION_CANONICAL);
+        }
 
     }
+
 
     /**
      * Handle the move of a page

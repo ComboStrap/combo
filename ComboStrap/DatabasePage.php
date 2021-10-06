@@ -38,7 +38,7 @@ class DatabasePage
      * For whatever reason, the row id is lowercase
      */
     const ROWID = "rowid";
-    const CANONICAL = "replication";
+    const REPLICATION_CANONICAL = "replication";
 
     /**
      * @var Page
@@ -102,7 +102,7 @@ class DatabasePage
             /**
              * The page may have moved
              */
-            if($page->exists()) {
+            if ($page->exists()) {
                 $result = $page->getDatabasePage()->replicate();
                 if ($result) {
                     LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
@@ -138,7 +138,7 @@ class DatabasePage
             return false;
         }
 
-        if(!$this->page->exists()){
+        if (!$this->page->exists()) {
             LogUtility::msg("You can't replicate the non-existing page ($this->page) on the file system");
             return false;
         }
@@ -305,12 +305,10 @@ class DatabasePage
                 break;
             case 1:
                 $id = $rows[0]["ID"];
-                if ($id === $page->getId()) {
-                    return intval($rows[0][self::ROWID]);
-                } else {
+                if ($id !== $page->getId()) {
                     LogUtility::msg("The page ($page) and the page ($id) have the same UUID ($uuid)", LogUtility::LVL_MSG_ERROR);
                 }
-                break;
+                return intval($rows[0][self::ROWID]);
             default:
                 $existingPages = implode(", ", $rows);
                 LogUtility::msg("The pages ($existingPages) have all the same UUID ($uuid)", LogUtility::LVL_MSG_ERROR);
@@ -331,11 +329,10 @@ class DatabasePage
                     break;
                 case 1:
                     $id = $rows[0]["ID"];
-                    if ($id === $page->getPath()) {
-                        return intval($rows[0][self::ROWID]);
-                    } else {
+                    if ($id !== $page->getId()) {
                         LogUtility::msg("The page ($page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
                     }
+                    return intval($rows[0][self::ROWID]);
                     break;
                 default:
                     $existingPages = [];
@@ -388,11 +385,10 @@ class DatabasePage
                 break;
             case 1:
                 $id = $rows[0]["ID"];
-                if ($id === $page->getId()) {
-                    return intval($rows[0][self::ROWID]);
-                } else {
+                if ($id !== $page->getId()) {
                     LogUtility::msg("The page ($page) and the page ($id) have the same path ($path)", LogUtility::LVL_MSG_ERROR);
                 }
+                return intval($rows[0][self::ROWID]);
                 break;
             default:
                 $existingPages = [];
@@ -680,8 +676,8 @@ EOF;
                 return false;
             }
             $countChanges = $this->sqlite->countChanges($res);
-            if($countChanges!==1){
-                LogUtility::msg("The database replication has not update exactly one record but ($countChanges) record", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            if ($countChanges !== 1) {
+                LogUtility::msg("The database replication has not update exactly one record but ($countChanges) record", LogUtility::LVL_MSG_ERROR, self::REPLICATION_CANONICAL);
             }
             $this->sqlite->res_close($res);
 
@@ -744,13 +740,14 @@ EOF;
 
     public function moveTo($targetId)
     {
-        if(!$this->exists()){
-            LogUtility::msg("The database page ($this) does not exist and cannot be moved to ($targetId)",LogUtility::LVL_MSG_ERROR);
+        if (!$this->exists()) {
+            LogUtility::msg("The database page ($this) does not exist and cannot be moved to ($targetId)", LogUtility::LVL_MSG_ERROR);
         }
+        $uuid = $this->page->getUuid();
         $attributes = [
             "id" => $targetId,
-            Page::PATH_ATTRIBUTE=>":${$targetId}",
-            Page::UUID_ATTRIBUTE=>$this->page->getUuid()
+            Page::PATH_ATTRIBUTE => ":${$targetId}",
+            Page::UUID_ATTRIBUTE => $uuid
         ];
 
         $this->upsertAttributes($attributes);
@@ -758,8 +755,12 @@ EOF;
          * The UUID is created on page creation
          * We need to update it on the target page
          */
+        if ($uuid === null) {
+            LogUtility::msg("During a move, the uuid of the page ($this) to ($targetId) was null. It should not be the case as this page exists. The UUID was not passed over to the target page.",LogUtility::LVL_MSG_ERROR,self::REPLICATION_CANONICAL);
+            return;
+        }
         $targetPage = Page::createPageFromId($targetId);
-        $targetPage->setUuid($this->page->getUuid());
+        $targetPage->setUuid($uuid);
 
     }
 

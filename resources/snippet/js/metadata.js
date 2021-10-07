@@ -48,7 +48,6 @@ window.addEventListener("DOMContentLoaded", function () {
                             modalBody.classList.add("modal-body");
                             let htmlFormElements = [];
                             let htmlValue;
-                            let disabled;
                             let label;
                             let inputType;
                             let metadataValue;
@@ -58,6 +57,8 @@ window.addEventListener("DOMContentLoaded", function () {
                             let metadataProperties;
                             let metadataMutable;
                             let metadataDefault;
+                            let metadataType;
+                            let disabled;
                             for (const metadata in jsonMetaDataObject) {
                                 if (jsonMetaDataObject.hasOwnProperty(metadata)) {
                                     let id = `colForm${metadata}`;
@@ -66,19 +67,24 @@ window.addEventListener("DOMContentLoaded", function () {
                                     metadataMutable = metadataProperties["mutable"];
                                     metadataDefault = metadataProperties["default"];
                                     metadataValues = metadataProperties["values"];
+                                    metadataType = metadataProperties["type"];
                                     htmlElement = "";
 
                                     /**
                                      * The label and the first cell
                                      * @type {string}
                                      */
-                                    label = metadata.replace("_", " ");
-                                    label = label.charAt(0).toUpperCase() + label.slice(1);
+                                    label = metadata
+                                        .split(/_|-/)
+                                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                        .join(" ");
+
 
                                     /**
                                      * The creation of the form element
                                      */
                                     if (metadataValues !== undefined) {
+
                                         /**
                                          * Select element
                                          * @type {string}
@@ -113,17 +119,32 @@ window.addEventListener("DOMContentLoaded", function () {
                                          * @type {string}
                                          */
                                         htmlElement = "input";
-                                        inputType = "text";
+                                        let htmlClass = "form-control";
+                                        let checked = "";
 
                                         /**
-                                         * Date ?
+                                         * Type ?
                                          */
-                                        if (metadata.slice(0, 4) === "date") {
-                                            if (metadataValue !== null) {
-                                                metadataValue = metadataValue.slice(0, 19);
-                                            }
-                                            inputType = "datetime-local";
-
+                                        switch (metadataType) {
+                                            case "datetime":
+                                                inputType = "datetime-local";
+                                                if (metadataValue !== null) {
+                                                    metadataValue = metadataValue.slice(0, 19);
+                                                }
+                                                break;
+                                            case "paragraph":
+                                                inputType = "textarea";
+                                                break;
+                                            case "boolean":
+                                                inputType = "checkbox";
+                                                htmlClass = "form-check-input";
+                                                if (metadataValue === true) {
+                                                    checked = "checked"
+                                                }
+                                                break;
+                                            case "line":
+                                            default:
+                                                inputType = "text";
                                         }
 
                                         if (metadataValue !== null) {
@@ -137,7 +158,7 @@ window.addEventListener("DOMContentLoaded", function () {
                                             disabled = "";
                                         }
 
-                                        htmlElement = `<input type="${inputType}" class="form-control" id="${id}" ${htmlValue} ${disabled}>`;
+                                        htmlElement = `<input type="${inputType}" class="${htmlClass}" id="${id}" ${htmlValue} ${checked} ${disabled}>`;
 
                                     }
 
@@ -162,8 +183,8 @@ window.addEventListener("DOMContentLoaded", function () {
                                 let htmlElement = htmlFormElement["element"];
                                 htmlForm += `
 <div class="row mb-3">
-    <label for="${id}" class="col-sm-2 col-form-label">${label}</label>
-    <div class="col-sm-10">${htmlElement}</div>
+    <label for="${id}" class="col-sm-4 col-form-label">${label}</label>
+    <div class="col-sm-8">${htmlElement}</div>
 </div>
 `;
                             }

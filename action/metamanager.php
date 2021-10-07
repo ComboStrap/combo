@@ -27,6 +27,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const DEFAULT_VALUE_ATTRIBUTE = "default";
     const MUTABLE_ATTRIBUTE = "mutable";
     const VALUES_ATTRIBUTE = "values";
+    const TYPE_ATTRIBUTE = "type";
+    const DATETIME_TYPE_VALUE = "datetime";
+    const PARAGRAPH_TYPE_VALUE = "paragraph";
+    const BOOLEAN_TYPE_VALUE = "boolean";
+    const LINE_TYPE_VALUE = "line";
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -178,11 +183,13 @@ EOF;
                 // Created Date
                 $dateCreated[self::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
                 $dateCreated[self::MUTABLE_ATTRIBUTE] = false;
+                $dateCreated[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $metas[Analytics::DATE_CREATED] = $dateCreated;
 
                 // Modified Date
                 $modifiedCreated[self::VALUE_ATTRIBUTE] = $page->getModifiedDateAsString();
                 $modifiedCreated[self::MUTABLE_ATTRIBUTE] = false;
+                $modifiedCreated[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $metas[Analytics::DATE_MODIFIED] = $modifiedCreated;
 
                 // Canonical
@@ -213,6 +220,7 @@ EOF;
                 $metasDescription[self::VALUE_ATTRIBUTE] = $page->getDescription();
                 $metasDescription[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDescriptionOrElseDokuWiki();
                 $metasDescription[self::MUTABLE_ATTRIBUTE] = true;
+                $metasDescription[self::TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
                 $metas[Analytics::DESCRIPTION] = $metasDescription;
 
                 // Page Type
@@ -226,16 +234,19 @@ EOF;
                 $publishedDate[self::VALUE_ATTRIBUTE] = $page->getPublishedTimeAsString();
                 $publishedDate[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
                 $publishedDate[self::MUTABLE_ATTRIBUTE] = true;
+                $publishedDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $metas[Publication::DATE_PUBLISHED] = $publishedDate;
 
                 // Start Date
                 $startDate[self::VALUE_ATTRIBUTE] = $page->getStartDate();
                 $startDate[self::MUTABLE_ATTRIBUTE] = true;
+                $startDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $metas[Analytics::DATE_START] = $startDate;
 
                 // End Date
                 $endDate[self::VALUE_ATTRIBUTE] = $page->getEndDate();
                 $endDate[self::MUTABLE_ATTRIBUTE] = true;
+                $endDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $metas[Analytics::DATE_END] = $endDate;
 
                 // Layout
@@ -249,12 +260,14 @@ EOF;
                 $isLowQualityPage[self::VALUE_ATTRIBUTE] = $page->getLowQualityIndicator();
                 $isLowQualityPage[self::MUTABLE_ATTRIBUTE] = true;
                 $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLowQualityIndicator();
+                $isLowQualityPage[self::TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
                 $metas[Page::LOW_QUALITY_PAGE_INDICATOR] = $isLowQualityPage;
 
                 // Quality Monitoring
                 $isQualityMonitoringOn[self::VALUE_ATTRIBUTE] = $page->isQualityMonitored();
                 $isQualityMonitoringOn[self::MUTABLE_ATTRIBUTE] = true;
                 $isQualityMonitoringOn[self::DEFAULT_VALUE_ATTRIBUTE] = !$this->getConf(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING);
+                $isQualityMonitoringOn[self::TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
                 $metas[action_plugin_combo_qualitymessage::DISABLE_INDICATOR] = $isQualityMonitoringOn;
 
 

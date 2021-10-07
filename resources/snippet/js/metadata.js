@@ -36,17 +36,20 @@ window.addEventListener("DOMContentLoaded", function () {
                             const modalDialog = document.createElement("div");
                             modalDialog.classList.add(
                                 "modal-dialog",
-                                "modal-dialog-centered",
                                 "modal-dialog-scrollable",
                                 "modal-fullscreen-md-down",
                                 "modal-lg");
+                            modalDialog.style.setProperty("margin", "5rem auto");
                             modalRoot.appendChild(modalDialog);
                             const modalContent = document.createElement("div");
                             modalContent.classList.add("modal-content");
                             modalDialog.appendChild(modalContent);
-                            const modalBody = document.createElement("div");
-                            modalBody.classList.add("modal-body");
-                            let htmlFormElements = [];
+
+                            /**
+                             * Parsing the data
+                             * before creating the header and body modal
+                             */
+                            let htmlFormElementsByTab = {};
                             let htmlValue;
                             let label;
                             let inputType;
@@ -59,6 +62,7 @@ window.addEventListener("DOMContentLoaded", function () {
                             let metadataDefault;
                             let metadataType;
                             let disabled;
+                            let metadataTab;
                             for (const metadata in jsonMetaDataObject) {
                                 if (jsonMetaDataObject.hasOwnProperty(metadata)) {
                                     let id = `colForm${metadata}`;
@@ -68,6 +72,7 @@ window.addEventListener("DOMContentLoaded", function () {
                                     metadataDefault = metadataProperties["default"];
                                     metadataValues = metadataProperties["values"];
                                     metadataType = metadataProperties["type"];
+                                    metadataTab = metadataProperties["tab"];
                                     htmlElement = "";
 
                                     /**
@@ -162,7 +167,10 @@ window.addEventListener("DOMContentLoaded", function () {
 
                                     }
 
-                                    htmlFormElements.push({
+                                    if (htmlFormElementsByTab[metadataTab] === undefined) {
+                                        htmlFormElementsByTab[metadataTab] = [];
+                                    }
+                                    htmlFormElementsByTab[metadataTab].push({
                                             "id": id,
                                             "label": label,
                                             "element": htmlElement
@@ -171,26 +179,85 @@ window.addEventListener("DOMContentLoaded", function () {
 
                                 }
                             }
+
+                            /**
+                             * Creating the header with the tab
+                             * @type {HTMLDivElement}
+                             */
+                            const modalHeader = document.createElement("div");
+                            modalHeader.classList.add("modal-header")
+                            let htmlHeader = `
+<h5 class="modal-title">Modal title</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+`
+                            modalHeader.innerHTML = htmlHeader;
+                            modalContent.appendChild(modalHeader);
+
+                            /**
+                             * Creating the tabs
+                             */
+                            let htmlTabNavs = '<ul class="nav nav-tabs mb-3">';
+                            let activeClass;
+                            let ariaSelected;
+                            this.getTabPaneId = function (tab) {
+                                return `combo-metadata-tab-pane-${tab}`;
+                            }
+                            this.getTabNavId = function (tab) {
+                                return `combo-metadata-tab-nav-${tab}`;
+                            }
+                            for (let tab in htmlFormElementsByTab) {
+                                if (tab === "page") {
+                                    activeClass = "active";
+                                    ariaSelected = "true";
+                                } else {
+                                    activeClass = "";
+                                    ariaSelected = "false";
+                                }
+                                let tabPanId = this.getTabPaneId(tab);
+                                let tabNavId = this.getTabNavId(tab);
+                                htmlTabNavs += `
+<li class="nav-item">
+    <button class="nav-link ${activeClass}" id="${tabNavId}" type="button" role="tab" aria-selected="${ariaSelected}" aria-controls="${tabPanId}" data-bs-toggle="tab" data-bs-target="#${tabPanId}">${tab}</button>
+</li>`
+                            }
+                            htmlTabNavs += '</ul>';
+
+
                             /**
                              * Creating the form
-                             * @type {string}
                              */
-                            let formId = call + id;
-                            let htmlForm = `<form id="${formId}">`;
-                            for (let htmlFormElement of htmlFormElements) {
-                                let id = htmlFormElement["id"];
-                                let label = htmlFormElement["label"];
-                                let htmlElement = htmlFormElement["element"];
-                                htmlForm += `
+                            const modalBody = document.createElement("div");
+                            modalBody.classList.add("modal-body");
+                            modalContent.appendChild(modalBody);
+
+
+                            let htmlTabPans = "<div class=\"tab-content\">";
+                            for (let tab in htmlFormElementsByTab) {
+                                let tabPaneId = this.getTabPaneId(tab);
+                                let tabNavId = this.getTabNavId(tab);
+                                if(tab==="page"){
+                                    activeClass = "active";
+                                } else {
+                                    activeClass = "";
+                                }
+                                htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
+                                for (let htmlFormElement of htmlFormElementsByTab[tab]) {
+                                    let id = htmlFormElement["id"];
+                                    let label = htmlFormElement["label"];
+                                    let htmlElement = htmlFormElement["element"];
+                                    htmlTabPans += `
 <div class="row mb-3">
     <label for="${id}" class="col-sm-4 col-form-label">${label}</label>
     <div class="col-sm-8">${htmlElement}</div>
 </div>
 `;
+                                }
+                                htmlTabPans += "</div>"
                             }
-                            htmlForm += "</form>"
-                            modalBody.innerHTML = htmlForm;
-                            modalContent.appendChild(modalBody);
+                            htmlTabPans += "</div>";
+
+                            let formId = call + id;
+                            modalBody.innerHTML = `<form id="${formId}">${htmlTabNavs} ${htmlTabPans} </form>`;
 
                             const modalFooter = document.createElement("div");
                             modalFooter.classList.add("modal-footer");

@@ -27,11 +27,13 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const DEFAULT_VALUE_ATTRIBUTE = "default";
     const MUTABLE_ATTRIBUTE = "mutable";
     const VALUES_ATTRIBUTE = "values";
-    const TYPE_ATTRIBUTE = "type";
+    const TYPE_ATTRIBUTE = self::TAB_TYPE_VALUE;
     const DATETIME_TYPE_VALUE = "datetime";
     const PARAGRAPH_TYPE_VALUE = "paragraph";
     const BOOLEAN_TYPE_VALUE = "boolean";
-    const LINE_TYPE_VALUE = "line";
+    const TAB_ATTRIBUTE = "tab";
+    const TAB_TYPE_VALUE = "type";
+    const TAB_QUALITY_VALUE = "quality";
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -170,50 +172,33 @@ EOF;
                 header("Status: 200");
                 $metas = [];
 
-                // Path
-                $metasPath[self::VALUE_ATTRIBUTE] = $page->getPath();
-                $metasPath[self::MUTABLE_ATTRIBUTE] = false;
-                $metas[Analytics::PATH] = $metasPath;
-
-                // UUID
-                $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
-                $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
-                $metas[Page::UUID_ATTRIBUTE] = $metasUuid;
-
-                // Created Date
-                $dateCreated[self::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
-                $dateCreated[self::MUTABLE_ATTRIBUTE] = false;
-                $dateCreated[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $metas[Analytics::DATE_CREATED] = $dateCreated;
-
-                // Modified Date
-                $modifiedCreated[self::VALUE_ATTRIBUTE] = $page->getModifiedDateAsString();
-                $modifiedCreated[self::MUTABLE_ATTRIBUTE] = false;
-                $modifiedCreated[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $metas[Analytics::DATE_MODIFIED] = $modifiedCreated;
 
                 // Canonical
                 $metasCanonical[self::VALUE_ATTRIBUTE] = $page->getCanonical();
                 $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
                 $metasCanonical[self::MUTABLE_ATTRIBUTE] = true;
+                $metasCanonical[self::TAB_ATTRIBUTE] = "page";
                 $metas[Analytics::CANONICAL] = $metasCanonical;
 
                 // Name
                 $metasName[self::VALUE_ATTRIBUTE] = $page->getPageName();
                 $metasName[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultPageName();
                 $metasName[self::MUTABLE_ATTRIBUTE] = true;
+                $metasName[self::TAB_ATTRIBUTE] = "page";
                 $metas[Analytics::NAME] = $metasName;
 
                 // Title
                 $metasTitle[self::VALUE_ATTRIBUTE] = $page->getTitle();
                 $metasTitle[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultTitle();
                 $metasTitle[self::MUTABLE_ATTRIBUTE] = true;
+                $metasTitle[self::TAB_ATTRIBUTE] = "page";
                 $metas[Analytics::TITLE] = $metasTitle;
 
                 // H1
                 $metasH1Value[self::VALUE_ATTRIBUTE] = $page->getH1();
                 $metasH1Value[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultH1();
                 $metasH1Value[self::MUTABLE_ATTRIBUTE] = true;
+                $metasH1Value[self::TAB_ATTRIBUTE] = "page";
                 $metas[Analytics::H1] = $metasH1Value;
 
                 // Description
@@ -221,13 +206,45 @@ EOF;
                 $metasDescription[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDescriptionOrElseDokuWiki();
                 $metasDescription[self::MUTABLE_ATTRIBUTE] = true;
                 $metasDescription[self::TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
+                $metasDescription[self::TAB_ATTRIBUTE] = "page";
                 $metas[Analytics::DESCRIPTION] = $metasDescription;
+
+                // Layout
+                $layout[self::VALUE_ATTRIBUTE] = $page->getLayout();
+                $layout[self::MUTABLE_ATTRIBUTE] = true;
+                $layout[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
+                $layout[self::VALUES_ATTRIBUTE] = $page->getLayoutValues();
+                $layout[self::TAB_ATTRIBUTE] = "page";
+                $metas[Page::LAYOUT_PROPERTY] = $layout;
+
+
+                // Modified Date
+                $modifiedCreated[self::VALUE_ATTRIBUTE] = $page->getModifiedDateAsString();
+                $modifiedCreated[self::MUTABLE_ATTRIBUTE] = false;
+                $modifiedCreated[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $modifiedCreated[self::TAB_ATTRIBUTE] = "page";
+                $metas[Analytics::DATE_MODIFIED] = $modifiedCreated;
+
+                // Created Date
+                $dateCreated[self::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
+                $dateCreated[self::MUTABLE_ATTRIBUTE] = false;
+                $dateCreated[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $dateCreated[self::TAB_ATTRIBUTE] = "page";
+                $metas[Analytics::DATE_CREATED] = $dateCreated;
+
+
+                // UUID
+                $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
+                $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
+                $metasUuid[self::TAB_ATTRIBUTE] = "page";
+                $metas[Page::UUID_ATTRIBUTE] = $metasUuid;
 
                 // Page Type
                 $metasPageType[self::VALUE_ATTRIBUTE] = $page->getType();
                 $metasPageType[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultType();
                 $metasPageType[self::MUTABLE_ATTRIBUTE] = true;
                 $metasPageType[self::VALUES_ATTRIBUTE] = $page->getTypeValues();
+                $metasPageType[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
                 $metas[Page::TYPE_META_PROPERTY] = $metasPageType;
 
                 // Published Date
@@ -235,32 +252,30 @@ EOF;
                 $publishedDate[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
                 $publishedDate[self::MUTABLE_ATTRIBUTE] = true;
                 $publishedDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $publishedDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
                 $metas[Publication::DATE_PUBLISHED] = $publishedDate;
 
                 // Start Date
                 $startDate[self::VALUE_ATTRIBUTE] = $page->getStartDate();
                 $startDate[self::MUTABLE_ATTRIBUTE] = true;
                 $startDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $startDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
                 $metas[Analytics::DATE_START] = $startDate;
 
                 // End Date
                 $endDate[self::VALUE_ATTRIBUTE] = $page->getEndDate();
                 $endDate[self::MUTABLE_ATTRIBUTE] = true;
                 $endDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $endDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
                 $metas[Analytics::DATE_END] = $endDate;
 
-                // Layout
-                $layout[self::VALUE_ATTRIBUTE] = $page->getLayout();
-                $layout[self::MUTABLE_ATTRIBUTE] = true;
-                $layout[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
-                $layout[self::VALUES_ATTRIBUTE] = $page->getLayoutValues();
-                $metas[Page::LAYOUT_PROPERTY] = $layout;
 
                 // Is low quality page
                 $isLowQualityPage[self::VALUE_ATTRIBUTE] = $page->getLowQualityIndicator();
                 $isLowQualityPage[self::MUTABLE_ATTRIBUTE] = true;
                 $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLowQualityIndicator();
                 $isLowQualityPage[self::TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
+                $isLowQualityPage[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
                 $metas[Page::LOW_QUALITY_PAGE_INDICATOR] = $isLowQualityPage;
 
                 // Quality Monitoring
@@ -268,6 +283,7 @@ EOF;
                 $isQualityMonitoringOn[self::MUTABLE_ATTRIBUTE] = true;
                 $isQualityMonitoringOn[self::DEFAULT_VALUE_ATTRIBUTE] = !$this->getConf(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING);
                 $isQualityMonitoringOn[self::TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
+                $isQualityMonitoringOn[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
                 $metas[action_plugin_combo_qualitymessage::DISABLE_INDICATOR] = $isQualityMonitoringOn;
 
 

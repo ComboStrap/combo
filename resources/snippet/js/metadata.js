@@ -46,21 +46,27 @@ window.addEventListener("DOMContentLoaded", function () {
                             modalDialog.appendChild(modalContent);
                             const modalBody = document.createElement("div");
                             modalBody.classList.add("modal-body");
-                            let formId = call + id;
-                            let htmlForm = `<form id="${formId}">`;
+                            let htmlFormElements = [];
                             let htmlValue;
-                            let unModifiableMetas = ["path", "date_created", "date_modified", "uuid"];
                             let disabled;
                             let label;
                             let inputType;
                             let metadataValue;
                             let htmlElement;
-                            let selectValues = [];
-                            let defaultGeneratedValue;
+                            let metadataValues = [];
+                            let defaultValueHtml;
+                            let metadataProperties;
+                            let metadataMutable;
+                            let metadataDefault;
                             for (const metadata in jsonMetaDataObject) {
                                 if (jsonMetaDataObject.hasOwnProperty(metadata)) {
                                     let id = `colForm${metadata}`;
-                                    metadataValue = jsonMetaDataObject[metadata];
+                                    metadataProperties = jsonMetaDataObject[metadata];
+                                    metadataValue = metadataProperties["value"];
+                                    metadataMutable = metadataProperties["mutable"];
+                                    metadataDefault = metadataProperties["default"];
+                                    metadataValues = metadataProperties["values"];
+                                    htmlElement = "";
 
                                     /**
                                      * The label and the first cell
@@ -68,80 +74,98 @@ window.addEventListener("DOMContentLoaded", function () {
                                      */
                                     label = metadata.replace("_", " ");
                                     label = label.charAt(0).toUpperCase() + label.slice(1);
-                                    htmlForm += `<div class="row mb-3">
-                                        <label for="${id}" class="col-sm-2 col-form-label">${label}</label>
-                                        <div class="col-sm-10">`;
+
                                     /**
                                      * The creation of the form element
                                      */
-                                    switch (metadata) {
-                                        case "type":
-                                            /**
-                                             * Select element
-                                             * @type {string}
-                                             */
-                                            htmlElement = "select";
-                                            selectValues = ["default", "article", "news", "blog", "website", "event", "home"];
-                                            defaultGeneratedValue = "home";
+                                    if (metadataValues !== undefined) {
+                                        /**
+                                         * Select element
+                                         * @type {string}
+                                         */
+                                        htmlElement = "select";
+                                        defaultValueHtml = "";
+                                        if (metadataDefault !== undefined) {
+                                            defaultValueHtml = ` (${metadataDefault})`;
+                                        }
 
-                                            htmlForm += `<select class="form-select" aria-label="${label}">`;
-                                            let selected = "";
-                                            if(metadataValue===null){
+                                        htmlElement = `<select class="form-select" aria-label="${label}">`;
+                                        let selected = "";
+                                        if (metadataValue === null) {
+                                            selected = "selected";
+                                        }
+                                        htmlElement += `<option ${selected}>Default${defaultValueHtml}</option>`;
+                                        for (let selectValue of metadataValues) {
+                                            if (selectValue === metadataValue) {
                                                 selected = "selected";
+                                            } else {
+                                                selected = "";
                                             }
-                                            htmlForm +=`<option ${selected}>Default (${defaultGeneratedValue})</option>`;
-                                            for (let selectedValueIndex in selectValues) {
-                                                let selectValue = selectValues[selectedValueIndex];
-                                                if(selectValue===metadataValue){
-                                                    selected = "selected";
-                                                } else {
-                                                    selected = "";
-                                                }
-                                                htmlForm +=`<option value="${selectValue}" ${selected}>${selectValue}</option>`;
-                                            }
-                                            htmlForm +=`</select>`;
-                                            break;
-                                        default:
-                                            /**
-                                             * Input Element
-                                             * @type {string}
-                                             */
-                                            htmlElement = "input";
-                                            inputType = "text";
+                                            htmlElement += `<option value="${selectValue}" ${selected}>${selectValue}</option>`;
+                                        }
+                                        htmlElement += `</select>`;
 
-                                            /**
-                                             * Date ?
-                                             */
-                                            if (metadata.slice(0, 4) === "date") {
-                                                if (metadataValue !== null) {
-                                                    metadataValue = metadataValue.slice(0, 19);
-                                                }
-                                                inputType = "datetime-local";
 
-                                            }
+                                    } else {
 
+                                        /**
+                                         * Input Element
+                                         * @type {string}
+                                         */
+                                        htmlElement = "input";
+                                        inputType = "text";
+
+                                        /**
+                                         * Date ?
+                                         */
+                                        if (metadata.slice(0, 4) === "date") {
                                             if (metadataValue !== null) {
-                                                htmlValue = `value="${metadataValue}"`;
-                                            } else {
-                                                htmlValue = `placeholder="${metadata}"`;
+                                                metadataValue = metadataValue.slice(0, 19);
                                             }
-                                            if (unModifiableMetas.includes(metadata)) {
-                                                disabled = "disabled";
-                                            } else {
-                                                disabled = "";
-                                            }
+                                            inputType = "datetime-local";
 
-                                            htmlForm += `<input type="${inputType}" class="form-control" id="${id}" ${htmlValue} ${disabled}>`;
+                                        }
 
-                                            break;
+                                        if (metadataValue !== null) {
+                                            htmlValue = `value="${metadataValue}"`;
+                                        } else {
+                                            htmlValue = `placeholder="${metadataDefault}"`;
+                                        }
+                                        if (metadataMutable !== undefined && metadataMutable === false) {
+                                            disabled = "disabled";
+                                        } else {
+                                            disabled = "";
+                                        }
+
+                                        htmlElement = `<input type="${inputType}" class="form-control" id="${id}" ${htmlValue} ${disabled}>`;
+
                                     }
-                                    /**
-                                     * The cloture of the cell and row
-                                     * for the actual element
-                                     * @type {string}
-                                     */
-                                    htmlForm += `</div></div>`;
+
+                                    htmlFormElements.push({
+                                            "id": id,
+                                            "label": label,
+                                            "element": htmlElement
+                                        }
+                                    );
+
                                 }
+                            }
+                            /**
+                             * Creating the form
+                             * @type {string}
+                             */
+                            let formId = call + id;
+                            let htmlForm = `<form id="${formId}">`;
+                            for (let htmlFormElement of htmlFormElements) {
+                                let id = htmlFormElement["id"];
+                                let label = htmlFormElement["label"];
+                                let htmlElement = htmlFormElement["element"];
+                                htmlForm += `
+<div class="row mb-3">
+    <label for="${id}" class="col-sm-2 col-form-label">${label}</label>
+    <div class="col-sm-10">${htmlElement}</div>
+</div>
+`;
                             }
                             htmlForm += "</form>"
                             modalBody.innerHTML = htmlForm;

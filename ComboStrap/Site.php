@@ -296,5 +296,10 @@ class Site
         return $conf['datadir'];
     }
 
+    public static function isLowQualityProtectionEnable(): bool
+    {
+        return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
+    }
+
 
 }

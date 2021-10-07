@@ -492,24 +492,20 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             }
         }
         /**
-         * If the low level is not set manually
+         * Low Level
          */
-        $lowLevel = $this->page->getLowQualityIndicator();
-        if (empty($lowLevel)) {
-            $lowLevel = false;
-            $brokenRulesCount = sizeof($mandatoryRulesBroken);
-            if ($brokenRulesCount > 0) {
-                $lowLevel = true;
-                $quality["message"] = "$brokenRulesCount mandatory rules broken.";
-            } else {
-                $quality["message"] = "No mandatory rules broken";
-            }
-        }
-        if (!$this->page->isSlot()) {
-            $this->page->setLowQualityIndicator($lowLevel);
+        $lowLevel = false;
+        $brokenRulesCount = sizeof($mandatoryRulesBroken);
+        if ($brokenRulesCount > 0) {
+            $lowLevel = true;
+            $quality["message"] = "$brokenRulesCount mandatory rules broken.";
         } else {
-            $this->page->setLowQualityIndicator(false);
+            $quality["message"] = "No mandatory rules broken";
         }
+        if ($this->page->isSlot()) {
+            $lowLevel = false;
+        }
+        $this->page->setCalculatedLowQualityIndicator($lowLevel);
 
         /**
          * Building the quality object in order

@@ -193,19 +193,19 @@ EOF;
 
                 // Name
                 $metasName[self::VALUE_ATTRIBUTE] = $page->getPageName();
-                $metasName[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getPageNameNotEmpty();
+                $metasName[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultPageName();
                 $metasName[self::MUTABLE_ATTRIBUTE] = true;
                 $metas[Analytics::NAME] = $metasName;
 
                 // Title
                 $metasTitle[self::VALUE_ATTRIBUTE] = $page->getTitle();
-                $metasTitle[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getTitleNotEmpty();
+                $metasTitle[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultTitle();
                 $metasTitle[self::MUTABLE_ATTRIBUTE] = true;
                 $metas[Analytics::TITLE] = $metasTitle;
 
                 // H1
                 $metasH1Value[self::VALUE_ATTRIBUTE] = $page->getH1();
-                $metasH1Value[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getH1NotEmpty();
+                $metasH1Value[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultH1();
                 $metasH1Value[self::MUTABLE_ATTRIBUTE] = true;
                 $metas[Analytics::H1] = $metasH1Value;
 
@@ -217,9 +217,9 @@ EOF;
 
                 // Page Type
                 $metasPageType[self::VALUE_ATTRIBUTE] = $page->getType();
-                $metasPageType[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getTypeNotEmpty();
+                $metasPageType[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultType();
                 $metasPageType[self::MUTABLE_ATTRIBUTE] = true;
-                $metasPageType[self::VALUES_ATTRIBUTE] = ["article", "news", "blog", "website", "event", "home"];
+                $metasPageType[self::VALUES_ATTRIBUTE] = $page->getTypeValues();
                 $metas[Page::TYPE_META_PROPERTY] = $metasPageType;
 
                 // Published Date
@@ -241,14 +241,14 @@ EOF;
                 // Layout
                 $layout[self::VALUE_ATTRIBUTE] = $page->getLayout();
                 $layout[self::MUTABLE_ATTRIBUTE] = true;
-                $layout[self::DEFAULT_VALUE_ATTRIBUTE] = "holy";
-                $layout[self::VALUES_ATTRIBUTE] = ["holy", "median", "landing"];
+                $layout[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
+                $layout[self::VALUES_ATTRIBUTE] = $page->getLayoutValues();
                 $metas[Page::LAYOUT_PROPERTY] = $layout;
 
                 // Is low quality page
                 $isLowQualityPage[self::VALUE_ATTRIBUTE] = $page->getLowQualityIndicator();
                 $isLowQualityPage[self::MUTABLE_ATTRIBUTE] = true;
-                $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getAnalytics()->getData()->toArray()[Analytics::QUALITY][Analytics::LOW];
+                $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLowQualityIndicator();
                 $metas[Page::LOW_QUALITY_PAGE_INDICATOR] = $isLowQualityPage;
 
                 // Quality Monitoring

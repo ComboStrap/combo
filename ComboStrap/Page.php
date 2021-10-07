@@ -91,6 +91,12 @@ class Page extends DokuPath
     const UUID4_PATTERN = "/^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i";
 
 
+    public const HOLY_LAYOUT_VALUE = "holy";
+    public const LANDING_LAYOUT_VALUE = "landing";
+    public const MEDIAN_LAYOUT_VALUE = "median";
+    const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
+
+
     private $canonical;
 
 
@@ -481,7 +487,7 @@ class Page extends DokuPath
     {
 
         $canonical = $this->getCanonical();
-        if(!empty($canonical)){
+        if (!empty($canonical)) {
             return $canonical;
         } else {
             return $this->getDefaultCanonical();
@@ -494,7 +500,7 @@ class Page extends DokuPath
      * @return array|array[]
      */
     public
-    function getMetadatas()
+    function getMetadatas(): array
     {
 
         /**
@@ -504,17 +510,17 @@ class Page extends DokuPath
          * This is not a {@link Page::renderMetadata()}
          */
         if ($this->metadatas == null) {
-            $this->metadatas = $this->updateMemoryMetaFromDisk();
+            $this->updateMemoryMetaFromDisk();
         }
         return $this->metadatas;
 
     }
 
     public
-    function updateMemoryMetaFromDisk()
+    function updateMemoryMetaFromDisk(): Page
     {
         $this->metadatas = p_read_metadata($this->getId());
-        return $this->metadatas;
+        return $this;
     }
 
     /**
@@ -585,35 +591,13 @@ class Page extends DokuPath
 
     /**
      * Set the page quality
-     * @param boolean $newIndicator true if this is a low quality page rank false otherwise
+     * @param boolean $value true if this is a low quality page rank false otherwise
      */
 
     public
-    function setLowQualityIndicator(bool $newIndicator)
+    function setLowQualityIndicator(bool $value): Page
     {
-        $actualIndicator = $this->getLowQualityIndicator();
-        if ($actualIndicator === null || $actualIndicator !== $newIndicator) {
-
-            /**
-             * Don't change the type of the value to a string
-             * otherwise dokuwiki will not see a change
-             * between true and a string and will not persist the value
-             */
-            p_set_metadata($this->getId(), array(self::LOW_QUALITY_PAGE_INDICATOR => $newIndicator));
-
-            /**
-             * Delete the cache to rewrite the links
-             * if the protection is on
-             */
-            if (PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1) {
-                foreach ($this->getBacklinks() as $backlink) {
-                    $backlink->deleteCache("xhtml");
-                }
-            }
-
-        }
-
-
+        return $this->setQualityIndicator(self::LOW_QUALITY_PAGE_INDICATOR, $value);
     }
 
     /**
@@ -646,29 +630,19 @@ class Page extends DokuPath
 
         $lowQualityIndicator = $this->getLowQualityIndicator();
         if ($lowQualityIndicator == null) {
-            /**
-             * By default, if a file has not been through
-             * a {@link \renderer_plugin_combo_analytics}
-             * analysis, this is not a low page
-             */
-            return false;
-        } else {
-            return $lowQualityIndicator === true;
+            return $this->getDefaultLowQualityIndicator() === true;
         }
+        return $lowQualityIndicator === true;
+
 
     }
 
 
     public
-    function getLowQualityIndicator()
+    function getLowQualityIndicator(): ?bool
     {
 
-        $low = p_get_metadata($this->getId(), self::LOW_QUALITY_PAGE_INDICATOR, METADATA_DONT_RENDER);
-        if ($low === null) {
-            return null;
-        } else {
-            return filter_var($low, FILTER_VALIDATE_BOOLEAN);
-        }
+        return $this->getMetadataAsBoolean(self::LOW_QUALITY_PAGE_INDICATOR);
 
     }
 
@@ -677,7 +651,7 @@ class Page extends DokuPath
     function getH1()
     {
 
-        $heading = p_get_metadata($this->getId(), Analytics::H1, METADATA_DONT_RENDER);
+        $heading = $this->getMetadata(Analytics::H1);
         if (!blank($heading)) {
             return $heading;
         } else {
@@ -693,13 +667,7 @@ class Page extends DokuPath
     function getTitle()
     {
 
-        $id = $this->getId();
-        $title = p_get_metadata($id, Analytics::TITLE, METADATA_RENDER_USING_SIMPLE_CACHE);
-        if (!blank($title)) {
-            return $title;
-        } else {
-            return $id;
-        }
+        return $this->getMetadata(Analytics::TITLE);
 
     }
 
@@ -710,11 +678,11 @@ class Page extends DokuPath
     public
     function isQualityMonitored()
     {
-        $dynamicQualityIndicator = p_get_metadata($this->getId(), action_plugin_combo_qualitymessage::DISABLE_INDICATOR, METADATA_RENDER_USING_SIMPLE_CACHE);
+        $dynamicQualityIndicator = $this->getMetadataAsBoolean(action_plugin_combo_qualitymessage::DISABLE_INDICATOR);
         if ($dynamicQualityIndicator === null) {
             return true;
         } else {
-            return filter_var($dynamicQualityIndicator, FILTER_VALIDATE_BOOLEAN);
+            return $dynamicQualityIndicator;
         }
     }
 
@@ -722,17 +690,14 @@ class Page extends DokuPath
      * @return string|null the title, or h1 if empty or the id if empty
      */
     public
-    function getTitleNotEmpty()
+    function getTitleNotEmpty(): ?string
     {
         $pageTitle = $this->getTitle();
         if ($pageTitle == null) {
-            if (!empty($this->getH1())) {
-                $pageTitle = $this->getH1();
-            } else {
-                $pageTitle = $this->getId();
-            }
+            return $this->getDefaultTitle();
+        } else {
+            return $pageTitle;
         }
-        return $pageTitle;
 
     }
 
@@ -742,13 +707,10 @@ class Page extends DokuPath
 
         $h1Title = $this->getH1();
         if ($h1Title == null) {
-            if (!empty($this->getTitle())) {
-                $h1Title = $this->getTitle();
-            } else {
-                $h1Title = $this->getPageNameNotEmpty();
-            }
+            return $this->getDefaultH1();
+        } else {
+            return $h1Title;
         }
-        return $h1Title;
 
     }
 
@@ -818,18 +780,7 @@ class Page extends DokuPath
         if (isset($type)) {
             return $type;
         } else {
-            if ($this->isRootHomePage()) {
-                return self::WEBSITE_TYPE;
-            } else if ($this->isHomePage()) {
-                return self::HOME_TYPE;
-            } else {
-                $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE);
-                if (!empty($defaultPageTypeConf)) {
-                    return $defaultPageTypeConf;
-                } else {
-                    return null;
-                }
-            }
+            return $this->getDefaultType();
         }
     }
 
@@ -1525,7 +1476,7 @@ class Page extends DokuPath
         if (!blank($name)) {
             return $name;
         } else {
-            return $this->getName();
+            return $this->getDefaultPageName();
         }
     }
 
@@ -1598,6 +1549,11 @@ class Page extends DokuPath
 
     public function setMetadata($key, $value)
     {
+        /**
+         * Don't change the type of the value to a string
+         * otherwise dokuwiki will not see a change
+         * between true and a string and will not persist the value
+         */
         p_set_metadata($this->getId(),
             [
                 $key => $value
@@ -1894,6 +1850,138 @@ class Page extends DokuPath
     public function getLayout()
     {
         return $this->getMetadata(Page::LAYOUT_PROPERTY);
+    }
+
+    public function getDefaultPageName(): string
+    {
+        $words = preg_split("/\s/", preg_replace("/-|_/", " ", $this->getName()));
+        $wordsUc = [];
+        foreach ($words as $word) {
+            $wordsUc[] = ucfirst($word);
+        }
+        return implode(" ", $wordsUc);
+    }
+
+    public function getDefaultTitle()
+    {
+        if (!empty($this->getH1())) {
+            return $this->getH1();
+        } else {
+            return $this->getPageNameNotEmpty();
+        }
+    }
+
+    public function getDefaultH1()
+    {
+        if (!empty($this->getTitle())) {
+            return $this->getTitle();
+        } else {
+            return $this->getPageNameNotEmpty();
+        }
+    }
+
+    public function getDefaultType()
+    {
+        if ($this->isRootHomePage()) {
+            return self::WEBSITE_TYPE;
+        } else if ($this->isHomePage()) {
+            return self::HOME_TYPE;
+        } else {
+            $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE);
+            if (!empty($defaultPageTypeConf)) {
+                return $defaultPageTypeConf;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public function getDefaultLayout(): string
+    {
+        return "holy";
+    }
+
+    public function getTypeValues(): array
+    {
+        return [Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE];
+    }
+
+    public function getLayoutValues(): array
+    {
+        return [Page::HOLY_LAYOUT_VALUE, Page::MEDIAN_LAYOUT_VALUE, Page::LANDING_LAYOUT_VALUE];
+    }
+
+    public function setCalculatedLowQualityIndicator($bool): Page
+    {
+        return $this->setQualityIndicator(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool);
+    }
+
+
+    public function getMetadataAsBoolean(string $key): ?bool
+    {
+        $value = $this->getMetadata($key);
+        if ($value !== null) {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        } else {
+            return null;
+        }
+
+    }
+
+    private function setQualityIndicator(string $lowQualityAttributeName, $value): Page
+    {
+        $actualValue = $this->getMetadataAsBoolean($lowQualityAttributeName);
+        if ($actualValue === null || $value !== $actualValue) {
+            $beforeLowQualityPage = $this->isLowQualityPage();
+            $this->setMetadata($lowQualityAttributeName, $value);
+            $afterLowQualityPage = $this->isLowQualityPage();
+            if ($beforeLowQualityPage !== $afterLowQualityPage) {
+                /**
+                 * Delete the cache to rewrite the links
+                 * if the protection is on
+                 */
+                if (Site::isLowQualityProtectionEnable()) {
+                    foreach ($this->getBacklinks() as $backlink) {
+                        $backlink->deleteXhtmlCache();
+                    }
+                }
+            }
+        }
+        return $this;
+    }
+
+    public function getCalculatedLowQualityIndicator()
+    {
+        $value = $this->getMetadataAsBoolean(self::LOW_QUALITY_INDICATOR_CALCULATED);
+        /**
+         * Migration code
+         * The indicator {@link Page::LOW_QUALITY_INDICATOR_CALCULATED} is new
+         * but if the analytics was done, we can get it
+         */
+        if ($value === null && $this->getAnalytics()->exists()) {
+            return $this->getAnalytics()->getData()->toArray()[Analytics::QUALITY][Analytics::LOW];
+        }
+        return $value;
+    }
+
+    public function getDefaultLowQualityIndicator()
+    {
+        /**
+         * By default, if a file has not been through
+         * a {@link \renderer_plugin_combo_analytics}
+         * analysis, this is a low page with protection enable
+         * or not if not
+         */
+        $calculated = $this->getCalculatedLowQualityIndicator();
+        if ($calculated === null) {
+            if (Site::isLowQualityProtectionEnable()) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return $calculated;
+
     }
 
 

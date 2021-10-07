@@ -142,11 +142,24 @@ class Analytics
 
     /**
      * Return the JSON analytics data
+     *
      * @return Json
      */
     public function getData(): Json
     {
-        return $this->render();
+        /**
+         * Don't render if the analytics file exists
+         * If the data is stale, the render function may create a cycle
+         * (for instance, the {@link Page::getCalculatedLowQualityIndicator()}
+         * used this data but the {@link renderer_plugin_combo_analytics}
+         * will set it {@link Page::setCalculatedLowQualityIndicator()}
+         * creating a loop
+         */
+        if(!$this->exists()){
+            return $this->render();
+        } else {
+            return Json::createFromString($this->cacheFile->getContent());
+        }
     }
 
     public function delete()
@@ -161,6 +174,11 @@ class Analytics
         } else {
             return null;
         }
+    }
+
+    public function exists()
+    {
+        return $this->cacheFile->exists();
     }
 
 

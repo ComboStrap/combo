@@ -2,6 +2,7 @@
 
 use ComboStrap\Analytics;
 use ComboStrap\LogUtility;
+use ComboStrap\LowQualityPage;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
@@ -28,7 +29,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const DEFAULT_VALUE_ATTRIBUTE = "default";
     const MUTABLE_ATTRIBUTE = "mutable";
     const VALUES_ATTRIBUTE = "values";
-    const TYPE_ATTRIBUTE = self::TAB_TYPE_VALUE;
+    const DATA_TYPE_ATTRIBUTE = "type"; //data type
     const DATETIME_TYPE_VALUE = "datetime";
     const PARAGRAPH_TYPE_VALUE = "paragraph";
     const BOOLEAN_TYPE_VALUE = "boolean";
@@ -247,7 +248,7 @@ EOF;
                 $metasDescription[self::VALUE_ATTRIBUTE] = $page->getDescription();
                 $metasDescription[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDescriptionOrElseDokuWiki();
                 $metasDescription[self::MUTABLE_ATTRIBUTE] = true;
-                $metasDescription[self::TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
+                $metasDescription[self::DATA_TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
                 $metasDescription[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
                 $metasDescription[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Analytics::DESCRIPTION,
@@ -275,7 +276,7 @@ EOF;
                 // Modified Date
                 $modifiedDate[self::VALUE_ATTRIBUTE] = $page->getModifiedDateAsString();
                 $modifiedDate[self::MUTABLE_ATTRIBUTE] = false;
-                $modifiedDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $modifiedDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $modifiedDate[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
                 $modifiedDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     self::METADATA_CANONICAL,
@@ -288,7 +289,7 @@ EOF;
                 // Created Date
                 $dateCreated[self::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
                 $dateCreated[self::MUTABLE_ATTRIBUTE] = false;
-                $dateCreated[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $dateCreated[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $dateCreated[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
                 $dateCreated[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     self::METADATA_CANONICAL,
@@ -341,7 +342,7 @@ EOF;
                 $publishedDate[self::VALUE_ATTRIBUTE] = $page->getPublishedTimeAsString();
                 $publishedDate[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
                 $publishedDate[self::MUTABLE_ATTRIBUTE] = true;
-                $publishedDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $publishedDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $publishedDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
                 $publishedDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     self::PAGE_TYPE_CANONICAL,
@@ -354,15 +355,27 @@ EOF;
                 // Start Date
                 $startDate[self::VALUE_ATTRIBUTE] = $page->getStartDate();
                 $startDate[self::MUTABLE_ATTRIBUTE] = true;
-                $startDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $startDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $startDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $startDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    Page::EVENT_TYPE,
+                    "Start Date",
+                    false,
+                    "The start date of an event"
+                );
                 $metas[Analytics::DATE_START] = $startDate;
 
                 // End Date
                 $endDate[self::VALUE_ATTRIBUTE] = $page->getEndDate();
                 $endDate[self::MUTABLE_ATTRIBUTE] = true;
-                $endDate[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $endDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $endDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $endDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    Page::EVENT_TYPE,
+                    "End Date",
+                    false,
+                    "The end date of an event"
+                );
                 $metas[Analytics::DATE_END] = $endDate;
 
 
@@ -370,16 +383,28 @@ EOF;
                 $isLowQualityPage[self::VALUE_ATTRIBUTE] = $page->getLowQualityIndicator();
                 $isLowQualityPage[self::MUTABLE_ATTRIBUTE] = true;
                 $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLowQualityIndicator();
-                $isLowQualityPage[self::TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
+                $isLowQualityPage[self::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
                 $isLowQualityPage[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
+                $isLowQualityPage[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    LowQualityPage::LOW_QUALITY_PAGE_CANONICAL,
+                    "Low Quality Page Indicator",
+                    false,
+                    "If checked, the page will be tagged as a low quality page"
+                );
                 $metas[Page::LOW_QUALITY_PAGE_INDICATOR] = $isLowQualityPage;
 
                 // Quality Monitoring
                 $isQualityMonitoringOn[self::VALUE_ATTRIBUTE] = $page->isQualityMonitored();
                 $isQualityMonitoringOn[self::MUTABLE_ATTRIBUTE] = true;
                 $isQualityMonitoringOn[self::DEFAULT_VALUE_ATTRIBUTE] = !$this->getConf(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING);
-                $isQualityMonitoringOn[self::TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
+                $isQualityMonitoringOn[self::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
                 $isQualityMonitoringOn[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
+                $isQualityMonitoringOn[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    "quality:dynamic_monitoring",
+                    "Dynamic Quality Monitoring",
+                    false,
+                    "If checked, the quality message will be shown for the page."
+                );
                 $metas[action_plugin_combo_qualitymessage::DISABLE_INDICATOR] = $isQualityMonitoringOn;
 
 
@@ -388,6 +413,12 @@ EOF;
                 $locale[self::MUTABLE_ATTRIBUTE] = false;
                 $locale[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLocale();
                 $locale[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
+                $locale[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    "locale",
+                    "Locale",
+                    false,
+                    "The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata."
+                );
                 $metas["locale"] = $locale;
 
                 // Lang
@@ -395,7 +426,12 @@ EOF;
                 $lang[self::MUTABLE_ATTRIBUTE] = true;
                 $lang[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLang();
                 $lang[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $lang[self::LABEL_ATTRIBUTE] = "Language";
+                $lang[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    Page::LANG_META_PROPERTY,
+                    "Language",
+                    false,
+                    "The language of the page"
+                );
                 $metas[Page::LANG_META_PROPERTY] = $lang;
 
                 // Country
@@ -403,6 +439,12 @@ EOF;
                 $region[self::MUTABLE_ATTRIBUTE] = true;
                 $region[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLanguageRegion();
                 $region[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
+                $region[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    Page::REGION_META_PROPERTY,
+                    "Region",
+                    false,
+                    "The region of the language"
+                );
                 $metas[Page::REGION_META_PROPERTY] = $region;
 
 

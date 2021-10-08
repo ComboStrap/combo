@@ -138,11 +138,6 @@ $meta[syntax_plugin_combo_preformatted::CONF_PREFORMATTED_EMPTY_CONTENT_NOT_PRIN
 $meta[renderer_plugin_combo_analytics::CONF_MANDATORY_QUALITY_RULES] = array('multicheckbox', '_choices' => renderer_plugin_combo_analytics::QUALITY_RULES);
 
 /**
- * Autofrontmatter mode enable
- */
-$meta[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = array('onoff');
-
-/**
  * The quality rules excluded from monitoring
  */
 $meta[action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING] = array('onoff');

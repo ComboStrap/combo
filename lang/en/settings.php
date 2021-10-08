@@ -109,10 +109,6 @@ $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE] = PluginUtility::
 $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_MODE] = PluginUtility::getUrl("lqpp", "Low quality page protection") . " - Choose the protection mode for low quality page.";
 $lang[LowQualityPage::CONF_LOW_QUALITY_PAGE_LINK_TYPE] = PluginUtility::getUrl("lqpp", "Low quality page protection") . " - Choose the link created to a low quality page.";
 
-/**
- * Autofrontmatter
- */
-$lang[action_plugin_combo_autofrontmatter::CONF_AUTOFRONTMATTER_ENABLE] = PluginUtility::getUrl("frontmatter", "Frontmatter") . " - If enabled, a new page will be created with a frontmatter)";
 
 /**
  * Excluded rules

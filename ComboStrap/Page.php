@@ -47,9 +47,10 @@ class Page extends DokuPath
     const LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
 
     /**
-     * The default page type
+     * @link https://ogp.me/#types Facebook ogp
+     * @link https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#http://purl.org/dc/elements/1.1/type Dublin Core
      */
-    const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
+    const TYPE_META_PROPERTY = "type";
     const WEBSITE_TYPE = "website";
     const ARTICLE_TYPE = "article";
     const EVENT_TYPE = "event";
@@ -59,7 +60,10 @@ class Page extends DokuPath
     const HOME_TYPE = "home";
     const NAME_PROPERTY = "name";
     const DESCRIPTION_PROPERTY = "description";
-    const TYPE_META_PROPERTY = "type";
+    /**
+     * Default page type configuration
+     */
+    const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
 
     /**
      * The scope is the namespace used to store the cache
@@ -95,6 +99,7 @@ class Page extends DokuPath
     public const LANDING_LAYOUT_VALUE = "landing";
     public const MEDIAN_LAYOUT_VALUE = "median";
     const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
+    const CANONICAL_VALUE = "page";
 
 
     private $canonical;

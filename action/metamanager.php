@@ -34,6 +34,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const TAB_ATTRIBUTE = "tab";
     const TAB_TYPE_VALUE = "type";
     const TAB_QUALITY_VALUE = "quality";
+    const CANONICAL_ATTRIBUTE = "canonical";
 
     public function register(Doku_Event_Handler $controller)
     {
@@ -178,6 +179,7 @@ EOF;
                 $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
                 $metasCanonical[self::MUTABLE_ATTRIBUTE] = true;
                 $metasCanonical[self::TAB_ATTRIBUTE] = "page";
+                $metasCanonical[self::CANONICAL_ATTRIBUTE] = Analytics::CANONICAL;
                 $metas[Analytics::CANONICAL] = $metasCanonical;
 
                 // Name
@@ -185,6 +187,7 @@ EOF;
                 $metasName[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultPageName();
                 $metasName[self::MUTABLE_ATTRIBUTE] = true;
                 $metasName[self::TAB_ATTRIBUTE] = "page";
+                $metasName[self::CANONICAL_ATTRIBUTE] = Analytics::NAME;
                 $metas[Analytics::NAME] = $metasName;
 
                 // Title
@@ -192,6 +195,7 @@ EOF;
                 $metasTitle[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultTitle();
                 $metasTitle[self::MUTABLE_ATTRIBUTE] = true;
                 $metasTitle[self::TAB_ATTRIBUTE] = "page";
+                $metasTitle[self::CANONICAL_ATTRIBUTE] = Analytics::TITLE; // title of a component is an heading
                 $metas[Analytics::TITLE] = $metasTitle;
 
                 // H1
@@ -199,6 +203,7 @@ EOF;
                 $metasH1Value[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultH1();
                 $metasH1Value[self::MUTABLE_ATTRIBUTE] = true;
                 $metasH1Value[self::TAB_ATTRIBUTE] = "page";
+                $metasH1Value[self::CANONICAL_ATTRIBUTE] = Analytics::H1;
                 $metas[Analytics::H1] = $metasH1Value;
 
                 // Description
@@ -207,6 +212,7 @@ EOF;
                 $metasDescription[self::MUTABLE_ATTRIBUTE] = true;
                 $metasDescription[self::TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
                 $metasDescription[self::TAB_ATTRIBUTE] = "page";
+                $metasDescription[self::CANONICAL_ATTRIBUTE] = Analytics::DESCRIPTION;
                 $metas[Analytics::DESCRIPTION] = $metasDescription;
 
                 // Layout
@@ -215,6 +221,7 @@ EOF;
                 $layout[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
                 $layout[self::VALUES_ATTRIBUTE] = $page->getLayoutValues();
                 $layout[self::TAB_ATTRIBUTE] = "page";
+                $layout[self::CANONICAL_ATTRIBUTE] = Page::LAYOUT_PROPERTY;
                 $metas[Page::LAYOUT_PROPERTY] = $layout;
 
 
@@ -223,6 +230,7 @@ EOF;
                 $modifiedCreated[self::MUTABLE_ATTRIBUTE] = false;
                 $modifiedCreated[self::TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $modifiedCreated[self::TAB_ATTRIBUTE] = "page";
+                $modifiedCreated[self::CANONICAL_ATTRIBUTE] = Page::CANONICAL_VALUE;
                 $metas[Analytics::DATE_MODIFIED] = $modifiedCreated;
 
                 // Created Date
@@ -238,6 +246,12 @@ EOF;
                 $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
                 $metasUuid[self::TAB_ATTRIBUTE] = "page";
                 $metas[Page::UUID_ATTRIBUTE] = $metasUuid;
+
+                // Path
+                $metasPath[self::VALUE_ATTRIBUTE] = $page->getPath();
+                $metasPath[self::MUTABLE_ATTRIBUTE] = false;
+                $metasPath[self::TAB_ATTRIBUTE] = "page";
+                $metas[Analytics::PATH] = $metasPath;
 
                 // Page Type
                 $metasPageType[self::VALUE_ATTRIBUTE] = $page->getType();
@@ -294,7 +308,6 @@ EOF;
         }
 
     }
-
 
 
 }

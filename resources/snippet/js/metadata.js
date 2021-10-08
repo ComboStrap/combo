@@ -292,7 +292,8 @@ window.addEventListener("DOMContentLoaded", function () {
                                 const modalFooter = document.createElement("div");
                                 modalFooter.classList.add("modal-footer");
                                 modalFooter.innerHTML = `
- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+<button type="button" class="btn btn-link text-primary text-decoration-none fs-6 text-muted" style="font-weight:300" data-bs-dismiss="modal">Viewer</button>
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 <button type="submit" form="${formId}" class="btn btn-primary">Submit</button>
 `;
                                 modalContent.appendChild(modalFooter);

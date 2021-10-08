@@ -11,8 +11,9 @@ use ComboStrap\Page;
  * @license  GPL 3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
  * @author   ComboStrap <support@combostrap.com>
  *
+ *
+ * @deprecated - the frontmatter is no more used to enter metadata.
  */
-
 class action_plugin_combo_autofrontmatter extends DokuWiki_Action_Plugin
 {
 

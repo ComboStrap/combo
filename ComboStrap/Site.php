@@ -55,10 +55,10 @@ class Site
      */
     private static function getLogoIds(): array
     {
-        $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS,self::SVG_LOGO_IDS);
+        $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS, self::SVG_LOGO_IDS);
         $logos = [];
-        foreach ($logosPaths as $logoPath){
-            $logos[]=Image::createImageFromAbsolutePath($logoPath);
+        foreach ($logosPaths as $logoPath) {
+            $logos[] = Image::createImageFromAbsolutePath($logoPath);
         }
         return $logos;
     }
@@ -146,6 +146,11 @@ class Site
             }
             return $country;
         } else {
+
+            if (extension_loaded("intl")) {
+                $locale = locale_get_default();
+            }
+
             return null;
         }
 
@@ -155,12 +160,12 @@ class Site
      * @return mixed|null
      * Wrapper around  https://www.dokuwiki.org/config:lang
      */
-    private static function getLang()
+    public static function getLang()
     {
 
         global $conf;
-        $locale = $conf['lang'];
-        return ($locale ? $locale : null);
+        $lang = $conf['lang'];
+        return ($lang ?: null);
     }
 
     public static function getUrl()

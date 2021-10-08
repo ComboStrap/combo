@@ -38,7 +38,7 @@ class action_plugin_combo_metalang extends DokuWiki_Action_Plugin
                     return;
                 }
             }
-            $pageLang = $page->getLang();
+            $pageLang = $page->getLangOrDefault();
             global $conf;
             if ($initialLang != $pageLang) {
                 $conf['lang'] = $pageLang;

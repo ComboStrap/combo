@@ -1048,17 +1048,24 @@ class Page extends DokuPath
     public
     function getCountry()
     {
-
         $country = $this->getPersistentMetadata(self::COUNTRY_META_PROPERTY);
         if (!empty($country)) {
             if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
                 LogUtility::msg("The country value ($country) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
             }
+        }
+        return $country;
+    }
+
+    public
+    function getCountryOrDefault()
+    {
+
+        $country = $this->getCountry();
+        if (!empty($country)) {
             return $country;
         } else {
-
             return Site::getCountry();
-
         }
 
     }
@@ -1066,12 +1073,15 @@ class Page extends DokuPath
     public
     function getLang()
     {
-        $lang = $this->getPersistentMetadata(self::LANG_META_PROPERTY);
+        return $this->getPersistentMetadata(self::LANG_META_PROPERTY);
+    }
+
+    public
+    function getLangOrDefault()
+    {
+        $lang = $this->getLang();
         if (empty($lang)) {
-            global $conf;
-            if (isset($conf["lang"])) {
-                $lang = $conf["lang"];
-            }
+            return Site::getLang();
         }
         return $lang;
     }
@@ -1193,10 +1203,10 @@ class Page extends DokuPath
     public
     function getLocale($default = null): ?string
     {
-        $lang = $this->getLang();
+        $lang = $this->getLangOrDefault();
         if (!empty($lang)) {
 
-            $country = $this->getCountry();
+            $country = $this->getCountryOrDefault();
             if (empty($country)) {
                 $country = $lang;
             }

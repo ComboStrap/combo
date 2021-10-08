@@ -825,9 +825,10 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
      * @param string $nameSpacePath
      * @param array $namespaceTemplateInstructions
      * @param array $pageTemplateInstructions
+     * @param array $homeTemplateInstructions
      */
     public
-    function treeProcessSubNamespace(&$callStack, $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [], $homeTemplateInstructions = [])
+    function treeProcessSubNamespace(CallStack &$callStack, string $nameSpacePath, $namespaceTemplateInstructions = [], $pageTemplateInstructions = [], $homeTemplateInstructions = [])
     {
 
 
@@ -883,7 +884,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
         }
 
         /**
-         * The the subdirectories
+         * The subdirectories
          */
         foreach ($childDirectoryIds as $childDirectoryId) {
             $childDirectoryPath = DokuPath::IdToAbsolutePath($childDirectoryId);

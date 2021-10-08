@@ -28,7 +28,7 @@ class DatabasePage
             Publication::DATE_PUBLISHED,
             Analytics::DATE_START,
             Analytics::DATE_END,
-            Page::COUNTRY_META_PROPERTY,
+            Page::REGION_META_PROPERTY,
             Page::LANG_META_PROPERTY,
             Page::TYPE_META_PROPERTY
         ];
@@ -486,7 +486,7 @@ class DatabasePage
             Publication::DATE_PUBLISHED => $page->getPublishedTimeAsString(),
             Analytics::DATE_START => $page->getEndDateAsString(),
             Analytics::DATE_END => $page->getStartDateAsString(),
-            Page::COUNTRY_META_PROPERTY => $page->getCountryOrDefault(),
+            Page::REGION_META_PROPERTY => $page->getCountryOrDefault(),
             Page::LANG_META_PROPERTY => $page->getLangOrDefault(),
             'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
             Page::TYPE_META_PROPERTY => $page->getTypeNotEmpty(),

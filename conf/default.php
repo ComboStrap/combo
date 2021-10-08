@@ -190,9 +190,9 @@ $conf['defaultFacebookImage'] = ":logo-facebook.png";
 
 /**
  * Country
- * {@link Site::CONF_SITE_ISO_COUNTRY}
+ * {@link Site::CONF_SITE_LANGUAGE_REGION}
  */
-$conf['siteIsoCountry'] = "";
+$conf['siteLanguageRegion'] = "";
 
 /**
  *

@@ -264,7 +264,7 @@ class DokuwikiUrl
     }
 
 
-    public static function createFromUrl($dokuwikiUrl)
+    public static function createFromUrl($dokuwikiUrl): DokuwikiUrl
     {
         return new DokuwikiUrl($dokuwikiUrl);
     }

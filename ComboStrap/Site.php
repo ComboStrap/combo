@@ -16,7 +16,7 @@ namespace ComboStrap;
 class Site
 {
 
-    const CONF_SITE_ISO_COUNTRY = "siteIsoCountry";
+    const CONF_SITE_LANGUAGE_REGION = "siteLanguageRegion";
     const STRAP_TEMPLATE_NAME = "strap";
 
     const SVG_LOGO_IDS = array(
@@ -116,14 +116,14 @@ class Site
      *
      * Locale always canonicalizes to upper case.
      */
-    public static function getLocale($sep = "-")
+    public static function getLocale($sep = "-"): ?string
     {
 
         $locale = null;
 
         $lang = self::getLang();
         if ($lang != null) {
-            $country = self::getCountry();
+            $country = self::getLanguageRegion();
             if ($country != null) {
                 $locale = strtolower($lang) . $sep . strtoupper($country);
             }
@@ -137,18 +137,19 @@ class Site
      * ISO 3166 alpha-2 country code
      *
      */
-    public static function getCountry()
+    public static function getLanguageRegion()
     {
-        $country = PluginUtility::getConfValue(self::CONF_SITE_ISO_COUNTRY);
-        if (!empty($country)) {
-            if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
-                LogUtility::msg("The country configuration value ($country) does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
-            }
-            return $country;
+        $region = PluginUtility::getConfValue(self::CONF_SITE_LANGUAGE_REGION);
+        if (!empty($region)) {
+            return $region;
         } else {
 
             if (extension_loaded("intl")) {
                 $locale = locale_get_default();
+                $localeParts = preg_split("/_/",$locale,2);
+                if(sizeof($localeParts)===2){
+                    return $localeParts[1];
+                }
             }
 
             return null;

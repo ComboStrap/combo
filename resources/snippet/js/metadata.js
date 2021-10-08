@@ -28,8 +28,8 @@ window.addEventListener("DOMContentLoaded", function () {
                             const modalRoot = document.createElement("div");
                             document.body.appendChild(modalRoot);
                             modalRoot.classList.add("modal", "fade");
-                            let id = `combo_metadata_modal_id`;
-                            modalRoot.setAttribute("id", id);
+                            let modalId = `combo_metadata_modal_id`;
+                            modalRoot.setAttribute("id", modalId);
                             // Uncaught RangeError: Maximum call stack size exceeded caused by the tabindex
                             // modalRoot.setAttribute("tabindex", "-1");
                             modalRoot.setAttribute("aria-hidden", "true")
@@ -73,16 +73,19 @@ window.addEventListener("DOMContentLoaded", function () {
                                     metadataValues = metadataProperties["values"];
                                     metadataType = metadataProperties["type"];
                                     metadataTab = metadataProperties["tab"];
+                                    label = metadataProperties["label"];
                                     htmlElement = "";
 
                                     /**
                                      * The label and the first cell
                                      * @type {string}
                                      */
-                                    label = metadata
-                                        .split(/_|-/)
-                                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                                        .join(" ");
+                                    if(label===undefined) {
+                                        label = metadata
+                                            .split(/_|-/)
+                                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                            .join(" ");
+                                    }
 
 
                                     /**
@@ -186,11 +189,10 @@ window.addEventListener("DOMContentLoaded", function () {
                              */
                             const modalHeader = document.createElement("div");
                             modalHeader.classList.add("modal-header")
-                            let htmlHeader = `
-<h5 class="modal-title">Modal title</h5>
+                            modalHeader.innerHTML = `
+<h5 class="modal-title">Metadata Manager</h5>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-`
-                            modalHeader.innerHTML = htmlHeader;
+`;
                             modalContent.appendChild(modalHeader);
 
                             /**
@@ -200,13 +202,16 @@ window.addEventListener("DOMContentLoaded", function () {
                             let activeClass;
                             let ariaSelected;
                             this.getTabPaneId = function (tab) {
-                                return `combo-metadata-tab-pane-${tab}`;
+                                let htmlId = tab.replace(" ","-");
+                                return `combo-metadata-tab-pane-${htmlId}`;
                             }
                             this.getTabNavId = function (tab) {
-                                return `combo-metadata-tab-nav-${tab}`;
+                                let htmlId = tab.replace(" ","-");
+                                return `combo-metadata-tab-nav-${htmlId}`;
                             }
+                            let defaultTab = "Page";
                             for (let tab in htmlFormElementsByTab) {
-                                if (tab === "page") {
+                                if (tab === defaultTab) {
                                     activeClass = "active";
                                     ariaSelected = "true";
                                 } else {
@@ -235,7 +240,7 @@ window.addEventListener("DOMContentLoaded", function () {
                             for (let tab in htmlFormElementsByTab) {
                                 let tabPaneId = this.getTabPaneId(tab);
                                 let tabNavId = this.getTabNavId(tab);
-                                if(tab==="page"){
+                                if(tab===defaultTab){
                                     activeClass = "active";
                                 } else {
                                     activeClass = "";
@@ -256,7 +261,7 @@ window.addEventListener("DOMContentLoaded", function () {
                             }
                             htmlTabPans += "</div>";
 
-                            let formId = call + id;
+                            let formId = call + modalId;
                             modalBody.innerHTML = `<form id="${formId}">${htmlTabNavs} ${htmlTabPans} </form>`;
 
                             const modalFooter = document.createElement("div");
@@ -274,6 +279,11 @@ window.addEventListener("DOMContentLoaded", function () {
                             };
                             const bootStrapModal = new bootstrap.Modal(modalRoot, options);
                             bootStrapModal.show();
+
+                            /**
+                             * Init the tooltip
+                             */
+                            document.querySelectorAll(`#${modalId} [data-bs-toggle="tooltip"]`).forEach(el => new bootstrap.Tooltip(el));
                         });
                     }
                 )

@@ -174,9 +174,9 @@ $meta[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
 $meta[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = array('string');
 
 /**
- * Site country
+ * Language region
  */
-$meta[Site::CONF_SITE_ISO_COUNTRY] = array("string");
+$meta[Site::CONF_SITE_LANGUAGE_REGION] = array("string");
 
 /**
  * Late publication protection

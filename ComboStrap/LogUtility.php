@@ -169,9 +169,9 @@ class LogUtility
             case "phpunit":
             case "browser":
             default:
-                $htmlMsg = PluginUtility::getUrl("", PluginUtility::$PLUGIN_NAME, $withIconURL);
+                $htmlMsg = PluginUtility::getDocumentationUrl("", PluginUtility::$PLUGIN_NAME, $withIconURL);
                 if ($canonical != null) {
-                    $htmlMsg = PluginUtility::getUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
+                    $htmlMsg = PluginUtility::getDocumentationUrl($canonical, ucfirst(str_replace(":", " ", $canonical)));
                 }
 
                 /**

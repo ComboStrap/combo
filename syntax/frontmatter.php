@@ -22,8 +22,6 @@
 
 use ComboStrap\Analytics;
 use ComboStrap\ArrayUtility;
-use ComboStrap\CacheManager;
-use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
@@ -178,6 +176,11 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     unset($jsonArray[Publication::OLD_META_KEY]);
                 }
 
+                if (isset($jsonArray[Page::OLD_REGION_PROPERTY])) {
+                    $jsonArray[Page::REGION_META_PROPERTY] = $jsonArray[Page::OLD_REGION_PROPERTY];
+                    unset($jsonArray[Page::OLD_REGION_PROPERTY]);
+                }
+
                 /**
                  * Upsert the meta
                  */
@@ -301,7 +304,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     Page::CANONICAL_PROPERTY,
                     Page::TYPE_META_PROPERTY,
                     Page::IMAGE_META_PROPERTY,
-                    Page::COUNTRY_META_PROPERTY,
+                    Page::REGION_META_PROPERTY,
                     Page::LANG_META_PROPERTY,
                     Analytics::TITLE,
                     syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,

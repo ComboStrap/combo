@@ -88,7 +88,7 @@ class Page extends DokuPath
     const CURRENT_METADATA = "current";
     const PERSISTENT_METADATA = "persistent";
     const IMAGE_META_PROPERTY = 'image';
-    const COUNTRY_META_PROPERTY = "country";
+    const REGION_META_PROPERTY = "region";
     const LANG_META_PROPERTY = "lang";
     const LAYOUT_PROPERTY = "layout";
     const UUID_ATTRIBUTE = "uuid";
@@ -100,6 +100,7 @@ class Page extends DokuPath
     public const MEDIAN_LAYOUT_VALUE = "median";
     const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
     const CANONICAL_VALUE = "page";
+    const OLD_REGION_PROPERTY = "country";
 
 
     private $canonical;
@@ -1046,9 +1047,9 @@ class Page extends DokuPath
     }
 
     public
-    function getCountry()
+    function getLocaleRegion()
     {
-        $country = $this->getPersistentMetadata(self::COUNTRY_META_PROPERTY);
+        $country = $this->getPersistentMetadata(self::REGION_META_PROPERTY);
         if (!empty($country)) {
             if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
                 LogUtility::msg("The country value ($country) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
@@ -1061,11 +1062,11 @@ class Page extends DokuPath
     function getCountryOrDefault()
     {
 
-        $country = $this->getCountry();
+        $country = $this->getLocaleRegion();
         if (!empty($country)) {
             return $country;
         } else {
-            return Site::getCountry();
+            return Site::getLanguageRegion();
         }
 
     }
@@ -1276,7 +1277,7 @@ class Page extends DokuPath
 
         if (!$this->isStrapSideSlot()) {
             $template = Site::getTemplate();
-            LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getUrl("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getDocumentationUrl("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
             return "";
         }
 

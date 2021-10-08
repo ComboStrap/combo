@@ -103,7 +103,7 @@ class Message
                 $firedByLang = $this->plugin->getLang('message_come_from');
             }
 
-            $message .= '<div class="' . self::SIGNATURE_CLASS . '">' . $firedByLang . PluginUtility::getUrl($this->signatureCanonical, $this->signatureName, false) . '</div>';
+            $message .= '<div class="' . self::SIGNATURE_CLASS . '">' . $firedByLang . PluginUtility::getDocumentationUrl($this->signatureCanonical, $this->signatureName, false) . '</div>';
             $message .= '</div>';
 
             /**

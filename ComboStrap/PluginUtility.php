@@ -173,7 +173,7 @@ class PluginUtility
     /**
      * The URL base of the documentation
      */
-    static $URL_BASE;
+    static $URL_APEX;
 
 
     /**
@@ -220,7 +220,7 @@ class PluginUtility
         self::$PLUGIN_NAME = 'ComboStrap';
         global $lang;
         self::$PLUGIN_LANG = $lang[self::PLUGIN_BASE_NAME];
-        self::$URL_BASE = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
+        self::$URL_APEX = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
         self::$VERSION = self::$INFO_PLUGIN['version'];
 
         PluginUtility::initStaticManager();
@@ -625,12 +625,12 @@ class PluginUtility
     /**
      * Create an URL to the documentation website
      * @param $canonical - canonical id or slug
-     * @param $text -  the text of the link
+     * @param $label -  the text of the link
      * @param bool $withIcon - used to break the recursion with the message in the {@link Icon}
      * @return string - an url
      */
     public
-    static function getUrl($canonical, $text, $withIcon = true)
+    static function getDocumentationUrl($canonical, $label, $withIcon = true, $tooltip = "")
     {
         /** @noinspection SpellCheckingInspection */
 
@@ -641,6 +641,8 @@ class PluginUtility
              * We don't include it as an external resource via url
              * because it then make a http request for every logo
              * in the configuration page and makes it really slow
+             * TODO: when we have made a special fetch ajax with cache
+             * for application resource, we can serve it statically
              */
             $path = File::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
             $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
@@ -655,9 +657,20 @@ class PluginUtility
             }
             $xhtmlIcon = file_get_contents($cache->getFile()->getFileSystemPath());
 
-
         }
-        return $xhtmlIcon . ' <a href="' . self::$URL_BASE . '/' . str_replace(":", "/", $canonical) . '" title="' . $text . '">' . $text . '</a>';
+        $urlApex = self::$URL_APEX;
+        $path = str_replace(":", "/", $canonical);
+        if (empty($tooltip)) {
+            $title = $label;
+        } else {
+            $title = $tooltip;
+        }
+        $htmlToolTip = "";
+        if (!empty($tooltip)) {
+            $dataAttributeNamespace = Bootstrap::getDataNamespace();
+            $htmlToolTip = "data{$dataAttributeNamespace}-toggle=\"tooltip\"";
+        }
+        return "$xhtmlIcon<a href=\"$urlApex/$path\" title=\"$title\" $htmlToolTip style=\"text-decoration:none;\">$label</a>";
     }
 
     /**

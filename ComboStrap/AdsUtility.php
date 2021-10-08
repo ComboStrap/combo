@@ -128,7 +128,7 @@ class AdsUtility
                     if (AdsUtility::showPlaceHolder()) {
 
                         $html .= 'Ads Page Id (' . $adsPageId . ') not found. <br>' . DOKU_LF
-                        . 'Showing the '.PluginUtility::getUrl("automatic/in-article/ad#AdsInArticleShowPlaceholder","In-article placeholder").'<br>' . DOKU_LF;
+                        . 'Showing the '.PluginUtility::getDocumentationUrl("automatic/in-article/ad#AdsInArticleShowPlaceholder","In-article placeholder").'<br>' . DOKU_LF;
 
                         $htmlAttributes["color"] = "dark";
                         $htmlAttributes["spacing"] = "m-3 p-3";

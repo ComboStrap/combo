@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 use dokuwiki\Menu\Item\AbstractItem;
-use renderer_plugin_combo_analytics;
 
 /**
  * Class MenuItem

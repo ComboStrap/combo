@@ -85,7 +85,7 @@ class Identity
          * The {@link getSecurityToken()} needs it
          */
         global $INPUT;
-        $INPUT->server->set('REMOTE_USER',$user);
+        $INPUT->server->set('REMOTE_USER', $user);
 
     }
 
@@ -119,7 +119,14 @@ class Identity
     public static function isManager()
     {
         global $INFO;
-        return $INFO['ismanager'];
+        if ($INFO !== null) {
+            return $INFO['ismanager'];
+        } else {
+            /**
+             * In test
+             */
+            return auth_ismanager();
+        }
     }
 
     private static function getUser()

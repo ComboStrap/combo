@@ -43,7 +43,7 @@ class MetadataUtility
      * @param $inlineAttributes - the inline attribute of a component if any
      * @return string - an HTML box of the array
      */
-    public static function getHtmlMetadataBox($plugin, $inlineAttributes = array())
+    public static function getHtmlMetadataBox($plugin, $inlineAttributes = array()): string
     {
 
         // Attributes processing

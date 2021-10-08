@@ -1689,8 +1689,7 @@ class Page extends DokuPath
 
     public function canBeUpdatedByCurrentUser(): bool
     {
-
-        return auth_quickaclcheck($this->getId()) >= AUTH_EDIT;
+        return Identity::isWriter();
     }
 
     public function upsertMetadata($attributes)
@@ -1895,7 +1894,7 @@ class Page extends DokuPath
     public function getDefaultH1()
     {
         $h1Parsed = $this->getMetadata(Analytics::H1_PARSED);
-        if(!empty($h1Parsed)){
+        if (!empty($h1Parsed)) {
             return $h1Parsed;
         }
 

@@ -1,8 +1,10 @@
 <?php
 
 use ComboStrap\Analytics;
+use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
+use ComboStrap\MetadataMenuItem;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
@@ -56,21 +58,30 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     public function register(Doku_Event_Handler $controller)
     {
+
+        /**
+         * The ajax api to return data
+         */
         $controller->register_hook('AJAX_CALL_UNKNOWN', 'BEFORE', $this, '_ajax_call');
+
+        /**
+         * Add a icon in the page tools menu
+         * https://www.dokuwiki.org/devel:event:menu_items_assembly
+         */
+        $controller->register_hook('MENU_ITEMS_ASSEMBLY', 'AFTER', $this, 'handle_rail_bar');
     }
 
     /**
-     * handle ajax requests
+     * Handle Metadata HTTP ajax requests
      * @param $event Doku_Event
      *
-     * {@link html_show()}
      *
      * https://www.dokuwiki.org/devel:plugin_programming_tips#handle_json_ajax_request
      *
      * CSRF checks are only for logged in users
      * This is public ({@link getSecurityToken()}
      */
-    function _ajax_call(&$event)
+    function _ajax_call(Doku_Event &$event): void
     {
 
         if ($event->data !== self::CALL_ID) {
@@ -187,11 +198,30 @@ EOF;
 
                 return;
             case "GET":
-                header('Content-type: application/json');
-                header("Status: 200");
+
                 $metas = [];
 
+                /**
+                 * The old viewer meta panel
+                 */
+                $type = $_GET["type"];
+                if ($type === "viewer") {
+                    if (!Identity::isManager()) {
+                        header("Status: 401");
+                        $metas = ["message" => "Not Authorized (managers only)"];
+                    } else {
+                        $metadata = p_read_metadata($id);
+                        $metas = $metadata['persistent'];
+                        header("Status: 200");
+                    }
+                    header('Content-type: application/json');
+                    echo json_encode($metas);
+                    return;
+                }
 
+                /**
+                 * The manager
+                 */
                 // Canonical
                 $metasCanonical[self::VALUE_ATTRIBUTE] = $page->getCanonical();
                 $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
@@ -447,12 +477,35 @@ EOF;
                 );
                 $metas[Page::REGION_META_PROPERTY] = $region;
 
-
+                header('Content-type: application/json');
+                header("Status: 200");
                 echo json_encode($metas);
                 return;
 
 
         }
+
+    }
+
+    public function handle_rail_bar(Doku_Event $event, $param)
+    {
+
+        if (!Identity::isWriter()) {
+            return;
+        }
+
+        /**
+         * The `view` property defines the menu that is currently built
+         * https://www.dokuwiki.org/devel:menus
+         * If this is not the page menu, return
+         */
+        if ($event->data['view'] != 'page') return;
+
+        global $INFO;
+        if (!$INFO['exists']) {
+            return;
+        }
+        array_splice($event->data['items'], -1, 0, array(new MetadataMenuItem()));
 
     }
 

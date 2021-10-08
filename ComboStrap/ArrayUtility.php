@@ -15,7 +15,7 @@ class ArrayUtility
      * @param string $content - [Optional] - append to this variable if given
      * @return string - an array as an HTML list or $content if given as variable
      */
-    public static function formatAsHtmlList(array $toPrint, &$content = "")
+    public static function formatAsHtmlList(array $toPrint, &$content = ""): string
     {
         /**
          * Sort it on the key
@@ -30,7 +30,7 @@ class ArrayUtility
                 $content .= '</li>';
             } else {
                 if (preg_match('/date|created|modified/i', $key) && is_numeric($value)) {
-                    $value = date(DateTime::ISO8601, $value);
+                    $value =  date(DATE_ATOM, $value);
                 }
                 $stringValue = var_export($value, true);
                 $content .= '<li>' . $key . ' : ' . $stringValue . '</li>';

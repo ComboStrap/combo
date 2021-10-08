@@ -65,6 +65,7 @@ class Analytics
     const DATE_CREATED = 'date_created';
     const DATE_END = "date_end";
     const DATE_START = "date_start";
+    const H1_PARSED = "h1_parsed";
     private $page;
     /**
      * @var CacheRenderer

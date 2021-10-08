@@ -673,7 +673,12 @@ class Page extends DokuPath
     function getTitle()
     {
 
-        return $this->getMetadata(Analytics::TITLE);
+        /**
+         * `title` is created by DokuWiki
+         * in current but not persistent
+         * and hold the heading 1, see {@link p_get_first_heading}
+         */
+        return $this->getPersistentMetadata(Analytics::TITLE);
 
     }
 
@@ -1889,6 +1894,11 @@ class Page extends DokuPath
 
     public function getDefaultH1()
     {
+        $h1Parsed = $this->getMetadata(Analytics::H1_PARSED);
+        if(!empty($h1Parsed)){
+            return $h1Parsed;
+        }
+
         if (!empty($this->getTitle())) {
             return $this->getTitle();
         } else {

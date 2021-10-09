@@ -8,6 +8,11 @@ window.addEventListener("DOMContentLoaded", function () {
 
         class ComboModal {
 
+            /**
+             * @type HTMLDivElement
+             */
+            modalFooter;
+
             constructor(modalId) {
                 this.modalId = modalId;
 
@@ -53,14 +58,32 @@ window.addEventListener("DOMContentLoaded", function () {
                 this.modalContent.appendChild(modalBody);
             }
 
-            addHtmlFooter(htmlFooter) {
-                const modalFooter = document.createElement("div");
-                modalFooter.classList.add("modal-footer");
-                modalFooter.innerHTML = htmlFooter;
-                this.modalContent.appendChild(modalFooter);
+            createModalFooter() {
+                this.modalFooter = document.createElement("div");
+                this.modalFooter.classList.add("modal-footer");
+                this.modalContent.appendChild(this.modalFooter);
             }
 
-            show(){
+            /**
+             *
+             * @type HTMLButtonElement|string htmlFooter
+             */
+            addFooterButton(htmlFooter) {
+
+
+                if (this.modalFooter === undefined) {
+                    this.createModalFooter();
+                }
+                if (typeof htmlFooter === 'string' || htmlFooter instanceof String) {
+                    this.modalFooter.insertAdjacentHTML('beforeend', htmlFooter);
+                } else {
+                    this.modalFooter.appendChild(htmlFooter);
+                }
+
+
+            }
+
+            show() {
                 let options = {
                     "backdrop": true,
                     "keyboard": true,
@@ -332,10 +355,13 @@ window.addEventListener("DOMContentLoaded", function () {
 
                             /**
                              * Footer
-                             * @type {HTMLDivElement}
                              */
-                            comboModal.addHtmlFooter(`
-<button type="button" class="btn btn-link text-primary text-decoration-none fs-6 text-muted" style="font-weight:300" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal" data-bs-dismiss="modal">Viewer</button>
+                            let viewerButton = document.createElement("button");
+                            viewerButton.classList.add("btn", "btn-link", "text-primary", "text-decoration-bone", "fs-6", "text-muted");
+                            viewerButton.style.setProperty("font-weight", "300");
+                            viewerButton.textContent = "Viewer";
+                            comboModal.addFooterButton(viewerButton);
+                            comboModal.addFooterButton(`
 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 <button type="submit" form="${formId}" class="btn btn-primary">Submit</button>
 `);

@@ -57,6 +57,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
     const REPLICATE = "replicate";
     const ANALYTICS = "analytics";
     const SYNC = "sync";
+    const PLUGINS_TO_UPDATE = "plugins-to-update";
 
     /**
      * register options and arguments
@@ -80,6 +81,7 @@ EOF;
         $options->registerOption('version', 'print version', 'v');
         $options->registerCommand(self::REPLICATE, "Replicate the data into the database");
         $options->registerCommand(self::ANALYTICS, "Start the analytics and export optionally the data");
+        $options->registerCommand(self::PLUGINS_TO_UPDATE, "List the plugins to update");
         $options->registerOption(
             'namespaces',
             "If no namespace is given, the root namespace is assumed.",
@@ -130,6 +132,22 @@ EOF;
                 break;
             case self::SYNC:
                 $this->sync();
+                break;
+            case self::PLUGINS_TO_UPDATE:
+                /**
+                 * Endpoint:
+                 * self::EXTENSION_REPOSITORY_API.'?fmt=php&ext[]='.urlencode($name)
+                 * `http://www.dokuwiki.org/lib/plugins/pluginrepo/api.php?fmt=php&ext[]=`.urlencode($name)
+                 */
+                $pluginList = plugin_list('', true);
+                /* @var helper_plugin_extension_extension $extension */
+                $extension = $this->loadHelper('extension_extension');
+                foreach ($pluginList as $name) {
+                    $extension->setExtension($name);
+                    if($extension->updateAvailable()){
+                        echo "The extension $name should be updated";
+                    }
+                }
                 break;
             default:
                 fwrite(STDERR, "Combo: Command unknown (" . $cmd . ")");

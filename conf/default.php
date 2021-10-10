@@ -93,11 +93,9 @@ $conf['disableDokuwikiStylesheet'] = 0;
 
 /**
  * Metadata Viewer
- * See {@link \ComboStrap\MetadataUtility::CONF_ENABLE_WHEN_EDITING
  * See {@link \ComboStrap\MetadataUtility::CONF_METADATA_DEFAULT_ATTRIBUTES
  * See {@link \ComboStrap\MetadataUtility::EXCLUDE_ATTRIBUTE
  */
-$conf['enableMetadataViewerWhenEditing'] = 1;
 $conf['metadataViewerDefaultAttributes'] = 'title="Metadata" exclude="tableofcontents"';
 
 /**

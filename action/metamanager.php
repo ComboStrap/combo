@@ -211,7 +211,9 @@ EOF;
                         $metas = ["message" => "Not Authorized (managers only)"];
                     } else {
                         $metadata = p_read_metadata($id);
-                        $metas = $metadata['persistent'];
+                        $metasPersistent = $metadata['persistent'];
+                        $metasCurrent = $metadata['current'];
+                        $metas = array_merge($metasCurrent,$metasPersistent);
                         header("Status: 200");
                     }
                     header('Content-type: application/json');

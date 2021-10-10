@@ -72,7 +72,6 @@ $lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility
  * Metdataviewer
  */
 $lang[MetadataUtility::CONF_METADATA_DEFAULT_ATTRIBUTES] = PluginUtility::getDocumentationUrl("metadata:viewer", "Metadata Viewer") . ' - The default attributes of the metadata component';
-$lang[MetadataUtility::CONF_ENABLE_WHEN_EDITING] = PluginUtility::getDocumentationUrl("metadata:viewer", "Metadata Viewer") . ' - Shows the metadata box when editing a page';
 
 /**
  * Badge

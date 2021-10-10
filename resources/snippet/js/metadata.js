@@ -1,20 +1,23 @@
 window.addEventListener("DOMContentLoaded", function () {
 
+
     /**
      * A pointer to the created modals
      */
     let comboModals = {};
 
+    let getComboModal = function (modalId) {
+        return comboModals[modalId];
+    }
     /**
      * Create a modal and return the modal content element
      * @return ComboModal
      */
-    let createOrGetComboModal = function (modalId) {
+    let createComboModal = function (modalId) {
 
-        if(comboModals[modalId]===undefined){
-            comboModals[modalId] = new ComboModal(modalId);
-        }
-        return comboModals[modalId];
+        let modal = new ComboModal(modalId);
+        comboModals[modalId] = modal;
+        return modal;
     }
 
     /**
@@ -53,7 +56,10 @@ window.addEventListener("DOMContentLoaded", function () {
                 "modal-dialog-scrollable",
                 "modal-fullscreen-md-down",
                 "modal-lg");
+            // Get the modal more central but fix as we have tab and
+            // we want still the mouse below the tab when we click
             modalManagerDialog.style.setProperty("margin", "5rem auto");
+            modalManagerDialog.style.setProperty("height","calc(100% - 9rem)");
             this.modalRoot.appendChild(modalManagerDialog);
             this.modalContent = document.createElement("div");
             this.modalContent.classList.add("modal-content");
@@ -85,7 +91,7 @@ window.addEventListener("DOMContentLoaded", function () {
             this.modalContent.insertAdjacentHTML('afterbegin', html);
         }
 
-        addHtmlBody(htmlBody) {
+        addBody(htmlBody) {
 
             this.modalBody.innerHTML = htmlBody;
 
@@ -150,10 +156,14 @@ window.addEventListener("DOMContentLoaded", function () {
 
     class ComboAjaxCall {
 
+
         method = "GET";
 
-        constructor(call) {
+        constructor(call = undefined) {
             this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
+            if(call===undefined){
+                call = "combo-meta-manager";
+            }
             this.url.searchParams.set("call", call);
             this.id = JSINFO.id;
         }
@@ -195,265 +205,283 @@ window.addEventListener("DOMContentLoaded", function () {
      *
      * @type ComboModal modalManager
      */
-    function openMetaViewer(modalManager) {
+    async function openMetaViewer(modalManager) {
         let modalViewerId = `combo_metadata_viewer`;
-        let modalViewer = createOrGetComboModal(modalViewerId);
-        modalViewer.setHeader("MetadataViewer");
-        let closeButton = modalViewer.addFooterCloseButton();
-        closeButton.addEventListener("click",function(){
-            modalManager.show();
-        });
+        let modalViewer = getComboModal(modalViewerId);
+        if (modalViewer === undefined) {
+            modalViewer = createComboModal(modalViewerId);
+            modalViewer.setHeader("Metadata Viewer");
+            let viewerCall = createGetCall();
+            viewerCall.setProperty("type","viewer");
+            let json = JSON.stringify(await viewerCall.getJson(), null, 2);
+
+            modalViewer.addBody(`
+<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>
+<pre>${json}</pre>
+`);
+            let closeButton = modalViewer.addFooterCloseButton();
+            closeButton.addEventListener("click", function () {
+                modalManager.show();
+            });
+        }
         modalViewer.show();
+
     }
 
     let openMetadataManager = async function () {
 
 
-        let call = createGetCall("combo-meta-manager");
-        let jsonMetaDataObject = await call.getJson();
         let modalManagerId = `combo_metadata_manager`;
-        let managerModal = createOrGetComboModal(modalManagerId);
+        let managerModal = getComboModal(modalManagerId);
 
-        /**
-         * Parsing the data
-         * before creating the header and body modal
-         */
-        let htmlFormElementsByTab = {};
-        let htmlValue;
-        let label;
-        let inputType;
-        let metadataValue;
-        let htmlElement;
-        let metadataValues = [];
-        let defaultValueHtml;
-        let metadataProperties;
-        let metadataMutable;
-        let metadataDefault;
-        let metadataType;
-        let disabled;
-        let metadataTab;
-        for (const metadata in jsonMetaDataObject) {
-            if (jsonMetaDataObject.hasOwnProperty(metadata)) {
-                let id = `colForm${metadata}`;
-                metadataProperties = jsonMetaDataObject[metadata];
-                metadataValue = metadataProperties["value"];
-                metadataMutable = metadataProperties["mutable"];
-                metadataDefault = metadataProperties["default"];
-                metadataValues = metadataProperties["values"];
-                metadataType = metadataProperties["type"];
-                metadataTab = metadataProperties["tab"];
-                label = metadataProperties["label"];
-                htmlElement = "";
+        if (managerModal === undefined) {
 
-                /**
-                 * The label and the first cell
-                 * @type {string}
-                 */
-                if (label === undefined) {
-                    label = metadata
-                        .split(/_|-/)
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(" ");
-                }
+            managerModal = createComboModal(modalManagerId);
 
-                /**
-                 * The creation of the form element
-                 */
-                if (metadataValues !== undefined) {
+            let call = createGetCall();
+            let jsonMetaDataObject = await call.getJson();
+
+
+            /**
+             * Parsing the data
+             * before creating the header and body modal
+             */
+            let htmlFormElementsByTab = {};
+            let htmlValue;
+            let label;
+            let inputType;
+            let metadataValue;
+            let htmlElement;
+            let metadataValues = [];
+            let defaultValueHtml;
+            let metadataProperties;
+            let metadataMutable;
+            let metadataDefault;
+            let metadataType;
+            let disabled;
+            let metadataTab;
+            for (const metadata in jsonMetaDataObject) {
+                if (jsonMetaDataObject.hasOwnProperty(metadata)) {
+                    let id = `colForm${metadata}`;
+                    metadataProperties = jsonMetaDataObject[metadata];
+                    metadataValue = metadataProperties["value"];
+                    metadataMutable = metadataProperties["mutable"];
+                    metadataDefault = metadataProperties["default"];
+                    metadataValues = metadataProperties["values"];
+                    metadataType = metadataProperties["type"];
+                    metadataTab = metadataProperties["tab"];
+                    label = metadataProperties["label"];
+                    htmlElement = "";
 
                     /**
-                     * Select element
+                     * The label and the first cell
                      * @type {string}
                      */
-                    htmlElement = "select";
-                    defaultValueHtml = "";
-                    if (metadataDefault !== undefined) {
-                        defaultValueHtml = ` (${metadataDefault})`;
+                    if (label === undefined) {
+                        label = metadata
+                            .split(/_|-/)
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(" ");
                     }
 
-                    htmlElement = `<select class="form-select" aria-label="${label}">`;
-                    let selected = "";
-                    if (metadataValue === null) {
-                        selected = "selected";
-                    }
-                    htmlElement += `<option ${selected}>Default${defaultValueHtml}</option>`;
-                    for (let selectValue of metadataValues) {
-                        if (selectValue === metadataValue) {
-                            selected = "selected";
-                        } else {
-                            selected = "";
+                    /**
+                     * The creation of the form element
+                     */
+                    if (metadataValues !== undefined) {
+
+                        /**
+                         * Select element
+                         * @type {string}
+                         */
+                        htmlElement = "select";
+                        defaultValueHtml = "";
+                        if (metadataDefault !== undefined) {
+                            defaultValueHtml = ` (${metadataDefault})`;
                         }
-                        htmlElement += `<option value="${selectValue}" ${selected}>${selectValue}</option>`;
+
+                        htmlElement = `<select class="form-select" aria-label="${label}">`;
+                        let selected = "";
+                        if (metadataValue === null) {
+                            selected = "selected";
+                        }
+                        htmlElement += `<option ${selected}>Default${defaultValueHtml}</option>`;
+                        for (let selectValue of metadataValues) {
+                            if (selectValue === metadataValue) {
+                                selected = "selected";
+                            } else {
+                                selected = "";
+                            }
+                            htmlElement += `<option value="${selectValue}" ${selected}>${selectValue}</option>`;
+                        }
+                        htmlElement += `</select>`;
+
+
+                    } else {
+
+                        /**
+                         * Input Element
+                         * @type {string}
+                         */
+                        htmlElement = "input";
+                        let htmlClass = "form-control";
+                        let checked = "";
+
+                        /**
+                         * Type ?
+                         */
+                        switch (metadataType) {
+                            case "datetime":
+                                inputType = "datetime-local";
+                                if (metadataValue !== null) {
+                                    metadataValue = metadataValue.slice(0, 19);
+                                }
+                                break;
+                            case "paragraph":
+                                inputType = "textarea";
+                                break;
+                            case "boolean":
+                                inputType = "checkbox";
+                                htmlClass = "form-check-input";
+                                if (metadataValue === true) {
+                                    checked = "checked"
+                                }
+                                break;
+                            case "line":
+                            default:
+                                inputType = "text";
+                        }
+
+                        if (metadataValue !== null) {
+                            htmlValue = `value="${metadataValue}"`;
+                        } else {
+                            htmlValue = `placeholder="${metadataDefault}"`;
+                        }
+                        if (metadataMutable !== undefined && metadataMutable === false) {
+                            disabled = "disabled";
+                        } else {
+                            disabled = "";
+                        }
+
+                        htmlElement = `<input type="${inputType}" class="${htmlClass}" id="${id}" ${htmlValue} ${checked} ${disabled}>`;
+
                     }
-                    htmlElement += `</select>`;
 
+                    if (htmlFormElementsByTab[metadataTab] === undefined) {
+                        htmlFormElementsByTab[metadataTab] = [];
+                    }
+                    htmlFormElementsByTab[metadataTab].push({
+                            "id": id,
+                            "label": label,
+                            "element": htmlElement,
+                            "type": metadataType
+                        }
+                    );
 
+                }
+            }
+
+            /**
+             * Header
+             */
+            managerModal.setHeader("Metadata Manager");
+
+            /**
+             * Creating the Body
+             * (Starting with the tabs)
+             */
+            let htmlTabNavs = '<ul class="nav nav-tabs mb-3">';
+            let activeClass;
+            let ariaSelected;
+            this.getTabPaneId = function (tab) {
+                let htmlId = tab.replace(" ", "-");
+                return `combo-metadata-tab-pane-${htmlId}`;
+            }
+            this.getTabNavId = function (tab) {
+                let htmlId = tab.replace(" ", "-");
+                return `combo-metadata-tab-nav-${htmlId}`;
+            }
+            let defaultTab = "Page";
+            for (let tab in htmlFormElementsByTab) {
+                if (tab === defaultTab) {
+                    activeClass = "active";
+                    ariaSelected = "true";
                 } else {
-
-                    /**
-                     * Input Element
-                     * @type {string}
-                     */
-                    htmlElement = "input";
-                    let htmlClass = "form-control";
-                    let checked = "";
-
-                    /**
-                     * Type ?
-                     */
-                    switch (metadataType) {
-                        case "datetime":
-                            inputType = "datetime-local";
-                            if (metadataValue !== null) {
-                                metadataValue = metadataValue.slice(0, 19);
-                            }
-                            break;
-                        case "paragraph":
-                            inputType = "textarea";
-                            break;
-                        case "boolean":
-                            inputType = "checkbox";
-                            htmlClass = "form-check-input";
-                            if (metadataValue === true) {
-                                checked = "checked"
-                            }
-                            break;
-                        case "line":
-                        default:
-                            inputType = "text";
-                    }
-
-                    if (metadataValue !== null) {
-                        htmlValue = `value="${metadataValue}"`;
-                    } else {
-                        htmlValue = `placeholder="${metadataDefault}"`;
-                    }
-                    if (metadataMutable !== undefined && metadataMutable === false) {
-                        disabled = "disabled";
-                    } else {
-                        disabled = "";
-                    }
-
-                    htmlElement = `<input type="${inputType}" class="${htmlClass}" id="${id}" ${htmlValue} ${checked} ${disabled}>`;
-
+                    activeClass = "";
+                    ariaSelected = "false";
                 }
-
-                if (htmlFormElementsByTab[metadataTab] === undefined) {
-                    htmlFormElementsByTab[metadataTab] = [];
-                }
-                htmlFormElementsByTab[metadataTab].push({
-                        "id": id,
-                        "label": label,
-                        "element": htmlElement,
-                        "type": metadataType
-                    }
-                );
-
-            }
-        }
-
-        /**
-         * Header
-         */
-        managerModal.setHeader("Metadata Manager");
-
-        /**
-         * Creating the Body
-         * (Starting with the tabs)
-         */
-        let htmlTabNavs = '<ul class="nav nav-tabs mb-3">';
-        let activeClass;
-        let ariaSelected;
-        this.getTabPaneId = function (tab) {
-            let htmlId = tab.replace(" ", "-");
-            return `combo-metadata-tab-pane-${htmlId}`;
-        }
-        this.getTabNavId = function (tab) {
-            let htmlId = tab.replace(" ", "-");
-            return `combo-metadata-tab-nav-${htmlId}`;
-        }
-        let defaultTab = "Page";
-        for (let tab in htmlFormElementsByTab) {
-            if (tab === defaultTab) {
-                activeClass = "active";
-                ariaSelected = "true";
-            } else {
-                activeClass = "";
-                ariaSelected = "false";
-            }
-            let tabPanId = this.getTabPaneId(tab);
-            let tabNavId = this.getTabNavId(tab);
-            htmlTabNavs += `
+                let tabPanId = this.getTabPaneId(tab);
+                let tabNavId = this.getTabNavId(tab);
+                htmlTabNavs += `
 <li class="nav-item">
     <button class="nav-link ${activeClass}" id="${tabNavId}" type="button" role="tab" aria-selected="${ariaSelected}" aria-controls="${tabPanId}" data-bs-toggle="tab" data-bs-target="#${tabPanId}">${tab}</button>
 </li>`
-        }
-        htmlTabNavs += '</ul>';
+            }
+            htmlTabNavs += '</ul>';
 
 
-        let htmlTabPans = "<div class=\"tab-content\">";
-        let rightColSize;
-        let leftColSize;
-        let classLabel;
-        for (let tab in htmlFormElementsByTab) {
-            let tabPaneId = this.getTabPaneId(tab);
-            let tabNavId = this.getTabNavId(tab);
-            if (tab === defaultTab) {
-                activeClass = "active";
-            } else {
-                activeClass = "";
-            }
-            htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
-            if (tab === "Quality") {
-                leftColSize = 4;
-                rightColSize = 8;
-            } else if (tab === "Language") {
-                leftColSize = 2;
-                rightColSize = 10;
-            } else {
-                leftColSize = 3;
-                rightColSize = 9;
-            }
-            for (let htmlFormElement of htmlFormElementsByTab[tab]) {
-                let id = htmlFormElement["id"];
-                let label = htmlFormElement["label"];
-                let htmlElement = htmlFormElement["element"];
-                let datatype = htmlFormElement["type"];
-                if (datatype === "boolean") {
-                    classLabel = "form-check"
+            let htmlTabPans = "<div class=\"tab-content\">";
+            let rightColSize;
+            let leftColSize;
+            let classLabel;
+            for (let tab in htmlFormElementsByTab) {
+                let tabPaneId = this.getTabPaneId(tab);
+                let tabNavId = this.getTabNavId(tab);
+                if (tab === defaultTab) {
+                    activeClass = "active";
                 } else {
-                    classLabel = "col-form-label";
+                    activeClass = "";
                 }
-                htmlTabPans += `
+                htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
+                if (tab === "Quality") {
+                    leftColSize = 4;
+                    rightColSize = 8;
+                } else if (tab === "Language") {
+                    leftColSize = 2;
+                    rightColSize = 10;
+                } else {
+                    leftColSize = 3;
+                    rightColSize = 9;
+                }
+                for (let htmlFormElement of htmlFormElementsByTab[tab]) {
+                    let id = htmlFormElement["id"];
+                    let label = htmlFormElement["label"];
+                    let htmlElement = htmlFormElement["element"];
+                    let datatype = htmlFormElement["type"];
+                    if (datatype === "boolean") {
+                        classLabel = "form-check"
+                    } else {
+                        classLabel = "col-form-label";
+                    }
+                    htmlTabPans += `
 <div class="row mb-3">
     <label for="${id}" class="col-sm-${leftColSize} ${classLabel}">${label}</label>
     <div class="col-sm-${rightColSize}">${htmlElement}</div>
 </div>
 `;
+                }
+                htmlTabPans += "</div>"
             }
-            htmlTabPans += "</div>"
+            htmlTabPans += "</div>";
+
+            let formId = call + modalManagerId;
+            managerModal.addBody(`<form id="${formId}">${htmlTabNavs} ${htmlTabPans} </form>`);
+
+            /**
+             * Footer
+             */
+            let viewerButton = document.createElement("button");
+            viewerButton.classList.add("btn", "btn-link", "text-primary", "text-decoration-bone", "fs-6", "text-muted");
+            viewerButton.style.setProperty("font-weight", "300");
+            viewerButton.textContent = "Viewer";
+            viewerButton.addEventListener("click", function (event) {
+                managerModal.dismiss();
+                openMetaViewer(managerModal);
+            });
+            managerModal.addFooterButton(viewerButton);
+            managerModal.addFooterCloseButton();
+            managerModal.addFooterButton(`<button type="submit" form="${formId}" class="btn btn-primary">Submit</button>`);
         }
-        htmlTabPans += "</div>";
-
-        let formId = call + modalManagerId;
-        managerModal.addHtmlBody(`<form id="${formId}">${htmlTabNavs} ${htmlTabPans} </form>`);
-
-        /**
-         * Footer
-         */
-        let viewerButton = document.createElement("button");
-        viewerButton.classList.add("btn", "btn-link", "text-primary", "text-decoration-bone", "fs-6", "text-muted");
-        viewerButton.style.setProperty("font-weight", "300");
-        viewerButton.textContent = "Viewer";
-        viewerButton.addEventListener("click", function (event) {
-            managerModal.dismiss();
-            openMetaViewer(managerModal);
-        });
-        managerModal.addFooterButton(viewerButton);
-        managerModal.addFooterCloseButton();
-        managerModal.addFooterButton(`<button type="submit" form="${formId}" class="btn btn-primary">Submit</button>`);
         managerModal.show();
-
 
     }
 

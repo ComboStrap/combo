@@ -59,7 +59,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const PAGE_TYPE_CANONICAL = "page:type";
 
 
-
     public function register(Doku_Event_Handler $controller)
     {
 
@@ -98,12 +97,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Shared check between post and get HTTP method
          */
-        $requestMethod = $_SERVER['REQUEST_METHOD'];
-        if ($requestMethod === "POST") {
-            $id = $_POST["id"];
-        } else {
-            $id = $_GET["id"];
-        }
+        $id = $_GET["id"];
+
         if (empty($id)) {
             LogUtility::log2file("The page id is empty", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             header("Status: 400");
@@ -128,75 +123,29 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Functional code
          */
+        $requestMethod = $_SERVER['REQUEST_METHOD'];
         switch ($requestMethod) {
             case 'POST':
 
                 $jsonString = $_POST["json"];
-                if (empty($jsonString)) {
-                    LogUtility::log2file("The json object is missing", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    header("Status: 400");
-                    return;
-                }
-
-                $jsonArray = \ComboStrap\Json::createFromString($jsonString)->toArray();
-                if ($jsonArray === null) {
-                    header("Status: 400");
-                    LogUtility::log2file("The json received is not conform ($jsonString)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return;
-                }
-
-
-                /**
-                 * Page modification if any
-                 */
-                $content = $page->getContent();
-                $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
-                if (strpos($content, $frontMatterStartTag) === 0) {
-
-                    $pattern = syntax_plugin_combo_frontmatter::PATTERN;
-                    $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
-
-                    /**
-                     * The split normally returns an array
-                     * where the first element is empty followed by the frontmatter
-                     */
-                    $emptyString = array_shift($split);
-                    if (!empty($emptyString)) {
-                        return;
-                    }
-
-                    $frontMatter = array_shift($split);
-
-                    $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
-                    $frontMatterMetadata = array_merge($frontMatterMetadata, $jsonArray);
-                    $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-                    /**
-                     * Building the document again
-                     */
-                    $restDocument = "";
-                    while (($element = array_shift($split)) != null) {
-                        $restDocument .= $element;
-                    }
-
-                    /**
-                     * Build the new document
-                     */
-                    $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-                    $newPageContent = <<<EOF
-$frontMatterStartTag
-$frontMatterJsonString
-$frontMatterEndTag$restDocument
-EOF;
-                    $page->upsertContent($newPageContent, "Metadata manager upsert");
-                }
-
-
-                /**
-                 * Upsert metadata after the page content modification
-                 * to not trigger another modification because of the replication date
-                 */
-                $page->upsertMetadata($jsonArray);
+//                if (empty($jsonString)) {
+//                    LogUtility::log2file("The json object is missing", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+//                    header("Status: 400");
+//                    return;
+//                }
+//
+//                $jsonArray = \ComboStrap\Json::createFromString($jsonString)->toArray();
+//                if ($jsonArray === null) {
+//                    header("Status: 400");
+//                    LogUtility::log2file("The json received is not conform ($jsonString)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+//                    return;
+//                }
+//
+//                /**
+//                 * Upsert metadata after the page content modification
+//                 * to not trigger another modification because of the replication date
+//                 */
+//                $page->upsertMetadata($jsonArray);
 
                 header("Status: 200");
 
@@ -533,6 +482,54 @@ EOF;
         }
         array_splice($event->data['items'], -1, 0, array(new MetadataMenuItem()));
 
+    }
+
+    function updateFrontmatter($page, $jsonArray)
+    {
+        /**
+         * Page modification if any
+         */
+        $content = $page->getContent();
+        $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
+        if (strpos($content, $frontMatterStartTag) === 0) {
+
+            $pattern = syntax_plugin_combo_frontmatter::PATTERN;
+            $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
+
+            /**
+             * The split normally returns an array
+             * where the first element is empty followed by the frontmatter
+             */
+            $emptyString = array_shift($split);
+            if (!empty($emptyString)) {
+                return;
+            }
+
+            $frontMatter = array_shift($split);
+
+            $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
+            $frontMatterMetadata = array_merge($frontMatterMetadata, $jsonArray);
+            $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            /**
+             * Building the document again
+             */
+            $restDocument = "";
+            while (($element = array_shift($split)) != null) {
+                $restDocument .= $element;
+            }
+
+            /**
+             * Build the new document
+             */
+            $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
+            $newPageContent = <<<EOF
+$frontMatterStartTag
+$frontMatterJsonString
+$frontMatterEndTag$restDocument
+EOF;
+            $page->upsertContent($newPageContent, "Metadata manager upsert");
+        }
     }
 
 

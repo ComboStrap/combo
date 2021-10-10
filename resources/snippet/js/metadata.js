@@ -24,9 +24,9 @@ window.addEventListener("DOMContentLoaded", function () {
      * Create a ajax call
      * @return ComboAjaxCall
      */
-    let createGetCall = function (call) {
+    let createGetCall = function (pageId) {
 
-        let comboCall = new ComboAjaxCall(call);
+        let comboCall = new ComboAjaxCall(pageId);
         comboCall.setMethod("GET");
         return comboCall;
     }
@@ -59,7 +59,7 @@ window.addEventListener("DOMContentLoaded", function () {
             // Get the modal more central but fix as we have tab and
             // we want still the mouse below the tab when we click
             modalManagerDialog.style.setProperty("margin", "5rem auto");
-            modalManagerDialog.style.setProperty("height","calc(100% - 9rem)");
+            modalManagerDialog.style.setProperty("height", "calc(100% - 9rem)");
             this.modalRoot.appendChild(modalManagerDialog);
             this.modalContent = document.createElement("div");
             this.modalContent.classList.add("modal-content");
@@ -154,33 +154,45 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    class ComboAjaxCall {
+    class ComboAjaxUrl {
 
-
-        method = "GET";
-
-        constructor(call = undefined) {
+        constructor(pageId) {
             this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
-            if(call===undefined){
-                call = "combo-meta-manager";
+
+            this.url.searchParams.set("call", "combo-meta-manager");
+            if(pageId!==undefined){
+                this.id = pageId;
+            } else {
+                this.id = JSINFO.id;
             }
-            this.url.searchParams.set("call", call);
-            this.id = JSINFO.id;
+            this.url.searchParams.set("id", this.id);
         }
 
-        setPageId(id) {
-            this.id = id;
-            return this;
-        }
 
         setProperty(key, value) {
             this.url.searchParams.set(key, value);
             return this;
         }
 
+        toString() {
+            return this.url.toString();
+        }
+    }
+
+
+    class ComboAjaxCall {
+
+
+        method = "GET";
+
+        constructor(pageId) {
+
+            this.url = new ComboAjaxUrl(pageId);
+
+        }
+
         async getJson() {
 
-            this.url.searchParams.set("id", this.id);
             let response = await fetch(this.url.toString(), {method: this.method});
 
             if (response.status !== 200) {
@@ -199,27 +211,31 @@ window.addEventListener("DOMContentLoaded", function () {
         setMethod(method) {
             this.method = method;
         }
+
+        setProperty(key, value) {
+            this.url.setProperty(key, value);
+        }
     }
 
     /**
      *
      * @type ComboModal modalManager
      */
-    async function openMetaViewer(modalManager) {
+    async function openMetaViewer(modalManager, pageId) {
         let modalViewerId = `combo_metadata_viewer`;
         let modalViewer = getComboModal(modalViewerId);
         if (modalViewer === undefined) {
             modalViewer = createComboModal(modalViewerId);
             modalViewer.setHeader("Metadata Viewer");
-            let viewerCall = createGetCall();
-            viewerCall.setProperty("type","viewer");
+            let viewerCall = createGetCall(pageId);
+            viewerCall.setProperty("type", "viewer");
             let json = JSON.stringify(await viewerCall.getJson(), null, 2);
 
             modalViewer.addBody(`
 <p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>
 <pre>${json}</pre>
 `);
-            let closeButton = modalViewer.addFooterCloseButton("Close and Return to the Metadata Manager");
+            let closeButton = modalViewer.addFooterCloseButton("Return to Metadata Manager");
             closeButton.addEventListener("click", function () {
                 modalManager.show();
             });
@@ -228,7 +244,15 @@ window.addEventListener("DOMContentLoaded", function () {
 
     }
 
-    let openMetadataManager = async function () {
+    /**
+     *
+     * @return {ComboAjaxUrl}
+     */
+    function createAjaxUrl(pageId) {
+        return new ComboAjaxUrl(pageId);
+    }
+
+    let openMetadataManager = async function (pageId) {
 
 
         let modalManagerId = `combo_metadata_manager`;
@@ -238,7 +262,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
             managerModal = createComboModal(modalManagerId);
 
-            let call = createGetCall();
+            let call = createGetCall(pageId);
             let jsonMetaDataObject = await call.getJson();
 
 
@@ -463,8 +487,9 @@ window.addEventListener("DOMContentLoaded", function () {
             }
             htmlTabPans += "</div>";
 
-            let formId = modalManagerId+"_form";
-            managerModal.addBody(`<form id="${formId}">${htmlTabNavs} ${htmlTabPans} </form>`);
+            let formId = modalManagerId + "_form";
+            let endpoint = createAjaxUrl(pageId).toString();
+            managerModal.addBody(`<form id="${formId}" method="post" action="${endpoint}">${htmlTabNavs} ${htmlTabPans} </form>`);
 
             /**
              * Footer
@@ -479,18 +504,28 @@ window.addEventListener("DOMContentLoaded", function () {
             });
             managerModal.addFooterButton(viewerButton);
             managerModal.addFooterCloseButton();
-            managerModal.addFooterButton(`<button type="submit" form="${formId}" class="btn btn-primary">Submit</button>`);
+            let submitButton = document.createElement("button");
+            submitButton.classList.add("btn", "btn-primary");
+            submitButton.setAttribute("type", "submit");
+            submitButton.setAttribute("form", formId);
+            submitButton.innerText = "Submit";
+            submitButton.addEventListener("click", function (event) {
+                event.preventDefault();
+                console.log("Submitted");
+            })
+            managerModal.addFooterButton(submitButton);
+
         }
         managerModal.show();
 
     }
 
 
-    document.querySelectorAll(".combo_metadata_item").forEach((metadataControlItem, key) => {
+    document.querySelectorAll(".combo_metadata_item").forEach((metadataControlItem) => {
 
         metadataControlItem.addEventListener("click", function (event) {
             event.preventDefault();
-            void openMetadataManager().catch(console.error);
+            void openMetadataManager(JSINFO.id).catch(console.error);
         });
 
     });

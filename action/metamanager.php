@@ -213,7 +213,14 @@ EOF;
                         $metadata = p_read_metadata($id);
                         $metasPersistent = $metadata['persistent'];
                         $metasCurrent = $metadata['current'];
-                        $metas = array_merge($metasCurrent,$metasPersistent);
+                        /**
+                         * toc is in the current meta data's, we place it then as high priority
+                         * if it does not work, we need to implement a recursive merge
+                         * because the {@link array_merge_recursive()} just add the values
+                         * (we got them the same value twice)
+                         */
+                        $metas = array_merge($metasPersistent, $metasCurrent);
+                        ksort($metas);
                         header("Status: 200");
                     }
                     header('Content-type: application/json');

@@ -1,7 +1,9 @@
 <?php
 
 use ComboStrap\Analytics;
+use ComboStrap\DatabasePage;
 use ComboStrap\Identity;
+use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MetadataMenuItem;
@@ -45,6 +47,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const TAB_QUALITY_VALUE = "Quality";
     const TAB_PAGE_VALUE = "Page";
     const TAB_LANGUAGE_VALUE = "Language";
+    const TAB_REPLICATION_VALUE = "Replication";
 
     /**
      * The canonical for the metadata page
@@ -54,6 +57,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      * The canonical for page type
      */
     const PAGE_TYPE_CANONICAL = "page:type";
+
 
 
     public function register(Doku_Event_Handler $controller)
@@ -485,6 +489,19 @@ EOF;
                     "The region of the language"
                 );
                 $metas[Page::REGION_META_PROPERTY] = $region;
+
+                // database replication Date
+                $replicationDate[self::VALUE_ATTRIBUTE] = $page->getDatabasePage()->getReplicationDate()->format(Iso8601Date::getFormat());
+                $replicationDate[self::MUTABLE_ATTRIBUTE] = false;
+                $replicationDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
+                $replicationDate[self::TAB_ATTRIBUTE] = self::TAB_REPLICATION_VALUE;
+                $replicationDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    DatabasePage::REPLICATION_CANONICAL,
+                    "Replication Date",
+                    false,
+                    "The last date of database replication"
+                );
+                $metas[DatabasePage::DATE_REPLICATION] = $replicationDate;
 
                 header('Content-type: application/json');
                 header("Status: 200");

@@ -219,7 +219,7 @@ window.addEventListener("DOMContentLoaded", function () {
 <p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>
 <pre>${json}</pre>
 `);
-            let closeButton = modalViewer.addFooterCloseButton();
+            let closeButton = modalViewer.addFooterCloseButton("Close and Return to the Metadata Manager");
             closeButton.addEventListener("click", function () {
                 modalManager.show();
             });
@@ -463,7 +463,7 @@ window.addEventListener("DOMContentLoaded", function () {
             }
             htmlTabPans += "</div>";
 
-            let formId = call + modalManagerId;
+            let formId = modalManagerId+"_form";
             managerModal.addBody(`<form id="${formId}">${htmlTabNavs} ${htmlTabPans} </form>`);
 
             /**

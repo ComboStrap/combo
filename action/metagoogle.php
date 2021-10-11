@@ -318,7 +318,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
         /**
          * Do we have extra ld-json properties
          */
-        $extraLdJson = $page->getMetadata(self::JSON_LD_META_PROPERTY);
+        $extraLdJson = $page->getLdJson();
         if (!empty($extraLdJson)) {
             $ldJson = array_merge($ldJson, $extraLdJson);
         }

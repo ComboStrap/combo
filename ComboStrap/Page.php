@@ -864,19 +864,9 @@ class Page extends DokuPath
          * for the same image
          * We may get an array then
          */
-        $imageMeta = $this->getMetadata(self::IMAGE_META_PROPERTY);
+        $imageMeta = $this->getPageImages();
         $images = array();
-        if (!empty($imageMeta)) {
-            if (is_array($imageMeta)) {
-                foreach ($imageMeta as $key => $imageIdFromMeta) {
-                    DokuPath::addRootSeparatorIfNotPresent($imageIdFromMeta);
-                    $images[$key] = Image::createImageFromAbsolutePath($imageIdFromMeta);
-                }
-            } else {
-                DokuPath::addRootSeparatorIfNotPresent($imageMeta);
-                $images = array(Image::createImageFromAbsolutePath($imageMeta));
-            }
-        } else {
+        if (empty($imageMeta)) {
             if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
                 $firstImage = $this->getFirstImage();
                 if ($firstImage != null) {
@@ -1928,7 +1918,9 @@ class Page extends DokuPath
 
     public function getTypeValues(): array
     {
-        return [Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE];
+        $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE];
+        sort($types);
+        return $types;
     }
 
     public function getLayoutValues(): array
@@ -2007,6 +1999,58 @@ class Page extends DokuPath
         }
         return $calculated;
 
+    }
+
+    /**
+     * @param string|null $tag
+     * @return Image[]|null
+     */
+    public function getPageImages($tag = null): ?array
+    {
+        $pagesImages = $this->getMetadata(self::IMAGE_META_PROPERTY);
+        if ($pagesImages === null) {
+            return null;
+        } else {
+            if (is_array($pagesImages)) {
+                $images = [];
+                foreach ($pagesImages as $key => $imageIdFromMeta) {
+                    if (is_array($imageIdFromMeta)) {
+
+                    } else {
+                        DokuPath::addRootSeparatorIfNotPresent($imageIdFromMeta);
+                        $images[$key] = Image::createImageFromAbsolutePath($imageIdFromMeta);
+                    }
+                }
+                return $images;
+            } else {
+                DokuPath::addRootSeparatorIfNotPresent($pagesImages);
+                return array(Image::createImageFromAbsolutePath($pagesImages));
+            }
+        }
+
+    }
+
+    /**
+     * @param string|array $pageImageData
+     * @return Page
+     */
+    public function setPageImage($pageImageData): Page
+    {
+        $this->setMetadata(self::IMAGE_META_PROPERTY, $pageImageData);
+        return $this;
+    }
+
+    public function getLdJson()
+    {
+        $ldJson = $this->getMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY);
+        if (empty($ldJson) && $this->getTypeNotEmpty() === "organization") {
+            // deprecated, old syntax
+            $metadata = $this->getMetadata("organization");
+            if (!empty($metadata)) {
+                return ["organization" => $metadata];
+            }
+        }
+        return $ldJson;
     }
 
 

@@ -56,7 +56,7 @@ abstract class Image extends Media
 
             }
         } else {
-            throw new \RuntimeException("The file ($imageIdFromMeta) has not been detected as beeing an image.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            throw new \RuntimeException("The file ($imageIdFromMeta) has not been detected as being an image.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
 
     }

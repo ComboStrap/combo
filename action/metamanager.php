@@ -316,6 +316,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 );
                 $metas[Analytics::PATH] = $metasPath;
 
+                // Image
+                $pageImages = $page->getPageImages();
+
                 // Page Type
                 $metasPageType[self::VALUE_ATTRIBUTE] = $page->getType();
                 $metasPageType[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultType();
@@ -329,6 +332,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The type of page"
                 );
                 $metas[Page::TYPE_META_PROPERTY] = $metasPageType;
+
 
                 // Published Date
                 $publishedDate[self::VALUE_ATTRIBUTE] = $page->getPublishedTimeAsString();
@@ -370,6 +374,19 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 );
                 $metas[Analytics::DATE_END] = $endDate;
 
+
+                // ld-json
+                $ldJson[self::VALUE_ATTRIBUTE] = $page->getLdJson();
+                $publishedDate[self::MUTABLE_ATTRIBUTE] = true;
+                $publishedDate[self::DATA_TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
+                $publishedDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $publishedDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    self::PAGE_TYPE_CANONICAL,
+                    "Publication Date",
+                    false,
+                    "The publication date"
+                );
+                $metas[Publication::DATE_PUBLISHED] = $publishedDate;
 
                 // Is low quality page
                 $isLowQualityPage[self::VALUE_ATTRIBUTE] = $page->getLowQualityIndicator();

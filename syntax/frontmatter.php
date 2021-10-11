@@ -312,7 +312,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     Publication::DATE_PUBLISHED,
                     Analytics::NAME,
                     action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
-                    Page::LAYOUT_PROPERTY
+                    Page::LAYOUT_PROPERTY,
+                    "organization"
                 ];
 
                 global $ID;

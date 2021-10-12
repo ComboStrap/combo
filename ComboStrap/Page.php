@@ -58,6 +58,8 @@ class Page extends DokuPath
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
     const HOME_TYPE = "home";
+    const CUSTOM_TYPE = "custom";
+
     const NAME_PROPERTY = "name";
     const DESCRIPTION_PROPERTY = "description";
     /**
@@ -101,6 +103,7 @@ class Page extends DokuPath
     const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
     const CANONICAL_VALUE = "page";
     const OLD_REGION_PROPERTY = "country";
+
 
 
     private $canonical;
@@ -1918,7 +1921,7 @@ class Page extends DokuPath
 
     public function getTypeValues(): array
     {
-        $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE];
+        $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE, Page::CUSTOM_TYPE];
         sort($types);
         return $types;
     }
@@ -2051,6 +2054,19 @@ class Page extends DokuPath
             }
         }
         return $ldJson;
+    }
+
+    public function setJsonLd(string $jsonLdString): Page
+    {
+        $jsonLdArray = json_decode($jsonLdString,true);
+        $this->setMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY, $jsonLdArray);
+        return $this;
+    }
+
+    public function setPageType(string $string): Page
+    {
+        $this->setMetadata(Page::TYPE_META_PROPERTY,$string);
+        return $this;
     }
 
 

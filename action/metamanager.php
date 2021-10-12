@@ -377,16 +377,17 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 // ld-json
                 $ldJson[self::VALUE_ATTRIBUTE] = $page->getLdJson();
-                $publishedDate[self::MUTABLE_ATTRIBUTE] = true;
-                $publishedDate[self::DATA_TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
-                $publishedDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $publishedDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                    self::PAGE_TYPE_CANONICAL,
-                    "Publication Date",
+                $ldJson[self::MUTABLE_ATTRIBUTE] = true;
+                $ldJson[self::DEFAULT_VALUE_ATTRIBUTE] = "Enter a json-ld value";
+                $ldJson[self::DATA_TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
+                $ldJson[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $ldJson[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    action_plugin_combo_metagoogle::CANONICAL,
+                    "Json-ld",
                     false,
-                    "The publication date"
+                    "Advanced Page metadata definition with the json-ld format"
                 );
-                $metas[Publication::DATE_PUBLISHED] = $publishedDate;
+                $metas[action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY] = $ldJson;
 
                 // Is low quality page
                 $isLowQualityPage[self::VALUE_ATTRIBUTE] = $page->getLowQualityIndicator();

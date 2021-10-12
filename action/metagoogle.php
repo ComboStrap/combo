@@ -1,10 +1,8 @@
 <?php
 
-use ComboStrap\Image;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
-use ComboStrap\RasterImageLink;
 use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) die();
@@ -40,6 +38,13 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
     const DATE_MODIFIED_KEY = "dateModified";
     const SPEAKABLE = "speakable";
     const PUBLISHER = "publisher";
+
+    /**
+     * @deprecated
+     * This attribute was used to hold json-ld organization
+     * data
+     */
+    public const OLD_ORGANIZATION_PROPERTY = "organization";
 
     function __construct()
     {
@@ -266,14 +271,14 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 }
                 $ldJson["description"] = $eventDescription;
                 $startDate = $page->getStartDateAsString();
-                if($startDate===null){
+                if ($startDate === null) {
                     LogUtility::msg("The date_start metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return;
                 }
                 $ldJson["startDate"] = $page->getStartDateAsString();
 
                 $endDate = $page->getEndDateAsString();
-                if($endDate===null){
+                if ($endDate === null) {
                     LogUtility::msg("The date_end metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return;
                 }
@@ -320,7 +325,11 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
          */
         $extraLdJson = $page->getLdJson();
         if (!empty($extraLdJson)) {
-            $ldJson = array_merge($ldJson, $extraLdJson);
+            if (isset($extraLdJson["@type"]) && isset($extraLdJson["@context"])) {
+                $ldJson = $extraLdJson;
+            } else {
+                $ldJson = array_merge($ldJson, $extraLdJson);
+            }
         }
 
 

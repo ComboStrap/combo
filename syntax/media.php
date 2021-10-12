@@ -65,11 +65,11 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     {
         $media = MediaLink::createFromCallStackArray($attributes);
         $renderer->stats[Analytics::MEDIA_COUNT]++;
-        $scheme = $media->getDefaultImage()->getScheme();
+        $scheme = $media->getMedia()->getScheme();
         switch ($scheme) {
             case DokuPath::LOCAL_SCHEME:
                 $renderer->stats[Analytics::INTERNAL_MEDIA_COUNT]++;
-                if (!$media->getDefaultImage()->exists()) {
+                if (!$media->getMedia()->exists()) {
                     $renderer->stats[Analytics::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;

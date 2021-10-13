@@ -39,6 +39,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const PARAGRAPH_TYPE_VALUE = "paragraph";
     const BOOLEAN_TYPE_VALUE = "boolean";
     const LABEL_ATTRIBUTE = "label";
+    const ROWS_TYPE_ATTRIBUTE = "rows";
 
     /**
      * The tabs attribute and value
@@ -319,34 +320,64 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metas[Analytics::PATH] = $metasPath;
 
                 // Image
-                $pageImages = $page->getPageImagesObject();
-                $pageImageDefault = $page->getDefaultPageImage();
+                $pageImages = [];
+                $pageImages[self::DATA_TYPE_ATTRIBUTE] = self::ROWS_TYPE_ATTRIBUTE;
+                $pageImages[self::TAB_ATTRIBUTE] = self::TAB_IMAGE_VALUE;
+                $pageImages[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    syntax_plugin_combo_pageimage::CANONICAL,
+                    "Page Image",
+                    false,
+                    "The illustrative images of the page"
+                );
+
+
                 /**
                  * @var PageImage $pageImage
                  */
-                foreach ($pageImages as $key => $pageImage) {
-                    $pageImage = [];
+                $pageImagesObjects = $page->getPageImagesObject();
+                $pageImageDefault = $page->getDefaultPageImageObject();
+                $pageImageRows = [];
+                for ($i = 0; $i < 5; $i++) {
 
+                    $pageImage = null;
+                    $pageImageRow = [];
+                    if (isset($pageImagesObjects[$i])) {
+                        $pageImage = $pageImagesObjects[$i];
+                    }
                     /**
                      * Label
                      */
-                    $pageImage[self::VALUE_ATTRIBUTE] = $pageImage->getTag();
-                    $pageImage[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImage->getDefaultTag();
-                    $pageImage[self::MUTABLE_ATTRIBUTE] = true;
-                    $pageImage[self::VALUES_ATTRIBUTE] = $pageImage->getTagValues();
-                    $pageImage[self::TAB_ATTRIBUTE] = self::TAB_IMAGE_VALUE;
-                    // Label only for the first
-                    if ($key == 0) {
-                        $pageImage[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                            syntax_plugin_combo_pageimage::CANONICAL,
-                            "Page Image",
-                            false,
-                            "The illustrative images of the page"
-                        );
+                    if ($pageImage != null) {
+                        $pageImageLabel[self::VALUE_ATTRIBUTE] = $pageImage->getTag();
                     }
-                    $metas[Page::TYPE_META_PROPERTY] = $pageImage;
+                    $pageImageLabel[self::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultTag();
+                    if ($i == 0 && $pageImageDefault !== null) {
+                        $pageImageLabel[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultTag();
+                    }
+                    $pageImageLabel[self::MUTABLE_ATTRIBUTE] = true;
+                    $pageImageLabel[self::VALUES_ATTRIBUTE] = PageImage::getTagValues();
+                    $pageImageRow["label"] = $pageImageLabel;
+
+                    /**
+                     * Image
+                     */
+                    if ($pageImage != null) {
+                        $pageImagePath[self::VALUE_ATTRIBUTE] = $pageImage->getImage()->getPath();
+                    }
+                    if ($i == 0 && $pageImageDefault !== null) {
+                        $pageImagePath[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultTag();
+                    }
+                    $pageImagePath[self::MUTABLE_ATTRIBUTE] = true;
+                    $pageImageRow["path"] = $pageImagePath;
+
+                    /**
+                     * Add the row
+                     */
+                    $pageImageRows[] = $pageImageRow;
 
                 }
+                $pageImages[self::VALUE_ATTRIBUTE] = $pageImageRows;
+                $metas["image"] = $pageImages;
 
 
                 // Page Type
@@ -488,7 +519,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metas[Page::REGION_META_PROPERTY] = $region;
 
                 // database replication Date
-                $replicationDate[self::VALUE_ATTRIBUTE] = $page->getDatabasePage()->getReplicationDate()->format(Iso8601Date::getFormat());
+                $replicationDateValue = $page->getDatabasePage()->getReplicationDate();
+                $replicationDate[self::VALUE_ATTRIBUTE] = $replicationDateValue != null ? $replicationDateValue->format(Iso8601Date::getFormat()) : null;
                 $replicationDate[self::MUTABLE_ATTRIBUTE] = false;
                 $replicationDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $replicationDate[self::TAB_ATTRIBUTE] = self::TAB_REPLICATION_VALUE;

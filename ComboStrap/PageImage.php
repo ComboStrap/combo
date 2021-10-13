@@ -8,6 +8,7 @@ class PageImage
 {
     const ILLUSTRATION = "illustration";
     const ICON = "icon";
+
     /**
      * @var Image
      */
@@ -50,13 +51,15 @@ class PageImage
         return $this->tag;
     }
 
-    public function getDefaultTag(): string
+    public static function getDefaultTag(): string
     {
         return self::ILLUSTRATION;
     }
 
-    public function getTagValues(): array
+    public static function getTagValues(): array
     {
         return [self::ILLUSTRATION, self::ICON];
     }
+
+
 }

@@ -868,9 +868,9 @@ class Page extends DokuPath
          */
         $pageImages = $this->getPageImagesObject();
         if (empty($pageImages)) {
-            $defaultPageImage = $this->getDefaultPageImage();
+            $defaultPageImage = $this->getDefaultPageImageObject();
             if ($defaultPageImage != null) {
-                return [$defaultPageImage];
+                return [$defaultPageImage->getImage()];
             } else {
                 return [];
             }
@@ -2010,11 +2010,11 @@ class Page extends DokuPath
      * @param string|null $tag
      * @return PageImage[]|null
      */
-    public function getPageImagesObject($tag = null): ?array
+    public function getPageImagesObject($tag = null): array
     {
         $pagesImages = $this->getMetadata(self::IMAGE_META_PROPERTY);
         if ($pagesImages === null) {
-            return null;
+            return [];
         } else {
             if (is_array($pagesImages)) {
                 $images = [];
@@ -2074,7 +2074,7 @@ class Page extends DokuPath
         return $this;
     }
 
-    public function getDefaultPageImage(): ?PageImage
+    public function getDefaultPageImageObject(): ?PageImage
     {
         if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             $firstImage = $this->getFirstImage();

@@ -347,6 +347,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     /**
                      * Label
                      */
+                    $pageImageLabel = [];
                     if ($pageImage != null) {
                         $pageImageLabel[self::VALUE_ATTRIBUTE] = $pageImage->getTag();
                     }
@@ -356,19 +357,20 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     }
                     $pageImageLabel[self::MUTABLE_ATTRIBUTE] = true;
                     $pageImageLabel[self::VALUES_ATTRIBUTE] = PageImage::getTagValues();
-                    $pageImageRow["label"] = $pageImageLabel;
+                    $pageImageRow["image-label"] = $pageImageLabel;
 
                     /**
                      * Image
                      */
+                    $pageImagePath = [];
                     if ($pageImage != null) {
                         $pageImagePath[self::VALUE_ATTRIBUTE] = $pageImage->getImage()->getPath();
                     }
                     if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImagePath[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultTag();
+                        $pageImagePath[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getImage()->getPath();
                     }
                     $pageImagePath[self::MUTABLE_ATTRIBUTE] = true;
-                    $pageImageRow["path"] = $pageImagePath;
+                    $pageImageRow["image-path"] = $pageImagePath;
 
                     /**
                      * Add the row

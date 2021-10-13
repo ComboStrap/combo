@@ -58,7 +58,7 @@ class Page extends DokuPath
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
     const HOME_TYPE = "home";
-    const CUSTOM_TYPE = "custom";
+    const OTHER_TYPE = "other";
 
     const NAME_PROPERTY = "name";
     const DESCRIPTION_PROPERTY = "description";
@@ -103,7 +103,6 @@ class Page extends DokuPath
     const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
     const CANONICAL_VALUE = "page";
     const OLD_REGION_PROPERTY = "country";
-
 
 
     private $canonical;
@@ -859,7 +858,7 @@ class Page extends DokuPath
      * @return Image[]
      */
     public
-    function getLocalImageSet(): array
+    function getPageImagesAsImageOrDefault(): array
     {
 
         /**
@@ -867,19 +866,22 @@ class Page extends DokuPath
          * for the same image
          * We may get an array then
          */
-        $imageMeta = $this->getPageImages();
-        $images = array();
-        if (empty($imageMeta)) {
-            if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
-                $firstImage = $this->getFirstImage();
-                if ($firstImage != null) {
-                    if ($firstImage->getScheme() == DokuPath::LOCAL_SCHEME) {
-                        $images = array($firstImage);
-                    }
-                }
+        $pageImages = $this->getPageImagesObject();
+        if (empty($pageImages)) {
+            $defaultPageImage = $this->getDefaultPageImage();
+            if ($defaultPageImage != null) {
+                return [$defaultPageImage];
+            } else {
+                return [];
             }
+        } else {
+            return array_map(
+                function ($a) {
+                    return $a->getImage();
+                },
+                $pageImages
+            );
         }
-        return $images;
 
     }
 
@@ -891,7 +893,7 @@ class Page extends DokuPath
     function getImage(): ?Image
     {
 
-        $images = $this->getLocalImageSet();
+        $images = $this->getPageImagesAsImageOrDefault();
         if (sizeof($images) >= 1) {
             return $images[0];
         } else {
@@ -1921,7 +1923,7 @@ class Page extends DokuPath
 
     public function getTypeValues(): array
     {
-        $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE, Page::CUSTOM_TYPE];
+        $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE, Page::OTHER_TYPE];
         sort($types);
         return $types;
     }
@@ -2006,9 +2008,9 @@ class Page extends DokuPath
 
     /**
      * @param string|null $tag
-     * @return Image[]|null
+     * @return PageImage[]|null
      */
-    public function getPageImages($tag = null): ?array
+    public function getPageImagesObject($tag = null): ?array
     {
         $pagesImages = $this->getMetadata(self::IMAGE_META_PROPERTY);
         if ($pagesImages === null) {
@@ -2018,16 +2020,19 @@ class Page extends DokuPath
                 $images = [];
                 foreach ($pagesImages as $key => $imageIdFromMeta) {
                     if (is_array($imageIdFromMeta)) {
-
+                        foreach ($imageIdFromMeta as $pageImage) {
+                            DokuPath::addRootSeparatorIfNotPresent($pageImage);
+                            $images[] = PageImage::create($pageImage)->setTag($key);
+                        }
                     } else {
                         DokuPath::addRootSeparatorIfNotPresent($imageIdFromMeta);
-                        $images[$key] = Image::createImageFromAbsolutePath($imageIdFromMeta);
+                        $images[] = PageImage::create($imageIdFromMeta)->setTag($key);
                     }
                 }
                 return $images;
             } else {
                 DokuPath::addRootSeparatorIfNotPresent($pagesImages);
-                return array(Image::createImageFromAbsolutePath($pagesImages));
+                return array(PageImage::create($pagesImages));
             }
         }
 
@@ -2058,15 +2063,28 @@ class Page extends DokuPath
 
     public function setJsonLd(string $jsonLdString): Page
     {
-        $jsonLdArray = json_decode($jsonLdString,true);
+        $jsonLdArray = json_decode($jsonLdString, true);
         $this->setMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY, $jsonLdArray);
         return $this;
     }
 
     public function setPageType(string $string): Page
     {
-        $this->setMetadata(Page::TYPE_META_PROPERTY,$string);
+        $this->setMetadata(Page::TYPE_META_PROPERTY, $string);
         return $this;
+    }
+
+    public function getDefaultPageImage(): ?PageImage
+    {
+        if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+            $firstImage = $this->getFirstImage();
+            if ($firstImage != null) {
+                if ($firstImage->getScheme() == DokuPath::LOCAL_SCHEME) {
+                    return PageImage::create($firstImage);
+                }
+            }
+        }
+        return null;
     }
 
 

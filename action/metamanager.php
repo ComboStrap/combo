@@ -8,6 +8,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MetadataMenuItem;
 use ComboStrap\Page;
+use ComboStrap\PageImage;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 use ComboStrap\Site;
@@ -48,6 +49,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const TAB_PAGE_VALUE = "Page";
     const TAB_LANGUAGE_VALUE = "Language";
     const TAB_REPLICATION_VALUE = "Replication";
+    const TAB_IMAGE_VALUE = "Image";
 
     /**
      * The canonical for the metadata page
@@ -317,7 +319,35 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metas[Analytics::PATH] = $metasPath;
 
                 // Image
-                $pageImages = $page->getPageImages();
+                $pageImages = $page->getPageImagesObject();
+                $pageImageDefault = $page->getDefaultPageImage();
+                /**
+                 * @var PageImage $pageImage
+                 */
+                foreach ($pageImages as $key => $pageImage) {
+                    $pageImage = [];
+
+                    /**
+                     * Label
+                     */
+                    $pageImage[self::VALUE_ATTRIBUTE] = $pageImage->getTag();
+                    $pageImage[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImage->getDefaultTag();
+                    $pageImage[self::MUTABLE_ATTRIBUTE] = true;
+                    $pageImage[self::VALUES_ATTRIBUTE] = $pageImage->getTagValues();
+                    $pageImage[self::TAB_ATTRIBUTE] = self::TAB_IMAGE_VALUE;
+                    // Label only for the first
+                    if ($key == 0) {
+                        $pageImage[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                            syntax_plugin_combo_pageimage::CANONICAL,
+                            "Page Image",
+                            false,
+                            "The illustrative images of the page"
+                        );
+                    }
+                    $metas[Page::TYPE_META_PROPERTY] = $pageImage;
+
+                }
+
 
                 // Page Type
                 $metasPageType[self::VALUE_ATTRIBUTE] = $page->getType();

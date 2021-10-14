@@ -291,7 +291,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 if (value === null) {
                     selected = "selected";
                 }
-                htmlElement += `<option ${selected}>Default${defaultValueHtml}</option>`;
+                htmlElement += `<option value="" ${selected}>Default${defaultValueHtml}</option>`;
                 for (let selectValue of domainValues) {
                     if (selectValue === value) {
                         selected = "selected";

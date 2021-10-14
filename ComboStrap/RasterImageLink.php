@@ -248,6 +248,7 @@ class RasterImageLink extends ImageLink
                          * Small image but there is no little improvement
                          */
                         $attributes->addHtmlAttributeValue("data-src", $srcValue);
+                        $attributes->addHtmlAttributeValue("src", LazyLoad::getPlaceholder());
 
                     }
 

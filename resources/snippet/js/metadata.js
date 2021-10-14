@@ -244,8 +244,16 @@ window.addEventListener("DOMContentLoaded", function () {
             return label;
         }
 
+        getLabelUrl() {
+            let label = this.properties["url"];
+            if (label === undefined) {
+                return this.getLabel();
+            }
+            return label;
+        }
+
         getHtmlLabel(forId, customClass) {
-            let label = this.getLabel();
+            let label = this.getLabelUrl();
             let classLabel = "";
             if (this.getType() === "boolean") {
                 classLabel = "form-check"
@@ -278,7 +286,7 @@ window.addEventListener("DOMContentLoaded", function () {
                     defaultValueHtml = ` (${defaultValue})`;
                 }
 
-                htmlElement = `<select class="form-select" aria-label="${label}">`;
+                htmlElement = `<select class="form-select" aria-label="${this.getLabel()}">`;
                 let selected = "";
                 if (value === null) {
                     selected = "selected";
@@ -553,7 +561,7 @@ window.addEventListener("DOMContentLoaded", function () {
             for (let htmlFormElement of htmlFormElementsByTab[tab]) {
 
                 let datatype = htmlFormElement["type"];
-                switch (datatype){
+                switch (datatype) {
                     case "tabular":
                         break;
                     default:
@@ -563,9 +571,9 @@ window.addEventListener("DOMContentLoaded", function () {
                          * @type ControlElement
                          */
                         let htmlElement = htmlFormElement["elements"];
-                        let labelHtml = htmlElement.getHtmlLabel(elementId,`col-sm-${leftColSize}`);
+                        let labelHtml = htmlElement.getHtmlLabel(elementId, `col-sm-${leftColSize}`);
                         let value = htmlFormElement["values"];
-                        let controlHtml = htmlElement.getHtml(elementId,value[0],value[1])
+                        let controlHtml = htmlElement.getHtml(elementId, value[0], value[1])
                         htmlTabPans += `
 <div class="row mb-3">
     ${labelHtml}

@@ -40,8 +40,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const DATETIME_TYPE_VALUE = "datetime";
     const PARAGRAPH_TYPE_VALUE = "paragraph";
     const BOOLEAN_TYPE_VALUE = "boolean";
-    const LABEL_ATTRIBUTE = "label";
+    const LABEL_URL_ATTRIBUTE = "url";
     const TABULAR_TYPE_ATTRIBUTE = "tabular";
+    const LABEL_ATTRIBUTE = "label";
 
     /**
      * The tabs attribute and value
@@ -196,7 +197,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
                 $metasCanonical[self::MUTABLE_ATTRIBUTE] = true;
                 $metasCanonical[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasCanonical[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasCanonical[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Analytics::CANONICAL,
                     "Canonical",
                     false,
@@ -209,7 +210,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasName[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultPageName();
                 $metasName[self::MUTABLE_ATTRIBUTE] = true;
                 $metasName[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasName[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasName[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Analytics::NAME,
                     "Name",
                     false,
@@ -222,7 +223,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasTitle[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultTitle();
                 $metasTitle[self::MUTABLE_ATTRIBUTE] = true;
                 $metasTitle[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasTitle[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasTitle[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Analytics::TITLE,
                     "Title",
                     false,
@@ -235,7 +236,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasH1Value[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultH1();
                 $metasH1Value[self::MUTABLE_ATTRIBUTE] = true;
                 $metasH1Value[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasH1Value[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasH1Value[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Analytics::H1,
                     "H1",
                     false,
@@ -249,7 +250,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasDescription[self::MUTABLE_ATTRIBUTE] = true;
                 $metasDescription[self::DATA_TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
                 $metasDescription[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasDescription[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasDescription[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Analytics::DESCRIPTION,
                     "Description",
                     false,
@@ -263,7 +264,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $layout[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
                 $layout[self::DOMAIN_VALUES_ATTRIBUTE] = $page->getLayoutValues();
                 $layout[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $layout[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $layout[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Page::LAYOUT_PROPERTY,
                     "Layout",
                     false,
@@ -277,7 +278,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $modifiedDate[self::MUTABLE_ATTRIBUTE] = false;
                 $modifiedDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $modifiedDate[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $modifiedDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $modifiedDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     self::METADATA_CANONICAL,
                     "Modification Date",
                     false,
@@ -290,7 +291,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $dateCreated[self::MUTABLE_ATTRIBUTE] = false;
                 $dateCreated[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $dateCreated[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $dateCreated[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $dateCreated[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     self::METADATA_CANONICAL,
                     "Creation Date",
                     false,
@@ -299,12 +300,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metas[Analytics::DATE_CREATED] = $dateCreated;
 
 
-
                 // Path
                 $metasPath[self::VALUE_ATTRIBUTE] = $page->getPath();
                 $metasPath[self::MUTABLE_ATTRIBUTE] = false;
                 $metasPath[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasPath[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasPath[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Analytics::PATH,
                     "Path",
                     false,
@@ -318,27 +318,28 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $pageImages[self::COLUMNS_ATTRIBUTE] = [];
                 $pageImageTag[self::MUTABLE_ATTRIBUTE] = true;
                 $pageImageTag[self::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getTagValues();
-                $pageImageTag[self::LABEL_ATTRIBUTE]=PluginUtility::getDocumentationUrl(
+                $pageImageTag[self::LABEL_ATTRIBUTE] = "Image Tag";
+                $pageImageTag[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     syntax_plugin_combo_pageimage::CANONICAL,
                     "Image Tag",
                     false,
                     "The tag of the image"
                 );
                 $metadataImageLabelName = "image-tag";
-                $pageImageTag[self::NAME_ATTRIBUTE]=$metadataImageLabelName;
+                $pageImageTag[self::NAME_ATTRIBUTE] = $metadataImageLabelName;
                 $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImageTag;
                 $pageImagePath[self::MUTABLE_ATTRIBUTE] = true;
-                $pageImagePath[self::LABEL_ATTRIBUTE]=PluginUtility::getDocumentationUrl(
+                $pageImagePath[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     syntax_plugin_combo_pageimage::CANONICAL,
                     "Image Path",
                     false,
                     "The path of the image"
                 );
                 $metadataImagePathName = "image-path";
-                $pageImagePath[self::NAME_ATTRIBUTE]=$metadataImagePathName;
+                $pageImagePath[self::NAME_ATTRIBUTE] = $metadataImagePathName;
                 $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImagePath;
                 $pageImages[self::TAB_ATTRIBUTE] = self::TAB_IMAGE_VALUE;
-                $pageImages[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $pageImages[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     syntax_plugin_combo_pageimage::CANONICAL,
                     "Page Image",
                     false,
@@ -400,7 +401,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasPageType[self::MUTABLE_ATTRIBUTE] = true;
                 $metasPageType[self::DOMAIN_VALUES_ATTRIBUTE] = $page->getTypeValues();
                 $metasPageType[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $metasPageType[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasPageType[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     self::PAGE_TYPE_CANONICAL,
                     "Page Type",
                     false,
@@ -415,7 +416,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $publishedDate[self::MUTABLE_ATTRIBUTE] = true;
                 $publishedDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $publishedDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $publishedDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $publishedDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     self::PAGE_TYPE_CANONICAL,
                     "Publication Date",
                     false,
@@ -428,7 +429,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $startDate[self::MUTABLE_ATTRIBUTE] = true;
                 $startDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $startDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $startDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $startDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Page::EVENT_TYPE,
                     "Start Date",
                     false,
@@ -441,7 +442,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $endDate[self::MUTABLE_ATTRIBUTE] = true;
                 $endDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $endDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $endDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $endDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Page::EVENT_TYPE,
                     "End Date",
                     false,
@@ -456,7 +457,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $ldJson[self::DEFAULT_VALUE_ATTRIBUTE] = "Enter a json-ld value";
                 $ldJson[self::DATA_TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
                 $ldJson[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $ldJson[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $ldJson[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     action_plugin_combo_metagoogle::CANONICAL,
                     "Json-ld",
                     false,
@@ -470,7 +471,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLowQualityIndicator();
                 $isLowQualityPage[self::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
                 $isLowQualityPage[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
-                $isLowQualityPage[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $isLowQualityPage[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     LowQualityPage::LOW_QUALITY_PAGE_CANONICAL,
                     "Low Quality Page Indicator",
                     false,
@@ -484,7 +485,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $isQualityMonitoringOn[self::DEFAULT_VALUE_ATTRIBUTE] = !$this->getConf(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING);
                 $isQualityMonitoringOn[self::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
                 $isQualityMonitoringOn[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
-                $isQualityMonitoringOn[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $isQualityMonitoringOn[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     "quality:dynamic_monitoring",
                     "Dynamic Quality Monitoring",
                     false,
@@ -498,7 +499,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $locale[self::MUTABLE_ATTRIBUTE] = false;
                 $locale[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLocale();
                 $locale[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $locale[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $locale[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     "locale",
                     "Locale",
                     false,
@@ -511,7 +512,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $lang[self::MUTABLE_ATTRIBUTE] = true;
                 $lang[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLang();
                 $lang[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $lang[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $lang[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Page::LANG_META_PROPERTY,
                     "Language",
                     false,
@@ -524,7 +525,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $region[self::MUTABLE_ATTRIBUTE] = true;
                 $region[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLanguageRegion();
                 $region[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $region[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $region[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Page::REGION_META_PROPERTY,
                     "Region",
                     false,
@@ -538,7 +539,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $replicationDate[self::MUTABLE_ATTRIBUTE] = false;
                 $replicationDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
                 $replicationDate[self::TAB_ATTRIBUTE] = self::TAB_REPLICATION_VALUE;
-                $replicationDate[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $replicationDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     DatabasePage::REPLICATION_CANONICAL,
                     "Replication Date",
                     false,
@@ -550,7 +551,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
                 $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
                 $metasUuid[self::TAB_ATTRIBUTE] = self::TAB_REPLICATION_VALUE;
-                $metasUuid[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasUuid[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Page::UUID_ATTRIBUTE,
                     "UUID",
                     false,

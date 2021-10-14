@@ -6,6 +6,11 @@ window.addEventListener("DOMContentLoaded", function () {
      */
     let comboModals = {};
 
+    /**
+     *
+     * @param modalId
+     * @return {ComboModal}
+     */
     let getComboModal = function (modalId) {
         return comboModals[modalId];
     }
@@ -154,6 +159,10 @@ window.addEventListener("DOMContentLoaded", function () {
 
         dismiss() {
             this.bootStrapModal.hide();
+        }
+
+        getId() {
+            return this.modalId;
         }
     }
 
@@ -307,7 +316,7 @@ window.addEventListener("DOMContentLoaded", function () {
             } else {
 
                 let htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
-                if(!(defaultValue===null || defaultValue===undefined)){
+                if (!(defaultValue === null || defaultValue === undefined)) {
                     htmlPlaceholder = `placeholder="${defaultValue}"`;
                 }
                 let htmlValue = "";
@@ -424,18 +433,13 @@ window.addEventListener("DOMContentLoaded", function () {
         return new ComboAjaxUrl(pageId);
     }
 
-    let openMetadataManager = async function (pageId) {
-
-
-        let modalManagerId = `combo_metadata_manager`;
-        let managerModal = getComboModal(modalManagerId);
-
-        if (managerModal !== undefined) {
-            managerModal.show();
-            return;
-        }
-
-        managerModal = createComboModal(modalManagerId);
+    /**
+     *
+     * @param {ComboModal} managerModal
+     * @param pageId
+     * @return {Promise<*>}
+     */
+    async function fetchAndBuildMetadataManager(managerModal, pageId) {
 
         let call = createGetCall(pageId);
         let jsonMetaDataObject = await call.getJson();
@@ -618,7 +622,7 @@ window.addEventListener("DOMContentLoaded", function () {
         }
         htmlTabPans += "</div>";
 
-        let formId = modalManagerId + "_form";
+        let formId = managerModal.getId() + "_form";
         let endpoint = createAjaxUrl(pageId).toString();
         managerModal.addBody(`<form id="${formId}" method="post" action="${endpoint}">${htmlTabNavs} ${htmlTabPans} </form>`);
 
@@ -642,9 +646,35 @@ window.addEventListener("DOMContentLoaded", function () {
         submitButton.innerText = "Submit";
         submitButton.addEventListener("click", function (event) {
             event.preventDefault();
+            let formData = new FormData(document.getElementById(formId));
+            let newFormatData = new FormData();
+            for (let entry of formData) {
+                let name = entry[0];
+                let value = entry[1];
+                if (value !== "") {
+                    newFormatData.append(name, value);
+                }
+            }
             console.log("Submitted");
+            for (let entry of newFormatData) {
+                console.log( entry );
+            }
         })
         managerModal.addFooterButton(submitButton);
+
+        return managerModal;
+    }
+
+    let openMetadataManager = async function (pageId) {
+
+
+        let modalManagerId = `combo_metadata_manager_page_${pageId}`;
+        let managerModal = getComboModal(modalManagerId);
+
+        if (managerModal === undefined) {
+            managerModal = createComboModal(modalManagerId);
+            managerModal = await fetchAndBuildMetadataManager(managerModal, pageId);
+        }
         managerModal.show();
 
 

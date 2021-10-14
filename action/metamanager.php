@@ -32,19 +32,22 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      */
     const VALUE_ATTRIBUTE = "value";
     const DEFAULT_VALUE_ATTRIBUTE = "default";
-    const MUTABLE_ATTRIBUTE = "mutable";
     const VALUES_ATTRIBUTE = "values";
+    const MUTABLE_ATTRIBUTE = "mutable";
+    const NAME_ATTRIBUTE = "name";
+    const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
     const DATA_TYPE_ATTRIBUTE = "type"; //data type
     const DATETIME_TYPE_VALUE = "datetime";
     const PARAGRAPH_TYPE_VALUE = "paragraph";
     const BOOLEAN_TYPE_VALUE = "boolean";
     const LABEL_ATTRIBUTE = "label";
-    const ROWS_TYPE_ATTRIBUTE = "rows";
+    const TABULAR_TYPE_ATTRIBUTE = "tabular";
 
     /**
      * The tabs attribute and value
      */
     const TAB_ATTRIBUTE = "tab";
+    const COLUMNS_ATTRIBUTE = "columns";
     const TAB_TYPE_VALUE = "Page Type";
     const TAB_QUALITY_VALUE = "Quality";
     const TAB_PAGE_VALUE = "Page";
@@ -60,6 +63,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      * The canonical for page type
      */
     const PAGE_TYPE_CANONICAL = "page:type";
+
 
 
     public function register(Doku_Event_Handler $controller)
@@ -257,7 +261,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $layout[self::VALUE_ATTRIBUTE] = $page->getLayout();
                 $layout[self::MUTABLE_ATTRIBUTE] = true;
                 $layout[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
-                $layout[self::VALUES_ATTRIBUTE] = $page->getLayoutValues();
+                $layout[self::DOMAIN_VALUES_ATTRIBUTE] = $page->getLayoutValues();
                 $layout[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
                 $layout[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Page::LAYOUT_PROPERTY,
@@ -295,17 +299,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metas[Analytics::DATE_CREATED] = $dateCreated;
 
 
-                // UUID
-                $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
-                $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
-                $metasUuid[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasUuid[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                    Page::UUID_ATTRIBUTE,
-                    "UUID",
-                    false,
-                    "UUID is the Universally Unique IDentifier of the page used in replication (between database or installation)"
-                );
-                $metas[Page::UUID_ATTRIBUTE] = $metasUuid;
 
                 // Path
                 $metasPath[self::VALUE_ATTRIBUTE] = $page->getPath();
@@ -321,7 +314,29 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 // Image
                 $pageImages = [];
-                $pageImages[self::DATA_TYPE_ATTRIBUTE] = self::ROWS_TYPE_ATTRIBUTE;
+                $pageImages[self::DATA_TYPE_ATTRIBUTE] = self::TABULAR_TYPE_ATTRIBUTE;
+                $pageImages[self::COLUMNS_ATTRIBUTE] = [];
+                $pageImageTag[self::MUTABLE_ATTRIBUTE] = true;
+                $pageImageTag[self::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getTagValues();
+                $pageImageTag[self::LABEL_ATTRIBUTE]=PluginUtility::getDocumentationUrl(
+                    syntax_plugin_combo_pageimage::CANONICAL,
+                    "Image Tag",
+                    false,
+                    "The tag of the image"
+                );
+                $metadataImageLabelName = "image-tag";
+                $pageImageTag[self::NAME_ATTRIBUTE]=$metadataImageLabelName;
+                $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImageTag;
+                $pageImagePath[self::MUTABLE_ATTRIBUTE] = true;
+                $pageImagePath[self::LABEL_ATTRIBUTE]=PluginUtility::getDocumentationUrl(
+                    syntax_plugin_combo_pageimage::CANONICAL,
+                    "Image Path",
+                    false,
+                    "The path of the image"
+                );
+                $metadataImagePathName = "image-path";
+                $pageImagePath[self::NAME_ATTRIBUTE]=$metadataImagePathName;
+                $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImagePath;
                 $pageImages[self::TAB_ATTRIBUTE] = self::TAB_IMAGE_VALUE;
                 $pageImages[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     syntax_plugin_combo_pageimage::CANONICAL,
@@ -347,17 +362,15 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     /**
                      * Label
                      */
-                    $pageImageLabel = [];
+                    $pageImageTag = [];
                     if ($pageImage != null) {
-                        $pageImageLabel[self::VALUE_ATTRIBUTE] = $pageImage->getTag();
+                        $pageImageTag[self::VALUE_ATTRIBUTE] = $pageImage->getTag();
                     }
-                    $pageImageLabel[self::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultTag();
+                    $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultTag();
                     if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImageLabel[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultTag();
+                        $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultTag();
                     }
-                    $pageImageLabel[self::MUTABLE_ATTRIBUTE] = true;
-                    $pageImageLabel[self::VALUES_ATTRIBUTE] = PageImage::getTagValues();
-                    $pageImageRow["image-label"] = $pageImageLabel;
+                    $pageImageRow[$metadataImageLabelName] = $pageImageTag;
 
                     /**
                      * Image
@@ -369,8 +382,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     if ($i == 0 && $pageImageDefault !== null) {
                         $pageImagePath[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getImage()->getPath();
                     }
-                    $pageImagePath[self::MUTABLE_ATTRIBUTE] = true;
-                    $pageImageRow["image-path"] = $pageImagePath;
+                    $pageImageRow[$metadataImagePathName] = $pageImagePath;
 
                     /**
                      * Add the row
@@ -378,7 +390,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     $pageImageRows[] = $pageImageRow;
 
                 }
-                $pageImages[self::VALUE_ATTRIBUTE] = $pageImageRows;
+                $pageImages[self::VALUES_ATTRIBUTE] = $pageImageRows;
                 $metas["image"] = $pageImages;
 
 
@@ -386,7 +398,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasPageType[self::VALUE_ATTRIBUTE] = $page->getType();
                 $metasPageType[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultType();
                 $metasPageType[self::MUTABLE_ATTRIBUTE] = true;
-                $metasPageType[self::VALUES_ATTRIBUTE] = $page->getTypeValues();
+                $metasPageType[self::DOMAIN_VALUES_ATTRIBUTE] = $page->getTypeValues();
                 $metasPageType[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
                 $metasPageType[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     self::PAGE_TYPE_CANONICAL,
@@ -533,6 +545,18 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The last date of database replication"
                 );
                 $metas[DatabasePage::DATE_REPLICATION] = $replicationDate;
+
+                // UUID
+                $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
+                $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
+                $metasUuid[self::TAB_ATTRIBUTE] = self::TAB_REPLICATION_VALUE;
+                $metasUuid[self::LABEL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    Page::UUID_ATTRIBUTE,
+                    "UUID",
+                    false,
+                    "UUID is the Universally Unique IDentifier of the page used in replication (between database or installation)"
+                );
+                $metas[Page::UUID_ATTRIBUTE] = $metasUuid;
 
                 header('Content-type: application/json');
                 header("Status: 200");

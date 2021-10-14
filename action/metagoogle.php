@@ -53,7 +53,11 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
         $this->setupLocale();
     }
 
-    private static function addImage(array &$ldJson, $page)
+    /**
+     * @param array $ldJson
+     * @param Page $page
+     */
+    private static function addImage(array &$ldJson, Page $page)
     {
         /**
          * Image must belong to the page
@@ -74,7 +78,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             "image/webp",
             "image/svg+xml",
         ];
-        $imagesSet = $page->getLocalImageSet();
+        $imagesSet = $page->getPageImagesAsImageOrDefault();
         $schemaImages = array();
         foreach ($imagesSet as $image) {
 

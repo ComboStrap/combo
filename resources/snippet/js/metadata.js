@@ -31,8 +31,8 @@ window.addEventListener("DOMContentLoaded", function () {
         return comboCall;
     }
 
-    let createControlElement = function (metadata, properties) {
-        return new ControlElement(metadata, properties);
+    let createControlElement = function (properties) {
+        return new ControlElement(properties);
     }
 
     class ComboModal {
@@ -224,8 +224,8 @@ window.addEventListener("DOMContentLoaded", function () {
     class ControlElement {
 
 
-        constructor(name, properties) {
-            this.name = name;
+        constructor(properties) {
+
             this.properties = properties;
         }
 
@@ -236,7 +236,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
             let label = this.properties["label"];
             if (label === undefined) {
-                return this.name
+                return this.getName()
                     .split(/_|-/)
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                     .join(" ");
@@ -286,7 +286,7 @@ window.addEventListener("DOMContentLoaded", function () {
                     defaultValueHtml = ` (${defaultValue})`;
                 }
 
-                htmlElement = `<select class="form-select" aria-label="${this.getLabel()}">`;
+                htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}">`;
                 let selected = "";
                 if (value === null) {
                     selected = "selected";
@@ -306,10 +306,13 @@ window.addEventListener("DOMContentLoaded", function () {
 
             } else {
 
-                let htmlPlaceholder = `placeholder="${defaultValue}"`;
+                let htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
+                if(!(defaultValue===null || defaultValue===undefined)){
+                    htmlPlaceholder = `placeholder="${defaultValue}"`;
+                }
                 let htmlValue = "";
                 let inputType;
-                let name = this.name;
+                let name = this.getName();
 
                 /**
                  * With disable, the data is not in the form
@@ -358,7 +361,7 @@ window.addEventListener("DOMContentLoaded", function () {
                     case "line":
                     default:
                         inputType = "text";
-                        if (value !== null) {
+                        if (!(value === null || value === undefined)) {
                             htmlValue = `value="${value}"`;
                         }
                 }
@@ -379,6 +382,10 @@ window.addEventListener("DOMContentLoaded", function () {
 
         getType() {
             return this.properties["type"];
+        }
+
+        getName() {
+            return this.properties["name"];
         }
     }
 
@@ -433,56 +440,46 @@ window.addEventListener("DOMContentLoaded", function () {
         let call = createGetCall(pageId);
         let jsonMetaDataObject = await call.getJson();
 
-
         /**
          * Parsing the data
          * before creating the header and body modal
          */
         let htmlFormElementsByTab = {};
-        let metadataProperties;
-        let metadataType;
+        let formNodeType;
 
-        let metadataTab;
-        for (const metadata in jsonMetaDataObject) {
-            if (jsonMetaDataObject.hasOwnProperty(metadata)) {
-                metadataProperties = jsonMetaDataObject[metadata];
-                metadataType = metadataProperties["type"];
-                metadataTab = metadataProperties["tab"];
+        let formNodeTab;
+        for (const formNode of jsonMetaDataObject) {
 
-                let controlElements = [];
-                let values = [];
-                let group = "";
-                switch (metadataType) {
-                    case "tabular":
-                        let columns = metadataProperties["columns"];
-                        for (const column of columns) {
-                            let rowOfControlElements = [];
-                            for (const rowMetadata in column) {
-                                if (column.hasOwnProperty(rowMetadata)) {
-                                    rowOfControlElements.push(createControlElement(rowMetadata, column[rowMetadata]));
-                                }
-                            }
-                            controlElements.push(rowOfControlElements);
-                        }
-                        values = metadataProperties["values"];
-                        group = metadataProperties["label"];
-                        break
-                    default:
-                        controlElements = createControlElement(metadata, metadataProperties);
-                        values = [metadataProperties["value"], metadataProperties["default"]];
-                }
+            formNodeType = formNode["type"];
+            formNodeTab = formNode["tab"];
 
-                if (htmlFormElementsByTab[metadataTab] === undefined) {
-                    htmlFormElementsByTab[metadataTab] = [];
-                }
-                htmlFormElementsByTab[metadataTab].push({
-                    "type": metadataType,
-                    "group": group,
-                    "elements": controlElements,
-                    "values": values
-                });
-
+            let controlElements = [];
+            let values = [];
+            let group = "";
+            switch (formNodeType) {
+                case "tabular":
+                    let columns = formNode["columns"];
+                    for (const column of columns) {
+                        let controlElement = createControlElement(column);
+                        controlElements.push(controlElement);
+                    }
+                    values = formNode["values"];
+                    group = formNode["url"];
+                    break
+                default:
+                    controlElements = createControlElement(formNode);
+                    values = [formNode["value"], formNode["default"]];
             }
+
+            if (htmlFormElementsByTab[formNodeTab] === undefined) {
+                htmlFormElementsByTab[formNodeTab] = [];
+            }
+            htmlFormElementsByTab[formNodeTab].push({
+                "type": formNodeType,
+                "group": group,
+                "elements": controlElements,
+                "values": values
+            });
 
         }
 
@@ -563,6 +560,40 @@ window.addEventListener("DOMContentLoaded", function () {
                 let datatype = htmlFormElement["type"];
                 switch (datatype) {
                     case "tabular":
+                        let group = htmlFormElement["group"];
+                        htmlTabPans += `<div class="row mb-3 text-center">${group}</div>`;
+                        let colsControlElement = htmlFormElement["elements"];
+                        let rows = htmlFormElement["values"];
+                        let colImageTag = "4";
+                        let colImagePath = "8";
+                        htmlTabPans += `<div class="row mb-3">`;
+                        for (const colControlElement of colsControlElement) {
+                            if (colControlElement.getName() === "image-tag") {
+                                htmlTabPans += `<div class="col-sm-${colImageTag} text-center">`;
+                            } else {
+                                htmlTabPans += `<div class="col-sm-${colImagePath} text-center">`;
+                            }
+                            htmlTabPans += colControlElement.getLabelUrl();
+                            htmlTabPans += `</div>`;
+                        }
+                        htmlTabPans += `</div>`;
+                        for (let i = 0; i < rows.length; i++) {
+                            let row = rows[i];
+                            htmlTabPans += `<div class="row mb-3">`;
+                            for (let i = 0; i < colsControlElement.length; i++) {
+                                let colControlElement = colsControlElement[i];
+                                elementIdCounter++;
+                                let elementId = `combo-metadata-manager-control-${elementIdCounter}`;
+                                if (colControlElement.getName() === "image-tag") {
+                                    htmlTabPans += `<div class="col-sm-${colImageTag}">`;
+                                } else {
+                                    htmlTabPans += `<div class="col-sm-${colImagePath}">`;
+                                }
+                                htmlTabPans += colControlElement.getHtml(elementId, row[i]["value"], row[i]["default"]);
+                                htmlTabPans += `</div>`;
+                            }
+                            htmlTabPans += `</div>`;
+                        }
                         break;
                     default:
                         elementIdCounter++;

@@ -488,7 +488,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $isLowQualityPage[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
                 $isLowQualityPage[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     LowQualityPage::LOW_QUALITY_PAGE_CANONICAL,
-                    "The page is always a high quality page",
+                    "The page is a high quality page",
                     false,
                     "If checked, the page will never be a low quality page"
                 );
@@ -561,7 +561,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $replicationDate[self::TAB_ATTRIBUTE] = self::TAB_REPLICATION_VALUE;
                 $replicationDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     DatabasePage::REPLICATION_CANONICAL,
-                    "Replication Date",
+                    "Database Replication Date",
                     false,
                     "The last date of database replication"
                 );

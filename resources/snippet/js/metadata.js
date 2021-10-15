@@ -556,6 +556,9 @@ window.addEventListener("DOMContentLoaded", function () {
             } else if (tab === "Language") {
                 leftColSize = 2;
                 rightColSize = 10;
+            } else if (tab === "Replication") {
+                leftColSize = 4;
+                rightColSize = 8;
             } else {
                 leftColSize = 3;
                 rightColSize = 9;

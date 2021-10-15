@@ -362,10 +362,11 @@ window.addEventListener("DOMContentLoaded", function () {
                     case "boolean":
                         inputType = "checkbox";
                         htmlClass = "form-check-input";
-                        if (value === true) {
+                        if (value === defaultValue) {
                             checked = "checked"
                         }
                         htmlValue = `value="${value}"`;
+                        htmlPlaceholder = "";
                         break;
                     case "line":
                     default:
@@ -550,8 +551,8 @@ window.addEventListener("DOMContentLoaded", function () {
             }
             htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
             if (tab === "Quality") {
-                leftColSize = 4;
-                rightColSize = 8;
+                leftColSize = 5;
+                rightColSize = 7;
             } else if (tab === "Language") {
                 leftColSize = 2;
                 rightColSize = 10;
@@ -657,7 +658,7 @@ window.addEventListener("DOMContentLoaded", function () {
             }
             console.log("Submitted");
             for (let entry of newFormatData) {
-                console.log( entry );
+                console.log(entry);
             }
         })
         managerModal.addFooterButton(submitButton);

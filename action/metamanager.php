@@ -480,16 +480,17 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metas[] = $ldJson;
 
                 // Is low quality page
-                $isLowQualityPage[self::VALUE_ATTRIBUTE] = $page->getLowQualityIndicator();
+                $lowQualityIndicator = $page->getLowQualityIndicator();
+                $isLowQualityPage[self::VALUE_ATTRIBUTE] = $lowQualityIndicator;
                 $isLowQualityPage[self::MUTABLE_ATTRIBUTE] = true;
-                $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLowQualityIndicator();
+                $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = false; // the value returned if checked
                 $isLowQualityPage[self::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
                 $isLowQualityPage[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
                 $isLowQualityPage[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     LowQualityPage::LOW_QUALITY_PAGE_CANONICAL,
-                    "Low Quality Page Indicator",
+                    "The page is always a high quality page",
                     false,
-                    "If checked, the page will be tagged as a low quality page"
+                    "If checked, the page will never be a low quality page"
                 );
                 $isLowQualityPage[self::NAME_ATTRIBUTE] = Page::LOW_QUALITY_PAGE_INDICATOR;
                 $metas[] = $isLowQualityPage;
@@ -497,14 +498,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 // Quality Monitoring
                 $isQualityMonitoringOn[self::VALUE_ATTRIBUTE] = $page->isQualityMonitored();
                 $isQualityMonitoringOn[self::MUTABLE_ATTRIBUTE] = true;
-                $isQualityMonitoringOn[self::DEFAULT_VALUE_ATTRIBUTE] = !$this->getConf(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING);
+                $isQualityMonitoringOn[self::DEFAULT_VALUE_ATTRIBUTE] = false; // the value returned if checked
                 $isQualityMonitoringOn[self::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
                 $isQualityMonitoringOn[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
                 $isQualityMonitoringOn[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     "quality:dynamic_monitoring",
-                    "Dynamic Quality Monitoring",
+                    "Disable the quality control of the page",
                     false,
-                    "If checked, the quality message will be shown for the page."
+                    "If checked, the quality message will not be shown for the page."
                 );
                 $isQualityMonitoringOn[self::NAME_ATTRIBUTE] = action_plugin_combo_qualitymessage::DISABLE_INDICATOR;
                 $metas[] = $isQualityMonitoringOn;

@@ -551,8 +551,8 @@ window.addEventListener("DOMContentLoaded", function () {
             }
             htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
             if (tab === "Quality") {
-                leftColSize = 5;
-                rightColSize = 7;
+                leftColSize = 6;
+                rightColSize = 6;
             } else if (tab === "Language") {
                 leftColSize = 2;
                 rightColSize = 10;

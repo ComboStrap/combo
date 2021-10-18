@@ -41,6 +41,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     // Where the target id value comes from
     const TARGET_ORIGIN_PAGE_RULES = 'pageRules';
     const TARGET_ORIGIN_CANONICAL = 'canonical';
+    const TARGET_ORIGIN_ALIAS = 'alias';
     const TARGET_ORIGIN_START_PAGE = 'startPage';
     const TARGET_ORIGIN_BEST_PAGE_NAME = 'bestPageName';
     const TARGET_ORIGIN_BEST_NAMESPACE = 'bestNamespace';
@@ -80,7 +81,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        if(PluginUtility::getConfValue(self::URL_MANAGER_ENABLE_CONF,1)) {
+        if (PluginUtility::getConfValue(self::URL_MANAGER_ENABLE_CONF, 1)) {
             /* This will call the function _handle404 */
             $controller->register_hook('DOKUWIKI_STARTED',
                 'AFTER',
@@ -136,8 +137,14 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          * Page Id is a Canonical ?
          */
         $targetPage = Page::createPageFromCanonical($ID);
-        if ($targetPage->exists()) {
+        if ($targetPage !== null && $targetPage->exists()) {
             $this->performIdRedirect($targetPage->getId(), self::TARGET_ORIGIN_CANONICAL);
+            return;
+        }
+
+        $targetPage = Page::createPageFromAlias($ID);
+        if ($targetPage !== null && $targetPage->exists()) {
+            $this->httpRedirect($targetPage->getId(),self::TARGET_ORIGIN_ALIAS);
             return;
         }
 
@@ -444,7 +451,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          */
         global $conf;
         if ($conf['send404'] == true) {
-            LogUtility::msg("The <a href=\"https://www.dokuwiki.org/config:send404\">dokuwiki send404 configuration</a> is on and should be disabled when using the url manager",LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("The <a href=\"https://www.dokuwiki.org/config:send404\">dokuwiki send404 configuration</a> is on and should be disabled when using the url manager", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
 
         // Redirection
@@ -461,7 +468,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
      * @param bool $permanent - true for a permanent redirection otherwise false
      */
     private
-    function httpRedirect($target, $targetOrigin, $permanent = false)
+    function httpRedirect(string $target, $targetOrigin, bool $permanent = false)
     {
 
         global $ID;
@@ -607,7 +614,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
      * @param $algorithmic
      * @param $method - http or rewrite
      */
-    function logRedirection($sourcePageId, $targetPageId, $algorithmic, $method)
+    function logRedirection(string $sourcePageId, $targetPageId, $algorithmic, $method)
     {
 
         $row = array(

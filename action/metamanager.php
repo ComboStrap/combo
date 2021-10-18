@@ -488,9 +488,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $isLowQualityPage[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
                 $isLowQualityPage[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     LowQualityPage::LOW_QUALITY_PAGE_CANONICAL,
-                    "The page is a high quality page",
+                    "Prevent this page to become a low quality page",
                     false,
-                    "If checked, the page will never be a low quality page"
+                    "If checked, this page will never be a low quality page"
                 );
                 $isLowQualityPage[self::NAME_ATTRIBUTE] = Page::LOW_QUALITY_PAGE_INDICATOR;
                 $metas[] = $isLowQualityPage;
@@ -503,7 +503,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $isQualityMonitoringOn[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
                 $isQualityMonitoringOn[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     "quality:dynamic_monitoring",
-                    "Disable the quality control of the page",
+                    "Disable the quality message of the page",
                     false,
                     "If checked, the quality message will not be shown for the page."
                 );

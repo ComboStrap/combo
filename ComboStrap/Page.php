@@ -221,6 +221,39 @@ class Page extends DokuPath
         return self::createPageFromId($mainPageId);
     }
 
+    public static function createPageFromAlias(string $alias): ?Page
+    {
+
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("select p.ID from PAGES p, PAGE_ALIASES pa where p.UUID = pa.UUID and pa.ALIAS = ? ", $alias);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the alias selection query");
+        }
+        $res2arr = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        switch (sizeof($res2arr)) {
+            case 0:
+                return null;
+            case 1:
+                $id = $res2arr[0]['ID'];
+                return self::createPageFromId($id);
+            default:
+                $id = $res2arr[0]['ID'];
+                $pages = implode(",",
+                    array_map(
+                        function ($row) {
+                            return $row['ID'];
+                        },
+                        $res2arr
+                    )
+                );
+                LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, self::ALIAS_ATTRIBUTE);
+                return self::createPageFromId($id);
+        }
+
+
+    }
+
 
     /**
      * @var string the logical id is used with slots.
@@ -237,7 +270,8 @@ class Page extends DokuPath
      * This is used also to store the HTML output in the cache
      * If this is not a slot the logical id is the {@link DokuPath::getId()}
      */
-    public function getLogicalId()
+    public
+    function getLogicalId()
     {
         /**
          * Delete the first separator
@@ -245,7 +279,8 @@ class Page extends DokuPath
         return substr($this->getLogicalPath(), 1);
     }
 
-    public function getLogicalPath()
+    public
+    function getLogicalPath()
     {
 
         /**
@@ -365,7 +400,7 @@ class Page extends DokuPath
      * @param $canonical
      * @return Page - an id of an existing page
      */
-    static function createPageFromCanonical($canonical)
+    static function createPageFromCanonical($canonical): Page
     {
 
         // Canonical
@@ -379,22 +414,6 @@ class Page extends DokuPath
         foreach ($res2arr as $row) {
             $id = $row['ID'];
             return self::createPageFromId($id)->setCanonical($canonical);
-        }
-
-
-        // If the function comes here, it means that the page id was not found in the pages table
-        // Alias ?
-        // Canonical
-        $res = $sqlite->query("select p.ID from pages p, PAGES_ALIAS pa where p.CANONICAL = pa.CANONICAL and pa.ALIAS = ? ", $canonical);
-        if (!$res) {
-            throw new RuntimeException("An exception has occurred with the alias selection query");
-        }
-        $res2arr = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        foreach ($res2arr as $row) {
-            $id = $row['ID'];
-            return self::createPageFromId($id)
-                ->setCanonical($canonical);
         }
 
         return self::createPageFromId($canonical);
@@ -495,7 +514,8 @@ class Page extends DokuPath
      *
      * @return Page[] the internal links or null
      */
-    public function getInternalReferencedPages(): array
+    public
+    function getInternalReferencedPages(): array
     {
         $metadata = $this->getMetadatas();
         if (key_exists(self::CURRENT_METADATA, $metadata)) {
@@ -790,7 +810,8 @@ class Page extends DokuPath
      *
      * {@link \Doku_Renderer_metadata::externalmedia()} does not save them
      */
-    public function getExistingInternalMediaIdFromTheIndex()
+    public
+    function getExistingInternalMediaIdFromTheIndex()
     {
 
         $medias = [];
@@ -928,7 +949,8 @@ class Page extends DokuPath
      *
      * @return DateTime
      */
-    public function getCreatedTime(): ?DateTime
+    public
+    function getCreatedTime(): ?DateTime
     {
         $createdMeta = $this->getPersistentMetadata('date')['created'];
         if (empty($createdMeta)) {
@@ -948,7 +970,8 @@ class Page extends DokuPath
      *
      * @return DateTime
      */
-    public function getModifiedTime(): \DateTime
+    public
+    function getModifiedTime(): \DateTime
     {
         $modified = $this->getCurrentMetadata('date')['modified'];
         if (empty($modified)) {
@@ -1212,7 +1235,8 @@ class Page extends DokuPath
 
     }
 
-    public function hasXhtmlCache(): bool
+    public
+    function hasXhtmlCache(): bool
     {
 
         $renderCache = $this->getRenderCache("xhtml");
@@ -1220,7 +1244,8 @@ class Page extends DokuPath
 
     }
 
-    public function hasInstructionCache(): bool
+    public
+    function hasInstructionCache(): bool
     {
 
         $instructionCache = $this->getInstructionsCache();
@@ -1459,7 +1484,8 @@ class Page extends DokuPath
     /**
      * @param $property
      */
-    public function unsetMetadata($property)
+    public
+    function unsetMetadata($property)
     {
         $meta = p_read_metadata($this->getId());
         if (isset($meta['persistent'][$property])) {
@@ -1473,7 +1499,8 @@ class Page extends DokuPath
      * @return array - return the standard / generated metadata
      * used in templating
      */
-    public function getMetadataForRendering()
+    public
+    function getMetadataForRendering()
     {
 
 
@@ -1518,12 +1545,14 @@ class Page extends DokuPath
 
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->getId();
     }
 
-    public function setMetadata($key, $value)
+    public
+    function setMetadata($key, $value)
     {
         /**
          * Don't change the type of the value to a string
@@ -1538,17 +1567,20 @@ class Page extends DokuPath
         $this->updateMemoryMetaFromDisk();
     }
 
-    public function getPublishedTimeAsString(): ?string
+    public
+    function getPublishedTimeAsString(): ?string
     {
         return $this->getPublishedTime() !== null ? $this->getPublishedTime()->format(Iso8601Date::getFormat()) : null;
     }
 
-    public function getEndDateAsString(): ?string
+    public
+    function getEndDateAsString(): ?string
     {
         return $this->getEndDate() !== null ? $this->getEndDate()->format(Iso8601Date::getFormat()) : null;
     }
 
-    public function getEndDate(): ?DateTime
+    public
+    function getEndDate(): ?DateTime
     {
         $dateEndProperty = Analytics::DATE_END;
         $persistentMetadata = $this->getPersistentMetadata($dateEndProperty);
@@ -1571,12 +1603,14 @@ class Page extends DokuPath
         return $dateTime;
     }
 
-    public function getStartDateAsString(): ?string
+    public
+    function getStartDateAsString(): ?string
     {
         return $this->getStartDate() !== null ? $this->getStartDate()->format(Iso8601Date::getFormat()) : null;
     }
 
-    public function getStartDate(): ?DateTime
+    public
+    function getStartDate(): ?DateTime
     {
         $dateStartProperty = Analytics::DATE_START;
         $persistentMetadata = $this->getPersistentMetadata($dateStartProperty);
@@ -1602,7 +1636,8 @@ class Page extends DokuPath
      * A UUID or null if the page does not exists
      * @return string|null
      */
-    public function getUuid(): ?string
+    public
+    function getUuid(): ?string
     {
 
         $uuid = $this->getMetadata(Page::UUID_ATTRIBUTE);
@@ -1632,22 +1667,26 @@ class Page extends DokuPath
     }
 
 
-    public function getAnalytics(): Analytics
+    public
+    function getAnalytics(): Analytics
     {
         return new Analytics($this);
     }
 
-    public function getDatabasePage(): DatabasePage
+    public
+    function getDatabasePage(): DatabasePage
     {
         return new DatabasePage($this);
     }
 
-    public function canBeUpdatedByCurrentUser(): bool
+    public
+    function canBeUpdatedByCurrentUser(): bool
     {
         return Identity::isWriter();
     }
 
-    public function upsertMetadata($attributes)
+    public
+    function upsertMetadata($attributes)
     {
 
         /**
@@ -1687,7 +1726,8 @@ class Page extends DokuPath
      * Modify metadata in `.meta` local file
      * @param $attributes
      */
-    private function upsertModifiableMetadata($attributes)
+    private
+    function upsertModifiableMetadata($attributes)
     {
         $notModifiableMeta = [
             "date",
@@ -1736,7 +1776,8 @@ class Page extends DokuPath
 
     }
 
-    public function isRootHomePage(): bool
+    public
+    function isRootHomePage(): bool
     {
         global $conf;
         $startPageName = $conf['start'];
@@ -1749,7 +1790,8 @@ class Page extends DokuPath
      * @param string|null $uuid
      * @return Page
      */
-    public function setUuid(?string $uuid): Page
+    public
+    function setUuid(?string $uuid): Page
     {
         if ($uuid == null) {
             LogUtility::msg("A uuid can not null when setting it (Page: $this)", LogUtility::LVL_MSG_ERROR);
@@ -1760,12 +1802,14 @@ class Page extends DokuPath
 
     }
 
-    public function getType()
+    public
+    function getType()
     {
         return $this->getPersistentMetadata(self::TYPE_META_PROPERTY);
     }
 
-    public function getCanonical()
+    public
+    function getCanonical()
     {
         return $this->getPersistentMetadata(Page::CANONICAL_PROPERTY);
     }
@@ -1775,7 +1819,8 @@ class Page extends DokuPath
      *
      * @return string|null
      */
-    public function getDefaultCanonical(): ?string
+    public
+    function getDefaultCanonical(): ?string
     {
         /**
          * The last part of the id as canonical
@@ -1822,12 +1867,14 @@ class Page extends DokuPath
         return null;
     }
 
-    public function getLayout()
+    public
+    function getLayout()
     {
         return $this->getMetadata(Page::LAYOUT_PROPERTY);
     }
 
-    public function getDefaultPageName(): string
+    public
+    function getDefaultPageName(): string
     {
         $words = preg_split("/\s/", preg_replace("/-|_/", " ", $this->getName()));
         $wordsUc = [];
@@ -1837,7 +1884,8 @@ class Page extends DokuPath
         return implode(" ", $wordsUc);
     }
 
-    public function getDefaultTitle()
+    public
+    function getDefaultTitle()
     {
         if (!empty($this->getH1())) {
             return $this->getH1();
@@ -1846,7 +1894,8 @@ class Page extends DokuPath
         }
     }
 
-    public function getDefaultH1()
+    public
+    function getDefaultH1()
     {
         $h1Parsed = $this->getMetadata(Analytics::H1_PARSED);
         if (!empty($h1Parsed)) {
@@ -1860,7 +1909,8 @@ class Page extends DokuPath
         }
     }
 
-    public function getDefaultType()
+    public
+    function getDefaultType()
     {
         if ($this->isRootHomePage()) {
             return self::WEBSITE_TYPE;
@@ -1876,30 +1926,35 @@ class Page extends DokuPath
         }
     }
 
-    public function getDefaultLayout(): string
+    public
+    function getDefaultLayout(): string
     {
         return "holy";
     }
 
-    public function getTypeValues(): array
+    public
+    function getTypeValues(): array
     {
         $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE, Page::OTHER_TYPE];
         sort($types);
         return $types;
     }
 
-    public function getLayoutValues(): array
+    public
+    function getLayoutValues(): array
     {
         return [Page::HOLY_LAYOUT_VALUE, Page::MEDIAN_LAYOUT_VALUE, Page::LANDING_LAYOUT_VALUE];
     }
 
-    public function setCalculatedLowQualityIndicator($bool): Page
+    public
+    function setCalculatedLowQualityIndicator($bool): Page
     {
         return $this->setQualityIndicator(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool);
     }
 
 
-    public function getMetadataAsBoolean(string $key): ?bool
+    public
+    function getMetadataAsBoolean(string $key): ?bool
     {
         $value = $this->getMetadata($key);
         if ($value !== null) {
@@ -1910,7 +1965,8 @@ class Page extends DokuPath
 
     }
 
-    private function setQualityIndicator(string $lowQualityAttributeName, $value): Page
+    private
+    function setQualityIndicator(string $lowQualityAttributeName, $value): Page
     {
         $actualValue = $this->getMetadataAsBoolean($lowQualityAttributeName);
         if ($actualValue === null || $value !== $actualValue) {
@@ -1932,7 +1988,8 @@ class Page extends DokuPath
         return $this;
     }
 
-    public function getCalculatedLowQualityIndicator()
+    public
+    function getCalculatedLowQualityIndicator()
     {
         $value = $this->getMetadataAsBoolean(self::LOW_QUALITY_INDICATOR_CALCULATED);
         /**
@@ -1946,7 +2003,8 @@ class Page extends DokuPath
         return $value;
     }
 
-    public function getDefaultLowQualityIndicator()
+    public
+    function getDefaultLowQualityIndicator()
     {
         /**
          * By default, if a file has not been through
@@ -1970,7 +2028,8 @@ class Page extends DokuPath
      * @param string|null $tag
      * @return PageImage[]|null
      */
-    public function getPageImagesObject($tag = null): array
+    public
+    function getPageImagesObject($tag = null): array
     {
         $pagesImages = $this->getMetadata(self::IMAGE_META_PROPERTY);
         if ($pagesImages === null) {
@@ -2002,13 +2061,15 @@ class Page extends DokuPath
      * @param string|array $pageImageData
      * @return Page
      */
-    public function setPageImage($pageImageData): Page
+    public
+    function setPageImage($pageImageData): Page
     {
         $this->setMetadata(self::IMAGE_META_PROPERTY, $pageImageData);
         return $this;
     }
 
-    public function getLdJson()
+    public
+    function getLdJson()
     {
         $ldJson = $this->getMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY);
         if (empty($ldJson) && $this->getTypeNotEmpty() === "organization") {
@@ -2021,20 +2082,23 @@ class Page extends DokuPath
         return $ldJson;
     }
 
-    public function setJsonLd(string $jsonLdString): Page
+    public
+    function setJsonLd(string $jsonLdString): Page
     {
         $jsonLdArray = json_decode($jsonLdString, true);
         $this->setMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY, $jsonLdArray);
         return $this;
     }
 
-    public function setPageType(string $string): Page
+    public
+    function setPageType(string $string): Page
     {
         $this->setMetadata(Page::TYPE_META_PROPERTY, $string);
         return $this;
     }
 
-    public function getDefaultPageImageObject(): ?PageImage
+    public
+    function getDefaultPageImageObject(): ?PageImage
     {
         if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             $firstImage = $this->getFirstImage();
@@ -2047,20 +2111,22 @@ class Page extends DokuPath
         return null;
     }
 
-    public function addAlias($aliasId): Page
+    public
+    function addAlias($aliasId): Page
     {
         $aliases = $this->getAliases();
         if ($aliases == null) {
             $aliases = $this->getDatabasePage()->getAndDeleteDeprecatedAlias();
         }
-        if(!in_array($aliasId,$aliases)){
-            $aliases[]=$aliasId;
+        if (!in_array($aliasId, $aliases)) {
+            $aliases[] = $aliasId;
         }
-        $this->setMetadata(self::ALIAS_ATTRIBUTE,$aliases);
+        $this->setMetadata(self::ALIAS_ATTRIBUTE, $aliases);
         return $this;
     }
 
-    public function getAliases()
+    public
+    function getAliases()
     {
         return $this->getMetadata(self::ALIAS_ATTRIBUTE);
     }

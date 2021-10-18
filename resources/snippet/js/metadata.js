@@ -651,16 +651,8 @@ window.addEventListener("DOMContentLoaded", function () {
         submitButton.addEventListener("click", function (event) {
             event.preventDefault();
             let formData = new FormData(document.getElementById(formId));
-            let newFormatData = new FormData();
-            for (let entry of formData) {
-                let name = entry[0];
-                let value = entry[1];
-                if (value !== "") {
-                    newFormatData.append(name, value);
-                }
-            }
             console.log("Submitted");
-            for (let entry of newFormatData) {
+            for (let entry of formData) {
                 console.log(entry);
             }
         })

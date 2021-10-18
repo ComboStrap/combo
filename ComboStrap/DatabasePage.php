@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use Exception;
+
 /**
  * The class that manage the replication
  * Class Replicate
@@ -152,7 +154,12 @@ class DatabasePage
             return false;
         }
 
-        $res = $this->replicatePageReference();
+        $res = $this->replicateBacklinkPages();
+        if ($res === false) {
+            return false;
+        }
+
+        $res = $this->replicateAliases();
         if ($res === false) {
             return false;
         }
@@ -333,7 +340,6 @@ class DatabasePage
                         LogUtility::msg("The page ($page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
                     }
                     return intval($rows[0][self::ROWID]);
-                    break;
                 default:
                     $existingPages = [];
                     foreach ($rows as $row) {
@@ -342,10 +348,13 @@ class DatabasePage
                         if (!$pageInDb->exists()) {
 
                             /**
-                             * TODO: Handle a page move with the move plugin instead
+                             * Refactoring / Deprecated
+                             * It should never occurs anymore
+                             * @deprecated 2012-10-28
                              */
                             $this->delete();
-                            $page->persistPageAlias($canonical, $id);
+                            $page->addAlias($id);
+                            $this->addAlias($id);
 
                         } else {
 
@@ -486,7 +495,7 @@ class DatabasePage
             Publication::DATE_PUBLISHED => $page->getPublishedTimeAsString(),
             Analytics::DATE_START => $page->getEndDateAsString(),
             Analytics::DATE_END => $page->getStartDateAsString(),
-            Page::REGION_META_PROPERTY => $page->getCountryOrDefault(),
+            Page::REGION_META_PROPERTY => $page->getRegionOrDefault(),
             Page::LANG_META_PROPERTY => $page->getLangOrDefault(),
             'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
             Page::TYPE_META_PROPERTY => $page->getTypeNotEmpty(),
@@ -502,7 +511,7 @@ class DatabasePage
 
     }
 
-    private function replicatePageReference(): bool
+    private function replicateBacklinkPages(): bool
     {
         $referencedPagesIndex = $this->page->getInternalReferencedPages();
         if ($referencedPagesIndex == null) {
@@ -527,7 +536,7 @@ class DatabasePage
                     LogUtility::msg("There was a problem during the page references insert : {$errorInfoAsString}");
                     return $res;
                 }
-                $reason = "The page ($this->page) has added a a backlink to the page {$internalPageReference}";
+                $reason = "The page ($this->page) has added a backlink to the page {$internalPageReference}";
                 $internalPageReference->getDatabasePage()->createReplicationRequest($reason);
             }
         }
@@ -756,7 +765,7 @@ EOF;
          * We need to update it on the target page
          */
         if ($uuid === null) {
-            LogUtility::msg("During a move, the uuid of the page ($this) to ($targetId) was null. It should not be the case as this page exists. The UUID was not passed over to the target page.",LogUtility::LVL_MSG_ERROR,self::REPLICATION_CANONICAL);
+            LogUtility::msg("During a move, the uuid of the page ($this) to ($targetId) was null. It should not be the case as this page exists. The UUID was not passed over to the target page.", LogUtility::LVL_MSG_ERROR, self::REPLICATION_CANONICAL);
             return;
         }
         $targetPage = Page::createPageFromId($targetId);
@@ -767,6 +776,156 @@ EOF;
     public function __toString()
     {
         return $this->page->__toString();
+    }
+
+    /**
+     * Code refactoring
+     * @return array
+     */
+    public function getAndDeleteDeprecatedAlias(): array
+    {
+        $canonicalOrDefault = $this->page->getCanonicalOrDefault();
+        $res = $this->sqlite->query("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", $canonicalOrDefault);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the deprecated alias selection query", LogUtility::LVL_MSG_ERROR);
+            return [];
+        }
+        $deprecatedAliasInDb = $this->sqlite->res2arr($res);
+        $this->sqlite->res_close($res);
+        $deprecatedAliasInDb = array_map(
+            function ($row) {
+                return $row['ALIAS'];
+            },
+            $deprecatedAliasInDb
+        );
+
+        /**
+         * Delete them
+         */
+        try {
+            if (sizeof($deprecatedAliasInDb) > 0) {
+                $res = $this->sqlite->query("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", $canonicalOrDefault);
+                if (!$res) {
+                    LogUtility::msg("An exception has occurred with the delete deprecated alias statement", LogUtility::LVL_MSG_ERROR);
+                }
+                $this->sqlite->res_close($res);
+            }
+        } catch (Exception $e) {
+            LogUtility::msg("An exception has occurred with the deletion of deprecated aliases. Message: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
+        }
+
+        /**
+         * Return
+         */
+        return $deprecatedAliasInDb;
+
+    }
+
+    public function addAlias($alias): DatabasePage
+    {
+
+        if (empty($alias)) {
+            LogUtility::msg("Alias: To create an alias, the alias value should not be empty", LogUtility::LVL_MSG_ERROR);
+            return $this;
+        }
+        if (!is_string($alias)) {
+            LogUtility::msg("Alias: To create an alias, the alias value should a string. Value: " . var_export($alias, true), LogUtility::LVL_MSG_ERROR);
+            return $this;
+        }
+
+        $row = array(
+            "UUID" => $this->page->getUuid(),
+            "ALIAS" => $alias
+        );
+
+        // Page has change of location
+        // Creation of an alias
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("select count(*) from PAGE_ALIASES where UUID = ? and ALIAS = ?", $row);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the alias selection query");
+        }
+        $aliasInDb = $sqlite->res2single($res);
+        $sqlite->res_close($res);
+        if ($aliasInDb == 0) {
+
+            $res = $sqlite->storeEntry('PAGE_ALIASES', $row);
+            if (!$res) {
+                LogUtility::msg("There was a problem during PAGE_ALIASES insertion");
+            }
+        }
+        return $this;
+    }
+
+    private function replicateAliases(): bool
+    {
+        $fileSystemAliases = $this->page->getAliases();
+        if ($fileSystemAliases === null) {
+            return true;
+        }
+        $dbAliases = $this->getAliases();
+        foreach ($fileSystemAliases as $fileSystemAlias) {
+
+            if (in_array($fileSystemAlias, $dbAliases)) {
+                $dbOffset = array_search($fileSystemAlias, $dbAliases);
+                unset($dbAliases[$dbOffset]);
+            } else {
+                $this->addAlias($fileSystemAlias);
+            }
+        }
+
+        if (sizeof($dbAliases) > 0) {
+
+            foreach ($dbAliases as $dbAlias) {
+                $this->deleteAlias($dbAlias);
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAliases(): array
+    {
+        if ($this->sqlite === null) {
+            return [];
+        }
+        $res = $this->sqlite->query("select ALIAS from PAGE_ALIASES where UUID = ? ", $this->page->getUuid());
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$this->page}) selection query");
+        }
+        $rowAliases = $this->sqlite->res2arr($res);
+        $this->sqlite->res_close($res);
+        return array_map(function ($row) {
+            return $row['ALIAS'];
+        }, $rowAliases);
+    }
+
+    public function deleteAlias($dbAlias)
+    {
+        $delete = <<<EOF
+delete from PAGE_ALIASES where UUID = ? and ALIAS = ?
+EOF;
+        $row = [
+            "UUID" => $this->page->getUuid(),
+            "ALIAS" => $dbAlias
+        ];
+        $res = $this->sqlite->query($delete, $row);
+
+        if ($res === false) {
+            $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
+            $message = "";
+            $errorCode = $errorInfo[0];
+            if ($errorCode === '0000') {
+                $message = ("No rows were deleted");
+            }
+            $errorInfoAsString = var_export($errorInfo, true);
+            LogUtility::msg("There was a problem during the alias delete. $message. : {$errorInfoAsString}");
+        }
+        return $this;
+
     }
 
 

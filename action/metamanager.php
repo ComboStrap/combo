@@ -192,20 +192,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 /**
                  * The manager
                  */
-                // Canonical
-                $metasCanonical[self::VALUE_ATTRIBUTE] = $page->getCanonical();
-                $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
-                $metasCanonical[self::MUTABLE_ATTRIBUTE] = true;
-                $metasCanonical[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasCanonical[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                    Analytics::CANONICAL,
-                    "Canonical",
-                    false,
-                    "The canonical (also known as slug) creates a permanent link."
-                );
-                $metasCanonical[self::NAME_ATTRIBUTE] = Analytics::CANONICAL;
-                $metas[] = $metasCanonical;
-
                 // Name
                 $metasName[self::VALUE_ATTRIBUTE] = $page->getPageName();
                 $metasName[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultPageName();
@@ -262,6 +248,20 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 );
                 $metasDescription[self::NAME_ATTRIBUTE] = Analytics::DESCRIPTION;
                 $metas[] = $metasDescription;
+
+                // Canonical
+                $metasCanonical[self::VALUE_ATTRIBUTE] = $page->getCanonical();
+                $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
+                $metasCanonical[self::MUTABLE_ATTRIBUTE] = true;
+                $metasCanonical[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
+                $metasCanonical[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    Analytics::CANONICAL,
+                    "Canonical",
+                    false,
+                    "The canonical (also known as slug) creates a permanent link."
+                );
+                $metasCanonical[self::NAME_ATTRIBUTE] = Analytics::CANONICAL;
+                $metas[] = $metasCanonical;
 
                 // Layout
                 $layout[self::VALUE_ATTRIBUTE] = $page->getLayout();

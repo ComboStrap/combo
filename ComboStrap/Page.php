@@ -103,6 +103,7 @@ class Page extends DokuPath
     const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
     const CANONICAL_VALUE = "page";
     const OLD_REGION_PROPERTY = "country";
+    const ALIAS_ATTRIBUTE = "alias";
 
 
     private $canonical;
@@ -352,47 +353,6 @@ class Page extends DokuPath
     function existInFs()
     {
         return $this->exists();
-    }
-
-    public
-    function persistPageAlias($canonical, $alias)
-    {
-
-        if (empty($canonical)) {
-            LogUtility::msg("Alias: To create an alias, the canonical should not be empty", LogUtility::LVL_MSG_ERROR);
-            return;
-        }
-        if (empty($alias)) {
-            LogUtility::msg("Alias: To create an alias, the alias value should not be empty", LogUtility::LVL_MSG_ERROR);
-            return;
-        }
-        if (!is_string($alias)) {
-            LogUtility::msg("Alias: To create an alias, the alias value should a string. Value: " . var_export($alias, true), LogUtility::LVL_MSG_ERROR);
-            return;
-        }
-
-        $row = array(
-            "CANONICAL" => $canonical,
-            "ALIAS" => $alias
-        );
-
-        // Page has change of location
-        // Creation of an alias
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("select count(*) from pages_alias where CANONICAL = ? and ALIAS = ?", $row);
-        if (!$res) {
-            throw new RuntimeException("An exception has occurred with the alia selection query");
-        }
-        $aliasInDb = $sqlite->res2single($res);
-        $sqlite->res_close($res);
-        if ($aliasInDb == 0) {
-
-            $res = $sqlite->storeEntry('pages_alias', $row);
-            if (!$res) {
-                LogUtility::msg("There was a problem during pages_alias insertion");
-            }
-        }
-
     }
 
 
@@ -1049,22 +1009,22 @@ class Page extends DokuPath
     public
     function getLocaleRegion()
     {
-        $country = $this->getPersistentMetadata(self::REGION_META_PROPERTY);
-        if (!empty($country)) {
-            if (!StringUtility::match($country, "[a-zA-Z]{2}")) {
-                LogUtility::msg("The country value ($country) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 country code)", LogUtility::LVL_MSG_ERROR, "country");
+        $region = $this->getPersistentMetadata(self::REGION_META_PROPERTY);
+        if (!empty($region)) {
+            if (!StringUtility::match($region, "[a-zA-Z]{2}")) {
+                LogUtility::msg("The region value ($region) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
             }
         }
-        return $country;
+        return $region;
     }
 
     public
-    function getCountryOrDefault()
+    function getRegionOrDefault()
     {
 
-        $country = $this->getLocaleRegion();
-        if (!empty($country)) {
-            return $country;
+        $region = $this->getLocaleRegion();
+        if (!empty($region)) {
+            return $region;
         } else {
             return Site::getLanguageRegion();
         }
@@ -1207,7 +1167,7 @@ class Page extends DokuPath
         $lang = $this->getLangOrDefault();
         if (!empty($lang)) {
 
-            $country = $this->getCountryOrDefault();
+            $country = $this->getRegionOrDefault();
             if (empty($country)) {
                 $country = $lang;
             }
@@ -2085,6 +2045,24 @@ class Page extends DokuPath
             }
         }
         return null;
+    }
+
+    public function addAlias($aliasId): Page
+    {
+        $aliases = $this->getAliases();
+        if ($aliases == null) {
+            $aliases = $this->getDatabasePage()->getAndDeleteDeprecatedAlias();
+        }
+        if(!in_array($aliasId,$aliases)){
+            $aliases[]=$aliasId;
+        }
+        $this->setMetadata(self::ALIAS_ATTRIBUTE,$aliases);
+        return $this;
+    }
+
+    public function getAliases()
+    {
+        return $this->getMetadata(self::ALIAS_ATTRIBUTE);
     }
 
 

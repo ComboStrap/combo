@@ -25,7 +25,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 /**
  * Class action_plugin_combo_analytics
- * Update the analytics data
+ * Replicate the file system to the sqlite database
  */
 class action_plugin_combo_replication extends DokuWiki_Action_Plugin
 {
@@ -76,18 +76,14 @@ class action_plugin_combo_replication extends DokuWiki_Action_Plugin
          * From {@link idx_addPage}
          * They receive even the deleted page
          */
-        $replicator = $page->getDatabasePage();
+        $databasePage = $page->getDatabasePage();
         if (!$page->exists()) {
-
-            $replicator->delete();
+            $databasePage->delete();
             return;
         }
 
-        if ($replicator->shouldReplicate()) {
-            $replicator->replicate();
-            /**
-             * TODO: Add reference
-             */
+        if ($databasePage->shouldReplicate()) {
+            $databasePage->replicate();
         }
 
 

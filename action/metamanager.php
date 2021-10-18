@@ -42,6 +42,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const BOOLEAN_TYPE_VALUE = "boolean";
     const LABEL_URL_ATTRIBUTE = "url";
     const TABULAR_TYPE_ATTRIBUTE = "tabular";
+    const LIST_TYPE_ATTRIBUTE = "list";
     const LABEL_ATTRIBUTE = "label";
 
     /**
@@ -64,7 +65,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      * The canonical for page type
      */
     const PAGE_TYPE_CANONICAL = "page:type";
-
 
 
     public function register(Doku_Event_Handler $controller)
@@ -402,6 +402,22 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 }
                 $pageImages[self::VALUES_ATTRIBUTE] = $pageImageRows;
                 $metas[] = $pageImages;
+
+                /**
+                 * Aliases
+                 */
+
+                $aliases[self::DATA_TYPE_ATTRIBUTE] = self::LIST_TYPE_ATTRIBUTE;
+                $aliases[self::NAME_ATTRIBUTE] = Page::ALIAS_ATTRIBUTE;
+                $aliases[self::VALUE_ATTRIBUTE] = $page->getAliases();
+                $aliases[self::MUTABLE_ATTRIBUTE] = false;
+                $aliases[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                    Page::ALIAS_ATTRIBUTE,
+                    "Page Aliases",
+                    false,
+                    "The aliases that will redirect to this page."
+                );
+                $metas[] = $aliases;
 
 
                 // Page Type

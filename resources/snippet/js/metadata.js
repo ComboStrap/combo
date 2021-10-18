@@ -47,7 +47,12 @@ window.addEventListener("DOMContentLoaded", function () {
          */
         modalFooter;
 
+        /**
+         * A valid HTML id
+         * @param modalId
+         */
         constructor(modalId) {
+
             this.modalId = modalId;
 
             this.modalRoot = document.createElement("div");
@@ -154,7 +159,7 @@ window.addEventListener("DOMContentLoaded", function () {
             /**
              * Init the tooltip if any
              */
-            document.querySelectorAll(`#${this.modalId} [data-bs-toggle="tooltip"]`).forEach(el => new bootstrap.Tooltip(el));
+            document.querySelectorAll(`#${this.modalId}[data-bs-toggle="tooltip"]`).forEach(el => new bootstrap.Tooltip(el));
         }
 
         dismiss() {
@@ -404,7 +409,7 @@ window.addEventListener("DOMContentLoaded", function () {
      * @type ComboModal modalManager
      */
     async function openMetaViewer(modalManager, pageId) {
-        let modalViewerId = `combo_metadata_viewer`;
+        let modalViewerId = toHtmlId(`combo_metadata_viewer_${pageId}`);
         let modalViewer = getComboModal(modalViewerId);
         if (modalViewer === undefined) {
             modalViewer = createComboModal(modalViewerId);
@@ -661,10 +666,13 @@ window.addEventListener("DOMContentLoaded", function () {
         return managerModal;
     }
 
+    let toHtmlId = function (s) {
+        return s.replace(/[_\s:\/\\]/g,"-");
+    }
+
     let openMetadataManager = async function (pageId) {
 
-
-        let modalManagerId = `combo_metadata_manager_page_${pageId}`;
+        let modalManagerId = toHtmlId(`combo_metadata_manager_page_${pageId}`);
         let managerModal = getComboModal(modalManagerId);
 
         if (managerModal === undefined) {

@@ -119,7 +119,7 @@ class action_plugin_combo_outlinenumbering extends DokuWiki_Action_Plugin
             }
 
             $numberingCss = <<<EOF
-$mainContainerSelector > h2 { counter-increment: h2; }
+$mainContainerSelector > h2 { counter-increment: h2; counter-reset: h3}
 $mainContainerSelector > h3 { counter-increment: h3; }
 $mainContainerSelector > h4 { counter-increment: h4; }
 $mainContainerSelector > h5 { counter-increment: h5; }

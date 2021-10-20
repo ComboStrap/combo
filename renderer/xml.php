@@ -78,6 +78,7 @@ class  renderer_plugin_combo_xml extends Doku_Renderer_xhtml
 
     public function document_start()
     {
+        $this->doc .= '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>';
         $this->doc .= "<document>";
     }
 
@@ -86,6 +87,23 @@ class  renderer_plugin_combo_xml extends Doku_Renderer_xhtml
     {
 
         $this->doc .= "</document>";
+
+        /**
+         * The result can be seen with
+         * doku.php?id=somepage&do=export_combo_xml
+         *
+         * Set the header temporarily for the export.php file
+         *
+         * The mode in the export is
+         */
+        $mode = "combo_" . $this->getPluginComponent();
+        global $ID;
+        p_set_metadata(
+            $ID,
+            array("format" => array($mode => array("Content-Type" => 'application/xml'))),
+            false,
+            true // Persistence is needed because there is a cache
+        );
 
     }
 

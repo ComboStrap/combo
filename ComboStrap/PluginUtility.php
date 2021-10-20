@@ -791,6 +791,15 @@ class PluginUtility
         return htmlentities($text);
     }
 
+    public
+    static function xmlEncode($text)
+    {
+        /**
+         * {@link htmlentities }
+         */
+        return htmlentities($text, ENT_XML1);
+    }
+
 
     /**
      * Add a class
@@ -1006,6 +1015,18 @@ class PluginUtility
         } else {
             return "";
         }
+    }
+
+    public
+    static function renderUnmatchedXml($data)
+    {
+        $payload = $data[self::PAYLOAD];
+        $previousTagDisplayType = $data[self::CONTEXT];
+        if ($previousTagDisplayType !== Call::INLINE_DISPLAY) {
+            $payload = ltrim($payload);
+        }
+        return PluginUtility::xmlEncode($payload);
+
     }
 
     /**

@@ -11,6 +11,53 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 {
 
 
+    const SECTION_OPEN = 'section_open';
+    const SECTION_CLOSE = 'section_close';
+
+    /**
+     * @param $callStack
+     * @param $headingEntryCall
+     * @param $handler
+     * @param $actualLocation - where does the insert occurs (before or after) the heading
+     */
+    private static function insertOpenSection($callStack, $headingEntryCall, $handler, $actualLocation)
+    {
+        $sectionStyle = PluginUtility::getConfValue(syntax_plugin_combo_heading::CONF_SECTION_LAYOUT, syntax_plugin_combo_heading::CONF_SECTION_LAYOUT_DEFAULT);
+        if ($sectionStyle === syntax_plugin_combo_heading::CONF_SECTION_LAYOUT_DOKUWIKI) {
+
+            /**
+             * Dokuwiki Style
+             */
+            if ($actualLocation === "after") {
+                $openSectionCall = Call::createNativeCall(
+                    self::SECTION_OPEN,
+                    array($headingEntryCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
+                    $headingEntryCall->getFirstMatchedCharacterPosition()
+                );
+                $callStack->insertAfter($openSectionCall);
+                $handler->setStatus('section', true);
+            }
+
+        } else {
+
+            /**
+             * Combo Style
+             */
+            if ($actualLocation === "before") {
+                $attributes = $headingEntryCall->getAttributes();
+                $attributes[PluginUtility::POSITION] = $headingEntryCall->getFirstMatchedCharacterPosition();
+                $openSectionCall = Call::createComboCall(
+                    syntax_plugin_combo_section::TAG,
+                    DOKU_LEXER_ENTER,
+                    $attributes
+                );
+                $callStack->insertBefore($openSectionCall);
+                $handler->setStatus('section', true);
+            }
+
+        }
+    }
+
     public function register(\Doku_Event_Handler $controller)
     {
         /**
@@ -32,6 +79,8 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
     /**
      * Transform the special heading atx call
      * in an enter and exit heading atx calls
+     *
+     * Add the section close / open
      *
      * Code extracted and adapted from the end of {@link Doku_Handler::header()}
      *
@@ -87,6 +136,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                     $headingComboCounter++;
                     $headingTotalCounter++;
                     self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState, $headingComboCounter, $headingTotalCounter);
+                    self::insertOpenSection($callStack, $headingEnterCall, $handler, "before");
                     continue 2;
                 case syntax_plugin_combo_heading::TAG:
                 case syntax_plugin_combo_headingwiki::TAG:
@@ -96,6 +146,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                         $headingComboCounter++;
                         $headingTotalCounter++;
                         self::closeSectionIfNeeded($actualCall, $handler, $callStack, $actualSectionState, $headingComboCounter, $headingTotalCounter);
+                        self::insertOpenSection($callStack, $headingEnterCall, $handler, "before");
                         continue 2;
                     }
                     break;
@@ -108,7 +159,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             /**
              * Close and Inside the heading description
              */
-            if ($actualHeadingParsingState == DOKU_LEXER_ENTER) {
+            if ($actualHeadingParsingState === DOKU_LEXER_ENTER) {
 
                 switch ($actualCall->getTagName()) {
 
@@ -206,7 +257,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
              * an atx heading, there is already a section close
              * at the end or in the middle
              */
-            if ($actualCall->getComponentName() == "section_close") {
+            if ($actualCall->getComponentName() == self::SECTION_CLOSE) {
                 $actualSectionState = DOKU_LEXER_EXIT;
             }
         }
@@ -224,7 +275,7 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
             $handler->setStatus('section', false);
             $callStack->insertAfter(
                 Call::createNativeCall(
-                    'section_close',
+                    self::SECTION_CLOSE,
                     array(),
                     $lastEndPosition
                 )
@@ -269,20 +320,25 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
 
             $headingText = "";
 
-            $callStack->insertAfter(
-                Call::createNativeCall(
-                    'section_open',
-                    array($headingEntryCall->getAttribute(syntax_plugin_combo_headingatx::LEVEL)),
-                    $headingEntryCall->getFirstMatchedCharacterPosition()
-                )
-            );
-            $handler->setStatus('section', true);
+            /**
+             * Insert an entry call
+             */
+            self::insertOpenSection($callStack, $headingEntryCall, $handler, "after");
+
             $actualSectionState = DOKU_LEXER_ENTER;
             $callStack->next();
 
         }
     }
 
+    /**
+     * @param Call $actualCall
+     * @param $handler
+     * @param $callStack
+     * @param $actualSectionState
+     * @param $headingComboCounter
+     * @param $headingTotalCounter
+     */
     private static function closeSectionIfNeeded(&$actualCall, &$handler, &$callStack, &$actualSectionState, $headingComboCounter, $headingTotalCounter)
     {
         if ($actualCall->getContext() == syntax_plugin_combo_heading::TYPE_OUTLINE) {
@@ -296,13 +352,31 @@ class action_plugin_combo_headingpostprocessing extends DokuWiki_Action_Plugin
                 $close = true;
             }
             if ($close) {
-                $callStack->insertBefore(
-                    Call::createNativeCall(
-                        'section_close',
+
+                $sectionStyle = PluginUtility::getConfValue(syntax_plugin_combo_heading::CONF_SECTION_LAYOUT, syntax_plugin_combo_heading::CONF_SECTION_LAYOUT_DEFAULT);
+                if ($sectionStyle === syntax_plugin_combo_heading::CONF_SECTION_LAYOUT_DOKUWIKI) {
+
+                    $call = Call::createNativeCall(
+                        self::SECTION_CLOSE,
                         array(),
                         $actualCall->getLastMatchedCharacterPosition()
-                    )
-                );
+                    );
+
+                } else {
+
+
+                    $call = Call::createComboCall(
+                        syntax_plugin_combo_section::TAG,
+                        DOKU_LEXER_EXIT,
+                        array(),
+                        null,
+                        null,
+                        null,
+                        $actualCall->getLastMatchedCharacterPosition() - strlen($actualCall->getCapturedContent())
+                    );
+
+                }
+                $callStack->insertBefore($call);
                 $actualSectionState = DOKU_LEXER_EXIT;
                 $handler->setStatus('section', false);
             }

@@ -132,17 +132,18 @@ class Call
      * Insert a tag above
      * @param $tagName
      * @param $state
-     * @param $attribute
+     * @param array $attribute
      * @param $context
      * @param string $content
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, $attribute = array(), $context = null, $content = '', $payload = null)
+    public static function createComboCall($tagName, $state, array $attribute = array(), $context = null, $content = '', $payload = null, $position= null)
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,
             PluginUtility::CONTEXT => $context,
-            PluginUtility::STATE => $state
+            PluginUtility::STATE => $state,
+            PluginUtility::POSITION => $position
         );
         if ($payload != null) {
             $data[PluginUtility::PAYLOAD] = $payload;

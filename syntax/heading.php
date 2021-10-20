@@ -57,6 +57,17 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     const DEFAULT_LEVEL = "3";
 
     /**
+     * The section generation:
+     *   - Dokuwiki section (ie div just after the heading)
+     *   - or Combo section (ie section just before the heading)
+     */
+    public const CONF_SECTION_LAYOUT = 'section_layout';
+    const CONF_SECTION_LAYOUT_COMBO = "combo";
+    const CONF_SECTION_LAYOUT_DOKUWIKI = "dokuwiki";
+    const CONF_SECTION_LAYOUT_VALUES = [self::CONF_SECTION_LAYOUT_COMBO, self::CONF_SECTION_LAYOUT_DOKUWIKI];
+    const CONF_SECTION_LAYOUT_DEFAULT = self::CONF_SECTION_LAYOUT_COMBO;
+
+    /**
      * A common function used to handle exit of headings
      * @param CallStack $callStack
      * @return array
@@ -327,23 +338,68 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
                 if (empty($tocText)) {
                     LogUtility::msg("The heading text should be not null on the enter tag");
                 }
-                if (trim(strtolower($tocText)) == "articles related") {
+                if (trim(strtolower($tocText)) === "articles related") {
                     $tagAttributes->addClassName("d-print-none");
                 }
             } else {
                 $tocText = "Heading Text Not found";
                 LogUtility::msg("The heading text attribute was not found for the toc");
             }
-            // The exact position because we does not capture any EOL
+
+
+            // note on the position value
+            // this is the exact position because we does not capture any EOL
             // and therefore the section should start at the first captured character
-            $renderer->header($tocText, $level, $pos);
-            $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
-            foreach ($attributes as $key => $value) {
-                if ($key === "id" && $tagAttributes->hasAttribute($key)) {
-                    // The id was set in the markup, don't overwrite
-                    continue;
+
+            $sectionStyle = PluginUtility::getConfValue(syntax_plugin_combo_heading::CONF_SECTION_LAYOUT, syntax_plugin_combo_heading::CONF_SECTION_LAYOUT_COMBO);
+            if ($sectionStyle == syntax_plugin_combo_heading::CONF_SECTION_LAYOUT_DOKUWIKI) {
+
+                $renderer->header($tocText, $level, $pos);
+                $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
+                foreach ($attributes as $key => $value) {
+                    if ($key === "id" && $tagAttributes->hasAttribute($key)) {
+                        // The id was set in the markup, don't overwrite
+                        continue;
+                    }
+                    $tagAttributes->addComponentAttributeValue($key, $value);
                 }
-                $tagAttributes->addComponentAttributeValue($key, $value);
+
+            } else {
+
+                /**
+                 * We took over and don't use {@link Doku_Renderer_xhtml::header()}
+                 * because it outputs the previous section edit just before the heading
+                 * leading to edit being not in its section
+                 *
+                 * For instance, we would get where the edit is for the first section
+                 * <pre>
+                 * <section>
+                 * </section>
+                 * <section">\n
+                 * <!-- EDIT{&quot;target&quot;:&quot;section&quot;,&quot;name&quot;:&quot;Heading 1&quot;,&quot;hid&quot;:&quot;heading_1&quot;,&quot;codeblockOffset&quot;:0,&quot;secid&quot;:1,&quot;range&quot;:&quot;1-40&quot;} -->\n
+                 * <h1>Heading</h1>\n
+                 * </pre>
+                 */
+
+                $id = $renderer->_headerToLink($tocText, true);
+                if (!$tagAttributes->hasAttribute("id")) {
+                    // The id was not set in the markup
+                    $tagAttributes->addHtmlAttributeValue("id", $id);
+                }
+                //only add items within configured levels
+                $renderer->toc_additem($id, $tocText, $level);
+
+                // Store section edit information
+                global $conf;
+                if ($level <= $conf['maxseclevel']) {
+                    $data = array();
+                    $data['target'] = 'section';
+                    $data['name'] = $tocText;
+                    $data['hid'] = $id;
+                    $data['codeblockOffset'] = 0; // Dokuwiki - count block count to allow download
+                    $class = $renderer->startSectionEdit($pos, $data);
+                    $tagAttributes->addClassName($class);
+                }
             }
 
         }

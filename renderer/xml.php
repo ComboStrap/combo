@@ -82,6 +82,11 @@ class  renderer_plugin_combo_xml extends Doku_Renderer_xhtml
         $this->doc .= "<document>";
     }
 
+    public function multiplyentity($x, $y): string
+    {
+        return "$x x $y";
+    }
+
 
     function document_end()
     {

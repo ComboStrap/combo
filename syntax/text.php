@@ -6,7 +6,6 @@ use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
-use ComboStrap\TextAlign;
 
 if (!defined('DOKU_INC')) die();
 

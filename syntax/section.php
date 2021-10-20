@@ -1,15 +1,12 @@
 <?php
 
-use ComboStrap\CallStack;
-use ComboStrap\Dimension;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
 
-
 /**
  * Class syntax_plugin_combo_section
- * Implementation of a section
+ * Implementation of a outline section
  *
  */
 class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
@@ -98,38 +95,18 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
-        if ($format === 'xhtml') {
+        if ($format === renderer_plugin_combo_xml::FORMAT) {
 
-            /** @var Doku_Renderer_xhtml $renderer */
+            /** @var renderer_plugin_combo_xml $renderer */
             $state = $data[PluginUtility::STATE];
             switch ($state) {
                 case DOKU_LEXER_ENTER :
-                    $attributes = $data[PluginUtility::ATTRIBUTES];
-                    $tagAttributes = TagAttributes::createFromCallStackArray($attributes, self::TAG);
-                    $level = $tagAttributes->getValueAndRemove("level");
-                    $tagAttributes->addClassName("level$level");
-
-                    $renderer->doc .= $tagAttributes->toHtmlEnterTag("section") . DOKU_LF;
+                    $renderer->doc .= '<section>'.DOKU_LF;
                     break;
-
                 case DOKU_LEXER_UNMATCHED :
                     $renderer->doc .= PluginUtility::renderUnmatched($data);
                     break;
-
                 case DOKU_LEXER_EXIT :
-
-                    $attributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                    $level = $attributes->getValueAndRemove("level");
-                    $pos = $data[PluginUtility::POSITION];
-
-                    /**
-                     * Origin: {@link Doku_Renderer_xhtml::header()}
-                     */
-                    global $conf;
-                    if($level <= $conf['maxseclevel'] ) {
-                        $renderer->finishSectionEdit($pos - 1);
-                        $renderer->doc .= DOKU_LF;
-                    }
                     $renderer->doc .= '</section>'.DOKU_LF;
                     break;
             }

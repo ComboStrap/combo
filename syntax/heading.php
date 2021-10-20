@@ -351,55 +351,14 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             // this is the exact position because we does not capture any EOL
             // and therefore the section should start at the first captured character
 
-            $sectionStyle = PluginUtility::getConfValue(syntax_plugin_combo_heading::CONF_SECTION_LAYOUT, syntax_plugin_combo_heading::CONF_SECTION_LAYOUT_COMBO);
-            if ($sectionStyle == syntax_plugin_combo_heading::CONF_SECTION_LAYOUT_DOKUWIKI) {
-
-                $renderer->header($tocText, $level, $pos);
-                $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
-                foreach ($attributes as $key => $value) {
-                    if ($key === "id" && $tagAttributes->hasAttribute($key)) {
-                        // The id was set in the markup, don't overwrite
-                        continue;
-                    }
-                    $tagAttributes->addComponentAttributeValue($key, $value);
+            $renderer->header($tocText, $level, $pos);
+            $attributes = syntax_plugin_combo_heading::reduceToFirstOpeningTagAndReturnAttributes($renderer->doc);
+            foreach ($attributes as $key => $value) {
+                if ($key === "id" && $tagAttributes->hasAttribute($key)) {
+                    // The id was set in the markup, don't overwrite
+                    continue;
                 }
-
-            } else {
-
-                /**
-                 * We took over and don't use {@link Doku_Renderer_xhtml::header()}
-                 * because it outputs the previous section edit just before the heading
-                 * leading to edit being not in its section
-                 *
-                 * For instance, we would get where the edit is for the first section
-                 * <pre>
-                 * <section>
-                 * </section>
-                 * <section">\n
-                 * <!-- EDIT{&quot;target&quot;:&quot;section&quot;,&quot;name&quot;:&quot;Heading 1&quot;,&quot;hid&quot;:&quot;heading_1&quot;,&quot;codeblockOffset&quot;:0,&quot;secid&quot;:1,&quot;range&quot;:&quot;1-40&quot;} -->\n
-                 * <h1>Heading</h1>\n
-                 * </pre>
-                 */
-
-                $id = $renderer->_headerToLink($tocText, true);
-                if (!$tagAttributes->hasAttribute("id")) {
-                    // The id was not set in the markup
-                    $tagAttributes->addHtmlAttributeValue("id", $id);
-                }
-                //only add items within configured levels
-                $renderer->toc_additem($id, $tocText, $level);
-
-                // Store section edit information
-                global $conf;
-                if ($level <= $conf['maxseclevel']) {
-                    $data = array();
-                    $data['target'] = 'section';
-                    $data['name'] = $tocText;
-                    $data['hid'] = $id;
-                    $data['codeblockOffset'] = 0; // Dokuwiki - count block count to allow download
-                    $class = $renderer->startSectionEdit($pos, $data);
-                    $tagAttributes->addClassName($class);
-                }
+                $tagAttributes->addComponentAttributeValue($key, $value);
             }
 
         }

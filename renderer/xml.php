@@ -61,14 +61,18 @@ class  renderer_plugin_combo_xml extends Doku_Renderer_xhtml
 
     }
 
+    /**
+     * This are edit zone section (not HTML/Outline Section)
+     * @param int $level
+     */
     public function section_open($level)
     {
-        $this->doc .= "<section>";
+        $this->doc .= "";
     }
 
     public function section_close()
     {
-        $this->doc .= "</section>";
+        $this->doc .= "";
     }
 
 

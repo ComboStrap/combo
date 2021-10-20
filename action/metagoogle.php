@@ -195,7 +195,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             case self::NEWSARTICLE_SCHEMA_ORG_LOWERCASE:
             case self::BLOGPOSTING_SCHEMA_ORG_LOWERCASE:
             case PAGE::HOME_TYPE:
-
+            case PAGE::WEB_PAGE_TYPE:
 
                 switch (strtolower($type)) {
                     case Page::NEWS_TYPE:
@@ -207,6 +207,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                         $schemaType = "BlogPosting";
                         break;
                     case PAGE::HOME_TYPE:
+                    case PAGE::WEB_PAGE_TYPE:
                         // https://schema.org/WebPage
                         $schemaType = "WebPage";
                         break;

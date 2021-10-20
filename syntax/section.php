@@ -95,6 +95,15 @@ class syntax_plugin_combo_section extends DokuWiki_Syntax_Plugin
      */
     function render($format, Doku_Renderer $renderer, $data): bool
     {
+
+        /**
+         * As of today, we don't render on XHTML
+         * because it would go in the way
+         * of the sectionEdit function
+         *
+         * The rendering is used only when exporting to another format
+         * (XML) to render on another platform such as mobile
+         */
         if ($format === renderer_plugin_combo_xml::FORMAT) {
 
             /** @var renderer_plugin_combo_xml $renderer */

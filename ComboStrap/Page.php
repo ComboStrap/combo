@@ -58,6 +58,7 @@ class Page extends DokuPath
     const NEWS_TYPE = "news";
     const BLOG_TYPE = "blog";
     const HOME_TYPE = "home";
+    const WEB_PAGE_TYPE = "webpage";
     const OTHER_TYPE = "other";
 
     const NAME_PROPERTY = "name";
@@ -1935,7 +1936,7 @@ class Page extends DokuPath
     public
     function getTypeValues(): array
     {
-        $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE, Page::OTHER_TYPE];
+        $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE, Page::WEB_PAGE_TYPE, Page::OTHER_TYPE];
         sort($types);
         return $types;
     }
@@ -2115,9 +2116,6 @@ class Page extends DokuPath
     function addAlias($aliasId): Page
     {
         $aliases = $this->getAliases();
-        if ($aliases == null) {
-            $aliases = $this->getDatabasePage()->getAndDeleteDeprecatedAlias();
-        }
         if (!in_array($aliasId, $aliases)) {
             $aliases[] = $aliasId;
         }
@@ -2128,7 +2126,16 @@ class Page extends DokuPath
     public
     function getAliases()
     {
-        return $this->getMetadata(self::ALIAS_ATTRIBUTE);
+        $aliases = $this->getMetadata(self::ALIAS_ATTRIBUTE);
+        if ($aliases == null) {
+            $aliases = $this->getDatabasePage()->getAndDeleteDeprecatedAlias();
+            /**
+             * To validate the migration we set a value
+             * (the array may be empty)
+             */
+            $this->setMetadata(self::ALIAS_ATTRIBUTE, $aliases);
+        }
+        return $aliases;
     }
 
 

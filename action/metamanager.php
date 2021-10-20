@@ -54,8 +54,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const TAB_QUALITY_VALUE = "Quality";
     const TAB_PAGE_VALUE = "Page";
     const TAB_LANGUAGE_VALUE = "Language";
-    const TAB_REPLICATION_VALUE = "Replication";
+    const TAB_INTEGRATION_VALUE = "Integration";
     const TAB_IMAGE_VALUE = "Image";
+    const TAB_REDIRECTION_VALUE = "Redirection";
 
     /**
      * The canonical for the metadata page
@@ -253,7 +254,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasCanonical[self::VALUE_ATTRIBUTE] = $page->getCanonical();
                 $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
                 $metasCanonical[self::MUTABLE_ATTRIBUTE] = true;
-                $metasCanonical[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
+                $metasCanonical[self::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
                 $metasCanonical[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Analytics::CANONICAL,
                     "Canonical",
@@ -407,17 +408,25 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                  * Aliases
                  */
 
-                $aliases[self::DATA_TYPE_ATTRIBUTE] = self::LIST_TYPE_ATTRIBUTE;
-                $aliases[self::NAME_ATTRIBUTE] = Page::ALIAS_ATTRIBUTE;
-                $aliases[self::VALUE_ATTRIBUTE] = $page->getAliases();
-                $aliases[self::MUTABLE_ATTRIBUTE] = false;
-                $aliases[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $aliasesValues = $page->getAliases();
+                $aliasUrl = PluginUtility::getDocumentationUrl(
                     Page::ALIAS_ATTRIBUTE,
-                    "Page Aliases",
+                    "Page Alias",
                     false,
-                    "The aliases that will redirect to this page."
+                    "An alias that will redirect to this page."
                 );
-                $metas[] = $aliases;
+                $alias[self::NAME_ATTRIBUTE] = Page::ALIAS_ATTRIBUTE;
+                $alias[self::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
+
+                $alias[self::MUTABLE_ATTRIBUTE] = false;
+                $alias[self::LABEL_URL_ATTRIBUTE] = $aliasUrl;
+                if (sizeof($aliasesValues) === 0) {
+                    $aliasesValues = ["None"];
+                }
+                foreach ($aliasesValues as $aliasValue) {
+                    $alias[self::VALUE_ATTRIBUTE] = $aliasValue;
+                    $metas[] = $alias;
+                }
 
 
                 // Page Type
@@ -519,7 +528,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $isQualityMonitoringOn[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
                 $isQualityMonitoringOn[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     "quality:dynamic_monitoring",
-                    "Disable the quality message of the page",
+                    "Disable the quality message of this page",
                     false,
                     "If checked, the quality message will not be shown for the page."
                 );
@@ -574,7 +583,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $replicationDate[self::VALUE_ATTRIBUTE] = $replicationDateValue != null ? $replicationDateValue->format(Iso8601Date::getFormat()) : null;
                 $replicationDate[self::MUTABLE_ATTRIBUTE] = false;
                 $replicationDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $replicationDate[self::TAB_ATTRIBUTE] = self::TAB_REPLICATION_VALUE;
+                $replicationDate[self::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
                 $replicationDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     DatabasePage::REPLICATION_CANONICAL,
                     "Database Replication Date",
@@ -587,7 +596,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 // UUID
                 $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
                 $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
-                $metasUuid[self::TAB_ATTRIBUTE] = self::TAB_REPLICATION_VALUE;
+                $metasUuid[self::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
                 $metasUuid[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     Page::UUID_ATTRIBUTE,
                     "UUID",

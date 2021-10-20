@@ -159,7 +159,8 @@ window.addEventListener("DOMContentLoaded", function () {
             /**
              * Init the tooltip if any
              */
-            document.querySelectorAll(`#${this.modalId}[data-bs-toggle="tooltip"]`).forEach(el => new bootstrap.Tooltip(el));
+            let tooltipSelector = `#${this.modalId} [data-bs-toggle="tooltip"]`;
+            document.querySelectorAll(tooltipSelector).forEach(el => new bootstrap.Tooltip(el));
         }
 
         dismiss() {

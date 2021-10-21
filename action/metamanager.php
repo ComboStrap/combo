@@ -50,13 +50,13 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      */
     const TAB_ATTRIBUTE = "tab";
     const COLUMNS_ATTRIBUTE = "columns";
-    const TAB_TYPE_VALUE = "Page Type";
-    const TAB_QUALITY_VALUE = "Quality";
-    const TAB_PAGE_VALUE = "Page";
-    const TAB_LANGUAGE_VALUE = "Language";
-    const TAB_INTEGRATION_VALUE = "Integration";
-    const TAB_IMAGE_VALUE = "Image";
-    const TAB_REDIRECTION_VALUE = "Redirection";
+    const TAB_TYPE_VALUE = "type";
+    const TAB_QUALITY_VALUE = "quality";
+    const TAB_PAGE_VALUE = "page";
+    const TAB_LANGUAGE_VALUE = "language";
+    const TAB_INTEGRATION_VALUE = "integration";
+    const TAB_IMAGE_VALUE = "image";
+    const TAB_REDIRECTION_VALUE = "redirection";
 
     /**
      * The canonical for the metadata page
@@ -161,7 +161,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 return;
             case "GET":
 
-                $metas = [];
+                $fields = [];
 
                 /**
                  * The old viewer meta panel
@@ -170,7 +170,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 if ($type === "viewer") {
                     if (!Identity::isManager()) {
                         header("Status: 401");
-                        $metas = ["message" => "Not Authorized (managers only)"];
+                        $fields = ["message" => "Not Authorized (managers only)"];
                     } else {
                         $metadata = p_read_metadata($id);
                         $metasPersistent = $metadata['persistent'];
@@ -181,12 +181,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                          * because the {@link array_merge_recursive()} just add the values
                          * (we got them the same value twice)
                          */
-                        $metas = array_merge($metasPersistent, $metasCurrent);
-                        ksort($metas);
+                        $fields = array_merge($metasPersistent, $metasCurrent);
+                        ksort($fields);
                         header("Status: 200");
                     }
                     header('Content-type: application/json');
-                    echo json_encode($metas);
+                    echo json_encode($fields);
                     return;
                 }
 
@@ -205,7 +205,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The page name is the shortest page description. It should be at maximum a couple of words long. It's used mainly in navigation components."
                 );
                 $metasName[self::NAME_ATTRIBUTE] = Analytics::NAME;
-                $metas[] = $metasName;
+                $fields[] = $metasName;
 
                 // Title (title of a component is an heading)
                 $metasTitle[self::VALUE_ATTRIBUTE] = $page->getTitle();
@@ -219,7 +219,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The page title is a description advertised to external application such as search engine and browser."
                 );
                 $metasTitle[self::NAME_ATTRIBUTE] = Analytics::TITLE;
-                $metas[] = $metasTitle;
+                $fields[] = $metasTitle;
 
                 // H1
                 $metasH1Value[self::VALUE_ATTRIBUTE] = $page->getH1();
@@ -233,7 +233,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title."
                 );
                 $metasH1Value[self::NAME_ATTRIBUTE] = Analytics::H1;
-                $metas[] = $metasH1Value;
+                $fields[] = $metasH1Value;
 
                 // Description
                 $metasDescription[self::VALUE_ATTRIBUTE] = $page->getDescription();
@@ -248,7 +248,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The description is a paragraph that describe your page. It's advertised to external application and used in templating."
                 );
                 $metasDescription[self::NAME_ATTRIBUTE] = Analytics::DESCRIPTION;
-                $metas[] = $metasDescription;
+                $fields[] = $metasDescription;
 
                 // Canonical
                 $metasCanonical[self::VALUE_ATTRIBUTE] = $page->getCanonical();
@@ -262,7 +262,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The canonical (also known as slug) creates a permanent link."
                 );
                 $metasCanonical[self::NAME_ATTRIBUTE] = Analytics::CANONICAL;
-                $metas[] = $metasCanonical;
+                $fields[] = $metasCanonical;
 
                 // Layout
                 $layout[self::VALUE_ATTRIBUTE] = $page->getLayout();
@@ -277,7 +277,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "A layout chooses the layout of your page (such as the slots and placement of the main content)"
                 );
                 $layout[self::NAME_ATTRIBUTE] = Page::LAYOUT_PROPERTY;
-                $metas[] = $layout;
+                $fields[] = $layout;
 
 
                 // Modified Date
@@ -292,7 +292,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The last modification date of the page"
                 );
                 $modifiedDate[self::NAME_ATTRIBUTE] = Analytics::DATE_MODIFIED;
-                $metas[] = $modifiedDate;
+                $fields[] = $modifiedDate;
 
                 // Created Date
                 $dateCreated[self::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
@@ -306,7 +306,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The creation date of the page"
                 );
                 $dateCreated[self::NAME_ATTRIBUTE] = Analytics::DATE_CREATED;
-                $metas[] = $dateCreated;
+                $fields[] = $dateCreated;
 
 
                 // Path
@@ -320,7 +320,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The path of the page on the file system (in wiki format with the colon `:` as path separator)"
                 );
                 $metasPath[self::NAME_ATTRIBUTE] = Analytics::PATH;
-                $metas[] = $metasPath;
+                $fields[] = $metasPath;
 
                 // Image
                 $pageImages = [];
@@ -402,12 +402,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 }
                 $pageImages[self::VALUES_ATTRIBUTE] = $pageImageRows;
-                $metas[] = $pageImages;
+                $fields[] = $pageImages;
 
                 /**
                  * Aliases
                  */
-
                 $aliasesValues = $page->getAliases();
                 $aliasUrl = PluginUtility::getDocumentationUrl(
                     Page::ALIAS_ATTRIBUTE,
@@ -417,16 +416,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 );
                 $alias[self::NAME_ATTRIBUTE] = Page::ALIAS_ATTRIBUTE;
                 $alias[self::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
-
+                $alias[self::DATA_TYPE_ATTRIBUTE] = self::LIST_TYPE_ATTRIBUTE;
                 $alias[self::MUTABLE_ATTRIBUTE] = false;
                 $alias[self::LABEL_URL_ATTRIBUTE] = $aliasUrl;
                 if (sizeof($aliasesValues) === 0) {
                     $aliasesValues = ["None"];
                 }
-                foreach ($aliasesValues as $aliasValue) {
-                    $alias[self::VALUE_ATTRIBUTE] = $aliasValue;
-                    $metas[] = $alias;
-                }
+                $alias[self::VALUE_ATTRIBUTE] = $aliasesValues;
+                $fields[] = $alias;
 
 
                 // Page Type
@@ -442,7 +439,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The type of page"
                 );
                 $metasPageType[self::NAME_ATTRIBUTE] = Page::TYPE_META_PROPERTY;
-                $metas[] = $metasPageType;
+                $fields[] = $metasPageType;
 
 
                 // Published Date
@@ -458,7 +455,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The publication date"
                 );
                 $publishedDate[self::NAME_ATTRIBUTE] = Publication::DATE_PUBLISHED;
-                $metas[] = $publishedDate;
+                $fields[] = $publishedDate;
 
                 // Start Date
                 $startDate[self::VALUE_ATTRIBUTE] = $page->getStartDate();
@@ -472,7 +469,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The start date of an event"
                 );
                 $startDate[self::NAME_ATTRIBUTE] = Analytics::DATE_START;
-                $metas[] = $startDate;
+                $fields[] = $startDate;
 
                 // End Date
                 $endDate[self::VALUE_ATTRIBUTE] = $page->getEndDate();
@@ -486,7 +483,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The end date of an event"
                 );
                 $endDate[self::NAME_ATTRIBUTE] = Analytics::DATE_END;
-                $metas[] = $endDate;
+                $fields[] = $endDate;
 
 
                 // ld-json
@@ -502,7 +499,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "Advanced Page metadata definition with the json-ld format"
                 );
                 $ldJson[self::NAME_ATTRIBUTE] = action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY;
-                $metas[] = $ldJson;
+                $fields[] = $ldJson;
 
                 // Is low quality page
                 $lowQualityIndicator = $page->getLowQualityIndicator();
@@ -518,7 +515,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "If checked, this page will never be a low quality page"
                 );
                 $isLowQualityPage[self::NAME_ATTRIBUTE] = Page::LOW_QUALITY_PAGE_INDICATOR;
-                $metas[] = $isLowQualityPage;
+                $fields[] = $isLowQualityPage;
 
                 // Quality Monitoring
                 $isQualityMonitoringOn[self::VALUE_ATTRIBUTE] = $page->isQualityMonitored();
@@ -533,7 +530,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "If checked, the quality message will not be shown for the page."
                 );
                 $isQualityMonitoringOn[self::NAME_ATTRIBUTE] = action_plugin_combo_qualitymessage::DISABLE_INDICATOR;
-                $metas[] = $isQualityMonitoringOn;
+                $fields[] = $isQualityMonitoringOn;
 
 
                 // Locale
@@ -548,7 +545,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata."
                 );
                 $locale[self::NAME_ATTRIBUTE] = "locale";
-                $metas[] = $locale;
+                $fields[] = $locale;
 
                 // Lang
                 $lang[self::VALUE_ATTRIBUTE] = $page->getLang();
@@ -562,7 +559,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The language of the page"
                 );
                 $lang[self::NAME_ATTRIBUTE] = Page::LANG_META_PROPERTY;
-                $metas[] = $lang;
+                $fields[] = $lang;
 
                 // Country
                 $region[self::VALUE_ATTRIBUTE] = $page->getLocaleRegion();
@@ -576,7 +573,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The region of the language"
                 );
                 $region[self::NAME_ATTRIBUTE] = Page::REGION_META_PROPERTY;
-                $metas[] = $region;
+                $fields[] = $region;
 
                 // database replication Date
                 $replicationDateValue = $page->getDatabasePage()->getReplicationDate();
@@ -591,7 +588,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "The last date of database replication"
                 );
                 $replicationDate[self::NAME_ATTRIBUTE] = DatabasePage::DATE_REPLICATION;
-                $metas[] = $replicationDate;
+                $fields[] = $replicationDate;
 
                 // UUID
                 $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
@@ -604,11 +601,55 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     "UUID is the Universally Unique IDentifier of the page used in replication (between database or installation)"
                 );
                 $metasUuid[self::NAME_ATTRIBUTE] = Page::UUID_ATTRIBUTE;
-                $metas[] = $metasUuid;
+                $fields[] = $metasUuid;
 
+                /**
+                 * Tabs
+                 */
+                $ui = [
+                    "tabs" => [
+                        self::TAB_PAGE_VALUE => [
+                            self::LABEL_ATTRIBUTE => "Page",
+                            "grid" => [3, 9]
+                        ],
+                        self::TAB_TYPE_VALUE => [
+                            self::LABEL_ATTRIBUTE => "Page Type",
+                            "grid" => [3, 9]
+                        ],
+                        self::TAB_REDIRECTION_VALUE => [
+                            self::LABEL_ATTRIBUTE => "Redirection",
+                            "grid" => [3, 9]
+                        ],
+                        self::TAB_IMAGE_VALUE => [
+                            self::LABEL_ATTRIBUTE => "Image",
+                            "grid" => [12]
+                        ],
+                        self::TAB_QUALITY_VALUE => [
+                            self::LABEL_ATTRIBUTE => "Quality",
+                            "grid" => [6, 6]
+                        ],
+                        self::TAB_LANGUAGE_VALUE => [
+                            self::LABEL_ATTRIBUTE => "Language",
+                            "grid" => [2, 10]
+                        ],
+                        self::TAB_INTEGRATION_VALUE => [
+                            self::LABEL_ATTRIBUTE => "Integration",
+                            "grid" => [4, 8]
+                        ],
+                    ],
+                    "layout" => [
+                        "type" => "nav-tabs",//ie nav-tabs versus list-group: https://getbootstrap.com/docs/5.0/components/list-group/#javascript-behavior
+                        "direction" => "horizontal",
+                        "grid" => [12]
+                    ]
+                ];
+                $forms = [
+                    "ui" => $ui,
+                    "fields" => $fields
+                ];
                 header('Content-type: application/json');
                 header("Status: 200");
-                echo json_encode($metas);
+                echo json_encode($forms);
                 return;
 
 

@@ -36,8 +36,8 @@ window.addEventListener("DOMContentLoaded", function () {
         return comboCall;
     }
 
-    let createControlElement = function (properties) {
-        return new ControlElement(properties);
+    let createMetaField = function (properties) {
+        return new FormMetaField(properties);
     }
 
     class ComboModal {
@@ -236,7 +236,13 @@ window.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    class ControlElement {
+    /**
+     * Represent a form meta element with:
+     *   * a label
+     *   * and a control element
+     * Without the values
+     */
+    class FormMetaField {
 
 
         constructor(properties) {
@@ -278,7 +284,7 @@ window.addEventListener("DOMContentLoaded", function () {
             return `<label for="${forId}" class="${customClass} ${classLabel}">${label}</label>`
         }
 
-        getHtml(id, value, defaultValue) {
+        getHtmlControl(id, value, defaultValue) {
 
             let metadataType = this.properties["type"];
             let mutable = this.properties["mutable"];
@@ -455,41 +461,39 @@ window.addEventListener("DOMContentLoaded", function () {
          * Parsing the data
          * before creating the header and body modal
          */
-        let htmlFormElementsByTab = {};
-        let formNodeType;
+        let formFieldsByTab = {};
+        let dataFields = jsonMetaDataObject["fields"];
+        for (const dataField of dataFields) {
 
-        let formNodeTab;
-        for (const formNode of jsonMetaDataObject) {
+            let dataFieldType = dataField["type"];
+            let dataFieldTab = dataField["tab"];
 
-            formNodeType = formNode["type"];
-            formNodeTab = formNode["tab"];
-
-            let controlElements = [];
-            let values = [];
-            let group = "";
-            switch (formNodeType) {
+            let fieldMetas = [];
+            let fieldValues = [];
+            let fieldGroup = "";
+            switch (dataFieldType) {
                 case "tabular":
-                    let columns = formNode["columns"];
+                    let columns = dataField["columns"];
                     for (const column of columns) {
-                        let controlElement = createControlElement(column);
-                        controlElements.push(controlElement);
+                        let metaField = createMetaField(column);
+                        fieldMetas.push(metaField);
                     }
-                    values = formNode["values"];
-                    group = formNode["url"];
+                    fieldValues = dataField["values"];
+                    fieldGroup = dataField["url"];
                     break
                 default:
-                    controlElements = createControlElement(formNode);
-                    values = [formNode["value"], formNode["default"]];
+                    fieldMetas = createMetaField(dataField);
+                    fieldValues = [dataField["value"], dataField["default"]];
             }
 
-            if (htmlFormElementsByTab[formNodeTab] === undefined) {
-                htmlFormElementsByTab[formNodeTab] = [];
+            if (formFieldsByTab[dataFieldTab] === undefined) {
+                formFieldsByTab[dataFieldTab] = [];
             }
-            htmlFormElementsByTab[formNodeTab].push({
-                "type": formNodeType,
-                "group": group,
-                "elements": controlElements,
-                "values": values
+            formFieldsByTab[dataFieldTab].push({
+                "type": dataFieldType,
+                "group": fieldGroup,
+                "metas": fieldMetas,
+                "values": fieldValues
             });
 
         }
@@ -514,8 +518,14 @@ window.addEventListener("DOMContentLoaded", function () {
             let htmlId = tab.replace(" ", "-");
             return `combo-metadata-tab-nav-${htmlId}`;
         }
-        let defaultTab = "Page";
-        for (let tab in htmlFormElementsByTab) {
+        let tabsMeta = jsonMetaDataObject["ui"]["tabs"];
+        let defaultTab = tabsMeta[0];
+        // Merge the tab found in the tab metas and in the field
+        // to be sure to let no error
+        let tabsFromField = Object.keys(formFieldsByTab);
+        let tabsFromMeta = Object.keys(tabsMeta);
+        let tabsMerged = tabsFromMeta.concat(tabsFromField.filter(element => tabsFromMeta.indexOf(element) < 0))
+        for (let tab of tabsMerged) {
             if (tab === defaultTab) {
                 activeClass = "active";
                 ariaSelected = "true";
@@ -523,6 +533,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 activeClass = "";
                 ariaSelected = "false";
             }
+            let tabLabel = tabsMeta[tab]["label"];
             let tabPanId = this.getTabPaneId(tab);
             let tabNavId = this.getTabNavId(tab);
             htmlTabNavs += `<li class="nav-item">
@@ -534,7 +545,7 @@ window.addEventListener("DOMContentLoaded", function () {
     aria-selected = "${ariaSelected}"
     aria-controls = "${tabPanId}"
     data-bs-toggle = "tab"
-    data-bs-target = "#${tabPanId}" >${tab}</button>
+    data-bs-target = "#${tabPanId}" >${tabLabel}</button>
 </li>`
         }
         htmlTabNavs += '</ul>';
@@ -547,7 +558,7 @@ window.addEventListener("DOMContentLoaded", function () {
         let rightColSize;
         let leftColSize;
         let elementIdCounter = 0;
-        for (let tab in htmlFormElementsByTab) {
+        for (let tab in formFieldsByTab) {
             let tabPaneId = this.getTabPaneId(tab);
             let tabNavId = this.getTabNavId(tab);
             if (tab === defaultTab) {
@@ -556,28 +567,23 @@ window.addEventListener("DOMContentLoaded", function () {
                 activeClass = "";
             }
             htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
-            if (tab === "Quality") {
-                leftColSize = 6;
-                rightColSize = 6;
-            } else if (tab === "Language") {
-                leftColSize = 2;
-                rightColSize = 10;
-            } else if (tab === "Replication") {
-                leftColSize = 4;
-                rightColSize = 8;
+            let grid = tabsMeta[tab]["grid"];
+            if (grid.length === 2) {
+                leftColSize = grid[0];
+                rightColSize = grid[1];
             } else {
                 leftColSize = 3;
                 rightColSize = 9;
             }
-            for (let htmlFormElement of htmlFormElementsByTab[tab]) {
+            for (let formField of formFieldsByTab[tab]) {
 
-                let datatype = htmlFormElement["type"];
+                let datatype = formField["type"];
                 switch (datatype) {
                     case "tabular":
-                        let group = htmlFormElement["group"];
+                        let group = formField["group"];
                         htmlTabPans += `<div class="row mb-3 text-center">${group}</div>`;
-                        let colsControlElement = htmlFormElement["elements"];
-                        let rows = htmlFormElement["values"];
+                        let colsControlElement = formField["fields"];
+                        let rows = formField["values"];
                         let colImageTag = "4";
                         let colImagePath = "8";
                         htmlTabPans += `<div class="row mb-3">`;
@@ -613,12 +619,12 @@ window.addEventListener("DOMContentLoaded", function () {
                         elementIdCounter++;
                         let elementId = `combo-metadata-manager-control-${elementIdCounter}`;
                         /**
-                         * @type ControlElement
+                         * @type FormMetaField
                          */
-                        let htmlElement = htmlFormElement["elements"];
+                        let htmlElement = formField["fields"];
                         let labelHtml = htmlElement.getHtmlLabel(elementId, `col-sm-${leftColSize}`);
-                        let value = htmlFormElement["values"];
-                        let controlHtml = htmlElement.getHtml(elementId, value[0], value[1])
+                        let value = formField["values"];
+                        let controlHtml = htmlElement.getHtmlControl(elementId, value[0], value[1])
                         htmlTabPans += `
 <div class="row mb-3">
     ${labelHtml}
@@ -668,7 +674,7 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
     let toHtmlId = function (s) {
-        return s.replace(/[_\s:\/\\]/g,"-");
+        return s.replace(/[_\s:\/\\]/g, "-");
     }
 
     let openMetadataManager = async function (pageId) {

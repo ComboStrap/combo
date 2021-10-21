@@ -135,7 +135,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
 
             // Get or store the data
             $cache = new \dokuwiki\Cache\Cache($slotId, "snippet");
-            $barFileSystemPath = DokuPath::createPagePathFromPath(DokuPath::PATH_SEPARATOR . $slotId)->getFileSystemPath();
+            $barFileSystemPath = DokuPath::createPagePathFromPath(DokuPath::PATH_SEPARATOR . $slotId)->getAbsoluteFileSystemPath();
             $dependencies = array(
                 "files" => [
                     $barFileSystemPath,

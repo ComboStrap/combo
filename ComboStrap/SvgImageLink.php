@@ -46,7 +46,6 @@ class SvgImageLink extends ImageLink
     /**
      * SvgImageLink constructor.
      * @param ImageSvg $imageSvg
-     * @param TagAttributes $tagAttributes
      */
     public function __construct($imageSvg)
     {
@@ -94,6 +93,7 @@ class SvgImageLink extends ImageLink
         /**
          * Remove the cache attribute
          * (no cache for the img tag)
+         * @var ImageSvg $image
          */
         $image = $this->getDefaultImage();
         $responseAttributes = TagAttributes::createFromTagAttributes($image->getAttributes());

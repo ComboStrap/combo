@@ -1366,7 +1366,7 @@ class Page extends DokuPath
 
         } else {
 
-            return new CacheRenderer($this->getId(), $this->getFileSystemPath(), $outputFormat);
+            return new CacheRenderer($this->getId(), $this->getAbsoluteFileSystemPath(), $outputFormat);
 
         }
     }
@@ -1391,7 +1391,7 @@ class Page extends DokuPath
 
         } else {
 
-            return new CacheInstructions($this->getId(), $this->getFileSystemPath());
+            return new CacheInstructions($this->getId(), $this->getAbsoluteFileSystemPath());
 
         }
 
@@ -2104,7 +2104,7 @@ class Page extends DokuPath
         if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             $firstImage = $this->getFirstImage();
             if ($firstImage != null) {
-                if ($firstImage->getScheme() == DokuPath::LOCAL_SCHEME) {
+                if ($firstImage->getDokuPath()->getScheme() == DokuPath::LOCAL_SCHEME) {
                     return PageImage::create($firstImage);
                 }
             }

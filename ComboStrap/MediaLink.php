@@ -138,7 +138,6 @@ abstract class MediaLink
     }
 
 
-
     /**
      * Create an image from dokuwiki internal call media attributes
      * @param array $callAttributes
@@ -350,11 +349,11 @@ abstract class MediaLink
      *
      * @param $nonQualifiedPath
      * @param TagAttributes $tagAttributes
-     * @param string $rev
+     * @param string|null $rev
      * @return MediaLink
      */
     public
-    static function createMediaLinkFromNonQualifiedPath($nonQualifiedPath, $rev = null, $tagAttributes = null)
+    static function createMediaLinkFromNonQualifiedPath($nonQualifiedPath, ?string $rev = '', $tagAttributes = null)
     {
         if (is_object($rev)) {
             LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");
@@ -379,7 +378,7 @@ abstract class MediaLink
         }
 
 
-        return self::createMediaLinkFromAbsolutePath($qualifiedPath,$rev,$tagAttributes);
+        return self::createMediaLinkFromAbsolutePath($qualifiedPath, $rev, $tagAttributes);
     }
 
     public static function createMediaLinkFromAbsolutePath($qualifiedPath, $rev = null, $tagAttributes = null)
@@ -388,7 +387,7 @@ abstract class MediaLink
          * Processing
          */
         $dokuPath = DokuPath::createMediaPathFromAbsolutePath($qualifiedPath, $rev);
-        if ($dokuPath->getExtension() == "svg") {
+        if ($dokuPath->getExtension() === "svg") {
             /**
              * The mime type is set when uploading, not when
              * viewing.
@@ -400,28 +399,28 @@ abstract class MediaLink
             $mime = $dokuPath->getKnownMime();
         }
 
-        if (substr($mime, 0, 5) == 'image') {
+        if (substr($mime, 0, 5) === 'image') {
+            $image = Image::createImageFromAbsolutePath($qualifiedPath, $rev, $tagAttributes);
             if (substr($mime, 6) == "svg+xml") {
-
-                $svgImage = new ImageSvg($qualifiedPath, $rev, $tagAttributes);
-                $internalMedia = new SvgImageLink($svgImage);
+                $internalMediaLink = new SvgImageLink($image);
             } else {
-                $rasterImage = new ImageRaster($qualifiedPath, $rev, $tagAttributes);
-                $internalMedia = new RasterImageLink($rasterImage );
+                $internalMediaLink = new RasterImageLink($image);
             }
         } else {
             if ($mime == false) {
                 LogUtility::msg("The mime type of the media ($qualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-                $media = new ImageRaster($qualifiedPath, $rev, $tagAttributes);
-                $internalMedia = new RasterImageLink($media);
+                $media = new ImageRaster($dokuPath->getAbsoluteFileSystemPath(), $tagAttributes);
+                $media->setDokuPath($dokuPath);
+                $internalMediaLink = new RasterImageLink($media);
             } else {
                 LogUtility::msg("The type ($mime) of media ($qualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                $media = Media::create($qualifiedPath, $rev, $tagAttributes);
-                $internalMedia = new ThirdMediaLink($media);
+                $media = new ThirdMedia($dokuPath->getAbsoluteFileSystemPath(), $tagAttributes);
+                $media->setDokuPath($dokuPath);
+                $internalMediaLink = new ThirdMediaLink($media);
             }
         }
 
-        return $internalMedia;
+        return $internalMediaLink;
     }
 
 
@@ -448,7 +447,7 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            DokuPath::PATH_ATTRIBUTE => $this->getMedia()->getPath()
+            DokuPath::PATH_ATTRIBUTE => $this->getMedia()->getDokuPath()->getPath()
         );
 
 
@@ -459,9 +458,6 @@ abstract class MediaLink
     }
 
 
-
-
-
     public
     static function isInternalMediaSyntax($text)
     {
@@ -469,11 +465,16 @@ abstract class MediaLink
     }
 
 
-
     public
     function __toString()
     {
-        return $this->getMedia()->getId();
+        $media = $this->getMedia();
+        $dokuPath = $media->getDokuPath();
+        if ($dokuPath !== null) {
+            return $dokuPath->getId();
+        } else {
+            return $media->__toString();
+        }
     }
 
     private
@@ -487,7 +488,6 @@ abstract class MediaLink
     {
         return $this->getMedia()->getAttributes()->getComponentAttributeValue(self::LINKING_KEY);
     }
-
 
 
     /**
@@ -514,15 +514,20 @@ abstract class MediaLink
          * Do we add a link to the image ?
          */
         $media = $this->getMedia();
+        $dokuPath = $media->getDokuPath();
+        if($dokuPath===null){
+            LogUtility::msg("Media Link are only supported on media from the internal library ($media)", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+            return "";
+        }
         $linking = $this->getLinking();
         switch ($linking) {
             case self::LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(
-                    $media->getId(),
+                    $dokuPath->getId(),
                     array(
-                        'id' => $media->getId(),
+                        'id' => $dokuPath->getId(),
                         'cache' => $media->getCache(),
-                        'rev' => $media->getRevision()
+                        'rev' => $dokuPath->getRevision()
                     )
                 );
                 $mediaLink->addHtmlAttributeValue("href", $src);
@@ -537,11 +542,11 @@ abstract class MediaLink
             case self::LINKING_DIRECT_VALUE:
                 //directly to the image
                 $src = ml(
-                    $media->getId(),
+                    $dokuPath->getId(),
                     array(
-                        'id' => $media->getId(),
+                        'id' => $dokuPath->getId(),
                         'cache' => $media->getCache(),
-                        'rev' => $media->getRevision()
+                        'rev' => $dokuPath->getRevision()
                     ),
                     true
                 );
@@ -553,11 +558,11 @@ abstract class MediaLink
             case self::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
                 $src = ml(
-                    $media->getId(),
+                    $dokuPath->getId(),
                     array(
-                        'id' => $media->getId(),
+                        'id' => $dokuPath->getId(),
                         'cache' => $media->getCache(),
-                        'rev' => $media->getRevision()
+                        'rev' => $dokuPath->getRevision()
                     ),
                     false
                 );
@@ -570,9 +575,6 @@ abstract class MediaLink
 
 
     }
-
-
-
 
 
     /**

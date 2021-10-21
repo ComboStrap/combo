@@ -45,6 +45,8 @@ class XmlDocument
 
     ];
 
+    const CANONICAL = "xml";
+
     /**
      * @var DOMDocument
      */
@@ -174,7 +176,7 @@ class XmlDocument
                         libxml_clear_errors();
 
                         // In test, this will send a exception
-                        LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, "support");
+                        LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
 
                     }
 

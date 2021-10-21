@@ -214,7 +214,7 @@ class LogUtility
         if (PluginUtility::isTest()
             && ($level >= self::LVL_MSG_WARNING)
         ) {
-            throw new LogException(PluginUtility::$PLUGIN_NAME . " - " . $message);
+            throw new LogException($message);
         }
     }
 }

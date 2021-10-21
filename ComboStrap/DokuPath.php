@@ -66,7 +66,7 @@ class DokuPath extends File
      *
      * @param string $absolutePath - the dokuwiki absolute path (may not be relative but may be a namespace)
      * @param string $type - the type (media, page)
-     * @param string $rev - the revision (mtime)
+     * @param string|null $rev - the revision (mtime)
      *
      * Thee path should be a qualified/absolute path because in Dokuwiki, a link to a {@link Page}
      * that ends with the {@link DokuPath::PATH_SEPARATOR} points to a start page
@@ -77,7 +77,7 @@ class DokuPath extends File
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
      */
-    protected function __construct($absolutePath, string $type, $rev = null)
+    protected function __construct($absolutePath, string $type, string $rev = null)
     {
 
         if (empty($absolutePath)) {
@@ -261,9 +261,9 @@ class DokuPath extends File
         }
     }
 
-    public static function createMediaPathFromId($id): DokuPath
+    public static function createMediaPathFromId($id, $rev = ''): DokuPath
     {
-        return self::createMediaPathFromAbsolutePath(DokuPath::PATH_SEPARATOR . $id);
+        return self::createMediaPathFromAbsolutePath(DokuPath::PATH_SEPARATOR . $id, $rev);
     }
 
 
@@ -282,6 +282,15 @@ class DokuPath extends File
         if (substr($path, 0, 1) !== ":") {
             $path = DokuPath::PATH_SEPARATOR . $path;
         }
+    }
+
+    /**
+     * @param string $relativePath
+     * @return string - a dokuwiki path (replacing the windows or linux path separator to the dokuwiki separator)
+     */
+    public static function toDokuWikiSeparator(string $relativePath): string
+    {
+        return preg_replace('/[\\\\\/]/', ":", $relativePath);
     }
 
 

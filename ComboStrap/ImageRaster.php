@@ -9,9 +9,10 @@ class ImageRaster extends Image
 
     const CANONICAL = "raster";
 
-    public function __construct($absolutePath, $rev = null, $attributes = null)
+
+    public function __construct($absoluteFileSystemPath, $attributes = null)
     {
-        parent::__construct($absolutePath, $rev, $attributes);
+        parent::__construct($absoluteFileSystemPath, $attributes);
         $this->getAttributes()->setLogicalTag(self::CANONICAL);
     }
 
@@ -68,7 +69,7 @@ class ImageRaster extends Image
                  * $dimensions = media_image_preview_size($this->id, '', false);
                  */
                 $imageInfo = array();
-                $imageSize = getimagesize($this->getFileSystemPath(), $imageInfo);
+                $imageSize = getimagesize($this->getAbsoluteFileSystemPath(), $imageInfo);
                 if ($imageSize === false) {
                     $this->analyzable = false;
                     LogUtility::msg("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -107,7 +108,7 @@ class ImageRaster extends Image
      * @param null $breakpointWidth - the breakpoint width - use for responsive image
      * @return string|null
      */
-    public function getUrl($ampersand = DokuwikiUrl::URL_ENCODED_AND, $breakpointWidth = null)
+    public function getUrl(string $ampersand = DokuwikiUrl::URL_ENCODED_AND, $breakpointWidth = null)
     {
 
         /**
@@ -117,62 +118,65 @@ class ImageRaster extends Image
             $breakpointWidth = $this->getTargetWidth();
         }
 
-        if ($this->exists()) {
-
-            /**
-             * Link attribute
-             */
-            $att = array();
-
-            /**
-             * The image ratio is fixed
-             * Width is driving the computation
-             */
-            // Height for the given width
-            $breakpointHeight = $this->getBreakpointHeight($breakpointWidth);
-
-            /**
-             * If the request is not the original image
-             * and not cropped, add the width and height
-             */
-            if ($breakpointWidth != null &&
-                (
-                    $breakpointWidth < $this->getIntrinsicWidth()
-                    ||
-                    $breakpointHeight < $this->getIntrinsicHeight()
-                )) {
-
-                $att['w'] = $breakpointWidth;
-
-                if (!empty($breakpointHeight)) {
-                    $att['h'] = $breakpointHeight;
-                    $this->checkLogicalRatioAgainstTargetRatio($breakpointWidth, $breakpointHeight);
-                }
-
-            }
-
-            if (!empty($this->getCache())) {
-                $att[CacheMedia::CACHE_KEY] = $this->getCache();
-            }
-
-            /**
-             * Smart Cache
-             */
-            $this->addCacheBusterToQueryParameters($att);
-
-            $direct = true;
-
-            return ml($this->getId(), $att, $direct, $ampersand, true);
-
-        } else {
-
-            LogUtility::msg("The image ($this) does not exist, you can't ask the URL");
+        if (!$this->exists()) {
+            LogUtility::msg("The image ($this) does not exist, you can't ask the URL", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return false;
+        }
+
+        /**
+         * Link attribute
+         */
+        $att = array();
+
+        /**
+         * The image ratio is fixed
+         * Width is driving the computation
+         */
+        // Height for the given width
+        $breakpointHeight = $this->getBreakpointHeight($breakpointWidth);
+
+        /**
+         * If the request is not the original image
+         * and not cropped, add the width and height
+         */
+        if ($breakpointWidth != null &&
+            (
+                $breakpointWidth < $this->getIntrinsicWidth()
+                ||
+                $breakpointHeight < $this->getIntrinsicHeight()
+            )) {
+
+            $att['w'] = $breakpointWidth;
+
+            if (!empty($breakpointHeight)) {
+                $att['h'] = $breakpointHeight;
+                $this->checkLogicalRatioAgainstTargetRatio($breakpointWidth, $breakpointHeight);
+            }
 
         }
+
+        if (!empty($this->getCache())) {
+            $att[CacheMedia::CACHE_KEY] = $this->getCache();
+        }
+
+        /**
+         * Smart Cache
+         */
+        $this->addCacheBusterToQueryParameters($att);
+
+        $direct = true;
+
+        if ($this->getDokuPath() === null) {
+            LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return "";
+        }
+        return ml($this->getDokuPath()->getId(), $att, $direct, $ampersand, true);
+
+
     }
 
-    public function getAbsoluteUrl()
+    public
+    function getAbsoluteUrl()
     {
 
         return $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $this->getTargetWidth());
@@ -186,7 +190,8 @@ class ImageRaster extends Image
      *
      * @return array|int|mixed|string
      */
-    public function getTargetWidth()
+    public
+    function getTargetWidth()
     {
         $requestedWidth = $this->getRequestedWidth();
 
@@ -214,7 +219,8 @@ class ImageRaster extends Image
         return parent::getTargetWidth();
     }
 
-    public function getTargetHeight()
+    public
+    function getTargetHeight()
     {
 
         $requestedHeight = $this->getRequestedHeight();
@@ -232,6 +238,8 @@ class ImageRaster extends Image
 
         return parent::getTargetHeight();
     }
+
+
 
 
 }

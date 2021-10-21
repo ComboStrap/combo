@@ -12,8 +12,9 @@ namespace ComboStrap;
  *   * same for svg ...
  *
  * This is why there is a cache attribute - this is the cache of the generated file
+ * if any
  */
-class Media extends DokuPath
+abstract class Media extends File
 {
 
     /**
@@ -22,22 +23,26 @@ class Media extends DokuPath
     protected $attributes;
 
     /**
-     * Media constructor.
+     * @var DokuPath
      */
-    public function __construct($absolutePath, $rev = null, $attributes = null)
+    private $dokuPath;
+
+    /**
+     * Media constructor.
+     * The file system path and the attributes (properties)
+     */
+    public function __construct($fileSystemPath, $attributes = null)
     {
         if ($attributes === null) {
             $attributes = TagAttributes::createEmpty();
         }
         $this->attributes = $attributes;
-        parent::__construct($absolutePath, DokuPath::MEDIA_TYPE, $rev);
+
+        parent::__construct($fileSystemPath);
 
     }
 
-    public static function create($absolutePath, $rev, $tagAttributes): Media
-    {
-        return new Media($absolutePath, $rev, $tagAttributes);
-    }
+
 
     /**
      * @return string $cache - one of {@link CacheMedia::CACHE_KEY} or null if not set
@@ -56,5 +61,28 @@ class Media extends DokuPath
     public function &getAttributes(){
         return $this->attributes;
     }
+
+    public
+    function setDokuPath(DokuPath $dokuPath): Media
+    {
+        $this->dokuPath = $dokuPath;
+        return $this;
+    }
+
+    public function getDokuPath(): ?DokuPath
+    {
+        return $this->dokuPath;
+    }
+
+    /**
+     * The URL will change if the file change
+     * @param $queryParameters
+     */
+    protected function addCacheBusterToQueryParameters(&$queryParameters)
+    {
+        $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getBuster();
+    }
+
+    public abstract function getUrl();
 
 }

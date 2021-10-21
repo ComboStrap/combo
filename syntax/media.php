@@ -203,7 +203,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $mediaLink = MediaLink::createFromCallStackArray($attributes);
                 $media = $mediaLink->getMedia();
-                if ($media->getScheme() == DokuPath::LOCAL_SCHEME) {
+                if ($media->getDokuPath()->getScheme() == DokuPath::LOCAL_SCHEME) {
                     $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                     if ($media->isImage() || $media->getExtension() === "svg") {
                         try {

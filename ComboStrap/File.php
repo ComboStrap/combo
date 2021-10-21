@@ -31,7 +31,7 @@ class File
     /**
      * @return mixed
      */
-    public function getFileSystemPath()
+    public function getAbsoluteFileSystemPath()
     {
         return $this->path;
     }
@@ -110,12 +110,12 @@ class File
 
     public function getContent()
     {
-        return file_get_contents($this->getFileSystemPath());
+        return file_get_contents($this->getAbsoluteFileSystemPath());
     }
 
     public function remove()
     {
-        unlink($this->getFileSystemPath());
+        unlink($this->getAbsoluteFileSystemPath());
     }
 
     public function getParent()
@@ -126,10 +126,10 @@ class File
     public function createAsDirectory()
     {
 
-        return mkdir($this->getFileSystemPath(), $mode = 0770, $recursive = true);
+        return mkdir($this->getAbsoluteFileSystemPath(), $mode = 0770, $recursive = true);
     }
 
-    public static function createFromPath($path)
+    public static function createFromPath($path): File
     {
         return new File($path);
 

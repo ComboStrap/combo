@@ -96,7 +96,7 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
         /**
          * The original file
          */
-        $files[] = $this->pageObject->getFileSystemPath();
+        $files[] = $this->pageObject->getAbsoluteFileSystemPath();
 
         /**
          * Update the dependency

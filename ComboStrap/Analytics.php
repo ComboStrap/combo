@@ -79,7 +79,7 @@ class Analytics
     public function __construct(Page $page)
     {
         $this->page = $page;
-        $cache = new CacheRenderer($this->page->getId(), $this->page->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
+        $cache = new CacheRenderer($this->page->getId(), $this->page->getAbsoluteFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
 
         $this->cacheFile = File::createFromPath($cache->cache);
 
@@ -133,7 +133,7 @@ class Analytics
         $oldId = $ID;
         $ID = $this->page->getId();
 
-        $result = p_cached_output($this->page->getFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE, $this->page->getId());
+        $result = p_cached_output($this->page->getAbsoluteFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE, $this->page->getId());
 
         $ID = $oldId;
 

@@ -452,10 +452,6 @@ class SnippetManager
         return $heads;
     }
 
-    public function getCssSnippetContent($string)
-    {
-
-    }
 
     private function mergeSnippetArray($left, $right)
     {
@@ -481,6 +477,20 @@ class SnippetManager
 
         return $distinctSnippetIdByType;
 
+    }
+
+    /**
+     * Add a local javascript library as script tag
+     * The id is given from the library resource directory
+     *
+     * For instance:
+     *   * combo:combo.js
+     *   * for a file located at dokuwiki_home\lib\plugins\combo\resources\library\combo\combo.js
+     * @param string $relativeId
+     */
+    public function attachJavascriptLibraryForRequest(string $relativeId)
+    {
+        $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromRelativeId($relativeId);
     }
 
 

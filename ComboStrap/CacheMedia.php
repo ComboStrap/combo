@@ -27,8 +27,10 @@ class CacheMedia
      * We don't use rev as cache buster because Dokuwiki still thinks
      * that this is an old file and search in the attic
      * as seen in the function {@link mediaFN()}
+     *
+     * The value used by Dokuwiki for the buster is tseed.
      */
-    const CACHE_BUSTER_KEY = "buster";
+    const CACHE_BUSTER_KEY = "tseed";
 
     /**
      * @var File
@@ -52,7 +54,7 @@ class CacheMedia
         /**
          * Cache Key Construction
          */
-        $cacheKey = $this->path->getFileSystemPath();
+        $cacheKey = $this->path->getAbsoluteFileSystemPath();
         foreach ($tagAttributes->getComponentAttributes() as $name => $value) {
 
             /**
@@ -127,7 +129,7 @@ class CacheMedia
                 // svg generation depends on configuration
                 $files = getConfigFiles('main');
             }
-            $files[] = $this->path->getFileSystemPath();
+            $files[] = $this->path->getAbsoluteFileSystemPath();
             $files[] = Resources::getComboHome() . "/plugin.info.txt";
             $dependencies = array('files' => $files);
             if ($this->maxAge != null) {

@@ -349,7 +349,7 @@ $conf["enableProfileDeleteForm"] = 1;
 $conf['outputComment'] = 0;
 
 /**
- * {@link action_plugin_combo_cache::CONF_STATIC_CACHE_ENABLED}
+ * {@link action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED}
  */
 $conf["staticCacheEnabled"] = 1;
 

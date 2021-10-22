@@ -30,10 +30,10 @@ class MetadataMenuItem extends AbstractItem
      */
     public function __construct()
     {
-
         $snippetManager = PluginUtility::getSnippetManager();
-        $snippetManager->attachJavascriptLibraryForRequest("combo/combo.js");
+        $snippetManager->attachJavascriptScriptForRequest(self::CANONICAL,"library:combo:combo.js");
         $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
+        parent::__construct();
     }
 
 

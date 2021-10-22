@@ -19,6 +19,11 @@ class DokuPath extends File
     const INTERWIKI_SCHEME = 'interwiki';
     const INTERNET_SCHEME = "internet";
     const PATH_ATTRIBUTE = "path";
+    /**
+     * For whatever reason, dokuwiki uses also on windows
+     * the linux separator
+     */
+    public const DIRECTORY_SEPARATOR = "/";
 
     /**
      * @var string the path id passed to function (cleaned)
@@ -291,6 +296,11 @@ class DokuPath extends File
     public static function toDokuWikiSeparator(string $relativePath): string
     {
         return preg_replace('/[\\\\\/]/', ":", $relativePath);
+    }
+
+    public static function toFileSystemSeparator($dokuPath)
+    {
+        return str_replace(":", self::DIRECTORY_SEPARATOR,$dokuPath);
     }
 
 

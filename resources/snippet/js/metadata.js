@@ -1,284 +1,6 @@
 window.addEventListener("DOMContentLoaded", function () {
 
 
-    /**
-     * A pointer to the created modals
-     */
-    let comboModals = {};
-
-    /**
-     *
-     * @param modalId
-     * @return {ComboModal}
-     */
-    let getComboModal = function (modalId) {
-        return comboModals[modalId];
-    }
-    /**
-     * Create a modal and return the modal content element
-     * @return ComboModal
-     */
-    let createComboModal = function (modalId) {
-
-        let modal = new ComboModal(modalId);
-        comboModals[modalId] = modal;
-        return modal;
-    }
-
-    /**
-     * Create a ajax call
-     * @return ComboAjaxCall
-     */
-    let createGetCall = function (pageId) {
-
-        let comboCall = new ComboAjaxCall(pageId);
-        comboCall.setMethod("GET");
-        return comboCall;
-    }
-
-    let createMetaField = function (properties) {
-        return new FormMetaField(properties);
-    }
-
-
-
-    class ComboAjaxUrl {
-
-        constructor(pageId) {
-            this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
-
-            this.url.searchParams.set("call", "combo-meta-manager");
-            if (pageId !== undefined) {
-                this.id = pageId;
-            } else {
-                this.id = JSINFO.id;
-            }
-            this.url.searchParams.set("id", this.id);
-        }
-
-
-        setProperty(key, value) {
-            this.url.searchParams.set(key, value);
-            return this;
-        }
-
-        toString() {
-            return this.url.toString();
-        }
-    }
-
-
-    class ComboAjaxCall {
-
-
-        method = "GET";
-
-        constructor(pageId) {
-
-            this.url = new ComboAjaxUrl(pageId);
-
-        }
-
-        async getJson() {
-
-            let response = await fetch(this.url.toString(), {method: this.method});
-
-            if (response.status !== 200) {
-                console.log('Bad request, status Code is: ' + response.status);
-                return {};
-            }
-
-            // Parses response data to JSON
-            //   * response.json()
-            //   * response.text()
-            // are promise, you need to pass them to a callback to get the value
-            return response.json();
-
-        }
-
-        setMethod(method) {
-            this.method = method;
-        }
-
-        setProperty(key, value) {
-            this.url.setProperty(key, value);
-        }
-    }
-
-    /**
-     * Represent a form meta element with:
-     *   * a label
-     *   * and a control element
-     * Without the values
-     */
-    class FormMetaField {
-
-
-        constructor(properties) {
-
-            this.properties = properties;
-        }
-
-        /**
-         * @return string
-         */
-        getLabel() {
-
-            let label = this.properties["label"];
-            if (label === undefined) {
-                return this.getName()
-                    .split(/_|-/)
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(" ");
-            }
-            return label;
-        }
-
-        getLabelUrl() {
-            let label = this.properties["url"];
-            if (label === undefined) {
-                return this.getLabel();
-            }
-            return label;
-        }
-
-        getHtmlLabel(forId, customClass) {
-            let label = this.getLabelUrl();
-            let classLabel = "";
-            if (this.getType() === "boolean") {
-                classLabel = "form-check"
-            } else {
-                classLabel = "col-form-label";
-            }
-            return `<label for="${forId}" class="${customClass} ${classLabel}">${label}</label>`
-        }
-
-        getHtmlControl(id, value, defaultValue) {
-
-            let metadataType = this.properties["type"];
-            let mutable = this.properties["mutable"];
-            let domainValues = this.properties["domain-values"];
-            let disabled;
-            let htmlElement;
-
-            /**
-             * The creation of the form element
-             */
-            if (domainValues !== undefined) {
-
-                /**
-                 * Select element
-                 * @type {string}
-                 */
-                htmlElement = "select";
-                let defaultValueHtml = "";
-                if (defaultValue !== undefined) {
-                    defaultValueHtml = ` (${defaultValue})`;
-                }
-
-                htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}">`;
-                let selected = "";
-                if (value === null) {
-                    selected = "selected";
-                }
-                htmlElement += `<option value="" ${selected}>Default${defaultValueHtml}</option>`;
-                for (let selectValue of domainValues) {
-                    if (selectValue === value) {
-                        selected = "selected";
-                    } else {
-                        selected = "";
-                    }
-                    htmlElement += `<option value="${selectValue}" ${selected}>${selectValue}</option>`;
-                }
-                htmlElement += `</select>`;
-                return htmlElement;
-
-
-            } else {
-
-                let htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
-                if (!(defaultValue === null || defaultValue === undefined)) {
-                    htmlPlaceholder = `placeholder="${defaultValue}"`;
-                }
-                let htmlValue = "";
-                let inputType;
-                let name = this.getName();
-
-                /**
-                 * With disable, the data is not in the form
-                 */
-                if (mutable !== undefined && mutable === false) {
-                    disabled = "disabled";
-                } else {
-                    disabled = "";
-                }
-
-                /**
-                 * Input Element
-                 * @type {string}
-                 */
-                let htmlTag = "input";
-                let htmlClass = "form-control";
-                let checked = "";
-
-                /**
-                 * Type ?
-                 */
-                switch (metadataType) {
-                    case "datetime":
-                        inputType = "datetime-local";
-                        if (value !== null) {
-                            value = value.slice(0, 19);
-                        }
-                        if (value !== null) {
-                            htmlValue = `value="${value}"`;
-                        }
-                        break;
-                    case "paragraph":
-                        htmlTag = "textarea";
-                        if (value !== null) {
-                            htmlValue = `${value}`;
-                        }
-                        break;
-                    case "boolean":
-                        inputType = "checkbox";
-                        htmlClass = "form-check-input";
-                        if (value === defaultValue) {
-                            checked = "checked"
-                        }
-                        htmlValue = `value="${value}"`;
-                        htmlPlaceholder = "";
-                        break;
-                    case "line":
-                    default:
-                        inputType = "text";
-                        if (!(value === null || value === undefined)) {
-                            htmlValue = `value="${value}"`;
-                        }
-                }
-
-                switch (htmlTag) {
-                    case "textarea":
-                        htmlElement = `<textarea id="${id}" name="${name}" class="${htmlClass}" rows="3" ${htmlPlaceholder} >${htmlValue}</textarea>`;
-                        break;
-                    default:
-                    case "input":
-                        htmlElement = `<input type="${inputType}" name="${name}" class="${htmlClass}" id="${id}" ${htmlPlaceholder} ${htmlValue} ${checked} ${disabled}>`;
-                        break;
-
-                }
-                return htmlElement;
-            }
-        }
-
-        getType() {
-            return this.properties["type"];
-        }
-
-        getName() {
-            return this.properties["name"];
-        }
-    }
 
     /**
      *
@@ -286,11 +8,11 @@ window.addEventListener("DOMContentLoaded", function () {
      */
     async function openMetaViewer(modalManager, pageId) {
         let modalViewerId = toHtmlId(`combo_metadata_viewer_${pageId}`);
-        let modalViewer = getComboModal(modalViewerId);
+        let modalViewer = combo.getComboModal(modalViewerId);
         if (modalViewer === undefined) {
-            modalViewer = createComboModal(modalViewerId);
+            modalViewer = combo.createComboModal(modalViewerId);
             modalViewer.setHeader("Metadata Viewer");
-            let viewerCall = createGetCall(pageId);
+            let viewerCall = combo.createGetCall(pageId);
             viewerCall.setProperty("type", "viewer");
             let json = JSON.stringify(await viewerCall.getJson(), null, 2);
 
@@ -307,13 +29,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
     }
 
-    /**
-     *
-     * @return {ComboAjaxUrl}
-     */
-    function createAjaxUrl(pageId) {
-        return new ComboAjaxUrl(pageId);
-    }
+
 
     /**
      *
@@ -323,49 +39,15 @@ window.addEventListener("DOMContentLoaded", function () {
      */
     async function fetchAndBuildMetadataManager(managerModal, pageId) {
 
-        let call = createGetCall(pageId);
+        let call = combo.createGetCall(pageId);
         let jsonMetaDataObject = await call.getJson();
 
         /**
          * Parsing the data
          * before creating the header and body modal
          */
-        let formFieldsByTab = {};
-        let dataFields = jsonMetaDataObject["fields"];
-        for (const dataField of dataFields) {
+        let formFieldsByTab = combo.toFormFieldsByTabs(jsonMetaDataObject["fields"]);
 
-            let dataFieldType = dataField["type"];
-            let dataFieldTab = dataField["tab"];
-
-            let fieldMetas = [];
-            let fieldValues = [];
-            let fieldGroup = "";
-            switch (dataFieldType) {
-                case "tabular":
-                    let columns = dataField["columns"];
-                    for (const column of columns) {
-                        let metaField = createMetaField(column);
-                        fieldMetas.push(metaField);
-                    }
-                    fieldValues = dataField["values"];
-                    fieldGroup = dataField["url"];
-                    break
-                default:
-                    fieldMetas = createMetaField(dataField);
-                    fieldValues = [dataField["value"], dataField["default"]];
-            }
-
-            if (formFieldsByTab[dataFieldTab] === undefined) {
-                formFieldsByTab[dataFieldTab] = [];
-            }
-            formFieldsByTab[dataFieldTab].push({
-                "type": dataFieldType,
-                "group": fieldGroup,
-                "metas": fieldMetas,
-                "values": fieldValues
-            });
-
-        }
 
         /**
          * Header
@@ -428,6 +110,9 @@ window.addEventListener("DOMContentLoaded", function () {
         let leftColSize;
         let elementIdCounter = 0;
         for (let tab in formFieldsByTab) {
+            if(!formFieldsByTab.hasOwnProperty(tab)){
+                continue;
+            }
             let tabPaneId = this.getTabPaneId(tab);
             let tabNavId = this.getTabNavId(tab);
             if (tab === defaultTab) {
@@ -508,7 +193,7 @@ window.addEventListener("DOMContentLoaded", function () {
         htmlTabPans += "</div>";
 
         let formId = managerModal.getId() + "_form";
-        let endpoint = createAjaxUrl(pageId).toString();
+        let endpoint = combo.createAjaxUrl(pageId).toString();
         managerModal.addBody(`<form id="${formId}" method="post" action="${endpoint}">${htmlTabNavs} ${htmlTabPans} </form>`);
 
         /**
@@ -549,10 +234,10 @@ window.addEventListener("DOMContentLoaded", function () {
     let openMetadataManager = async function (pageId) {
 
         let modalManagerId = toHtmlId(`combo_metadata_manager_page_${pageId}`);
-        let managerModal = getComboModal(modalManagerId);
+        let managerModal = combo.getComboModal(modalManagerId);
 
         if (managerModal === undefined) {
-            managerModal = createComboModal(modalManagerId);
+            managerModal = combo.createComboModal(modalManagerId);
             managerModal = await fetchAndBuildMetadataManager(managerModal, pageId);
         }
         managerModal.show();

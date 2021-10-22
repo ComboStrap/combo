@@ -76,7 +76,6 @@ class SnippetManager
     private $snippetsByRequestScope = array();
 
 
-
     public static function init()
     {
         global $componentScript;
@@ -297,7 +296,6 @@ class SnippetManager
     }
 
 
-
     /**
      * A function to be able to add snippets from the snippets cache
      * when a bar was served from the cache
@@ -385,7 +383,7 @@ class SnippetManager
      * @param string $script -  the css if any, otherwise the css file will be taken
      * @return Snippet a snippet scoped at the request scope
      */
-    public function &attachCssSnippetForRequest($snippetId, $script = null)
+    public function &attachCssSnippetForRequest($snippetId, $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromRequest($snippetId, Snippet::TYPE_CSS);
         if ($script != null) {
@@ -399,7 +397,7 @@ class SnippetManager
      * @param null $script
      * @return Snippet a snippet scoped at the bar level
      */
-    public function &attachJavascriptSnippetForBar($snippetId, $script = null)
+    public function &attachJavascriptSnippetForBar($snippetId, $script = null): Snippet
     {
         $snippet = $this->attachSnippetFromBar($snippetId, Snippet::TYPE_JS);
         if ($script != null) {
@@ -452,6 +450,17 @@ class SnippetManager
         return $heads;
     }
 
+    public function &attachTagsForRequest($snippetId)
+    {
+        global $ID;
+        $bar = $ID;
+        $heads = &$this->snippetsByRequestScope[$bar][Snippet::TAG_TYPE][$snippetId];
+        if (!isset($heads)) {
+            $heads = new Snippet($snippetId, Snippet::TAG_TYPE);
+        }
+        return $heads;
+    }
+
 
     private function mergeSnippetArray($left, $right)
     {
@@ -480,17 +489,31 @@ class SnippetManager
     }
 
     /**
-     * Add a local javascript library as script tag
-     * The id is given from the library resource directory
+     * Add a local javascript script as tag
+     * (ie same as {@link SnippetManager::attachTagsForRequest()})
+     * but for local script
+     *
      *
      * For instance:
-     *   * combo:combo.js
+     *   * library:combo:combo.js
      *   * for a file located at dokuwiki_home\lib\plugins\combo\resources\library\combo\combo.js
-     * @param string $relativeId
+     * @param string $snippetId - the snippet id
+     * @param string $relativeId - the relative id from the resources directory
      */
-    public function attachJavascriptLibraryForRequest(string $relativeId)
+    public function attachJavascriptScriptForRequest(string $snippetId, string $relativeId)
     {
         $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromRelativeId($relativeId);
+
+        $this->attachTagsForRequest($snippetId)->setTags(
+            array("script" => [
+                array(
+                    "src" => $javascriptMedia->getUrl(),
+//                    "integrity" => "sha256-LGOWMG4g6/zc0chji4hZP1d8RxR2bPvXMzl/7oPZqjs=",
+//                    "crossorigin" => "anonymous"
+                )
+            ])
+        );
+        
     }
 
 

@@ -10,44 +10,46 @@ namespace ComboStrap;
  */
 class JavascriptLibrary extends Media
 {
-    const COMBO_MEDIA_TYPE = "combo-type";
+
+    /**
+     * Dokuwiki know as file system starts at page and media
+     * This parameters permits to add another one
+     * that starts at the resource directory
+     */
+    const COMBO_MEDIA_FILE_SYSTEM = "combo-fs";
 
 
     /**
-     * @param $relativePath
+     * @param $relativeDokuPath
      * @return JavascriptLibrary
      */
-    public static function createJavascriptLibraryFromRelativeId($relativePath): JavascriptLibrary
+    public static function createJavascriptLibraryFromRelativeId($relativeDokuPath): JavascriptLibrary
     {
-        $absolutePath = self::getHomeLibraryDirectory()."/$relativePath";
+        $relativeFsPath = DokuPath::toFileSystemSeparator($relativeDokuPath);
+        $absolutePath = Resources::getAbsoluteResourcesDirectory() . DIRECTORY_SEPARATOR . $relativeFsPath;
         return new JavascriptLibrary($absolutePath);
     }
 
-    public static function getHomeLibraryDirectory(): string
-    {
-        return Resources::getAbsoluteResourcesDirectory() . "/library";
-    }
 
 
-    public function getUrl(): string
+    public function getUrl($ampersand = DokuwikiUrl::URL_AND): string
     {
-        if(!$this->isResourceLibrary()){
-            LogUtility::msg("Only Javascript Library in the resource directory can be served, blank url returned");
+        if (!$this->isResourceScript()) {
+            LogUtility::msg("Only Javascript script in the resource directory can be served, blank url returned");
             return "";
         };
-        $relativePath = substr($this->getAbsoluteFileSystemPath(), strlen(static::getHomeLibraryDirectory()));
+        $relativePath = substr($this->getAbsoluteFileSystemPath(), strlen(Resources::getAbsoluteResourcesDirectory()));
         $relativeDokuPath = DokuPath::toDokuWikiSeparator($relativePath);
         $direct = true;
-        $ampersand = DokuwikiUrl::URL_ENCODED_AND;
         $att = [];
         $this->addCacheBusterToQueryParameters($att);
-        $att[self::COMBO_MEDIA_TYPE] = "library";
+        $att[self::COMBO_MEDIA_FILE_SYSTEM] = "resources";
         return ml($relativeDokuPath, $att, $direct, $ampersand, true);
     }
 
-    private function isResourceLibrary(): bool
+    private function isResourceScript(): bool
     {
-        $resourceDirectory = self::getHomeLibraryDirectory();
+        $resourceDirectory = Resources::getAbsoluteResourcesDirectory();
         if (!(strpos($this->getAbsoluteFileSystemPath(), $resourceDirectory) === 0)) {
             return false;
         }

@@ -1,5 +1,3 @@
-
-
 (function (combo) {
 
     /**
@@ -7,48 +5,108 @@
      *   * a simple scalar value
      *   * or a table (list of values)
      */
-    class FormField {
+    class ComboFormField {
 
         /**
          * The form field type
-         * @param type
-         * @return {FormField}
+         * @param {string} type
+         * @return {ComboFormField}
          */
-        setType(type){
+        setType(type) {
             this.type = type;
             return this;
         }
 
         /**
          * In case of tabular data, the table label
-         * @param group
-         * @return {FormField}
+         * @param {string} group
+         * @return {ComboFormField}
          */
-        setGroup(group){
+        setGroup(group) {
             this.group = group;
             return this;
         }
 
         /**
-         * @param metas - the type of values (equivalent to column metadata for a table)
-         * @return {FormField}
+         * @param {FormMetaField[]} metas - the type of values (equivalent to column metadata for a table)
+         * @return {ComboFormField}
          */
-        setMetas(metas){
+        setMetas(metas) {
             this.metas = metas;
             return this;
         }
 
         /**
-         *
-         * @param values - the values attached
-         * @return {FormField}
+         * @param {FormMetaField} meta - the type of value
+         * @return {ComboFormField}
          */
-        setValues(values){
+        setMeta(meta) {
+            this.meta = meta;
+            return this;
+        }
+
+        /**
+         * @return {FormMetaField[]}
+         */
+        getMetas() {
+            return this.metas;
+        }
+
+        /**
+         * @return {FormMetaField}
+         */
+        getMeta() {
+            return this.meta;
+        }
+
+        /**
+         *
+         * Type:
+         *   * A single value
+         *   * or an array of an array of values (ie table)
+         * @param {{value: string, default: string}[][]} values - the values attached
+         * @return {ComboFormField}
+         */
+        setValues(values) {
             this.values = values;
             return this;
         }
 
+        /**
+         * @param {{value: string, default: string}} value
+         * @return {ComboFormField}
+         */
+        setValue(value) {
+            this.value = value;
+            return this;
+        }
+
+        /**
+         *
+         * @return {{value: string, default: string}[][]}
+         */
+        getValues() {
+            return this.values;
+        }
+
+        /**
+         *
+         * @return {{value: string, default: string}}
+         */
+        getValue() {
+            return this.value;
+        }
+
+        getType() {
+            return this.type;
+        }
+
+        getGroup() {
+            return this.group;
+        }
+
     }
+
     class ComboModal {
 
         /**
@@ -451,18 +509,35 @@
      * @param modalId
      * @return {ComboModal}
      */
-    combo.getComboModal = function (modalId) {
+    combo.getModal = function (modalId) {
         return comboModals[modalId];
     }
     /**
      * Create a modal and return the modal content element
      * @return ComboModal
      */
-    combo.createComboModal = function (modalId) {
+    combo.createModal = function (modalId) {
 
         let modal = new ComboModal(modalId);
         comboModals[modalId] = modal;
         return modal;
+    }
+
+    /**
+     * List the managed modals
+     */
+    combo.listModals = function () {
+        console.log(Object.keys(comboModals).join(", "));
+    }
+
+    /**
+     * Delete all modals
+     */
+    combo.destroyAllModals = function () {
+        Object.keys(comboModals).forEach(modalId => {
+            document.getElementById(modalId).remove();
+        })
+        comboModals = {};
     }
 
     /**
@@ -478,41 +553,51 @@
             let dataFieldType = dataField["type"];
             let dataFieldTab = dataField["tab"];
 
-            let fieldMetas = [];
-            let fieldValues = [];
-            let fieldGroup = "";
+            if (formFieldsByTab[dataFieldTab] === undefined) {
+                formFieldsByTab[dataFieldTab] = [];
+            }
+
+
             switch (dataFieldType) {
                 case "tabular":
                     let columns = dataField["columns"];
+                    let fieldMetas = [];
                     for (const column of columns) {
                         let metaField = combo.createMetaField(column);
                         fieldMetas.push(metaField);
                     }
-                    fieldValues = dataField["values"];
-                    fieldGroup = dataField["url"];
+                    let fieldValues = dataField["values"];
+                    let fieldGroup = dataField["url"];
+                    formFieldsByTab[dataFieldTab].push(
+                        createFormField()
+                            .setType(dataFieldType)
+                            .setGroup(fieldGroup)
+                            .setMetas(fieldMetas)
+                            .setValues(fieldValues)
+                    );
                     break
                 default:
-                    fieldMetas = combo.createMetaField(dataField);
-                    fieldValues = [dataField["value"], dataField["default"]];
+                    let fieldMeta = combo.createMetaField(dataField);
+                    let fieldValue = {
+                        value: dataField["value"],
+                        default: dataField["default"]
+                    };
+                    formFieldsByTab[dataFieldTab].push(
+                        createFormField()
+                            .setType(dataFieldType)
+                            .setMeta(fieldMeta)
+                            .setValue(fieldValue)
+                    );
+                    break;
             }
 
-            if (formFieldsByTab[dataFieldTab] === undefined) {
-                formFieldsByTab[dataFieldTab] = [];
-            }
-            formFieldsByTab[dataFieldTab].push(
-                createFormField()
-                    .setType(dataFieldType)
-                    .setGroup(fieldGroup)
-                    .setMetas(fieldMetas)
-                    .setValues(fieldValues)
-            );
 
         }
         return formFieldsByTab;
     }
 
-    let createFormField = function (){
-        return new FormField();
+    let createFormField = function () {
+        return new ComboFormField();
     }
 
 })(window.combo = window.combo || {});

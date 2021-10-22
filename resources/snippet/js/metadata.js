@@ -1,16 +1,15 @@
 window.addEventListener("DOMContentLoaded", function () {
 
 
-
     /**
      *
      * @type ComboModal modalManager
      */
     async function openMetaViewer(modalManager, pageId) {
         let modalViewerId = toHtmlId(`combo_metadata_viewer_${pageId}`);
-        let modalViewer = combo.getComboModal(modalViewerId);
+        let modalViewer = combo.getModal(modalViewerId);
         if (modalViewer === undefined) {
-            modalViewer = combo.createComboModal(modalViewerId);
+            modalViewer = combo.createModal(modalViewerId);
             modalViewer.setHeader("Metadata Viewer");
             let viewerCall = combo.createGetCall(pageId);
             viewerCall.setProperty("type", "viewer");
@@ -28,7 +27,6 @@ window.addEventListener("DOMContentLoaded", function () {
         modalViewer.show();
 
     }
-
 
 
     /**
@@ -70,11 +68,12 @@ window.addEventListener("DOMContentLoaded", function () {
             return `combo-metadata-tab-nav-${htmlId}`;
         }
         let tabsMeta = jsonMetaDataObject["ui"]["tabs"];
-        let defaultTab = tabsMeta[0];
+
         // Merge the tab found in the tab metas and in the field
         // to be sure to let no error
         let tabsFromField = Object.keys(formFieldsByTab);
         let tabsFromMeta = Object.keys(tabsMeta);
+        let defaultTab = tabsFromMeta[0];
         let tabsMerged = tabsFromMeta.concat(tabsFromField.filter(element => tabsFromMeta.indexOf(element) < 0))
         for (let tab of tabsMerged) {
             if (tab === defaultTab) {
@@ -87,7 +86,8 @@ window.addEventListener("DOMContentLoaded", function () {
             let tabLabel = tabsMeta[tab]["label"];
             let tabPanId = this.getTabPaneId(tab);
             let tabNavId = this.getTabNavId(tab);
-            htmlTabNavs += `<li class="nav-item">
+            htmlTabNavs += `
+<li class="nav-item">
 <button
     class="nav-link ${activeClass}"
     id="${tabNavId}"
@@ -96,7 +96,8 @@ window.addEventListener("DOMContentLoaded", function () {
     aria-selected = "${ariaSelected}"
     aria-controls = "${tabPanId}"
     data-bs-toggle = "tab"
-    data-bs-target = "#${tabPanId}" >${tabLabel}</button>
+    data-bs-target = "#${tabPanId}" >${tabLabel}
+    </button>
 </li>`
         }
         htmlTabNavs += '</ul>';
@@ -110,7 +111,7 @@ window.addEventListener("DOMContentLoaded", function () {
         let leftColSize;
         let elementIdCounter = 0;
         for (let tab in formFieldsByTab) {
-            if(!formFieldsByTab.hasOwnProperty(tab)){
+            if (!formFieldsByTab.hasOwnProperty(tab)) {
                 continue;
             }
             let tabPaneId = this.getTabPaneId(tab);
@@ -129,33 +130,34 @@ window.addEventListener("DOMContentLoaded", function () {
                 leftColSize = 3;
                 rightColSize = 9;
             }
-            for (let formField of formFieldsByTab[tab]) {
 
-                let datatype = formField["type"];
+            for (/** @type {ComboFormField} **/ let formField of formFieldsByTab[tab]) {
+
+                let datatype = formField.getType();
                 switch (datatype) {
                     case "tabular":
-                        let group = formField["group"];
+                        let group = formField.getGroup();
                         htmlTabPans += `<div class="row mb-3 text-center">${group}</div>`;
-                        let colsControlElement = formField["fields"];
-                        let rows = formField["values"];
+                        let colsMeta = formField.getMetas();
+                        let rows = formField.getValues();
                         let colImageTag = "4";
                         let colImagePath = "8";
                         htmlTabPans += `<div class="row mb-3">`;
-                        for (const colControlElement of colsControlElement) {
-                            if (colControlElement.getName() === "image-tag") {
+                        for (const colMeta of colsMeta) {
+                            if (colMeta.getName() === "image-tag") {
                                 htmlTabPans += `<div class="col-sm-${colImageTag} text-center">`;
                             } else {
                                 htmlTabPans += `<div class="col-sm-${colImagePath} text-center">`;
                             }
-                            htmlTabPans += colControlElement.getLabelUrl();
+                            htmlTabPans += colMeta.getLabelUrl();
                             htmlTabPans += `</div>`;
                         }
                         htmlTabPans += `</div>`;
                         for (let i = 0; i < rows.length; i++) {
                             let row = rows[i];
                             htmlTabPans += `<div class="row mb-3">`;
-                            for (let i = 0; i < colsControlElement.length; i++) {
-                                let colControlElement = colsControlElement[i];
+                            for (let i = 0; i < colsMeta.length; i++) {
+                                let colControlElement = colsMeta[i];
                                 elementIdCounter++;
                                 let elementId = `combo-metadata-manager-control-${elementIdCounter}`;
                                 if (colControlElement.getName() === "image-tag") {
@@ -163,7 +165,7 @@ window.addEventListener("DOMContentLoaded", function () {
                                 } else {
                                     htmlTabPans += `<div class="col-sm-${colImagePath}">`;
                                 }
-                                htmlTabPans += colControlElement.getHtml(elementId, row[i]["value"], row[i]["default"]);
+                                htmlTabPans += colControlElement.getHtmlControl(elementId, row[i].value, row[i].default);
                                 htmlTabPans += `</div>`;
                             }
                             htmlTabPans += `</div>`;
@@ -172,13 +174,10 @@ window.addEventListener("DOMContentLoaded", function () {
                     default:
                         elementIdCounter++;
                         let elementId = `combo-metadata-manager-control-${elementIdCounter}`;
-                        /**
-                         * @type FormMetaField
-                         */
-                        let htmlElement = formField["fields"];
-                        let labelHtml = htmlElement.getHtmlLabel(elementId, `col-sm-${leftColSize}`);
-                        let value = formField["values"];
-                        let controlHtml = htmlElement.getHtmlControl(elementId, value[0], value[1])
+                        let formMetaField = formField.getMeta();
+                        let labelHtml = formMetaField.getHtmlLabel(elementId, `col-sm-${leftColSize}`);
+                        let value = formField.getValue();
+                        let controlHtml = formMetaField.getHtmlControl(elementId, value.value, value.default)
                         htmlTabPans += `
 <div class="row mb-3">
     ${labelHtml}
@@ -234,10 +233,10 @@ window.addEventListener("DOMContentLoaded", function () {
     let openMetadataManager = async function (pageId) {
 
         let modalManagerId = toHtmlId(`combo_metadata_manager_page_${pageId}`);
-        let managerModal = combo.getComboModal(modalManagerId);
+        let managerModal = combo.getModal(modalManagerId);
 
         if (managerModal === undefined) {
-            managerModal = combo.createComboModal(modalManagerId);
+            managerModal = combo.createModal(modalManagerId);
             managerModal = await fetchAndBuildMetadataManager(managerModal, pageId);
         }
         managerModal.show();

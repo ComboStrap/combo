@@ -388,10 +388,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                      */
                     $pageImagePath = [];
                     if ($pageImage != null) {
-                        $pageImagePath[self::VALUE_ATTRIBUTE] = $pageImage->getImage()->getPath();
+                        $pageImagePath[self::VALUE_ATTRIBUTE] = $pageImage->getImage()->getDokuPath()->getPath();
                     }
                     if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImagePath[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getImage()->getPath();
+                        $pageImagePath[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getImage()->getDokuPath()->getPath();
                     }
                     $pageImageRow[] = $pageImagePath;
 
@@ -604,7 +604,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $metasUuid;
 
                 /**
-                 * Tabs
+                 * Tabs (for whatever reason, javascript keep the order of the properties
+                 * and therefore the order of the tabs)
                  */
                 $ui = [
                     "tabs" => [

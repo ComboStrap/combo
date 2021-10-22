@@ -92,14 +92,18 @@ class File
 
     public function getMime()
     {
-        if ($this->getExtension() == ImageSvg::EXTENSION) {
-            /**
-             * Svg is authorized when viewing but is not part
-             * of the {@link File::getKnownMime()}
-             */
-            return ImageSvg::MIME;
-        } else {
-            return mimetype($this->getBaseName(), false)[1];
+        switch ($this->getExtension()) {
+            case ImageSvg::EXTENSION:
+                /**
+                 * Svg is authorized when viewing but is not part
+                 * of the {@link File::getKnownMime()}
+                 */
+                return ImageSvg::MIME;
+            case JavascriptLibrary::EXTENSION:
+                return JavascriptLibrary::MIME;
+            default:
+
+                return mimetype($this->getBaseName(), false)[1];
         }
     }
 

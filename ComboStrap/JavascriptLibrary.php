@@ -17,6 +17,8 @@ class JavascriptLibrary extends Media
      * that starts at the resource directory
      */
     const COMBO_MEDIA_FILE_SYSTEM = "combo-fs";
+    const EXTENSION = "js";
+    const MIME = "text/javascript";
 
 
     /**

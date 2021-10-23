@@ -780,7 +780,7 @@ EOF;
 
     /**
      * Code refactoring
-     * @return array
+     * @return Alias[]
      */
     public function getAndDeleteDeprecatedAlias(): array
     {
@@ -792,9 +792,10 @@ EOF;
         }
         $deprecatedAliasInDb = $this->sqlite->res2arr($res);
         $this->sqlite->res_close($res);
-        $deprecatedAliasInDb = array_map(
+        $deprecatedAliases = array_map(
             function ($row) {
-                return $row['ALIAS'];
+                return Alias::create($this->page, $row['ALIAS'])
+                    ->setType(Alias::REDIRECT);
             },
             $deprecatedAliasInDb
         );
@@ -817,43 +818,42 @@ EOF;
         /**
          * Return
          */
-        return $deprecatedAliasInDb;
+        return $deprecatedAliases;
 
     }
 
-    public function addAlias($alias): DatabasePage
+    /**
+     * @param $path
+     * @param string $type - the type of alias ie {@link Alias::REDIRECT} or {@link Alias::SYNONYM}
+     * @return $this
+     */
+    public function addAlias($path, string $type = Alias::REDIRECT): DatabasePage
     {
 
-        if (empty($alias)) {
-            LogUtility::msg("Alias: To create an alias, the alias value should not be empty", LogUtility::LVL_MSG_ERROR);
+        if (empty($path)) {
+            LogUtility::msg("Alias: To create an alias, the path value should not be empty", LogUtility::LVL_MSG_ERROR);
             return $this;
         }
-        if (!is_string($alias)) {
-            LogUtility::msg("Alias: To create an alias, the alias value should a string. Value: " . var_export($alias, true), LogUtility::LVL_MSG_ERROR);
+        if (!is_string($path)) {
+            LogUtility::msg("Alias: To create an alias, the path value should a string. Value: " . var_export($path, true), LogUtility::LVL_MSG_ERROR);
             return $this;
         }
 
         $row = array(
             "UUID" => $this->page->getUuid(),
-            "ALIAS" => $alias
+            "PATH" => $path,
+            "TYPE" => $type
         );
 
         // Page has change of location
         // Creation of an alias
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("select count(*) from PAGE_ALIASES where UUID = ? and ALIAS = ?", $row);
+        $res = $sqlite->storeEntry('PAGE_ALIASES', $row);
         if (!$res) {
-            LogUtility::msg("An exception has occurred with the alias selection query");
+            LogUtility::msg("There was a problem during PAGE_ALIASES insertion");
         }
-        $aliasInDb = $sqlite->res2single($res);
         $sqlite->res_close($res);
-        if ($aliasInDb == 0) {
 
-            $res = $sqlite->storeEntry('PAGE_ALIASES', $row);
-            if (!$res) {
-                LogUtility::msg("There was a problem during PAGE_ALIASES insertion");
-            }
-        }
         return $this;
     }
 
@@ -863,7 +863,7 @@ EOF;
         if ($fileSystemAliases === null) {
             return true;
         }
-        $dbAliases = $this->getAliases();
+        $dbAliases = $this->getAliasesPath();
         foreach ($fileSystemAliases as $fileSystemAlias) {
 
             if (in_array($fileSystemAlias, $dbAliases)) {
@@ -887,30 +887,30 @@ EOF;
     /**
      * @return array
      */
-    public function getAliases(): array
+    public function getAliasesPath(): array
     {
         if ($this->sqlite === null) {
             return [];
         }
-        $res = $this->sqlite->query("select ALIAS from PAGE_ALIASES where UUID = ? ", $this->page->getUuid());
+        $res = $this->sqlite->query("select PATH from PAGE_ALIASES where UUID = ? ", $this->page->getUuid());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$this->page}) selection query");
         }
         $rowAliases = $this->sqlite->res2arr($res);
         $this->sqlite->res_close($res);
         return array_map(function ($row) {
-            return $row['ALIAS'];
+            return $row['PATH'];
         }, $rowAliases);
     }
 
-    public function deleteAlias($dbAlias)
+    public function deleteAlias($dbAliasPath): DatabasePage
     {
         $delete = <<<EOF
 delete from PAGE_ALIASES where UUID = ? and ALIAS = ?
 EOF;
         $row = [
             "UUID" => $this->page->getUuid(),
-            "ALIAS" => $dbAlias
+            "PATH" => $dbAliasPath
         ];
         $res = $this->sqlite->query($delete, $row);
 

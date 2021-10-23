@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\Alias;
 use ComboStrap\DatabasePage;
 use ComboStrap\File;
 use ComboStrap\LinkUtility;
@@ -77,7 +78,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         try {
             $page = Page::createPageFromId($id);
             $page->getDatabasePage()->moveTo($targetId);
-            $page->getDatabasePage()->addAlias($page->getId());
+            $page->getDatabasePage()->addAlias($page->getId(),Alias::REDIRECT);
             $page->addAlias($page->getId());
         } catch (Exception $exception){
             // We catch the errors if any to not stop the move

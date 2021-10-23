@@ -30,6 +30,7 @@ require_once(__DIR__ . '/MediaLink.php');
  * the IDE when refactoring
  */
 require_once(__DIR__ . '/AdsUtility.php');
+require_once(__DIR__ . '/Alias.php');
 require_once(__DIR__ . '/Align.php');
 require_once(__DIR__ . '/Analytics.php');
 require_once(__DIR__ . '/AnalyticsMenuItem.php');

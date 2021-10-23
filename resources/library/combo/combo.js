@@ -239,18 +239,13 @@
         }
     }
 
-    class ComboAjaxUrl {
+    class DokuAjaxUrl {
 
-        constructor(pageId) {
+        constructor(call) {
             this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
 
-            this.url.searchParams.set("call", "combo-meta-manager");
-            if (pageId !== undefined) {
-                this.id = pageId;
-            } else {
-                this.id = JSINFO.id;
-            }
-            this.url.searchParams.set("id", this.id);
+            this.url.searchParams.set("call", call);
+            this.url.searchParams.set("id", JSINFO.id);
         }
 
 
@@ -264,14 +259,14 @@
         }
     }
 
-    class ComboAjaxCall {
+    class DokuAjaxRequest {
 
 
         method = "GET";
 
-        constructor(pageId) {
+        constructor(call) {
 
-            this.url = new ComboAjaxUrl(pageId);
+            this.url = new DokuAjaxUrl(call);
 
         }
 
@@ -298,6 +293,7 @@
 
         setProperty(key, value) {
             this.url.setProperty(key, value);
+            return this;
         }
     }
 
@@ -478,25 +474,15 @@
 
     /**
      * Create a ajax call
-     * @return ComboAjaxCall
+     * @return DokuAjaxRequest
      */
-    combo.createGetCall = function (pageId) {
+    combo.createDokuRequest = function (call) {
 
-        let comboCall = new ComboAjaxCall(pageId);
-        comboCall.setMethod("GET");
-        return comboCall;
+        return new DokuAjaxRequest(call);
     }
 
     combo.createMetaField = function (properties) {
         return new FormMetaField(properties);
-    }
-
-    /**
-     *
-     * @return {ComboAjaxUrl}
-     */
-    combo.createAjaxUrl = function (pageId) {
-        return new ComboAjaxUrl(pageId);
     }
 
     /**
@@ -545,7 +531,7 @@
      * @param dataFields
      * @return {{FormField[]}}
      */
-    combo.toFormFieldsByTabs = function (dataFields) {
+    let toFormFieldsByTabs = function (dataFields) {
 
         const formFieldsByTab = {};
         for (const dataField of dataFields) {
@@ -594,6 +580,161 @@
 
         }
         return formFieldsByTab;
+    }
+
+    combo.toHtmlId = function (s) {
+        return s
+            .toString() // in case of number
+            .replace(/[_\s:\/\\]/g, "-");
+    }
+
+    combo.toForm = function (formId, jsonMetaDataObject) {
+
+        let formFieldsByTab = toFormFieldsByTabs(jsonMetaDataObject["fields"]);
+        /**
+         * Creating the Body
+         * (Starting with the tabs)
+         */
+        let htmlTabNavs = '<ul class="nav nav-tabs mb-3">';
+        let activeClass;
+        let ariaSelected;
+        this.getTabPaneId = function (id) {
+            let htmlId = combo.toHtmlId(id);
+            return `${formId}-tab-pane-${htmlId}`;
+        }
+        this.getTabNavId = function (id) {
+            let htmlId = combo.toHtmlId(id);
+            return `${formId}-tab-nav-${htmlId}`;
+        }
+        this.getControlId = function (id) {
+            let htmlId = combo.toHtmlId(id);
+            return `${formId}-control-${htmlId}`;
+        }
+        let tabsMeta = jsonMetaDataObject["ui"]["tabs"];
+
+        // Merge the tab found in the tab metas and in the field
+        // to be sure to let no error
+        let tabsFromField = Object.keys(formFieldsByTab);
+        let tabsFromMeta = Object.keys(tabsMeta);
+        let defaultTab = tabsFromMeta[0];
+        let tabsMerged = tabsFromMeta.concat(tabsFromField.filter(element => tabsFromMeta.indexOf(element) < 0))
+        for (let tab of tabsMerged) {
+            if (tab === defaultTab) {
+                activeClass = "active";
+                ariaSelected = "true";
+            } else {
+                activeClass = "";
+                ariaSelected = "false";
+            }
+            let tabLabel = tabsMeta[tab]["label"];
+            let tabPanId = this.getTabPaneId(tab);
+            let tabNavId = this.getTabNavId(tab);
+            htmlTabNavs += `
+<li class="nav-item">
+<button
+    class="nav-link ${activeClass}"
+    id="${tabNavId}"
+    type="button"
+    role="tab"
+    aria-selected = "${ariaSelected}"
+    aria-controls = "${tabPanId}"
+    data-bs-toggle = "tab"
+    data-bs-target = "#${tabPanId}" >${tabLabel}
+    </button>
+</li>`
+        }
+        htmlTabNavs += '</ul>';
+
+        /**
+         * Creating the content
+         * @type {string}
+         */
+        let htmlTabPans = "<div class=\"tab-content\">";
+        let rightColSize;
+        let leftColSize;
+        let elementIdCounter = 0;
+        for (let tab in formFieldsByTab) {
+            if (!formFieldsByTab.hasOwnProperty(tab)) {
+                continue;
+            }
+            let tabPaneId = this.getTabPaneId(tab);
+            let tabNavId = this.getTabNavId(tab);
+            if (tab === defaultTab) {
+                activeClass = "active";
+            } else {
+                activeClass = "";
+            }
+            htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
+            let grid = tabsMeta[tab]["grid"];
+            if (grid.length === 2) {
+                leftColSize = grid[0];
+                rightColSize = grid[1];
+            } else {
+                leftColSize = 3;
+                rightColSize = 9;
+            }
+
+            for (/** @type {ComboFormField} **/ let formField of formFieldsByTab[tab]) {
+
+                let datatype = formField.getType();
+                switch (datatype) {
+                    case "tabular":
+                        let group = formField.getGroup();
+                        htmlTabPans += `<div class="row mb-3 text-center">${group}</div>`;
+                        let colsMeta = formField.getMetas();
+                        let rows = formField.getValues();
+                        let colImageTag = "4";
+                        let colImagePath = "8";
+                        htmlTabPans += `<div class="row mb-3">`;
+                        for (const colMeta of colsMeta) {
+                            if (colMeta.getName() === "image-tag") {
+                                htmlTabPans += `<div class="col-sm-${colImageTag} text-center">`;
+                            } else {
+                                htmlTabPans += `<div class="col-sm-${colImagePath} text-center">`;
+                            }
+                            htmlTabPans += colMeta.getLabelUrl();
+                            htmlTabPans += `</div>`;
+                        }
+                        htmlTabPans += `</div>`;
+                        for (let i = 0; i < rows.length; i++) {
+                            let row = rows[i];
+                            htmlTabPans += `<div class="row mb-3">`;
+                            for (let i = 0; i < colsMeta.length; i++) {
+                                let colControlElement = colsMeta[i];
+                                elementIdCounter++;
+                                let elementId = this.getControlId(elementIdCounter);
+                                if (colControlElement.getName() === "image-tag") {
+                                    htmlTabPans += `<div class="col-sm-${colImageTag}">`;
+                                } else {
+                                    htmlTabPans += `<div class="col-sm-${colImagePath}">`;
+                                }
+                                htmlTabPans += colControlElement.getHtmlControl(elementId, row[i].value, row[i].default);
+                                htmlTabPans += `</div>`;
+                            }
+                            htmlTabPans += `</div>`;
+                        }
+                        break;
+                    default:
+                        elementIdCounter++;
+                        let elementId = this.getControlId(elementIdCounter);
+                        let formMetaField = formField.getMeta();
+                        let labelHtml = formMetaField.getHtmlLabel(elementId, `col-sm-${leftColSize}`);
+                        let value = formField.getValue();
+                        let controlHtml = formMetaField.getHtmlControl(elementId, value.value, value.default)
+                        htmlTabPans += `
+<div class="row mb-3">
+    ${labelHtml}
+    <div class="col-sm-${rightColSize}">${controlHtml}</div>
+</div>
+`;
+                }
+
+            }
+            htmlTabPans += "</div>"
+        }
+        htmlTabPans += "</div>";
+
+        return `<form id="${formId}">${htmlTabNavs} ${htmlTabPans}</form>`;
     }
 
     let createFormField = function () {

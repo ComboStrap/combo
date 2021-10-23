@@ -2123,8 +2123,11 @@ class Page extends DokuPath
         return $this;
     }
 
+    /**
+     * @return Alias[]
+     */
     public
-    function getAliases()
+    function getAliases(): array
     {
         $aliases = $this->getMetadata(self::ALIAS_ATTRIBUTE);
         if ($aliases == null) {
@@ -2133,7 +2136,9 @@ class Page extends DokuPath
              * To validate the migration we set a value
              * (the array may be empty)
              */
-            $this->setMetadata(self::ALIAS_ATTRIBUTE, $aliases);
+            $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toNativeArray($aliases));
+        } else {
+            $aliases = Alias::toAliasArray($aliases, $this);
         }
         return $aliases;
     }

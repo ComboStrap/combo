@@ -12,6 +12,7 @@ class Alias
 
     const  REDIRECT = "redirect";
     const SYNONYM = "synonym";
+    const CANONICAL = "alias";
 
 
     private $path; // the path of the alias
@@ -28,8 +29,17 @@ class Alias
      */
     public function __construct($page, $path)
     {
-        $this->path = $path;
         $this->page = $page;
+        if (empty($path)) {
+            LogUtility::msg("Alias: To create an alias, the path value should not be empty", LogUtility::LVL_MSG_ERROR);
+            return;
+        }
+        if (!is_string($path)) {
+            LogUtility::msg("Alias: To create an alias, the path value should a string. Value: " . var_export($path, true), LogUtility::LVL_MSG_ERROR);
+            return;
+        }
+        DokuPath::addRootSeparatorIfNotPresent($path);
+        $this->path = $path;
     }
 
     /**
@@ -44,8 +54,16 @@ class Alias
     {
         return array_map(
             function ($element) use ($page) {
-                return Alias::create($page, $element[Alias::ALIAS_PATH_PROPERTY])
-                    ->setType($element[Alias::ALIAS_TYPE_PROPERTY]);
+                if (is_array($element)) {
+                    return Alias::create($page, $element[Alias::ALIAS_PATH_PROPERTY])
+                        ->setType($element[Alias::ALIAS_TYPE_PROPERTY]);
+                } else {
+                    if (!is_string($element)) {
+                        $element = StringUtility::toString($element);
+                        LogUtility::msg("The alias element ($element) is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    }
+                    return Alias::create($page, $element);
+                }
             },
             $aliases
         );
@@ -94,6 +112,11 @@ class Alias
     {
         $this->type = $type;
         return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->path;
     }
 
 

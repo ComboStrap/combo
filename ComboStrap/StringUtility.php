@@ -60,17 +60,39 @@ class StringUtility
          * var_export below is not idempotent
          * ie \ would become \\
          */
-        if(is_string($value)){
+        if (is_string($value)) {
             return $value;
         }
 
-        $string = var_export($value, true);
+        if (is_array($value)) {
+            $string = var_export($value, true);
 
-        // An array value gets command in var_export
-        $lastCharacterIndex = strlen($string) - 1;
-        if ($string[0] === "'" && $string[$lastCharacterIndex] === "'") {
-            $string = substr($string, 1, strlen($string) - 2);
+            // An array value gets command in var_export
+            $lastCharacterIndex = strlen($string) - 1;
+            if ($string[0] === "'" && $string[$lastCharacterIndex] === "'") {
+                $string = substr($string, 1, strlen($string) - 2);
+            }
+            return $string;
         }
+
+        if (is_object($value)) {
+            if (method_exists($value, "__toString")) {
+                return strval($value);
+            } else {
+                return get_class($value);
+            }
+        }
+
+        if (is_numeric($value)) {
+            return strval($value);
+        }
+
+        if (is_bool($value)) {
+            return var_export($value, true);
+        }
+
+        $string = var_export($value, true);
+        LogUtility::msg("The type of the value ($string) is unknown and could not be properly cast to string", LogUtility::LVL_MSG_WARNING);
         return $string;
 
     }

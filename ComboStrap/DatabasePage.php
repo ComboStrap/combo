@@ -823,26 +823,16 @@ EOF;
     }
 
     /**
-     * @param $path
-     * @param string $type - the type of alias ie {@link Alias::REDIRECT} or {@link Alias::SYNONYM}
+     * @param Alias $alias
      * @return $this
      */
-    public function addAlias($path, string $type = Alias::REDIRECT): DatabasePage
+    public function addAlias(Alias $alias): DatabasePage
     {
-
-        if (empty($path)) {
-            LogUtility::msg("Alias: To create an alias, the path value should not be empty", LogUtility::LVL_MSG_ERROR);
-            return $this;
-        }
-        if (!is_string($path)) {
-            LogUtility::msg("Alias: To create an alias, the path value should a string. Value: " . var_export($path, true), LogUtility::LVL_MSG_ERROR);
-            return $this;
-        }
 
         $row = array(
             "UUID" => $this->page->getUuid(),
-            "PATH" => $path,
-            "TYPE" => $type
+            "PATH" => $alias->getPath(),
+            "TYPE" => $alias->getType()
         );
 
         // Page has change of location
@@ -859,16 +849,20 @@ EOF;
 
     private function replicateAliases(): bool
     {
+
         $fileSystemAliases = $this->page->getAliases();
-        if ($fileSystemAliases === null) {
-            return true;
+
+        // Make the path an unique value key
+        // To delete the entry if found
+        $dbAliases = [];
+        foreach ($this->getAliases() as $alias) {
+            $dbAliases[$alias->getPath()] = $alias;
         }
-        $dbAliases = $this->getAliasesPath();
+
         foreach ($fileSystemAliases as $fileSystemAlias) {
 
-            if (in_array($fileSystemAlias, $dbAliases)) {
-                $dbOffset = array_search($fileSystemAlias, $dbAliases);
-                unset($dbAliases[$dbOffset]);
+            if (key_exists($fileSystemAlias->getPath(), $dbAliases)) {
+                unset($dbAliases[$fileSystemAlias->getPath()]);
             } else {
                 $this->addAlias($fileSystemAlias);
             }
@@ -885,32 +879,37 @@ EOF;
     }
 
     /**
-     * @return array
+     * @return Alias[]
      */
-    public function getAliasesPath(): array
+    public function getAliases(): array
     {
         if ($this->sqlite === null) {
             return [];
         }
-        $res = $this->sqlite->query("select PATH from PAGE_ALIASES where UUID = ? ", $this->page->getUuid());
+        $res = $this->sqlite->query("select PATH, TYPE from PAGE_ALIASES where UUID = ? ", $this->page->getUuid());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$this->page}) selection query");
         }
         $rowAliases = $this->sqlite->res2arr($res);
         $this->sqlite->res_close($res);
         return array_map(function ($row) {
-            return $row['PATH'];
+            return Alias::create($this->page, $row['PATH'])
+                ->setType($row["TYPE"]);
         }, $rowAliases);
     }
 
-    public function deleteAlias($dbAliasPath): DatabasePage
+    /**
+     * @param Alias $dbAliasPath
+     * @return $this
+     */
+    public function deleteAlias(Alias $dbAliasPath): DatabasePage
     {
         $delete = <<<EOF
-delete from PAGE_ALIASES where UUID = ? and ALIAS = ?
+delete from PAGE_ALIASES where UUID = ? and PATH = ?
 EOF;
         $row = [
             "UUID" => $this->page->getUuid(),
-            "PATH" => $dbAliasPath
+            "PATH" => $dbAliasPath->getPath()
         ];
         $res = $this->sqlite->query($delete, $row);
 

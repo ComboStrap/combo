@@ -63,7 +63,7 @@ $conf['WeightFactorForSameNamespace'] = 5;
 /**
  * See {@link UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT_DEFAULT}
  */
-$conf['BestEndPageMinimalScoreForIdRedirect'] = 0;
+$conf['BestEndPageMinimalScoreForAliasCreation'] = 2;
 
 /**
  * Does automatic canonical processing is on

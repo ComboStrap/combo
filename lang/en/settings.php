@@ -53,7 +53,7 @@ $lang['WeightFactorForSameNamespace'] = PluginUtility::getDocumentationUrl("best
 
 $lang[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = PluginUtility::getDocumentationUrl("automatic:canonical", action_plugin_combo_urlmanager::NAME . ' - Automatic Canonical') . ' - The number of last part of a DokuWiki Id to create a ' . PluginUtility::getDocumentationUrl("canonical", "canonical") . ' (0 to disable)';
 
-$lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getDocumentationUrl("best:end:page:name", action_plugin_combo_urlmanager::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getDocumentationUrl("id:redirect", "ID redirect") . ' (0 to disable)';
+$lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getDocumentationUrl("best:end:page:name", action_plugin_combo_urlmanager::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getDocumentationUrl(action_plugin_combo_urlmanager::PERMANENT_REDIRECT_CANONICAL, "permanent redirect") . ' (0 to disable)';
 
 
 /**

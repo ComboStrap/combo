@@ -92,10 +92,22 @@ class Identity
     /**
      * @return bool if edit auth
      */
-    public static function isWriter()
+    public static function isWriter($pageId = null): bool
     {
+        if ($pageId == null) {
+            $pageId = PluginUtility::getPageId();
+        }
+        if ($_SERVER['REMOTE_USER']) {
+            $perm = auth_quickaclcheck($pageId);
+        } else {
+            $perm = auth_aclcheck($pageId, '', null);
+        }
 
-        return auth_quickaclcheck(PluginUtility::getPageId()) >= AUTH_EDIT;
+        if ($perm >= AUTH_EDIT) {
+            return true;
+        } else {
+            return false;
+        }
 
     }
 
@@ -192,6 +204,31 @@ class Identity
 EOF;
         }
         return "";
+    }
+
+    public static function isReader(string $pageId): bool
+    {
+        $perm = self::getPerm($pageId);
+
+        if ($perm >= AUTH_READ) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    private static function getPerm(string $pageId)
+    {
+        if ($pageId == null) {
+            $pageId = PluginUtility::getPageId();
+        }
+        if ($_SERVER['REMOTE_USER']) {
+            $perm = auth_quickaclcheck($pageId);
+        } else {
+            $perm = auth_aclcheck($pageId, '', null);
+        }
+        return $perm;
     }
 
 

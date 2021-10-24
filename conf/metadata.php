@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Load all class via Plugin Utility
+ */
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 use ComboStrap\AdsUtility;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
@@ -20,10 +25,7 @@ use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
-/**
- * Load all class via Plugin Utility
- */
-require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -63,7 +65,7 @@ $meta['ActionReaderThird'] = $actionChoices;
 $meta['WeightFactorForSamePageName'] = array('string');
 $meta['WeightFactorForStartPage'] = array('string');
 $meta['WeightFactorForSameNamespace'] = array('string');
-require_once(__DIR__ . '/../ComboStrap/UrlManagerBestEndPage.php');
+
 $meta[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = array('string');
 
 $meta[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = array('string');

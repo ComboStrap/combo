@@ -3,12 +3,12 @@
 // implementation of
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hr
 
+require_once (__DIR__."/../ComboStrap/PluginUtility.php");
+
 // must be run within Dokuwiki
 use ComboStrap\PluginUtility;
-use ComboStrap\TitleUtility;
 
 
-if (!defined('DOKU_INC')) die();
 
 /**
  * Class syntax_plugin_combo_hr

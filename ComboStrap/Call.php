@@ -133,11 +133,13 @@ class Call
      * @param $tagName
      * @param $state
      * @param array $attribute
-     * @param $context
-     * @param string $content
+     * @param string|null $context
+     * @param string $content - the parsed content
+     * @param string|null $payload - the payload after handler
+     * @param int|null $position
      * @return Call - a call
      */
-    public static function createComboCall($tagName, $state, array $attribute = array(), $context = null, $content = '', $payload = null, $position= null)
+    public static function createComboCall($tagName, $state, array $attribute = array(), string $context = null, string $content = null, string $payload = null, int $position= null): Call
     {
         $data = array(
             PluginUtility::ATTRIBUTES => $attribute,

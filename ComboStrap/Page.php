@@ -107,8 +107,6 @@ class Page extends DokuPath
     const ALIAS_ATTRIBUTE = "alias";
 
 
-    private $canonical;
-
 
     /**
      * @var array|array[]
@@ -422,16 +420,16 @@ class Page extends DokuPath
     }
 
 
-    private
+    public
     function setCanonical($canonical): Page
     {
-        $this->canonical = $canonical;
+        $this->setMetadata(Page::CANONICAL_PROPERTY,$canonical);
         return $this;
     }
 
 
     public
-    function isSlot()
+    function isSlot(): bool
     {
         global $conf;
         $barsName = array($conf['sidebar']);
@@ -1162,17 +1160,15 @@ class Page extends DokuPath
         return $this->getPublishedElseCreationTime() > new DateTime('now');
     }
 
-    public
-    function getCanonicalUrl()
+    public function getCanonicalUrl(): ?string
     {
         if (!empty($this->getCanonicalOrDefault())) {
-            return getBaseURL(true) . strtr($this->getCanonicalOrDefault(), ':', '/');
+            return Site::getBaseUrl() . strtr($this->getCanonicalOrDefault(), ':', '/');
         }
         return null;
     }
 
-    public
-    function getCanonicalUrlOrDefault()
+    public function getCanonicalUrlOrDefault(): ?string
     {
         $url = $this->getCanonicalUrl();
         if (empty($url)) {
@@ -1828,7 +1824,7 @@ class Page extends DokuPath
          */
         // How many last parts are taken into account in the canonical processing (2 by default)
         $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
-        if (empty($this->canonical) && $canonicalLastNamesCount > 0) {
+        if (empty($this->getCanonical()) && $canonicalLastNamesCount > 0) {
             /**
              * Takes the last names part
              */

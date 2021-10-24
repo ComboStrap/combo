@@ -150,7 +150,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 $ldJson = array(
                     '@context' => 'https://schema.org',
                     '@type' => 'WebSite',
-                    'url' => Site::getUrl(),
+                    'url' => Site::getBaseUrl(),
                     'name' => Site::getTitle()
                 );
 
@@ -158,7 +158,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
                     $ldJson['potentialAction'] = array(
                         '@type' => 'SearchAction',
-                        'target' => Site::getUrl() . DOKU_SCRIPT . '?do=search&amp;id={search_term_string}',
+                        'target' => Site::getBaseUrl() . DOKU_SCRIPT . '?do=search&amp;id={search_term_string}',
                         'query-input' => 'required name=search_term_string',
                     );
                 }
@@ -183,7 +183,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => "Organization",
-                    "url" => Site::getUrl(),
+                    "url" => Site::getBaseUrl(),
                     "logo" => Site::getLogoUrlAsPng()
                 );
 

@@ -95,4 +95,14 @@ class ArrayUtility
             $flatArray[] = $value;
         }
     }
+
+    /**
+     * @param array $default
+     * @param array $overwrite
+     * @return array
+     */
+    public static function mergeByValue(array $default, array $overwrite): array
+    {
+        return array_merge($default,$overwrite);
+    }
 }

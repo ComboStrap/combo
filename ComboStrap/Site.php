@@ -169,7 +169,7 @@ class Site
         return ($lang ?: null);
     }
 
-    public static function getUrl()
+    public static function getBaseUrl(): string
     {
 
         /**
@@ -178,6 +178,8 @@ class Site
          * https://www.dokuwiki.org/config:baseurl
          * to be able to test the metadata / social integration
          * via a tunnel
+         *
+         * Same as {@link getBaseURL()} ??
          */
 
         return DOKU_URL;
@@ -269,7 +271,7 @@ class Site
 
     public static function getAjaxUrl()
     {
-        return self::getUrl() . "lib/exe/ajax.php";
+        return self::getBaseUrl() . "lib/exe/ajax.php";
     }
 
     public static function getPageDirectory()

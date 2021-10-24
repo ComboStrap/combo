@@ -79,7 +79,7 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
          */
         $httpHeaderReferer = $_SERVER['HTTP_REFERER'];
         $httpDirectives = [];
-        if (strpos($httpHeaderReferer, Site::getUrl()) === false) {
+        if (strpos($httpHeaderReferer, Site::getBaseUrl()) === false) {
             // not same origin
             $httpDirectives = [
                 "content-security-policy: frame-ancestors 'none'", // the page cannot be used in a iframe (clickjacking),

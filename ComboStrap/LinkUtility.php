@@ -170,9 +170,9 @@ class LinkUtility
     /**
      * Link constructor.
      * @param $ref
-     * @param TagAttributes $tagAttributes
+     * @param TagAttributes|null $tagAttributes
      */
-    public function __construct($ref, &$tagAttributes = null)
+    public function __construct($ref, TagAttributes &$tagAttributes = null)
     {
 
         if ($tagAttributes == null) {

@@ -293,7 +293,8 @@ class PluginUtility
      * @return string
      *
      * Create a open tag pattern without lookahead.
-     * Used for https://dev.w3.org/html5/html-author/#void-elements-0
+     * Used for
+     * @link https://dev.w3.org/html5/html-author/#void-elements-0
      */
     public static function getVoidElementTagPattern($tag)
     {

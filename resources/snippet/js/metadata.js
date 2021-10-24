@@ -67,7 +67,7 @@ window.addEventListener("DOMContentLoaded", function () {
         viewerButton.textContent = "Viewer";
         viewerButton.addEventListener("click", function (event) {
             managerModal.dismiss();
-            openMetaViewer(managerModal);
+            openMetaViewer(managerModal,pageId);
         });
         managerModal.addFooterButton(viewerButton);
         managerModal.addFooterCloseButton();

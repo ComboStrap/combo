@@ -94,12 +94,12 @@ class UrlManagerBestEndPage
 
         list($bestPageId, $bestScore) = self::getBestEndPageId($missingPageId);
         if ($bestPageId != null) {
-            $redirectType = action_plugin_combo_urlmanager::REDIRECT_NOTFOUND;
+            $redirectType = action_plugin_combo_urlmanager::REDIRECT_NOTFOUND_METHOD;
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
                 $page = Page::createPageFromId($bestPageId);
                 $alias = $page->addAndGetAlias($missingPageId, Alias::REDIRECT);
                 $page->getDatabasePage()->addAlias($alias);
-                $redirectType = action_plugin_combo_urlmanager::REDIRECT_PERMANENT;
+                $redirectType = action_plugin_combo_urlmanager::REDIRECT_PERMANENT_METHOD;
             }
             $return = array(
                 $bestPageId,

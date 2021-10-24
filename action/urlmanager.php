@@ -36,15 +36,16 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     const URL_MANAGER_ENABLE_CONF = "enableUrlManager";
 
     // The redirect type
-    const REDIRECT_PERMANENT = 'permanent'; // was `Http` (301)
-    const REDIRECT_NOTFOUND = "notfound"; // 404 (See other) (when best page name is calculated)
-    const REDIRECT_TRANSPARENT = 'transparent'; // was (Id)
+    const REDIRECT_PERMANENT_METHOD = 'permanent'; // was `Http` (301)
+    const REDIRECT_NOTFOUND_METHOD = "notfound"; // 404 (See other) (when best page name is calculated)
+    const REDIRECT_TRANSPARENT_METHOD = 'transparent'; // was (Id)
     public const PERMANENT_REDIRECT_CANONICAL = "permanent:redirect";
 
     // Where the target id value comes from
     const TARGET_ORIGIN_PAGE_RULES = 'pageRules';
     const TARGET_ORIGIN_CANONICAL = 'canonical';
     const TARGET_ORIGIN_ALIAS = 'alias';
+    const TARGET_ORIGIN_UUID = "uuid";
     const TARGET_ORIGIN_START_PAGE = 'startPage';
     const TARGET_ORIGIN_BEST_PAGE_NAME = 'bestPageName';
     const TARGET_ORIGIN_BEST_NAMESPACE = 'bestNamespace';
@@ -64,6 +65,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     /** @var string - a name used in log and other places */
     const NAME = 'Url Manager';
     const CANONICAL = 'url/manager';
+
 
 
     /**
@@ -147,13 +149,26 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             }
         }
 
-        $targetPage = Page::createPageFromAlias($ID);
+        $targetPage = Page::createPageFromUuid($ID);
         if ($targetPage !== null && $targetPage->exists()) {
-            $res = $this->executePermanentRedirect($targetPage->getId(), self::TARGET_ORIGIN_ALIAS);
+            $target = $targetPage->getCanonical();
+            if($target===null){
+                $target = $targetPage->getId();
+            }
+            $res = $this->executePermanentRedirect($target, self::TARGET_ORIGIN_UUID);
             if ($res) {
                 return;
             }
         }
+
+        $targetPage = Page::createPageFromAlias($ID);
+        if ($targetPage !== null && $targetPage->exists()) {
+            $res = $this->executePermanentRedirect($targetPage->getCanonical(), self::TARGET_ORIGIN_ALIAS);
+            if ($res) {
+                return;
+            }
+        }
+
 
         // If there is a redirection defined in the page rules
         $result = $this->processingPageRules();
@@ -204,10 +219,10 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                     if ($targetPage != null) {
                         $res = false;
                         switch ($method) {
-                            case self::REDIRECT_PERMANENT:
+                            case self::REDIRECT_PERMANENT_METHOD:
                                 $res = $this->executePermanentRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                                 break;
-                            case self::REDIRECT_NOTFOUND:
+                            case self::REDIRECT_NOTFOUND_METHOD:
                                 $res = $this->performNotFoundRedirect($targetPage, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                                 break;
                             default:
@@ -470,7 +485,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
         // Redirection
-        $this->logRedirection($sourceId, $targetPageId, $targetOriginId, self::REDIRECT_TRANSPARENT);
+        $this->logRedirection($sourceId, $targetPageId, $targetOriginId, self::REDIRECT_TRANSPARENT_METHOD);
 
         return true;
 
@@ -479,7 +494,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     private
     function executePermanentRedirect(string $target, $targetOrigin): bool
     {
-        return $this->executeHttpRedirect($target, $targetOrigin, true);
+        return $this->executeHttpRedirect($target, $targetOrigin, self::REDIRECT_PERMANENT_METHOD);
     }
 
     /**
@@ -496,11 +511,11 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
 
         switch ($method) {
-            case self::REDIRECT_PERMANENT:
+            case self::REDIRECT_PERMANENT_METHOD:
                 header('HTTP/1.1 301 Moved Permanently');
                 http_response_code(301);
                 break;
-            case self::REDIRECT_NOTFOUND:
+            case self::REDIRECT_NOTFOUND_METHOD:
                 header('HTTP/1.1 404 Not Found');
                 http_response_code(404);
                 break;
@@ -528,10 +543,13 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             $link = explode('#', $target, 2);
 
             // Query String to pass the message
-            $urlParams = array(
-                action_plugin_combo_urlmessage::ORIGIN_PAGE => $ID,
-                action_plugin_combo_urlmessage::ORIGIN_TYPE => $targetOrigin
-            );
+            $urlParams = [];
+            if($targetOrigin!=self::TARGET_ORIGIN_UUID) {
+                $urlParams = array(
+                    action_plugin_combo_urlmessage::ORIGIN_PAGE => $ID,
+                    action_plugin_combo_urlmessage::ORIGIN_TYPE => $targetOrigin
+                );
+            }
 
             $targetUrl = wl($link[0], $urlParams, true, '&');
             if ($link[1]) {
@@ -738,7 +756,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
     private function performNotFoundRedirect(string $targetId, string $origin): bool
     {
-        return $this->executeHttpRedirect($targetId, $origin, self::REDIRECT_NOTFOUND);
+        return $this->executeHttpRedirect($targetId, $origin, self::REDIRECT_NOTFOUND_METHOD);
     }
 
 

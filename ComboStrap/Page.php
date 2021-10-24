@@ -253,6 +253,24 @@ class Page extends DokuPath
 
     }
 
+    public static function createPageFromUuid(string $uuid): Page
+    {
+        // Canonical
+        $sqlite = Sqlite::getSqlite();
+        $res = $sqlite->query("select * from pages where UUID = ? ", $uuid);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the UUID pages selection");
+        }
+        $res2arr = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        foreach ($res2arr as $row) {
+            $id = $row['ID'];
+            return self::createPageFromId($id);
+        }
+
+        return self::createPageFromId($uuid);
+    }
+
 
     /**
      * @var string the logical id is used with slots.

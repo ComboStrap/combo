@@ -743,6 +743,13 @@ EOF;
             }
             $stats[Analytics::WINDOWS_SHARE_COUNT]++;
 
+        } else if ($this->getType() == self::TYPE_INTERNAL_TEMPLATE) {
+
+            if (!array_key_exists(Analytics::TEMPLATE_LINK_COUNT, $stats)) {
+                $stats[Analytics::TEMPLATE_LINK_COUNT] = 0;
+            }
+            $stats[Analytics::TEMPLATE_LINK_COUNT]++;
+
         } else {
 
             LogUtility::msg("The link `{$this->ref}` with the type (" . $this->getType() . ")  is not taken into account into the statistics");
@@ -908,7 +915,7 @@ EOF;
                      * pageutils (transform a fragment in section id)
                      */
                     $check = false;
-                    $url .= '#' . sectionID($this->dokuwikiUrl->getFragment(),$check);
+                    $url .= '#' . sectionID($this->dokuwikiUrl->getFragment(), $check);
                 }
                 break;
             case self::TYPE_INTERWIKI:

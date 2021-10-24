@@ -41,6 +41,7 @@ class Analytics
     const INTERNAL_MEDIA_COUNT = 'internal_media_count';
     const INTERNAL_BROKEN_MEDIA_COUNT = 'internal_broken_media_count';
     const EXTERNAL_LINK_COUNT = 'external_link_count';
+    const TEMPLATE_LINK_COUNT = 'template_link_count';
     const HEADING_COUNT = 'heading_count';
     const SYNTAX_COUNT = "syntax_count";
     const QUALITY = 'quality';

@@ -52,27 +52,28 @@ class Alias
 
     public static function toAliasArray($aliases, Page $page): array
     {
-        return array_map(
-            function ($element) use ($page) {
-                if (is_array($element)) {
-                    return Alias::create($page, $element[Alias::ALIAS_PATH_PROPERTY])
-                        ->setType($element[Alias::ALIAS_TYPE_PROPERTY]);
-                } else {
-                    if (!is_string($element)) {
-                        $element = StringUtility::toString($element);
-                        LogUtility::msg("The alias element ($element) is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    }
-                    return Alias::create($page, $element);
+        $aliasArray = [];
+        foreach ($aliases as $alias) {
+            if (is_array($alias)) {
+                $path = $alias[Alias::ALIAS_PATH_PROPERTY];
+                $aliasArray[$path] = Alias::create($page, $path)
+                    ->setType($alias[Alias::ALIAS_TYPE_PROPERTY]);
+            } else {
+                if (!is_string($alias)) {
+                    $alias = StringUtility::toString($alias);
+                    LogUtility::msg("The alias element ($alias) is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }
-            },
-            $aliases
-        );
+                $aliasArray[$alias] = Alias::create($page, $alias);
+            }
+        }
+        return $aliasArray;
     }
 
     /**
      * @return mixed
      */
-    public function getPage()
+    public
+    function getPage()
     {
         return $this->page;
     }
@@ -80,41 +81,46 @@ class Alias
     /**
      * @return string
      */
-    public function getType(): string
+    public
+    function getType(): string
     {
         return $this->type;
     }
 
 
-    public static function create(Page $page, $alias): Alias
+    public
+    static function create(Page $page, $alias): Alias
     {
         return new Alias($page, $alias);
     }
 
     /**
      * @param Alias[] $aliases
-     * @return array
+     * @return array - the array to be saved in a text/json file
      */
-    public static function toNativeArray(array $aliases): array
+    public
+    static function toMetadataArray(array $aliases): array
     {
         return array_map(
             function ($aliasObject) {
                 return [
-                    ALIAS_PROPERTY => $aliasObject->getPath(),
-                    ALIAS_TYPE_PROPERTY => $aliasObject->getType()
+                    Alias::ALIAS_PATH_PROPERTY => $aliasObject->getPath(),
+                    Alias::ALIAS_TYPE_PROPERTY => $aliasObject->getType()
                 ];
             },
             $aliases
         );
     }
 
-    public function setType(string $type): Alias
+    public
+    function setType(string $type): Alias
     {
         $this->type = $type;
         return $this;
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->path;
     }

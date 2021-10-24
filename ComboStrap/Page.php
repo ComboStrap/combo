@@ -2113,15 +2113,18 @@ class Page extends DokuPath
     }
 
     public
-    function addAlias($aliasId): Page
+    function addAndGetAlias($aliasPath, $aliasType): Alias
     {
         $aliases = $this->getAliases();
-        if (!in_array($aliasId, $aliases)) {
-            $aliases[] = $aliasId;
+        $newAlias = Alias::create($this, $aliasPath);
+        if(!blank($aliasType)){
+            $newAlias->setType($aliasType);
         }
-        $this->setMetadata(self::ALIAS_ATTRIBUTE, $aliases);
-        return $this;
+        $aliases[$aliasPath] = $newAlias;
+        $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
+        return $newAlias;
     }
+
 
     /**
      * @return Alias[]
@@ -2136,7 +2139,7 @@ class Page extends DokuPath
              * To validate the migration we set a value
              * (the array may be empty)
              */
-            $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toNativeArray($aliases));
+            $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
         } else {
             $aliases = Alias::toAliasArray($aliases, $this);
         }

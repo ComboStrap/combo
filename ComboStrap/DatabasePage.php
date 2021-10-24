@@ -353,7 +353,7 @@ class DatabasePage
                              * @deprecated 2012-10-28
                              */
                             $this->delete();
-                            $page->addAlias($id);
+                            $page->addAndGetAlias($id);
                             $this->addAlias($id);
 
                         } else {
@@ -750,7 +750,7 @@ EOF;
     public function moveTo($targetId)
     {
         if (!$this->exists()) {
-            LogUtility::msg("The database page ($this) does not exist and cannot be moved to ($targetId)", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("The `database` page ($this) does not exist and cannot be moved to ($targetId)", LogUtility::LVL_MSG_ERROR);
         }
         $uuid = $this->page->getUuid();
         $attributes = [
@@ -792,9 +792,11 @@ EOF;
         }
         $deprecatedAliasInDb = $this->sqlite->res2arr($res);
         $this->sqlite->res_close($res);
-        $deprecatedAliases = array_map(
-            function ($row) {
-                return Alias::create($this->page, $row['ALIAS'])
+        $deprecatedAliases = [];
+        array_map(
+            function ($row) use ($deprecatedAliases) {
+                $alias = $row['ALIAS'];
+                $deprecatedAliases[$alias] = Alias::create($this->page, $alias)
                     ->setType(Alias::REDIRECT);
             },
             $deprecatedAliasInDb
@@ -851,14 +853,7 @@ EOF;
     {
 
         $fileSystemAliases = $this->page->getAliases();
-
-        // Make the path an unique value key
-        // To delete the entry if found
-        $dbAliases = [];
-        foreach ($this->getAliases() as $alias) {
-            $dbAliases[$alias->getPath()] = $alias;
-        }
-
+        $dbAliases = $this->getAliases();
         foreach ($fileSystemAliases as $fileSystemAlias) {
 
             if (key_exists($fileSystemAlias->getPath(), $dbAliases)) {
@@ -892,10 +887,12 @@ EOF;
         }
         $rowAliases = $this->sqlite->res2arr($res);
         $this->sqlite->res_close($res);
-        return array_map(function ($row) {
-            return Alias::create($this->page, $row['PATH'])
+        $dbAliases = [];
+        foreach ($rowAliases as $row) {
+            $dbAliases[$row['PATH']] = Alias::create($this->page, $row['PATH'])
                 ->setType($row["TYPE"]);
-        }, $rowAliases);
+        }
+        return $dbAliases;
     }
 
     /**

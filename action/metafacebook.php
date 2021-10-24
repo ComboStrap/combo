@@ -1,20 +1,17 @@
 <?php
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 use ComboStrap\DokuPath;
 use ComboStrap\Image;
-use ComboStrap\RasterImageLink;
-use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
-use ComboStrap\MetadataUtility;
-use ComboStrap\PluginUtility;
 use ComboStrap\Page;
+use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
 
-if (!defined('DOKU_INC')) die();
 
-require_once(__DIR__ . '/../ComboStrap/Site.php');
-require_once(__DIR__ . '/../ComboStrap/RasterImageLink.php');
+
 
 /**
  *
@@ -125,7 +122,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {
                 DokuPath::addRootSeparatorIfNotPresent($defaultFacebookImage);
-                $image = Image::createImageFromAbsolutePath($defaultFacebookImage);
+                $image = Image::createImageFromDokuwikiAbsolutePath($defaultFacebookImage);
                 if ($image->exists()) {
                     $facebookImages[] = $image;
                 } else {
@@ -176,7 +173,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
 
                     if ($toSmall) {
                         $message = "The facebook image ($facebookImage) is too small (" . $facebookImage->getIntrinsicWidth() . " x " . $facebookImage->getIntrinsicHeight() . "). The minimum size constraint is 200px by 200px";
-                        if ($facebookImage->getId() != $page->getFirstImage()->getId()) {
+                        if ($facebookImage->getAbsoluteFileSystemPath() != $page->getFirstImage()->getAbsoluteFileSystemPath()) {
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         } else {
                             LogUtility::log2BrowserConsole($message);
@@ -190,7 +187,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                     if (!$toSmall) {
                         $mime = $facebookImage->getMime();
                         if (!empty($mime)) {
-                            $facebookMeta["og:image:type"] = $mime[1];
+                            $facebookMeta["og:image:type"] = $mime;
                         }
                         $facebookMeta["og:image"] = $facebookImage->getAbsoluteUrl();
                         // One image only

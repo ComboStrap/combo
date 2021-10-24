@@ -30,7 +30,7 @@ class PageImage
     public static function create($image): PageImage
     {
         if (!($image instanceof Image)) {
-            $image = Image::createImageFromAbsolutePath($image);
+            $image = Image::createImageFromDokuwikiAbsolutePath($image);
         }
         return new PageImage($image);
     }

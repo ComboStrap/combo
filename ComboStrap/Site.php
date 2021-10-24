@@ -58,7 +58,7 @@ class Site
         $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS, self::SVG_LOGO_IDS);
         $logos = [];
         foreach ($logosPaths as $logoPath) {
-            $logos[] = Image::createImageFromAbsolutePath($logoPath);
+            $logos[] = Image::createImageFromDokuwikiAbsolutePath($logoPath);
         }
         return $logos;
     }

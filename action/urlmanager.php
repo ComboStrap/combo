@@ -35,8 +35,9 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     const URL_MANAGER_ENABLE_CONF = "enableUrlManager";
 
     // The redirect type
-    const REDIRECT_HTTP = 'Http';
-    const REDIRECT_ID = 'Id';
+    const REDIRECT_PERMANENT = 'permanent'; // was `Http` (301)
+    const REDIRECT_UNKNOWN = "temporary"; // 303 (See other) (when best page name is calculated)
+    const REDIRECT_TRANSPARENT = 'transparent'; // was (Id)
 
     // Where the target id value comes from
     const TARGET_ORIGIN_PAGE_RULES = 'pageRules';
@@ -61,6 +62,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     /** @var string - a name used in log and other places */
     const NAME = 'Url Manager';
     const CANONICAL = 'url/manager';
+
 
 
     /**
@@ -195,7 +197,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
                     list($page, $method) = UrlManagerBestEndPage::process($ID);
                     if ($page != null) {
-                        if ($method == self::REDIRECT_HTTP) {
+                        if ($method == self::REDIRECT_PERMANENT) {
                             $this->httpRedirect($page, self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
                         } else {
                             $this->performIdRedirect($targetPage->getId(), self::TARGET_ORIGIN_BEST_END_PAGE_NAME);
@@ -455,7 +457,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
         // Redirection
-        $this->logRedirection($sourceId, $targetPageId, $targetOriginId, self::REDIRECT_ID);
+        $this->logRedirection($sourceId, $targetPageId, $targetOriginId, self::REDIRECT_TRANSPARENT);
 
         return true;
 
@@ -476,7 +478,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         // No message can be shown because this is an external URL
 
         // Log the redirections
-        $this->logRedirection($ID, $target, $targetOrigin, self::REDIRECT_HTTP);
+        $this->logRedirection($ID, $target, $targetOrigin, self::REDIRECT_PERMANENT);
 
         // Notify
         action_plugin_combo_urlmessage::notify($ID, $targetOrigin);

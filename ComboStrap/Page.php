@@ -226,7 +226,7 @@ class Page extends DokuPath
     {
 
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("select p.ID from PAGES p, PAGE_ALIASES pa where p.UUID = pa.UUID and pa.ALIAS = ? ", $alias);
+        $res = $sqlite->query("select p.ID from PAGES p, PAGE_ALIASES pa where p.UUID = pa.UUID and pa.PATH = ? ", $alias);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the alias selection query");
         }
@@ -795,7 +795,7 @@ class Page extends DokuPath
                 if (!media_isexternal($firstImageId)) {
                     $pathId = DokuPath::PATH_SEPARATOR . $firstImageId;
                 }
-                return Image::createImageFromAbsolutePath($pathId);
+                return Image::createImageFromDokuwikiAbsolutePath($pathId);
             }
         }
         return null;

@@ -400,7 +400,7 @@ abstract class MediaLink
         }
 
         if (substr($mime, 0, 5) === 'image') {
-            $image = Image::createImageFromAbsolutePath($qualifiedPath, $rev, $tagAttributes);
+            $image = Image::createImageFromDokuwikiAbsolutePath($qualifiedPath, $rev, $tagAttributes);
             if (substr($mime, 6) == "svg+xml") {
                 $internalMediaLink = new SvgImageLink($image);
             } else {

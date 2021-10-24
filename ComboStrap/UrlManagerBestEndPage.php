@@ -94,9 +94,9 @@ class UrlManagerBestEndPage
 
         list($bestPageId, $bestScore) = self::getBestEndPageId($pageId);
         if ($bestPageId != null) {
-            $redirectType = action_plugin_combo_urlmanager::REDIRECT_HTTP;
+            $redirectType = action_plugin_combo_urlmanager::REDIRECT_UNKNOWN;
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
-                $redirectType = action_plugin_combo_urlmanager::REDIRECT_ID;
+                $redirectType = action_plugin_combo_urlmanager::REDIRECT_PERMANENT;
             }
             $return = array(
                 $bestPageId,

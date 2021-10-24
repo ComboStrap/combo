@@ -35,18 +35,25 @@ abstract class Image extends Media
     }
 
 
-    public static function createImageFromAbsolutePath($imageIdFromMeta, $rev = null, $attributes = null)
+    /**
+     * @param $dokuWikiAbsolutePathOrId
+     * @param null $rev
+     * @param null $attributes
+     * @return ImageRaster|ImageSvg|null
+     */
+    public static function createImageFromDokuwikiAbsolutePath($dokuWikiAbsolutePathOrId, $rev = null, $attributes = null)
     {
 
+        DokuPath::addRootSeparatorIfNotPresent($dokuWikiAbsolutePathOrId);
         /**
          * Processing
          */
-        $dokuPath = DokuPath::createMediaPathFromAbsolutePath($imageIdFromMeta, $rev);
+        $dokuPath = DokuPath::createMediaPathFromAbsolutePath($dokuWikiAbsolutePathOrId, $rev);
         $mime = $dokuPath->getMime();
 
         if (substr($mime, 0, 5) !== 'image') {
 
-            LogUtility::msg("The file ($imageIdFromMeta) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("The file ($dokuWikiAbsolutePathOrId) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return null;
 
         }
@@ -67,7 +74,7 @@ abstract class Image extends Media
 
     public static function createImageFromId(string $imageId,$rev = '',$attributes = null)
     {
-        return self::createImageFromAbsolutePath(":$imageId", $rev,$attributes);
+        return self::createImageFromDokuwikiAbsolutePath(":$imageId", $rev,$attributes);
     }
 
     /**

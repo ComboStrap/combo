@@ -35,4 +35,16 @@ class Http
     {
         return (function_exists('xdebug_get_headers') ? xdebug_get_headers() : headers_list());
     }
+
+    /**
+     * Set the HTTP status
+     * (Dokuwiki test does not capture all status, there is several way
+     * to do it, this function centralize it)
+     * @param int $int
+     */
+    public static function setStatus(int $int)
+    {
+        http_status($int);
+        //header('HTTP/1.0 304 Not Modified');
+    }
 }

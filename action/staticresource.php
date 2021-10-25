@@ -197,17 +197,13 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
             if ($ifNoneMatch && $ifNoneMatch === $etag) {
 
-                header('HTTP/1.0 304 Not Modified');
-
-                /**
-                 * Clean the buffer to not produce any output
-                 */
-                @ob_end_clean();
+                Http::setStatus(304);
 
                 /**
                  * Exit
                  */
-                PluginUtility::softExit("File not modified");
+                PluginUtility::softExit("File not modified",$event);
+                return;
             }
         }
 
@@ -246,18 +242,12 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if ($filePointer) {
             http_rangeRequest($filePointer, $mediaToSend->getSize(), $mime);
         } else {
-            http_status(500);
+            Http::setStatus(500)  ;
             print "Could not read $mediaToSend - bad permissions?";
         }
 
-        /**
-         * Stop the propagation
-         * Unfortunately, you can't stop the default ({@link sendFile()})
-         * because the event in fetch.php does not allow it
-         * We exit only if not test
-         */
-        $event->stopPropagation();
-        PluginUtility::softExit("File Send");
+
+        PluginUtility::softExit("File Send",$event);
 
 
     }

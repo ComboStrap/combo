@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
+use TestRequest;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -172,6 +173,8 @@ class PluginUtility
     const ERROR_MESSAGE = "errorAtt";
     const ERROR_LEVEL = "errorLevel";
     const DISPLAY = "display";
+    const EXIT_KEY = 'exit';
+    const CONTENT_KEY = "content";
 
     /**
      * The URL base of the documentation
@@ -1328,16 +1331,39 @@ class PluginUtility
     }
 
     /**
-     * An helper function to not exit when it's a test environment
-     * @param string $message
+     * An helper function to mimic an exit when it's a test environment
+     * @param string|null $message
      */
-    public static function softExit($message = null)
+    public static function softExit(string $message, \Doku_Event $event)
     {
 
         if (!PluginUtility::isTest()) {
             exit;
         } else {
-            throw new ExitException($message);
+
+            /**
+             * Stop the propagation and prevent the default
+             */
+            if ($event !== null) {
+                $event->stopPropagation();
+                $event->preventDefault();
+            }
+
+            /**
+             * Add test info into the request
+             */
+            $testRequest = TestRequest::getRunning();
+
+            if ($testRequest !== null) {
+                $testRequest->addData(self::EXIT_KEY, $message);
+
+                // Test request starts a buffer, it will capture the body
+                // No need to clean
+                // to avoid phpunit warning `Test code or tested code did not (only) close its own output buffers`
+
+            }
+
+
         }
 
     }

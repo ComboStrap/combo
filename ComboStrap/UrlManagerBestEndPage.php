@@ -42,30 +42,21 @@ class UrlManagerBestEndPage
             $bestPage = $pagesWithSameName[0];
 
             // The name of the dokuwiki id
-            $pageIdNames = explode(':', $pageId);
+            $missingPageIdNames = explode(':', $pageId);
 
             // Loop
-            foreach ($pagesWithSameName as $targetPageId => $pageTitle) {
+            foreach ($pagesWithSameName as $pageIdWithSameName => $pageTitle) {
 
-                $targetPageIdNames = explode(':', $targetPageId);
-                $targetPageIdScore = 0;
-                for ($i = 1; $i <= sizeof($pageIdNames); $i++) {
-                    $pageIdName = $pageIdNames[sizeof($pageIdNames) - $i];
-                    $indexTargetPage = sizeof($targetPageIdNames) - $i;
-                    if ($indexTargetPage < 0) {
-                        break;
+                $targetPageNames = explode(':', $pageIdWithSameName);
+                $score = 0;
+                foreach($targetPageNames as $targetPageName){
+                    if(in_array($targetPageName,$missingPageIdNames)){
+                        $score++;
                     }
-                    $targetPageIdName = $targetPageIdNames[$indexTargetPage];
-                    if ($targetPageIdName == $pageIdName) {
-                        $targetPageIdScore++;
-                    } else {
-                        break;
-                    }
-
                 }
-                if ($targetPageIdScore > $bestScore) {
-                    $bestScore = $targetPageIdScore;
-                    $bestPage = $targetPageId;
+                if($score>$bestScore){
+                    $bestScore = $score;
+                    $bestPage = $pageIdWithSameName;
                 }
 
             }

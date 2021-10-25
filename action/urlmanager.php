@@ -58,6 +58,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     const CANONICAL = 'url/manager';
     const PAGE_404 = "<html lang=\"en\"><body></body></html>";
     const REFRESH_HEADER_PREFIX = 'Refresh: 0;url=';
+    const LOCATION_HEADER_PREFIX = "Location: ";
 
 
     /**
@@ -81,6 +82,11 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     public static function getUrlFromRefresh($refreshHeader)
     {
         return substr($refreshHeader, strlen(action_plugin_combo_urlmanager::REFRESH_HEADER_PREFIX));
+    }
+
+    public static function getUrlFromLocation($refreshHeader)
+    {
+        return substr($refreshHeader, strlen(action_plugin_combo_urlmanager::LOCATION_HEADER_PREFIX));
     }
 
 
@@ -184,7 +190,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          * There was no redirection found, redirect to edit mode if writer
          *
          */
-        if ($this->userCanWrite() && $this->getConf(self::GO_TO_EDIT_MODE) == 1) {
+        if (Identity::isWriter() && $this->getConf(self::GO_TO_EDIT_MODE) == 1) {
 
             $this->gotToEditMode($event);
             // Stop here
@@ -400,27 +406,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
     }
 
-    /**
-     * Return if the user has the right/permission to create/write an article
-     * @return bool
-     */
-    private
-    function userCanWrite()
-    {
-        global $ID;
-
-        if ($_SERVER['REMOTE_USER']) {
-            $perm = auth_quickaclcheck($ID);
-        } else {
-            $perm = auth_aclcheck($ID, '', null);
-        }
-
-        if ($perm >= AUTH_EDIT) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     /**
      * Redirect to an internal page ie:
@@ -561,7 +546,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             case self::REDIRECT_PERMANENT_METHOD:
                 // header location should before the status
                 // because it changes it to 302
-                header('Location: '.$targetUrl);
+                header(self::LOCATION_HEADER_PREFIX.$targetUrl);
                 Http::setStatus(301);
                 break;
             case self::REDIRECT_NOTFOUND_METHOD:

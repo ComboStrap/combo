@@ -45,7 +45,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
      *
      * An internal HTTP redirect pass them via query string
      */
-    private static function getMessageQueryStringProperties()
+    private static function getMessageQueryStringProperties(): array
     {
 
         $returnValues = array();
@@ -95,22 +95,11 @@ class action_plugin_combo_urlmessage extends ActionPlugin
 
         $pageIdOrigin = null;
         $redirectSource = null;
-        $messageSessionProperties = self::getMessageSessionProperties();
-        if (!empty($messageSessionProperties)) {
-            list($pageIdOrigin, $redirectSource) = $messageSessionProperties;
-        } else {
-            $messageQueryStringProperties = self::getMessageQueryStringProperties();
-            if(!empty($messageQueryStringProperties)) {
-                list($pageIdOrigin, $redirectSource) = $messageQueryStringProperties;
-            }
-        }
 
 
-        // Are we a test call
-        // The redirection does not exist the process otherwise the test fails
-        global $ID;
-        if ($ID == $pageIdOrigin && action_plugin_combo_urlmanager::GO_TO_EDIT_MODE != $redirectSource) {
-            return;
+        $messageQueryStringProperties = self::getMessageQueryStringProperties();
+        if (!empty($messageQueryStringProperties)) {
+            list($pageIdOrigin, $redirectSource) = $messageQueryStringProperties;
         }
 
         if ($pageIdOrigin) {
@@ -262,35 +251,6 @@ class action_plugin_combo_urlmessage extends ActionPlugin
         }
     }
 
-    /**
-     * Return notification data or an empty array
-     * @return array - of the source id and of the type of redirect if a redirect has occurs otherwise an empty array
-     */
-    static function getMessageSessionProperties()
-    {
-        $returnArray = array();
-        if (!defined('NOSESSION')) {
-
-            $pageIdOrigin = null;
-            $redirectSource = null;
-
-            // Read the data and unset
-            if (isset($_SESSION[DOKU_COOKIE][self::ORIGIN_PAGE])) {
-                $pageIdOrigin = $_SESSION[DOKU_COOKIE][self::ORIGIN_PAGE];
-            }
-            if (isset($_SESSION[DOKU_COOKIE][self::ORIGIN_TYPE])) {
-                $redirectSource = $_SESSION[DOKU_COOKIE][self::ORIGIN_TYPE];
-            }
-
-
-            if ($pageIdOrigin) {
-                $returnArray = array($pageIdOrigin, $redirectSource);
-            }
-
-        }
-        return $returnArray;
-
-    }
 
     private static function sessionStart()
     {
@@ -298,7 +258,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
         switch ($sessionStatus) {
             case PHP_SESSION_DISABLED:
                 throw new RuntimeException("Sessions are disabled");
-                break;
+
             case PHP_SESSION_NONE:
                 $result = @session_start();
                 if (!$result) {
@@ -313,8 +273,8 @@ class action_plugin_combo_urlmessage extends ActionPlugin
     private static function sessionClose()
     {
         // Close the session
-        $phpVersion =  phpversion();
-        if ($phpVersion>"7.2.0") {
+        $phpVersion = phpversion();
+        if ($phpVersion > "7.2.0") {
             /** @noinspection PhpVoidFunctionResultUsedInspection */
             $result = session_write_close();
             if (!$result) {

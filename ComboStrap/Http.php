@@ -38,13 +38,23 @@ class Http
 
     /**
      * Set the HTTP status
-     * (Dokuwiki test does not capture all status, there is several way
-     * to do it, this function centralize it)
+     * Dokuwiki test does not {@link \TestResponse::getStatusCode()} capture the status with all php function such
+     * as {@link http_response_code},
+     *
      * @param int $int
      */
     public static function setStatus(int $int)
     {
+        /**
+         * {@link http_status} function
+         * that creates
+         * header('HTTP/1.1 301 Moved Permanently');
+         * header('HTTP/1.0 304 Not Modified');
+         * header('HTTP/1.1 404 Not Found');
+         *
+         * not {@link http_response_code}
+         */
         http_status($int);
-        //header('HTTP/1.0 304 Not Modified');
+
     }
 }

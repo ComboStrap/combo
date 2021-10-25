@@ -1334,7 +1334,7 @@ class PluginUtility
      * An helper function to mimic an exit when it's a test environment
      * @param string|null $message
      */
-    public static function softExit(string $message, \Doku_Event $event)
+    public static function softExit(string $message, \Doku_Event $event = null)
     {
 
         if (!PluginUtility::isTest()) {

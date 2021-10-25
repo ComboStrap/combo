@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Http;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
@@ -65,7 +66,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     /** @var string - a name used in log and other places */
     const NAME = 'Url Manager';
     const CANONICAL = 'url/manager';
-
 
 
     /**
@@ -152,7 +152,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         $targetPage = Page::createPageFromUuid($ID);
         if ($targetPage !== null && $targetPage->exists()) {
             $target = $targetPage->getCanonical();
-            if($target===null){
+            if ($target === null) {
                 $target = $targetPage->getId();
             }
             $res = $this->executePermanentRedirect($target, self::TARGET_ORIGIN_UUID);
@@ -510,19 +510,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         global $ID;
 
 
-        switch ($method) {
-            case self::REDIRECT_PERMANENT_METHOD:
-                header('HTTP/1.1 301 Moved Permanently');
-                http_response_code(301);
-                break;
-            case self::REDIRECT_NOTFOUND_METHOD:
-                header('HTTP/1.1 404 Not Found');
-                http_response_code(404);
-                break;
-            default:
-                LogUtility::msg("The method ($method) is not an http redirection");
-                return false;
-        }
 
         // Log the redirections
         $this->logRedirection($ID, $target, $targetOrigin, $method);
@@ -531,7 +518,9 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         // An external url ?
         if (UrlUtility::isValidURL($target)) {
 
-            $targetUrl = $target;
+            // defend against HTTP Response Splitting
+            // https://owasp.org/www-community/attacks/HTTP_Response_Splitting
+            $targetUrl = stripctl($target);
 
         } else {
 
@@ -544,11 +533,19 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
             // Query String to pass the message
             $urlParams = [];
-            if($targetOrigin!=self::TARGET_ORIGIN_UUID) {
+            if ($targetOrigin != self::TARGET_ORIGIN_UUID) {
                 $urlParams = array(
                     action_plugin_combo_urlmessage::ORIGIN_PAGE => $ID,
                     action_plugin_combo_urlmessage::ORIGIN_TYPE => $targetOrigin
                 );
+            }
+
+            // if this is search engine redirect
+            if ($targetOrigin == self::TARGET_ORIGIN_SEARCH_ENGINE) {
+                $replacementPart = array(':', '_', '-');
+                $query = str_replace($replacementPart, ' ', $ID);
+                $urlParams["do"] = "search";
+                $urlParams["q"] = $query;
             }
 
             $targetUrl = wl($link[0], $urlParams, true, '&');
@@ -559,11 +556,48 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
 
-        send_redirect($targetUrl);
+        switch ($method) {
+            case self::REDIRECT_PERMANENT_METHOD:
+                // header location should before the status
+                // because it changes it to 302
+                header('Location: '.$targetUrl);
+                Http::setStatus(301);
+                break;
+            case self::REDIRECT_NOTFOUND_METHOD:
+                // Empty 404 body to not get the standard 404 page of the browser
+                // but a blank page to avoid a sort of FOUC.
+                // ie the user see a page briefly
+                echo "<html lang=\"en\"><body></body></html>";
+                header('Refresh: 0;url=' . $targetUrl);
+                Http::setStatus(404);
+                break;
+            default:
+                LogUtility::msg("The method ($method) is not an http redirection");
+                header('Location: '.$targetUrl);
+                Http::setStatus(302);
+                break;
+        }
+
+        /**
+         * The dokuwiki function {@link send_redirect()}
+         * set the `Location header` and in php, the header function
+         * in this case change the status code to 302 Arghhhh.
+         * The code below is adapted from this function {@link send_redirect()}
+         */
+        global $MSG; // are there any undisplayed messages? keep them in session for display
+        if(isset($MSG) && count($MSG) && !defined('NOSESSION')) {
+            //reopen session, store data and close session again
+            @session_start();
+            $_SESSION[DOKU_COOKIE]['msg'] = $MSG;
+        }
+        session_write_close(); // always close the session
 
 
-        if (defined('DOKU_UNITTEST')) return true; // no exits during unit tests
-        exit();
+        /**
+         * Exit
+         */
+        PluginUtility::softExit("Http Redirect executed");
+        return true;
 
     }
 
@@ -636,18 +670,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     {
 
         global $ID;
-
-        $replacementPart = array(':', '_', '-');
-        $query = str_replace($replacementPart, ' ', $ID);
-
-        $urlParams = array(
-            "do" => "search",
-            "q" => $query
-        );
-
-        $url = wl($ID, $urlParams, true, '&');
-
-        $this->performNotFoundRedirect($url, self::TARGET_ORIGIN_SEARCH_ENGINE);
+        $this->performNotFoundRedirect($ID, self::TARGET_ORIGIN_SEARCH_ENGINE);
 
     }
 

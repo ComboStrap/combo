@@ -57,4 +57,24 @@ class Http
         http_status($int);
 
     }
+
+    /**
+     * PHP is blocking and fsockopen also.
+     * Don't use it in a page rendering flow
+     * https://segment.com/blog/how-to-make-async-requests-in-php/
+     * @param $url
+     */
+    function sendAsyncRequest($url)
+    {
+        $parts=parse_url($url);
+        $fp = fsockopen($parts['host'],isset($parts['port'])?$parts['port']:80,$errno, $errstr, 30);
+        $out = "GET ".$parts['path'] . "?" . $parts['query'] . " HTTP/1.1\r\n";
+        $out.= "Host: ".$parts['host']."\r\n";
+        $out.= "Content-Length: 0"."\r\n";
+        $out.= "Connection: Close\r\n\r\n";
+
+        fwrite($fp, $out);
+        fclose($fp);
+    }
+
 }

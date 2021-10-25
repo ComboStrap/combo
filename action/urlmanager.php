@@ -1,5 +1,8 @@
 <?php
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
+
 use ComboStrap\Http;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
@@ -8,21 +11,8 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Sqlite;
 use ComboStrap\Page;
 use ComboStrap\UrlManagerBestEndPage;
-use ComboStrap\UrlUtility;
+use ComboStrap\Url;
 
-if (!defined('DOKU_INC')) die();
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
-// Needed for the page lookup
-//require_once(DOKU_INC . 'inc/fulltext.php');
-// Needed to get the redirection manager
-// require_once(DOKU_PLUGIN . 'action.php');
-
-require_once(__DIR__ . '/../ComboStrap/PageRules.php');
-require_once(__DIR__ . '/../ComboStrap/Page.php');
-require_once(__DIR__ . '/../ComboStrap/UrlUtility.php');
-require_once(__DIR__ . '/../ComboStrap/Sqlite.php');
-require_once(__DIR__ . '/../ComboStrap/UrlManagerBestEndPage.php');
-require_once(__DIR__ . '/urlmessage.php');
 
 /**
  * Class action_plugin_combo_url
@@ -66,6 +56,8 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     /** @var string - a name used in log and other places */
     const NAME = 'Url Manager';
     const CANONICAL = 'url/manager';
+    const PAGE_404 = "<html lang=\"en\"><body></body></html>";
+    const REFRESH_HEADER_PREFIX = 'Refresh: 0;url=';
 
 
     /**
@@ -80,6 +72,15 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         // ie $this->lang
         $this->setupLocale();
 
+    }
+
+    /**
+     * @param $refreshHeader
+     * @return false|string
+     */
+    public static function getUrlFromRefresh($refreshHeader)
+    {
+        return substr($refreshHeader, strlen(action_plugin_combo_urlmanager::REFRESH_HEADER_PREFIX));
     }
 
 
@@ -516,7 +517,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
 
         // An external url ?
-        if (UrlUtility::isValidURL($target)) {
+        if (Url::isValidURL($target)) {
 
             // defend against HTTP Response Splitting
             // https://owasp.org/www-community/attacks/HTTP_Response_Splitting
@@ -567,8 +568,8 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                 // Empty 404 body to not get the standard 404 page of the browser
                 // but a blank page to avoid a sort of FOUC.
                 // ie the user see a page briefly
-                echo "<html lang=\"en\"><body></body></html>";
-                header('Refresh: 0;url=' . $targetUrl);
+                echo self::PAGE_404;
+                header(self::REFRESH_HEADER_PREFIX . $targetUrl);
                 Http::setStatus(404);
                 break;
             default:
@@ -748,7 +749,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
         // If this is an external redirect (other domain)
-        if (UrlUtility::isValidURL($calculatedTarget)) {
+        if (Url::isValidURL($calculatedTarget)) {
 
             $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, true);
             return true;

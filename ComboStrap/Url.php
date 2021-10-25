@@ -4,9 +4,37 @@
 namespace ComboStrap;
 
 
-
-class UrlUtility
+class Url
 {
+    /**
+     * @var array|false|int|string|null
+     */
+    private $urlComponents;
+    /**
+     * @var void
+     */
+    private $query;
+
+    /**
+     * UrlUtility constructor.
+     */
+    public function __construct($url)
+    {
+        $this->urlComponents = parse_url($url);
+        parse_str($this->urlComponents['query'], $queryKeys);
+        $this->query = $queryKeys;
+    }
+
+    function getQuery()
+    {
+
+        return $this->query;
+    }
+
+    function getQueryPropertyValue($prop)
+    {
+        return $this->query[$prop];
+    }
 
     /**
      * Extract the value of a property
@@ -16,9 +44,9 @@ class UrlUtility
      */
     public static function getPropertyValue($URL, $propertyName)
     {
-        $parsedQuery = parse_url($URL,PHP_URL_QUERY);
+        $parsedQuery = parse_url($URL, PHP_URL_QUERY);
         $parsedQueryArray = [];
-        parse_str($parsedQuery,$parsedQueryArray);
+        parse_str($parsedQuery, $parsedQueryArray);
         return $parsedQueryArray[$propertyName];
     }
 
@@ -34,23 +62,10 @@ class UrlUtility
         return preg_match('|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i', $url);
     }
 
-    /**
-     * PHP is blocking and fsockopen also.
-     * Don't use it in a page rendering flow
-     * https://segment.com/blog/how-to-make-async-requests-in-php/
-     * @param $url
-     */
-    function sendGetRequest($url)
+    public static function create(string $url)
     {
-        $parts=parse_url($url);
-        $fp = fsockopen($parts['host'],isset($parts['port'])?$parts['port']:80,$errno, $errstr, 30);
-        $out = "GET ".$parts['path'] . "?" . $parts['query'] . " HTTP/1.1\r\n";
-        $out.= "Host: ".$parts['host']."\r\n";
-        $out.= "Content-Length: 0"."\r\n";
-        $out.= "Connection: Close\r\n\r\n";
-
-        fwrite($fp, $out);
-        fclose($fp);
+        return new Url($url);
     }
+
 
 }

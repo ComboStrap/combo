@@ -126,8 +126,8 @@ require_once(__DIR__ . '/TocUtility.php');
 require_once(__DIR__ . '/Toggle.php');
 require_once(__DIR__ . '/Underline.php');
 require_once(__DIR__ . '/Unit.php');
+require_once(__DIR__ . '/Url.php');
 require_once(__DIR__ . '/UrlManagerBestEndPage.php');
-require_once(__DIR__ . '/UrlUtility.php');
 require_once(__DIR__ . '/XhtmlUtility.php');
 require_once(__DIR__ . '/XmlDocument.php');
 require_once(__DIR__ . '/XmlUtility.php');
@@ -1356,13 +1356,21 @@ class PluginUtility
 
             if ($testRequest !== null) {
                 $testRequest->addData(self::EXIT_KEY, $message);
-
-                // Test request starts a buffer, it will capture the body
-                // No need to clean
-                // to avoid phpunit warning `Test code or tested code did not (only) close its own output buffers`
-
             }
 
+            /**
+             * Output buffer
+             * Stop the buffer
+             * Test request starts a buffer at {@link TestRequest::execute()},
+             * it will capture the body until this point
+             */
+            ob_end_clean();
+            /**
+             * To avoid phpunit warning `Test code or tested code did not (only) close its own output buffers`
+             * and
+             * Send the output to the void
+             */
+            ob_start(function($value){});
 
         }
 

@@ -2,6 +2,7 @@
 
 use ComboStrap\Analytics;
 use ComboStrap\DatabasePage;
+use ComboStrap\Http;
 use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
@@ -169,7 +170,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $type = $_GET["type"];
                 if ($type === "viewer") {
                     if (!Identity::isManager()) {
-                        header("Status: 401");
+                        Http::setStatus(401);
                         $fields = ["message" => "Not Authorized (managers only)"];
                     } else {
                         $metadata = p_read_metadata($id);
@@ -183,7 +184,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                          */
                         $fields = array_merge($metasPersistent, $metasCurrent);
                         ksort($fields);
-                        header("Status: 200");
+                        Http::setStatus(200);
                     }
                     header('Content-type: application/json');
                     echo json_encode($fields);
@@ -327,15 +328,16 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $pageImages[self::DATA_TYPE_ATTRIBUTE] = self::TABULAR_TYPE_ATTRIBUTE;
                 $pageImages[self::COLUMNS_ATTRIBUTE] = [];
                 $pageImageTag[self::MUTABLE_ATTRIBUTE] = true;
-                $pageImageTag[self::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getTagValues();
-                $pageImageTag[self::LABEL_ATTRIBUTE] = "Image Tag";
+                $pageImageTag[self::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getUsageValues();
+                $pageImageTag[self::LABEL_ATTRIBUTE] = "Image Usage";
+                $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
                 $pageImageTag[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
                     syntax_plugin_combo_pageimage::CANONICAL,
-                    "Image Tag",
+                    "Image Usages",
                     false,
-                    "The tag of the image"
+                    "The possible usages of the image"
                 );
-                $metadataImageLabelName = "image-tag";
+                $metadataImageLabelName = "image-usage";
                 $pageImageTag[self::NAME_ATTRIBUTE] = $metadataImageLabelName;
                 $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImageTag;
                 $pageImagePath[self::MUTABLE_ATTRIBUTE] = true;
@@ -375,11 +377,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                      */
                     $pageImageTag = [];
                     if ($pageImage != null) {
-                        $pageImageTag[self::VALUE_ATTRIBUTE] = $pageImage->getTag();
+                        $pageImageTag[self::VALUE_ATTRIBUTE] = $pageImage->getUsages();
                     }
-                    $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultTag();
+                    $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
                     if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultTag();
+                        $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultUsages();
                     }
                     $pageImageRow[] = $pageImageTag;
 

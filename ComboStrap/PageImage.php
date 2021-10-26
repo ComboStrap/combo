@@ -6,14 +6,21 @@ namespace ComboStrap;
 
 class PageImage
 {
-    const ILLUSTRATION = "illustration";
+    const PAGE_IMAGE = "page-image";
     const ICON = "icon";
+    const SOCIAL = "social";
+    const FACEBOOK = "facebook";
+    const GOOGLE = "google";
+    const TWITTER = "twitter";
+    const ALL = "all";
+    const DEFAULT = self::ALL;
+    const USAGE_ATTRIBUTE = "usage";
 
     /**
      * @var Image
      */
     private $image;
-    private $tag = self::ILLUSTRATION;
+    private $usage = [self::DEFAULT];
 
     /**
      * PageImage constructor.
@@ -35,9 +42,13 @@ class PageImage
         return new PageImage($image);
     }
 
-    public function setTag($tag): PageImage
+    /**
+     * @param array $usage
+     * @return $this
+     */
+    public function setUsage(array $usage): PageImage
     {
-        $this->tag = $tag;
+        $this->usage = $usage;
         return $this;
     }
 
@@ -46,19 +57,28 @@ class PageImage
         return $this->image;
     }
 
-    public function getTag(): string
+    public function getUsages(): array
     {
-        return $this->tag;
+        return $this->usage;
     }
 
-    public static function getDefaultTag(): string
+    public static function getDefaultUsages(): array
     {
-        return self::ILLUSTRATION;
+        return [self::DEFAULT];
     }
 
-    public static function getTagValues(): array
+    public static function getUsageValues(): array
     {
-        return [self::ILLUSTRATION, self::ICON];
+        return [
+            self::ALL,
+            self::GOOGLE,
+            self::FACEBOOK,
+            self::ICON,
+            self::PAGE_IMAGE,
+            self::SOCIAL,
+            self::TWITTER,
+        ];
+
     }
 
 

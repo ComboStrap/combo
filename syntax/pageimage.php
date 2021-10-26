@@ -216,7 +216,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                 }
 
                 $mediaLink = MediaLink::createMediaLinkFromAbsolutePath(
-                    $selectedPageImage->getAbsolutePath(),
+                    $selectedPageImage->getDokuPath()->getAbsolutePath(),
                     null,
                     $tagAttributes
                 );

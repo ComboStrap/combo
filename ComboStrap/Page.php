@@ -107,7 +107,6 @@ class Page extends DokuPath
     const ALIAS_ATTRIBUTE = "alias";
 
 
-
     /**
      * @var array|array[]
      */
@@ -441,7 +440,7 @@ class Page extends DokuPath
     public
     function setCanonical($canonical): Page
     {
-        $this->setMetadata(Page::CANONICAL_PROPERTY,$canonical);
+        $this->setMetadata(Page::CANONICAL_PROPERTY, $canonical);
         return $this;
     }
 
@@ -2052,21 +2051,31 @@ class Page extends DokuPath
         } else {
             if (is_array($pagesImages)) {
                 $images = [];
-                foreach ($pagesImages as $key => $imageIdFromMeta) {
-                    if (is_array($imageIdFromMeta)) {
-                        foreach ($imageIdFromMeta as $pageImage) {
-                            DokuPath::addRootSeparatorIfNotPresent($pageImage);
-                            $images[] = PageImage::create($pageImage)->setTag($key);
-                        }
+                foreach ($pagesImages as $key => $value) {
+
+                    $usage = PageImage::getDefaultUsages();
+                    if (is_numeric($key)) {
+                        $imagePath = $value;
                     } else {
-                        DokuPath::addRootSeparatorIfNotPresent($imageIdFromMeta);
-                        $images[] = PageImage::create($imageIdFromMeta)->setTag($key);
+                        $imagePath = $key;
+                        if (is_array($value) && isset($value[PageImage::USAGE_ATTRIBUTE])) {
+                            $usage = $value[PageImage::USAGE_ATTRIBUTE];
+                            if (!is_array($usage)) {
+                                $usage = [$usage];
+                            }
+                        }
                     }
+                    DokuPath::addRootSeparatorIfNotPresent($imagePath);
+                    $images[$imagePath] = PageImage::create($imagePath)
+                        ->setUsage($usage);
                 }
                 return $images;
             } else {
+                /**
+                 * A single image
+                 */
                 DokuPath::addRootSeparatorIfNotPresent($pagesImages);
-                return array(PageImage::create($pagesImages));
+                return [$pagesImages => PageImage::create($pagesImages)];
             }
         }
 
@@ -2131,7 +2140,7 @@ class Page extends DokuPath
     {
         $aliases = $this->getAliases();
         $newAlias = Alias::create($this, $aliasPath);
-        if(!blank($aliasType)){
+        if (!blank($aliasType)) {
             $newAlias->setType($aliasType);
         }
         $aliases[$aliasPath] = $newAlias;

@@ -33,6 +33,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     public const PERMANENT_REDIRECT_CANONICAL = "permanent:redirect";
 
     // Where the target id value comes from
+    const TARGET_ORIGIN_WELL_KNOWN = 'well-known';
     const TARGET_ORIGIN_PAGE_RULES = 'pageRules';
     const TARGET_ORIGIN_CANONICAL = 'canonical';
     const TARGET_ORIGIN_ALIAS = 'alias';
@@ -42,6 +43,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     const TARGET_ORIGIN_BEST_NAMESPACE = 'bestNamespace';
     const TARGET_ORIGIN_SEARCH_ENGINE = 'searchEngine';
     const TARGET_ORIGIN_BEST_END_PAGE_NAME = 'bestEndPageName';
+    const TARGET_ORIGIN_SHADOW_BANNED = "shadowBanned";
 
 
     // The constant parameters
@@ -87,6 +89,72 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     public static function getUrlFromLocation($refreshHeader)
     {
         return substr($refreshHeader, strlen(action_plugin_combo_urlmanager::LOCATION_HEADER_PREFIX));
+    }
+
+    public static function isShadowBanned(string $id): bool
+    {
+        /**
+         * ie
+         * wp-json:api:flutter_woo:config_file
+         * wp-content:plugins:wpdiscuz:themes:default:style-rtl.css
+         * wp-admin
+         * 2020:wp-includes:wlwmanifest.xml
+         * wp-content:start
+         * wp-admin:css:start
+         * sito:wp-includes:wlwmanifest.xml
+         * site:wp-includes:wlwmanifest.xml
+         * cms:wp-includes:wlwmanifest.xml
+         * test:wp-includes:wlwmanifest.xml
+         * media:wp-includes:wlwmanifest.xml
+         * wp2:wp-includes:wlwmanifest.xml
+         * 2019:wp-includes:wlwmanifest.xml
+         * shop:wp-includes:wlwmanifest.xml
+         * wp1:wp-includes:wlwmanifest.xml
+         * news:wp-includes:wlwmanifest.xml
+         * 2018:wp-includes:wlwmanifest.xml
+         */
+        if (str_contains($id, 'wp-')) {
+            return true;
+        }
+
+        /**
+         * db:oracle:long_or_1_utl_inaddr.get_host_address_chr_33_chr_126_chr_33_chr_65_chr_66_chr_67_chr_49_chr_52_chr_53_chr_90_chr_81_chr_54_chr_50_chr_68_chr_87_chr_81_chr_65_chr_70_chr_80_chr_79_chr_73_chr_89_chr_67_chr_70_chr_68_chr_33_chr_126_chr_33
+         * db:oracle:999999.9:union:all:select_null:from_dual
+         * db:oracle:999999.9:union:all:select_null:from_dual_and_0_0
+         */
+        if (str_contains($id, '_chr_')) {
+            return true;
+        }
+        if (str_contains($id, '_0_0')) {
+            return true;
+        }
+
+        /**
+         * ie
+         * git:objects:
+         * git:refs:heads:stable
+         * git:logs:refs:heads:main
+         * git:logs:refs:heads:stable
+         * git:hooks:pre-push.sample
+         * git:hooks:pre-receive.sample
+         */
+        if (strpos($id, "git:") === 0) {
+            return true;
+        }
+        return false;
+
+    }
+
+    /**
+     * @param string $id
+     * @return bool
+     * well-known:traffic-advice = https://github.com/buettner/private-prefetch-proxy/blob/main/traffic-advice.md
+     * .well-known/security.txt, id=well-known:security.txt = https://securitytxt.org/
+     * well-known:dnt-policy.txt
+     */
+    public static function isWellKnownFile(string $id): bool
+    {
+        return strpos($id, "well-known") === 0;
     }
 
 
@@ -140,6 +208,19 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
         global $ACT;
         if ($ACT != 'show') return;
+
+        // Well known
+        if (self::isWellKnownFile($ID)) {
+            echo self::PAGE_404;
+            Http::setStatus(404);
+            $this->logRedirection($ID, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
+            exit();
+        }
+
+        // Shadow banned
+        if (self::isShadowBanned($ID)) {
+            $this->executeTransparentRedirect(":start", self::TARGET_ORIGIN_SHADOW_BANNED);
+        }
 
 
         // Global variable needed in the process
@@ -496,7 +577,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         global $ID;
 
 
-
         // Log the redirections
         $this->logRedirection($ID, $target, $targetOrigin, $method);
 
@@ -546,7 +626,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             case self::REDIRECT_PERMANENT_METHOD:
                 // header location should before the status
                 // because it changes it to 302
-                header(self::LOCATION_HEADER_PREFIX.$targetUrl);
+                header(self::LOCATION_HEADER_PREFIX . $targetUrl);
                 Http::setStatus(301);
                 break;
             case self::REDIRECT_NOTFOUND_METHOD:
@@ -559,7 +639,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                 break;
             default:
                 LogUtility::msg("The method ($method) is not an http redirection");
-                header('Location: '.$targetUrl);
+                header('Location: ' . $targetUrl);
                 Http::setStatus(302);
                 break;
         }
@@ -571,7 +651,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          * The code below is adapted from this function {@link send_redirect()}
          */
         global $MSG; // are there any undisplayed messages? keep them in session for display
-        if(isset($MSG) && count($MSG) && !defined('NOSESSION')) {
+        if (isset($MSG) && count($MSG) && !defined('NOSESSION')) {
             //reopen session, store data and close session again
             @session_start();
             $_SESSION[DOKU_COOKIE]['msg'] = $MSG;

@@ -7,7 +7,7 @@ namespace ComboStrap;
 class PageImage
 {
     const PAGE_IMAGE = "page-image";
-    const ICON = "icon";
+    const ICON = "link-icon"; // next release ?
     const SOCIAL = "social";
     const FACEBOOK = "facebook";
     const GOOGLE = "google";
@@ -73,7 +73,6 @@ class PageImage
             self::ALL,
             self::GOOGLE,
             self::FACEBOOK,
-            self::ICON,
             self::PAGE_IMAGE,
             self::SOCIAL,
             self::TWITTER,

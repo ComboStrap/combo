@@ -26,7 +26,7 @@ class LineSpacing
 
             $bootstrapVersion = Bootstrap::getBootStrapMajorVersion();
             if ($bootstrapVersion != Bootstrap::BootStrapFiveMajorVersion) {
-                LogUtility::msg("The line-spacing attribute is only implemented with Bootstrap 5. If you want to use this attribute, you should " . PluginUtility::getDocumentationUrl(Bootstrap::CANONICAL, "change the Bootstrap version") . ".", self::CANONICAL);
+                LogUtility::msg("The line-spacing attribute is only implemented with Bootstrap 5. If you want to use this attribute, you should " . PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, "change the Bootstrap version") . ".", self::CANONICAL);
                 return;
             }
 

@@ -637,7 +637,7 @@ class PluginUtility
      * @return string - an url
      */
     public
-    static function getDocumentationUrl($canonical, $label, $withIcon = true, $tooltip = "")
+    static function getDocumentationHyperLink($canonical, $label, $withIcon = true, $tooltip = ""): string
     {
         /** @noinspection SpellCheckingInspection */
 

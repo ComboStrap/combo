@@ -2,6 +2,7 @@
 
 use ComboStrap\Analytics;
 use ComboStrap\DatabasePage;
+use ComboStrap\FormField;
 use ComboStrap\Http;
 use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
@@ -28,28 +29,13 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const JSON_PARAM = "json";
     const CANONICAL = "meta-manager";
 
-    /**
-     * The JSON attribute for each parameter
-     */
-    const VALUE_ATTRIBUTE = "value";
-    const DEFAULT_VALUE_ATTRIBUTE = "default";
     const VALUES_ATTRIBUTE = "values";
-    const MUTABLE_ATTRIBUTE = "mutable";
     const NAME_ATTRIBUTE = "name";
     const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
-    const DATA_TYPE_ATTRIBUTE = "type"; //data type
-    const DATETIME_TYPE_VALUE = "datetime";
-    const PARAGRAPH_TYPE_VALUE = "paragraph";
+    //data type
     const BOOLEAN_TYPE_VALUE = "boolean";
-    const LABEL_URL_ATTRIBUTE = "url";
-    const TABULAR_TYPE_ATTRIBUTE = "tabular";
-    const LIST_TYPE_ATTRIBUTE = "list";
-    const LABEL_ATTRIBUTE = "label";
+    const WIDTH_ATTRIBUTE = "width"; // width of the label / element
 
-    /**
-     * The tabs attribute and value
-     */
-    const TAB_ATTRIBUTE = "tab";
     const COLUMNS_ATTRIBUTE = "columns";
     const TAB_TYPE_VALUE = "type";
     const TAB_QUALITY_VALUE = "quality";
@@ -195,68 +181,44 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                  * The manager
                  */
                 // Name
-                $metasName[self::VALUE_ATTRIBUTE] = $page->getPageName();
-                $metasName[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultPageName();
-                $metasName[self::MUTABLE_ATTRIBUTE] = true;
-                $metasName[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasName[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                    Analytics::NAME,
-                    "Name",
-                    false,
-                    "The page name is the shortest page description. It should be at maximum a couple of words long. It's used mainly in navigation components."
-                );
-                $metasName[self::NAME_ATTRIBUTE] = Analytics::NAME;
-                $fields[] = $metasName;
+                $fields[] = FormField::create(Analytics::NAME)
+                    ->setMutable(true)
+                    ->setTab(self::TAB_PAGE_VALUE)
+                    ->setLabel("Name")
+                    ->setCanonical(Analytics::NAME)
+                    ->setDescription("The page name is the shortest page description. It should be at maximum a couple of words long. It's used mainly in navigation components.")
+                    ->addValue($page->getPageName(), $page->getDefaultPageName())
+                    ->toAssociativeArray();
 
                 // Title (title of a component is an heading)
-                $metasTitle[self::VALUE_ATTRIBUTE] = $page->getTitle();
-                $metasTitle[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultTitle();
-                $metasTitle[self::MUTABLE_ATTRIBUTE] = true;
-                $metasTitle[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasTitle[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                    Analytics::TITLE,
-                    "Title",
-                    false,
-                    "The page title is a description advertised to external application such as search engine and browser."
-                );
-                $metasTitle[self::NAME_ATTRIBUTE] = Analytics::TITLE;
-                $fields[] = $metasTitle;
+                $fields[] = FormField::create(Analytics::TITLE)
+                    ->setLabel("Title")
+                    ->setDescription("The page title is a description advertised to external application such as search engine and browser.")
+                    ->addValue($page->getTitle(), $page->getDefaultTitle())
+                    ->setTab(self::TAB_PAGE_VALUE)
+                    ->toAssociativeArray();
 
                 // H1
-                $metasH1Value[self::VALUE_ATTRIBUTE] = $page->getH1();
-                $metasH1Value[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultH1();
-                $metasH1Value[self::MUTABLE_ATTRIBUTE] = true;
-                $metasH1Value[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasH1Value[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                    Analytics::H1,
-                    "H1",
-                    false,
-                    "The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title."
-                );
-                $metasH1Value[self::NAME_ATTRIBUTE] = Analytics::H1;
-                $fields[] = $metasH1Value;
+                $fields[] = FormField::create(Analytics::H1)
+                    ->addValue($page->getH1(), $page->getDefaultH1())
+                    ->setTab(self::TAB_PAGE_VALUE)
+                    ->setDescription("The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title.")
+                    ->toAssociativeArray();
 
                 // Description
-                $metasDescription[self::VALUE_ATTRIBUTE] = $page->getDescription();
-                $metasDescription[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDescriptionOrElseDokuWiki();
-                $metasDescription[self::MUTABLE_ATTRIBUTE] = true;
-                $metasDescription[self::DATA_TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
-                $metasDescription[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasDescription[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                    Analytics::DESCRIPTION,
-                    "Description",
-                    false,
-                    "The description is a paragraph that describe your page. It's advertised to external application and used in templating."
-                );
-                $metasDescription[self::NAME_ATTRIBUTE] = Analytics::DESCRIPTION;
-                $fields[] = $metasDescription;
+                $fields[] = FormField::create(Analytics::DESCRIPTION)
+                    ->addValue($page->getDescription(), $page->getDescriptionOrElseDokuWiki())
+                    ->setType(FormField::PARAGRAPH_TYPE_VALUE)
+                    ->setTab(self::TAB_PAGE_VALUE)
+                    ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
+                    ->toAssociativeArray();
 
                 // Canonical
-                $metasCanonical[self::VALUE_ATTRIBUTE] = $page->getCanonical();
-                $metasCanonical[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
-                $metasCanonical[self::MUTABLE_ATTRIBUTE] = true;
-                $metasCanonical[self::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
-                $metasCanonical[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasCanonical[FormField::VALUE_ATTRIBUTE] = $page->getCanonical();
+                $metasCanonical[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
+                $metasCanonical[FormField::MUTABLE_ATTRIBUTE] = true;
+                $metasCanonical[FormField::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
+                $metasCanonical[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Analytics::CANONICAL,
                     "Canonical",
                     false,
@@ -266,12 +228,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $metasCanonical;
 
                 // Layout
-                $layout[self::VALUE_ATTRIBUTE] = $page->getLayout();
-                $layout[self::MUTABLE_ATTRIBUTE] = true;
-                $layout[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
+                $layout[FormField::VALUE_ATTRIBUTE] = $page->getLayout();
+                $layout[FormField::MUTABLE_ATTRIBUTE] = true;
+                $layout[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
                 $layout[self::DOMAIN_VALUES_ATTRIBUTE] = $page->getLayoutValues();
-                $layout[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $layout[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $layout[FormField::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
+                $layout[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Page::LAYOUT_PROPERTY,
                     "Layout",
                     false,
@@ -282,11 +244,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
                 // Modified Date
-                $modifiedDate[self::VALUE_ATTRIBUTE] = $page->getModifiedDateAsString();
-                $modifiedDate[self::MUTABLE_ATTRIBUTE] = false;
-                $modifiedDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $modifiedDate[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $modifiedDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $modifiedDate[FormField::VALUE_ATTRIBUTE] = $page->getModifiedDateAsString();
+                $modifiedDate[FormField::MUTABLE_ATTRIBUTE] = false;
+                $modifiedDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
+                $modifiedDate[FormField::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
+                $modifiedDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     self::METADATA_CANONICAL,
                     "Modification Date",
                     false,
@@ -296,11 +258,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $modifiedDate;
 
                 // Created Date
-                $dateCreated[self::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
-                $dateCreated[self::MUTABLE_ATTRIBUTE] = false;
-                $dateCreated[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $dateCreated[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $dateCreated[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $dateCreated[FormField::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
+                $dateCreated[FormField::MUTABLE_ATTRIBUTE] = false;
+                $dateCreated[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
+                $dateCreated[FormField::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
+                $dateCreated[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     self::METADATA_CANONICAL,
                     "Creation Date",
                     false,
@@ -311,10 +273,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
                 // Path
-                $metasPath[self::VALUE_ATTRIBUTE] = $page->getPath();
-                $metasPath[self::MUTABLE_ATTRIBUTE] = false;
-                $metasPath[self::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasPath[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasPath[FormField::VALUE_ATTRIBUTE] = $page->getPath();
+                $metasPath[FormField::MUTABLE_ATTRIBUTE] = false;
+                $metasPath[FormField::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
+                $metasPath[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Analytics::PATH,
                     "Path",
                     false,
@@ -325,33 +287,41 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 // Image
                 $pageImages = [];
-                $pageImages[self::DATA_TYPE_ATTRIBUTE] = self::TABULAR_TYPE_ATTRIBUTE;
+                $pageImages[FormField::DATA_TYPE_ATTRIBUTE] = FormField::TABULAR_TYPE_VALUE;
                 $pageImages[self::COLUMNS_ATTRIBUTE] = [];
-                $pageImageTag[self::MUTABLE_ATTRIBUTE] = true;
-                $pageImageTag[self::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getUsageValues();
-                $pageImageTag[self::LABEL_ATTRIBUTE] = "Image Usage";
-                $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
-                $pageImageTag[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+
+                //
+                $pageImagePath[FormField::MUTABLE_ATTRIBUTE] = true;
+                $pageImagePath[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     syntax_plugin_combo_pageimage::CANONICAL,
-                    "Image Usages",
-                    false,
-                    "The possible usages of the image"
-                );
-                $metadataImageLabelName = "image-usage";
-                $pageImageTag[self::NAME_ATTRIBUTE] = $metadataImageLabelName;
-                $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImageTag;
-                $pageImagePath[self::MUTABLE_ATTRIBUTE] = true;
-                $pageImagePath[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
-                    syntax_plugin_combo_pageimage::CANONICAL,
-                    "Image Path",
+                    "Path",
                     false,
                     "The path of the image"
                 );
                 $metadataImagePathName = "image-path";
                 $pageImagePath[self::NAME_ATTRIBUTE] = $metadataImagePathName;
                 $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImagePath;
-                $pageImages[self::TAB_ATTRIBUTE] = self::TAB_IMAGE_VALUE;
-                $pageImages[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+
+                // Usage
+                $metadataImageLabelName = "image-usage";
+                $pageImageTag[self::WIDTH_ATTRIBUTE] = 8;
+                $pageImageTag[self::NAME_ATTRIBUTE] = $metadataImageLabelName;
+                $pageImageTag[FormField::MUTABLE_ATTRIBUTE] = true;
+                $pageImageTag[self::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getUsageValues();
+                $pageImageTag[FormField::LABEL_ATTRIBUTE] = "Image Usage";
+                $pageImageTag[self::WIDTH_ATTRIBUTE] = 4;
+                $pageImageTag[FormField::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
+                $pageImageTag[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
+                    syntax_plugin_combo_pageimage::CANONICAL,
+                    "Usages",
+                    false,
+                    "The possible usages of the image"
+                );
+                $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImageTag;
+
+                $pageImages[FormField::LABEL_ATTRIBUTE] = "Images";
+                $pageImages[FormField::TAB_ATTRIBUTE] = self::TAB_IMAGE_VALUE;
+                $pageImages[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     syntax_plugin_combo_pageimage::CANONICAL,
                     "Page Images",
                     false,
@@ -372,30 +342,32 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     if (isset($pageImagesObjects[$i])) {
                         $pageImage = $pageImagesObjects[$i];
                     }
-                    /**
-                     * Label
-                     */
-                    $pageImageTag = [];
-                    if ($pageImage != null) {
-                        $pageImageTag[self::VALUE_ATTRIBUTE] = $pageImage->getUsages();
-                    }
-                    $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
-                    if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImageTag[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultUsages();
-                    }
-                    $pageImageRow[] = $pageImageTag;
+
 
                     /**
                      * Image
                      */
                     $pageImagePath = [];
                     if ($pageImage != null) {
-                        $pageImagePath[self::VALUE_ATTRIBUTE] = $pageImage->getImage()->getDokuPath()->getPath();
+                        $pageImagePath[FormField::VALUE_ATTRIBUTE] = $pageImage->getImage()->getDokuPath()->getPath();
                     }
                     if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImagePath[self::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getImage()->getDokuPath()->getPath();
+                        $pageImagePath[FormField::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getImage()->getDokuPath()->getPath();
                     }
                     $pageImageRow[] = $pageImagePath;
+
+                    /**
+                     * Label
+                     */
+                    $pageImageTag = [];
+                    if ($pageImage != null) {
+                        $pageImageTag[FormField::VALUE_ATTRIBUTE] = $pageImage->getUsages();
+                    }
+                    $pageImageTag[FormField::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
+                    if ($i == 0 && $pageImageDefault !== null) {
+                        $pageImageTag[FormField::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultUsages();
+                    }
+                    $pageImageRow[] = $pageImageTag;
 
                     /**
                      * Add the row
@@ -410,31 +382,32 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                  * Aliases
                  */
                 $aliasesValues = $page->getAliases();
-                $aliasUrl = PluginUtility::getDocumentationUrl(
+                $aliasUrl = PluginUtility::getDocumentationHyperLink(
                     Page::ALIAS_ATTRIBUTE,
-                    "Page Alias",
+                    "Page Aliases",
                     false,
-                    "An alias that will redirect to this page."
+                    "Aliases that will redirect to this page."
                 );
                 $alias[self::NAME_ATTRIBUTE] = Page::ALIAS_ATTRIBUTE;
-                $alias[self::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
-                $alias[self::DATA_TYPE_ATTRIBUTE] = self::LIST_TYPE_ATTRIBUTE;
-                $alias[self::MUTABLE_ATTRIBUTE] = false;
-                $alias[self::LABEL_URL_ATTRIBUTE] = $aliasUrl;
+                $alias[FormField::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
+                $alias[FormField::DATA_TYPE_ATTRIBUTE] = FormField::TABULAR_TYPE_VALUE;
+
+                $alias[FormField::MUTABLE_ATTRIBUTE] = true;
+                $alias[FormField::HYPERLINK_ATTRIBUTE] = $aliasUrl;
                 if (sizeof($aliasesValues) === 0) {
                     $aliasesValues = ["None"];
                 }
-                $alias[self::VALUE_ATTRIBUTE] = $aliasesValues;
+                $alias[FormField::VALUE_ATTRIBUTE] = $aliasesValues;
                 $fields[] = $alias;
 
 
                 // Page Type
-                $metasPageType[self::VALUE_ATTRIBUTE] = $page->getType();
-                $metasPageType[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultType();
-                $metasPageType[self::MUTABLE_ATTRIBUTE] = true;
+                $metasPageType[FormField::VALUE_ATTRIBUTE] = $page->getType();
+                $metasPageType[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultType();
+                $metasPageType[FormField::MUTABLE_ATTRIBUTE] = true;
                 $metasPageType[self::DOMAIN_VALUES_ATTRIBUTE] = $page->getTypeValues();
-                $metasPageType[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $metasPageType[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasPageType[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $metasPageType[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     self::PAGE_TYPE_CANONICAL,
                     "Page Type",
                     false,
@@ -445,12 +418,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
                 // Published Date
-                $publishedDate[self::VALUE_ATTRIBUTE] = $page->getPublishedTimeAsString();
-                $publishedDate[self::DEFAULT_VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
-                $publishedDate[self::MUTABLE_ATTRIBUTE] = true;
-                $publishedDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $publishedDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $publishedDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $publishedDate[FormField::VALUE_ATTRIBUTE] = $page->getPublishedTimeAsString();
+                $publishedDate[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
+                $publishedDate[FormField::MUTABLE_ATTRIBUTE] = true;
+                $publishedDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
+                $publishedDate[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $publishedDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     self::PAGE_TYPE_CANONICAL,
                     "Publication Date",
                     false,
@@ -460,11 +433,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $publishedDate;
 
                 // Start Date
-                $startDate[self::VALUE_ATTRIBUTE] = $page->getStartDate();
-                $startDate[self::MUTABLE_ATTRIBUTE] = true;
-                $startDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $startDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $startDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $startDate[FormField::VALUE_ATTRIBUTE] = $page->getStartDate();
+                $startDate[FormField::MUTABLE_ATTRIBUTE] = true;
+                $startDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
+                $startDate[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $startDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Page::EVENT_TYPE,
                     "Start Date",
                     false,
@@ -474,11 +447,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $startDate;
 
                 // End Date
-                $endDate[self::VALUE_ATTRIBUTE] = $page->getEndDate();
-                $endDate[self::MUTABLE_ATTRIBUTE] = true;
-                $endDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $endDate[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $endDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $endDate[FormField::VALUE_ATTRIBUTE] = $page->getEndDate();
+                $endDate[FormField::MUTABLE_ATTRIBUTE] = true;
+                $endDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
+                $endDate[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $endDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Page::EVENT_TYPE,
                     "End Date",
                     false,
@@ -489,12 +462,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
                 // ld-json
-                $ldJson[self::VALUE_ATTRIBUTE] = $page->getLdJson();
-                $ldJson[self::MUTABLE_ATTRIBUTE] = true;
-                $ldJson[self::DEFAULT_VALUE_ATTRIBUTE] = "Enter a json-ld value";
-                $ldJson[self::DATA_TYPE_ATTRIBUTE] = self::PARAGRAPH_TYPE_VALUE;
-                $ldJson[self::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $ldJson[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $ldJson[FormField::VALUE_ATTRIBUTE] = $page->getLdJson();
+                $ldJson[FormField::MUTABLE_ATTRIBUTE] = true;
+                $ldJson[FormField::DEFAULT_VALUE_ATTRIBUTE] = "Enter a json-ld value";
+                $ldJson[FormField::DATA_TYPE_ATTRIBUTE] = FormField::PARAGRAPH_TYPE_VALUE;
+                $ldJson[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
+                $ldJson[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     action_plugin_combo_metagoogle::CANONICAL,
                     "Json-ld",
                     false,
@@ -505,12 +478,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 // Is low quality page
                 $lowQualityIndicator = $page->getLowQualityIndicator();
-                $isLowQualityPage[self::VALUE_ATTRIBUTE] = $lowQualityIndicator;
-                $isLowQualityPage[self::MUTABLE_ATTRIBUTE] = true;
-                $isLowQualityPage[self::DEFAULT_VALUE_ATTRIBUTE] = false; // the value returned if checked
-                $isLowQualityPage[self::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
-                $isLowQualityPage[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
-                $isLowQualityPage[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $isLowQualityPage[FormField::VALUE_ATTRIBUTE] = $lowQualityIndicator;
+                $isLowQualityPage[FormField::MUTABLE_ATTRIBUTE] = true;
+                $isLowQualityPage[FormField::DEFAULT_VALUE_ATTRIBUTE] = false; // the value returned if checked
+                $isLowQualityPage[FormField::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
+                $isLowQualityPage[FormField::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
+                $isLowQualityPage[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     LowQualityPage::LOW_QUALITY_PAGE_CANONICAL,
                     "Prevent this page to become a low quality page",
                     false,
@@ -520,12 +493,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $isLowQualityPage;
 
                 // Quality Monitoring
-                $isQualityMonitoringOn[self::VALUE_ATTRIBUTE] = $page->isQualityMonitored();
-                $isQualityMonitoringOn[self::MUTABLE_ATTRIBUTE] = true;
-                $isQualityMonitoringOn[self::DEFAULT_VALUE_ATTRIBUTE] = false; // the value returned if checked
-                $isQualityMonitoringOn[self::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
-                $isQualityMonitoringOn[self::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
-                $isQualityMonitoringOn[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $isQualityMonitoringOn[FormField::VALUE_ATTRIBUTE] = $page->isQualityMonitored();
+                $isQualityMonitoringOn[FormField::MUTABLE_ATTRIBUTE] = true;
+                $isQualityMonitoringOn[FormField::DEFAULT_VALUE_ATTRIBUTE] = false; // the value returned if checked
+                $isQualityMonitoringOn[FormField::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
+                $isQualityMonitoringOn[FormField::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
+                $isQualityMonitoringOn[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     "quality:dynamic_monitoring",
                     "Disable the quality message of this page",
                     false,
@@ -536,11 +509,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
                 // Locale
-                $locale[self::VALUE_ATTRIBUTE] = $page->getLocale();
-                $locale[self::MUTABLE_ATTRIBUTE] = false;
-                $locale[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLocale();
-                $locale[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $locale[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $locale[FormField::VALUE_ATTRIBUTE] = $page->getLocale();
+                $locale[FormField::MUTABLE_ATTRIBUTE] = false;
+                $locale[FormField::DEFAULT_VALUE_ATTRIBUTE] = Site::getLocale();
+                $locale[FormField::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
+                $locale[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     "locale",
                     "Locale",
                     false,
@@ -550,11 +523,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $locale;
 
                 // Lang
-                $lang[self::VALUE_ATTRIBUTE] = $page->getLang();
-                $lang[self::MUTABLE_ATTRIBUTE] = true;
-                $lang[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLang();
-                $lang[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $lang[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $lang[FormField::VALUE_ATTRIBUTE] = $page->getLang();
+                $lang[FormField::MUTABLE_ATTRIBUTE] = true;
+                $lang[FormField::DEFAULT_VALUE_ATTRIBUTE] = Site::getLang();
+                $lang[FormField::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
+                $lang[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Page::LANG_META_PROPERTY,
                     "Language",
                     false,
@@ -564,11 +537,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $lang;
 
                 // Country
-                $region[self::VALUE_ATTRIBUTE] = $page->getLocaleRegion();
-                $region[self::MUTABLE_ATTRIBUTE] = true;
-                $region[self::DEFAULT_VALUE_ATTRIBUTE] = Site::getLanguageRegion();
-                $region[self::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $region[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $region[FormField::VALUE_ATTRIBUTE] = $page->getLocaleRegion();
+                $region[FormField::MUTABLE_ATTRIBUTE] = true;
+                $region[FormField::DEFAULT_VALUE_ATTRIBUTE] = Site::getLanguageRegion();
+                $region[FormField::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
+                $region[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Page::REGION_META_PROPERTY,
                     "Region",
                     false,
@@ -579,11 +552,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 // database replication Date
                 $replicationDateValue = $page->getDatabasePage()->getReplicationDate();
-                $replicationDate[self::VALUE_ATTRIBUTE] = $replicationDateValue != null ? $replicationDateValue->format(Iso8601Date::getFormat()) : null;
-                $replicationDate[self::MUTABLE_ATTRIBUTE] = false;
-                $replicationDate[self::DATA_TYPE_ATTRIBUTE] = self::DATETIME_TYPE_VALUE;
-                $replicationDate[self::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
-                $replicationDate[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $replicationDate[FormField::VALUE_ATTRIBUTE] = $replicationDateValue != null ? $replicationDateValue->format(Iso8601Date::getFormat()) : null;
+                $replicationDate[FormField::MUTABLE_ATTRIBUTE] = false;
+                $replicationDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
+                $replicationDate[FormField::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
+                $replicationDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     DatabasePage::REPLICATION_CANONICAL,
                     "Database Replication Date",
                     false,
@@ -593,10 +566,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $replicationDate;
 
                 // UUID
-                $metasUuid[self::VALUE_ATTRIBUTE] = $page->getUuid();
-                $metasUuid[self::MUTABLE_ATTRIBUTE] = false;
-                $metasUuid[self::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
-                $metasUuid[self::LABEL_URL_ATTRIBUTE] = PluginUtility::getDocumentationUrl(
+                $metasUuid[FormField::VALUE_ATTRIBUTE] = $page->getUuid();
+                $metasUuid[FormField::MUTABLE_ATTRIBUTE] = false;
+                $metasUuid[FormField::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
+                $metasUuid[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Page::UUID_ATTRIBUTE,
                     "UUID",
                     false,
@@ -612,31 +585,31 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $ui = [
                     "tabs" => [
                         self::TAB_PAGE_VALUE => [
-                            self::LABEL_ATTRIBUTE => "Page",
+                            FormField::LABEL_ATTRIBUTE => "Page",
                             "grid" => [3, 9]
                         ],
                         self::TAB_TYPE_VALUE => [
-                            self::LABEL_ATTRIBUTE => "Page Type",
+                            FormField::LABEL_ATTRIBUTE => "Page Type",
                             "grid" => [3, 9]
                         ],
                         self::TAB_REDIRECTION_VALUE => [
-                            self::LABEL_ATTRIBUTE => "Redirection",
+                            FormField::LABEL_ATTRIBUTE => "Redirection",
                             "grid" => [3, 9]
                         ],
                         self::TAB_IMAGE_VALUE => [
-                            self::LABEL_ATTRIBUTE => "Image",
+                            FormField::LABEL_ATTRIBUTE => "Image",
                             "grid" => [12]
                         ],
                         self::TAB_QUALITY_VALUE => [
-                            self::LABEL_ATTRIBUTE => "Quality",
+                            FormField::LABEL_ATTRIBUTE => "Quality",
                             "grid" => [6, 6]
                         ],
                         self::TAB_LANGUAGE_VALUE => [
-                            self::LABEL_ATTRIBUTE => "Language",
+                            FormField::LABEL_ATTRIBUTE => "Language",
                             "grid" => [2, 10]
                         ],
                         self::TAB_INTEGRATION_VALUE => [
-                            self::LABEL_ATTRIBUTE => "Integration",
+                            FormField::LABEL_ATTRIBUTE => "Integration",
                             "grid" => [4, 8]
                         ],
                     ],

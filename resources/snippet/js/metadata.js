@@ -67,7 +67,7 @@ window.addEventListener("DOMContentLoaded", function () {
         viewerButton.textContent = "Viewer";
         viewerButton.addEventListener("click", function (event) {
             managerModal.dismiss();
-            openMetaViewer(managerModal,pageId);
+            openMetaViewer(managerModal, pageId);
         });
         managerModal.addFooterButton(viewerButton);
         managerModal.addFooterCloseButton();
@@ -108,7 +108,14 @@ window.addEventListener("DOMContentLoaded", function () {
 
         metadataControlItem.addEventListener("click", function (event) {
             event.preventDefault();
-            void openMetadataManager(JSINFO.id).catch(console.error);
+            void openMetadataManager(JSINFO.id)
+                .catch(e => {
+                    if (e instanceof Error) {
+                        console.error(e.stack)
+                    } else {
+                        console.error(e.toString())
+                    }
+                });
         });
 
     });

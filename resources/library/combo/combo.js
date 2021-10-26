@@ -18,12 +18,24 @@
         }
 
         /**
-         * In case of tabular data, the table label
-         * @param {string} group
+         * The global label
+         * (should be not null in case of tabular data)
+         * @param {string} label
          * @return {ComboFormField}
          */
-        setGroup(group) {
-            this.group = group;
+        setLabel(label) {
+            this.label = label;
+            return this;
+        }
+
+        /**
+         * The global Url
+         * (should be not null in case of tabular data)
+         * @param {string} url
+         * @return {ComboFormField}
+         */
+        setUrl(url) {
+            this.url = url;
             return this;
         }
 
@@ -101,8 +113,12 @@
             return this.type;
         }
 
-        getGroup() {
-            return this.group;
+        getLabel() {
+            return this.label;
+        }
+
+        getUrl(){
+            return this.url;
         }
 
     }
@@ -308,6 +324,9 @@
 
         constructor(properties) {
 
+            if (properties == null) {
+                throw new Error("Properties of a form meta field should not be null");
+            }
             this.properties = properties;
         }
 
@@ -470,6 +489,28 @@
         getName() {
             return this.properties["name"];
         }
+
+        /**
+         * The width of the control
+         * is the most imporant as it can
+         * be used to determine the column width
+         * in case of tabular data
+         * @return {number|*}
+         */
+        getControlWidth() {
+            let width = this.properties["width"];
+            if (width !== undefined) {
+                return width;
+            } else {
+                return 8;
+            }
+        }
+
+        getLabelWidth() {
+            return 12 - this.getLabelWidth();
+        }
+
+
     }
 
     /**
@@ -546,18 +587,23 @@
 
             switch (dataFieldType) {
                 case "tabular":
+                    let label = dataField["label"];
+                    let url = dataField["url"];
                     let columns = dataField["columns"];
                     let fieldMetas = [];
                     for (const column of columns) {
+                        if(column===null){
+                            throw new Error(`A column of the ${label} field is null`);
+                        }
                         let metaField = combo.createMetaField(column);
                         fieldMetas.push(metaField);
                     }
                     let fieldValues = dataField["values"];
-                    let fieldGroup = dataField["url"];
                     formFieldsByTab[dataFieldTab].push(
                         createFormField()
                             .setType(dataFieldType)
-                            .setGroup(fieldGroup)
+                            .setLabel(label)
+                            .setUrl(url)
                             .setMetas(fieldMetas)
                             .setValues(fieldValues)
                     );
@@ -683,19 +729,15 @@
                 let datatype = formField.getType();
                 switch (datatype) {
                     case "tabular":
-                        let group = formField.getGroup();
-                        htmlTabPans += `<div class="row mb-3 text-center">${group}</div>`;
+                        let url = formField.getUrl();
+                        htmlTabPans += `<div class="row mb-3 text-center">${url}</div>`;
                         let colsMeta = formField.getMetas();
                         let rows = formField.getValues();
-                        let colImageTag = "4";
-                        let colImagePath = "8";
+
                         htmlTabPans += `<div class="row mb-3">`;
                         for (const colMeta of colsMeta) {
-                            if (colMeta.getName() === "image-tag") {
-                                htmlTabPans += `<div class="col-sm-${colImageTag} text-center">`;
-                            } else {
-                                htmlTabPans += `<div class="col-sm-${colImagePath} text-center">`;
-                            }
+                            let width = colMeta.getControlWidth();
+                            htmlTabPans += `<div class="col-sm-${width} text-center">`;
                             htmlTabPans += colMeta.getLabelUrl();
                             htmlTabPans += `</div>`;
                         }
@@ -704,15 +746,12 @@
                             let row = rows[i];
                             htmlTabPans += `<div class="row mb-3">`;
                             for (let i = 0; i < colsMeta.length; i++) {
-                                let colControlElement = colsMeta[i];
+                                let metaField = colsMeta[i];
                                 elementIdCounter++;
                                 let elementId = this.getControlId(elementIdCounter);
-                                if (colControlElement.getName() === "image-tag") {
-                                    htmlTabPans += `<div class="col-sm-${colImageTag}">`;
-                                } else {
-                                    htmlTabPans += `<div class="col-sm-${colImagePath}">`;
-                                }
-                                htmlTabPans += colControlElement.getHtmlControl(elementId, row[i].value, row[i].default);
+                                let width = metaField.getControlWidth();
+                                htmlTabPans += `<div class="col-sm-${width}">`;
+                                htmlTabPans += metaField.getHtmlControl(elementId, row[i].value, row[i].default);
                                 htmlTabPans += `</div>`;
                             }
                             htmlTabPans += `</div>`;

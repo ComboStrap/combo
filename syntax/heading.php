@@ -301,7 +301,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
 
                 if (in_array($type, self::DISPLAY_TYPES_ONLY_BS_5)) {
                     $displayClass = "display-4";
-                    LogUtility::msg("Bootstrap 4 does not support the type ($type). Switch to " . PluginUtility::getDocumentationUrl(Bootstrap::CANONICAL, "bootstrap 5") . " if you want to use it. The display type was set to `d4`", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                    LogUtility::msg("Bootstrap 4 does not support the type ($type). Switch to " . PluginUtility::getDocumentationHyperLink(Bootstrap::CANONICAL, "bootstrap 5") . " if you want to use it. The display type was set to `d4`", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
                 }
 
             }

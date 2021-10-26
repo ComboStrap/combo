@@ -66,7 +66,7 @@ class MetadataUtility
             ArrayUtility::filterArrayByKey($metas, $filter);
         }
         if (!array_key_exists("canonical", $metas)) {
-            $metas["canonical"] = PluginUtility::getDocumentationUrl("canonical", "No Canonical");
+            $metas["canonical"] = PluginUtility::getDocumentationHyperLink("canonical", "No Canonical");
         }
 
         $content .= ArrayUtility::formatAsHtmlList($metas);
@@ -81,7 +81,7 @@ class MetadataUtility
             "font-style" => "italic"
         );
 
-        $content .= '<div style="' . PluginUtility::array2InlineStyle($referenceStyle) . '">' . $plugin->getLang('message_come_from') . PluginUtility::getDocumentationUrl("metadata:viewer", "ComboStrap Metadata Viewer") . '</div>';
+        $content .= '<div style="' . PluginUtility::array2InlineStyle($referenceStyle) . '">' . $plugin->getLang('message_come_from') . PluginUtility::getDocumentationHyperLink("metadata:viewer", "ComboStrap Metadata Viewer") . '</div>';
         $content .= '</div>';
         return $content;
 

@@ -459,7 +459,7 @@ class syntax_plugin_combo_webcode extends DokuWiki_Syntax_Plugin
                         $iFrameAttributes->addHtmlAttributeValue("srcdoc", $iframeSrcValue);
 
                         // Code bar with button
-                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getDocumentationUrl(self::TAG, "Rendered by WebCode", false) . '</div>';
+                        $bar .= '<div class="webcode-bar-item">' . PluginUtility::getDocumentationHyperLink(self::TAG, "Rendered by WebCode", false) . '</div>';
                         $bar .= '<div class="webcode-bar-item">' . $this->addJsFiddleButton($codes, $externalResources, $useConsole, $iFrameAttributes->getValue("name")) . '</div>';
 
 

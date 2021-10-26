@@ -1276,7 +1276,7 @@ class Page extends DokuPath
 
         if (!$this->isStrapSideSlot()) {
             $template = Site::getTemplate();
-            LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getDocumentationUrl("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
+            LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getDocumentationHyperLink("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
             return "";
         }
 

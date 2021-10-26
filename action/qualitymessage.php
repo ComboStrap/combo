@@ -149,12 +149,12 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
                 $qualityScore = $analyticsArray[Analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
                 $message = new Message($plugin);
-                $message->addContent("<p>Well played, you got a " . PluginUtility::getDocumentationUrl("quality:score", "quality score") . " of {$qualityScore} !</p>");
+                $message->addContent("<p>Well played, you got a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore} !</p>");
                 if ($page->isLowQualityPage()) {
                     $analyticsArray = $page->getAnalytics()->getData()->toArray();
                     $mandatoryFailedRules = $analyticsArray[Analytics::QUALITY][Analytics::FAILED_MANDATORY_RULES];
-                    $rulesUrl = PluginUtility::getDocumentationUrl("quality:rule", "rules");
-                    $lqPageUrl = PluginUtility::getDocumentationUrl("low_quality_page", "low quality page");
+                    $rulesUrl = PluginUtility::getDocumentationHyperLink("quality:rule", "rules");
+                    $lqPageUrl = PluginUtility::getDocumentationHyperLink("low_quality_page", "low quality page");
                     $message->addContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");
                     $message->addContent("<ul style='margin-bottom: 0'>");
                     /**
@@ -165,7 +165,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                      */
                     if (is_array($mandatoryFailedRules)) {
                         foreach ($mandatoryFailedRules as $mandatoryFailedRule) {
-                            $message->addContent("<li>" . PluginUtility::getDocumentationUrl("quality:rule#list", $mandatoryFailedRule) . "</li>");
+                            $message->addContent("<li>" . PluginUtility::getDocumentationHyperLink("quality:rule#list", $mandatoryFailedRule) . "</li>");
                         }
                     }
                     $message->addContent("</ul>");

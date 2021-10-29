@@ -104,6 +104,9 @@ class Page extends DokuPath
     const CANONICAL_VALUE = "page";
     const OLD_REGION_PROPERTY = "country";
     const ALIAS_ATTRIBUTE = "alias";
+    const PAGE_ID_LENGTH = 12;
+    // No separator
+    const PAGE_ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 
     /**
@@ -256,7 +259,7 @@ class Page extends DokuPath
      * @param string $pageId
      * @return Page|null - a page or null, if the page id does not exist
      */
-    public static function createPageFromPageId(string $pageId): ?Page
+    public static function getPageFromPageId(string $pageId): ?Page
     {
         // Canonical
         $sqlite = Sqlite::getSqlite();
@@ -1665,8 +1668,8 @@ class Page extends DokuPath
         $pageId = $this->getMetadata(Page::PAGE_ID_ATTRIBUTE);
 
         /**
-         * UUID are created only for existing pages
-         * (It avoids the conflict of UUID when page are moved)
+         * Page Id are created only for existing pages
+         * (It avoids the conflict of PageId when page are moved)
          */
         if ($pageId === null && !$this->exists()) {
             return null;
@@ -1677,7 +1680,7 @@ class Page extends DokuPath
          * Bug that caused to create bad uuid
          * (Should be deleted in the future)
          */
-        if ($pageId === null || !is_string($pageId)) {
+        if ($pageId === null || !is_string($pageId) || preg_match("/[-_]/",$pageId)) {
             $pageId = self::generateUniquePageId();
             $this->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
         }
@@ -1688,22 +1691,24 @@ class Page extends DokuPath
 
     /**
      * Return a page id collision free
-     * for the page already {@link DatabasePage::replicate() replicated}
+     * for the page already {@link DatabasePage::replicatePage() replicated}
      *
-     * Collision are avoided with page_id being unique
      * @return string
      */
     public static function generateUniquePageId(): string
     {
-
         /**
-         * Collision detection happens also on the database level
+         * Collision detection happens also on the
+         * {@link DatabasePage::replicatePage() database level}
          * but we try to detect it early
+         * Chance are pretty low
+         *
+         *
          */
         $nanoIdClient = new \Hidehalo\Nanoid\Client();
-        $pageId = ($nanoIdClient)->generateId(12);
-        while (Page::createPageFromPageId($pageId) != null) {
-            $pageId = ($nanoIdClient)->generateId(12);
+        $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
+        while (Page::getPageFromPageId($pageId) != null) {
+            $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET,self::PAGE_ID_LENGTH);
         }
         return $pageId;
     }

@@ -107,6 +107,10 @@ class LinkUtility
      */
     const SEARCH_HIGHLIGHT_QUERY_PROPERTY = "s";
 
+    const CONF_ENABLE_PERMALINK_GENERATION = "enablePermalinkGeneration";
+    const CONF_ENABLE_PERMALINK_GENERATION_DEFAULT = 1;
+    const PERMALINK_SEPARATOR = "-";
+
 
     /**
      * @var mixed
@@ -887,7 +891,13 @@ EOF;
                 if ($this->dokuwikiUrl->hasQueryParameter("do")) {
                     $url = wl($page->getDokuwikiId(), $this->dokuwikiUrl->getQueryParameters());
                 } else {
-                    $url = wl($page->getDokuwikiId(), []);
+
+                    $dokuwikiId = $page->getDokuwikiId();
+                    $permalink = PluginUtility::getConfValue(self::CONF_ENABLE_PERMALINK_GENERATION, self::CONF_ENABLE_PERMALINK_GENERATION_DEFAULT);
+                    if($permalink){
+                        $dokuwikiId .= DokuPath::PATH_SEPARATOR.$page->getPageId();
+                    }
+                    $url = wl($dokuwikiId, []);
                     /**
                      * The search term
                      * Code adapted found at {@link Doku_Renderer_xhtml::internallink()}

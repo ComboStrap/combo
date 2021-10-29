@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Http;
 use ComboStrap\Identity;
+use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
@@ -37,7 +38,8 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     const TARGET_ORIGIN_PAGE_RULES = 'pageRules';
     const TARGET_ORIGIN_CANONICAL = 'canonical';
     const TARGET_ORIGIN_ALIAS = 'alias';
-    const TARGET_ORIGIN_UUID = "uuid";
+    const TARGET_ORIGIN_PERMALINK = "permalink";
+    const TARGET_ORIGIN_PERMALINK_EXTENDED = "extendedPermalink";
     const TARGET_ORIGIN_START_PAGE = 'startPage';
     const TARGET_ORIGIN_BEST_PAGE_NAME = 'bestPageName';
     const TARGET_ORIGIN_BEST_NAMESPACE = 'bestNamespace';
@@ -205,6 +207,27 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             return false;
         }
 
+        /**
+         * {@link LinkUtility::CONF_ENABLE_PERMALINK_GENERATION}
+         */
+        $lastSeparatorPosition = strrpos($ID, LinkUtility::PERMALINK_SEPARATOR);
+        if ($lastSeparatorPosition !== false) {
+            $lastPart = substr($ID, $lastSeparatorPosition + 1);
+            if (strlen($lastPart) === Page::PAGE_ID_LENGTH) {
+                $page = Page::getPageFromPageId($lastPart);
+                if ($page != null && $page->exists()) {
+                    $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                }
+                // not yet in the database ?
+                $permalinkId = substr($ID, 0, $lastSeparatorPosition);
+                $page = Page::createPageFromId($permalinkId);
+                if ($page->exists()) {
+                    $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                }
+            }
+
+        }
+
 
         global $ACT;
         if ($ACT != 'show') return;
@@ -242,13 +265,13 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          * $ID not, we take therefore the id parameter
          */
         $pageId = $_GET["id"];
-        $targetPage = Page::createPageFromPageId($pageId);
+        $targetPage = Page::getPageFromPageId($pageId);
         if ($targetPage !== null && $targetPage->exists()) {
             $target = $targetPage->getCanonical();
             if ($target === null) {
                 $target = $targetPage->getDokuwikiId();
             }
-            $res = $this->executePermanentRedirect($target, self::TARGET_ORIGIN_UUID);
+            $res = $this->executePermanentRedirect($target, self::TARGET_ORIGIN_PERMALINK);
             if ($res) {
                 return;
             }
@@ -604,7 +627,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
             // Query String to pass the message
             $urlParams = [];
-            if ($targetOrigin != self::TARGET_ORIGIN_UUID) {
+            if ($targetOrigin != self::TARGET_ORIGIN_PERMALINK) {
                 $urlParams = array(
                     action_plugin_combo_urlmessage::ORIGIN_PAGE => $ID,
                     action_plugin_combo_urlmessage::ORIGIN_TYPE => $targetOrigin

@@ -480,7 +480,7 @@ class DatabasePage
          * Collision detection
          * Do we have already a page in the database with the same page id
          */
-        $dbPage = Page::createPageFromPageId($page->getPageId());
+        $dbPage = Page::getPageFromPageId($page->getPageId());
         if ($dbPage != null && $dbPage->getPath() != $page->getPath()) {
             LogUtility::msg("The page {$dbPage->getPath()} and {$page->getPath()} had the same page id. The page id was regenerated for {$page->getPath()}.", LogUtility::LVL_MSG_INFO, Page::PAGE_ID_ATTRIBUTE);
             $page->updatePageId(Page::generateUniquePageId());

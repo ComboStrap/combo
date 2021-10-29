@@ -79,7 +79,7 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
         /**
          * Needed by the move plugin
          */
-        $this->page = $pageObject->getId();
+        $this->page = $pageObject->getDokuwikiId();
 
         parent::__construct($this->getCacheKey(), $this->getExt());
 

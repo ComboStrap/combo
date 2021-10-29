@@ -94,8 +94,7 @@ class Page extends DokuPath
     const REGION_META_PROPERTY = "region";
     const LANG_META_PROPERTY = "lang";
     const LAYOUT_PROPERTY = "layout";
-    const UUID_ATTRIBUTE = "uuid";
-    const UUID4_PATTERN = "/^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i";
+    const PAGE_ID_ATTRIBUTE = "page_id";
 
 
     public const HOLY_LAYOUT_VALUE = "holy";
@@ -223,7 +222,8 @@ class Page extends DokuPath
     {
 
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("select p.ID from PAGES p, PAGE_ALIASES pa where p.UUID = pa.UUID and pa.PATH = ? ", $alias);
+        $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
+        $res = $sqlite->query("select p.ID from PAGES p, PAGE_ALIASES pa where p.{$pageIdAttribute} = pa.{$pageIdAttribute} and pa.PATH = ? ", $alias);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the alias selection query");
         }
@@ -252,11 +252,19 @@ class Page extends DokuPath
 
     }
 
-    public static function createPageFromUuid(string $uuid): Page
+    /**
+     * @param string $pageId
+     * @return Page|null - a page or null, if the page id does not exist
+     */
+    public static function createPageFromPageId(string $pageId): ?Page
     {
         // Canonical
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("select * from pages where UUID = ? ", $uuid);
+        if ($sqlite === null) {
+            return null;
+        }
+        $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
+        $res = $sqlite->query("select * from pages where $pageIdAttribute = ? ", $pageId);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the UUID pages selection");
         }
@@ -267,7 +275,7 @@ class Page extends DokuPath
             return self::createPageFromId($id);
         }
 
-        return self::createPageFromId($uuid);
+        return null;
     }
 
 
@@ -284,7 +292,7 @@ class Page extends DokuPath
      * This logical id does take into account this aspect.
      *
      * This is used also to store the HTML output in the cache
-     * If this is not a slot the logical id is the {@link DokuPath::getId()}
+     * If this is not a slot the logical id is the {@link DokuPath::getDokuwikiId()}
      */
     public
     function getLogicalId()
@@ -344,7 +352,7 @@ class Page extends DokuPath
         if ($this->isHomePage()) {
             $url = DOKU_URL;
         } else {
-            $url = wl($this->getId(), '', true, '&');
+            $url = wl($this->getDokuwikiId(), '', true, '&');
         }
         return $url;
     }
@@ -370,7 +378,7 @@ class Page extends DokuPath
     {
 
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT * FROM pages where id = ?", $this->getId());
+        $res = $sqlite->query("SELECT * FROM pages where id = ?", $this->getDokuwikiId());
         if (!$res) {
             throw new RuntimeException("An exception has occurred with the select pages query");
         }
@@ -389,7 +397,7 @@ class Page extends DokuPath
     function existInDb(): int
     {
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $this->getId());
+        $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $this->getDokuwikiId());
         $count = $sqlite->res2single($res);
         $sqlite->res_close($res);
         return $count;
@@ -522,7 +530,7 @@ class Page extends DokuPath
     public
     function updateMemoryMetaFromDisk(): Page
     {
-        $this->metadatas = p_read_metadata($this->getId());
+        $this->metadatas = p_read_metadata($this->getDokuwikiId());
         return $this;
     }
 
@@ -590,7 +598,7 @@ class Page extends DokuPath
     public
     function getMetaFile()
     {
-        return metaFN($this->getId(), '.meta');
+        return metaFN($this->getDokuwikiId(), '.meta');
     }
 
     /**
@@ -618,7 +626,7 @@ class Page extends DokuPath
          * Same as
          * idx_get_indexer()->lookupKey('relation_references', $ID);
          */
-        foreach (ft_backlinks($this->getId()) as $backlinkId) {
+        foreach (ft_backlinks($this->getDokuwikiId()) as $backlinkId) {
             $backlinks[$backlinkId] = Page::createPageFromId($backlinkId);
         }
         return $backlinks;
@@ -755,7 +763,7 @@ class Page extends DokuPath
         /**
          * use {@link io_readWikiPage(wikiFN($id, $rev), $id, $rev)};
          */
-        return rawWiki($this->getId());
+        return rawWiki($this->getDokuwikiId());
     }
 
 
@@ -764,7 +772,7 @@ class Page extends DokuPath
     {
         $Indexer = idx_get_indexer();
         $pages = $Indexer->getPages();
-        $return = array_search($this->getId(), $pages, true);
+        $return = array_search($this->getDokuwikiId(), $pages, true);
         return $return !== false;
     }
 
@@ -772,14 +780,14 @@ class Page extends DokuPath
     public
     function upsertContent($content, $summary = "Default"): Page
     {
-        saveWikiText($this->getId(), $content, $summary);
+        saveWikiText($this->getDokuwikiId(), $content, $summary);
         return $this;
     }
 
     public
     function addToIndex()
     {
-        idx_addPage($this->getId());
+        idx_addPage($this->getDokuwikiId());
     }
 
     public
@@ -1030,7 +1038,7 @@ class Page extends DokuPath
          * Read/render the metadata from the file
          * with parsing
          */
-        $this->metadatas = p_render_metadata($this->getId(), $this->metadatas);
+        $this->metadatas = p_render_metadata($this->getDokuwikiId(), $this->metadatas);
 
         /**
          * ReInitialize
@@ -1051,7 +1059,7 @@ class Page extends DokuPath
         $region = $this->getPersistentMetadata(self::REGION_META_PROPERTY);
         if (!empty($region)) {
             if (!StringUtility::match($region, "[a-zA-Z]{2}")) {
-                LogUtility::msg("The region value ($region) for the page (" . $this->getId() . ") does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
+                LogUtility::msg("The region value ($region) for the page (" . $this->getDokuwikiId() . ") does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
             }
         }
         return $region;
@@ -1289,7 +1297,7 @@ class Page extends DokuPath
          */
         global $ID;
         $keep = $ID;
-        $ID = $this->getId();
+        $ID = $this->getDokuwikiId();
 
         /**
          * The code below is adapted from {@link p_cached_output()}
@@ -1379,7 +1387,7 @@ class Page extends DokuPath
 
         } else {
 
-            return new CacheRenderer($this->getId(), $this->getAbsoluteFileSystemPath(), $outputFormat);
+            return new CacheRenderer($this->getDokuwikiId(), $this->getAbsoluteFileSystemPath(), $outputFormat);
 
         }
     }
@@ -1404,7 +1412,7 @@ class Page extends DokuPath
 
         } else {
 
-            return new CacheInstructions($this->getId(), $this->getAbsoluteFileSystemPath());
+            return new CacheInstructions($this->getDokuwikiId(), $this->getAbsoluteFileSystemPath());
 
         }
 
@@ -1432,7 +1440,7 @@ class Page extends DokuPath
     public
     function getNamespacePath()
     {
-        $ns = getNS($this->getId());
+        $ns = getNS($this->getDokuwikiId());
         /**
          * False means root namespace
          */
@@ -1452,8 +1460,8 @@ class Page extends DokuPath
          * during a run, we then read the metadata file
          * each time
          */
-        if (isset(p_read_metadata($this->getId())["persistent"][Page::SCOPE_KEY])) {
-            return p_read_metadata($this->getId())["persistent"][Page::SCOPE_KEY];
+        if (isset(p_read_metadata($this->getDokuwikiId())["persistent"][Page::SCOPE_KEY])) {
+            return p_read_metadata($this->getDokuwikiId())["persistent"][Page::SCOPE_KEY];
         } else {
             return null;
         }
@@ -1466,21 +1474,21 @@ class Page extends DokuPath
     public
     function getCacheHtmlId()
     {
-        return "cache-" . str_replace(":", "-", $this->getId());
+        return "cache-" . str_replace(":", "-", $this->getDokuwikiId());
     }
 
     public
     function deleteMetadatas()
     {
         $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
-        p_save_metadata($this->getId(), $meta);
+        p_save_metadata($this->getDokuwikiId(), $meta);
         return $this;
     }
 
     public
     function getPageName()
     {
-        return p_get_metadata($this->getId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+        return p_get_metadata($this->getDokuwikiId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
 
     }
 
@@ -1501,11 +1509,11 @@ class Page extends DokuPath
     public
     function unsetMetadata($property)
     {
-        $meta = p_read_metadata($this->getId());
+        $meta = p_read_metadata($this->getDokuwikiId());
         if (isset($meta['persistent'][$property])) {
             unset($meta['persistent'][$property]);
         }
-        p_save_metadata($this->getId(), $meta);
+        p_save_metadata($this->getDokuwikiId(), $meta);
 
     }
 
@@ -1532,7 +1540,7 @@ class Page extends DokuPath
          */
         $title = str_replace('"', "'", $title);
         $array[Analytics::TITLE] = $title;
-        $array[Page::UUID_ATTRIBUTE] = $this->getUuid();
+        $array[Page::PAGE_ID_ATTRIBUTE] = $this->getPageId();
         $array[Page::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
         $array[Analytics::PATH] = $this->getAbsolutePath();
         $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
@@ -1562,7 +1570,7 @@ class Page extends DokuPath
     public
     function __toString()
     {
-        return $this->getId();
+        return $this->getDokuwikiId();
     }
 
     public
@@ -1573,7 +1581,7 @@ class Page extends DokuPath
          * otherwise dokuwiki will not see a change
          * between true and a string and will not persist the value
          */
-        p_set_metadata($this->getId(),
+        p_set_metadata($this->getDokuwikiId(),
             [
                 $key => $value
             ]
@@ -1647,20 +1655,20 @@ class Page extends DokuPath
     }
 
     /**
-     * A UUID or null if the page does not exists
+     * A generated id or null if the page does not exists
      * @return string|null
      */
     public
-    function getUuid(): ?string
+    function getPageId(): ?string
     {
 
-        $uuid = $this->getMetadata(Page::UUID_ATTRIBUTE);
+        $pageId = $this->getMetadata(Page::PAGE_ID_ATTRIBUTE);
 
         /**
          * UUID are created only for existing pages
          * (It avoids the conflict of UUID when page are moved)
          */
-        if ($uuid === null && !$this->exists()) {
+        if ($pageId === null && !$this->exists()) {
             return null;
         }
 
@@ -1669,15 +1677,35 @@ class Page extends DokuPath
          * Bug that caused to create bad uuid
          * (Should be deleted in the future)
          */
-        if ($uuid === null || !is_string($uuid) ||
-            (!preg_match(self::UUID4_PATTERN, $uuid))
-        ) {
-            $uuid = Uuid::uuid4()->toString();
-            $this->setMetadata(Page::UUID_ATTRIBUTE, $uuid);
+        if ($pageId === null || !is_string($pageId)) {
+            $pageId = self::generateUniquePageId();
+            $this->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
         }
 
-        return $uuid;
+        return $pageId;
 
+    }
+
+    /**
+     * Return a page id collision free
+     * for the page already {@link DatabasePage::replicate() replicated}
+     *
+     * Collision are avoided with page_id being unique
+     * @return string
+     */
+    public static function generateUniquePageId(): string
+    {
+
+        /**
+         * Collision detection happens also on the database level
+         * but we try to detect it early
+         */
+        $nanoIdClient = new \Hidehalo\Nanoid\Client();
+        $pageId = ($nanoIdClient)->generateId(12);
+        while (Page::createPageFromPageId($pageId) != null) {
+            $pageId = ($nanoIdClient)->generateId(12);
+        }
+        return $pageId;
     }
 
 
@@ -1768,7 +1796,7 @@ class Page extends DokuPath
                     /**
                      * Overwrite also the actual description
                      */
-                    p_set_metadata($this->getId(), array(Page::DESCRIPTION_PROPERTY => array(
+                    p_set_metadata($this->getDokuwikiId(), array(Page::DESCRIPTION_PROPERTY => array(
                         "abstract" => $value,
                         "origin" => syntax_plugin_combo_frontmatter::CANONICAL
                     )));
@@ -1783,7 +1811,7 @@ class Page extends DokuPath
 
             }
             // Set the value persistently
-            p_set_metadata($this->getId(), array($lowerCaseKey => $value));
+            p_set_metadata($this->getDokuwikiId(), array($lowerCaseKey => $value));
 
         }
 
@@ -1800,18 +1828,18 @@ class Page extends DokuPath
     }
 
     /**
-     * Used when the page is moved to take the UUID of the source
-     * @param string|null $uuid
+     * Used when the page is moved to take the Page Id of the source
+     * @param string|null $pageId
      * @return Page
      */
     public
-    function setUuid(?string $uuid): Page
+    function updatePageId(?string $pageId): Page
     {
-        if ($uuid == null) {
-            LogUtility::msg("A uuid can not null when setting it (Page: $this)", LogUtility::LVL_MSG_ERROR);
+        if ($pageId == null) {
+            LogUtility::msg("A page id can not null when setting it (Page: $this)", LogUtility::LVL_MSG_ERROR);
             return $this;
         }
-        $this->setMetadata(Page::UUID_ATTRIBUTE, $uuid);
+        $this->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
         return $this;
 
     }

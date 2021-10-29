@@ -30,6 +30,7 @@ class FormField
     public const PARAGRAPH_TYPE_VALUE = "paragraph";
     public const DATETIME_TYPE_VALUE = "datetime";
     public const LIST_TYPE_VALUE = "list";
+    public const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
 
     private $name;
     /**
@@ -52,6 +53,10 @@ class FormField
      * @var string
      */
     private $type;
+    /**
+     * @var array
+     */
+    private $domainValues;
 
 
     /**
@@ -60,6 +65,7 @@ class FormField
     public function __construct($name)
     {
         $this->name = $name;
+        $this->label = ucfirst($name);
         $this->canonical = $name;
         $this->description = $name;
         $this->type = self::TEXT_TYPE_VALUE;
@@ -81,7 +87,8 @@ class FormField
             self::TAB_ATTRIBUTE => $this->tab,
             self::VALUE_ATTRIBUTE => $this->value,
             self::DEFAULT_VALUE_ATTRIBUTE => $this->default,
-            self::DATA_TYPE_ATTRIBUTE => $this->type
+            self::DATA_TYPE_ATTRIBUTE => $this->type,
+            self::DOMAIN_VALUES_ATTRIBUTE => $this->domainValues
         ];
     }
 
@@ -135,6 +142,12 @@ class FormField
     public function setType(string $type): FormField
     {
         $this->type = $type;
+        return $this;
+    }
+
+    public function setDomainValues(array $domainValues)
+    {
+        $this->domainValues = $domainValues;
         return $this;
     }
 

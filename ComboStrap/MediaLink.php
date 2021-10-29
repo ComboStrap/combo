@@ -471,7 +471,7 @@ abstract class MediaLink
         $media = $this->getMedia();
         $dokuPath = $media->getDokuPath();
         if ($dokuPath !== null) {
-            return $dokuPath->getId();
+            return $dokuPath->getDokuwikiId();
         } else {
             return $media->__toString();
         }
@@ -523,9 +523,9 @@ abstract class MediaLink
         switch ($linking) {
             case self::LINKING_LINKONLY_VALUE: // show only a url
                 $src = ml(
-                    $dokuPath->getId(),
+                    $dokuPath->getDokuwikiId(),
                     array(
-                        'id' => $dokuPath->getId(),
+                        'id' => $dokuPath->getDokuwikiId(),
                         'cache' => $media->getCache(),
                         'rev' => $dokuPath->getRevision()
                     )
@@ -542,9 +542,9 @@ abstract class MediaLink
             case self::LINKING_DIRECT_VALUE:
                 //directly to the image
                 $src = ml(
-                    $dokuPath->getId(),
+                    $dokuPath->getDokuwikiId(),
                     array(
-                        'id' => $dokuPath->getId(),
+                        'id' => $dokuPath->getDokuwikiId(),
                         'cache' => $media->getCache(),
                         'rev' => $dokuPath->getRevision()
                     ),
@@ -558,9 +558,9 @@ abstract class MediaLink
             case self::LINKING_DETAILS_VALUE:
                 //go to the details media viewer
                 $src = ml(
-                    $dokuPath->getId(),
+                    $dokuPath->getDokuwikiId(),
                     array(
-                        'id' => $dokuPath->getId(),
+                        'id' => $dokuPath->getDokuwikiId(),
                         'cache' => $media->getCache(),
                         'rev' => $dokuPath->getRevision()
                     ),

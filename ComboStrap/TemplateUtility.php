@@ -171,7 +171,7 @@ class TemplateUtility
         /**
          * @deprecated for path
          */
-        $array["id"] = $page->getId();
+        $array["id"] = $page->getDokuwikiId();
 
         /**
          * Override / add the user variable

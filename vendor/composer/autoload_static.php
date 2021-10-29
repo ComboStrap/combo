@@ -7,8 +7,8 @@ namespace Composer\Autoload;
 class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
 {
     public static $files = array (
-        'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
+        'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
         'e39a8b23c42d4e1452234d762b03835a' => __DIR__ . '/..' . '/ramsey/uuid/src/functions.php',
     );
 
@@ -22,6 +22,10 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         array (
             'Ramsey\\Uuid\\' => 12,
             'Ramsey\\Collection\\' => 18,
+        ),
+        'H' => 
+        array (
+            'Hidehalo\\Nanoid\\' => 16,
         ),
         'C' => 
         array (
@@ -53,6 +57,10 @@ class ComposerStaticInitb17e1b0ee5884bcef9ce08e1c1e6b764
         'Ramsey\\Collection\\' => 
         array (
             0 => __DIR__ . '/..' . '/ramsey/collection/src',
+        ),
+        'Hidehalo\\Nanoid\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/hidehalo/nanoid-php/src',
         ),
         'Cron\\' => 
         array (

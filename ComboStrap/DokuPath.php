@@ -317,7 +317,7 @@ class DokuPath extends File
     public
     function getNames()
     {
-        return preg_split("/" . self::PATH_SEPARATOR . "/", $this->getId());
+        return preg_split("/" . self::PATH_SEPARATOR . "/", $this->getDokuwikiId());
     }
 
     /**
@@ -346,13 +346,13 @@ class DokuPath extends File
          * with id of the form :path:*
          * (for directory ?)
          */
-        return StringUtility::endWiths($this->getId(), ":*");
+        return StringUtility::endWiths($this->getDokuwikiId(), ":*");
     }
 
     public
     function __toString()
     {
-        return $this->getId();
+        return $this->getDokuwikiId();
     }
 
     /**
@@ -364,7 +364,7 @@ class DokuPath extends File
      * use this format
      */
     public
-    function getId()
+    function getDokuwikiId()
     {
 
         if ($this->getScheme() == self::LOCAL_SCHEME) {
@@ -418,7 +418,7 @@ class DokuPath extends File
      * when creating test, otherwise the ref is considered as relative
      *
      *
-     * Otherwise everywhere in Dokuwiki, they use the {@link DokuPath::getId()} absolute value that does not have any root separator
+     * Otherwise everywhere in Dokuwiki, they use the {@link DokuPath::getDokuwikiId()} absolute value that does not have any root separator
      * and is absolute (internal index, function, ...)
      *
      */
@@ -438,7 +438,7 @@ class DokuPath extends File
     public
     function getReferencedBy(): array
     {
-        $absoluteId = $this->getId();
+        $absoluteId = $this->getDokuwikiId();
         if ($this->finalType == self::MEDIA_TYPE) {
             return idx_get_indexer()->lookupKey('relation_media', $absoluteId);
         } else {
@@ -456,8 +456,8 @@ class DokuPath extends File
     function toRelativeFileSystemPath()
     {
         $relativeSystemPath = ".";
-        if (!empty($this->getId())) {
-            $relativeSystemPath .= "/" . utf8_encodeFN(str_replace(':', '/', $this->getId()));
+        if (!empty($this->getDokuwikiId())) {
+            $relativeSystemPath .= "/" . utf8_encodeFN(str_replace(':', '/', $this->getDokuwikiId()));
         }
         return $relativeSystemPath;
 
@@ -475,7 +475,7 @@ class DokuPath extends File
      */
     public function getAuthAclValue(): int
     {
-        return auth_quickaclcheck($this->getId());
+        return auth_quickaclcheck($this->getDokuwikiId());
     }
 
 

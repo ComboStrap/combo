@@ -31,7 +31,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     const VALUES_ATTRIBUTE = "values";
     const NAME_ATTRIBUTE = "name";
-    const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
     //data type
     const BOOLEAN_TYPE_VALUE = "boolean";
     const WIDTH_ATTRIBUTE = "width"; // width of the label / element
@@ -214,33 +213,19 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     ->toAssociativeArray();
 
                 // Canonical
-                $metasCanonical[FormField::VALUE_ATTRIBUTE] = $page->getCanonical();
-                $metasCanonical[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultCanonical();
-                $metasCanonical[FormField::MUTABLE_ATTRIBUTE] = true;
-                $metasCanonical[FormField::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
-                $metasCanonical[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Analytics::CANONICAL,
-                    "Canonical",
-                    false,
-                    "The canonical (also known as slug) creates a permanent link."
-                );
-                $metasCanonical[self::NAME_ATTRIBUTE] = Analytics::CANONICAL;
-                $fields[] = $metasCanonical;
+                $fields[] = FormField::create(Analytics::CANONICAL)
+                    ->addValue($page->getCanonical(),$page->getDefaultCanonical())
+                    ->setTab(self::TAB_REDIRECTION_VALUE)
+                    ->setDescription("The canonical creates a link that identifies your page uniquely by name")
+                    ->toAssociativeArray();
 
                 // Layout
-                $layout[FormField::VALUE_ATTRIBUTE] = $page->getLayout();
-                $layout[FormField::MUTABLE_ATTRIBUTE] = true;
-                $layout[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultLayout();
-                $layout[self::DOMAIN_VALUES_ATTRIBUTE] = $page->getLayoutValues();
-                $layout[FormField::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $layout[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Page::LAYOUT_PROPERTY,
-                    "Layout",
-                    false,
-                    "A layout chooses the layout of your page (such as the slots and placement of the main content)"
-                );
-                $layout[self::NAME_ATTRIBUTE] = Page::LAYOUT_PROPERTY;
-                $fields[] = $layout;
+                $fields[] = FormField::create(Page::LAYOUT_PROPERTY)
+                    ->addValue( $page->getLayout(), $page->getDefaultLayout())
+                    ->setDomainValues($page->getLayoutValues())
+                    ->setTab(self::TAB_PAGE_VALUE)
+                    ->setDescription("A layout chooses the layout of your page (such as the slots and placement of the main content)")
+                    ->toAssociativeArray();
 
 
                 // Modified Date
@@ -307,7 +292,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $pageImageTag[self::WIDTH_ATTRIBUTE] = 8;
                 $pageImageTag[self::NAME_ATTRIBUTE] = $metadataImageLabelName;
                 $pageImageTag[FormField::MUTABLE_ATTRIBUTE] = true;
-                $pageImageTag[self::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getUsageValues();
+                $pageImageTag[FormField::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getUsageValues();
                 $pageImageTag[FormField::LABEL_ATTRIBUTE] = "Image Usage";
                 $pageImageTag[self::WIDTH_ATTRIBUTE] = 4;
                 $pageImageTag[FormField::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
@@ -405,7 +390,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasPageType[FormField::VALUE_ATTRIBUTE] = $page->getType();
                 $metasPageType[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultType();
                 $metasPageType[FormField::MUTABLE_ATTRIBUTE] = true;
-                $metasPageType[self::DOMAIN_VALUES_ATTRIBUTE] = $page->getTypeValues();
+                $metasPageType[FormField::DOMAIN_VALUES_ATTRIBUTE] = $page->getTypeValues();
                 $metasPageType[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
                 $metasPageType[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     self::PAGE_TYPE_CANONICAL,
@@ -566,16 +551,16 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = $replicationDate;
 
                 // UUID
-                $metasUuid[FormField::VALUE_ATTRIBUTE] = $page->getUuid();
+                $metasUuid[FormField::VALUE_ATTRIBUTE] = $page->getPageId();
                 $metasUuid[FormField::MUTABLE_ATTRIBUTE] = false;
                 $metasUuid[FormField::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
                 $metasUuid[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Page::UUID_ATTRIBUTE,
+                    Page::PAGE_ID_ATTRIBUTE,
                     "UUID",
                     false,
                     "UUID is the Universally Unique IDentifier of the page used in replication (between database or installation)"
                 );
-                $metasUuid[self::NAME_ATTRIBUTE] = Page::UUID_ATTRIBUTE;
+                $metasUuid[self::NAME_ATTRIBUTE] = Page::PAGE_ID_ATTRIBUTE;
                 $fields[] = $metasUuid;
 
                 /**

@@ -130,7 +130,7 @@ class ImageSvg extends Image
             LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
-        return ml($this->getDokuPath()->getId(), $att, $direct, $ampersand, true);
+        return ml($this->getDokuPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
 
 
     }

@@ -78,7 +78,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         try {
             $page = Page::createPageFromId($id);
             $page->getDatabasePage()->moveTo($targetId);
-            $alias = $page->addAndGetAlias($page->getId(), Alias::REDIRECT);
+            $alias = $page->addAndGetAlias($page->getDokuwikiId(), Alias::REDIRECT);
             $page->getDatabasePage()->addAlias($alias);
         } catch (Exception $exception){
             // We catch the errors if any to not stop the move

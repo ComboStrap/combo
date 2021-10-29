@@ -231,17 +231,22 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          */
         $targetPage = Page::createPageFromCanonical($ID);
         if ($targetPage !== null && $targetPage->exists()) {
-            $res = $this->executeTransparentRedirect($targetPage->getId(), self::TARGET_ORIGIN_CANONICAL);
+            $res = $this->executeTransparentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_CANONICAL);
             if ($res) {
                 return;
             }
         }
 
-        $targetPage = Page::createPageFromUuid($ID);
+        /**
+         * Page Id may have uppercase
+         * $ID not, we take therefore the id parameter
+         */
+        $pageId = $_GET["id"];
+        $targetPage = Page::createPageFromPageId($pageId);
         if ($targetPage !== null && $targetPage->exists()) {
             $target = $targetPage->getCanonical();
             if ($target === null) {
-                $target = $targetPage->getId();
+                $target = $targetPage->getDokuwikiId();
             }
             $res = $this->executePermanentRedirect($target, self::TARGET_ORIGIN_UUID);
             if ($res) {

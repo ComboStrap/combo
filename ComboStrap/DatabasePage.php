@@ -217,7 +217,7 @@ class DatabasePage
     function delete()
     {
 
-        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->page->getId());
+        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->page->getDokuwikiId());
         if (!$res) {
             LogUtility::msg("Something went wrong when deleting the page ({$this->page})");
         }
@@ -255,7 +255,7 @@ class DatabasePage
         /**
          * Check if exists
          */
-        $res = $this->sqlite->query("select count(1) from PAGES_TO_REPLICATE where ID = ?", array('ID' => $this->page->getId()));
+        $res = $this->sqlite->query("select count(1) from PAGES_TO_REPLICATE where ID = ?", array('ID' => $this->page->getDokuwikiId()));
         if (!$res) {
             LogUtility::msg("There was a problem during the select PAGES_TO_REPLICATE: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
         }
@@ -269,7 +269,7 @@ class DatabasePage
          * If not present
          */
         $entry = array(
-            "ID" => $this->page->getId(),
+            "ID" => $this->page->getDokuwikiId(),
             "TIMESTAMP" => Iso8601Date::createFromString()->toString(),
             "REASON" => $reason
         );
@@ -300,8 +300,9 @@ class DatabasePage
 
         $page = $this->page;
         // Do we have a page attached to this uuid
-        $uuid = $page->getUuid();
-        $res = $this->sqlite->query("select ROWID, ID from pages where UUID = ?", $uuid);
+        $pageId = $page->getPageId();
+        $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
+        $res = $this->sqlite->query("select ROWID, ID from pages where $pageIdAttribute = ?", $pageId);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from UUID");
         }
@@ -312,13 +313,13 @@ class DatabasePage
                 break;
             case 1:
                 $id = $rows[0]["ID"];
-                if ($id !== $page->getId()) {
-                    LogUtility::msg("The page ($page) and the page ($id) have the same UUID ($uuid)", LogUtility::LVL_MSG_ERROR);
+                if ($id !== $page->getDokuwikiId()) {
+                    LogUtility::msg("The page ($page) and the page ($id) have the same UUID ($pageId)", LogUtility::LVL_MSG_ERROR);
                 }
                 return intval($rows[0][self::ROWID]);
             default:
                 $existingPages = implode(", ", $rows);
-                LogUtility::msg("The pages ($existingPages) have all the same UUID ($uuid)", LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("The pages ($existingPages) have all the same UUID ($pageId)", LogUtility::LVL_MSG_ERROR);
         }
 
         // Do we have a page attached to the canonical
@@ -336,7 +337,7 @@ class DatabasePage
                     break;
                 case 1:
                     $id = $rows[0]["ID"];
-                    if ($id !== $page->getId()) {
+                    if ($id !== $page->getDokuwikiId()) {
                         LogUtility::msg("The page ($page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
                     }
                     return intval($rows[0][self::ROWID]);
@@ -394,7 +395,7 @@ class DatabasePage
                 break;
             case 1:
                 $id = $rows[0]["ID"];
-                if ($id !== $page->getId()) {
+                if ($id !== $page->getDokuwikiId()) {
                     LogUtility::msg("The page ($page) and the page ($id) have the same path ($path)", LogUtility::LVL_MSG_ERROR);
                 }
                 return intval($rows[0][self::ROWID]);
@@ -428,7 +429,7 @@ class DatabasePage
          * Do we have a page attached to this ID
          * @deprecated
          */
-        $id = $page->getId();
+        $id = $page->getDokuwikiId();
         $res = $this->sqlite->query("select ROWID, ID from pages where ID = ?", $id);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from UUID");
@@ -469,10 +470,23 @@ class DatabasePage
      */
     public function replicatePage(string $replicationDate): bool
     {
+
         /**
          * Convenient variable
          */
         $page = $this->page;
+
+        /**
+         * Collision detection
+         * Do we have already a page in the database with the same page id
+         */
+        $dbPage = Page::createPageFromPageId($page->getPageId());
+        if ($dbPage != null && $dbPage->getPath() != $page->getPath()) {
+            LogUtility::msg("The page {$dbPage->getPath()} and {$page->getPath()} had the same page id. The page id was regenerated for {$page->getPath()}.", LogUtility::LVL_MSG_INFO, Page::PAGE_ID_ATTRIBUTE);
+            $page->updatePageId(Page::generateUniquePageId());
+            return false;
+        }
+
 
         /**
          * Render and save on the file system
@@ -502,9 +516,9 @@ class DatabasePage
             'WORD_COUNT' => $analyticsJsonAsArray[Analytics::WORD_COUNT],
             'BACKLINK_COUNT' => $this->getBacklinkCount(),
             'IS_HOME' => ($page->isHomePage() === true ? 1 : 0),
-            Page::UUID_ATTRIBUTE => $page->getUuid(),
+            Page::PAGE_ID_ATTRIBUTE => $page->getPageId(),
             self::DATE_REPLICATION => $replicationDate,
-            'ID' => $page->getId(),
+            'ID' => $page->getDokuwikiId(),
         );
 
         return $this->upsertAttributes($record);
@@ -522,12 +536,12 @@ class DatabasePage
             if (!$internalPageReference->exists()) {
                 continue;
             }
-            if (in_array($internalPageReference->getId(), array_keys($referencedPagesDb), true)) {
-                unset($referencedPagesDb[$internalPageReference->getId()]);
+            if (in_array($internalPageReference->getDokuwikiId(), array_keys($referencedPagesDb), true)) {
+                unset($referencedPagesDb[$internalPageReference->getDokuwikiId()]);
             } else {
                 $record = [
-                    "SOURCE_ID" => $this->page->getId(),
-                    "TARGET_ID" => $internalPageReference->getId()
+                    "SOURCE_ID" => $this->page->getDokuwikiId(),
+                    "TARGET_ID" => $internalPageReference->getDokuwikiId()
                 ];
                 $res = $this->sqlite->storeEntry('PAGE_REFERENCES', $record);
                 if ($res === false) {
@@ -546,8 +560,8 @@ EOF;
 
         foreach ($referencedPagesDb as $internalPageReference) {
             $row = [
-                "SOURCE_ID" => $this->page->getId(),
-                "TARGET_ID" => $internalPageReference->getId()
+                "SOURCE_ID" => $this->page->getDokuwikiId(),
+                "TARGET_ID" => $internalPageReference->getDokuwikiId()
             ];
             $res = $this->sqlite->query($delete, $row);
 
@@ -582,7 +596,7 @@ EOF;
         if ($this->sqlite === null) {
             return null;
         }
-        $res = $this->sqlite->query("select count(1) from PAGE_REFERENCES where TARGET_ID = ? ", $this->page->getId());
+        $res = $this->sqlite->query("select count(1) from PAGE_REFERENCES where TARGET_ID = ? ", $this->page->getDokuwikiId());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the backlinks count select ({$this->page})");
         }
@@ -601,7 +615,7 @@ EOF;
         if ($this->sqlite === null) {
             return [];
         }
-        $res = $this->sqlite->query("select TARGET_ID from PAGE_REFERENCES where SOURCE_ID = ? ", $this->page->getId());
+        $res = $this->sqlite->query("select TARGET_ID from PAGE_REFERENCES where SOURCE_ID = ? ", $this->page->getDokuwikiId());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the PAGE_REFERENCES ({$this->page}) selection query");
         }
@@ -691,9 +705,9 @@ EOF;
             $this->sqlite->res_close($res);
 
         } else {
-            $values["id"] = $this->page->getId();
+            $values["id"] = $this->page->getDokuwikiId();
             $values[Analytics::PATH] = $this->page->getPath();
-            $values[Page::UUID_ATTRIBUTE] = $this->page->getUuid();
+            $values[Page::PAGE_ID_ATTRIBUTE] = $this->page->getPageId();
             /**
              * TODO: Canonical should be able to be null
              * When the not null constraint on canonical is deleted, we can delete
@@ -723,7 +737,7 @@ EOF;
         if ($this->sqlite === null) {
             return null;
         }
-        $res = $this->sqlite->query("select $attribute from pages where ID = ? ", $this->page->getId());
+        $res = $this->sqlite->query("select $attribute from pages where ID = ? ", $this->page->getDokuwikiId());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the retrieve of the attribute $attribute for the page ({$this->page}) selection query");
         }
@@ -752,24 +766,24 @@ EOF;
         if (!$this->exists()) {
             LogUtility::msg("The `database` page ($this) does not exist and cannot be moved to ($targetId)", LogUtility::LVL_MSG_ERROR);
         }
-        $uuid = $this->page->getUuid();
+        $pageId = $this->page->getPageId();
         $attributes = [
             "id" => $targetId,
             Page::PATH_ATTRIBUTE => ":${$targetId}",
-            Page::UUID_ATTRIBUTE => $uuid
+            Page::PAGE_ID_ATTRIBUTE => $pageId
         ];
 
         $this->upsertAttributes($attributes);
         /**
-         * The UUID is created on page creation
+         * The page id is created on page creation
          * We need to update it on the target page
          */
-        if ($uuid === null) {
+        if ($pageId === null) {
             LogUtility::msg("During a move, the uuid of the page ($this) to ($targetId) was null. It should not be the case as this page exists. The UUID was not passed over to the target page.", LogUtility::LVL_MSG_ERROR, self::REPLICATION_CANONICAL);
             return;
         }
         $targetPage = Page::createPageFromId($targetId);
-        $targetPage->setUuid($uuid);
+        $targetPage->updatePageId($pageId);
 
     }
 
@@ -832,7 +846,7 @@ EOF;
     {
 
         $row = array(
-            "UUID" => $this->page->getUuid(),
+            "UUID" => $this->page->getPageId(),
             "PATH" => $alias->getPath(),
             "TYPE" => $alias->getType()
         );
@@ -881,7 +895,8 @@ EOF;
         if ($this->sqlite === null) {
             return [];
         }
-        $res = $this->sqlite->query("select PATH, TYPE from PAGE_ALIASES where UUID = ? ", $this->page->getUuid());
+        $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
+        $res = $this->sqlite->query("select PATH, TYPE from PAGE_ALIASES where $pageIdAttribute = ? ", $this->page->getPageId());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$this->page}) selection query");
         }
@@ -905,7 +920,7 @@ EOF;
 delete from PAGE_ALIASES where UUID = ? and PATH = ?
 EOF;
         $row = [
-            "UUID" => $this->page->getUuid(),
+            "UUID" => $this->page->getPageId(),
             "PATH" => $dbAliasPath->getPath()
         ];
         $res = $this->sqlite->query($delete, $row);

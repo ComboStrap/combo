@@ -32,7 +32,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '79e89b8767ac59d11aa9a084078f2616c5377bfe',
+    'reference' => 'a1836d550061260d3ff1137fae166be97969826b',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -62,7 +62,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '79e89b8767ac59d11aa9a084078f2616c5377bfe',
+      'reference' => 'a1836d550061260d3ff1137fae166be97969826b',
     ),
     'dragonmantank/cron-expression' => 
     array (
@@ -72,6 +72,24 @@ private static $installed = array (
       array (
       ),
       'reference' => '9504fa9ea681b586028adaaa0877db4aecf32bad',
+    ),
+    'hidehalo/nanoid-php' => 
+    array (
+      'pretty_version' => '1.1.8',
+      'version' => '1.1.8.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '14187ab7a5affa34078b6a54df94176bb7a21227',
+    ),
+    'paragonie/random_compat' => 
+    array (
+      'pretty_version' => 'v9.99.100',
+      'version' => '9.99.100.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
     ),
     'ramsey/collection' => 
     array (

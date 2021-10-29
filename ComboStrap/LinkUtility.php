@@ -436,7 +436,7 @@ class LinkUtility
                  * Internal Page
                  */
                 $linkedPage = $this->getInternalPage();
-                $this->attributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getId());
+                $this->attributes->addHtmlAttributeValue("data-wiki-id", $linkedPage->getDokuwikiId());
 
 
                 if (!$linkedPage->exists()) {
@@ -689,7 +689,7 @@ EOF;
             /**
              * Broken link ?
              */
-            $id = $this->getInternalPage()->getId();
+            $id = $this->getInternalPage()->getDokuwikiId();
             if (!$this->getInternalPage()->exists()) {
                 $stats[Analytics::INTERNAL_LINK_BROKEN_COUNT]++;
                 $stats[Analytics::INFO][] = "The internal link `{$id}` does not exist";
@@ -885,9 +885,9 @@ EOF;
                  * action link (with the `do` property)
                  */
                 if ($this->dokuwikiUrl->hasQueryParameter("do")) {
-                    $url = wl($page->getId(), $this->dokuwikiUrl->getQueryParameters());
+                    $url = wl($page->getDokuwikiId(), $this->dokuwikiUrl->getQueryParameters());
                 } else {
-                    $url = wl($page->getId(), []);
+                    $url = wl($page->getDokuwikiId(), []);
                     /**
                      * The search term
                      * Code adapted found at {@link Doku_Renderer_xhtml::internallink()}

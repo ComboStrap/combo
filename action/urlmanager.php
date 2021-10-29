@@ -210,22 +210,20 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         /**
          * {@link LinkUtility::CONF_ENABLE_PERMALINK_GENERATION}
          */
-        $lastSeparatorPosition = strrpos($ID, LinkUtility::PERMALINK_SEPARATOR);
-        if ($lastSeparatorPosition !== false) {
-            $lastPart = substr($ID, $lastSeparatorPosition + 1);
-            if (strlen($lastPart) === Page::PAGE_ID_LENGTH) {
-                $page = Page::getPageFromPageId($lastPart);
-                if ($page != null && $page->exists()) {
-                    $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
-                }
-                // not yet in the database ?
-                $permalinkId = substr($ID, 0, $lastSeparatorPosition);
-                $page = Page::createPageFromId($permalinkId);
-                if ($page->exists()) {
-                    $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
-                }
-            }
 
+
+        $lastPart = $targetPage->getName();
+        if (strlen($lastPart) === Page::PAGE_ID_LENGTH) {
+            $page = Page::getPageFromPageId($lastPart);
+            if ($page != null && $page->exists()) {
+                $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+            }
+            // not yet in the database ?
+            $permalinkId = substr($ID, 0, $lastSeparatorPosition);
+            $page = Page::createPageFromId($permalinkId);
+            if ($page->exists()) {
+                $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+            }
         }
 
 

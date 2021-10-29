@@ -897,6 +897,7 @@ EOF;
                     if($permalink){
                         $dokuwikiId .= DokuPath::PATH_SEPARATOR.$page->getPageId();
                     }
+
                     $url = wl($dokuwikiId, []);
                     /**
                      * The search term

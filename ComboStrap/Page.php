@@ -104,9 +104,9 @@ class Page extends DokuPath
     const CANONICAL_VALUE = "page";
     const OLD_REGION_PROPERTY = "country";
     const ALIAS_ATTRIBUTE = "alias";
-    const PAGE_ID_LENGTH = 12;
-    // No separator
-    const PAGE_ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const PAGE_ID_LENGTH = 14;
+    // No separator, no uppercase to be consistent on the whole url
+    const PAGE_ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
 
 
     /**
@@ -1680,7 +1680,9 @@ class Page extends DokuPath
          * Bug that caused to create bad uuid
          * (Should be deleted in the future)
          */
-        if ($pageId === null || !is_string($pageId) || preg_match("/[-_]/",$pageId)) {
+        if ($pageId === null || !is_string($pageId)
+            || preg_match("/[-_A-Z]/", $pageId)
+        ) {
             $pageId = self::generateUniquePageId();
             $this->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
         }
@@ -1692,6 +1694,15 @@ class Page extends DokuPath
     /**
      * Return a page id collision free
      * for the page already {@link DatabasePage::replicatePage() replicated}
+     *
+     * https://zelark.github.io/nano-id-cc/
+     *
+     * 1000 id / hour = ~35 years needed, in order to have a 1% probability of at least one collision.
+     *
+     * We don't rely on a sequence because
+     *    - the database may be refreshed
+     *    - sqlite does have only auto-increment support
+     * https://www.sqlite.org/autoinc.html
      *
      * @return string
      */
@@ -1708,7 +1719,7 @@ class Page extends DokuPath
         $nanoIdClient = new \Hidehalo\Nanoid\Client();
         $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
         while (Page::getPageFromPageId($pageId) != null) {
-            $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET,self::PAGE_ID_LENGTH);
+            $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
         }
         return $pageId;
     }

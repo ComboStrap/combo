@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'a1836d550061260d3ff1137fae166be97969826b',
+    'reference' => '70c0e03a7f16e199a3dc6c79fcc5b7e3edaf6886',
     'name' => 'combostrap/combo',
   ),
   'versions' => 
@@ -20,15 +20,6 @@
       ),
       'reference' => '0cb16628b575b50bd087a81d11bd961ac3b8e9e9',
     ),
-    'brick/math' => 
-    array (
-      'pretty_version' => '0.9.3',
-      'version' => '0.9.3.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'ca57d18f028f84f777b2168cd1911b0dee2343ae',
-    ),
     'combostrap/combo' => 
     array (
       'pretty_version' => '1.22.x-dev',
@@ -36,7 +27,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'a1836d550061260d3ff1137fae166be97969826b',
+      'reference' => '70c0e03a7f16e199a3dc6c79fcc5b7e3edaf6886',
     ),
     'dragonmantank/cron-expression' => 
     array (
@@ -64,49 +55,6 @@
       array (
       ),
       'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
-    ),
-    'ramsey/collection' => 
-    array (
-      'pretty_version' => '1.1.4',
-      'version' => '1.1.4.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'ab2237657ad99667a5143e32ba2683c8029563d4',
-    ),
-    'ramsey/uuid' => 
-    array (
-      'pretty_version' => '4.2.3',
-      'version' => '4.2.3.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'fc9bb7fb5388691fd7373cd44dcb4d63bbcf24df',
-    ),
-    'rhumsaa/uuid' => 
-    array (
-      'replaced' => 
-      array (
-        0 => '4.2.3',
-      ),
-    ),
-    'symfony/polyfill-ctype' => 
-    array (
-      'pretty_version' => 'v1.23.0',
-      'version' => '1.23.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '46cd95797e9df938fdd2b03693b5fca5e64b01ce',
-    ),
-    'symfony/polyfill-php80' => 
-    array (
-      'pretty_version' => 'v1.23.1',
-      'version' => '1.23.1.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '1100343ed1a92e3a38f9ae122fc0eb21602547be',
     ),
   ),
 );

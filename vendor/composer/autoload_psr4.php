@@ -6,12 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
-    'Symfony\\Polyfill\\Ctype\\' => array($vendorDir . '/symfony/polyfill-ctype'),
-    'Ramsey\\Uuid\\' => array($vendorDir . '/ramsey/uuid/src'),
-    'Ramsey\\Collection\\' => array($vendorDir . '/ramsey/collection/src'),
     'Hidehalo\\Nanoid\\' => array($vendorDir . '/hidehalo/nanoid-php/src'),
     'Cron\\' => array($vendorDir . '/dragonmantank/cron-expression/src/Cron'),
-    'Brick\\Math\\' => array($vendorDir . '/brick/math/src'),
     'Antlr\\Antlr4\\Runtime\\' => array($vendorDir . '/antlr/antlr4-php-runtime/src'),
 );

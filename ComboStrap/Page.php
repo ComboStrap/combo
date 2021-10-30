@@ -343,23 +343,6 @@ class Page extends DokuPath
     }
 
 
-    /**
-     *
-     *
-     * Dokuwiki Methodology taken from {@link tpl_metaheaders()}
-     * @return string - the Dokuwiki URL
-     */
-    public
-    function getUrl()
-    {
-        if ($this->isHomePage()) {
-            $url = DOKU_URL;
-        } else {
-            $url = wl($this->getDokuwikiId(), '', true, '&');
-        }
-        return $url;
-    }
-
     public
     static function createRequestedPageFromEnvironment()
     {
@@ -1188,22 +1171,53 @@ class Page extends DokuPath
         return $this->getPublishedElseCreationTime() > new DateTime('now');
     }
 
+    /**
+     * The Url used:
+     *   * in the link
+     *   * in the canonical ref
+     *   * in the site map
+     * @return string|null
+     */
     public function getCanonicalUrl(): ?string
     {
+        /**
+         * canonical url: name for ns + slug (title) + page id
+         * or
+         * canonical url: canonical path + page id
+         * or
+         * canonical url: page path + page id
+         *
+         *
+         *   - slug + page id
+         *   - hierarchical slug + page id
+         *   - canonical path + page id
+         *   - canonical path
+         *   - page path + page id
+         *   - page path
+         */
+
+        /**
+         * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
+         */
+        if ($this->isHomePage()) {
+            return DOKU_URL;
+        }
+
         if (!empty($this->getCanonicalOrDefault())) {
             return Site::getBaseUrl() . strtr($this->getCanonicalOrDefault(), ':', '/');
         }
-        return null;
-    }
 
-    public function getCanonicalUrlOrDefault(): ?string
-    {
-        $url = $this->getCanonicalUrl();
-        if (empty($url)) {
-            $url = $this->getUrl();
+        $permalink = PluginUtility::getConfValue(LinkUtility::CONF_ENABLE_PERMALINK_GENERATION, LinkUtility::CONF_ENABLE_PERMALINK_GENERATION_DEFAULT);
+        if ($permalink) {
+            $dokuwikiId .= DokuPath::PATH_SEPARATOR . $page->getPageId();
         }
+
+        $url = wl($this->getDokuwikiId(), '', true, '&');
+
+
         return $url;
     }
+
 
     /**
      *
@@ -1430,7 +1444,7 @@ class Page extends DokuPath
     public
     function getAnchorLink()
     {
-        $url = $this->getCanonicalUrlOrDefault();
+        $url = $this->getCanonicalUrl();
         $title = $this->getTitle();
         return "<a href=\"$url\">$title</a>";
     }

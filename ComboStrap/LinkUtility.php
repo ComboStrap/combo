@@ -892,13 +892,8 @@ EOF;
                     $url = wl($page->getDokuwikiId(), $this->dokuwikiUrl->getQueryParameters());
                 } else {
 
-                    $dokuwikiId = $page->getDokuwikiId();
-                    $permalink = PluginUtility::getConfValue(self::CONF_ENABLE_PERMALINK_GENERATION, self::CONF_ENABLE_PERMALINK_GENERATION_DEFAULT);
-                    if($permalink){
-                        $dokuwikiId .= DokuPath::PATH_SEPARATOR.$page->getPageId();
-                    }
+                    $url = $page->getCanonicalUrl();
 
-                    $url = wl($dokuwikiId, []);
                     /**
                      * The search term
                      * Code adapted found at {@link Doku_Renderer_xhtml::internallink()}

@@ -147,7 +147,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
 
                 $url = $attributes[self::ATTRIBUTE_URL];
                 if (empty($url)) {
-                    $url = $page->getCanonicalUrlOrDefault();
+                    $url = $page->getCanonicalUrl();
                 }
                 $disqusConfig .= "this.page.url = $url;";
 

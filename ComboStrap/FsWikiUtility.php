@@ -113,29 +113,17 @@ class FsWikiUtility
     }
 
     /**
-     * Return the page index of a namespace of null if it does not exist
+     * Return the page index of a namespace or null if it does not exist
      * ie the index.html
-     * @param $namespacePath
-     * @return string|null
+     * @param $namespacePath - in dokuwiki format
+     * @return string - the dokuwiki path
+     * @deprecated use {@link Page::getHomePageFromNamespace()} instead
      */
-    public static function getHomePagePath($namespacePath)
+    public static function getHomePagePath($namespacePath): ?string
     {
-        global $conf;
-
-        if ($namespacePath != ":") {
-            $namespacePath = $namespacePath . ":";
-        }
-
-        $startPageName = $conf['start'];
-        if (page_exists($namespacePath . $startPageName)) {
-            // start page inside namespace
-            return $namespacePath . $startPageName;
-        } elseif (page_exists($namespacePath . noNS(cleanID($namespacePath)))) {
-            // page named like the NS inside the NS
-            return $namespacePath . noNS(cleanID($namespacePath));
-        } elseif (page_exists($namespacePath)) {
-            // page like namespace exists
-            return substr($namespacePath, 0, -1);
+        $homePage = Page::getHomePageFromNamespace($namespacePath);
+        if($homePage->exists()){
+            return $homePage->getAbsolutePath();
         } else {
             return null;
         }

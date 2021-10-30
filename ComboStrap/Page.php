@@ -277,6 +277,30 @@ class Page extends DokuPath
 
     }
 
+    public static function getHomePageFromNamespace(string $namespacePath): Page
+    {
+        global $conf;
+
+        if ($namespacePath != ":") {
+            $namespacePath = $namespacePath . ":";
+        }
+
+        $startPageName = $conf['start'];
+        if (page_exists($namespacePath . $startPageName)) {
+            // start page inside namespace
+            return self::createPageFromId($namespacePath . $startPageName);
+        } elseif (page_exists($namespacePath . noNS(cleanID($namespacePath)))) {
+            // page named like the NS inside the NS
+            return self::createPageFromId($namespacePath . noNS(cleanID($namespacePath)));
+        } elseif (page_exists($namespacePath)) {
+            // page like namespace exists
+            return self::createPageFromId(substr($namespacePath, 0, -1));
+        } else {
+            // Does not exist but can be used by hierarchical function
+            return self::createPageFromId($namespacePath . $startPageName);
+        }
+    }
+
     /**
      * @param string $pageId
      * @return Page|null - a page or null, if the page id does not exist
@@ -401,14 +425,15 @@ class Page extends DokuPath
     /**
      * Does the page is known in the pages table
      * @return int
+     * @deprecated uses {@link Page::getDatabasePage()::exists()} instead
      */
     function existInDb(): int
     {
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM pages where id = ?", $this->getDokuwikiId());
-        $count = $sqlite->res2single($res);
-        $sqlite->res_close($res);
-        return $count;
+        if ($this->getDatabasePage()->exists()) {
+            return 1;
+        } else {
+            return 0;
+        }
 
     }
 
@@ -1238,7 +1263,7 @@ class Page extends DokuPath
                 $id = $this->getDokuwikiId();
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH:
-                $id = $this->getDokuwikiId() . DokuPath::PATH_SEPARATOR . $this->getPageId();
+                $id = $this->getDokuwikiId() . DokuPath::PATH_SEPARATOR . "x" . $this->getPageId() . "z";
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH:
                 $id = $this->getCanonicalOrDefault();
@@ -1249,8 +1274,14 @@ class Page extends DokuPath
             case Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG:
                 $id = Url::toSlug($this->getSlugOrDefault()) . DokuPath::PATH_SEPARATOR . $this->getPageId();
                 break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG:
+                $id = Url::toSlug($this->getSlugOrDefault()) . DokuPath::PATH_SEPARATOR . $this->getPageId();
+                while (($parent = $this->getParentPage()) != null) {
+                    $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
+                }
+                break;
             default:
-                LogUtility::msg("The canonical configuration ($confCanonicalType) value ($$canonicalType) was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
+                LogUtility::msg("The canonical configuration ($confCanonicalType) value ($canonicalType) was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
 
         }
         return wl($id, $urlParameters, true, '&');
@@ -1943,7 +1974,7 @@ class Page extends DokuPath
             /**
              * Takes the last names part
              */
-            $namesOriginal = $this->getNames();
+            $namesOriginal = $this->getDokuNames();
             /**
              * Delete the identical names at the end
              * To resolve this problem
@@ -2270,7 +2301,7 @@ class Page extends DokuPath
     private function getSlugOrDefault(): ?string
     {
         $slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
-        if($slug===null){
+        if ($slug === null) {
             $slug = $this->getDefaultSlug();
         }
         return $slug;
@@ -2279,6 +2310,19 @@ class Page extends DokuPath
     private function getDefaultSlug(): ?string
     {
         return $this->getTitleNotEmpty();
+    }
+
+    public function getParentPage(): ?Page
+    {
+
+        $names = $this->getDokuNames();
+        if (sizeof($names) == 0) {
+            return null;
+        }
+        $parentNames = array_slice($names, 0, sizeof($names) - 1);
+        $parentNamespaceId = implode($parentNames, DokuPath::PATH_SEPARATOR);
+        return self::getHomePageFromNamespace($parentNamespaceId);
+
     }
 
 

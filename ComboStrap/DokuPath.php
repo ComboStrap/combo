@@ -314,12 +314,12 @@ class DokuPath extends File
         /**
          * See also {@link noNSorNS}
          */
-        $names = $this->getNames();
+        $names = $this->getDokuNames();
         return $names[sizeOf($names) - 1];
     }
 
     public
-    function getNames()
+    function getDokuNames()
     {
         return preg_split("/" . self::PATH_SEPARATOR . "/", $this->getDokuwikiId());
     }
@@ -481,6 +481,8 @@ class DokuPath extends File
     {
         return auth_quickaclcheck($this->getDokuwikiId());
     }
+
+
 
 
 }

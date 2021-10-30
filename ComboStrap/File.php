@@ -122,12 +122,16 @@ class File
         unlink($this->getAbsoluteFileSystemPath());
     }
 
-    public function getParent()
+    public function getParent(): ?File
     {
-        return new File(pathinfo($this->path, PATHINFO_DIRNAME));
+        $absolutePath = pathinfo($this->path, PATHINFO_DIRNAME);
+        if(empty($absolutePath)){
+            return null;
+        }
+        return new File($absolutePath);
     }
 
-    public function createAsDirectory()
+    public function createAsDirectory(): bool
     {
 
         return mkdir($this->getAbsoluteFileSystemPath(), $mode = 0770, $recursive = true);

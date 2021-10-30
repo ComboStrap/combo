@@ -108,7 +108,6 @@ class LinkUtility
     const SEARCH_HIGHLIGHT_QUERY_PROPERTY = "s";
 
 
-
     /**
      * @var mixed
      */
@@ -886,10 +885,10 @@ EOF;
                  * action link (with the `do` property)
                  */
                 if ($this->dokuwikiUrl->hasQueryParameter("do")) {
-                    $url = wl($page->getDokuwikiId(), $this->dokuwikiUrl->getQueryParameters());
-                } else {
 
-                    $url = $page->getCanonicalUrl();
+                    $url = wl($page->getDokuwikiId(), $this->dokuwikiUrl->getQueryParameters());
+
+                } else {
 
                     /**
                      * The search term
@@ -897,21 +896,27 @@ EOF;
                      * We can't use the previous {@link wl function}
                      * because it encode too much
                      */
+                    $urlParams = [];
                     $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
                     if ($searchTerms != null) {
                         PluginUtility::getSnippetManager()->attachCssSnippetForBar("search");
                         if (is_array($searchTerms)) {
-
-                            $searchTerms = array_map('rawurlencode', $searchTerms);
                             /**
-                             * Multiple s[] is the way to create an array
+                             * To verify, do we really need the []
+                             * to get an array in php ?
                              */
-                            $url .= '&amp;s[]=' . join('&amp;s[]=', $searchTerms);
+                            array_map(function($element) use ($urlParams){
+                                $urlParams['s[]'] = $element;
+                            },$searchTerms);
 
                         } else {
-                            $url .= '&amp;s=' . rawurlencode($searchTerms);
+                            $urlParams['s'] = $searchTerms;
                         }
                     }
+
+                    $url = $page->getCanonicalUrl($urlParams);
+
+
                 }
                 if ($this->dokuwikiUrl->getFragment() != null) {
                     /**

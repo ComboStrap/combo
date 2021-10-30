@@ -107,9 +107,6 @@ class LinkUtility
      */
     const SEARCH_HIGHLIGHT_QUERY_PROPERTY = "s";
 
-    const CONF_ENABLE_PERMALINK_GENERATION = "enablePermalinkGeneration";
-    const CONF_ENABLE_PERMALINK_GENERATION_DEFAULT = 1;
-    const PERMALINK_SEPARATOR = "-";
 
 
     /**

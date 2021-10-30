@@ -101,12 +101,34 @@ class Page extends DokuPath
     public const LANDING_LAYOUT_VALUE = "landing";
     public const MEDIAN_LAYOUT_VALUE = "median";
     const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
-    const CANONICAL_VALUE = "page";
+
     const OLD_REGION_PROPERTY = "country";
     const ALIAS_ATTRIBUTE = "alias";
     const PAGE_ID_LENGTH = 14;
     // No separator, no uppercase to be consistent on the whole url
     const PAGE_ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+    /**
+     * The canonical for the canonical url
+     */
+    const CANONICAL_CANONICAL_URL = "canonical-url";
+    public const CONF_CANONICAL_URL_TYPE_DEFAULT = self::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH;
+    public const CONF_CANONICAL_URL_MODE_VALUE_SLUG = "slug";
+    public const CONF_CANONICAL_URL_TYPE = "canonicalUrlMode";
+    public const CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG = "hierarchical slug";
+    public const CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH = "permanent canonical path";
+    public const CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH = "permanent page path";
+    public const CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH = "canonical path";
+    public const CONF_CANONICAL_URL_MODE_VALUES = [
+        Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG,
+        Page::CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG,
+        Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH,
+        Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH,
+        Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH,
+        Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH,
+    ];
+    public const CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH = "page path";
+    public const SLUG_ATTRIBUTE = "slug";
 
 
     /**
@@ -327,9 +349,9 @@ class Page extends DokuPath
             }
 
             if ($scopePath !== ":") {
-                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getName();
+                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getDokuPathName();
             } else {
-                return DokuPath::PATH_SEPARATOR . $this->getName();
+                return DokuPath::PATH_SEPARATOR . $this->getDokuPathName();
             }
 
 
@@ -453,7 +475,7 @@ class Page extends DokuPath
                 $barsName[] = TplUtility::getSideKickSlotPageName();
             }
         }
-        return in_array($this->getName(), $barsName);
+        return in_array($this->getDokuPathName(), $barsName);
     }
 
     public
@@ -469,7 +491,7 @@ class Page extends DokuPath
     function isStartPage()
     {
         global $conf;
-        return $this->getName() == $conf['start'];
+        return $this->getDokuPathName() == $conf['start'];
     }
 
     /**
@@ -484,11 +506,10 @@ class Page extends DokuPath
     {
 
         $canonical = $this->getCanonical();
-        if (!empty($canonical)) {
-            return $canonical;
-        } else {
-            return $this->getDefaultCanonical();
+        if (empty($canonical)) {
+            $canonical = $this->getDefaultCanonical();
         }
+        return strtr($canonical, ':', '/');
 
     }
 
@@ -690,13 +711,13 @@ class Page extends DokuPath
     }
 
     /**
-     * @return string|null the title, or h1 if empty or the id if empty
+     * @return string the title, or h1 if empty or the id if empty
      */
     public
-    function getTitleNotEmpty(): ?string
+    function getTitleNotEmpty(): string
     {
         $pageTitle = $this->getTitle();
-        if ($pageTitle == null) {
+        if ($pageTitle === null) {
             return $this->getDefaultTitle();
         } else {
             return $pageTitle;
@@ -1089,11 +1110,11 @@ class Page extends DokuPath
     {
         global $conf;
         $startPageName = $conf['start'];
-        if ($this->getName() == $startPageName) {
+        if ($this->getDokuPathName() == $startPageName) {
             return true;
         } else {
             $namespaceName = noNS(cleanID($this->getNamespacePath()));
-            if ($namespaceName == $this->getName()) {
+            if ($namespaceName == $this->getDokuPathName()) {
                 /**
                  * page named like the NS inside the NS
                  * ie ns:ns
@@ -1176,9 +1197,10 @@ class Page extends DokuPath
      *   * in the link
      *   * in the canonical ref
      *   * in the site map
+     * @param array $urlParameters
      * @return string|null
      */
-    public function getCanonicalUrl(): ?string
+    public function getCanonicalUrl(array $urlParameters = []): ?string
     {
         /**
          * canonical url: name for ns + slug (title) + page id
@@ -1188,11 +1210,11 @@ class Page extends DokuPath
          * canonical url: page path + page id
          *
          *
-         *   - slug + page id
-         *   - hierarchical slug + page id
-         *   - canonical path + page id
+         *   - slug
+         *   - hierarchical slug
+         *   - permanent canonical path (page id)
          *   - canonical path
-         *   - page path + page id
+         *   - permanent page path (page id)
          *   - page path
          */
 
@@ -1203,19 +1225,37 @@ class Page extends DokuPath
             return DOKU_URL;
         }
 
-        if (!empty($this->getCanonicalOrDefault())) {
-            return Site::getBaseUrl() . strtr($this->getCanonicalOrDefault(), ':', '/');
+        $confCanonicalType = self::CONF_CANONICAL_URL_TYPE;
+        $confDefaultValue = self::CONF_CANONICAL_URL_TYPE_DEFAULT;
+        $canonicalType = PluginUtility::getConfValue($confCanonicalType, $confDefaultValue);
+        if (!in_array($canonicalType, self::CONF_CANONICAL_URL_MODE_VALUES)) {
+            $canonicalType = $confDefaultValue;
+            LogUtility::msg("The canonical configuration ($confCanonicalType) value ($canonicalType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
         }
+        $id = $this->getDokuwikiId();
+        switch ($canonicalType) {
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH:
+                $id = $this->getDokuwikiId();
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH:
+                $id = $this->getDokuwikiId() . DokuPath::PATH_SEPARATOR . $this->getPageId();
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH:
+                $id = $this->getCanonicalOrDefault();
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH:
+                $id = $this->getCanonicalOrDefault() . DokuPath::PATH_SEPARATOR . $this->getPageId();
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG:
+                $id = Url::toSlug($this->getSlugOrDefault()) . DokuPath::PATH_SEPARATOR . $this->getPageId();
+                break;
+            default:
+                LogUtility::msg("The canonical configuration ($confCanonicalType) value ($$canonicalType) was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
 
-        $permalink = PluginUtility::getConfValue(LinkUtility::CONF_ENABLE_PERMALINK_GENERATION, LinkUtility::CONF_ENABLE_PERMALINK_GENERATION_DEFAULT);
-        if ($permalink) {
-            $dokuwikiId .= DokuPath::PATH_SEPARATOR . $page->getPageId();
         }
+        return wl($id, $urlParameters, true, '&');
 
-        $url = wl($this->getDokuwikiId(), '', true, '&');
 
-
-        return $url;
     }
 
 
@@ -1948,7 +1988,7 @@ class Page extends DokuPath
     public
     function getDefaultPageName(): string
     {
-        $words = preg_split("/\s/", preg_replace("/-|_/", " ", $this->getName()));
+        $words = preg_split("/\s/", preg_replace("/-|_/", " ", $this->getDokuPathName()));
         $wordsUc = [];
         foreach ($words as $word) {
             $wordsUc[] = ucfirst($word);
@@ -2225,6 +2265,20 @@ class Page extends DokuPath
             $aliases = Alias::toAliasArray($aliases, $this);
         }
         return $aliases;
+    }
+
+    private function getSlugOrDefault(): ?string
+    {
+        $slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
+        if($slug===null){
+            $slug = $this->getDefaultSlug();
+        }
+        return $slug;
+    }
+
+    private function getDefaultSlug(): ?string
+    {
+        return $this->getTitleNotEmpty();
     }
 
 

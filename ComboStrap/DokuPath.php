@@ -306,10 +306,10 @@ class DokuPath extends File
 
     /**
      * The last part of the path
-     * (Not to confound with the {@link Page::getName()
+     * (Not to confound with the {@link Page::getDokuPathName()
      */
     public
-    function getName()
+    function getDokuPathName()
     {
         /**
          * See also {@link noNSorNS}

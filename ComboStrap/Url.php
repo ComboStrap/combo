@@ -6,6 +6,7 @@ namespace ComboStrap;
 
 class Url
 {
+    const SLUG_SEPARATOR = "-";
     /**
      * @var array|false|int|string|null
      */
@@ -23,6 +24,28 @@ class Url
         $this->urlComponents = parse_url($url);
         parse_str($this->urlComponents['query'], $queryKeys);
         $this->query = $queryKeys;
+    }
+
+    const RESERVED_WORDS = ['!', '#', '$', '&', '\'', '(', ')', '*', '+', ',', '/', ':', ';', '=', '?', '@', '[', ']'];
+
+    /**
+     * A text to a slug
+     * @param $string -  a string
+     * @return string - a slug that can go into a url
+     */
+    public static function toSlug($string): string
+    {
+        // Reserved word to space
+        $slugWithoutReservedWord = str_replace(self::RESERVED_WORDS, " ", $string);
+        // Doubles spaces to space
+        $slugWithoutDoubleSpace = preg_replace("/\s{2,}/", " ", $slugWithoutReservedWord);
+        // Trim space
+        $slugTrimmed = trim($slugWithoutDoubleSpace);
+        // Space to separator
+        $slugWithoutSpace = str_replace(" ", self::SLUG_SEPARATOR, $slugTrimmed);
+        // No double separator
+        $slugWithoutDoubleSeparator = preg_replace("/" . self::SLUG_SEPARATOR . "{2,}/", self::SLUG_SEPARATOR, $slugWithoutSpace);
+        return urlencode($slugWithoutDoubleSeparator);
     }
 
     function getQuery()

@@ -208,11 +208,11 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
         /**
-         * {@link LinkUtility::CONF_ENABLE_PERMALINK_GENERATION}
+         * {@link Page::CONF_CANONICAL_URL_TYPE}
          */
 
 
-        $lastPart = $targetPage->getName();
+        $lastPart = $targetPage->getDokuPathName();
         if (strlen($lastPart) === Page::PAGE_ID_LENGTH) {
             $page = Page::getPageFromPageId($lastPart);
             if ($page != null && $page->exists()) {

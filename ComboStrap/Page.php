@@ -163,6 +163,11 @@ class Page extends DokuPath
      * @var string
      */
     private $requestedId;
+    /**
+     * @var DatabasePage
+     */
+    private $databasePage;
+    private $canonical;
 
     /**
      * Page constructor.
@@ -211,18 +216,18 @@ class Page extends DokuPath
 
     }
 
-    public static function createPageFromCurrentId()
+    public static function createPageFromCurrentId(): Page
     {
         global $ID;
         return self::createPageFromId($ID);
     }
 
-    public static function createPageFromId($id)
+    public static function createPageFromId($id): Page
     {
         return new Page(DokuPath::PATH_SEPARATOR . $id);
     }
 
-    public static function createPageFromNonQualifiedPath($pathOrId)
+    public static function createPageFromNonQualifiedPath($pathOrId): Page
     {
         global $ID;
         $qualifiedId = $pathOrId;
@@ -244,7 +249,7 @@ class Page extends DokuPath
     /**
      * @return Page - the requested page
      */
-    public static function createPageFromRequestedPage()
+    public static function createPageFromRequestedPage(): Page
     {
         $mainPageId = FsWikiUtility::getMainPageId();
         return self::createPageFromId($mainPageId);
@@ -359,8 +364,7 @@ class Page extends DokuPath
         return substr($this->getLogicalPath(), 1);
     }
 
-    public
-    function getLogicalPath()
+    public function getLogicalPath(): string
     {
 
         /**
@@ -396,8 +400,7 @@ class Page extends DokuPath
     }
 
 
-    public
-    static function createRequestedPageFromEnvironment()
+    public static function createRequestedPageFromEnvironment(): ?Page
     {
         $pageId = PluginUtility::getPageId();
         if ($pageId != null) {
@@ -406,26 +409,6 @@ class Page extends DokuPath
             LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
             return null;
         }
-    }
-
-
-    /**
-     * Does the page is known in the pages table
-     * @return array
-     */
-    function getRow()
-    {
-
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT * FROM pages where id = ?", $this->getDokuwikiId());
-        if (!$res) {
-            throw new RuntimeException("An exception has occurred with the select pages query");
-        }
-        $res2arr = $sqlite->res2row($res);
-        $sqlite->res_close($res);
-        return $res2arr;
-
-
     }
 
 
@@ -488,7 +471,10 @@ class Page extends DokuPath
     public function setCanonical($canonical): Page
     {
         $canonical = DokuPath::toValidAbsolutePath($canonical);
-        $this->setMetadata(Page::CANONICAL_PROPERTY, $canonical);
+        if($canonical!=$this->canonical) {
+            $this->canonical = $canonical;
+            $this->setMetadata(Page::CANONICAL_PROPERTY, $this->canonical);
+        }
         return $this;
     }
 
@@ -566,6 +552,15 @@ class Page extends DokuPath
 
     }
 
+    /**
+     * Note that the data may be cached  without our consent
+     *
+     * The method {@link p_get_metadata()} does it with this logic
+     * ```
+     * $cache = ($ID == $id);
+     * $meta = p_read_metadata($id, $cache);
+     * ```
+     */
     public
     function updateMemoryMetaFromDisk(): Page
     {
@@ -971,6 +966,10 @@ class Page extends DokuPath
     }
 
 
+    /**
+     * @param $key
+     * @return mixed|null
+     */
     private
     function getPersistentMetadata($key)
     {
@@ -1826,7 +1825,10 @@ class Page extends DokuPath
     public
     function getDatabasePage(): DatabasePage
     {
-        return new DatabasePage($this);
+        if ($this->databasePage == null) {
+            $this->databasePage = new DatabasePage($this);
+        }
+        return $this->databasePage;
     }
 
     public
@@ -1910,7 +1912,7 @@ class Page extends DokuPath
         /**
          * Database update
          */
-        $this->getDatabasePage()->upsertScalarAttributes($attributes);
+        $this->getDatabasePage()->replicateMetaAttributes();
 
     }
 

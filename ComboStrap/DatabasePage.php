@@ -17,24 +17,6 @@ class DatabasePage
      */
     public const DATE_REPLICATION = "date_replication";
 
-    /**
-     * Attribute that are scalar / modifiable in the database
-     * (not aliases or json data for instance)
-     */
-    public const SCALAR_ATTRIBUTES =
-        [
-            Analytics::DESCRIPTION,
-            Analytics::CANONICAL,
-            Analytics::NAME,
-            Analytics::TITLE,
-            Analytics::H1,
-            Publication::DATE_PUBLISHED,
-            Analytics::DATE_START,
-            Analytics::DATE_END,
-            Page::REGION_META_PROPERTY,
-            Page::LANG_META_PROPERTY,
-            Page::TYPE_META_PROPERTY
-        ];
 
     /**
      * The list of attributes that are set
@@ -259,6 +241,11 @@ class DatabasePage
         if (!$res) {
             LogUtility::msg("Something went wrong when deleting the page ({$this->page})");
         }
+        $this->rowId = null;
+        $this->description = null;
+        $this->pageName = null;
+        $this->json = null;
+        $this->canonical = null;
 
     }
 
@@ -326,9 +313,7 @@ class DatabasePage
     function buildDatabaseObject(): void
     {
 
-        if ($this->sqlite === null) {
-            return;
-        }
+        if ($this->sqlite === null) return;
 
         $databaseFields = implode(self::BUILD_ATTRIBUTES, ", ");
         $page = $this->page;
@@ -520,29 +505,14 @@ class DatabasePage
         /**
          * Same data as {@link Page::getMetadataForRendering()}
          */
-        $record = array(
-            Analytics::CANONICAL => $page->getCanonicalOrDefault(),
-            self::ANALYTICS_ATTRIBUTE => $analyticsJsonAsString,
-            'PATH' => $page->getAbsolutePath(),
-            Analytics::NAME => $page->getPageNameNotEmpty(),
-            Analytics::TITLE => $page->getTitleNotEmpty(),
-            Analytics::H1 => $page->getH1NotEmpty(),
-            Analytics::DATE_CREATED => $page->getCreatedDateAsString(),
-            Analytics::DATE_MODIFIED => $page->getModifiedDateAsString(),
-            Publication::DATE_PUBLISHED => $page->getPublishedTimeAsString(),
-            Analytics::DATE_START => $page->getEndDateAsString(),
-            Analytics::DATE_END => $page->getStartDateAsString(),
-            Page::REGION_META_PROPERTY => $page->getRegionOrDefault(),
-            Page::LANG_META_PROPERTY => $page->getLangOrDefault(),
-            'IS_LOW_QUALITY' => ($page->isLowQualityPage() === true ? 1 : 0),
-            Page::TYPE_META_PROPERTY => $page->getTypeNotEmpty(),
-            'WORD_COUNT' => $analyticsJsonAsArray[Analytics::WORD_COUNT],
-            'BACKLINK_COUNT' => $this->getBacklinkCount(),
-            'IS_HOME' => ($page->isHomePage() === true ? 1 : 0),
-            Page::PAGE_ID_ATTRIBUTE => $page->getPageId(),
-            self::DATE_REPLICATION => $replicationDate,
-            'ID' => $page->getDokuwikiId(),
-        );
+        $record = $this->getMetaRecord();
+        $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
+        $record['IS_LOW_QUALITY'] = ($page->isLowQualityPage() === true ? 1 : 0);
+        $record['WORD_COUNT'] = $analyticsJsonAsArray[Analytics::WORD_COUNT];
+        $record['BACKLINK_COUNT'] = $this->getBacklinkCount();
+        $record['IS_HOME'] = ($page->isHomePage() === true ? 1 : 0);
+        $record[self::DATE_REPLICATION] = $replicationDate;
+
 
         return $this->upsertAttributes($record);
 
@@ -656,21 +626,16 @@ EOF;
     /**
      * @param array $attributes
      * @return bool when an update as occurred
+     *
+     * Attribute that are scalar / modifiable in the database
+     * (not aliases or json data for instance)
+     *
      */
-    public function upsertScalarAttributes(array $attributes): bool
+    public function replicateMetaAttributes(): bool
     {
-        $databaseFields = [];
-        foreach ($attributes as $key => $value) {
-            $lower = strtolower($key);
-            if (in_array($lower, DatabasePage::SCALAR_ATTRIBUTES)) {
-                $databaseFields[$key] = $value;
-            }
-        }
-        if (!empty($databaseFields)) {
-            return $this->upsertAttributes($databaseFields);
-        } else {
-            return false;
-        }
+
+        return $this->upsertAttributes($this->getMetaRecord());
+
     }
 
     private function upsertAttributes(array $attributes): bool
@@ -989,6 +954,47 @@ EOF;
             }
         }
 
+    }
+
+    public function refresh(): DatabasePage
+    {
+
+        $this->buildDatabaseObject();
+        return $this;
+
+    }
+
+    /**
+     * @return array - an array of the fix page metadata (ie not derived)
+     * Therefore quick to insert/update
+     *
+     */
+    private function getMetaRecord(): array
+    {
+        return array(
+            Analytics::CANONICAL => $this->page->getCanonicalOrDefault(),
+            'PATH' => $this->page->getAbsolutePath(),
+            Analytics::NAME => $this->page->getPageNameNotEmpty(),
+            Analytics::TITLE => $this->page->getTitleNotEmpty(),
+            Analytics::H1 => $this->page->getH1NotEmpty(),
+            Analytics::DATE_CREATED => $this->page->getCreatedDateAsString(),
+            Analytics::DATE_MODIFIED => $this->page->getModifiedDateAsString(),
+            Publication::DATE_PUBLISHED => $this->page->getPublishedTimeAsString(),
+            Analytics::DATE_START => $this->page->getEndDateAsString(),
+            Analytics::DATE_END => $this->page->getStartDateAsString(),
+            Page::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
+            Page::LANG_META_PROPERTY => $this->page->getLangOrDefault(),
+            Page::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
+            Page::PAGE_ID_ATTRIBUTE => $this->page->getPageId(),
+            'ID' => $this->page->getDokuwikiId(),
+        );
+    }
+
+    public function deleteIfExist()
+    {
+        if ($this->exists()) {
+            $this->delete();
+        }
     }
 
 

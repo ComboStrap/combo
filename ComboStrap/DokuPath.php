@@ -204,9 +204,9 @@ class DokuPath extends File
 
     /**
      * @param $url - a URL path http://whatever/hello/my/lord (The canonical)
-     * @return string - a dokuwiki Id hello:my:lord
+     * @return DokuPath - a dokuwiki Id hello:my:lord
      */
-    public static function createFromUrl($url)
+    public static function createFromUrl($url): DokuPath
     {
         // Replace / by : and suppress the first : because the global $ID does not have it
         $parsedQuery = parse_url($url, PHP_URL_QUERY);

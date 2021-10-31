@@ -1985,7 +1985,7 @@ class Page extends DokuPath
     }
 
     public
-    function getDefaultTitle()
+    function getDefaultTitle(): ?string
     {
         if (!empty($this->getH1())) {
             return $this->getH1();
@@ -2446,9 +2446,10 @@ class Page extends DokuPath
 
     }
 
-    public function flushMeta()
+    public function flushMeta(): Page
     {
         p_save_metadata($this->getDokuwikiId(), $this->metadatas);
+        return $this;
     }
 
     /**

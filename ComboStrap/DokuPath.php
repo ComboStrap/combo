@@ -309,8 +309,9 @@ class DokuPath extends File
      */
     public static function toValidAbsolutePath($path): string
     {
+        $path = cleanID($path);
         DokuPath::addRootSeparatorIfNotPresent($path);
-        return strtolower($path);
+        return $path;
     }
 
 

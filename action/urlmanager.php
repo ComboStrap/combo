@@ -93,6 +93,18 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         return substr($refreshHeader, strlen(action_plugin_combo_urlmanager::LOCATION_HEADER_PREFIX));
     }
 
+    /**
+     * Determine if the request should be banned based on the id
+     *
+     * @param string $id
+     * @return bool
+     *
+     * See also {@link https://perishablepress.com/7g-firewall/#features}
+     * for blocking rules on http request data such as:
+     *   * query_string
+     *   * user_agent,
+     *   * remote host
+     */
     public static function isShadowBanned(string $id): bool
     {
         /**

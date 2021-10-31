@@ -19,9 +19,34 @@ class DatabasePage
 
     /**
      * Attribute that are scalar / modifiable in the database
+     * (not aliases or json data for instance)
      */
     public const SCALAR_ATTRIBUTES =
         [
+            Analytics::DESCRIPTION,
+            Analytics::CANONICAL,
+            Analytics::NAME,
+            Analytics::TITLE,
+            Analytics::H1,
+            Publication::DATE_PUBLISHED,
+            Analytics::DATE_START,
+            Analytics::DATE_END,
+            Page::REGION_META_PROPERTY,
+            Page::LANG_META_PROPERTY,
+            Page::TYPE_META_PROPERTY
+        ];
+
+    /**
+     * The list of attributes that are set
+     * at build time
+     * used in the build function {@link DatabasePage::buildDatabaseObject()}
+     * to build the sql
+     */
+    private const BUILD_ATTRIBUTES =
+        [
+            self::ROWID,
+            "ID",
+            self::ANALYTICS_ATTRIBUTE,
             Analytics::DESCRIPTION,
             Analytics::CANONICAL,
             Analytics::NAME,
@@ -50,6 +75,17 @@ class DatabasePage
      * @var \helper_plugin_sqlite|null
      */
     private $sqlite;
+    private $rowId;
+    /**
+     * @var mixed
+     */
+    private $description;
+    /**
+     * @var mixed
+     */
+    private $canonical;
+    private $json;
+    private $pageName;
 
     /**
      * Replicate constructor.
@@ -62,6 +98,8 @@ class DatabasePage
          * Persist on the DB
          */
         $this->sqlite = Sqlite::getSqlite();
+
+        $this->buildDatabaseObject();
 
     }
 
@@ -231,12 +269,7 @@ class DatabasePage
     function getAnalyticsData(): ?Json
     {
 
-        $jsonString = $this->getAttribute(self::ANALYTICS_ATTRIBUTE);
-        if ($jsonString !== null) {
-            return Json::createFromString($jsonString);
-        } else {
-            return null;
-        }
+        return $this->json;
 
     }
 
@@ -288,23 +321,23 @@ class DatabasePage
      *
      * If the first element is null, no row was found in the database
      *
-     * @return int|null
      */
     private
-    function getRowId(): ?int
+    function buildDatabaseObject(): void
     {
 
         if ($this->sqlite === null) {
-            return null;
+            return;
         }
 
+        $databaseFields = implode(self::BUILD_ATTRIBUTES, ", ");
         $page = $this->page;
         // Do we have a page attached to this page id
         $pageId = $page->getPageId();
         $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
-        $res = $this->sqlite->query("select ROWID, ID from pages where $pageIdAttribute = ?", $pageId);
+        $res = $this->sqlite->query("select $databaseFields from pages where $pageIdAttribute = ?", $pageId);
         if (!$res) {
-            LogUtility::msg("An exception has occurred with the page search from UUID");
+            LogUtility::msg("An exception has occurred with the page search from page id");
         }
         $rows = $this->sqlite->res2arr($res);
         $this->sqlite->res_close($res);
@@ -316,7 +349,8 @@ class DatabasePage
                 if ($id !== $page->getDokuwikiId()) {
                     LogUtility::msg("The page ($page) and the page ($id) have the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
                 }
-                return intval($rows[0][self::ROWID]);
+                $this->buildDatabaseObjectFields($rows[0]);
+                return;
             default:
                 $existingPages = implode(", ", $rows);
                 LogUtility::msg("The pages ($existingPages) have all the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
@@ -340,7 +374,7 @@ class DatabasePage
                     if ($id !== $page->getDokuwikiId()) {
                         LogUtility::msg("The page ($page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
                     }
-                    return intval($rows[0][self::ROWID]);
+                    return;
                 default:
                     $existingPages = [];
                     foreach ($rows as $row) {
@@ -366,7 +400,7 @@ class DatabasePage
                         }
                     }
                     if (sizeof($existingPages) === 1) {
-                        return $existingPages[0][self::ROWID];
+                        return;
                     } else {
                         $existingPages = implode(", ", $existingPages);
                         LogUtility::msg("The existing pages ($existingPages) have all the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
@@ -391,7 +425,7 @@ class DatabasePage
                 if ($id !== $page->getDokuwikiId()) {
                     LogUtility::msg("The page ($page) and the page ($id) have the same path ($path)", LogUtility::LVL_MSG_ERROR);
                 }
-                return intval($rows[0][self::ROWID]);
+                return;
             default:
                 $existingPages = [];
                 foreach ($rows as $row) {
@@ -406,7 +440,7 @@ class DatabasePage
                     }
                 }
                 if (sizeof($existingPages) === 1) {
-                    return intval($existingPages[0][self::ROWID]);
+                    return;
                 } else {
                     $existingPages = implode(", ", $existingPages);
                     LogUtility::msg("The existing pages ($existingPages) have all the same path ($path)", LogUtility::LVL_MSG_ERROR);
@@ -430,7 +464,7 @@ class DatabasePage
             case 0:
                 break;
             case 1:
-                return intval($rows[0][self::ROWID]);
+                return;
             default:
                 LogUtility::msg("The database has " . sizeof($rows) . " records with the same id ($id)", LogUtility::LVL_MSG_ERROR);
                 break;
@@ -440,7 +474,6 @@ class DatabasePage
         /**
          * No rows found
          */
-        return null;
 
     }
 
@@ -665,7 +698,7 @@ EOF;
          *
          * If the primary key is null, no record was found
          */
-        $rowId = $this->getRowId();
+        $rowId = $this->rowId;
         if ($rowId != null) {
             /**
              * We just add the primary key
@@ -719,36 +752,18 @@ EOF;
 
     public function getDescription()
     {
-        return $this->getAttribute(Analytics::DESCRIPTION);
+        return $this->description;
     }
 
-    private function getAttribute(string $attribute)
-    {
-        if ($this->sqlite === null) {
-            return null;
-        }
-        $res = $this->sqlite->query("select $attribute from pages where ID = ? ", $this->page->getDokuwikiId());
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the retrieve of the attribute $attribute for the page ({$this->page}) selection query");
-        }
-        $value = $this->sqlite->res2single($res);
-        $this->sqlite->res_close($res);
-        if ($value === false) {
-            // Sqlite does not have the false datatype (ouff)
-            return null;
-        } else {
-            return $value;
-        }
-    }
 
     public function getPageName()
     {
-        return $this->getAttribute(Page::NAME_PROPERTY);
+        return $this->pageName;
     }
 
     public function exists(): bool
     {
-        return $this->getRowId() !== null;
+        return $this->rowId !== null;
     }
 
     public function moveTo($targetId)
@@ -945,6 +960,34 @@ EOF;
 
     public function getCanonical()
     {
+        return $this->canonical;
+    }
+
+    /**
+     * Set the field to their values
+     * @param $row
+     */
+    private function buildDatabaseObjectFields($row)
+    {
+        foreach ($row as $key => $value) {
+            $key = strtolower($key);
+            switch ($key) {
+                case self::ROWID:
+                    $this->rowId = $value;
+                    continue 2;
+                case PAGE::DESCRIPTION_PROPERTY:
+                    $this->description = $value;
+                    continue 2;
+                case PAGE::CANONICAL_PROPERTY:
+                    $this->canonical = $value;
+                    continue 2;
+                case self::ANALYTICS_ATTRIBUTE:
+                    $this->json = Json::createFromString($value);
+                    continue 2;
+                case Page::NAME_PROPERTY:
+                    $this->pageName = $value;
+            }
+        }
 
     }
 

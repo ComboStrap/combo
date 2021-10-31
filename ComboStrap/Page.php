@@ -8,7 +8,6 @@ use DateTime;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Extension\SyntaxPlugin;
-use Ramsey\Uuid\Uuid;
 use renderer_plugin_combo_analytics;
 use RuntimeException;
 use syntax_plugin_combo_frontmatter;
@@ -35,6 +34,14 @@ class Page extends DokuPath
     const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
 
     const FIRST_IMAGE_META_RELATION = "firstimage";
+
+    const NOT_MODIFIABLE_METAS = [
+        "date",
+        "user",
+        "last_change",
+        "creator",
+        "contributor"
+    ];
 
     /**
      * An indicator in the meta
@@ -303,7 +310,7 @@ class Page extends DokuPath
 
     /**
      * @param string $pageId
-     * @return Page|null - a page or null, if the page id does not exist
+     * @return Page|null - a page or null, if the page id does not exist in the database
      */
     public static function getPageFromPageId(string $pageId): ?Page
     {
@@ -315,7 +322,7 @@ class Page extends DokuPath
         $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
         $res = $sqlite->query("select * from pages where $pageIdAttribute = ? ", $pageId);
         if (!$res) {
-            LogUtility::msg("An exception has occurred with the UUID pages selection");
+            LogUtility::msg("An exception has occurred with the $pageIdAttribute pages selection");
         }
         $res2arr = $sqlite->res2arr($res);
         $sqlite->res_close($res);
@@ -478,9 +485,9 @@ class Page extends DokuPath
     }
 
 
-    public
-    function setCanonical($canonical): Page
+    public function setCanonical($canonical): Page
     {
+        $canonical = DokuPath::toValidAbsolutePath($canonical);
         $this->setMetadata(Page::CANONICAL_PROPERTY, $canonical);
         return $this;
     }
@@ -1828,96 +1835,85 @@ class Page extends DokuPath
         return Identity::isWriter();
     }
 
-    public
-    function upsertMetadata($attributes)
+    /**
+     * Frontmatter
+     * @param $attributes
+     */
+    public function upsertMetadataFromAssociativeArray($attributes)
     {
 
         /**
-         * Validate the dates and get them in iso format
+         * Attribute to set
+         * The set function modify the value to be valid
+         * or does not store them at all
          */
         foreach ($attributes as $key => $value) {
-            $lowerKey = strtolower($key);
-            if (strpos($lowerKey, 'date') === 0) {
-                $dateObject = Iso8601Date::createFromString($value);
-                if (!$dateObject->isValidDateEntry()) {
-                    LogUtility::msg("The date value ($value) for the key ($key) is not a valid date supported.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-                    unset($attributes[$key]);
-                    continue;
-                }
+
+            $lowerKey = trim(strtolower($key));
+            if (in_array($lowerKey, self::NOT_MODIFIABLE_METAS)) {
+                LogUtility::msg("The metadata ($lowerKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
+                continue;
+            }
+            switch ($lowerKey) {
+                case self::CANONICAL_PROPERTY:
+                    $this->setCanonical($value);
+                    continue 2;
+                case Analytics::DATE_END:
+                    $this->setEndDate($value);
+                    continue 2;
+                case Analytics::DATE_START:
+                    $this->setStartDate($value);
+                    continue 2;
+                case Publication::DATE_PUBLISHED:
+                    $this->setPublishedDate($value);
+                    continue 2;
+                case Page::DESCRIPTION_PROPERTY:
+                    $this->setDescription($value);
+                    continue 2;
+                case Page::NAME_PROPERTY:
+                    $this->setPageName($value);
+                    continue 2;
+                case Page::TITLE_META_PROPERTY:
+                    $this->setTitle($value);
+                    continue 2;
+                case Analytics::H1:
+                    $this->setH1($value);
+                    continue 2;
+                case Page::TYPE_META_PROPERTY:
+                    $this->setPageType($value);
+                    continue 2;
+                case \action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY:
+                    $this->setJsonLd($value);
+                    continue 2;
+                case Page::REGION_META_PROPERTY:
+                    $this->setRegion($value);
+                    continue 2;
+                case Page::LANG_META_PROPERTY:
+                    $this->setLang($value);
+                    continue 2;
+                case Page::LAYOUT_PROPERTY:
+                    $this->setLayout($value);
+                    continue 2;
+                case Page::ALIAS_ATTRIBUTE:
+                    $aliases = Alias::toAliasArray($value, $this);
+                    $this->setAliases($aliases);
+                    continue 2;
+                default:
+                    LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_WARNING);
+                    $this->setMetadata($key, $value);
+                    continue 2;
             }
 
-            if ($lowerKey === Page::CANONICAL_PROPERTY) {
-                // Canonical should be lowercase
-                $attributes[$key] = strtolower($value);
-            }
 
         }
-
-        /**
-         * File system metadata
-         */
-        $this->upsertModifiableMetadata($attributes);
 
         /**
          * Database update
          */
-        $this->getDatabasePage()->upsertModifiableAttributes($attributes);
+        $this->getDatabasePage()->upsertScalarAttributes($attributes);
 
     }
 
-    /**
-     * Modify metadata in `.meta` local file
-     * @param $attributes
-     */
-    private
-    function upsertModifiableMetadata($attributes)
-    {
-        $notModifiableMeta = [
-            "date",
-            "user",
-            "last_change",
-            "creator",
-            "contributor"
-        ];
-
-
-        foreach ($attributes as $key => $value) {
-
-            $lowerCaseKey = trim(strtolower($key));
-
-            // Not modifiable metadata
-            if (in_array($lowerCaseKey, $notModifiableMeta)) {
-                LogUtility::msg("The metadata ($lowerCaseKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
-                continue;
-            }
-
-            switch ($lowerCaseKey) {
-
-                case Page::DESCRIPTION_PROPERTY:
-                    /**
-                     * Overwrite also the actual description
-                     */
-                    p_set_metadata($this->getDokuwikiId(), array(Page::DESCRIPTION_PROPERTY => array(
-                        "abstract" => $value,
-                        "origin" => syntax_plugin_combo_frontmatter::CANONICAL
-                    )));
-                    /**
-                     * Continue because
-                     * the description value was already stored
-                     * We don't want to override it
-                     * And continue 2 because continue == break in a switch
-                     */
-                    continue 2;
-
-
-            }
-            // Set the value persistently
-            p_set_metadata($this->getDokuwikiId(), array($lowerCaseKey => $value));
-
-        }
-
-
-    }
 
     public
     function isRootHomePage(): bool
@@ -2291,7 +2287,7 @@ class Page extends DokuPath
              * To validate the migration we set a value
              * (the array may be empty)
              */
-            $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
+            $this->setAliases($aliases);
         } else {
             $aliases = Alias::toAliasArray($aliases, $this);
         }
@@ -2323,6 +2319,85 @@ class Page extends DokuPath
         $parentNamespaceId = implode($parentNames, DokuPath::PATH_SEPARATOR);
         return self::getHomePageFromNamespace($parentNamespaceId);
 
+    }
+
+    public function setDescription($description): Page
+    {
+        /**
+         * Dokuwiki has already a description
+         * We use it to be conform
+         */
+        $this->setMetadata(Page::DESCRIPTION_PROPERTY, array(
+            Page::DESCRIPTION_PROPERTY => array(
+                "abstract" => $description,
+                "origin" => syntax_plugin_combo_frontmatter::CANONICAL
+            )));
+        return $this;
+    }
+
+    public function setEndDate($value)
+    {
+        if (Iso8601Date::isValid($value)) {
+            $this->setMetadata(Analytics::DATE_END, $value);
+        } else {
+            LogUtility::msg("The end date value ($value) is not a valid date.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+        }
+    }
+
+    public function setStartDate($value)
+    {
+        if (Iso8601Date::isValid($value)) {
+            $this->setMetadata(Analytics::DATE_START, $value);
+        } else {
+            LogUtility::msg("The start date value ($value) is not a valid date.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+        }
+    }
+
+    public function setPublishedDate($value)
+    {
+        if (Iso8601Date::isValid($value)) {
+            $this->setMetadata(Publication::DATE_PUBLISHED, $value);
+        } else {
+            LogUtility::msg("The published date value ($value) is not a valid date.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+        }
+    }
+
+    public function setPageName($value)
+    {
+        $this->setMetadata(Page::NAME_PROPERTY, $value);
+    }
+
+    public function setTitle($value)
+    {
+        $this->setMetadata(Page::TITLE_META_PROPERTY, $value);
+    }
+
+    public function setH1($value)
+    {
+        $this->setMetadata(Analytics::H1, $value);
+    }
+
+    public function setRegion($value)
+    {
+        $this->setMetadata(Page::REGION_META_PROPERTY, $value);
+    }
+
+    public function setLang($value)
+    {
+        $this->setMetadata(Page::LANG_META_PROPERTY, $value);
+    }
+
+    public function setLayout($value)
+    {
+        $this->setMetadata(Page::LAYOUT_PROPERTY, $value);
+    }
+
+    /**
+     * @param Alias[] $aliases
+     */
+    private function setAliases(array $aliases)
+    {
+        $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
     }
 
 

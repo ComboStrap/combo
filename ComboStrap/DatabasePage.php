@@ -18,9 +18,9 @@ class DatabasePage
     public const DATE_REPLICATION = "date_replication";
 
     /**
-     * Attribute that are modifiable in the database
+     * Attribute that are scalar / modifiable in the database
      */
-    public const MODIFIABLE_ATTRIBUTES =
+    public const SCALAR_ATTRIBUTES =
         [
             Analytics::DESCRIPTION,
             Analytics::CANONICAL,
@@ -299,7 +299,7 @@ class DatabasePage
         }
 
         $page = $this->page;
-        // Do we have a page attached to this uuid
+        // Do we have a page attached to this page id
         $pageId = $page->getPageId();
         $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
         $res = $this->sqlite->query("select ROWID, ID from pages where $pageIdAttribute = ?", $pageId);
@@ -314,16 +314,16 @@ class DatabasePage
             case 1:
                 $id = $rows[0]["ID"];
                 if ($id !== $page->getDokuwikiId()) {
-                    LogUtility::msg("The page ($page) and the page ($id) have the same UUID ($pageId)", LogUtility::LVL_MSG_ERROR);
+                    LogUtility::msg("The page ($page) and the page ($id) have the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
                 }
                 return intval($rows[0][self::ROWID]);
             default:
                 $existingPages = implode(", ", $rows);
-                LogUtility::msg("The pages ($existingPages) have all the same UUID ($pageId)", LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("The pages ($existingPages) have all the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
         }
 
         // Do we have a page attached to the canonical
-        $canonical = $page->getCanonicalOrDefault();
+        $canonical = $page->getCanonical();
         if ($canonical != null) {
             $res = $this->sqlite->query("select ROWID, ID from pages where CANONICAL = ?", $canonical);
             if (!$res) {
@@ -345,17 +345,10 @@ class DatabasePage
                     $existingPages = [];
                     foreach ($rows as $row) {
                         $id = $row["ID"];
-                        $pageInDb = Page::createPageFromId($id);
-                        if (!$pageInDb->exists()) {
+                        $duplicatePage = Page::createPageFromId($id);
+                        if (!$duplicatePage->exists()) {
 
-                            /**
-                             * Refactoring / Deprecated
-                             * It should never occurs anymore
-                             * @deprecated 2012-10-28
-                             */
-                            $this->delete();
-                            $page->addAndGetAlias($id);
-                            $this->addAlias($id);
+                            $this->deleteAndAddDuplicateAsRedirect($id);
 
                         } else {
 
@@ -399,18 +392,14 @@ class DatabasePage
                     LogUtility::msg("The page ($page) and the page ($id) have the same path ($path)", LogUtility::LVL_MSG_ERROR);
                 }
                 return intval($rows[0][self::ROWID]);
-                break;
             default:
                 $existingPages = [];
                 foreach ($rows as $row) {
-                    $pageInDb = Page::createPageFromId($row);
-                    if (!$pageInDb->exists()) {
+                    $id = $row["ID"];
+                    $duplicatePage = Page::createPageFromId($id);
+                    if (!$duplicatePage->exists()) {
 
-                        /**
-                         * TODO: Handle a page move with the move plugin instead
-                         */
-                        $this->delete();
-                        $page->persistPageAlias($canonical, $row);
+                        $this->deleteAndAddDuplicateAsRedirect($id);
 
                     } else {
                         $existingPages[] = $row;
@@ -427,7 +416,8 @@ class DatabasePage
 
         /**
          * Do we have a page attached to this ID
-         * @deprecated
+         * @deprecated for the page id
+         * Last resort
          */
         $id = $page->getDokuwikiId();
         $res = $this->sqlite->query("select ROWID, ID from pages where ID = ?", $id);
@@ -634,12 +624,12 @@ EOF;
      * @param array $attributes
      * @return bool when an update as occurred
      */
-    public function upsertModifiableAttributes(array $attributes): bool
+    public function upsertScalarAttributes(array $attributes): bool
     {
         $databaseFields = [];
         foreach ($attributes as $key => $value) {
             $lower = strtolower($key);
-            if (in_array($lower, DatabasePage::MODIFIABLE_ATTRIBUTES)) {
+            if (in_array($lower, DatabasePage::SCALAR_ATTRIBUTES)) {
                 $databaseFields[$key] = $value;
             }
         }
@@ -846,7 +836,7 @@ EOF;
     {
 
         $row = array(
-            "UUID" => $this->page->getPageId(),
+            Page::PAGE_ID_ATTRIBUTE => $this->page->getPageId(),
             "PATH" => $alias->getPath(),
             "TYPE" => $alias->getType()
         );
@@ -936,6 +926,25 @@ EOF;
             LogUtility::msg("There was a problem during the alias delete. $message. : {$errorInfoAsString}");
         }
         return $this;
+
+    }
+
+    /**
+     * Redirect are now added during a move
+     * Not when a duplicate is found.
+     * With the advent of the page id, it should never occurs anymore
+     * @param $id
+     * @deprecated 2012-10-28
+     */
+    private function deleteAndAddDuplicateAsRedirect($id): void
+    {
+        $this->delete();
+        $alias = $this->page->addAndGetAlias($id, Alias::REDIRECT);
+        $this->addAlias($alias);
+    }
+
+    public function getCanonical()
+    {
 
     }
 

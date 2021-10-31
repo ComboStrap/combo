@@ -303,6 +303,16 @@ class DokuPath extends File
         return str_replace(":", self::DIRECTORY_SEPARATOR,$dokuPath);
     }
 
+    /**
+     * @param $path - a manual path value
+     * @return string -  a valid path
+     */
+    public static function toValidAbsolutePath($path): string
+    {
+        DokuPath::addRootSeparatorIfNotPresent($path);
+        return strtolower($path);
+    }
+
 
     /**
      * The last part of the path

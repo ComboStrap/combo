@@ -152,7 +152,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
 
             $result = [];
-            // Decodage problem
+            // Decode problem
             if ($jsonArray == null) {
 
                 $result[self::STATUS] = self::PARSING_STATE_ERROR;
@@ -184,7 +184,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 /**
                  * Upsert the meta
                  */
-                $page->upsertMetadata($jsonArray);
+                $page->upsertMetadataFromAssociativeArray($jsonArray);
 
                 /**
                  * Return them

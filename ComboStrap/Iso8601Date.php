@@ -148,7 +148,13 @@ class Iso8601Date
         return DATE_ATOM;
     }
 
-    public function isValidDateEntry()
+    public static function isValid($value): bool
+    {
+        $dateObject = Iso8601Date::createFromString($value);
+        return $dateObject->isValidDateEntry();
+    }
+
+    public function isValidDateEntry(): bool
     {
         if ($this->dateTime !== false) {
             return true;

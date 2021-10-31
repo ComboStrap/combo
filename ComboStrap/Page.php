@@ -168,6 +168,15 @@ class Page extends DokuPath
      */
     private $databasePage;
     private $canonical;
+    private $h1;
+    private $pageName;
+    private $type;
+    private $title;
+    private $author;
+    private $authorId;
+    private $lowQualityIndicator;
+    private $region;
+    private $lang;
 
     /**
      * Page constructor.
@@ -212,7 +221,16 @@ class Page extends DokuPath
         global $ID;
         $this->requestedId = $ID;
 
+
         parent::__construct($absolutePath, DokuPath::PAGE_TYPE);
+
+        /**
+         * After the parent construction because we need the id
+         * and it's set in the {@link DokuPath}
+         * When the Page will be os file system based
+         * and not dokuwiki file system based we may change that
+         */
+        $this->buildPropertiesFromFileSystem();
 
     }
 
@@ -412,32 +430,6 @@ class Page extends DokuPath
     }
 
 
-    /**
-     * Does the page is known in the pages table
-     * @return int
-     * @deprecated uses {@link Page::getDatabasePage()::exists()} instead
-     */
-    function existInDb(): int
-    {
-        if ($this->getDatabasePage()->exists()) {
-            return 1;
-        } else {
-            return 0;
-        }
-
-    }
-
-    /**
-     * Exist in FS
-     * @return bool
-     * @deprecated use {@link DokuPath::exists()} instead
-     */
-    function existInFs()
-    {
-        return $this->exists();
-    }
-
-
     static function createPageFromQualifiedPath($qualifiedPath)
     {
         return new Page($qualifiedPath);
@@ -471,7 +463,7 @@ class Page extends DokuPath
     public function setCanonical($canonical): Page
     {
         $canonical = DokuPath::toValidAbsolutePath($canonical);
-        if($canonical!=$this->canonical) {
+        if ($canonical != $this->canonical) {
             $this->canonical = $canonical;
             $this->setMetadata(Page::CANONICAL_PROPERTY, $this->canonical);
         }
@@ -539,32 +531,18 @@ class Page extends DokuPath
     function getMetadatas(): array
     {
 
-        /**
-         * Read / not {@link p_get_metadata()}
-         * because it can trigger a rendering of the meta again)
-         *
-         * This is not a {@link Page::renderMetadata()}
-         */
-        if ($this->metadatas == null) {
-            $this->updateMemoryMetaFromDisk();
-        }
         return $this->metadatas;
 
     }
 
     /**
-     * Note that the data may be cached  without our consent
-     *
-     * The method {@link p_get_metadata()} does it with this logic
-     * ```
-     * $cache = ($ID == $id);
-     * $meta = p_read_metadata($id, $cache);
-     * ```
+     * Refresh from disk
+     * @return $this
      */
     public
-    function updateMemoryMetaFromDisk(): Page
+    function refresh(): Page
     {
-        $this->metadatas = p_read_metadata($this->getDokuwikiId());
+        $this->buildPropertiesFromFileSystem();
         return $this;
     }
 
@@ -688,7 +666,7 @@ class Page extends DokuPath
     function getLowQualityIndicator(): ?bool
     {
 
-        return $this->getMetadataAsBoolean(self::LOW_QUALITY_PAGE_INDICATOR);
+        return $this->lowQualityIndicator;
 
     }
 
@@ -697,7 +675,7 @@ class Page extends DokuPath
     function getH1()
     {
 
-        $heading = $this->getMetadata(Analytics::H1);
+        $heading = $this->h1;
         if (!blank($heading)) {
             return $heading;
         } else {
@@ -713,12 +691,7 @@ class Page extends DokuPath
     function getTitle()
     {
 
-        /**
-         * `title` is created by DokuWiki
-         * in current but not persistent
-         * and hold the heading 1, see {@link p_get_first_heading}
-         */
-        return $this->getPersistentMetadata(Analytics::TITLE);
+        return $this->title;
 
     }
 
@@ -769,13 +742,11 @@ class Page extends DokuPath
     function getDescription(): ?string
     {
 
-        $this->processDescriptionIfNeeded();
         if ($this->descriptionOrigin == \syntax_plugin_combo_frontmatter::CANONICAL) {
             return $this->description;
         } else {
             return null;
         }
-
 
     }
 
@@ -786,7 +757,7 @@ class Page extends DokuPath
     public
     function getDescriptionOrElseDokuWiki(): ?string
     {
-        $this->processDescriptionIfNeeded();
+        $this->processDescription();
         return $this->description;
     }
 
@@ -946,11 +917,9 @@ class Page extends DokuPath
      *
      * @return string
      */
-    public
-    function getAuthor()
+    public function getAuthor(): ?string
     {
-        $author = $this->getPersistentMetadata('creator');
-        return ($author ? $author : null);
+        return $this->author;
     }
 
     /**
@@ -958,11 +927,10 @@ class Page extends DokuPath
      *
      * @return string
      */
-    public
-    function getAuthorID()
+    public function getAuthorID(): ?string
     {
-        $user = $this->getPersistentMetadata('user');
-        return ($user ? $user : null);
+
+        return $this->authorId;
     }
 
 
@@ -1003,7 +971,7 @@ class Page extends DokuPath
     function getCurrentMetadata($key)
     {
         $key = $this->getMetadatas()[self::CURRENT_METADATA][$key];
-        return ($key ? $key : null);
+        return ($key ?: null);
     }
 
     /**
@@ -1065,13 +1033,6 @@ class Page extends DokuPath
     function renderMetadata()
     {
 
-        if ($this->metadatas == null) {
-            /**
-             * Read the metadata from the file
-             */
-            $this->metadatas = $this->getMetadatas();
-        }
-
         /**
          * Read/render the metadata from the file
          * with parsing
@@ -1094,13 +1055,7 @@ class Page extends DokuPath
     public
     function getLocaleRegion()
     {
-        $region = $this->getPersistentMetadata(self::REGION_META_PROPERTY);
-        if (!empty($region)) {
-            if (!StringUtility::match($region, "[a-zA-Z]{2}")) {
-                LogUtility::msg("The region value ($region) for the page (" . $this->getDokuwikiId() . ") does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
-            }
-        }
-        return $region;
+        return $this->region;
     }
 
     public
@@ -1119,7 +1074,7 @@ class Page extends DokuPath
     public
     function getLang()
     {
-        return $this->getPersistentMetadata(self::LANG_META_PROPERTY);
+        return $this->lang;
     }
 
     public
@@ -1207,7 +1162,7 @@ class Page extends DokuPath
      * @return DateTime
      */
     public
-    function getPublishedElseCreationTime()
+    function getPublishedElseCreationTime(): ?DateTime
     {
         $publishedDate = $this->getPublishedTime();
         if (empty($publishedDate)) {
@@ -1315,39 +1270,39 @@ class Page extends DokuPath
         return $default;
     }
 
-    private
-    function processDescriptionIfNeeded()
+    private function processDescription(): ?string
     {
 
-        if ($this->descriptionOrigin == null) {
-            $descriptionArray = $this->getMetadata(Page::DESCRIPTION_PROPERTY);
-            if (!empty($descriptionArray)) {
-                if (array_key_exists('abstract', $descriptionArray)) {
 
-                    $temporaryDescription = $descriptionArray['abstract'];
+        $descriptionArray = $this->getMetadata(Page::DESCRIPTION_PROPERTY);
+        if (empty($descriptionArray)) {
+            return null;
+        }
+        if (array_key_exists('abstract', $descriptionArray)) {
 
-                    $this->descriptionOrigin = "dokuwiki";
-                    if (array_key_exists('origin', $descriptionArray)) {
-                        $this->descriptionOrigin = $descriptionArray['origin'];
-                    }
+            $temporaryDescription = $descriptionArray['abstract'];
 
-                    if ($this->descriptionOrigin == "dokuwiki") {
+            $this->descriptionOrigin = "dokuwiki";
+            if (array_key_exists('origin', $descriptionArray)) {
+                $this->descriptionOrigin = $descriptionArray['origin'];
+            }
 
-                        // suppress the carriage return
-                        $temporaryDescription = str_replace("\n", " ", $descriptionArray['abstract']);
-                        // suppress the h1
-                        $temporaryDescription = str_replace($this->getH1NotEmpty(), "", $temporaryDescription);
-                        // Suppress the star, the tab, About
-                        $temporaryDescription = preg_replace('/(\*|\t|About)/im', "", $temporaryDescription);
-                        // Suppress all double space and trim
-                        $temporaryDescription = trim(preg_replace('/  /m', " ", $temporaryDescription));
+            if ($this->descriptionOrigin == "dokuwiki") {
 
-                    }
-                    $this->description = $temporaryDescription;
-                }
+                // suppress the carriage return
+                $temporaryDescription = str_replace("\n", " ", $descriptionArray['abstract']);
+                // suppress the h1
+                $temporaryDescription = str_replace($this->getH1NotEmpty(), "", $temporaryDescription);
+                // Suppress the star, the tab, About
+                $temporaryDescription = preg_replace('/(\*|\t|About)/im', "", $temporaryDescription);
+                // Suppress all double space and trim
+                $temporaryDescription = trim(preg_replace('/  /m', " ", $temporaryDescription));
 
             }
+            return $temporaryDescription;
         }
+        return null;
+
 
     }
 
@@ -1519,7 +1474,7 @@ class Page extends DokuPath
     }
 
     public
-    function getAnchorLink()
+    function getAnchorLink(): string
     {
         $url = $this->getCanonicalUrl();
         $title = $this->getTitle();
@@ -1532,7 +1487,7 @@ class Page extends DokuPath
      * @return string
      */
     public
-    function getNamespacePath()
+    function getNamespacePath(): string
     {
         $ns = getNS($this->getDokuwikiId());
         /**
@@ -1582,7 +1537,7 @@ class Page extends DokuPath
     public
     function getPageName()
     {
-        return p_get_metadata($this->getDokuwikiId(), self::NAME_PROPERTY, METADATA_RENDER_USING_SIMPLE_CACHE);
+        return $this->pageName;
 
     }
 
@@ -1680,7 +1635,7 @@ class Page extends DokuPath
                 $key => $value
             ]
         );
-        $this->updateMemoryMetaFromDisk();
+        $this->refresh();
     }
 
     public
@@ -1946,13 +1901,13 @@ class Page extends DokuPath
     public
     function getType()
     {
-        return $this->getPersistentMetadata(self::TYPE_META_PROPERTY);
+        return $this->type;
     }
 
     public
     function getCanonical()
     {
-        return $this->getPersistentMetadata(Page::CANONICAL_PROPERTY);
+        return $this->canonical;
     }
 
     /**
@@ -2366,27 +2321,53 @@ class Page extends DokuPath
 
     public function setPageName($value)
     {
-        $this->setMetadata(Page::NAME_PROPERTY, $value);
+
+        if ($value != $this->pageName) {
+            $this->pageName = $value;
+            $this->setMetadata(Page::NAME_PROPERTY, $value);
+        }
+
     }
 
     public function setTitle($value)
     {
-        $this->setMetadata(Page::TITLE_META_PROPERTY, $value);
+        if ($value != $this->title) {
+            $this->title = $value;
+            $this->setMetadata(Page::TITLE_META_PROPERTY, $value);
+        }
     }
 
     public function setH1($value)
     {
-        $this->setMetadata(Analytics::H1, $value);
+        if ($value != $this->h1) {
+            $this->h1 = $value;
+            $this->setMetadata(Analytics::H1, $value);
+        }
     }
 
     public function setRegion($value)
     {
-        $this->setMetadata(Page::REGION_META_PROPERTY, $value);
+        if (empty($region)) return;
+
+        if ($value != $this->region) {
+
+            if (!StringUtility::match($region, "[a-zA-Z]{2}")) {
+                LogUtility::msg("The region value ($region) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
+                return;
+            }
+
+            $this->region = $value;
+            $this->setMetadata(Page::REGION_META_PROPERTY, $value);
+
+        }
     }
 
     public function setLang($value)
     {
-        $this->setMetadata(Page::LANG_META_PROPERTY, $value);
+        if($value!=$this->lang) {
+            $this->lang = $value;
+            $this->setMetadata(Page::LANG_META_PROPERTY, $value);
+        }
     }
 
     public function setLayout($value)
@@ -2400,6 +2381,64 @@ class Page extends DokuPath
     private function setAliases(array $aliases)
     {
         $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
+    }
+
+    /**
+     *
+     * We manage the properties by setter and getter
+     *
+     * Why ?
+     *   * Because we can capture the updates
+     *   * Because setter are the entry point to good quality data
+     *   * Because dokuwiki may cache the metadata (see below)
+     *
+     * Note all properties have been migrated
+     * but they should be initialized below
+     *
+     * Dokuwiki cache: the data may be cached without our consent
+     * The method {@link p_get_metadata()} does it with this logic
+     * ```
+     * $cache = ($ID == $id);
+     * $meta = p_read_metadata($id, $cache);
+     * ```
+     */
+    private function buildPropertiesFromFileSystem()
+    {
+        /**
+         * Updating the metadata must happen first
+         * All meta function depends on it
+         *
+         * Read / not {@link p_get_metadata()}
+         * because it can trigger a rendering of the meta again)
+         *
+         * This is not a {@link Page::renderMetadata()}
+         */
+        $this->metadatas = p_read_metadata($this->getDokuwikiId());
+
+        $this->pageName = $this->getMetadata(self::NAME_PROPERTY);
+        $this->description = $this->processDescription();
+        $this->h1 = $this->getMetadata(Analytics::H1);
+        $this->canonical = $this->getMetadata(Page::CANONICAL_PROPERTY);
+        $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
+        /**
+         * `title` is created by DokuWiki
+         * in current but not persistent
+         * and hold the heading 1, see {@link p_get_first_heading}
+         */
+        $this->title = $this->getMetadata(Analytics::TITLE);
+        $this->author = $this->getMetadata('creator');
+        $this->authorId = $this->getMetadata('user');
+
+        $this->lowQualityIndicator = $this->getMetadataAsBoolean(self::LOW_QUALITY_PAGE_INDICATOR);
+
+        $this->region = $this->getMetadata(self::REGION_META_PROPERTY);
+        $this->lang = $this->getMetadata(self::LANG_META_PROPERTY);
+
+    }
+
+    public function flushMeta()
+    {
+        p_save_metadata($this->getDokuwikiId(), $this->metadatas);
     }
 
 

@@ -357,7 +357,13 @@ class DatabasePage
                 case 1:
                     $id = $rows[0]["ID"];
                     if ($id !== $page->getDokuwikiId()) {
-                        LogUtility::msg("The page ($page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
+                        $duplicatePage = Page::createPageFromId($id);
+                        if (!$duplicatePage->exists()) {
+                            $this->deleteIfExistsAndAddDuplicateAsRedirect($id);
+                            LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($page)", LogUtility::LVL_MSG_INFO);
+                        } else {
+                            LogUtility::msg("The page ($page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
+                        }
                     }
                     return;
                 default:
@@ -367,7 +373,7 @@ class DatabasePage
                         $duplicatePage = Page::createPageFromId($id);
                         if (!$duplicatePage->exists()) {
 
-                            $this->deleteAndAddDuplicateAsRedirect($id);
+                            $this->deleteIfExistsAndAddDuplicateAsRedirect($id);
 
                         } else {
 
@@ -418,7 +424,7 @@ class DatabasePage
                     $duplicatePage = Page::createPageFromId($id);
                     if (!$duplicatePage->exists()) {
 
-                        $this->deleteAndAddDuplicateAsRedirect($id);
+                        $this->deleteIfExistsAndAddDuplicateAsRedirect($id);
 
                     } else {
                         $existingPages[] = $row;
@@ -916,9 +922,9 @@ EOF;
      * @param $id
      * @deprecated 2012-10-28
      */
-    private function deleteAndAddDuplicateAsRedirect($id): void
+    private function deleteIfExistsAndAddDuplicateAsRedirect($id): void
     {
-        $this->delete();
+        $this->deleteIfExist();
         $alias = $this->page->addAndGetAlias($id, Alias::REDIRECT);
         $this->addAlias($alias);
     }

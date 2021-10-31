@@ -1033,7 +1033,7 @@ class Page extends DokuPath
     function renderAndFlushMetadata(): Page
     {
 
-        if(!$this->exists()){
+        if (!$this->exists()) {
             return $this;
         }
 
@@ -1547,7 +1547,7 @@ class Page extends DokuPath
     }
 
     public
-    function getPageNameNotEmpty()
+    function getPageNameNotEmpty(): string
     {
         $name = $this->getPageName();
         if (!blank($name)) {
@@ -2243,7 +2243,7 @@ class Page extends DokuPath
     {
         $aliases = $this->getMetadata(self::ALIAS_ATTRIBUTE);
         if ($aliases == null) {
-            $aliases = $this->getDatabasePage()->getAndDeleteDeprecatedAlias();
+            $aliases = $this->getAndDeleteDeprecatedAlias();
             /**
              * To validate the migration we set a value
              * (the array may be empty)
@@ -2368,7 +2368,7 @@ class Page extends DokuPath
 
     public function setLang($value)
     {
-        if($value!=$this->lang) {
+        if ($value != $this->lang) {
             $this->lang = $value;
             $this->setMetadata(Page::LANG_META_PROPERTY, $value);
         }
@@ -2408,6 +2408,12 @@ class Page extends DokuPath
      */
     private function buildPropertiesFromFileSystem()
     {
+
+        if(!$this->exists()) {
+            $this->metadatas = [];
+            return;
+        }
+
         /**
          * Updating the metadata must happen first
          * All meta function depends on it
@@ -2443,6 +2449,63 @@ class Page extends DokuPath
     public function flushMeta()
     {
         p_save_metadata($this->getDokuwikiId(), $this->metadatas);
+    }
+
+    /**
+     * Code refactoring
+     * This method is not in the database page
+     * because it would create a cycle
+     *
+     * The old data was saved in the database
+     * but should have been saved on the file system
+     *
+     * Once
+     * @return Alias[]
+     * @deprecated 2021-10-31
+     */
+    private function getAndDeleteDeprecatedAlias(): array
+    {
+        $sqlite = Sqlite::getSqlite();
+        if ($sqlite === null) return [];
+
+        $canonicalOrDefault = $this->getCanonicalOrDefault();
+        $res = $sqlite->query("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", $canonicalOrDefault);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the deprecated alias selection query", LogUtility::LVL_MSG_ERROR);
+            return [];
+        }
+        $deprecatedAliasInDb = $sqlite->res2arr($res);
+        $sqlite->res_close($res);
+        $deprecatedAliases = [];
+        array_map(
+            function ($row) use ($deprecatedAliases) {
+                $alias = $row['ALIAS'];
+                $deprecatedAliases[$alias] = Alias::create($this, $alias)
+                    ->setType(Alias::REDIRECT);
+            },
+            $deprecatedAliasInDb
+        );
+
+        /**
+         * Delete them
+         */
+        try {
+            if (sizeof($deprecatedAliasInDb) > 0) {
+                $res = $sqlite->query("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", $canonicalOrDefault);
+                if (!$res) {
+                    LogUtility::msg("An exception has occurred with the delete deprecated alias statement", LogUtility::LVL_MSG_ERROR);
+                }
+                $sqlite->res_close($res);
+            }
+        } catch (\Exception $e) {
+            LogUtility::msg("An exception has occurred with the deletion of deprecated aliases. Message: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
+        }
+
+        /**
+         * Return
+         */
+        return $deprecatedAliases;
+
     }
 
 

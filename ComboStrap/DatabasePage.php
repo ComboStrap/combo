@@ -768,51 +768,7 @@ EOF;
         return $this->page->__toString();
     }
 
-    /**
-     * Code refactoring
-     * @return Alias[]
-     */
-    public function getAndDeleteDeprecatedAlias(): array
-    {
-        $canonicalOrDefault = $this->page->getCanonicalOrDefault();
-        $res = $this->sqlite->query("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", $canonicalOrDefault);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the deprecated alias selection query", LogUtility::LVL_MSG_ERROR);
-            return [];
-        }
-        $deprecatedAliasInDb = $this->sqlite->res2arr($res);
-        $this->sqlite->res_close($res);
-        $deprecatedAliases = [];
-        array_map(
-            function ($row) use ($deprecatedAliases) {
-                $alias = $row['ALIAS'];
-                $deprecatedAliases[$alias] = Alias::create($this->page, $alias)
-                    ->setType(Alias::REDIRECT);
-            },
-            $deprecatedAliasInDb
-        );
 
-        /**
-         * Delete them
-         */
-        try {
-            if (sizeof($deprecatedAliasInDb) > 0) {
-                $res = $this->sqlite->query("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", $canonicalOrDefault);
-                if (!$res) {
-                    LogUtility::msg("An exception has occurred with the delete deprecated alias statement", LogUtility::LVL_MSG_ERROR);
-                }
-                $this->sqlite->res_close($res);
-            }
-        } catch (Exception $e) {
-            LogUtility::msg("An exception has occurred with the deletion of deprecated aliases. Message: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
-        }
-
-        /**
-         * Return
-         */
-        return $deprecatedAliases;
-
-    }
 
     /**
      * @param Alias $alias

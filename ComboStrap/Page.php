@@ -519,7 +519,7 @@ class Page extends DokuPath
         if (empty($canonical)) {
             $canonical = $this->getDefaultCanonical();
         }
-        return strtr($canonical, ':', '/');
+        return $canonical;
 
     }
 
@@ -757,7 +757,7 @@ class Page extends DokuPath
     public
     function getDescriptionOrElseDokuWiki(): ?string
     {
-        $this->processDescription();
+        $this->buildDescription();
         return $this->description;
     }
 
@@ -1030,8 +1030,12 @@ class Page extends DokuPath
      * Refresh the metadata (used only in test)
      */
     public
-    function renderMetadata()
+    function renderAndFlushMetadata(): Page
     {
+
+        if(!$this->exists()){
+            return $this;
+        }
 
         /**
          * Read/render the metadata from the file
@@ -1039,11 +1043,9 @@ class Page extends DokuPath
          */
         $this->metadatas = p_render_metadata($this->getDokuwikiId(), $this->metadatas);
 
-        /**
-         * ReInitialize
-         */
-        $this->descriptionOrigin = null;
-        $this->description = null;
+        $this->flushMeta();
+
+        $this->buildPropertiesFromFileSystem();
 
         /**
          * Return
@@ -1270,9 +1272,12 @@ class Page extends DokuPath
         return $default;
     }
 
-    private function processDescription(): ?string
+    private function buildDescription(): ?string
     {
 
+
+        $this->descriptionOrigin = null;
+        $this->description = null;
 
         $descriptionArray = $this->getMetadata(Page::DESCRIPTION_PROPERTY);
         if (empty($descriptionArray)) {
@@ -1635,7 +1640,6 @@ class Page extends DokuPath
                 $key => $value
             ]
         );
-        $this->refresh();
     }
 
     public
@@ -2411,12 +2415,12 @@ class Page extends DokuPath
          * Read / not {@link p_get_metadata()}
          * because it can trigger a rendering of the meta again)
          *
-         * This is not a {@link Page::renderMetadata()}
+         * This is not a {@link Page::renderAndFlushMetadata()}
          */
         $this->metadatas = p_read_metadata($this->getDokuwikiId());
 
         $this->pageName = $this->getMetadata(self::NAME_PROPERTY);
-        $this->description = $this->processDescription();
+        $this->description = $this->buildDescription();
         $this->h1 = $this->getMetadata(Analytics::H1);
         $this->canonical = $this->getMetadata(Page::CANONICAL_PROPERTY);
         $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);

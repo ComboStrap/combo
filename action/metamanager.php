@@ -556,9 +556,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $metasUuid[FormField::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
                 $metasUuid[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
                     Page::PAGE_ID_ATTRIBUTE,
-                    "UUID",
+                    "Page Id",
                     false,
-                    "UUID is the Universally Unique IDentifier of the page used in replication (between database or installation)"
+                    "An unique identifier for the page"
                 );
                 $metasUuid[self::NAME_ATTRIBUTE] = Page::PAGE_ID_ATTRIBUTE;
                 $fields[] = $metasUuid;

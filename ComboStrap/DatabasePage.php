@@ -4,6 +4,7 @@
 namespace ComboStrap;
 
 use Exception;
+use http\Exception\RuntimeException;
 
 /**
  * The class that manage the replication
@@ -192,6 +193,42 @@ class DatabasePage
 
     }
 
+    /**
+     * For, there is no real replication between website.
+     *
+     * Therefore, the source of truth is the value in the {@link syntax_plugin_combo_frontmatter}
+     * Therefore, the page id generation should happen after the rendering of the page
+     * at the database level
+     *
+     * Return a page id collision free
+     * for the page already {@link DatabasePage::replicatePage() replicated}
+     *
+     * https://zelark.github.io/nano-id-cc/
+     *
+     * 1000 id / hour = ~35 years needed, in order to have a 1% probability of at least one collision.
+     *
+     * We don't rely on a sequence because
+     *    - the database may be refreshed
+     *    - sqlite does have only auto-increment support
+     * https://www.sqlite.org/autoinc.html
+     *
+     * @return string
+     */
+    public static function generateUniquePageId(): string
+    {
+        /**
+         * Collision detection happens just after the use of this function on the
+         * creation of the {@link DatabasePage::buildDatabaseObject() databasePage object}
+         *
+         */
+        $nanoIdClient = new \Hidehalo\Nanoid\Client();
+        $pageId = ($nanoIdClient)->formattedId(Page::PAGE_ID_ALPHABET, Page::PAGE_ID_LENGTH);
+        while (Page::getPageFromPageId($pageId) != null) {
+            $pageId = ($nanoIdClient)->formattedId(Page::PAGE_ID_ALPHABET, Page::PAGE_ID_LENGTH);
+        }
+        return $pageId;
+    }
+
     public
     function shouldReplicate(): bool
     {
@@ -320,6 +357,18 @@ class DatabasePage
         // Do we have a page attached to this page id
         $pageId = $page->getPageId();
         $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
+
+        /**
+         * Collision detection
+         * Do we have already a page in the database with the same page id
+         */
+        if ($pageId === null || !is_string($pageId)
+            || preg_match("/[-_A-Z]/", $pageId)
+        ) {
+            $pageId = self::generateUniquePageId();
+            $this->page->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
+        }
+
         $res = $this->sqlite->query("select $databaseFields from pages where $pageIdAttribute = ?", $pageId);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from page id");
@@ -331,8 +380,27 @@ class DatabasePage
                 break;
             case 1:
                 $id = $rows[0]["ID"];
+                /**
+                 * Page Id Collision detection
+                 */
                 if ($id !== $page->getDokuwikiId()) {
-                    LogUtility::msg("The page ($page) and the page ($id) have the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
+                    $duplicatePage = Page::createPageFromId($id);
+                    if(!$duplicatePage->exists()) {
+                        // Move
+                        LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($page)", LogUtility::LVL_MSG_INFO);
+                        $this->deleteIfExistsAndAddDuplicateAsRedirect($id);
+                    } else {
+                        // This can happens if two page were created not on the same website
+                        // of if the sqlite database was deleted and rebuilt.
+                        // The chance is really, really low
+                        $errorMessage = "The page ($page) and the page ($id) have the same page id ($pageId)";
+                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR);
+                        // What to do ?
+                        // We just throw an error for now
+                        // The database does not allow two page id with the same value
+                        // If it happens, ugh, ugh, ..., a replication process between website may be.
+                        throw new RuntimeException($errorMessage);
+                    }
                 }
                 $this->buildDatabaseObjectFields($rows[0]);
                 return;
@@ -359,7 +427,7 @@ class DatabasePage
                     if ($id !== $page->getDokuwikiId()) {
                         $duplicatePage = Page::createPageFromId($id);
                         if (!$duplicatePage->exists()) {
-                            $this->deleteIfExistsAndAddDuplicateAsRedirect($id);
+                            $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
                             LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($page)", LogUtility::LVL_MSG_INFO);
                         } else {
                             LogUtility::msg("The page ($page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
@@ -373,7 +441,7 @@ class DatabasePage
                         $duplicatePage = Page::createPageFromId($id);
                         if (!$duplicatePage->exists()) {
 
-                            $this->deleteIfExistsAndAddDuplicateAsRedirect($id);
+                            $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
 
                         } else {
 
@@ -424,7 +492,7 @@ class DatabasePage
                     $duplicatePage = Page::createPageFromId($id);
                     if (!$duplicatePage->exists()) {
 
-                        $this->deleteIfExistsAndAddDuplicateAsRedirect($id);
+                        $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
 
                     } else {
                         $existingPages[] = $row;
@@ -485,21 +553,16 @@ class DatabasePage
     public function replicatePage(string $replicationDate): bool
     {
 
+        if (!$this->page->exists()) {
+            LogUtility::msg("You can't replicate the page ($this->page) because it does not exists.");
+            return false;
+        }
+
         /**
          * Convenient variable
          */
         $page = $this->page;
 
-        /**
-         * Collision detection
-         * Do we have already a page in the database with the same page id
-         */
-        $dbPage = Page::getPageFromPageId($page->getPageId());
-        if ($dbPage != null && $dbPage->getPath() != $page->getPath()) {
-            LogUtility::msg("The page {$dbPage->getPath()} and {$page->getPath()} had the same page id. The page id was regenerated for {$page->getPath()}.", LogUtility::LVL_MSG_INFO, Page::PAGE_ID_ATTRIBUTE);
-            $page->updatePageId(Page::generateUniquePageId());
-            return false;
-        }
 
 
         /**
@@ -715,6 +778,13 @@ EOF;
                 $errorInfoAsString = var_export($errorInfo, true);
                 LogUtility::msg("There was a problem during the updateAttributes insert. : {$errorInfoAsString}");
                 return false;
+            } else {
+                /**
+                 * rowid is used in {@link DatabasePage::exists()}
+                 * to check if the page exists in the database
+                 * We update it
+                */
+                $this->rowId = $this->sqlite->getAdapter()->getDb()->lastInsertId();
             }
         }
         return true;
@@ -767,7 +837,6 @@ EOF;
     {
         return $this->page->__toString();
     }
-
 
 
     /**
@@ -875,13 +944,13 @@ EOF;
      * Redirect are now added during a move
      * Not when a duplicate is found.
      * With the advent of the page id, it should never occurs anymore
-     * @param $id
+     * @param Page $page
      * @deprecated 2012-10-28
      */
-    private function deleteIfExistsAndAddDuplicateAsRedirect($id): void
+    private function deleteIfExistsAndAddDuplicateAsRedirect(Page $page): void
     {
-        $this->deleteIfExist();
-        $alias = $this->page->addAndGetAlias($id, Alias::REDIRECT);
+        $page->getDatabasePage()->deleteIfExist();
+        $alias = $this->page->addAndGetAlias($page->getDokuwikiId(), Alias::REDIRECT);
         $this->addAlias($alias);
     }
 
@@ -921,6 +990,7 @@ EOF;
     public function refresh(): DatabasePage
     {
 
+        $this->page->refresh();
         $this->buildDatabaseObject();
         return $this;
 

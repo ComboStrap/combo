@@ -111,7 +111,22 @@ class Page extends DokuPath
 
     const OLD_REGION_PROPERTY = "country";
     const ALIAS_ATTRIBUTE = "alias";
-    const PAGE_ID_LENGTH = 14;
+    // Length to get the same probability than uuid v4
+    const PAGE_ID_LENGTH = 21;
+    // The page id abbreviation is used in the url
+    // to make them unique.
+    //
+    // A website is not git but an abbreviation of 7
+    // is enough for a website.
+    //
+    // 7 is also the initial length of the git has abbreviation
+    //
+    // It gives a probability of collision of 1 percent
+    // for 24 pages creation by day over a period of 100 year
+    // (You need to create 876k pages).
+    // with the 36 alphabet
+    // https://datacadamia.com/crypto/hash/collision
+    const PAGE_ID_ABBREV_LENGTH = 7;
     // No separator, no uppercase to be consistent on the whole url
     const PAGE_ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
 
@@ -1708,70 +1723,15 @@ class Page extends DokuPath
     }
 
     /**
-     * A generated id or null if the page does not exists
+     * A page id or null if the page does not exists
      * @return string|null
      */
     public
     function getPageId(): ?string
     {
 
-        $pageId = $this->getMetadata(Page::PAGE_ID_ATTRIBUTE);
+        return $this->getMetadata(Page::PAGE_ID_ATTRIBUTE);
 
-        /**
-         * Page Id are created only for existing pages
-         * (It avoids the conflict of PageId when page are moved)
-         */
-        if ($pageId === null && !$this->exists()) {
-            return null;
-        }
-
-
-        /**
-         * Bug that caused to create bad uuid
-         * (Should be deleted in the future)
-         */
-        if ($pageId === null || !is_string($pageId)
-            || preg_match("/[-_A-Z]/", $pageId)
-        ) {
-            $pageId = self::generateUniquePageId();
-            $this->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
-        }
-
-        return $pageId;
-
-    }
-
-    /**
-     * Return a page id collision free
-     * for the page already {@link DatabasePage::replicatePage() replicated}
-     *
-     * https://zelark.github.io/nano-id-cc/
-     *
-     * 1000 id / hour = ~35 years needed, in order to have a 1% probability of at least one collision.
-     *
-     * We don't rely on a sequence because
-     *    - the database may be refreshed
-     *    - sqlite does have only auto-increment support
-     * https://www.sqlite.org/autoinc.html
-     *
-     * @return string
-     */
-    public static function generateUniquePageId(): string
-    {
-        /**
-         * Collision detection happens also on the
-         * {@link DatabasePage::replicatePage() database level}
-         * but we try to detect it early
-         * Chance are pretty low
-         *
-         *
-         */
-        $nanoIdClient = new \Hidehalo\Nanoid\Client();
-        $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
-        while (Page::getPageFromPageId($pageId) != null) {
-            $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
-        }
-        return $pageId;
     }
 
 

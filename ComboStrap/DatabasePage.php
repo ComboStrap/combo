@@ -229,6 +229,12 @@ class DatabasePage
         return $pageId;
     }
 
+    private function addPageIdMeta(array &$metaRecord)
+    {
+        $metaRecord[Page::PAGE_ID_ATTRIBUTE] = $this->page->getPageId();
+        $metaRecord[Page::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
+    }
+
     public
     function shouldReplicate(): bool
     {
@@ -358,55 +364,46 @@ class DatabasePage
         $pageId = $page->getPageId();
         $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
 
-        /**
-         * Collision detection
-         * Do we have already a page in the database with the same page id
-         */
-        if ($pageId === null || !is_string($pageId)
-            || preg_match("/[-_A-Z]/", $pageId)
-        ) {
-            $pageId = self::generateUniquePageId();
-            $this->page->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
-        }
-
-        $res = $this->sqlite->query("select $databaseFields from pages where $pageIdAttribute = ?", $pageId);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the page search from page id");
-        }
-        $rows = $this->sqlite->res2arr($res);
-        $this->sqlite->res_close($res);
-        switch (sizeof($rows)) {
-            case 0:
-                break;
-            case 1:
-                $id = $rows[0]["ID"];
-                /**
-                 * Page Id Collision detection
-                 */
-                if ($id !== $page->getDokuwikiId()) {
-                    $duplicatePage = Page::createPageFromId($id);
-                    if(!$duplicatePage->exists()) {
-                        // Move
-                        LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($page)", LogUtility::LVL_MSG_INFO);
-                        $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
-                    } else {
-                        // This can happens if two page were created not on the same website
-                        // of if the sqlite database was deleted and rebuilt.
-                        // The chance is really, really low
-                        $errorMessage = "The page ($page) and the page ($id) have the same page id ($pageId)";
-                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR);
-                        // What to do ?
-                        // We just throw an error for now
-                        // The database does not allow two page id with the same value
-                        // If it happens, ugh, ugh, ..., a replication process between website may be.
-                        throw new RuntimeException($errorMessage);
+        if($pageId!=null) {
+            $res = $this->sqlite->query("select $databaseFields from pages where $pageIdAttribute = ?", $pageId);
+            if (!$res) {
+                LogUtility::msg("An exception has occurred with the page search from page id");
+            }
+            $rows = $this->sqlite->res2arr($res);
+            $this->sqlite->res_close($res);
+            switch (sizeof($rows)) {
+                case 0:
+                    break;
+                case 1:
+                    $id = $rows[0]["ID"];
+                    /**
+                     * Page Id Collision detection
+                     */
+                    if ($id !== $page->getDokuwikiId()) {
+                        $duplicatePage = Page::createPageFromId($id);
+                        if (!$duplicatePage->exists()) {
+                            // Move
+                            LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($page)", LogUtility::LVL_MSG_INFO);
+                            $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
+                        } else {
+                            // This can happens if two page were created not on the same website
+                            // of if the sqlite database was deleted and rebuilt.
+                            // The chance is really, really low
+                            $errorMessage = "The page ($page) and the page ($id) have the same page id ($pageId)";
+                            LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR);
+                            // What to do ?
+                            // We just throw an error for now
+                            // The database does not allow two page id with the same value
+                            // If it happens, ugh, ugh, ..., a replication process between website may be.
+                            throw new RuntimeException($errorMessage);
+                        }
                     }
-                }
-                $this->buildDatabaseObjectFields($rows[0]);
-                return;
-            default:
-                $existingPages = implode(", ", $rows);
-                LogUtility::msg("The pages ($existingPages) have all the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
+                    $this->buildDatabaseObjectFields($rows[0]);
+                    return;
+                default:
+                    $existingPages = implode(", ", $rows);
+                    LogUtility::msg("The pages ($existingPages) have all the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
+            }
         }
 
         // Do we have a page attached to the canonical
@@ -562,7 +559,6 @@ class DatabasePage
          * Convenient variable
          */
         $page = $this->page;
-
 
 
         /**
@@ -762,7 +758,19 @@ EOF;
             $this->sqlite->res_close($res);
 
         } else {
-            $values["id"] = $this->page->getDokuwikiId();
+
+            /**
+             * Page Id
+             */
+            $pageId = $this->page->getPageId();
+            if ($pageId === null || !is_string($pageId)
+                || preg_match("/[-_A-Z]/", $pageId)
+            ) {
+                $pageId = self::generateUniquePageId();
+                $this->page->setPageId($pageId);
+            }
+
+            $values[PAGE::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getDokuwikiId();
             $values[Analytics::PATH] = $this->page->getPath();
             $values[Page::PAGE_ID_ATTRIBUTE] = $this->page->getPageId();
             /**
@@ -783,7 +791,7 @@ EOF;
                  * rowid is used in {@link DatabasePage::exists()}
                  * to check if the page exists in the database
                  * We update it
-                */
+                 */
                 $this->rowId = $this->sqlite->getAdapter()->getDb()->lastInsertId();
             }
         }
@@ -814,7 +822,7 @@ EOF;
         }
         $pageId = $this->page->getPageId();
         $attributes = [
-            "id" => $targetId,
+            Page::DOKUWIKI_ID_ATTRIBUTE => $targetId,
             Page::PATH_ATTRIBUTE => ":${$targetId}",
             Page::PAGE_ID_ATTRIBUTE => $pageId
         ];
@@ -848,8 +856,8 @@ EOF;
 
         $row = array(
             Page::PAGE_ID_ATTRIBUTE => $this->page->getPageId(),
-            "PATH" => $alias->getPath(),
-            "TYPE" => $alias->getType()
+            Alias::ALIAS_PATH_PROPERTY => $alias->getPath(),
+            Alias::ALIAS_TYPE_PROPERTY => $alias->getType()
         );
 
         // Page has change of location
@@ -1003,7 +1011,7 @@ EOF;
      */
     private function getMetaRecord(): array
     {
-        return array(
+        $metaRecord = array(
             Analytics::CANONICAL => $this->page->getCanonicalOrDefault(),
             'PATH' => $this->page->getAbsolutePath(),
             Analytics::NAME => $this->page->getPageNameNotEmpty(),
@@ -1017,9 +1025,13 @@ EOF;
             Page::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
             Page::LANG_META_PROPERTY => $this->page->getLangOrDefault(),
             Page::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
-            Page::PAGE_ID_ATTRIBUTE => $this->page->getPageId(),
             'ID' => $this->page->getDokuwikiId(),
         );
+
+        if ($this->page->getPageId() != null) {
+            $this->addPageIdMeta($metaRecord);
+        };
+        return $metaRecord;
     }
 
     public function deleteIfExist()

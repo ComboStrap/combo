@@ -388,7 +388,7 @@ class DatabasePage
                     if(!$duplicatePage->exists()) {
                         // Move
                         LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($page)", LogUtility::LVL_MSG_INFO);
-                        $this->deleteIfExistsAndAddDuplicateAsRedirect($id);
+                        $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
                     } else {
                         // This can happens if two page were created not on the same website
                         // of if the sqlite database was deleted and rebuilt.
@@ -1027,6 +1027,11 @@ EOF;
         if ($this->exists()) {
             $this->delete();
         }
+    }
+
+    public function getRowId()
+    {
+        return $this->rowId;
     }
 
 

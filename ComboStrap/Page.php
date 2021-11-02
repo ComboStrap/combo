@@ -192,6 +192,10 @@ class Page extends DokuPath
     private $lowQualityIndicator;
     private $region;
     private $lang;
+    /**
+     * @var string
+     */
+    private $pageId;
 
     /**
      * Page constructor.
@@ -1730,7 +1734,7 @@ class Page extends DokuPath
     function getPageId(): ?string
     {
 
-        return $this->getMetadata(Page::PAGE_ID_ATTRIBUTE);
+        return $this->pageId;
 
     }
 
@@ -1860,6 +1864,7 @@ class Page extends DokuPath
             LogUtility::msg("A page id can not null when setting it (Page: $this)", LogUtility::LVL_MSG_ERROR);
             return $this;
         }
+        $this->pageId = $pageId;
         $this->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
         return $this;
 
@@ -2388,6 +2393,7 @@ class Page extends DokuPath
          */
         $this->metadatas = p_read_metadata($this->getDokuwikiId());
 
+        $this->pageId = $this->getMetadata(self::PAGE_ID_ATTRIBUTE);
         $this->pageName = $this->getMetadata(self::NAME_PROPERTY);
         $this->description = $this->buildDescription();
         $this->h1 = $this->getMetadata(Analytics::H1);

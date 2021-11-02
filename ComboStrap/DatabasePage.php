@@ -829,7 +829,7 @@ EOF;
             return;
         }
         $targetPage = Page::createPageFromId($targetId);
-        $targetPage->updatePageId($pageId);
+        $targetPage->setPageId($pageId);
 
     }
 

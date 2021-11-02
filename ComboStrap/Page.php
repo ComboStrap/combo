@@ -1819,6 +1819,9 @@ class Page extends DokuPath
                     $aliases = Alias::toAliasArray($value, $this);
                     $this->setAliases($aliases);
                     continue 2;
+                case Page::PAGE_ID_ATTRIBUTE:
+                    $this->setPageId($value);
+                    continue 2;
                 default:
                     LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_WARNING);
                     $this->setMetadata($key, $value);
@@ -1851,7 +1854,7 @@ class Page extends DokuPath
      * @return Page
      */
     public
-    function updatePageId(?string $pageId): Page
+    function setPageId(?string $pageId): Page
     {
         if ($pageId == null) {
             LogUtility::msg("A page id can not null when setting it (Page: $this)", LogUtility::LVL_MSG_ERROR);

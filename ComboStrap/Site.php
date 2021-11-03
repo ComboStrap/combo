@@ -309,5 +309,11 @@ class Site
         return PluginUtility::getConfValue(LowQualityPage::CONF_LOW_QUALITY_PAGE_PROTECTION_ENABLE) === 1;
     }
 
+    public static function getHomePageName()
+    {
+        global $conf;
+        return $conf["start"];
+    }
+
 
 }

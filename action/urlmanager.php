@@ -3,12 +3,14 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
+use ComboStrap\DatabasePage;
 use ComboStrap\Http;
 use ComboStrap\Identity;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
+use ComboStrap\Site;
 use ComboStrap\Sqlite;
 use ComboStrap\Page;
 use ComboStrap\UrlManagerBestEndPage;
@@ -127,7 +129,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          * news:wp-includes:wlwmanifest.xml
          * 2018:wp-includes:wlwmanifest.xml
          */
-        if (str_contains($id, 'wp-')) {
+        if (strpos($id, 'wp-') !== false) {
             return true;
         }
 
@@ -136,12 +138,10 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          * db:oracle:999999.9:union:all:select_null:from_dual
          * db:oracle:999999.9:union:all:select_null:from_dual_and_0_0
          */
-        if (str_contains($id, '_chr_')) {
+        if (preg_match('/_chr_|_0_0/', $id) === 1) {
             return true;
         }
-        if (str_contains($id, '_0_0')) {
-            return true;
-        }
+
 
         /**
          * ie
@@ -155,6 +155,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         if (strpos($id, "git:") === 0) {
             return true;
         }
+
         return false;
 
     }
@@ -210,40 +211,24 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
         /**
-         * If the page exists
-         * return
+         * Page is an existing id ?
          */
         $targetPage = Page::createPageFromId($ID);
         if ($targetPage->exists()) {
-            action_plugin_combo_urlmessage::unsetNotification();
-            return false;
-        }
-
-        /**
-         * {@link Page::CONF_CANONICAL_URL_TYPE}
-         */
-
-
-        $lastPart = $targetPage->getDokuPathName();
-        if (strlen($lastPart) === Page::PAGE_ID_LENGTH) {
-            $page = Page::getPageFromPageId($lastPart);
-            if ($page != null && $page->exists()) {
-                $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+            if($ID!==$targetPage->getCanonicalUrlId()){
+                $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
             }
-            // not yet in the database ?
-            $permalinkId = substr($ID, 0, $lastSeparatorPosition);
-            $page = Page::createPageFromId($permalinkId);
-            if ($page->exists()) {
-                $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
-            }
+            return;
         }
 
 
         global $ACT;
         if ($ACT != 'show') return;
 
+        $identifier = $ID;
+
         // Well known
-        if (self::isWellKnownFile($ID)) {
+        if (self::isWellKnownFile($identifier)) {
             echo self::PAGE_404;
             Http::setStatus(404);
             $this->logRedirection($ID, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
@@ -251,18 +236,66 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
         // Shadow banned
-        if (self::isShadowBanned($ID)) {
-            $this->executeTransparentRedirect(":start", self::TARGET_ORIGIN_SHADOW_BANNED);
+        if (self::isShadowBanned($identifier)) {
+            $webSiteHomePage = Site::getHomePageName();
+            $this->executeTransparentRedirect($webSiteHomePage, self::TARGET_ORIGIN_SHADOW_BANNED);
         }
 
+        /**
+         * Page Id
+         * {@link Page::CONF_CANONICAL_URL_TYPE}
+         */
+
+        $lastPart = $targetPage->getDokuPathName();
+        if (
+            strlen($lastPart) === (Page::PAGE_ID_ABBREV_LENGTH + strlen(Page::PAGE_ID_URL_PREFIX))
+            && strpos($lastPart, Page::PAGE_ID_URL_PREFIX) === 0
+        ) {
+            $urlPageId = substr($lastPart, strlen(Page::PAGE_ID_URL_PREFIX));
+            $page = DatabasePage::createFromPageIdAbbr($urlPageId)->getPage();
+            if ($page !== null && $page->exists()) {
+                /**
+                 * If the url canonical id has changed, we show it
+                 * to the writer by performing a permanent redirect
+                 */
+                if ($identifier != $page->getCanonicalUrlId() ) {
+                    // Google asks for a redirect
+                    // https://developers.google.com/search/docs/advanced/crawling/301-redirects
+                    // People access your site through several different URLs.
+                    // If, for example, your home page can be reached in multiple ways
+                    // (for instance, http://example.com/home, http://home.example.com, or http://www.example.com),
+                    // it's a good idea to pick one of those URLs as your preferred (canonical) destination,
+                    // and use redirects to send traffic from the other URLs to your preferred URL.
+                    $this->executePermanentRedirect($page->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                    return;
+                }
+                $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                return;
+
+            }
+            // permanent url not yet in the database
+
+            // permanent id test
+            $identifier = $targetPage->getParentId();
+            $permanentIdPage = Page::createPageFromId($identifier);
+            if ($permanentIdPage->exists()) {
+                $this->executeTransparentRedirect($permanentIdPage->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                return;
+            }
+
+            // Other permanent such as permanent canonical ?
+            // We let the process go with the new identifier
+
+
+        }
 
         // Global variable needed in the process
         global $conf;
 
         /**
-         * Page Id is a Canonical ?
+         * Identifier is a Canonical ?
          */
-        $targetPage = Page::createPageFromCanonical($ID);
+        $targetPage = Page::createPageFromCanonical($identifier);
         if ($targetPage !== null && $targetPage->exists()) {
             $res = $this->executeTransparentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_CANONICAL);
             if ($res) {
@@ -271,25 +304,11 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Page Id may have uppercase
-         * $ID not, we take therefore the id parameter
+         * Identifier is an alias
          */
-        $pageId = $_GET["id"];
-        $targetPage = Page::getPageFromPageId($pageId);
+        $targetPage = Page::createPageFromAlias($identifier);
         if ($targetPage !== null && $targetPage->exists()) {
-            $target = $targetPage->getCanonical();
-            if ($target === null) {
-                $target = $targetPage->getDokuwikiId();
-            }
-            $res = $this->executePermanentRedirect($target, self::TARGET_ORIGIN_PERMALINK);
-            if ($res) {
-                return;
-            }
-        }
-
-        $targetPage = Page::createPageFromAlias($ID);
-        if ($targetPage !== null && $targetPage->exists()) {
-            $res = $this->executePermanentRedirect($targetPage->getCanonical(), self::TARGET_ORIGIN_ALIAS);
+            $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
             if ($res) {
                 return;
             }
@@ -341,7 +360,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
                 case self::GO_TO_BEST_END_PAGE_NAME:
 
-                    list($targetPage, $method) = UrlManagerBestEndPage::process($ID);
+                    list($targetPage, $method) = UrlManagerBestEndPage::process($identifier);
                     if ($targetPage != null) {
                         $res = false;
                         switch ($method) {
@@ -364,7 +383,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                 case self::GO_TO_NS_START_PAGE:
 
                     // Start page with the conf['start'] parameter
-                    $startPage = getNS($ID) . ':' . $conf['start'];
+                    $startPage = getNS($identifier) . ':' . $conf['start'];
                     if (page_exists($startPage)) {
                         $res = $this->performNotFoundRedirect($startPage, self::TARGET_ORIGIN_START_PAGE);
                         if ($res) {
@@ -373,7 +392,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                     }
 
                     // Start page with the same name than the namespace
-                    $startPage = getNS($ID) . ':' . curNS($ID);
+                    $startPage = getNS($identifier) . ':' . curNS($identifier);
                     if (page_exists($startPage)) {
                         $res = $this->performNotFoundRedirect($startPage, self::TARGET_ORIGIN_START_PAGE);
                         if ($res) {
@@ -386,12 +405,12 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
                     $bestPageId = null;
 
-                    $bestPage = $this->getBestPage($ID);
+                    $bestPage = $this->getBestPage($identifier);
                     $bestPageId = $bestPage['id'];
                     $scorePageName = $bestPage['score'];
 
                     // Get Score from a Namespace
-                    $bestNamespace = $this->scoreBestNamespace($ID);
+                    $bestNamespace = $this->scoreBestNamespace($identifier);
                     $bestNamespaceId = $bestNamespace['namespace'];
                     $namespaceScore = $bestNamespace['score'];
 
@@ -408,7 +427,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
                 case self::GO_TO_BEST_NAMESPACE:
 
-                    $scoreNamespace = $this->scoreBestNamespace($ID);
+                    $scoreNamespace = $this->scoreBestNamespace($identifier);
                     $bestNamespaceId = $scoreNamespace['namespace'];
                     $score = $scoreNamespace['score'];
 
@@ -430,9 +449,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
             // End While Action
         }
-        // End if not connected
 
-        return;
 
     }
 

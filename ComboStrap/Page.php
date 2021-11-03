@@ -154,6 +154,8 @@ class Page extends DokuPath
     ];
     public const CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH = "page path";
     public const SLUG_ATTRIBUTE = "slug";
+
+    const PAGE_ID_URL_PREFIX = "x";
     const PAGE_ID_URL_SEPARATOR = ":";
 
 
@@ -330,6 +332,12 @@ class Page extends DokuPath
 
     }
 
+    public static function getPageFromUrlPageId(bool $urlPageId)
+    {
+
+    }
+
+
     public static function getHomePageFromNamespace(string $namespacePath): Page
     {
         global $conf;
@@ -360,24 +368,8 @@ class Page extends DokuPath
      */
     public static function getPageFromPageId(string $pageId): ?Page
     {
-        // Canonical
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite === null) {
-            return null;
-        }
-        $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
-        $res = $sqlite->query("select * from pages where $pageIdAttribute = ? ", $pageId);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the $pageIdAttribute pages selection");
-        }
-        $res2arr = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        foreach ($res2arr as $row) {
-            $id = $row['ID'];
-            return self::createPageFromId($id);
-        }
-
-        return null;
+        $databasePage = DatabasePage::createFromPageId($pageId);
+        return $databasePage->getPage();
     }
 
 
@@ -1222,21 +1214,7 @@ class Page extends DokuPath
      */
     public function getCanonicalUrl(array $urlParameters = []): ?string
     {
-        /**
-         * canonical url: name for ns + slug (title) + page id
-         * or
-         * canonical url: canonical path + page id
-         * or
-         * canonical url: page path + page id
-         *
-         *
-         *   - slug
-         *   - hierarchical slug
-         *   - permanent canonical path (page id)
-         *   - canonical path
-         *   - permanent page path (page id)
-         *   - page path
-         */
+
 
         /**
          * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
@@ -1245,56 +1223,7 @@ class Page extends DokuPath
             return DOKU_URL;
         }
 
-        /**
-         * Type of Url
-         */
-        if (!$this->exists()) {
-            $urlType = Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH;
-        } else {
-            $confCanonicalType = self::CONF_CANONICAL_URL_TYPE;
-            $confDefaultValue = self::CONF_CANONICAL_URL_TYPE_DEFAULT;
-            $urlType = PluginUtility::getConfValue($confCanonicalType, $confDefaultValue);
-            if (!in_array($urlType, self::CONF_CANONICAL_URL_MODE_VALUES)) {
-                $urlType = $confDefaultValue;
-                LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
-            }
-        }
-        $id = $this->getDokuwikiId();
-        switch ($urlType) {
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH:
-                $id = $this->getDokuwikiId();
-                break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH:
-                $id = $this->getDokuwikiId() . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbr();
-                break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH:
-                $id = $this->getCanonicalOrDefault();
-                break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH:
-                $id = $this->getCanonicalOrDefault() . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbr();
-                break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbr();
-                break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbr();
-                while (($parent = $this->getParentPage()) != null) {
-                    $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
-                }
-                break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_NAMESPACE_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbr();
-                if (($parent = $this->getParentPage()) != null) {
-                    $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
-                }
-                break;
-            default:
-                LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
-
-        }
-        $url = wl($id, $urlParameters, true, '&');
-        // keep the plus
-        return str_replace('%2B', self::PAGE_ID_URL_SEPARATOR, $url);
+        return wl($this->getCanonicalUrlId(), $urlParameters, true, '&');
 
 
     }
@@ -1777,7 +1706,7 @@ class Page extends DokuPath
     function getDatabasePage(): DatabasePage
     {
         if ($this->databasePage == null) {
-            $this->databasePage = new DatabasePage($this);
+            $this->databasePage = DatabasePage::createFromPageObject($this);
         }
         return $this->databasePage;
     }
@@ -2509,8 +2438,98 @@ class Page extends DokuPath
 
     function getPageIdAbbr()
     {
+
         if ($this->getPageId() === null) return null;
         return substr($this->getPageId(), 0, Page::PAGE_ID_ABBREV_LENGTH);
+
+    }
+
+    public function setDatabasePage(DatabasePage $databasePage): Page
+    {
+        $this->databasePage = $databasePage;
+        return $this;
+    }
+
+    /**
+     * canonical id: name for ns + slug (title) + page id
+     * or
+     * canonical id: canonical path + page id
+     * or
+     * canonical id: page path + page id
+     *
+     *
+     *   - slug
+     *   - hierarchical slug
+     *   - permanent canonical path (page id)
+     *   - canonical path
+     *   - permanent page path (page id)
+     *   - page path
+     */
+    public function getCanonicalUrlId(): string
+    {
+
+        /**
+         * Type of Url
+         */
+        if (!$this->exists()) {
+            $urlType = Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH;
+        } else {
+            $confCanonicalType = self::CONF_CANONICAL_URL_TYPE;
+            $confDefaultValue = self::CONF_CANONICAL_URL_TYPE_DEFAULT;
+            $urlType = PluginUtility::getConfValue($confCanonicalType, $confDefaultValue);
+            if (!in_array($urlType, self::CONF_CANONICAL_URL_MODE_VALUES)) {
+                $urlType = $confDefaultValue;
+                LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
+            }
+
+            // Not yet sync with the database
+            // No permanent canonical url
+            if ($this->getPageIdAbbr() === null) {
+                if ($urlType === Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH) {
+                    $urlType = Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH;
+                } else {
+                    $urlType = Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH;
+                }
+            }
+        }
+        $pageIdWithPrefix = '';
+        if ($this->getPageIdAbbr() != null) {
+            $pageIdWithPrefix = self::PAGE_ID_URL_PREFIX . $this->getPageIdAbbr();
+        }
+        $id = $this->getDokuwikiId();
+        switch ($urlType) {
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH:
+                $id = $this->getDokuwikiId();
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH:
+                $id = $this->getDokuwikiId() . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH:
+                $id = $this->getCanonicalOrDefault();
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH:
+                $id = $this->getCanonicalOrDefault() . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG:
+                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG:
+                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                while (($parent = $this->getParentPage()) != null) {
+                    $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
+                }
+                break;
+            case Page::CONF_CANONICAL_URL_MODE_VALUE_NAMESPACE_SLUG:
+                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                if (($parent = $this->getParentPage()) != null) {
+                    $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
+                }
+                break;
+            default:
+                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
+
+        }
+        return $id;
 
     }
 

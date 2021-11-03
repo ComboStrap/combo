@@ -424,6 +424,20 @@ class DokuPath extends File
         return $this->rev;
     }
 
+    /**
+     * @return string|null - the parent id without trailing separator or null if it's the root
+     */
+    public function getParentId(): ?string
+    {
+        $names = $this->getDokuNames();
+        if(sizeof($names)===1){
+            return null;
+        } else {
+            array_splice($names,0,sizeof($names)-1);
+            return implode(DokuPath::PATH_SEPARATOR,$names);
+        }
+    }
+
 
     /**
      * @return string

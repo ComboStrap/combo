@@ -230,26 +230,6 @@ class action_plugin_combo_urlmessage extends ActionPlugin
         }
     }
 
-    /**
-     * You can't unset when rendering because the write
-     * of a session may fail because some data may have already been send
-     * during the rendering process
-     * Unset is done at the start of the 404 manager
-     */
-    static function unsetNotification()
-    {
-
-        // Open session
-        self::sessionStart();
-
-        // Read the data and unset
-        if (isset($_SESSION[DOKU_COOKIE][self::ORIGIN_PAGE])) {
-            unset($_SESSION[DOKU_COOKIE][self::ORIGIN_PAGE]);
-        }
-        if (isset($_SESSION[DOKU_COOKIE][self::ORIGIN_TYPE])) {
-            unset($_SESSION[DOKU_COOKIE][self::ORIGIN_TYPE]);
-        }
-    }
 
 
     private static function sessionStart()

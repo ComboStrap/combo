@@ -265,6 +265,24 @@ class DatabasePage
 
     }
 
+    /**
+     * @param $canonical
+     * @return DatabasePage
+     */
+    public static function createFromCanonical($canonical): DatabasePage
+    {
+
+        DokuPath::addRootSeparatorIfNotPresent($canonical);
+        $databasePage = new DatabasePage();
+        $row = $databasePage->getDatabaseRowFromAttribute(Page::CANONICAL_PROPERTY,$canonical);
+        if ($row != null) {
+            $databasePage->buildDatabaseObjectFields($row);
+        }
+        return $databasePage;
+
+
+    }
+
     public
     function shouldReplicate(): bool
     {

@@ -301,7 +301,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         /**
          * Identifier is a Canonical ?
          */
-        $targetPage = Page::createPageFromCanonical($identifier);
+        $targetPage = DatabasePage::createFromCanonical($identifier)->getPage();
         if ($targetPage !== null && $targetPage->exists()) {
             $res = $this->executeTransparentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_CANONICAL);
             if ($res) {

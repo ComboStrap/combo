@@ -499,30 +499,6 @@ class Page extends DokuPath
         return new Page($qualifiedPath);
     }
 
-    /**
-     * @param $canonical
-     * @return Page - an id of an existing page
-     */
-    static function createPageFromCanonical($canonical): Page
-    {
-
-        // Canonical
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("select * from pages where CANONICAL = ? ", $canonical);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the pages selection query");
-        }
-        $res2arr = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        foreach ($res2arr as $row) {
-            $id = $row['ID'];
-            return self::createPageFromId($id)->setCanonical($canonical);
-        }
-
-        return self::createPageFromId($canonical);
-
-    }
-
 
     public function setCanonical($canonical): Page
     {
@@ -1264,14 +1240,18 @@ class Page extends DokuPath
     public function getCanonicalUrl(array $urlParameters = []): ?string
     {
 
-
         /**
          * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
          */
-        if ($this->isHomePage()) {
+        if ($this->isRootHomePage()) {
             return DOKU_URL;
         }
 
+        /**
+         * We are not honoring the below configuration
+         * https://www.dokuwiki.org/config:canonical
+         * that could make the url relative
+         */
         return wl($this->getCanonicalId(), $urlParameters, true, '&');
 
 

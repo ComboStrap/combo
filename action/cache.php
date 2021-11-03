@@ -2,15 +2,12 @@
 
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
-use ComboStrap\DokuPath;
-use ComboStrap\File;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
-use ComboStrap\JavascriptLibrary;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TplUtility;
 use dokuwiki\Cache\CacheRenderer;
-use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -188,8 +185,6 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     }
 
 
-
-
     /**
      * Delete the Vary header
      * @param Doku_Event $event
@@ -237,7 +232,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
          */
         $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        if($loaded){
+        if ($loaded) {
 
             $sideKickSlotPageName = TplUtility::getSideKickSlotPageName();
             if (!empty($sideKickSlotPageName)) {

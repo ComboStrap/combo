@@ -217,7 +217,12 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          */
         $targetPage = Page::createPageFromId($ID);
         if ($targetPage->exists()) {
-            if($ID!==$targetPage->getCanonicalId()){
+            /**
+             * If this is not the root home page
+             * and if the canonical id is the not the same,
+             * redirect
+             */
+            if ($ID !== $targetPage->getCanonicalId() && $ID != Site::getHomePageName()) {
                 $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
             }
             return;
@@ -248,19 +253,17 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
          * {@link Page::CONF_CANONICAL_URL_TYPE}
          */
 
-        $lastPart = $targetPage->getDokuPathName();
+        $pageIdAbbr = Page::decodePageId($targetPage->getDokuPathName());
         if (
-            strlen($lastPart) === (Page::PAGE_ID_ABBREV_LENGTH + strlen(Page::PAGE_ID_URL_PREFIX))
-            && strpos($lastPart, Page::PAGE_ID_URL_PREFIX) === 0
+            $pageIdAbbr != null
         ) {
-            $urlPageId = substr($lastPart, strlen(Page::PAGE_ID_URL_PREFIX));
-            $page = DatabasePage::createFromPageIdAbbr($urlPageId)->getPage();
+            $page = DatabasePage::createFromPageIdAbbr($pageIdAbbr)->getPage();
             if ($page !== null && $page->exists()) {
                 /**
                  * If the url canonical id has changed, we show it
                  * to the writer by performing a permanent redirect
                  */
-                if ($identifier != $page->getCanonicalId() ) {
+                if ($identifier != $page->getCanonicalId()) {
                     // Google asks for a redirect
                     // https://developers.google.com/search/docs/advanced/crawling/301-redirects
                     // People access your site through several different URLs.

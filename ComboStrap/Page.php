@@ -155,8 +155,8 @@ class Page extends DokuPath
     public const CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH = "page path";
     public const SLUG_ATTRIBUTE = "slug";
 
-    const PAGE_ID_URL_PREFIX = "x";
-    const PAGE_ID_URL_SEPARATOR = ":";
+
+    const PAGE_ID_URL_SEPARATOR = DokuPath::PATH_SEPARATOR;
 
 
     /**
@@ -333,12 +333,20 @@ class Page extends DokuPath
     }
 
 
-    public static function getPageIdChecksumCharacter(string $pageId): string
+    /**
+     * @param string $pageId
+     * @return string|null - the checksum letter or null if this is not a page id
+     */
+    public static function getPageIdChecksumCharacter(string $pageId): ?string
     {
         $total = 0;
         for ($i = 0; $i < strlen($pageId); $i++) {
             $letter = $pageId[$i];
-            $total += strpos(self::PAGE_ID_ALPHABET, $letter);
+            $pos = strpos(self::PAGE_ID_ALPHABET, $letter);
+            if ($pos === false) {
+                return null;
+            }
+            $total += $pos;
         }
         $checkSum = $total % strlen(self::PAGE_ID_ALPHABET);
         return self::PAGE_ID_ALPHABET[$checkSum];
@@ -359,9 +367,15 @@ class Page extends DokuPath
      * @param string $encodedPageId
      * @return string|null return the decoded page id or null if it's not an encoded page id
      */
-    public static function decodePageId(string $encodedPageId): string
+    public static function decodePageId(string $encodedPageId): ?string
     {
-        return $encodedPageId;
+        if (empty($encodedPageId)) return null;
+        $checkSum = $encodedPageId[0];
+        $extractedEncodedPageId = substr($encodedPageId, 1);
+        $calculatedCheckSum = self::getPageIdChecksumCharacter($extractedEncodedPageId);
+        if($calculatedCheckSum==null) return null;
+        if($calculatedCheckSum!=$checkSum) return null;
+        return $extractedEncodedPageId;
     }
 
 
@@ -2519,35 +2533,32 @@ class Page extends DokuPath
                 }
             }
         }
-        $pageIdWithPrefix = '';
-        if ($this->getPageIdAbbr() != null) {
-            $pageIdWithPrefix = $this->getPageIdAbbrUrlEncoded();
-        }
+
         $id = $this->getDokuwikiId();
         switch ($urlType) {
             case Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH:
                 $id = $this->getDokuwikiId();
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH:
-                $id = $this->getDokuwikiId() . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                $id = $this->getDokuwikiId() . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH:
                 $id = $this->getCanonicalOrDefault();
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH:
-                $id = $this->getCanonicalOrDefault() . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                $id = $this->getCanonicalOrDefault() . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
                 while (($parent = $this->getParentPage()) != null) {
                     $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
                 }
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_NAMESPACE_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $pageIdWithPrefix;
+                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
                 if (($parent = $this->getParentPage()) != null) {
                     $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
                 }
@@ -2566,11 +2577,11 @@ class Page extends DokuPath
      * ( and not to hit the index for nothing )
      * @return string
      */
-    private function getPageIdAbbrUrlEncoded(): string
+    public function getPageIdAbbrUrlEncoded(): ?string
     {
-        if ($this->getPageIdAbbr() == null) return "";
+        if ($this->getPageIdAbbr() == null) return null;
         $abbr = $this->getPageIdAbbr();
-        $checkSum = self::getPageIdChecksumCharacter($abbr);
+        return self::encodePageId($abbr);
     }
 
 

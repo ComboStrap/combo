@@ -988,10 +988,9 @@ EOF;
                         $errorMessage = "The page ($this->page) and the page ($id) have the same page id ($pageId)";
                         LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR);
                         // What to do ?
-                        // We just throw an error for now
                         // The database does not allow two page id with the same value
                         // If it happens, ugh, ugh, ..., a replication process between website may be.
-                        throw new RuntimeException($errorMessage);
+                        return null;
                     }
                 }
                 return $rows[0];

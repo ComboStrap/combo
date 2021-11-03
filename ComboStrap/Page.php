@@ -332,9 +332,36 @@ class Page extends DokuPath
 
     }
 
-    public static function getPageFromUrlPageId(bool $urlPageId)
-    {
 
+    public static function getPageIdChecksumCharacter(string $pageId): string
+    {
+        $total = 0;
+        for ($i = 0; $i < strlen($pageId); $i++) {
+            $letter = $pageId[$i];
+            $total += strpos(self::PAGE_ID_ALPHABET, $letter);
+        }
+        $checkSum = $total % strlen(self::PAGE_ID_ALPHABET);
+        return self::PAGE_ID_ALPHABET[$checkSum];
+    }
+
+    /**
+     * Add a checksum character to the page id
+     * to check if it's a page id that we get in the url
+     * @param string $pageId
+     * @return string
+     */
+    public static function encodePageId(string $pageId): string
+    {
+        return self::getPageIdChecksumCharacter($pageId) . $pageId;
+    }
+
+    /**
+     * @param string $encodedPageId
+     * @return string|null return the decoded page id or null if it's not an encoded page id
+     */
+    public static function decodePageId(string $encodedPageId): string
+    {
+        return $encodedPageId;
     }
 
 
@@ -1223,7 +1250,7 @@ class Page extends DokuPath
             return DOKU_URL;
         }
 
-        return wl($this->getCanonicalUrlId(), $urlParameters, true, '&');
+        return wl($this->getCanonicalId(), $urlParameters, true, '&');
 
 
     }
@@ -2465,7 +2492,7 @@ class Page extends DokuPath
      *   - permanent page path (page id)
      *   - page path
      */
-    public function getCanonicalUrlId(): string
+    public function getCanonicalId(): string
     {
 
         /**
@@ -2494,7 +2521,7 @@ class Page extends DokuPath
         }
         $pageIdWithPrefix = '';
         if ($this->getPageIdAbbr() != null) {
-            $pageIdWithPrefix = self::PAGE_ID_URL_PREFIX . $this->getPageIdAbbr();
+            $pageIdWithPrefix = $this->getPageIdAbbrUrlEncoded();
         }
         $id = $this->getDokuwikiId();
         switch ($urlType) {
@@ -2531,6 +2558,19 @@ class Page extends DokuPath
         }
         return $id;
 
+    }
+
+    /**
+     * Add a one letter checksum
+     * to verify that this is a page id abbr
+     * ( and not to hit the index for nothing )
+     * @return string
+     */
+    private function getPageIdAbbrUrlEncoded(): string
+    {
+        if ($this->getPageIdAbbr() == null) return "";
+        $abbr = $this->getPageIdAbbr();
+        $checkSum = self::getPageIdChecksumCharacter($abbr);
     }
 
 

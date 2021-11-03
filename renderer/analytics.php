@@ -505,7 +505,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         if ($this->page->isSlot()) {
             $lowLevel = false;
         }
-        $this->page->setCalculatedLowQualityIndicator($lowLevel);
+        $this->page->setDefaultLowQualityIndicator($lowLevel);
 
         /**
          * Building the quality object in order

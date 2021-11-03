@@ -202,6 +202,14 @@ class Page extends DokuPath
      * @var string
      */
     private $pageId;
+    /**
+     * @var boolean|null
+     */
+    private $isLowQualityIndicator;
+    /**
+     * @var boolean|null
+     */
+    private $defaultLowQuality;
 
     /**
      * Page constructor.
@@ -373,8 +381,8 @@ class Page extends DokuPath
         $checkSum = $encodedPageId[0];
         $extractedEncodedPageId = substr($encodedPageId, 1);
         $calculatedCheckSum = self::getPageIdChecksumCharacter($extractedEncodedPageId);
-        if($calculatedCheckSum==null) return null;
-        if($calculatedCheckSum!=$checkSum) return null;
+        if ($calculatedCheckSum == null) return null;
+        if ($calculatedCheckSum != $checkSum) return null;
         return $extractedEncodedPageId;
     }
 
@@ -673,11 +681,11 @@ class Page extends DokuPath
      * Set the page quality
      * @param boolean $value true if this is a low quality page rank false otherwise
      */
-
     public
     function setLowQualityIndicator(bool $value): Page
     {
-        return $this->setQualityIndicator(self::LOW_QUALITY_PAGE_INDICATOR, $value);
+        $this->lowQualityIndicator = $value;
+        return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_PAGE_INDICATOR, $value);
     }
 
     /**
@@ -1824,6 +1832,9 @@ class Page extends DokuPath
                 case Page::PAGE_ID_ATTRIBUTE:
                     $this->setPageId($value);
                     continue 2;
+                case Page::LOW_QUALITY_PAGE_INDICATOR:
+                    $this->setLowQualityIndicator(Boolean::toBoolean($value));
+                    continue 2;
                 default:
                     LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_WARNING);
                     $this->setMetadata($key, $value);
@@ -2012,27 +2023,28 @@ class Page extends DokuPath
         return [Page::HOLY_LAYOUT_VALUE, Page::MEDIAN_LAYOUT_VALUE, Page::LANDING_LAYOUT_VALUE];
     }
 
-    public
-    function setCalculatedLowQualityIndicator($bool): Page
+    public function setDefaultLowQualityIndicator($bool): Page
     {
-        return $this->setQualityIndicator(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool);
+        $this->defaultLowQuality = $bool;
+        return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool);
     }
 
 
     public
     function getMetadataAsBoolean(string $key): ?bool
     {
-        $value = $this->getMetadata($key);
-        if ($value !== null) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
-        } else {
-            return null;
-        }
-
+        return Boolean::toBoolean($this->getMetadata($key));
     }
 
-    private
-    function setQualityIndicator(string $lowQualityAttributeName, $value): Page
+    /**
+     * Change the quality indicator
+     * and if the quality level has become low
+     * and that the protection is on, delete the cache
+     * @param string $lowQualityAttributeName
+     * @param $value
+     * @return Page
+     */
+    private function setQualityIndicatorAndDeleteCacheIfNeeded(string $lowQualityAttributeName, $value): Page
     {
         $actualValue = $this->getMetadataAsBoolean($lowQualityAttributeName);
         if ($actualValue === null || $value !== $actualValue) {
@@ -2054,20 +2066,6 @@ class Page extends DokuPath
         return $this;
     }
 
-    public
-    function getCalculatedLowQualityIndicator()
-    {
-        $value = $this->getMetadataAsBoolean(self::LOW_QUALITY_INDICATOR_CALCULATED);
-        /**
-         * Migration code
-         * The indicator {@link Page::LOW_QUALITY_INDICATOR_CALCULATED} is new
-         * but if the analytics was done, we can get it
-         */
-        if ($value === null && $this->getAnalytics()->exists()) {
-            return $this->getAnalytics()->getData()->toArray()[Analytics::QUALITY][Analytics::LOW];
-        }
-        return $value;
-    }
 
     public
     function getDefaultLowQualityIndicator()
@@ -2078,15 +2076,24 @@ class Page extends DokuPath
          * analysis, this is a low page with protection enable
          * or not if not
          */
-        $calculated = $this->getCalculatedLowQualityIndicator();
-        if ($calculated === null) {
-            if (Site::isLowQualityProtectionEnable()) {
-                return true;
-            } else {
-                return false;
-            }
+        $value = $this->getMetadataAsBoolean(self::LOW_QUALITY_INDICATOR_CALCULATED);
+        if ($value !== null)  return $value;
+
+        /**
+         * Migration code
+         * The indicator {@link Page::LOW_QUALITY_INDICATOR_CALCULATED} is new
+         * but if the analytics was done, we can get it
+         */
+        if ($this->getAnalytics()->exists()) {
+            $value = $this->getAnalytics()->getData()->toArray()[Analytics::QUALITY][Analytics::LOW];
+            if ($value !== null)  return $value;
         }
-        return $calculated;
+
+        if (Site::isLowQualityProtectionEnable()) {
+            return true;
+        } else {
+            return false;
+        }
 
     }
 
@@ -2411,6 +2418,9 @@ class Page extends DokuPath
 
         $this->region = $this->getMetadata(self::REGION_META_PROPERTY);
         $this->lang = $this->getMetadata(self::LANG_META_PROPERTY);
+
+        $this->isLowQualityIndicator = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_PAGE_INDICATOR));
+        $this->defaultLowQuality = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_INDICATOR_CALCULATED));
 
     }
 

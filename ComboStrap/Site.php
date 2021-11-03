@@ -277,6 +277,9 @@ class Site
     public static function getPageDirectory()
     {
         global $conf;
+        /**
+         * Data dir is the pages dir
+         */
         return $conf['datadir'];
     }
 
@@ -301,7 +304,7 @@ class Site
     public static function getDataDirectory()
     {
         global $conf;
-        return $conf['datadir'];
+        return File::createFromPath( $conf['datadir'])->getParent()->getAbsoluteFileSystemPath();
     }
 
     public static function isLowQualityProtectionEnable(): bool

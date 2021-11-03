@@ -40,6 +40,7 @@ require_once(__DIR__ . '/ArrayCaseInsensitive.php');
 require_once(__DIR__ . '/ArrayUtility.php');
 require_once(__DIR__ . '/Background.php');
 require_once(__DIR__ . '/Boldness.php');
+require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/BreadcrumbHierarchical.php');
 require_once(__DIR__ . '/CacheByLogicalKey.php');

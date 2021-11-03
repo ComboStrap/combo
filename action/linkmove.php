@@ -18,6 +18,25 @@ use ComboStrap\Site;
 class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 {
 
+
+    private static function checkAndSendAMessageIfLockFilePresent(): bool
+    {
+        $lockFile = File::createFromPath(Site::getDataDirectory() . "/locks_plugin_move.lock");
+        if (!$lockFile->exists()) {
+            return false;
+        }
+        $lockFileDateTimeModified = $lockFile->getModifiedTime();
+        $lockFileModifiedTimestamp = $lockFileDateTimeModified->getTimestamp();
+        $now = time();
+
+        $lockFileAgeInMinute = ($now - $lockFileModifiedTimestamp) / 60;
+        if ($lockFileAgeInMinute > 5) {
+            LogUtility::msg("The move lockfile ($lockFile) exists and is older than 10 minutes (exactly $lockFileAgeInMinute minutes). If you are no more in a move, you should delete this file otherwise it will disable the move of page and the cache.");
+            return true;
+        }
+        return false;
+    }
+
     /**
      * As explained https://www.dokuwiki.org/plugin:move#support_for_other_plugins
      * @param Doku_Event_Handler $controller
@@ -34,6 +53,29 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          * To rewrite the link
          */
         $controller->register_hook('PLUGIN_MOVE_HANDLERS_REGISTER', 'BEFORE', $this, 'handle_link', array());
+
+
+        /**
+         * Check for the presence of a lock file
+         */
+        $controller->register_hook('PARSER_WIKITEXT_PREPROCESS', 'BEFORE', $this, 'check_lock_file_age', array());
+
+
+    }
+
+    /**
+     * @param Doku_Event $event
+     * @param $params
+     *
+     * When a lock file is present,
+     * the move plugin will purge the data in {@link action_plugin_move_rewrite::handle_cache()}
+     * making the rendering fucking slow
+     * We check that the lock file is not
+     */
+    function check_lock_file_age(Doku_Event $event, $params)
+    {
+        self::checkAndSendAMessageIfLockFilePresent();
+
     }
 
     /**
@@ -45,25 +87,17 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
     function handle_rename_before(Doku_Event $event, $params)
     {
         /**
-         * Check that the lock file is not older than 10 minutes
+         * Check that the lock file is not older
+         * Lock file bigger than 5 minutes
+         * Is not really possible
          */
-        $lockFile = File::createFromPath(Site::getDataDirectory() . "/locks_plugin_move.lock");
-        if ($lockFile->exists()) {
-            $lockFileDateTimeModified = $lockFile->getModifiedTime();
-            $lockFileModifiedTimestamp = $lockFileDateTimeModified->getTimestamp();
-            $now = time();
-
-            /**
-             * Lock file bigger than 5 minutes
-             * Is not really possible
-             */
-            $ageInMinute = ($now - $lockFileModifiedTimestamp)/60;
-            if ($ageInMinute > 5) {
-                $event->preventDefault();
-                LogUtility::msg("The move lockfile ($lockFile) exists and is older than 10 minutes (exactly $ageInMinute minutes), you should finish the first move or delete this file before a move. The Move was canceled.");
-                return;
-            }
+        $result = self::checkAndSendAMessageIfLockFilePresent();
+        if ($result === true) {
+            $event->preventDefault();
+            LogUtility::msg("The move lock file is present, the move was canceled.");
+            return;
         }
+
 
         /**
          * The move is done before otherwise the metadata have moved
@@ -80,9 +114,9 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             $page->getDatabasePage()->moveTo($targetId);
             $alias = $page->addAndGetAlias($page->getDokuwikiId(), Alias::REDIRECT);
             $page->getDatabasePage()->addAlias($alias);
-        } catch (Exception $exception){
+        } catch (Exception $exception) {
             // We catch the errors if any to not stop the move
-            LogUtility::msg("An error occurred during the move replication to the database. Error message was: ".$exception->getMessage(),LogUtility::LVL_MSG_ERROR, DatabasePage::REPLICATION_CANONICAL);
+            LogUtility::msg("An error occurred during the move replication to the database. Error message was: " . $exception->getMessage(), LogUtility::LVL_MSG_ERROR, DatabasePage::REPLICATION_CANONICAL);
         }
 
     }

@@ -8,6 +8,7 @@ use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
 use ComboStrap\JavascriptLibrary;
 use ComboStrap\PluginUtility;
+use ComboStrap\TplUtility;
 use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Utf8\PhpString;
 
@@ -53,7 +54,11 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('INIT_LANG_LOAD', 'BEFORE', $this, 'deleteVaryFromStaticGeneratedResources', array());
 
-
+        /**
+         * To delete sidebar (cache) cache when a page was modified in a namespace
+         * https://combostrap.com/sideslots
+         */
+        $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'sideSlotsCacheBursting', array());
     }
 
     /**
@@ -219,5 +224,39 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         }
     }
 
+    function sideSlotsCacheBursting($event)
+    {
+
+        global $conf;
+
+        $sidebars = [
+            $conf['sidebar']
+        ];
+
+        /**
+         * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
+         */
+        $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        if($loaded){
+
+            $sideKickSlotPageName = TplUtility::getSideKickSlotPageName();
+            if (!empty($sideKickSlotPageName)) {
+                $sidebars[] = $sideKickSlotPageName;
+            }
+
+        }
+
+
+        /**
+         * Delete the cache for the sidebar
+         */
+        foreach ($sidebars as $sidebarRelativePath) {
+
+            $page = Page::createPageFromNonQualifiedPath($sidebarRelativePath);
+            //$page->deleteCache();
+
+        }
+
+    }
 
 }

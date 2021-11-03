@@ -200,6 +200,10 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     function _handle404(&$event, $param)
     {
 
+        global $ACT;
+        if ($ACT != 'show') return;
+
+
         global $ID;
 
         /**
@@ -229,9 +233,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
 
-        global $ACT;
-        if ($ACT != 'show') return;
-
         $identifier = $ID;
 
         // Well known
@@ -255,7 +256,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
         $pageIdAbbr = Page::decodePageId($targetPage->getDokuPathName());
         if (
-            $pageIdAbbr != null
+            $pageIdAbbr !== null
         ) {
             $page = DatabasePage::createFromPageIdAbbr($pageIdAbbr)->getPage();
             if ($page !== null && $page->exists()) {

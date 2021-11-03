@@ -433,7 +433,7 @@ class DokuPath extends File
         if(sizeof($names)===1){
             return null;
         } else {
-            array_splice($names,0,sizeof($names)-1);
+            $names = array_slice($names,0,sizeof($names)-1);
             return implode(DokuPath::PATH_SEPARATOR,$names);
         }
     }

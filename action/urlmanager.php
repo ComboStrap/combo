@@ -30,9 +30,11 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     const URL_MANAGER_ENABLE_CONF = "enableUrlManager";
 
     // The redirect type
+    const REDIRECT_TRANSPARENT_METHOD = 'transparent'; // was (Id)
+    // For permanent, see https://developers.google.com/search/docs/advanced/crawling/301-redirects
     const REDIRECT_PERMANENT_METHOD = 'permanent'; // was `Http` (301)
     const REDIRECT_NOTFOUND_METHOD = "notfound"; // 404 (See other) (when best page name is calculated)
-    const REDIRECT_TRANSPARENT_METHOD = 'transparent'; // was (Id)
+
     public const PERMANENT_REDIRECT_CANONICAL = "permanent:redirect";
 
     // Where the target id value comes from
@@ -613,8 +615,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
     }
 
-    private
-    function executePermanentRedirect(string $target, $targetOrigin): bool
+    private function executePermanentRedirect(string $target, $targetOrigin): bool
     {
         return $this->executeHttpRedirect($target, $targetOrigin, self::REDIRECT_PERMANENT_METHOD);
     }

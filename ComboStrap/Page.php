@@ -484,7 +484,7 @@ class Page extends DokuPath
 
     public static function createRequestedPageFromEnvironment(): ?Page
     {
-        $pageId = PluginUtility::getPageId();
+        $pageId = PluginUtility::getMainPageDokuwikiId();
         if ($pageId != null) {
             return Page::createPageFromId($pageId);
         } else {
@@ -1883,7 +1883,7 @@ class Page extends DokuPath
          * The last part of the id as canonical
          */
         // How many last parts are taken into account in the canonical processing (2 by default)
-        $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
+        $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_canonical::CONF_CANONICAL_LAST_NAMES_COUNT);
         if (empty($this->getCanonical()) && $canonicalLastNamesCount > 0) {
             /**
              * Takes the last names part

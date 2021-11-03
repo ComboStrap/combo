@@ -67,8 +67,11 @@ $conf['BestEndPageMinimalScoreForAliasCreation'] = 2;
 
 /**
  * Does automatic canonical processing is on
+ * {@link action_plugin_combo_canonical::CONF_CANONICAL_LAST_NAMES_COUNT}
+ *
  */
 $conf['MinimalNamesCountForAutomaticCanonical'] = 0;
+$conf['useCanonicalValueForGoogleAnalyticsPageView'] = 0;
 
 /**
  * Icon Namespace

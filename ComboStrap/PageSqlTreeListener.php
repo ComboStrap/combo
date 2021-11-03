@@ -288,7 +288,7 @@ where
     pr.target_id = ?
 
 EOF;
-                    $id = PluginUtility::getPageId();
+                    $id = PluginUtility::getMainPageDokuwikiId();
                     if (empty($id)) {
                         LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
                     }

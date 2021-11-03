@@ -94,7 +94,7 @@ class MetadataUtility
      */
     public static function getMeta($key)
     {
-        return p_get_metadata(PluginUtility::getPageId(), $key);
+        return p_get_metadata(PluginUtility::getMainPageDokuwikiId(), $key);
     }
 
     /**
@@ -104,6 +104,6 @@ class MetadataUtility
      */
     public static function setMeta($key, $value)
     {
-        p_set_metadata(PluginUtility::getPageId(), array($key => $value));
+        p_set_metadata(PluginUtility::getMainPageDokuwikiId(), array($key => $value));
     }
 }

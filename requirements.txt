@@ -2,3 +2,4 @@
 https://github.com/cosmocode/sqlite.git   lib/plugins/sqlite
 https://github.com/michitux/dokuwiki-plugin-move   lib/plugins/move
 https://github.com/alexlehm/dokuwiki-plugin-gtm   lib/plugins/googletagmanager
+https://github.com/tatewake/dokuwiki-plugin-googleanalytics lib/plugins/googleanalytics

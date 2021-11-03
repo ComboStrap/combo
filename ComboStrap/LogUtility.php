@@ -116,7 +116,7 @@ class LogUtility
             global $INPUT;
             global $conf;
 
-            $id = PluginUtility::getPageId();
+            $id = PluginUtility::getMainPageDokuwikiId();
 
             $file = $conf['cachedir'] . '/debug.log';
             $fh = fopen($file, 'a');
@@ -181,7 +181,7 @@ class LogUtility
                  * because it throws an error message when the environment
                  * is not good, creating a recursive call.
                  */
-                $id = PluginUtility::getPageId();
+                $id = PluginUtility::getMainPageDokuwikiId();
                 if ($id != null) {
                     $page = Page::createPageFromId($id);
                     if ($page != null) {

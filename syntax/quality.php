@@ -132,7 +132,7 @@ class syntax_plugin_combo_quality extends DokuWiki_Syntax_Plugin
                          * If the pageId is relative make it absolute
                          */
                         if (strpos(":",$pageId)===false) {
-                            $pageNameSpace = getNS(PluginUtility::getPageId());
+                            $pageNameSpace = getNS(PluginUtility::getMainPageDokuwikiId());
                             resolve_pageid($pageNameSpace, $pageId, $exists);
                         }
                         $note = action_plugin_combo_qualitymessage::createQualityNote($pageId, $this);

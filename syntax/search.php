@@ -98,7 +98,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     }
                     $renderer->doc .= '">' . DOKU_LF;
                     $renderer->doc .= '<input type="hidden" name="do" value="search" />';
-                    $id = PluginUtility::getPageId();
+                    $id = PluginUtility::getMainPageDokuwikiId();
                     $renderer->doc .= "<input type=\"hidden\" name=\"id\" value=\"$id\" />";
                     $inputSearchId = 'qsearch__in';
 

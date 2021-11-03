@@ -81,7 +81,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 return;
             }
 
-            $note = $this->createQualityNote(PluginUtility::getPageId(), $this);
+            $note = $this->createQualityNote(PluginUtility::getMainPageDokuwikiId(), $this);
             if ($note != null) {
                 ptln($note->toHtml());
             }

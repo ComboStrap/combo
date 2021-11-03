@@ -68,7 +68,8 @@ $meta['WeightFactorForSameNamespace'] = array('string');
 
 $meta[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = array('string');
 
-$meta[action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF] = array('string');
+$meta[action_plugin_combo_canonical::CONF_CANONICAL_LAST_NAMES_COUNT] = array('string');
+$meta[action_plugin_combo_canonical::CONF_CANONICAL_FOR_GA_PAGE_VIEW] = array('onff');
 
 /**
  * Icon namespace where the downloaded icon are stored

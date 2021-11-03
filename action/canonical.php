@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\DokuPath;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Page;
@@ -10,13 +11,15 @@ if (!defined('DOKU_INC')) die();
  *
  *
  */
-class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
+class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
 {
 
     /**
      * The conf
      */
-    const CANONICAL_LAST_NAMES_COUNT_CONF = 'MinimalNamesCountForAutomaticCanonical';
+    const CONF_CANONICAL_LAST_NAMES_COUNT = 'MinimalNamesCountForAutomaticCanonical';
+    const CONF_CANONICAL_FOR_GA_PAGE_VIEW = "useCanonicalValueForGoogleAnalyticsPageView";
+    const CANONICAL = "canonical";
 
 
     function __construct()
@@ -32,6 +35,12 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
          * https://www.dokuwiki.org/devel:event:tpl_metaheader_output
          */
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'metaCanonicalProcessing', array());
+
+        /**
+         * Add canonical to javascript
+         */
+        $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this, 'addCanonicalToJavascript', array());
+
     }
 
     /**
@@ -44,7 +53,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
     {
 
         global $ID;
-        if (empty($ID)){
+        if (empty($ID)) {
             // $_SERVER['SCRIPT_NAME']== "/lib/exe/mediamanager.php"
             // $ID is null
             return;
@@ -103,7 +112,7 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
         $canonicalOgArray = array("property" => $canonicalPropertyKey, "content" => $canonicalUrl);
         // Search if the canonical property is already present
         foreach ($event->data['meta'] as $key => $meta) {
-            if (array_key_exists("property",$meta)) {
+            if (array_key_exists("property", $meta)) {
                 /**
                  * We may have several properties
                  */
@@ -120,6 +129,36 @@ class action_plugin_combo_metacanonical extends DokuWiki_Action_Plugin
             $event->data['meta'][] = $canonicalOgArray;
         }
 
+    }
+
+    /**
+     * Add the canonical value to JSON
+     * @param $event
+     * @noinspection SpellCheckingInspection
+     */
+    function addCanonicalToJavascript($event)
+    {
+
+        global $JSINFO;
+        $page = Page::createPageFromId(PluginUtility::getMainPageDokuwikiId());
+        if ($page->getCanonical() != null) {
+            $JSINFO[Page::CANONICAL_PROPERTY] = $page->getCanonical();
+            if (isset($JSINFO["ga"]) && PluginUtility::getConfValue(self::CONF_CANONICAL_FOR_GA_PAGE_VIEW, 1)) {
+                //
+                // The path portion of a URL. This value should start with a slash (/) character.
+                // As said here
+                // https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#pageview_fields
+                //
+                //
+                // For the modification instructions
+                // https://developers.google.com/analytics/devguides/collection/analyticsjs/pages#pageview_fields
+                $pageViewCanonical = str_replace(DokuPath::PATH_SEPARATOR, "/", $page->getCanonical());
+                if ($pageViewCanonical[0] != "/") {
+                    $pageViewCanonical = "/$pageViewCanonical";
+                }
+                $JSINFO["ga"]["pageview"] = $pageViewCanonical;
+            }
+        }
     }
 
 }

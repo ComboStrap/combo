@@ -769,10 +769,10 @@ class PluginUtility
      * Get the page id
      * If the page is a sidebar, it will not return the id of the sidebar
      * but the one of the page
-     * @return string
+     * @return string|null - null in test
      */
     public
-    static function getPageId()
+    static function getMainPageDokuwikiId(): ?string
     {
         return FsWikiUtility::getMainPageId();
     }

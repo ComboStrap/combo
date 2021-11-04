@@ -303,6 +303,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $managedMeta = [
                     Page::CANONICAL_PROPERTY,
                     Page::TYPE_META_PROPERTY,
+                    Analytics::H1,
                     Page::IMAGE_META_PROPERTY,
                     Page::REGION_META_PROPERTY,
                     Page::LANG_META_PROPERTY,

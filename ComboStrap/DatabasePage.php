@@ -290,12 +290,14 @@ class DatabasePage
      */
     private function createPageIdIfNeeded()
     {
-        $pageId = $this->page->getPageId();
-        if ($pageId === null || !is_string($pageId)
-            || preg_match("/[-_A-Z]/", $pageId)
-        ) {
-            $pageId = self::generateUniquePageId();
-            $this->page->setPageId($pageId);
+        if($this->page!=null) {
+            $pageId = $this->page->getPageId();
+            if ($pageId === null || !is_string($pageId)
+                || preg_match("/[-_A-Z]/", $pageId)
+            ) {
+                $pageId = self::generateUniquePageId();
+                $this->page->setPageId($pageId);
+            }
         }
     }
 
@@ -820,6 +822,14 @@ EOF;
     public function getAliases(): array
     {
         if ($this->sqlite === null) {
+            return [];
+        }
+        if($this->page===null){
+            LogUtility::msg("The page is unknown. We can't retrieve the aliases");
+            return [];
+        }
+        if($this->page->getPageId()===null){
+            LogUtility::msg("The page id is null. We can't retrieve the aliases");
             return [];
         }
         $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;

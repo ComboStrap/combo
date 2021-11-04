@@ -1,10 +1,6 @@
 <?php
-/**
- * DokuWiki Plugin Js Action
- *
- */
 
-if (!defined('DOKU_INC')) die();
+
 
 /**
  * Suppress the Javascript of Dokuwiki not needed on a page show

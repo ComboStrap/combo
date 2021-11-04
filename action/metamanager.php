@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 use ComboStrap\Analytics;
 use ComboStrap\DatabasePage;
 use ComboStrap\FormField;

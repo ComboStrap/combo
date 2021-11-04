@@ -91,7 +91,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:
-                        $permanentValue = $page->getPageId();
+                        $permanentValue = Page::encodePageId($page->getPageId());
                         $url = Site::getBaseUrl() . "$permanentValue";
                         if($fragment!=null){
                             $url .= "#$fragment";

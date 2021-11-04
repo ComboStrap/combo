@@ -283,6 +283,22 @@ class DatabasePage
 
     }
 
+    /**
+     * Create a page id before insertion
+     * and when the row does not have any
+     * (Needed for the replication of the alias)
+     */
+    private function createPageIdIfNeeded()
+    {
+        $pageId = $this->page->getPageId();
+        if ($pageId === null || !is_string($pageId)
+            || preg_match("/[-_A-Z]/", $pageId)
+        ) {
+            $pageId = self::generateUniquePageId();
+            $this->page->setPageId($pageId);
+        }
+    }
+
     public
     function shouldReplicate(): bool
     {
@@ -667,15 +683,10 @@ EOF;
         } else {
 
             /**
-             * Page Id
+             * The page id should be null
+             * We create it
              */
-            $pageId = $this->page->getPageId();
-            if ($pageId === null || !is_string($pageId)
-                || preg_match("/[-_A-Z]/", $pageId)
-            ) {
-                $pageId = self::generateUniquePageId();
-                $this->page->setPageId($pageId);
-            }
+            $this->createPageIdIfNeeded();
 
             $values[PAGE::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getDokuwikiId();
             $values[Analytics::PATH] = $this->page->getPath();
@@ -893,6 +904,12 @@ EOF;
             return;
         }
 
+        /**
+         * Old record may not have any page id,
+         * we create them here
+         */
+        self::createPageIdIfNeeded();
+
         foreach ($row as $key => $value) {
             $key = strtolower($key);
             switch ($key) {
@@ -942,7 +959,7 @@ EOF;
     {
         $metaRecord = array(
             Analytics::CANONICAL => $this->page->getCanonicalOrDefault(),
-            'PATH' => $this->page->getAbsolutePath(),
+            Page::PATH_ATTRIBUTE => $this->page->getAbsolutePath(),
             Analytics::NAME => $this->page->getPageNameNotEmpty(),
             Analytics::TITLE => $this->page->getTitleNotEmpty(),
             Analytics::H1 => $this->page->getH1NotEmpty(),
@@ -954,7 +971,7 @@ EOF;
             Page::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
             Page::LANG_META_PROPERTY => $this->page->getLangOrDefault(),
             Page::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
-            'ID' => $this->page->getDokuwikiId(),
+            Page::DOKUWIKI_ID_ATTRIBUTE => $this->page->getDokuwikiId(),
         );
 
         if ($this->page->getPageId() != null) {
@@ -1119,7 +1136,7 @@ EOF;
                     if (!$duplicatePage->exists()) {
                         $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
                     } else {
-                        LogUtility::msg("The page ($this->page) and the page ($value) have the same path ($path)", LogUtility::LVL_MSG_ERROR);
+                        LogUtility::msg("The page ($this->page) and the page ($value) have the same $attribute ($value)", LogUtility::LVL_MSG_ERROR);
                     }
                 }
                 return $rows[0];
@@ -1140,7 +1157,7 @@ EOF;
                     return $existingPages[0];
                 } else {
                     $existingPages = implode(", ", $existingPages);
-                    LogUtility::msg("The existing pages ($existingPages) have all the same path ($path)", LogUtility::LVL_MSG_ERROR);
+                    LogUtility::msg("The existing pages ($existingPages) have all the same $attribute ($value)", LogUtility::LVL_MSG_ERROR);
                     return null;
                 }
         }

@@ -7,9 +7,10 @@ use ComboStrap\Page;
 /**
  * Take the metadata description
  *
+ * To known more about description and [[docs:seo:seo|search engine optimization]], see:
+ * [[https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML/The_head_metadata_in_HTML#Active_learning_The_descriptions_use_in_search_engines|Active learning: The description's use in search engines]].
+ * [[https://developers.google.com/search/docs/beginner/seo-starter-guide#use-the-description-meta-tag|Description section of the Google SEO Starter guide]]
  */
-
-
 class action_plugin_combo_metadescription extends DokuWiki_Action_Plugin
 {
 

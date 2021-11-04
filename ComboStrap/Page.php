@@ -1819,6 +1819,9 @@ class Page extends DokuPath
                 case Analytics::DATE_END:
                     $this->setEndDate($value);
                     continue 2;
+                case Page::TYPE_META_PROPERTY:
+                    $this->setPageType($value);
+                    continue 2;
                 case Analytics::DATE_START:
                     $this->setStartDate($value);
                     continue 2;
@@ -1836,9 +1839,6 @@ class Page extends DokuPath
                     continue 2;
                 case Analytics::H1:
                     $this->setH1($value);
-                    continue 2;
-                case Page::TYPE_META_PROPERTY:
-                    $this->setPageType($value);
                     continue 2;
                 case \action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY:
                     $this->setJsonLd($value);
@@ -1861,6 +1861,9 @@ class Page extends DokuPath
                     continue 2;
                 case Page::LOW_QUALITY_PAGE_INDICATOR:
                     $this->setLowQualityIndicator(Boolean::toBoolean($value));
+                    continue 2;
+                case PAGE::IMAGE_META_PROPERTY:
+                    $this->setPageImage($value);
                     continue 2;
                 default:
                     LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_WARNING);
@@ -2208,6 +2211,7 @@ class Page extends DokuPath
     public
     function setPageType(string $string): Page
     {
+        $this->type = $string;
         $this->setMetadata(Page::TYPE_META_PROPERTY, $string);
         return $this;
     }

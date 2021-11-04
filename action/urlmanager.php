@@ -224,9 +224,14 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             /**
              * If this is not the root home page
              * and if the canonical id is the not the same,
+             * and if this is not a historical page (revision)
              * redirect
              */
-            if ($ID !== $targetPage->getUrlId() && $ID != Site::getHomePageName()) {
+            if (
+                $ID !== $targetPage->getUrlId()
+                && $ID != Site::getHomePageName()
+                && !isset($_REQUEST["rev"])
+            ) {
                 $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
             }
             return;
@@ -250,15 +255,24 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         }
 
         /**
-         * Page Id
+         * Page Id Permalink ?
+         */
+        $pageId = Page::decodePageId($targetPage->getDokuPathName());
+        if ($targetPage->getParentPage()===null && $pageId!==null){
+            $page = DatabasePage::createFromPageId($pageId)->getPage();
+            if ($page !== null && $page->exists()) {
+                $this->executePermanentRedirect($page->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK);
+            }
+        }
+
+        /**
+         * Page Id Abbr ?
          * {@link Page::CONF_CANONICAL_URL_TYPE}
          */
-
-        $pageIdAbbr = Page::decodePageId($targetPage->getDokuPathName());
         if (
-            $pageIdAbbr !== null
+            $pageId !== null
         ) {
-            $page = DatabasePage::createFromPageIdAbbr($pageIdAbbr)->getPage();
+            $page = DatabasePage::createFromPageIdAbbr($pageId)->getPage();
             if ($page !== null && $page->exists()) {
                 /**
                  * If the url canonical id has changed, we show it

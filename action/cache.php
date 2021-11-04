@@ -3,6 +3,7 @@
 use ComboStrap\Analytics;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
+use ComboStrap\File;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
 use ComboStrap\Page;
@@ -23,26 +24,40 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
     const CANONICAL = "cache";
     const STATIC_SCRIPT_NAMES = ["/lib/exe/jquery.php", "/lib/exe/js.php", "/lib/exe/css.php"];
 
+    /**
+     * @var string[]
+     */
+    private static $sideSlotNames;
+
+
+    private static function getSideSlotNames(): array
+    {
+        if (self::$sideSlotNames === null) {
+            global $conf;
+
+            self::$sideSlotNames = [
+                $conf['sidebar']
+            ];
+
+            /**
+             * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
+             */
+            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+            if ($loaded) {
+
+                $sideKickSlotPageName = TplUtility::getSideKickSlotPageName();
+                if (!empty($sideKickSlotPageName)) {
+                    self::$sideSlotNames[] = $sideKickSlotPageName;
+                }
+
+            }
+        }
+        return self::$sideSlotNames;
+    }
+
     private static function deleteSideSlotCache()
     {
-        global $conf;
-
-        $sidebars = [
-            $conf['sidebar']
-        ];
-
-        /**
-         * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
-         */
-        $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        if ($loaded) {
-
-            $sideKickSlotPageName = TplUtility::getSideKickSlotPageName();
-            if (!empty($sideKickSlotPageName)) {
-                $sidebars[] = $sideKickSlotPageName;
-            }
-
-        }
+        $sidebars = self::getSideSlotNames();
 
 
         /**
@@ -90,7 +105,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * https://combostrap.com/sideslots
          */
         $controller->register_hook(Page::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'sideSlotsCacheBurstingForMetadataMutation', array());
-        $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'sideSlotsCacheBurstingForPageCreationAndDeletion', array());
+        $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'sideSlotsCacheBurstingForPageCreationAndDeletion', array());
 
     }
 
@@ -263,15 +278,74 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * The side slot cache is deleted only when the
          * below property are updated
          */
-        $descriptionProperties = [Page::TITLE_META_PROPERTY,Page::NAME_PROPERTY, Analytics::H1, Page::DESCRIPTION_PROPERTY];
-        if(!in_array( $data["name"],$descriptionProperties)) return;
+        $descriptionProperties = [Page::TITLE_META_PROPERTY, Page::NAME_PROPERTY, Analytics::H1, Page::DESCRIPTION_PROPERTY];
+        if (!in_array($data["name"], $descriptionProperties)) return;
 
         self::deleteSideSlotCache();
 
     }
 
-    function sideSlotsCacheBurstingForPageCreationAndDeletion($event){
-        throw new Exception("Todo !");
+    /**
+     * @param $event
+     * @throws Exception
+     * @link https://www.dokuwiki.org/devel:event:io_wikipage_write
+     */
+    function sideSlotsCacheBurstingForPageCreationAndDeletion($event)
+    {
+
+        $data = $event->data;
+        $pageName = $data[2];
+
+        /**
+         * Modification to the side slot is not processed further
+         */
+        if (in_array($pageName, self::getSideSlotNames())) return;
+
+        /**
+         * Pointer to see if we need to delete the cache
+         */
+        $doWeNeedToDeleteTheSideSlotCache = false;
+
+        /**
+         * File creation
+         *
+         * ```
+         * Page creation may be detected by checking if the file already exists and the revision is false.
+         * ```
+         * From https://www.dokuwiki.org/devel:event:io_wikipage_write
+         *
+         */
+        $rev = $data[3];
+        $filePath = $data[0][0];
+        $file = File::createFromPath($filePath);
+        if (!$file->exists() && $rev === false) {
+            $doWeNeedToDeleteTheSideSlotCache = true;
+        }
+
+        /**
+         * File deletion
+         * (No content)
+         *
+         * ```
+         * Page deletion may be detected by checking for empty page content.
+         * On update to an existing page this event is called twice, once for the transfer of the old version to the attic (rev will have a value)
+         * and once to write the new version of the page into the wiki (rev is false)
+         * ```
+         * From https://www.dokuwiki.org/devel:event:io_wikipage_write
+         */
+        $append = $data[0][2];
+        if (!$append) {
+
+            $content = $data[0][1];
+            if (empty($content) && $rev === false) {
+                // Deletion
+                $doWeNeedToDeleteTheSideSlotCache = true;
+            }
+
+        }
+
+        if ($doWeNeedToDeleteTheSideSlotCache) self::deleteSideSlotCache();
+
     }
 
 }

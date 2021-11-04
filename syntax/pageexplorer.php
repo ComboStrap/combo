@@ -219,7 +219,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  *
                  */
                 if ($renderedPage->isStrapSideSlot()) {
-                    p_set_metadata($renderedPage->getDokuwikiId(), [Page::SCOPE_KEY => $scope]);
+                    $renderedPage->setScope( $scope);
                 }
 
                 /**

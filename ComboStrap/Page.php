@@ -165,6 +165,8 @@ class Page extends DokuPath
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
 
 
+
+
     /**
      * @var array|array[]
      */
@@ -229,6 +231,14 @@ class Page extends DokuPath
      * @var string the generated description from the content
      */
     private $descriptionDefault;
+
+    /**
+     * The scope of the page
+     * (used mostly in side slot, to see if the content
+     * is for the current requested namespace or not)
+     * @var string|null
+     */
+    private $scope;
 
     /**
      * Page constructor.
@@ -1292,7 +1302,10 @@ class Page extends DokuPath
         return $default;
     }
 
-    private function buildDescription(): ?string
+    /**
+     * @return array|null[] - a tuple of value for the description and description default
+     */
+    private function buildGetDescriptionAndDefault(): array
     {
 
 
@@ -1301,32 +1314,30 @@ class Page extends DokuPath
 
         $descriptionArray = $this->getMetadata(Page::DESCRIPTION_PROPERTY);
         if (empty($descriptionArray)) {
-            return null;
+            return [null, null];
         }
-        if (array_key_exists('abstract', $descriptionArray)) {
-
-            $temporaryDescription = $descriptionArray['abstract'];
-
-            $this->descriptionOrigin = "dokuwiki";
-            if (array_key_exists('origin', $descriptionArray)) {
-                $this->descriptionOrigin = $descriptionArray['origin'];
-            }
-
-            if ($this->descriptionOrigin == "dokuwiki") {
-
-                // suppress the carriage return
-                $temporaryDescription = str_replace("\n", " ", $descriptionArray['abstract']);
-                // suppress the h1
-                $temporaryDescription = str_replace($this->getH1NotEmpty(), "", $temporaryDescription);
-                // Suppress the star, the tab, About
-                $temporaryDescription = preg_replace('/(\*|\t|About)/im', "", $temporaryDescription);
-                // Suppress all double space and trim
-                $temporaryDescription = trim(preg_replace('/  /m', " ", $temporaryDescription));
-
-            }
-            return $temporaryDescription;
+        if (!array_key_exists('abstract', $descriptionArray)) {
+            return [null, null];
         }
-        return null;
+
+        $description = $descriptionArray['abstract'];
+        $this->descriptionOrigin = "dokuwiki";
+        if (array_key_exists('origin', $descriptionArray)) {
+            $this->descriptionOrigin = $descriptionArray['origin'];
+            if ($this->descriptionOrigin !== "dokuwiki") {
+                return [$description, ""];
+            }
+        }
+
+        // suppress the carriage return
+        $description = str_replace("\n", " ", $descriptionArray['abstract']);
+        // suppress the h1
+        $description = str_replace($this->getH1NotEmpty(), "", $description);
+        // Suppress the star, the tab, About
+        $description = preg_replace('/(\*|\t|About)/im', "", $description);
+        // Suppress all double space and trim
+        $description = trim(preg_replace('/  /m', " ", $description));
+        return [null, $description];
 
 
     }
@@ -1552,7 +1563,7 @@ class Page extends DokuPath
     }
 
     public
-    function deleteMetadatas()
+    function deleteMetadatasAndFlush(): Page
     {
         $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
         p_save_metadata($this->getDokuwikiId(), $meta);
@@ -2418,7 +2429,7 @@ class Page extends DokuPath
 
         $this->pageId = $this->getMetadata(self::PAGE_ID_ATTRIBUTE);
         $this->pageName = $this->getMetadata(self::NAME_PROPERTY);
-        $this->description = $this->buildDescription();
+        [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
         $this->h1 = $this->getMetadata(Analytics::H1);
         $this->canonical = $this->getMetadata(Page::CANONICAL_PROPERTY);
         $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
@@ -2443,6 +2454,8 @@ class Page extends DokuPath
 
         $this->aliases = Alias::toAliasArray($this->getMetadata(self::ALIAS_ATTRIBUTE), $this);
         $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
+
+        $this->scope = $this->getMetadata(self::SCOPE_KEY);
 
     }
 
@@ -2646,6 +2659,16 @@ class Page extends DokuPath
     private function getDefaultDescription()
     {
         return $this->descriptionDefault;
+    }
+
+    /**
+     * @param string $scope {@link Page::SCOPE_CURRENT_VALUE} or a namespace...
+     */
+    public function setScope(string $scope): Page
+    {
+        $this->scope = $scope;
+        $this->setMetadata(Page::SCOPE_KEY, $scope);
+        return $this;
     }
 
 

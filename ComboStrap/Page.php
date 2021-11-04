@@ -165,8 +165,6 @@ class Page extends DokuPath
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
 
 
-
-
     /**
      * @var array|array[]
      */
@@ -1668,10 +1666,11 @@ class Page extends DokuPath
     public
     function setMetadata($key, $value)
     {
-        $oldValue = $this->metadatas[$key];
+
+        $oldValue = $this->metadatas['persistent'][$key];
         if ($oldValue !== $value) {
 
-            $this->metadatas[$key] = $value;
+            $this->metadatas['persistent'][$key] = $value;
             /**
              * Don't change the type of the value to a string
              * otherwise dokuwiki will not see a change
@@ -1992,11 +1991,14 @@ class Page extends DokuPath
     public
     function getDefaultTitle(): ?string
     {
+        if ($this->isRootHomePage() && !empty(Site::getTagLine())) {
+            return Site::getTagLine();
+        }
         if (!empty($this->getH1())) {
             return $this->getH1();
-        } else {
-            return $this->getPageNameNotEmpty();
         }
+        return $this->getPageNameNotEmpty();
+
     }
 
     public
@@ -2051,7 +2053,8 @@ class Page extends DokuPath
         return [Page::HOLY_LAYOUT_VALUE, Page::MEDIAN_LAYOUT_VALUE, Page::LANDING_LAYOUT_VALUE];
     }
 
-    public function setDefaultLowQualityIndicator($bool): Page
+    public
+    function setDefaultLowQualityIndicator($bool): Page
     {
         $this->defaultLowQuality = $bool;
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool);
@@ -2072,7 +2075,8 @@ class Page extends DokuPath
      * @param $value
      * @return Page
      */
-    private function setQualityIndicatorAndDeleteCacheIfNeeded(string $lowQualityAttributeName, $value): Page
+    private
+    function setQualityIndicatorAndDeleteCacheIfNeeded(string $lowQualityAttributeName, $value): Page
     {
         $actualValue = $this->getMetadataAsBoolean($lowQualityAttributeName);
         if ($actualValue === null || $value !== $actualValue) {
@@ -2258,7 +2262,8 @@ class Page extends DokuPath
         return $this->aliases;
     }
 
-    private function getSlugOrDefault(): ?string
+    private
+    function getSlugOrDefault(): ?string
     {
 
         if ($this->getSlug() !== null) {
@@ -2268,13 +2273,15 @@ class Page extends DokuPath
         return $this->getDefaultSlug();
     }
 
-    private function getDefaultSlug(): ?string
+    private
+    function getDefaultSlug(): ?string
     {
 
         return $this->getTitleNotEmpty();
     }
 
-    public function getParentPage(): ?Page
+    public
+    function getParentPage(): ?Page
     {
 
         $names = $this->getDokuNames();
@@ -2287,22 +2294,39 @@ class Page extends DokuPath
 
     }
 
-    public function setDescription($description): Page
+    public
+    function setDescription($description): Page
     {
         /**
          * Dokuwiki has already a description
          * We use it to be conform
          */
         $this->description = $description;
-        $this->setMetadata(Page::DESCRIPTION_PROPERTY, array(
-            Page::DESCRIPTION_PROPERTY => array(
+
+        /**
+         * Bug: We have passed an array and not the key
+         * We have created therefore a description property below the description array
+         * We delete it
+         */
+        $descriptionArray = $this->metadatas[Page::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY];
+        if ($descriptionArray != null && array_key_exists(Page::DESCRIPTION_PROPERTY, $descriptionArray)) {
+            unset($this->metadatas[Page::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY][Page::DESCRIPTION_PROPERTY]);
+            $this->flushMeta();
+        }
+
+        /**
+         *
+         */
+        $this->setMetadata(Page::DESCRIPTION_PROPERTY,
+            array(
                 "abstract" => $description,
                 "origin" => syntax_plugin_combo_frontmatter::CANONICAL
-            )));
+            ));
         return $this;
     }
 
-    public function setEndDate($value)
+    public
+    function setEndDate($value)
     {
         if (Iso8601Date::isValid($value)) {
             $this->setMetadata(Analytics::DATE_END, $value);
@@ -2311,7 +2335,8 @@ class Page extends DokuPath
         }
     }
 
-    public function setStartDate($value)
+    public
+    function setStartDate($value)
     {
         if (Iso8601Date::isValid($value)) {
             $this->setMetadata(Analytics::DATE_START, $value);
@@ -2320,7 +2345,8 @@ class Page extends DokuPath
         }
     }
 
-    public function setPublishedDate($value)
+    public
+    function setPublishedDate($value)
     {
         if (Iso8601Date::isValid($value)) {
             $this->setMetadata(Publication::DATE_PUBLISHED, $value);
@@ -2329,7 +2355,8 @@ class Page extends DokuPath
         }
     }
 
-    public function setPageName($value): Page
+    public
+    function setPageName($value): Page
     {
         $this->pageName = $value;
         $this->setMetadata(Page::NAME_PROPERTY, $value);
@@ -2337,21 +2364,24 @@ class Page extends DokuPath
 
     }
 
-    public function setTitle($value): Page
+    public
+    function setTitle($value): Page
     {
         $this->title = $value;
         $this->setMetadata(Page::TITLE_META_PROPERTY, $value);
         return $this;
     }
 
-    public function setH1($value): Page
+    public
+    function setH1($value): Page
     {
         $this->h1 = $value;
         $this->setMetadata(Analytics::H1, $value);
         return $this;
     }
 
-    public function setRegion($value): Page
+    public
+    function setRegion($value): Page
     {
         if (empty($region)) return $this;
 
@@ -2365,14 +2395,16 @@ class Page extends DokuPath
         return $this;
     }
 
-    public function setLang($value): Page
+    public
+    function setLang($value): Page
     {
         $this->lang = $value;
         $this->setMetadata(Page::LANG_META_PROPERTY, $value);
         return $this;
     }
 
-    public function setLayout($value): Page
+    public
+    function setLayout($value): Page
     {
         $this->layout = $value;
         $this->setMetadata(Page::LAYOUT_PROPERTY, $value);
@@ -2382,7 +2414,8 @@ class Page extends DokuPath
     /**
      * @param Alias[] $aliases
      */
-    private function setAliases(array $aliases): Page
+    private
+    function setAliases(array $aliases): Page
     {
         $this->aliases = $aliases;
         $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
@@ -2408,7 +2441,8 @@ class Page extends DokuPath
      * $meta = p_read_metadata($id, $cache);
      * ```
      */
-    private function buildPropertiesFromFileSystem()
+    private
+    function buildPropertiesFromFileSystem()
     {
 
         if (!$this->exists()) {
@@ -2459,7 +2493,8 @@ class Page extends DokuPath
 
     }
 
-    public function flushMeta(): Page
+    public
+    function flushMeta(): Page
     {
         p_save_metadata($this->getDokuwikiId(), $this->metadatas);
         return $this;
@@ -2477,7 +2512,8 @@ class Page extends DokuPath
      * @return Alias[]
      * @deprecated 2021-10-31
      */
-    private function getAndDeleteDeprecatedAlias(): array
+    private
+    function getAndDeleteDeprecatedAlias(): array
     {
         $sqlite = Sqlite::getSqlite();
         if ($sqlite === null) return [];
@@ -2530,7 +2566,8 @@ class Page extends DokuPath
 
     }
 
-    public function setDatabasePage(DatabasePage $databasePage): Page
+    public
+    function setDatabasePage(DatabasePage $databasePage): Page
     {
         $this->databasePage = $databasePage;
         return $this;
@@ -2553,7 +2590,8 @@ class Page extends DokuPath
      *   - permanent page path (page id)
      *   - page path
      */
-    public function getUrlPath(): string
+    public
+    function getUrlPath(): string
     {
 
         /**
@@ -2626,19 +2664,22 @@ class Page extends DokuPath
      * ( and not to hit the index for nothing )
      * @return string
      */
-    public function getPageIdAbbrUrlEncoded(): ?string
+    public
+    function getPageIdAbbrUrlEncoded(): ?string
     {
         if ($this->getPageIdAbbr() == null) return null;
         $abbr = $this->getPageIdAbbr();
         return self::encodePageId($abbr);
     }
 
-    public function getSlug(): ?string
+    public
+    function getSlug(): ?string
     {
         return $this->slug;
     }
 
-    public function setSlug($slug): Page
+    public
+    function setSlug($slug): Page
     {
         $slug = DokuPath::toSlugPath($slug);
         $this->canonical = $slug;
@@ -2646,17 +2687,20 @@ class Page extends DokuPath
         return $this;
     }
 
-    private function toPermanentUrlPath(string $id): string
+    private
+    function toPermanentUrlPath(string $id): string
     {
         return $id . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
     }
 
-    public function getUrlId()
+    public
+    function getUrlId()
     {
         return DokuPath::toDokuwikiId($this->getUrlPath());
     }
 
-    private function getDefaultDescription()
+    private
+    function getDefaultDescription()
     {
         return $this->descriptionDefault;
     }
@@ -2664,7 +2708,8 @@ class Page extends DokuPath
     /**
      * @param string $scope {@link Page::SCOPE_CURRENT_VALUE} or a namespace...
      */
-    public function setScope(string $scope): Page
+    public
+    function setScope(string $scope): Page
     {
         $this->scope = $scope;
         $this->setMetadata(Page::SCOPE_KEY, $scope);

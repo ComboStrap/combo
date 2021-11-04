@@ -1,10 +1,8 @@
 <?php
 
-use ComboStrap\Analytics;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
-use ComboStrap\XhtmlUtility;
 
 
 /**
@@ -31,13 +29,17 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
     static function getTitle(): string
     {
 
+        // Page Title
         // Root Home page
         $currentPage = Page::createPageFromCurrentId();
-        if ($currentPage->isRootHomePage()) {
-            $pageTitle = Site::getTagLine();
-        } else {
-            $pageTitle = $currentPage->getTitleNotEmpty();
+        $pageTitle = $currentPage->getTitleNotEmpty();
+
+        // Namespace name
+        $parentPage = $currentPage->getParentPage();
+        if($parentPage!=null){
+            $pageTitle .= self::TITLE_SEPARATOR . $parentPage->getPageNameNotEmpty();
         }
+        // Site name
         if (!empty(Site::getName())) {
             $pageTitle .= self::TITLE_SEPARATOR . Site::getName();
         }

@@ -11,6 +11,8 @@ if (!defined('DOKU_INC')) die();
  *
  * @see <a href="https://combostrap.com/manifest">manifest</a>
  *
+ * [[doku>devel:manifest|webmanifest]]
+ * https://developer.mozilla.org/en-US/docs/Web/Manifest
  */
 
 class action_plugin_combo_manifest extends DokuWiki_Action_Plugin

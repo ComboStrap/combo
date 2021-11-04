@@ -318,5 +318,20 @@ class Site
         return $conf["start"];
     }
 
+    /**
+     * @return mixed - Application / Website name
+     */
+    public static function getName()
+    {
+        global $conf;
+        return $conf["title"];
+    }
+
+    public static function getTagLine()
+    {
+        global $conf;
+        return $conf['tagline'];
+    }
+
 
 }

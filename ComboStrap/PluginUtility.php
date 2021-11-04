@@ -788,7 +788,7 @@ class PluginUtility
      * @return string
      */
     public
-    static function htmlEncode($text)
+    static function htmlEncode($text): string
     {
         /**
          * See https://stackoverflow.com/questions/46483/htmlentities-vs-htmlspecialchars/3614344

@@ -1364,7 +1364,7 @@ class Page extends DokuPath
     }
 
     public
-    function render()
+    function toXhtml(): string
     {
 
         if (!$this->isStrapSideSlot()) {
@@ -1459,8 +1459,8 @@ class Page extends DokuPath
      * Output of {@link DokuWiki_Syntax_Plugin::render()}
      *
      */
-    private
-    function getRenderCache($outputFormat)
+    public
+    function getRenderCache(string $outputFormat)
     {
 
         if ($this->isStrapSideSlot()) {
@@ -1481,7 +1481,7 @@ class Page extends DokuPath
      * @return CacheInstructions
      * The cache of the {@link CallStack call stack} (ie list of output of {@link DokuWiki_Syntax_Plugin::handle})
      */
-    private
+    public
     function getInstructionsCache()
     {
 

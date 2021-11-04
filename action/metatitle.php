@@ -1,6 +1,10 @@
 <?php
 
 use ComboStrap\Analytics;
+use ComboStrap\Page;
+use ComboStrap\PluginUtility;
+use ComboStrap\Site;
+use ComboStrap\XhtmlUtility;
 
 
 /**
@@ -12,6 +16,8 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
 {
 
 
+    const TITLE_SEPARATOR = ' | ';
+
     public function register(Doku_Event_Handler $controller)
     {
         $controller->register_hook('TPL_TITLE_OUTPUT', 'BEFORE', $this, 'handleTitle', array());
@@ -22,31 +28,20 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
         $event->data = self::getTitle();
     }
 
-    static function getTitle(){
-        global $ID;
-        global $conf;
-        if (defined('DOKU_UNITTEST')) {
-            $title = TestUtility::getMeta($ID, Analytics::TITLE);
+    static function getTitle(): string
+    {
+
+        // Root Home page
+        $currentPage = Page::createPageFromCurrentId();
+        if ($currentPage->isRootHomePage()) {
+            $pageTitle = Site::getTagLine();
         } else {
-            $title = p_get_metadata($ID, Analytics::TITLE);
+            $pageTitle = $currentPage->getTitleNotEmpty();
         }
-        if (!empty($title)){
-
-            $pageTitle = $title;
-
-        } else {
-
-            // Home page
-            if ($ID == "start") {
-                $pageTitle = $conf["title"];
-                if ($conf['tagline']) {
-                    $pageTitle .= ' - ' . $conf['tagline'];
-                }
-            } else {
-                $pageTitle = tpl_pagetitle($ID, true) . ' ['. $conf["title"]. ']';
-            }
-
+        if (!empty(Site::getName())) {
+            $pageTitle .= self::TITLE_SEPARATOR . Site::getName();
         }
-        return strip_tags($pageTitle);
+
+        return PluginUtility::htmlEncode($pageTitle);
     }
 }

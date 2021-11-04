@@ -55,7 +55,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         return self::$sideSlotNames;
     }
 
-    private static function deleteSideSlotCache()
+    private static function removeSideSlotCache()
     {
         $sidebars = self::getSideSlotNames();
 
@@ -281,7 +281,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $descriptionProperties = [Page::TITLE_META_PROPERTY, Page::NAME_PROPERTY, Analytics::H1, Page::DESCRIPTION_PROPERTY];
         if (!in_array($data["name"], $descriptionProperties)) return;
 
-        self::deleteSideSlotCache();
+        self::removeSideSlotCache();
 
     }
 
@@ -344,7 +344,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
         }
 
-        if ($doWeNeedToDeleteTheSideSlotCache) self::deleteSideSlotCache();
+        if ($doWeNeedToDeleteTheSideSlotCache) self::removeSideSlotCache();
 
     }
 

@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\Analytics;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
 use ComboStrap\Http;
@@ -21,6 +22,39 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
     const CANONICAL = "cache";
     const STATIC_SCRIPT_NAMES = ["/lib/exe/jquery.php", "/lib/exe/js.php", "/lib/exe/css.php"];
+
+    private static function deleteSideSlotCache()
+    {
+        global $conf;
+
+        $sidebars = [
+            $conf['sidebar']
+        ];
+
+        /**
+         * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
+         */
+        $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+        if ($loaded) {
+
+            $sideKickSlotPageName = TplUtility::getSideKickSlotPageName();
+            if (!empty($sideKickSlotPageName)) {
+                $sidebars[] = $sideKickSlotPageName;
+            }
+
+        }
+
+
+        /**
+         * Delete the cache for the sidebar
+         */
+        foreach ($sidebars as $sidebarRelativePath) {
+
+            $page = Page::createPageFromNonQualifiedPath($sidebarRelativePath);
+            $page->deleteCache();
+
+        }
+    }
 
     /**
      * @param Doku_Event_Handler $controller
@@ -55,7 +89,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * To delete sidebar (cache) cache when a page was modified in a namespace
          * https://combostrap.com/sideslots
          */
-        $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'sideSlotsCacheBursting', array());
+        $controller->register_hook(Page::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'sideSlotsCacheBurstingForMetadataMutation', array());
+        $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'sideSlotsCacheBurstingForPageCreationAndDeletion', array());
+
     }
 
     /**
@@ -219,39 +255,23 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         }
     }
 
-    function sideSlotsCacheBursting($event)
+    function sideSlotsCacheBurstingForMetadataMutation($event)
     {
 
-        global $conf;
-
-        $sidebars = [
-            $conf['sidebar']
-        ];
-
+        $data = $event->data;
         /**
-         * @see {@link \ComboStrap\TplConstant::CONF_SIDEKICK}
+         * The side slot cache is deleted only when the
+         * below property are updated
          */
-        $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-        if ($loaded) {
+        $descriptionProperties = [Page::TITLE_META_PROPERTY,Page::NAME_PROPERTY, Analytics::H1, Page::DESCRIPTION_PROPERTY];
+        if(!in_array( $data["name"],$descriptionProperties)) return;
 
-            $sideKickSlotPageName = TplUtility::getSideKickSlotPageName();
-            if (!empty($sideKickSlotPageName)) {
-                $sidebars[] = $sideKickSlotPageName;
-            }
+        self::deleteSideSlotCache();
 
-        }
+    }
 
-
-        /**
-         * Delete the cache for the sidebar
-         */
-        foreach ($sidebars as $sidebarRelativePath) {
-
-            $page = Page::createPageFromNonQualifiedPath($sidebarRelativePath);
-            //$page->deleteCache();
-
-        }
-
+    function sideSlotsCacheBurstingForPageCreationAndDeletion($event){
+        throw new Exception("Todo !");
     }
 
 }

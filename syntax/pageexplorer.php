@@ -226,7 +226,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                  * Set the wiki-id of the namespace
                  * (Needed by javascript)
                  */
-                $namespaceId = DokuPath::absolutePathToId($namespacePath);
+                $namespaceId = DokuPath::toDokuwikiId($namespacePath);
                 if ($namespaceId == "") {
                     // root namespace id is the empty string
                     $tagAttributes->addEmptyComponentAttributeValue(TagAttributes::WIKI_ID);

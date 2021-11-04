@@ -226,7 +226,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
              * and if the canonical id is the not the same,
              * redirect
              */
-            if ($ID !== $targetPage->getCanonicalId() && $ID != Site::getHomePageName()) {
+            if ($ID !== $targetPage->getUrlId() && $ID != Site::getHomePageName()) {
                 $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
             }
             return;
@@ -264,7 +264,7 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
                  * If the url canonical id has changed, we show it
                  * to the writer by performing a permanent redirect
                  */
-                if ($identifier != $page->getCanonicalId()) {
+                if ($identifier != $page->getUrlId()) {
                     // Google asks for a redirect
                     // https://developers.google.com/search/docs/advanced/crawling/301-redirects
                     // People access your site through several different URLs.

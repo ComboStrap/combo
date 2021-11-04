@@ -50,8 +50,10 @@ class Alias
         return $this->path;
     }
 
-    public static function toAliasArray($aliases, Page $page): array
+    public static function toAliasArray($aliases, Page $page): ?array
     {
+        if($aliases===null) return null;
+
         $aliasArray = [];
         foreach ($aliases as $alias) {
             if (is_array($alias)) {

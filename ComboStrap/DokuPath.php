@@ -24,6 +24,11 @@ class DokuPath extends File
      * the linux separator
      */
     public const DIRECTORY_SEPARATOR = "/";
+    public const SLUG_SEPARATOR = "-";
+    /**
+     * @var string[]
+     */
+    private static $reservedWords;
 
     /**
      * @var string the path id passed to function (cleaned)
@@ -139,7 +144,7 @@ class DokuPath extends File
         $filePath = $this->absolutePath;
         if ($this->scheme == self::LOCAL_SCHEME) {
 
-            $this->id = DokuPath::absolutePathToId($this->absolutePath);
+            $this->id = DokuPath::toDokuwikiId($this->absolutePath);
             $isNamespacePath = false;
             if (\mb_substr($this->absolutePath, -1) == self::PATH_SEPARATOR) {
                 $isNamespacePath = true;
@@ -257,13 +262,17 @@ class DokuPath extends File
     }
 
     public
-    static function absolutePathToId($absolutePath)
+    static function toDokuwikiId($absolutePath)
     {
-        if ($absolutePath != ":") {
-            return substr($absolutePath, 1);
-        } else {
+        // Root ?
+        if ($absolutePath == DokuPath::PATH_SEPARATOR) {
             return "";
         }
+        if ($absolutePath[0] === DokuPath::PATH_SEPARATOR) {
+            return substr($absolutePath, 1);
+        }
+        return $absolutePath;
+
     }
 
     public static function createMediaPathFromId($id, $rev = ''): DokuPath
@@ -300,7 +309,7 @@ class DokuPath extends File
 
     public static function toFileSystemSeparator($dokuPath)
     {
-        return str_replace(":", self::DIRECTORY_SEPARATOR,$dokuPath);
+        return str_replace(":", self::DIRECTORY_SEPARATOR, $dokuPath);
     }
 
     /**
@@ -430,11 +439,11 @@ class DokuPath extends File
     public function getParentId(): ?string
     {
         $names = $this->getDokuNames();
-        if(sizeof($names)===1){
+        if (sizeof($names) === 1) {
             return null;
         } else {
-            $names = array_slice($names,0,sizeof($names)-1);
-            return implode(DokuPath::PATH_SEPARATOR,$names);
+            $names = array_slice($names, 0, sizeof($names) - 1);
+            return implode(DokuPath::PATH_SEPARATOR, $names);
         }
     }
 
@@ -508,6 +517,39 @@ class DokuPath extends File
     }
 
 
+    public static function toSlugPath($string)
+    {
+        if (empty($string)) return ":";
+        // Reserved word to space
+        $slugWithoutReservedWord = str_replace(DokuPath::getReservedWord(), " ", $string);
+        // Doubles spaces to space
+        $slugWithoutDoubleSpace = preg_replace("/\s{2,}/", " ", $slugWithoutReservedWord);
+        // Trim space
+        $slugTrimmed = trim($slugWithoutDoubleSpace);
+        // No Space around the path part
+        $slugParts = explode(DokuPath::PATH_SEPARATOR, $slugTrimmed);
+        $slugParts = array_map(function ($e) {
+            return trim($e);
+        }, $slugParts);
+        $slugWithoutSpaceAroundParts = implode(DokuPath::PATH_SEPARATOR, $slugParts);
+        // Space to separator
+        $slugWithoutSpace = str_replace(" ", self::SLUG_SEPARATOR, $slugWithoutSpaceAroundParts);
+        // No double separator
+        $slugWithoutDoubleSeparator = preg_replace("/" . self::SLUG_SEPARATOR . "{2,}/", self::SLUG_SEPARATOR, $slugWithoutSpace);
+        // Root
+        DokuPath::addRootSeparatorIfNotPresent($slugWithoutDoubleSeparator);
+        return $slugWithoutDoubleSeparator;
+    }
+
+    private static function getReservedWord(): array
+    {
+        if (self::$reservedWords == null) {
+            self::$reservedWords = array_filter(Url::RESERVED_WORDS, function ($e) {
+                return $e != DokuPath::PATH_SEPARATOR;
+            });
+        }
+        return self::$reservedWords;
+    }
 
 
 }

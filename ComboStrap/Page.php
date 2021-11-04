@@ -7,6 +7,7 @@ use action_plugin_combo_qualitymessage;
 use DateTime;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
+use dokuwiki\Extension\Event;
 use dokuwiki\Extension\SyntaxPlugin;
 use renderer_plugin_combo_analytics;
 use RuntimeException;
@@ -158,6 +159,11 @@ class Page extends DokuPath
 
     const PAGE_ID_URL_SEPARATOR = DokuPath::PATH_SEPARATOR;
 
+    /**
+     * When the value of a metadata has changed
+     */
+    const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
+
 
     /**
      * @var array|array[]
@@ -210,6 +216,19 @@ class Page extends DokuPath
      * @var boolean|null
      */
     private $defaultLowQuality;
+    private $layout;
+    /**
+     * @var Alias[]
+     */
+    private $aliases;
+    /**
+     * @var a slug path
+     */
+    private $slug;
+    /**
+     * @var string the generated description from the content
+     */
+    private $descriptionDefault;
 
     /**
      * Page constructor.
@@ -503,10 +522,8 @@ class Page extends DokuPath
     public function setCanonical($canonical): Page
     {
         $canonical = DokuPath::toValidAbsolutePath($canonical);
-        if ($canonical != $this->canonical) {
-            $this->canonical = $canonical;
-            $this->setMetadata(Page::CANONICAL_PROPERTY, $this->canonical);
-        }
+        $this->canonical = $canonical;
+        $this->setMetadata(Page::CANONICAL_PROPERTY, $this->canonical);
         return $this;
     }
 
@@ -782,11 +799,7 @@ class Page extends DokuPath
     function getDescription(): ?string
     {
 
-        if ($this->descriptionOrigin == \syntax_plugin_combo_frontmatter::CANONICAL) {
-            return $this->description;
-        } else {
-            return null;
-        }
+        return $this->description;
 
     }
 
@@ -797,7 +810,9 @@ class Page extends DokuPath
     public
     function getDescriptionOrElseDokuWiki(): ?string
     {
-        $this->buildDescription();
+        if ($this->description == null) {
+            return $this->getDefaultDescription();
+        }
         return $this->description;
     }
 
@@ -1156,7 +1171,7 @@ class Page extends DokuPath
                  * page named like the NS inside the NS
                  * ie ns:ns
                  */
-                $startPage = Page::createPageFromId(DokuPath::absolutePathToId($this->getNamespacePath()) . DokuPath::PATH_SEPARATOR . $startPageName);
+                $startPage = Page::createPageFromId(DokuPath::toDokuwikiId($this->getNamespacePath()) . DokuPath::PATH_SEPARATOR . $startPageName);
                 if (!$startPage->exists()) {
                     return true;
                 }
@@ -1252,7 +1267,7 @@ class Page extends DokuPath
          * https://www.dokuwiki.org/config:canonical
          * that could make the url relative
          */
-        return wl($this->getCanonicalId(), $urlParameters, true, '&');
+        return wl($this->getUrlId(), $urlParameters, true, '&');
 
 
     }
@@ -1632,19 +1647,41 @@ class Page extends DokuPath
         return $this->getDokuwikiId();
     }
 
+    /**
+     * Change a meta on file
+     * and triggers the {@link Page::PAGE_METADATA_MUTATION_EVENT} event
+     *
+     * @param $key
+     * @param $value
+     */
     public
     function setMetadata($key, $value)
     {
-        /**
-         * Don't change the type of the value to a string
-         * otherwise dokuwiki will not see a change
-         * between true and a string and will not persist the value
-         */
-        p_set_metadata($this->getDokuwikiId(),
-            [
-                $key => $value
-            ]
-        );
+        $oldValue = $this->metadatas[$key];
+        if ($oldValue !== $value) {
+
+            $this->metadatas[$key] = $value;
+            /**
+             * Don't change the type of the value to a string
+             * otherwise dokuwiki will not see a change
+             * between true and a string and will not persist the value
+             */
+            p_set_metadata($this->getDokuwikiId(),
+                [
+                    $key => $value
+                ]
+            );
+            /**
+             * Event
+             */
+            $data = [
+                "name" => $key,
+                "new_value" => $value,
+                "old_value" => $oldValue
+            ];
+            Event::createAndTrigger(Page::PAGE_METADATA_MUTATION_EVENT, $data);
+        }
+
     }
 
     public
@@ -2057,7 +2094,7 @@ class Page extends DokuPath
          * or not if not
          */
         $value = $this->getMetadataAsBoolean(self::LOW_QUALITY_INDICATOR_CALCULATED);
-        if ($value !== null)  return $value;
+        if ($value !== null) return $value;
 
         /**
          * Migration code
@@ -2066,7 +2103,7 @@ class Page extends DokuPath
          */
         if ($this->getAnalytics()->exists()) {
             $value = $this->getAnalytics()->getData()->toArray()[Analytics::QUALITY][Analytics::LOW];
-            if ($value !== null)  return $value;
+            if ($value !== null) return $value;
         }
 
         if (Site::isLowQualityProtectionEnable()) {
@@ -2194,31 +2231,35 @@ class Page extends DokuPath
     public
     function getAliases(): array
     {
-        $aliases = $this->getMetadata(self::ALIAS_ATTRIBUTE);
-        if ($aliases == null) {
+        /**
+         * We don't do that on build because
+         * we are using a set a metadata method that creates
+         * a cycle via the {@link Page::PAGE_METADATA_MUTATION_EVENT}
+         */
+        if ($this->aliases === null) {
             $aliases = $this->getAndDeleteDeprecatedAlias();
             /**
              * To validate the migration we set a value
              * (the array may be empty)
              */
             $this->setAliases($aliases);
-        } else {
-            $aliases = Alias::toAliasArray($aliases, $this);
         }
-        return $aliases;
+        return $this->aliases;
     }
 
     private function getSlugOrDefault(): ?string
     {
-        $slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
-        if ($slug === null) {
-            $slug = $this->getDefaultSlug();
+
+        if ($this->getSlug() !== null) {
+            return $this->getSlug();
+
         }
-        return $slug;
+        return $this->getDefaultSlug();
     }
 
     private function getDefaultSlug(): ?string
     {
+
         return $this->getTitleNotEmpty();
     }
 
@@ -2241,6 +2282,7 @@ class Page extends DokuPath
          * Dokuwiki has already a description
          * We use it to be conform
          */
+        $this->description = $description;
         $this->setMetadata(Page::DESCRIPTION_PROPERTY, array(
             Page::DESCRIPTION_PROPERTY => array(
                 "abstract" => $description,
@@ -2278,67 +2320,62 @@ class Page extends DokuPath
 
     public function setPageName($value): Page
     {
-
-        if ($value != $this->pageName) {
-            $this->pageName = $value;
-            $this->setMetadata(Page::NAME_PROPERTY, $value);
-        }
+        $this->pageName = $value;
+        $this->setMetadata(Page::NAME_PROPERTY, $value);
         return $this;
 
     }
 
-    public function setTitle($value)
+    public function setTitle($value): Page
     {
-        if ($value != $this->title) {
-            $this->title = $value;
-            $this->setMetadata(Page::TITLE_META_PROPERTY, $value);
-        }
+        $this->title = $value;
+        $this->setMetadata(Page::TITLE_META_PROPERTY, $value);
+        return $this;
     }
 
-    public function setH1($value)
+    public function setH1($value): Page
     {
-        if ($value != $this->h1) {
-            $this->h1 = $value;
-            $this->setMetadata(Analytics::H1, $value);
-        }
+        $this->h1 = $value;
+        $this->setMetadata(Analytics::H1, $value);
+        return $this;
     }
 
-    public function setRegion($value)
+    public function setRegion($value): Page
     {
-        if (empty($region)) return;
+        if (empty($region)) return $this;
 
-        if ($value != $this->region) {
-
-            if (!StringUtility::match($region, "[a-zA-Z]{2}")) {
-                LogUtility::msg("The region value ($region) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
-                return;
-            }
-
-            $this->region = $value;
-            $this->setMetadata(Page::REGION_META_PROPERTY, $value);
-
+        if (!StringUtility::match($region, "[a-zA-Z]{2}")) {
+            LogUtility::msg("The region value ($region) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
+            return $this;
         }
+
+        $this->region = $value;
+        $this->setMetadata(Page::REGION_META_PROPERTY, $value);
+        return $this;
     }
 
-    public function setLang($value)
+    public function setLang($value): Page
     {
-        if ($value != $this->lang) {
-            $this->lang = $value;
-            $this->setMetadata(Page::LANG_META_PROPERTY, $value);
-        }
+        $this->lang = $value;
+        $this->setMetadata(Page::LANG_META_PROPERTY, $value);
+        return $this;
     }
 
-    public function setLayout($value)
+    public function setLayout($value): Page
     {
+        $this->layout = $value;
         $this->setMetadata(Page::LAYOUT_PROPERTY, $value);
+        return $this;
     }
 
     /**
      * @param Alias[] $aliases
      */
-    private function setAliases(array $aliases)
+    private function setAliases(array $aliases): Page
     {
+        $this->aliases = $aliases;
         $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
+        return $this;
     }
 
     /**
@@ -2401,6 +2438,11 @@ class Page extends DokuPath
 
         $this->isLowQualityIndicator = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_PAGE_INDICATOR));
         $this->defaultLowQuality = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_INDICATOR_CALCULATED));
+
+        $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
+
+        $this->aliases = Alias::toAliasArray($this->getMetadata(self::ALIAS_ATTRIBUTE), $this);
+        $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
 
     }
 
@@ -2482,11 +2524,13 @@ class Page extends DokuPath
     }
 
     /**
-     * canonical id: name for ns + slug (title) + page id
+     * The path (ie id attribute in the url) in a absolute format (ie with root)
+     *
+     * url path: name for ns + slug (title) + page id
      * or
-     * canonical id: canonical path + page id
+     * url path: canonical path + page id
      * or
-     * canonical id: page path + page id
+     * url path: page path + page id
      *
      *
      *   - slug
@@ -2496,7 +2540,7 @@ class Page extends DokuPath
      *   - permanent page path (page id)
      *   - page path
      */
-    public function getCanonicalId(): string
+    public function getUrlPath(): string
     {
 
         /**
@@ -2524,40 +2568,42 @@ class Page extends DokuPath
             }
         }
 
-        $id = $this->getDokuwikiId();
+        $path = $this->getPath();
         switch ($urlType) {
             case Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH:
-                $id = $this->getDokuwikiId();
+                $path = $this->getPath();
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH:
-                $id = $this->getDokuwikiId() . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
+                $path = $this->toPermanentUrlPath($this->getPath());
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH:
-                $id = $this->getCanonicalOrDefault();
+                $path = $this->getCanonicalOrDefault();
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH:
-                $id = $this->getCanonicalOrDefault() . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
+                $path = $this->toPermanentUrlPath($this->getCanonicalOrDefault());
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
+                $path = $this->toPermanentUrlPath($this->getSlugOrDefault());
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
+                $path = $this->getSlugOrDefault();
                 while (($parent = $this->getParentPage()) != null) {
-                    $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
+                    $path = DokuPath::toSlugPath($parent->getPageName()) . $path;
                 }
+                $path = $this->toPermanentUrlPath($path);
                 break;
             case Page::CONF_CANONICAL_URL_MODE_VALUE_NAMESPACE_SLUG:
-                $id = Url::toSlug($this->getSlugOrDefault()) . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
+                $path = $this->getSlugOrDefault();
                 if (($parent = $this->getParentPage()) != null) {
-                    $id = Url::toSlug($parent->getPageName()) . DokuPath::PATH_SEPARATOR . $id;
+                    $path = DokuPath::toSlugPath($parent->getPageName()) . $path;
                 }
+                $path = $this->toPermanentUrlPath($path);
                 break;
             default:
                 LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
 
         }
-        return $id;
+        return $path;
 
     }
 
@@ -2572,6 +2618,34 @@ class Page extends DokuPath
         if ($this->getPageIdAbbr() == null) return null;
         $abbr = $this->getPageIdAbbr();
         return self::encodePageId($abbr);
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug($slug): Page
+    {
+        $slug = DokuPath::toSlugPath($slug);
+        $this->canonical = $slug;
+        $this->setMetadata(Page::SLUG_ATTRIBUTE, $slug);
+        return $this;
+    }
+
+    private function toPermanentUrlPath(string $id): string
+    {
+        return $id . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
+    }
+
+    public function getUrlId()
+    {
+        return DokuPath::toDokuwikiId($this->getUrlPath());
+    }
+
+    private function getDefaultDescription()
+    {
+        return $this->descriptionDefault;
     }
 
 

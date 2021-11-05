@@ -409,90 +409,63 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     ->toAssociativeArray();
 
                 // Quality Monitoring
-                $isQualityMonitoringOn[FormField::VALUE_ATTRIBUTE] = $page->isQualityMonitored();
-                $isQualityMonitoringOn[FormField::MUTABLE_ATTRIBUTE] = true;
-                $isQualityMonitoringOn[FormField::DEFAULT_VALUE_ATTRIBUTE] = false; // the value returned if checked
-                $isQualityMonitoringOn[FormField::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
-                $isQualityMonitoringOn[FormField::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
-                $isQualityMonitoringOn[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    "quality:dynamic_monitoring",
-                    "Disable the quality message of this page",
-                    false,
-                    "If checked, the quality message will not be shown for the page."
-                );
-                $isQualityMonitoringOn[self::NAME_ATTRIBUTE] = action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR;
-                $fields[] = $isQualityMonitoringOn;
-
+                $fields[] = FormField::create(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR)
+                    ->addValue($page->isQualityMonitored(), false) // the default value is returned if checked
+                    ->setType(self::BOOLEAN_TYPE_VALUE)
+                    ->setTab(self::TAB_QUALITY_VALUE)
+                    ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)
+                    ->setLabel("Disable the quality message of this page")
+                    ->setDescription("If checked, the quality message will not be shown for the page.")
+                    ->toAssociativeArray();
 
                 // Locale
-                $locale[FormField::VALUE_ATTRIBUTE] = $page->getLocale();
-                $locale[FormField::MUTABLE_ATTRIBUTE] = false;
-                $locale[FormField::DEFAULT_VALUE_ATTRIBUTE] = Site::getLocale();
-                $locale[FormField::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $locale[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    "locale",
-                    "Locale",
-                    false,
-                    "The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata."
-                );
-                $locale[self::NAME_ATTRIBUTE] = "locale";
-                $fields[] = $locale;
+                $fields[] = FormField::create("locale")
+                    ->addValue($page->getLocale(), Site::getLocale())
+                    ->setMutable(false)
+                    ->setTab(self::TAB_LANGUAGE_VALUE)
+                    ->setCanonical("locale")
+                    ->setLabel("Locale")
+                    ->setDescription("The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata.")
+                    ->toAssociativeArray();
 
                 // Lang
-                $lang[FormField::VALUE_ATTRIBUTE] = $page->getLang();
-                $lang[FormField::MUTABLE_ATTRIBUTE] = true;
-                $lang[FormField::DEFAULT_VALUE_ATTRIBUTE] = Site::getLang();
-                $lang[FormField::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $lang[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Page::LANG_META_PROPERTY,
-                    "Language",
-                    false,
-                    "The language of the page"
-                );
-                $lang[self::NAME_ATTRIBUTE] = Page::LANG_META_PROPERTY;
-                $fields[] = $lang;
+                $fields[] = FormField::create(Page::LANG_META_PROPERTY)
+                    ->addValue($page->getLang(), Site::getLang())
+                    ->setTab(self::TAB_LANGUAGE_VALUE)
+                    ->setCanonical(Page::LANG_META_PROPERTY)
+                    ->setLabel("Language")
+                    ->setDescription("The language of the page")
+                    ->toAssociativeArray();
 
                 // Country
-                $region[FormField::VALUE_ATTRIBUTE] = $page->getLocaleRegion();
-                $region[FormField::MUTABLE_ATTRIBUTE] = true;
-                $region[FormField::DEFAULT_VALUE_ATTRIBUTE] = Site::getLanguageRegion();
-                $region[FormField::TAB_ATTRIBUTE] = self::TAB_LANGUAGE_VALUE;
-                $region[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Page::REGION_META_PROPERTY,
-                    "Region",
-                    false,
-                    "The region of the language"
-                );
-                $region[self::NAME_ATTRIBUTE] = Page::REGION_META_PROPERTY;
-                $fields[] = $region;
+                $fields[] = FormField::create(Page::REGION_META_PROPERTY)
+                    ->addValue($page->getLocaleRegion(), Site::getLanguageRegion())
+                    ->setTab(self::TAB_LANGUAGE_VALUE)
+                    ->setLabel("Region")
+                    ->setDescription("The region of the language")
+                    ->toAssociativeArray();
 
                 // database replication Date
-                $replicationDateValue = $page->getDatabasePage()->getReplicationDate();
-                $replicationDate[FormField::VALUE_ATTRIBUTE] = $replicationDateValue != null ? $replicationDateValue->format(Iso8601Date::getFormat()) : null;
-                $replicationDate[FormField::MUTABLE_ATTRIBUTE] = false;
-                $replicationDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
-                $replicationDate[FormField::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
-                $replicationDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    DatabasePage::REPLICATION_CANONICAL,
-                    "Database Replication Date",
-                    false,
-                    "The last date of database replication"
-                );
-                $replicationDate[self::NAME_ATTRIBUTE] = DatabasePage::DATE_REPLICATION;
-                $fields[] = $replicationDate;
+                $replicationDate = $page->getDatabasePage()->getReplicationDate();
+                $fields[] = FormField::create(DatabasePage::DATE_REPLICATION)
+                    ->addValue($replicationDate != null ? $replicationDate->format(Iso8601Date::getFormat()) : null)
+                    ->setMutable(false)
+                    ->setType(FormField::DATETIME_TYPE_VALUE)
+                    ->setTab(self::TAB_INTEGRATION_VALUE)
+                    ->setCanonical(DatabasePage::REPLICATION_CANONICAL)
+                    ->setLabel("Database Replication Date")
+                    ->setDescription("The last date of database replication")
+                    ->toAssociativeArray();
 
-                // UUID
-                $metasUuid[FormField::VALUE_ATTRIBUTE] = $page->getPageId();
-                $metasUuid[FormField::MUTABLE_ATTRIBUTE] = false;
-                $metasUuid[FormField::TAB_ATTRIBUTE] = self::TAB_INTEGRATION_VALUE;
-                $metasUuid[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Page::PAGE_ID_ATTRIBUTE,
-                    "Page Id",
-                    false,
-                    "An unique identifier for the page"
-                );
-                $metasUuid[self::NAME_ATTRIBUTE] = Page::PAGE_ID_ATTRIBUTE;
-                $fields[] = $metasUuid;
+                // Page Id
+                $fields[] = FormField::create(Page::PAGE_ID_ATTRIBUTE)
+                    ->addValue($page->getPageId())
+                    ->setMutable(false)
+                    ->setTab(self::TAB_INTEGRATION_VALUE)
+                    ->setCanonical(Page::PAGE_ID_ATTRIBUTE)
+                    ->setLabel("Page Id")
+                    ->setDescription("An unique identifier for the page")
+                    ->toAssociativeArray();
 
                 /**
                  * Tabs (for whatever reason, javascript keep the order of the properties

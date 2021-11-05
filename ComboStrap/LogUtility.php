@@ -89,7 +89,7 @@ class LogUtility
         /**
          * If test, we throw an error
          */
-        self::throwErrorIfTest($level,$message);
+        self::throwErrorIfTest($level, $message);
     }
 
     /**
@@ -189,10 +189,14 @@ class LogUtility
                  */
                 $id = PluginUtility::getMainPageDokuwikiId();
                 if ($id != null) {
-                    $page = Page::createPageFromId($id);
-                    if ($page != null) {
-                        $htmlMsg .= " - " . $page->getAnchorLink();
-                    }
+
+                    /**
+                     * We don't use any Page object to not
+                     * create a cycle while building it
+                     */
+                    $url = wl($id,[],true);
+                    $htmlMsg .= " - <a href=\"$url\">$id</a>";
+
                 }
 
                 /**

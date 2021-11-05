@@ -5,17 +5,17 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
 use ComboStrap\DatabasePage;
+use ComboStrap\DokuPath;
 use ComboStrap\Http;
 use ComboStrap\Identity;
-use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\Sqlite;
-use ComboStrap\Page;
-use ComboStrap\UrlManagerBestEndPage;
 use ComboStrap\Url;
+use ComboStrap\UrlManagerBestEndPage;
 
 
 /**
@@ -103,6 +103,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         return substr($refreshHeader, strlen(action_plugin_combo_router::LOCATION_HEADER_PREFIX));
     }
 
+    private static function getOriginalIdFromRequest()
+    {
+        $originalId = $_GET["id"];
+        return str_replace("/", DokuPath::PATH_SEPARATOR, $originalId);
+    }
+
     /**
      * Determine if the request should be banned based on the id
      *
@@ -185,24 +191,71 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
 
         if (PluginUtility::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
-            /* This will call the function _handle404 */
+            /**
+             * This will call the function {@link action_plugin_combo_router::_router()}
+             * The event is not DOKUWIKI_STARTED because this is not the first one
+             *
+             * https://www.dokuwiki.org/devel:event:init_lang_load
+             */
             $controller->register_hook('DOKUWIKI_STARTED',
                 'AFTER',
                 $this,
-                '_router',
+                'router',
                 array());
+
+            /**
+             * This is the real first call of Dokuwiki
+             * Unfortunately, it does not create the environment
+             * We just ban to spare server resources
+             *
+             * https://www.dokuwiki.org/devel:event:init_lang_load
+             */
+            $controller->register_hook('INIT_LANG_LOAD', 'BEFORE', $this, 'ban', array());
+
         }
+
+
 
     }
 
     /**
+     *
+     * We have created a spacial ban function that is
+     * called before the first function
+     * {@link action_plugin_combo_metalang::load_lang()}
+     * to spare CPU.
+     *
+     * @param $event
+     * @throws Exception
+     */
+    function ban(&$event){
 
+        $id = self::getOriginalIdFromRequest();
+        $page = Page::createPageFromId($id);
+        if(!$page->exists()) {
+            // Well known
+            if (self::isWellKnownFile($id)) {
+                echo self::PAGE_404;
+                Http::setStatus(404);
+                $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
+                exit();
+            }
+
+            // Shadow banned
+            if (self::isShadowBanned($id)) {
+                $webSiteHomePage = Site::getHomePageName();
+                $this->executeTransparentRedirect($webSiteHomePage, self::TARGET_ORIGIN_SHADOW_BANNED);
+            }
+        }
+    }
+
+    /**
      * @param $event Doku_Event
      * @param $param
      * @return void
      * @throws Exception
      */
-    function _router(&$event, $param)
+    function router(&$event, $param)
     {
 
         global $ACT;
@@ -222,10 +275,20 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
 
         /**
+         * Unfortunately, DOKUWIKI_STARTED is not the first event
+         * The id may have been changed by
+         * {@link action_plugin_combo_metalang::load_lang()}
+         * function, that's why we check against the {@link $_REQUEST}
+         * and not the global ID
+         */
+        $originalId = self::getOriginalIdFromRequest();
+
+        /**
          * Page is an existing id ?
          */
         $targetPage = Page::createPageFromId($ID);
         if ($targetPage->exists()) {
+
             /**
              * If this is not the root home page
              * and if the canonical id is the not the same,
@@ -233,7 +296,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
              * redirect
              */
             if (
-                $ID !== $targetPage->getUrlId()
+                $originalId !== $targetPage->getUrlId() // The id may have been changed
                 && $ID != Site::getHomePageName()
                 && !isset($_REQUEST["rev"])
             ) {
@@ -245,25 +308,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         $identifier = $ID;
 
-        // Well known
-        if (self::isWellKnownFile($identifier)) {
-            echo self::PAGE_404;
-            Http::setStatus(404);
-            $this->logRedirection($ID, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
-            exit();
-        }
-
-        // Shadow banned
-        if (self::isShadowBanned($identifier)) {
-            $webSiteHomePage = Site::getHomePageName();
-            $this->executeTransparentRedirect($webSiteHomePage, self::TARGET_ORIGIN_SHADOW_BANNED);
-        }
 
         /**
-         * Page Id Permalink ?
+         * Page Id Website / root Permalink ?
          */
         $pageId = Page::decodePageId($targetPage->getDokuPathName());
-        if ($targetPage->getParentPage()===null && $pageId!==null){
+        if ($targetPage->getParentPage() === null && $pageId !== null) {
             $page = DatabasePage::createFromPageId($pageId)->getPage();
             if ($page !== null && $page->exists()) {
                 $this->executePermanentRedirect($page->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK);
@@ -314,6 +364,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         }
 
+
         // Global variable needed in the process
         global $conf;
 
@@ -334,7 +385,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         $targetPage = DatabasePage::createFromAlias($identifier)->getPage();
         if ($targetPage !== null && $targetPage->exists()) {
             $buildAlias = $targetPage->getBuildAlias();
-            switch ($buildAlias->getType()){
+            switch ($buildAlias->getType()) {
                 case Alias::REDIRECT:
                     $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {

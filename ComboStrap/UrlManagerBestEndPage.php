@@ -2,14 +2,14 @@
 
 namespace ComboStrap;
 
-use action_plugin_combo_urlmanager;
+use action_plugin_combo_router;
 
 include_once(__DIR__ . "/PagesIndex.php");
 
 /**
  * Class UrlManagerBestEndPage
  *
- * A class that implements the BestEndPage Algorithm for the {@link action_plugin_combo_urlmanager urlManager}
+ * A class that implements the BestEndPage Algorithm for the {@link action_plugin_combo_router urlManager}
  */
 class UrlManagerBestEndPage
 {
@@ -85,12 +85,12 @@ class UrlManagerBestEndPage
 
         list($bestPageId, $bestScore) = self::getBestEndPageId($missingPageId);
         if ($bestPageId != null) {
-            $redirectType = action_plugin_combo_urlmanager::REDIRECT_NOTFOUND_METHOD;
+            $redirectType = action_plugin_combo_router::REDIRECT_NOTFOUND_METHOD;
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
                 $page = Page::createPageFromId($bestPageId);
                 $alias = $page->addAndGetAlias($missingPageId, Alias::REDIRECT);
                 $page->getDatabasePage()->addAlias($alias);
-                $redirectType = action_plugin_combo_urlmanager::REDIRECT_PERMANENT_METHOD;
+                $redirectType = action_plugin_combo_router::REDIRECT_PERMANENT_METHOD;
             }
             $return = array(
                 $bestPageId,

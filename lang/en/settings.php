@@ -38,23 +38,23 @@ $lang[syntax_plugin_combo_disqus::CONF_DEFAULT_ATTRIBUTES] = PluginUtility::getD
 /**
  * Url Manager
  */
-$lang[action_plugin_combo_urlmanager::URL_MANAGER_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink("url:manager", action_plugin_combo_urlmanager::NAME ) . ' - If unchecked, the URL manager will be disabled';
-$lang['ActionReaderFirst'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_urlmanager::NAME . " - Redirection Actions") . ' - First redirection action for a reader';
-$lang['ActionReaderSecond'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_urlmanager::NAME . " - Redirection Actions") . ' - Second redirection action for a reader if the first action don\'t success.';
-$lang['ActionReaderThird'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_urlmanager::NAME . " - Redirection Actions") . ' - Third redirection action for a reader if the second action don\'t success.';
-$lang['GoToEditMode'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_urlmanager::NAME . " - Redirection Actions") . ' - Switch directly in the edit mode for a writer ?';
+$lang[action_plugin_combo_router::ROUTER_ENABLE_CONF] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::CANONICAL, action_plugin_combo_router::NAME ) . ' - If unchecked, the URL manager will be disabled';
+$lang['ActionReaderFirst'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - First redirection action for a reader';
+$lang['ActionReaderSecond'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - Second redirection action for a reader if the first action don\'t success.';
+$lang['ActionReaderThird'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - Third redirection action for a reader if the second action don\'t success.';
+$lang['GoToEditMode'] = PluginUtility::getDocumentationHyperLink("redirection:action", action_plugin_combo_router::NAME . " - Redirection Actions") . ' - Switch directly in the edit mode for a writer ?';
 
-$lang['ShowPageNameIsNotUnique'] = PluginUtility::getDocumentationHyperLink("redirection:message", action_plugin_combo_urlmanager::NAME . " - Redirection Message") . ' - When redirected to the edit mode, show a message when the page name is not unique';
-$lang['ShowMessageClassic'] = PluginUtility::getDocumentationHyperLink("redirection:message", action_plugin_combo_urlmanager::NAME . " - Redirection Message") . ' - Show classic message when a action is performed ?';
-$lang['WeightFactorForSamePageName'] = PluginUtility::getDocumentationHyperLink("best:page:name", action_plugin_combo_urlmanager::NAME . " - Best Page Name") . ' - Weight factor for same page name to calculate the score for the best page.';
-$lang['WeightFactorForStartPage'] = PluginUtility::getDocumentationHyperLink("best:page:name", action_plugin_combo_urlmanager::NAME . " - Best Page Name") . ' - Weight factor for same start page to calculate the score for the best page.';
-$lang['WeightFactorForSameNamespace'] = PluginUtility::getDocumentationHyperLink("best:page:name", action_plugin_combo_urlmanager::NAME . " - Best Page Name") . ' - Weight factor for same namespace to calculate the score for the best page.';
+$lang['ShowPageNameIsNotUnique'] = PluginUtility::getDocumentationHyperLink("redirection:message", action_plugin_combo_router::NAME . " - Redirection Message") . ' - When redirected to the edit mode, show a message when the page name is not unique';
+$lang['ShowMessageClassic'] = PluginUtility::getDocumentationHyperLink("redirection:message", action_plugin_combo_router::NAME . " - Redirection Message") . ' - Show classic message when a action is performed ?';
+$lang['WeightFactorForSamePageName'] = PluginUtility::getDocumentationHyperLink("best:page:name", action_plugin_combo_router::NAME . " - Best Page Name") . ' - Weight factor for same page name to calculate the score for the best page.';
+$lang['WeightFactorForStartPage'] = PluginUtility::getDocumentationHyperLink("best:page:name", action_plugin_combo_router::NAME . " - Best Page Name") . ' - Weight factor for same start page to calculate the score for the best page.';
+$lang['WeightFactorForSameNamespace'] = PluginUtility::getDocumentationHyperLink("best:page:name", action_plugin_combo_router::NAME . " - Best Page Name") . ' - Weight factor for same namespace to calculate the score for the best page.';
 
 
 $lang[action_plugin_combo_canonical::CONF_CANONICAL_LAST_NAMES_COUNT] = PluginUtility::getDocumentationHyperLink("automatic:canonical", 'Automatic Canonical') . ' - The number of last part of a page path to create a ' . PluginUtility::getDocumentationHyperLink("canonical", "canonical") . ' (0 to disable)';
 $lang[action_plugin_combo_canonical::CONF_CANONICAL_FOR_GA_PAGE_VIEW] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_canonical::CANONICAL, 'Canonical') . ' - If enable and if set, the canonical will be reported to the Google Analytics Plugin as page path';
 
-$lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getDocumentationHyperLink("best:end:page:name", action_plugin_combo_urlmanager::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getDocumentationHyperLink(action_plugin_combo_urlmanager::PERMANENT_REDIRECT_CANONICAL, "permanent redirect") . ' (0 to disable)';
+$lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getDocumentationHyperLink("best:end:page:name", action_plugin_combo_router::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::PERMANENT_REDIRECT_CANONICAL, "permanent redirect") . ' (0 to disable)';
 
 
 /**

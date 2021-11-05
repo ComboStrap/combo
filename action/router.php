@@ -3,6 +3,7 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
+use ComboStrap\Alias;
 use ComboStrap\DatabasePage;
 use ComboStrap\Http;
 use ComboStrap\Identity;
@@ -24,10 +25,14 @@ use ComboStrap\Url;
  *
  *
  */
-class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
+class action_plugin_combo_router extends DokuWiki_Action_Plugin
 {
 
+    /**
+     * @deprecated
+     */
     const URL_MANAGER_ENABLE_CONF = "enableUrlManager";
+    const ROUTER_ENABLE_CONF = "enableRouter";
 
     // The redirect type
     const REDIRECT_TRANSPARENT_METHOD = 'transparent'; // was (Id)
@@ -63,10 +68,11 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
     /** @var string - a name used in log and other places */
     const NAME = 'Url Manager';
-    const CANONICAL = 'url/manager';
+    const CANONICAL = 'router';
     const PAGE_404 = "<html lang=\"en\"><body></body></html>";
     const REFRESH_HEADER_PREFIX = 'Refresh: 0;url=';
     const LOCATION_HEADER_PREFIX = "Location: ";
+    public const URL_MANAGER_NAME = "Router";
 
 
     /**
@@ -89,12 +95,12 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
      */
     public static function getUrlFromRefresh($refreshHeader)
     {
-        return substr($refreshHeader, strlen(action_plugin_combo_urlmanager::REFRESH_HEADER_PREFIX));
+        return substr($refreshHeader, strlen(action_plugin_combo_router::REFRESH_HEADER_PREFIX));
     }
 
     public static function getUrlFromLocation($refreshHeader)
     {
-        return substr($refreshHeader, strlen(action_plugin_combo_urlmanager::LOCATION_HEADER_PREFIX));
+        return substr($refreshHeader, strlen(action_plugin_combo_router::LOCATION_HEADER_PREFIX));
     }
 
     /**
@@ -178,26 +184,25 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        if (PluginUtility::getConfValue(self::URL_MANAGER_ENABLE_CONF, 1)) {
+        if (PluginUtility::getConfValue(self::ROUTER_ENABLE_CONF, 1)) {
             /* This will call the function _handle404 */
             $controller->register_hook('DOKUWIKI_STARTED',
                 'AFTER',
                 $this,
-                '_handle404',
+                '_router',
                 array());
         }
 
     }
 
     /**
-     * Verify if there is a 404
-     * Inspiration comes from <a href="https://github.com/splitbrain/dokuwiki-plugin-notfound/blob/master/action.php">Not Found Plugin</a>
+
      * @param $event Doku_Event
      * @param $param
-     * @return false|void
+     * @return void
      * @throws Exception
      */
-    function _handle404(&$event, $param)
+    function _router(&$event, $param)
     {
 
         global $ACT;
@@ -326,11 +331,29 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
         /**
          * Identifier is an alias
          */
-        $targetPage = Page::createPageFromAlias($identifier);
+        $targetPage = DatabasePage::createFromAlias($identifier)->getPage();
         if ($targetPage !== null && $targetPage->exists()) {
-            $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
-            if ($res) {
-                return;
+            $buildAlias = $targetPage->getBuildAlias();
+            switch ($buildAlias->getType()){
+                case Alias::REDIRECT:
+                    $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
+                    if ($res) {
+                        return;
+                    }
+                    break;
+                case Alias::SYNONYM:
+                    $res = $this->executeTransparentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
+                    if ($res) {
+                        return;
+                    }
+                    break;
+                default:
+                    LogUtility::msg("The alias type ({$buildAlias->getType()}) is unknown. A permanent redirect was performed for the alias $identifier");
+                    $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
+                    if ($res) {
+                        return;
+                    }
+                    break;
             }
         }
 
@@ -543,22 +566,8 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
     private
     function gotToEditMode(&$event)
     {
-        global $ID;
-        global $conf;
-
-
         global $ACT;
         $ACT = 'edit';
-
-        // If this is a side bar no message.
-        // There is always other page with the same name
-        $pageName = noNS($ID);
-        if ($pageName != $conf['sidebar']) {
-
-            action_plugin_combo_urlmessage::notify($ID, self::GO_TO_EDIT_MODE);
-
-        }
-
 
     }
 
@@ -664,9 +673,6 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
 
         } else {
 
-            // Notify
-            // Message can be shown because this is not an external URL
-            action_plugin_combo_urlmessage::notify($ID, $targetOrigin);
 
             // Explode the page ID and the anchor (#)
             $link = explode('#', $target, 2);
@@ -675,8 +681,8 @@ class action_plugin_combo_urlmanager extends DokuWiki_Action_Plugin
             $urlParams = [];
             if ($targetOrigin != self::TARGET_ORIGIN_PERMALINK) {
                 $urlParams = array(
-                    action_plugin_combo_urlmessage::ORIGIN_PAGE => $ID,
-                    action_plugin_combo_urlmessage::ORIGIN_TYPE => $targetOrigin
+                    action_plugin_combo_routermessage::ORIGIN_PAGE => $ID,
+                    action_plugin_combo_routermessage::ORIGIN_TYPE => $targetOrigin
                 );
             }
 

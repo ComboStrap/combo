@@ -25,7 +25,7 @@ class DatabasePage
      * used in the build functions such as {@link DatabasePage::getDatabaseRowFromPage()}
      * to build the sql
      */
-    private const BUILD_ATTRIBUTES =
+    private const PAGE_BUILD_ATTRIBUTES =
         [
             self::ROWID,
             Page::DOKUWIKI_ID_ATTRIBUTE,
@@ -257,7 +257,7 @@ class DatabasePage
     public static function createFromPageIdAbbr(string $pageIdAbbr): DatabasePage
     {
         $databasePage = new DatabasePage();
-        $row = $databasePage->getDatabaseRowFromAttribute(Page::PAGE_ID_ABBR_ATTRIBUTE,$pageIdAbbr);
+        $row = $databasePage->getDatabaseRowFromAttribute(Page::PAGE_ID_ABBR_ATTRIBUTE, $pageIdAbbr);
         if ($row != null) {
             $databasePage->buildDatabaseObjectFields($row);
         }
@@ -274,12 +274,26 @@ class DatabasePage
 
         DokuPath::addRootSeparatorIfNotPresent($canonical);
         $databasePage = new DatabasePage();
-        $row = $databasePage->getDatabaseRowFromAttribute(Page::CANONICAL_PROPERTY,$canonical);
+        $row = $databasePage->getDatabaseRowFromAttribute(Page::CANONICAL_PROPERTY, $canonical);
         if ($row != null) {
             $databasePage->buildDatabaseObjectFields($row);
         }
         return $databasePage;
 
+
+    }
+
+    public static function createFromAlias($alias): DatabasePage
+    {
+
+        DokuPath::addRootSeparatorIfNotPresent($alias);
+        $databasePage = new DatabasePage();
+        $row = $databasePage->getDatabaseRowFromAlias($alias);
+        if ($row != null) {
+            $databasePage->buildDatabaseObjectFields($row);
+            $databasePage->getPage()->setBuildAliasPath($alias);
+        }
+        return $databasePage;
 
     }
 
@@ -290,7 +304,7 @@ class DatabasePage
      */
     private function createPageIdIfNeeded()
     {
-        if($this->page!=null) {
+        if ($this->page != null) {
             $pageId = $this->page->getPageId();
             if ($pageId === null || !is_string($pageId)
                 || preg_match("/[-_A-Z]/", $pageId)
@@ -824,11 +838,11 @@ EOF;
         if ($this->sqlite === null) {
             return [];
         }
-        if($this->page===null){
+        if ($this->page === null) {
             LogUtility::msg("The page is unknown. We can't retrieve the aliases");
             return [];
         }
-        if($this->page->getPageId()===null){
+        if ($this->page->getPageId() === null) {
             LogUtility::msg("The page id is null. We can't retrieve the aliases");
             return [];
         }
@@ -1049,9 +1063,10 @@ EOF;
 
     private function getParametrizedLookupQuery(string $pageIdAttribute): string
     {
-        $databaseFields = implode(self::BUILD_ATTRIBUTES, ", ");
+        $databaseFields = implode(self::PAGE_BUILD_ATTRIBUTES, ", ");
         return "select $databaseFields from pages where $pageIdAttribute = ?";
     }
+
 
     private function setPage(Page $page)
     {
@@ -1176,6 +1191,45 @@ EOF;
     public function getPage(): ?Page
     {
         return $this->page;
+    }
+
+    private function getDatabaseRowFromAlias($alias): ?array
+    {
+
+        $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
+        $buildFields = self::PAGE_BUILD_ATTRIBUTES;
+        $fields = array_reduce($buildFields, function ($carry, $element) {
+            if ($carry !== null) {
+                 return "$carry, p.{$element}";
+            } else {
+                return "p.{$element}";
+            }
+        }, null);
+        $query = "select {$fields} from PAGES p, PAGE_ALIASES pa where p.{$pageIdAttribute} = pa.{$pageIdAttribute} and pa.PATH = ? ";
+        $res = $this->sqlite->query($query, $alias);
+        if (!$res) {
+            LogUtility::msg("An exception has occurred with the alias selection query");
+        }
+        $res2arr = $this->sqlite->res2arr($res);
+        $this->sqlite->res_close($res);
+        switch (sizeof($res2arr)) {
+            case 0:
+                return null;
+            case 1:
+                return $res2arr[0];
+            default:
+                $id = $res2arr[0]['ID'];
+                $pages = implode(",",
+                    array_map(
+                        function ($row) {
+                            return $row['ID'];
+                        },
+                        $res2arr
+                    )
+                );
+                LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, Page::ALIAS_ATTRIBUTE);
+                return $res2arr[0];
+        }
     }
 
 

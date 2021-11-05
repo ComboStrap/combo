@@ -1,18 +1,12 @@
 <?php
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
+
 use ComboStrap\LogUtility;
 use ComboStrap\Message;
 use ComboStrap\PagesIndex;
 use dokuwiki\Extension\ActionPlugin;
 
-if (!defined('DOKU_INC')) die();
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
-
-
-require_once(__DIR__ . '/../ComboStrap/PageRules.php');
-require_once(__DIR__ . '/../ComboStrap/Page.php');
-require_once(__DIR__ . '/urlmanager.php');
-require_once(__DIR__ . '/../ComboStrap/Message.php');
 
 /**
  *
@@ -21,7 +15,7 @@ require_once(__DIR__ . '/../ComboStrap/Message.php');
  *
  *
  */
-class action_plugin_combo_urlmessage extends ActionPlugin
+class action_plugin_combo_routermessage extends ActionPlugin
 {
 
     // a class can not start with a number then webcomponent is not a valid class name
@@ -89,9 +83,9 @@ class action_plugin_combo_urlmessage extends ActionPlugin
 
         // Message
         $message = new Message($this);
-        $message->setClass(action_plugin_combo_urlmessage::REDIRECT_MANAGER_BOX_CLASS);
-        $message->setSignatureCanonical(action_plugin_combo_urlmanager::CANONICAL);
-        $message->setSignatureName("Url Manager");
+        $message->setClass(action_plugin_combo_routermessage::REDIRECT_MANAGER_BOX_CLASS);
+        $message->setSignatureCanonical(action_plugin_combo_router::CANONICAL);
+        $message->setSignatureName(action_plugin_combo_router::URL_MANAGER_NAME);
 
         $pageIdOrigin = null;
         $redirectSource = null;
@@ -106,32 +100,32 @@ class action_plugin_combo_urlmessage extends ActionPlugin
 
             switch ($redirectSource) {
 
-                case action_plugin_combo_urlmanager::TARGET_ORIGIN_PAGE_RULES:
+                case action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES:
                     $message->addContent(sprintf($this->getLang('message_redirected_by_redirect'), hsc($pageIdOrigin)));
                     $message->setType(Message::TYPE_CLASSIC);
                     break;
 
-                case action_plugin_combo_urlmanager::TARGET_ORIGIN_START_PAGE:
+                case action_plugin_combo_router::TARGET_ORIGIN_START_PAGE:
                     $message->addContent(sprintf($this->lang['message_redirected_to_startpage'], hsc($pageIdOrigin)));
                     $message->setType(Message::TYPE_WARNING);
                     break;
 
-                case  action_plugin_combo_urlmanager::TARGET_ORIGIN_BEST_PAGE_NAME:
+                case  action_plugin_combo_router::TARGET_ORIGIN_BEST_PAGE_NAME:
                     $message->addContent(sprintf($this->lang['message_redirected_to_bestpagename'], hsc($pageIdOrigin)));
                     $message->setType(Message::TYPE_WARNING);
                     break;
 
-                case action_plugin_combo_urlmanager::TARGET_ORIGIN_BEST_NAMESPACE:
+                case action_plugin_combo_router::TARGET_ORIGIN_BEST_NAMESPACE:
                     $message->addContent(sprintf($this->lang['message_redirected_to_bestnamespace'], hsc($pageIdOrigin)));
                     $message->setType(Message::TYPE_WARNING);
                     break;
 
-                case action_plugin_combo_urlmanager::TARGET_ORIGIN_SEARCH_ENGINE:
+                case action_plugin_combo_router::TARGET_ORIGIN_SEARCH_ENGINE:
                     $message->addContent(sprintf($this->lang['message_redirected_to_searchengine'], hsc($pageIdOrigin)));
                     $message->setType(Message::TYPE_WARNING);
                     break;
 
-                case action_plugin_combo_urlmanager::GO_TO_EDIT_MODE:
+                case action_plugin_combo_router::GO_TO_EDIT_MODE:
                     $message->addContent($this->lang['message_redirected_to_edit_mode']);
                     $message->setType(Message::TYPE_CLASSIC);
                     break;
@@ -140,7 +134,7 @@ class action_plugin_combo_urlmessage extends ActionPlugin
 
             // Add a list of page with the same name to the message
             // if the redirections is not planned
-            if ($redirectSource != action_plugin_combo_urlmanager::TARGET_ORIGIN_PAGE_RULES) {
+            if ($redirectSource != action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES) {
                 $this->addToMessagePagesWithSameName($message, $pageIdOrigin);
             }
 

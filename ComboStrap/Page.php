@@ -240,6 +240,11 @@ class Page extends DokuPath
     private $isDynamicQualityMonitored = true;
 
     /**
+     * @var string the alias used to build this page
+     */
+    private $buildAliasPath;
+
+    /**
      * Page constructor.
      * @param $absolutePath - the qualified path (may be not relative)
      *
@@ -337,40 +342,6 @@ class Page extends DokuPath
             LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
             return Page::createPageFromId("unknown-requested-page");
         }
-    }
-
-    public static function createPageFromAlias(string $alias): ?Page
-    {
-
-        $sqlite = Sqlite::getSqlite();
-        $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
-        $res = $sqlite->query("select p.ID from PAGES p, PAGE_ALIASES pa where p.{$pageIdAttribute} = pa.{$pageIdAttribute} and pa.PATH = ? ", $alias);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the alias selection query");
-        }
-        $res2arr = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        switch (sizeof($res2arr)) {
-            case 0:
-                return null;
-            case 1:
-                $id = $res2arr[0]['ID'];
-                return self::createPageFromId($id);
-            default:
-                $id = $res2arr[0]['ID'];
-                $pages = implode(",",
-                    array_map(
-                        function ($row) {
-                            return $row['ID'];
-                        },
-                        $res2arr
-                    )
-                );
-                LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, self::ALIAS_ATTRIBUTE);
-                return self::createPageFromId($id);
-        }
-
-
     }
 
 
@@ -1658,8 +1629,8 @@ class Page extends DokuPath
     {
 
         $oldValue = $this->metadatas['persistent'][$key];
-        if(is_bool($value)){
-            $oldValue=Boolean::toBoolean($value);
+        if (is_bool($value)) {
+            $oldValue = Boolean::toBoolean($value);
         }
         if ($oldValue !== $value) {
 
@@ -2728,6 +2699,25 @@ class Page extends DokuPath
         $this->isDynamicQualityMonitored = $boolean;
         $this->setMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR, $boolean);
         return $this;
+    }
+
+    /**
+     * @param $aliasPath - the alias used to build this page
+     */
+    public function setBuildAliasPath($aliasPath)
+    {
+        $this->buildAliasPath = $aliasPath;
+    }
+
+    public function getBuildAlias(): ?Alias
+    {
+        if ($this->buildAliasPath === null) return null;
+        foreach ($this->getAliases() as $alias) {
+            if ($alias->getPath() === $this->buildAliasPath) {
+                return $alias;
+            }
+        }
+        return null;
     }
 
 

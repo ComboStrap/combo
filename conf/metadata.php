@@ -45,18 +45,18 @@ $meta[syntax_plugin_combo_disqus::CONF_DEFAULT_ATTRIBUTES] = array('string');
 /**
  * Url Manager
  */
-$meta[action_plugin_combo_urlmanager::URL_MANAGER_ENABLE_CONF] = array('onoff');
+$meta[action_plugin_combo_router::ROUTER_ENABLE_CONF] = array('onoff');
 $meta['ShowPageNameIsNotUnique'] = array('onoff');
 $meta['ShowMessageClassic'] = array('onoff');
 
 require_once(__DIR__ . '/../action/urlmanager.php');
 $actionChoices = array('multichoice', '_choices' => array(
-    action_plugin_combo_urlmanager::NOTHING,
-    action_plugin_combo_urlmanager::GO_TO_BEST_END_PAGE_NAME,
-    action_plugin_combo_urlmanager::GO_TO_NS_START_PAGE,
-    action_plugin_combo_urlmanager::GO_TO_BEST_PAGE_NAME,
-    action_plugin_combo_urlmanager::GO_TO_BEST_NAMESPACE,
-    action_plugin_combo_urlmanager::GO_TO_SEARCH_ENGINE
+    action_plugin_combo_router::NOTHING,
+    action_plugin_combo_router::GO_TO_BEST_END_PAGE_NAME,
+    action_plugin_combo_router::GO_TO_NS_START_PAGE,
+    action_plugin_combo_router::GO_TO_BEST_PAGE_NAME,
+    action_plugin_combo_router::GO_TO_BEST_NAMESPACE,
+    action_plugin_combo_router::GO_TO_SEARCH_ENGINE
 ));
 $meta['GoToEditMode'] = array('onoff');
 $meta['ActionReaderFirst'] = $actionChoices;

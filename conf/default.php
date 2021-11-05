@@ -37,20 +37,20 @@ $conf['extra_pattern'] = '{{backlinks>.}}';
 $conf['disqusDefaultAttributes'] = 'shortName=""';
 
 /**
- * Enable ie {@link action_plugin_combo_urlmanager::URL_MANAGER_ENABLE_CONF}
+ * Enable ie {@link action_plugin_combo_router::ROUTER_ENABLE_CONF}
  */
-$conf['enableUrlManager']=1;
+$conf['enableRouter']=1;
 /**
- * ie {@link action_plugin_combo_urlmanager::GO_TO_BEST_END_PAGE_NAME}
+ * ie {@link action_plugin_combo_router::GO_TO_BEST_END_PAGE_NAME}
  */
 $conf['ActionReaderFirst'] = 'GoToBestEndPageName';
 
 /**
- * ie {@link action_plugin_combo_urlmanager::GO_TO_BEST_PAGE_NAME}
+ * ie {@link action_plugin_combo_router::GO_TO_BEST_PAGE_NAME}
  */
 $conf['ActionReaderSecond'] = 'GoToBestPageName';
 /**
- * ie {@link action_plugin_combo_urlmanager::GO_TO_SEARCH_ENGINE}
+ * ie {@link action_plugin_combo_router::GO_TO_SEARCH_ENGINE}
  */
 $conf['ActionReaderThird'] = 'GoToSearchEngine';
 $conf['GoToEditMode'] = 1;

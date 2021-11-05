@@ -52,7 +52,7 @@ class Alias
 
     public static function toAliasArray($aliases, Page $page): ?array
     {
-        if($aliases===null) return null;
+        if ($aliases === null) return null;
 
         $aliasArray = [];
         foreach ($aliases as $alias) {

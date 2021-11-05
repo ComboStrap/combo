@@ -13,6 +13,7 @@ class Alias
     const  REDIRECT = "redirect";
     const SYNONYM = "synonym";
     const CANONICAL = "alias";
+    const ALIAS_TYPE_VALUES = [self::SYNONYM, self::REDIRECT];
 
 
     private $path; // the path of the alias
@@ -86,6 +87,16 @@ class Alias
         return $aliasArray;
     }
 
+    public static function getPossibleTypesValues(): array
+    {
+        return self::ALIAS_TYPE_VALUES;
+    }
+
+    public static function getDefaultType()
+    {
+        return self::REDIRECT;
+    }
+
     /**
      * @return mixed
      */
@@ -130,6 +141,10 @@ class Alias
     public
     function setType(string $type): Alias
     {
+        if(!in_array($type,self::getPossibleTypesValues())){
+            LogUtility::msg("The alias type ($type) is unknown");
+            return $this;
+        }
         $this->type = $type;
         return $this;
     }

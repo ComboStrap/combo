@@ -3,7 +3,17 @@
 
 namespace ComboStrap;
 
-
+/**
+ * Class FormField
+ * @package ComboStrap
+ *
+ * A class that represents a tree of form field.
+ *
+ * Each field can be a scalar, a list or
+ * tabular by adding child fields.
+ *
+ *
+ */
 class FormField
 {
 
@@ -96,16 +106,20 @@ class FormField
             Analytics::NAME => $this->name,
             self::LABEL_ATTRIBUTE => $this->label,
             self::HYPERLINK_ATTRIBUTE => $this->getHyperLink(),
-            self::DATA_TYPE_ATTRIBUTE => $this->type,
-            self::TAB_ATTRIBUTE => $this->tab,
-            self::MUTABLE_ATTRIBUTE => $this->mutable,
+            self::DATA_TYPE_ATTRIBUTE => $this->type
         ];
+        /**
+         * For child form field (ie column), there is no tab
+         */
+        if ($this->tab != null) {
+            $associative[self::TAB_ATTRIBUTE] = $this->tab;
+        }
         switch (sizeof($this->values)) {
             case 0:
                 break;
             case 1:
                 $value = $this->values[0];
-                if(!blank($value)) {
+                if (!blank($value)) {
                     $associative[self::VALUE_ATTRIBUTE] = $this->values[0];
                 }
                 break;
@@ -118,7 +132,7 @@ class FormField
                 break;
             case 1:
                 $value = $this->defaults[0];
-                if(!blank($value)) {
+                if (!blank($value)) {
                     $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $value;
                 }
                 break;
@@ -138,6 +152,11 @@ class FormField
             foreach ($this->columns as $column) {
                 $associative[self::COLUMNS_ATTRIBUTE][] = $column->toAssociativeArray();
             }
+        } else {
+            /**
+             * Mutable is only valid for leaf field
+             */
+            $associative[self::MUTABLE_ATTRIBUTE] = $this->mutable;
         }
         return $associative;
     }

@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\Alias;
 use ComboStrap\Analytics;
 use ComboStrap\DatabasePage;
 use ComboStrap\FormField;
@@ -297,7 +298,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                         $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
                     }
                     $pageImagePath->addValue($pageImagePathValue, $pageImagePathDefaultValue);
-                    $pageImageUsage->addValue($pageImagePathUsage,PageImage::getDefaultUsage());
+                    $pageImageUsage->addValue($pageImagePathUsage, PageImage::getDefaultUsage());
 
                 }
 
@@ -315,116 +316,97 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 /**
                  * Aliases
                  */
-                $aliasesValues = $page->getAliases();
-                $aliasUrl = PluginUtility::getDocumentationHyperLink(
-                    Page::ALIAS_ATTRIBUTE,
-                    "Page Aliases",
-                    false,
-                    "Aliases that will redirect to this page."
-                );
-                $alias[self::NAME_ATTRIBUTE] = Page::ALIAS_ATTRIBUTE;
-                $alias[FormField::TAB_ATTRIBUTE] = self::TAB_REDIRECTION_VALUE;
-                $alias[FormField::DATA_TYPE_ATTRIBUTE] = FormField::TABULAR_TYPE_VALUE;
+                $aliasPath = FormField::create("alias-path")
+                    ->setCanonical(Alias::CANONICAL)
+                    ->setLabel("Alias Path")
+                    ->setDescription("The path of the alias");
+                $aliasType = FormField::create("alias-type")
+                    ->setCanonical(Alias::CANONICAL)
+                    ->setLabel("Alias Type")
+                    ->setDescription("The type of the alias")
+                    ->setDomainValues(Alias::getPossibleTypesValues());
 
-                $alias[FormField::MUTABLE_ATTRIBUTE] = true;
-                $alias[FormField::HYPERLINK_ATTRIBUTE] = $aliasUrl;
+
+                $aliasesValues = $page->getAliases();
                 if (sizeof($aliasesValues) === 0) {
-                    $aliasesValues = ["None"];
+                    $aliasPath->addValue(null);
+                    $aliasType->addValue(null, Alias::getDefaultType());
+                } else {
+                    foreach ($aliasesValues as $alias) {
+                        $aliasPath->addValue($alias->getPath());
+                        $aliasType->addValue($alias->getType(), Alias::getDefaultType());
+                    }
                 }
-                $alias[FormField::VALUE_ATTRIBUTE] = $aliasesValues;
-                $fields[] = $alias;
+
+                $fields[] = FormField::create(Page::ALIAS_ATTRIBUTE)
+                    ->setLabel("Page Aliases")
+                    ->setDescription("Aliases that will redirect to this page.")
+                    ->setTab(self::TAB_REDIRECTION_VALUE)
+                    ->setType(FormField::TABULAR_TYPE_VALUE)
+                    ->addColumn($aliasPath)
+                    ->addColumn($aliasType)
+                    ->toAssociativeArray();
 
 
                 // Page Type
-                $metasPageType[FormField::VALUE_ATTRIBUTE] = $page->getType();
-                $metasPageType[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getDefaultType();
-                $metasPageType[FormField::MUTABLE_ATTRIBUTE] = true;
-                $metasPageType[FormField::DOMAIN_VALUES_ATTRIBUTE] = $page->getTypeValues();
-                $metasPageType[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $metasPageType[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    self::PAGE_TYPE_CANONICAL,
-                    "Page Type",
-                    false,
-                    "The type of page"
-                );
-                $metasPageType[self::NAME_ATTRIBUTE] = Page::TYPE_META_PROPERTY;
-                $fields[] = $metasPageType;
-
+                $fields[] = FormField::create(Page::TYPE_META_PROPERTY)
+                    ->addValue($page->getType(), $page->getDefaultType())
+                    ->setDomainValues($page->getTypeValues())
+                    ->setTab(self::TAB_TYPE_VALUE)
+                    ->setCanonical(self::PAGE_TYPE_CANONICAL)
+                    ->setLabel("Page Type")
+                    ->setDescription("The type of page")
+                    ->toAssociativeArray();
 
                 // Published Date
-                $publishedDate[FormField::VALUE_ATTRIBUTE] = $page->getPublishedTimeAsString();
-                $publishedDate[FormField::DEFAULT_VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
-                $publishedDate[FormField::MUTABLE_ATTRIBUTE] = true;
-                $publishedDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
-                $publishedDate[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $publishedDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    self::PAGE_TYPE_CANONICAL,
-                    "Publication Date",
-                    false,
-                    "The publication date"
-                );
-                $publishedDate[self::NAME_ATTRIBUTE] = Publication::DATE_PUBLISHED;
-                $fields[] = $publishedDate;
+                $fields[] = FormField::create(Publication::DATE_PUBLISHED)
+                    ->addValue($page->getPublishedTimeAsString(), $page->getCreatedDateAsString())
+                    ->setType(FormField::DATETIME_TYPE_VALUE)
+                    ->setTab(self::TAB_TYPE_VALUE)
+                    ->setCanonical(self::PAGE_TYPE_CANONICAL)
+                    ->setLabel("Publication Date")
+                    ->setDescription("The publication date")
+                    ->toAssociativeArray();
 
                 // Start Date
-                $startDate[FormField::VALUE_ATTRIBUTE] = $page->getStartDate();
-                $startDate[FormField::MUTABLE_ATTRIBUTE] = true;
-                $startDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
-                $startDate[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $startDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Page::EVENT_TYPE,
-                    "Start Date",
-                    false,
-                    "The start date of an event"
-                );
-                $startDate[self::NAME_ATTRIBUTE] = Analytics::DATE_START;
-                $fields[] = $startDate;
+                $fields[] = FormField::create(Analytics::DATE_START)
+                    ->addValue($page->getStartDate())
+                    ->setType(FormField::DATETIME_TYPE_VALUE)
+                    ->setTab(self::TAB_TYPE_VALUE)
+                    ->setCanonical(Page::EVENT_TYPE)
+                    ->setLabel("Start Date")
+                    ->setDescription("The start date of an event");
 
                 // End Date
-                $endDate[FormField::VALUE_ATTRIBUTE] = $page->getEndDate();
-                $endDate[FormField::MUTABLE_ATTRIBUTE] = true;
-                $endDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
-                $endDate[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $endDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Page::EVENT_TYPE,
-                    "End Date",
-                    false,
-                    "The end date of an event"
-                );
-                $endDate[self::NAME_ATTRIBUTE] = Analytics::DATE_END;
-                $fields[] = $endDate;
-
+                $fields[] = FormField::create(Analytics::DATE_END)
+                    ->addValue($page->getEndDate())
+                    ->setTab(FormField::DATETIME_TYPE_VALUE)
+                    ->setTab(self::TAB_TYPE_VALUE)
+                    ->setCanonical(Page::EVENT_TYPE)
+                    ->setLabel("End Date")
+                    ->setDescription("The end date of an event")
+                    ->toAssociativeArray();
 
                 // ld-json
-                $ldJson[FormField::VALUE_ATTRIBUTE] = $page->getLdJson();
-                $ldJson[FormField::MUTABLE_ATTRIBUTE] = true;
-                $ldJson[FormField::DEFAULT_VALUE_ATTRIBUTE] = "Enter a json-ld value";
-                $ldJson[FormField::DATA_TYPE_ATTRIBUTE] = FormField::PARAGRAPH_TYPE_VALUE;
-                $ldJson[FormField::TAB_ATTRIBUTE] = self::TAB_TYPE_VALUE;
-                $ldJson[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    action_plugin_combo_metagoogle::CANONICAL,
-                    "Json-ld",
-                    false,
-                    "Advanced Page metadata definition with the json-ld format"
-                );
-                $ldJson[self::NAME_ATTRIBUTE] = action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY;
-                $fields[] = $ldJson;
+                $fields[] = FormField::create(action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY)
+                    ->addValue($page->getLdJson(), "Enter a json-ld value")
+                    ->setType(FormField::PARAGRAPH_TYPE_VALUE)
+                    ->setTab(self::TAB_TYPE_VALUE)
+                    ->setCanonical(action_plugin_combo_metagoogle::CANONICAL)
+                    ->setLabel("Json-ld")
+                    ->setDescription("Advanced Page metadata definition with the json-ld format")
+                    ->toAssociativeArray();
+
 
                 // Is low quality page
-                $lowQualityIndicator = $page->getLowQualityIndicator();
-                $isLowQualityPage[FormField::VALUE_ATTRIBUTE] = $lowQualityIndicator;
-                $isLowQualityPage[FormField::MUTABLE_ATTRIBUTE] = true;
-                $isLowQualityPage[FormField::DEFAULT_VALUE_ATTRIBUTE] = false; // the value returned if checked
-                $isLowQualityPage[FormField::DATA_TYPE_ATTRIBUTE] = self::BOOLEAN_TYPE_VALUE;
-                $isLowQualityPage[FormField::TAB_ATTRIBUTE] = self::TAB_QUALITY_VALUE;
-                $isLowQualityPage[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    LowQualityPage::LOW_QUALITY_PAGE_CANONICAL,
-                    "Prevent this page to become a low quality page",
-                    false,
-                    "If checked, this page will never be a low quality page"
-                );
-                $isLowQualityPage[self::NAME_ATTRIBUTE] = Page::LOW_QUALITY_PAGE_INDICATOR;
-                $fields[] = $isLowQualityPage;
+                $fields[] = FormField::create(Page::LOW_QUALITY_PAGE_INDICATOR)
+                    ->addValue($page->getLowQualityIndicator(), false) // the default value is the value returned if checked)
+                    ->setType(self::BOOLEAN_TYPE_VALUE)
+                    ->setTab(self::TAB_QUALITY_VALUE)
+                    ->setCanonical(LowQualityPage::LOW_QUALITY_PAGE_CANONICAL)
+                    ->setLabel("Prevent this page to become a low quality page")
+                    ->setDescription("If checked, this page will never be a low quality page")
+                    ->toAssociativeArray();
 
                 // Quality Monitoring
                 $isQualityMonitoringOn[FormField::VALUE_ATTRIBUTE] = $page->isQualityMonitored();

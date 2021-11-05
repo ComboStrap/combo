@@ -166,7 +166,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
                 $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
 
-                $page = Page::createPageFromCurrentId();
+                $page = Page::createPageFromGlobalDokuwikiId();
 
                 /**
                  * Published is an old alias for date published

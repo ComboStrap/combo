@@ -87,7 +87,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                     PluginUtility::STATE => $state,
                 );
 
-                $page = Page::createPageFromCurrentId();
+                $page = Page::createPageFromGlobalDokuwikiId();
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:

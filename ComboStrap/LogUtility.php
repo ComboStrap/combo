@@ -116,6 +116,12 @@ class LogUtility
             global $INPUT;
             global $conf;
 
+            /**
+             * Adding page - context information
+             * We are not using {@link Page::createPageFromRequestedPage()}
+             * because it throws an error message when the environment
+             * is not good, creating a recursive call.
+             */
             $id = PluginUtility::getMainPageDokuwikiId();
 
             $file = $conf['cachedir'] . '/debug.log';
@@ -177,7 +183,7 @@ class LogUtility
                 /**
                  * Adding page - context information
                  * We are not creating the page
-                 * direction from {@link Page::createRequestedPageFromEnvironment()}
+                 * direction from {@link Page::createPageFromRequestedPage()}
                  * because it throws an error message when the environment
                  * is not good, creating a recursive call.
                  */

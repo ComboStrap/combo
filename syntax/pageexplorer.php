@@ -182,7 +182,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 $tagAttributes = TagAttributes::createFromTagMatch($match, $default);
 
                 $type = $tagAttributes->getType();
-                $renderedPage = Page::createPageFromCurrentId();
+                $renderedPage = Page::createPageFromGlobalDokuwikiId();
 
                 /**
                  * nameSpacePath determination
@@ -190,7 +190,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                 if (!$tagAttributes->hasComponentAttribute(self::ATTR_NAMESPACE)) {
                     switch ($type) {
                         case self::LIST_TYPE:
-                            $requestedPage = Page::createRequestedPageFromEnvironment();
+                            $requestedPage = Page::createPageFromRequestedPage();
                             $namespacePath = $requestedPage->getNamespacePath();
                             $scope = Page::SCOPE_CURRENT_VALUE;
                             break;

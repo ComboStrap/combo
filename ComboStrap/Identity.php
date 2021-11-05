@@ -95,7 +95,7 @@ class Identity
     public static function isWriter($pageId = null): bool
     {
         if ($pageId == null) {
-            $pageId = PluginUtility::getMainPageDokuwikiId();
+            $pageId = Page::createPageFromGlobalDokuwikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($pageId);
@@ -221,7 +221,7 @@ EOF;
     private static function getPerm(string $pageId)
     {
         if ($pageId == null) {
-            $pageId = PluginUtility::getMainPageDokuwikiId();
+            $pageId = Page::createPageFromRequestedPage()->getDokuwikiId();
         }
         if ($_SERVER['REMOTE_USER']) {
             $perm = auth_quickaclcheck($pageId);

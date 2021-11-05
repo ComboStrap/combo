@@ -72,7 +72,7 @@ $lang[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = PluginUtility
 /**
  * Metdataviewer
  */
-$lang[MetadataUtility::CONF_METADATA_DEFAULT_ATTRIBUTES] = PluginUtility::getDocumentationHyperLink("metadata:viewer", "Metadata Viewer") . ' - The default attributes of the metadata component';
+$lang[syntax_plugin_combo_metadata::CONF_METADATA_DEFAULT_ATTRIBUTES] = PluginUtility::getDocumentationHyperLink("metadata:viewer", "Metadata Viewer") . ' - The default attributes of the metadata component';
 
 /**
  * Badge

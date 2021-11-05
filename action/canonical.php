@@ -140,7 +140,7 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
     {
 
         global $JSINFO;
-        $page = Page::createPageFromId(PluginUtility::getMainPageDokuwikiId());
+        $page = Page::createPageFromRequestedPage();
         if ($page->getCanonical() != null) {
             $JSINFO[Page::CANONICAL_PROPERTY] = $page->getCanonical();
             if (isset($JSINFO["ga"]) && PluginUtility::getConfValue(self::CONF_CANONICAL_FOR_GA_PAGE_VIEW, 1)) {

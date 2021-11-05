@@ -79,7 +79,6 @@ require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
-require_once(__DIR__ . '/MetadataUtility.php');
 require_once(__DIR__ . '/MetadataMenuItem.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');
@@ -770,12 +769,34 @@ class PluginUtility
      * Get the page id
      * If the page is a sidebar, it will not return the id of the sidebar
      * but the one of the page
+     * Return the main/requested page id
+     * (Not the sidebar)
      * @return string|null - null in test
      */
     public
     static function getMainPageDokuwikiId(): ?string
     {
-        return FsWikiUtility::getMainPageId();
+        global $ID;
+        global $INFO;
+        $callingId = $ID;
+        // If the component is in a sidebar, we don't want the ID of the sidebar
+        // but the ID of the page.
+        if ($INFO != null) {
+            $callingId = $INFO['id'];
+        }
+        /**
+         * This is the case with event triggered
+         * before DokuWiki such as
+         * https://www.dokuwiki.org/devel:event:init_lang_load
+         */
+        if ($callingId == null) {
+            global $_REQUEST;
+            if (isset($_REQUEST["id"])) {
+                $callingId = $_REQUEST["id"];
+            }
+        }
+        return $callingId;
+
     }
 
     /**
@@ -1372,7 +1393,8 @@ class PluginUtility
              * and
              * Send the output to the void
              */
-            ob_start(function($value){});
+            ob_start(function ($value) {
+            });
 
         }
 

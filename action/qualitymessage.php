@@ -38,7 +38,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     /**
      * Key in the frontmatter that disable the message
      */
-    const DISABLE_INDICATOR = "dynamic_quality_monitoring";
+    const DYNAMIC_QUALITY_MONITORING_INDICATOR = "dynamic_quality_monitoring";
 
 
     function __construct()
@@ -81,7 +81,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 return;
             }
 
-            $note = $this->createQualityNote(PluginUtility::getMainPageDokuwikiId(), $this);
+            $note = $this->createQualityNote($this);
             if ($note != null) {
                 ptln($note->toHtml());
             }
@@ -90,13 +90,12 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     }
 
     /**
-     * @param $pageId
      * @param $plugin - Plugin
      * @return Message|null
      */
-    static public function createQualityNote($pageId, $plugin)
+    static public function createQualityNote($plugin)
     {
-        $page = Page::createPageFromId($pageId);
+        $page = Page::createPageFromRequestedPage();
 
         if ($page->isSlot()) {
             return null;

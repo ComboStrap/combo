@@ -114,7 +114,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 list($attributes) = $data;
                 /** @var Doku_Renderer_xhtml $renderer */
 
-                $page = Page::createRequestedPageFromEnvironment();
+                $page = Page::createPageFromRequestedPage();
 
                 /**
                  * Disqus configuration
@@ -129,7 +129,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 }
                 $forumShortName = hsc($forumShortName);
 
-                $disqusIdentifier = MetadataUtility::getMeta(self::META_DISQUS_IDENTIFIER);
+                $disqusIdentifier = $page->getMetadata(self::META_DISQUS_IDENTIFIER);
                 if (empty($disqusIdentifier)) {
 
                     $disqusIdentifier = $attributes[self::ATTRIBUTE_IDENTIFIER];
@@ -141,7 +141,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                     if (!empty($canonical)) {
                         $disqusIdentifier = $canonical;
                     }
-                    MetadataUtility::setMeta(self::META_DISQUS_IDENTIFIER, $disqusIdentifier);
+                    $page->setMetadata(self::META_DISQUS_IDENTIFIER, $disqusIdentifier);
                 }
                 $disqusConfig = "this.page.identifier = \"$disqusIdentifier\";";
 

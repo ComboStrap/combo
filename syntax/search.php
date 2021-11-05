@@ -5,6 +5,7 @@
 
 // must be run within Dokuwiki
 use ComboStrap\Bootstrap;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
@@ -98,7 +99,7 @@ class syntax_plugin_combo_search extends DokuWiki_Syntax_Plugin
                     }
                     $renderer->doc .= '">' . DOKU_LF;
                     $renderer->doc .= '<input type="hidden" name="do" value="search" />';
-                    $id = PluginUtility::getMainPageDokuwikiId();
+                    $id = Page::createPageFromRequestedPage()->getDokuwikiId();
                     $renderer->doc .= "<input type=\"hidden\" name=\"id\" value=\"$id\" />";
                     $inputSearchId = 'qsearch__in';
 

@@ -88,7 +88,7 @@ $meta[action_plugin_combo_css::CONF_DISABLE_DOKUWIKI_STYLESHEET] = array('onoff'
 /**
  * Metadata Viewer
  */
-$meta[MetadataUtility::CONF_METADATA_DEFAULT_ATTRIBUTES] = array('string');
+$meta[syntax_plugin_combo_metadata::CONF_METADATA_DEFAULT_ATTRIBUTES] = array('string');
 
 /**
  * Badge

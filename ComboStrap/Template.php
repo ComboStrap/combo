@@ -53,7 +53,7 @@ class Template
                 if(isset($this->_data[$variable])) {
                     $value = $this->_data[$variable];
                 } else  {
-                    LogUtility::msg("The variable ($variable) was not found and have not been replaced", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                    LogUtility::msg("The variable ($variable) was not found and has not been replaced", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
                     $value = $variable;
                 }
             } else {

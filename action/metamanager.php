@@ -491,7 +491,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     false,
                     "If checked, the quality message will not be shown for the page."
                 );
-                $isQualityMonitoringOn[self::NAME_ATTRIBUTE] = action_plugin_combo_qualitymessage::DISABLE_INDICATOR;
+                $isQualityMonitoringOn[self::NAME_ATTRIBUTE] = action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR;
                 $fields[] = $isQualityMonitoringOn;
 
 

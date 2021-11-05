@@ -30,7 +30,7 @@ class action_plugin_combo_metalang extends DokuWiki_Action_Plugin
         global $_REQUEST;
         if(isset($_REQUEST["id"])) {
             $initialLang = $event->data;
-            $page = Page::createRequestedPageFromEnvironment();
+            $page = Page::createPageFromRequestedPage();
             if($page==null){
                 $page = Page::createPageFromId($_REQUEST["id"]);
                 if($page==null){

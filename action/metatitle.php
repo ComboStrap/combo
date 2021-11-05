@@ -31,7 +31,7 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
 
         // Page Title
         // Root Home page
-        $currentPage = Page::createPageFromCurrentId();
+        $currentPage = Page::createPageFromGlobalDokuwikiId();
         $pageTitle = $currentPage->getTitleNotEmpty();
 
         // Namespace name

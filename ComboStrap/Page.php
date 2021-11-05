@@ -237,6 +237,7 @@ class Page extends DokuPath
      * @var string|null
      */
     private $scope;
+    private $isDynamicQualityMonitored = true;
 
     /**
      * Page constructor.
@@ -294,7 +295,7 @@ class Page extends DokuPath
 
     }
 
-    public static function createPageFromCurrentId(): Page
+    public static function createPageFromGlobalDokuwikiId(): Page
     {
         global $ID;
         return self::createPageFromId($ID);
@@ -329,8 +330,13 @@ class Page extends DokuPath
      */
     public static function createPageFromRequestedPage(): Page
     {
-        $mainPageId = FsWikiUtility::getMainPageId();
-        return self::createPageFromId($mainPageId);
+        $pageId = PluginUtility::getMainPageDokuwikiId();
+        if ($pageId != null) {
+            return Page::createPageFromId($pageId);
+        } else {
+            LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
+            return Page::createPageFromId("unknown-requested-page");
+        }
     }
 
     public static function createPageFromAlias(string $alias): ?Page
@@ -488,7 +494,7 @@ class Page extends DokuPath
         if ($scopePath !== null) {
 
             if ($scopePath == Page::SCOPE_CURRENT_VALUE) {
-                $requestPage = Page::createRequestedPageFromEnvironment();
+                $requestPage = Page::createPageFromRequestedPage();
                 $scopePath = $requestPage->getNamespacePath();
             }
 
@@ -506,18 +512,6 @@ class Page extends DokuPath
         }
 
 
-    }
-
-
-    public static function createRequestedPageFromEnvironment(): ?Page
-    {
-        $pageId = PluginUtility::getMainPageDokuwikiId();
-        if ($pageId != null) {
-            return Page::createPageFromId($pageId);
-        } else {
-            LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
-            return null;
-        }
     }
 
 
@@ -762,17 +756,12 @@ class Page extends DokuPath
 
     /**
      * If true, the page is quality monitored (a note is shown to the writer)
-     * @return bool|mixed
+     * @return bool
      */
     public
-    function isQualityMonitored()
+    function isQualityMonitored(): bool
     {
-        $dynamicQualityIndicator = $this->getMetadataAsBoolean(action_plugin_combo_qualitymessage::DISABLE_INDICATOR);
-        if ($dynamicQualityIndicator === null) {
-            return true;
-        } else {
-            return $dynamicQualityIndicator;
-        }
+        return $this->isDynamicQualityMonitored;
     }
 
     /**
@@ -1628,6 +1617,7 @@ class Page extends DokuPath
         $array[Analytics::PATH] = $this->getAbsolutePath();
         $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
+        $array["url"] = $this->getCanonicalUrl();
         $array[self::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
 
         /**
@@ -1668,6 +1658,9 @@ class Page extends DokuPath
     {
 
         $oldValue = $this->metadatas['persistent'][$key];
+        if(is_bool($value)){
+            $oldValue=Boolean::toBoolean($value);
+        }
         if ($oldValue !== $value) {
 
             $this->metadatas['persistent'][$key] = $value;
@@ -1857,13 +1850,22 @@ class Page extends DokuPath
                     $this->setAliases($aliases);
                     continue 2;
                 case Page::PAGE_ID_ATTRIBUTE:
-                    $this->setPageId($value);
+                    if ($this->getPageId() === null) {
+                        $this->setPageId($value);
+                    } else {
+                        if ($this->getPageId() !== $value) {
+                            LogUtility::msg("The page id is a managed id and cannot be changed, this page has the id ({$this->getPageId()}) that has not the same value than in the frontmatter ({$value})");
+                        }
+                    }
                     continue 2;
                 case Page::LOW_QUALITY_PAGE_INDICATOR:
                     $this->setLowQualityIndicator(Boolean::toBoolean($value));
                     continue 2;
                 case PAGE::IMAGE_META_PROPERTY:
                     $this->setPageImage($value);
+                    continue 2;
+                case action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR:
+                    $this->setMonitorinQualityIndicator(Boolean::toBoolean($value));
                     continue 2;
                 default:
                     LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_WARNING);
@@ -2494,6 +2496,7 @@ class Page extends DokuPath
         $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
 
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
+        $this->isDynamicQualityMonitored = Boolean::toBoolean($this->getMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR, $this->isDynamicQualityMonitored));
 
     }
 
@@ -2717,6 +2720,13 @@ class Page extends DokuPath
     {
         $this->scope = $scope;
         $this->setMetadata(Page::SCOPE_KEY, $scope);
+        return $this;
+    }
+
+    private function setMonitorinQualityIndicator($boolean): Page
+    {
+        $this->isDynamicQualityMonitored = $boolean;
+        $this->setMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR, $boolean);
         return $this;
     }
 

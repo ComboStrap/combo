@@ -132,7 +132,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
     public function document_start()
     {
         $this->reset();
-        $this->page = Page::createPageFromCurrentId();
+        $this->page = Page::createPageFromGlobalDokuwikiId();
 
     }
 
@@ -527,7 +527,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         /**
          * Metadata
          */
-        $page = Page::createPageFromCurrentId();
+        $page = Page::createPageFromGlobalDokuwikiId();
         $meta = $page->getMetadataForRendering();
         foreach ($meta as $key => $value) {
             /**

@@ -247,7 +247,7 @@ class Call
                 }
             } else {
                 // To resolve: explode() expects parameter 2 to be string, array given
-                LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . PluginUtility::getMainPageDokuwikiId(), LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("The call (" . print_r($this->call, true) . ") has an array and not a string as component (" . print_r($component, true) . "). Page: " . Page::createPageFromRequestedPage(), LogUtility::LVL_MSG_ERROR);
                 $tagName = "";
             }
 

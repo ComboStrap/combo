@@ -132,7 +132,7 @@ class FormField
         return $this;
     }
 
-    public function addValue($value, $default): FormField
+    public function addValue($value, $default = null): FormField
     {
         $this->value = $value;
         $this->default = $default;

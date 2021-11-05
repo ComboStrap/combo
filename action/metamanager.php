@@ -231,46 +231,34 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
                 // Modified Date
-                $modifiedDate[FormField::VALUE_ATTRIBUTE] = $page->getModifiedDateAsString();
-                $modifiedDate[FormField::MUTABLE_ATTRIBUTE] = false;
-                $modifiedDate[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
-                $modifiedDate[FormField::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $modifiedDate[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    self::METADATA_CANONICAL,
-                    "Modification Date",
-                    false,
-                    "The last modification date of the page"
-                );
-                $modifiedDate[self::NAME_ATTRIBUTE] = Analytics::DATE_MODIFIED;
-                $fields[] = $modifiedDate;
+                $fields[] = FormField::create(Analytics::DATE_MODIFIED)
+                    ->addValue($page->getModifiedDateAsString())
+                    ->setMutable(false)
+                    ->setType(FormField::DATETIME_TYPE_VALUE)
+                    ->setTab(self::TAB_PAGE_VALUE)
+                    ->setLabel("Modification Date")
+                    ->setDescription("The last modification date of the page")
+                    ->setCanonical(self::METADATA_CANONICAL)
+                    ->toAssociativeArray();
 
                 // Created Date
-                $dateCreated[FormField::VALUE_ATTRIBUTE] = $page->getCreatedDateAsString();
-                $dateCreated[FormField::MUTABLE_ATTRIBUTE] = false;
-                $dateCreated[FormField::DATA_TYPE_ATTRIBUTE] = FormField::DATETIME_TYPE_VALUE;
-                $dateCreated[FormField::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $dateCreated[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    self::METADATA_CANONICAL,
-                    "Creation Date",
-                    false,
-                    "The creation date of the page"
-                );
-                $dateCreated[self::NAME_ATTRIBUTE] = Analytics::DATE_CREATED;
-                $fields[] = $dateCreated;
-
+                $fields[] = FormField::create(Analytics::DATE_CREATED)
+                    ->addValue($page->getCreatedDateAsString())
+                    ->setMutable(false)
+                    ->setType( FormField::DATETIME_TYPE_VALUE)
+                    ->setTab(self::TAB_PAGE_VALUE)
+                    ->setCanonical(self::METADATA_CANONICAL)
+                    ->setLabel("Creation Date")
+                    ->setDescription( "The creation date of the page")
+                    ->toAssociativeArray();
 
                 // Path
-                $metasPath[FormField::VALUE_ATTRIBUTE] = $page->getPath();
-                $metasPath[FormField::MUTABLE_ATTRIBUTE] = false;
-                $metasPath[FormField::TAB_ATTRIBUTE] = self::TAB_PAGE_VALUE;
-                $metasPath[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    Analytics::PATH,
-                    "Path",
-                    false,
-                    "The path of the page on the file system (in wiki format with the colon `:` as path separator)"
-                );
-                $metasPath[self::NAME_ATTRIBUTE] = Analytics::PATH;
-                $fields[] = $metasPath;
+                $fields[] = FormField::create(Analytics::PATH)
+                    ->addValue($page->getPath())
+                    ->setMutable(false)
+                    ->setTab(self::TAB_PAGE_VALUE)
+                    ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
+                    ->toAssociativeArray();
 
                 // Image
                 $pageImages = [];

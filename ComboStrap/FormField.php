@@ -29,8 +29,10 @@ class FormField
     public const TABULAR_TYPE_VALUE = "tabular";
     public const PARAGRAPH_TYPE_VALUE = "paragraph";
     public const DATETIME_TYPE_VALUE = "datetime";
-    public const LIST_TYPE_VALUE = "list";
     public const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
+    public const WIDTH_ATTRIBUTE = "width";
+    public const COLUMNS_ATTRIBUTE = "columns";
+
 
     private $name;
     /**
@@ -47,8 +49,8 @@ class FormField
     private $label;
     private $description;
     private $canonical;
-    private $value;
-    private $default;
+    private $values = [];
+    private $defaults = [];
     /**
      * @var string
      */
@@ -57,6 +59,14 @@ class FormField
      * @var array
      */
     private $domainValues;
+    /**
+     * @var FormField[]
+     */
+    private $columns;
+    /**
+     * @var int
+     */
+    private $width;
 
 
     /**
@@ -79,38 +89,82 @@ class FormField
 
     public function toAssociativeArray(): array
     {
-        return [
+        /**
+         * Mandatory attributes
+         */
+        $associative = [
             Analytics::NAME => $this->name,
             self::LABEL_ATTRIBUTE => $this->label,
             self::HYPERLINK_ATTRIBUTE => $this->getHyperLink(),
-            self::MUTABLE_ATTRIBUTE => $this->mutable,
-            self::TAB_ATTRIBUTE => $this->tab,
-            self::VALUE_ATTRIBUTE => $this->value,
-            self::DEFAULT_VALUE_ATTRIBUTE => $this->default,
             self::DATA_TYPE_ATTRIBUTE => $this->type,
-            self::DOMAIN_VALUES_ATTRIBUTE => $this->domainValues
+            self::TAB_ATTRIBUTE => $this->tab,
+            self::MUTABLE_ATTRIBUTE => $this->mutable,
         ];
+        switch (sizeof($this->values)) {
+            case 0:
+                break;
+            case 1:
+                $value = $this->values[0];
+                if(!blank($value)) {
+                    $associative[self::VALUE_ATTRIBUTE] = $this->values[0];
+                }
+                break;
+            default:
+                $associative[self::VALUE_ATTRIBUTE] = $this->values;
+                break;
+        }
+        switch (sizeof($this->defaults)) {
+            case 0:
+                break;
+            case 1:
+                $value = $this->defaults[0];
+                if(!blank($value)) {
+                    $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $value;
+                }
+                break;
+            default:
+                $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $this->defaults;
+                break;
+        }
+
+        if ($this->domainValues !== null) {
+            $associative[self::DOMAIN_VALUES_ATTRIBUTE] = $this->domainValues;
+        }
+
+        if ($this->width !== null) {
+            $associative[self::WIDTH_ATTRIBUTE] = $this->width;
+        }
+        if ($this->columns !== null) {
+            foreach ($this->columns as $column) {
+                $associative[self::COLUMNS_ATTRIBUTE][] = $column->toAssociativeArray();
+            }
+        }
+        return $associative;
     }
 
-    public function setMutable(bool $bool): FormField
+    public
+    function setMutable(bool $bool): FormField
     {
         $this->mutable = $bool;
         return $this;
     }
 
-    public function setTab(string $tabName): FormField
+    public
+    function setTab(string $tabName): FormField
     {
         $this->tab = $tabName;
         return $this;
     }
 
-    public function setLabel(string $label): FormField
+    public
+    function setLabel(string $label): FormField
     {
         $this->label = $label;
         return $this;
     }
 
-    public function getHyperLink(): string
+    public
+    function getHyperLink(): string
     {
         return PluginUtility::getDocumentationHyperLink(
             $this->canonical,
@@ -120,34 +174,56 @@ class FormField
         );
     }
 
-    public function setCanonical(string $canonical): FormField
+    public
+    function setCanonical(string $canonical): FormField
     {
         $this->canonical = $canonical;
         return $this;
     }
 
-    public function setDescription(string $string): FormField
+    public
+    function setDescription(string $string): FormField
     {
         $this->description = $string;
         return $this;
     }
 
-    public function addValue($value, $default = null): FormField
+    public
+    function addValue($value, $default = null): FormField
     {
-        $this->value = $value;
-        $this->default = $default;
+        $this->values[] = $value;
+        $this->defaults[] = $default;
         return $this;
     }
 
-    public function setType(string $type): FormField
+    public
+    function setType(string $type): FormField
     {
         $this->type = $type;
         return $this;
     }
 
-    public function setDomainValues(array $domainValues)
+    public
+    function setDomainValues(array $domainValues): FormField
     {
         $this->domainValues = $domainValues;
+        return $this;
+    }
+
+    public
+    function addColumn(FormField $formField): FormField
+    {
+        $this->type = self::TABULAR_TYPE_VALUE;
+        // A parent node is not mutable
+        $this->mutable = false;
+        $this->columns[] = $formField;
+        return $this;
+    }
+
+    public
+    function setWidth(int $int): FormField
+    {
+        $this->width = $int;
         return $this;
     }
 

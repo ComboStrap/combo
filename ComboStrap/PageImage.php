@@ -57,12 +57,12 @@ class PageImage
         return $this->image;
     }
 
-    public function getUsages(): array
+    public function getUsage(): array
     {
         return $this->usage;
     }
 
-    public static function getDefaultUsages(): array
+    public static function getDefaultUsage(): array
     {
         return [self::DEFAULT];
     }

@@ -1839,7 +1839,7 @@ class Page extends DokuPath
                     $this->setMonitorinQualityIndicator(Boolean::toBoolean($value));
                     continue 2;
                 default:
-                    LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_WARNING);
+                    LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_INFO);
                     $this->setMetadata($key, $value);
                     continue 2;
             }
@@ -2120,7 +2120,7 @@ class Page extends DokuPath
                 $images = [];
                 foreach ($pagesImages as $key => $value) {
 
-                    $usage = PageImage::getDefaultUsages();
+                    $usage = PageImage::getDefaultUsage();
                     if (is_numeric($key)) {
                         $imagePath = $value;
                     } else {

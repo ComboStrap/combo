@@ -35,9 +35,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const NAME_ATTRIBUTE = "name";
     //data type
     const BOOLEAN_TYPE_VALUE = "boolean";
-    const WIDTH_ATTRIBUTE = "width"; // width of the label / element
+    // width of the label / element
 
-    const COLUMNS_ATTRIBUTE = "columns";
     const TAB_TYPE_VALUE = "type";
     const TAB_QUALITY_VALUE = "quality";
     const TAB_PAGE_VALUE = "page";
@@ -216,14 +215,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 // Canonical
                 $fields[] = FormField::create(Analytics::CANONICAL)
-                    ->addValue($page->getCanonical(),$page->getDefaultCanonical())
+                    ->addValue($page->getCanonical(), $page->getDefaultCanonical())
                     ->setTab(self::TAB_REDIRECTION_VALUE)
                     ->setDescription("The canonical creates a link that identifies your page uniquely by name")
                     ->toAssociativeArray();
 
                 // Layout
                 $fields[] = FormField::create(Page::LAYOUT_PROPERTY)
-                    ->addValue( $page->getLayout(), $page->getDefaultLayout())
+                    ->addValue($page->getLayout(), $page->getDefaultLayout())
                     ->setDomainValues($page->getLayoutValues())
                     ->setTab(self::TAB_PAGE_VALUE)
                     ->setDescription("A layout chooses the layout of your page (such as the slots and placement of the main content)")
@@ -245,11 +244,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $fields[] = FormField::create(Analytics::DATE_CREATED)
                     ->addValue($page->getCreatedDateAsString())
                     ->setMutable(false)
-                    ->setType( FormField::DATETIME_TYPE_VALUE)
+                    ->setType(FormField::DATETIME_TYPE_VALUE)
                     ->setTab(self::TAB_PAGE_VALUE)
                     ->setCanonical(self::METADATA_CANONICAL)
                     ->setLabel("Creation Date")
-                    ->setDescription( "The creation date of the page")
+                    ->setDescription("The creation date of the page")
                     ->toAssociativeArray();
 
                 // Path
@@ -260,98 +259,58 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
                     ->toAssociativeArray();
 
-                // Image
-                $pageImages = [];
-                $pageImages[FormField::DATA_TYPE_ATTRIBUTE] = FormField::TABULAR_TYPE_VALUE;
-                $pageImages[self::COLUMNS_ATTRIBUTE] = [];
-
-                //
-                $pageImagePath[FormField::MUTABLE_ATTRIBUTE] = true;
-                $pageImagePath[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    syntax_plugin_combo_pageimage::CANONICAL,
-                    "Path",
-                    false,
-                    "The path of the image"
-                );
-                $metadataImagePathName = "image-path";
-                $pageImagePath[self::NAME_ATTRIBUTE] = $metadataImagePathName;
-                $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImagePath;
-
-                // Usage
-                $metadataImageLabelName = "image-usage";
-                $pageImageTag[self::WIDTH_ATTRIBUTE] = 8;
-                $pageImageTag[self::NAME_ATTRIBUTE] = $metadataImageLabelName;
-                $pageImageTag[FormField::MUTABLE_ATTRIBUTE] = true;
-                $pageImageTag[FormField::DOMAIN_VALUES_ATTRIBUTE] = PageImage::getUsageValues();
-                $pageImageTag[FormField::LABEL_ATTRIBUTE] = "Image Usage";
-                $pageImageTag[self::WIDTH_ATTRIBUTE] = 4;
-                $pageImageTag[FormField::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
-                $pageImageTag[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    syntax_plugin_combo_pageimage::CANONICAL,
-                    "Usages",
-                    false,
-                    "The possible usages of the image"
-                );
-                $pageImages[self::COLUMNS_ATTRIBUTE][] = $pageImageTag;
-
-                $pageImages[FormField::LABEL_ATTRIBUTE] = "Images";
-                $pageImages[FormField::TAB_ATTRIBUTE] = self::TAB_IMAGE_VALUE;
-                $pageImages[FormField::HYPERLINK_ATTRIBUTE] = PluginUtility::getDocumentationHyperLink(
-                    syntax_plugin_combo_pageimage::CANONICAL,
-                    "Page Images",
-                    false,
-                    "The illustrative images of the page"
-                );
-
 
                 /**
-                 * @var PageImage $pageImage
+                 * Page Image Properties
                  */
+                $pageImagePath = FormField::create("image-path")
+                    ->setLabel("Path")
+                    ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
+                    ->setDescription("The path of the image")
+                    ->setWidth(8);
+                $pageImageUsage = FormField::create("image-usage")
+                    ->setLabel("Usages")
+                    ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
+                    ->setDomainValues(PageImage::getUsageValues())
+                    ->setWidth(4)
+                    ->setDescription("The possible usages of the image");
                 $pageImagesObjects = $page->getPageImagesObject();
                 $pageImageDefault = $page->getDefaultPageImageObject();
-                $pageImageRows = [];
                 for ($i = 0; $i < 5; $i++) {
 
                     $pageImage = null;
-                    $pageImageRow = [];
                     if (isset($pageImagesObjects[$i])) {
                         $pageImage = $pageImagesObjects[$i];
                     }
 
-
                     /**
                      * Image
                      */
-                    $pageImagePath = [];
+                    $pageImagePathValue = null;
+                    $pageImagePathDefaultValue = null;
+                    $pageImagePathUsage = null;
                     if ($pageImage != null) {
-                        $pageImagePath[FormField::VALUE_ATTRIBUTE] = $pageImage->getImage()->getDokuPath()->getPath();
+                        $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getPath();
+                        $pageImagePathUsage = $pageImage->getUsage();
                     }
                     if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImagePath[FormField::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getImage()->getDokuPath()->getPath();
+                        $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
                     }
-                    $pageImageRow[] = $pageImagePath;
-
-                    /**
-                     * Label
-                     */
-                    $pageImageTag = [];
-                    if ($pageImage != null) {
-                        $pageImageTag[FormField::VALUE_ATTRIBUTE] = $pageImage->getUsages();
-                    }
-                    $pageImageTag[FormField::DEFAULT_VALUE_ATTRIBUTE] = PageImage::getDefaultUsages();
-                    if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImageTag[FormField::DEFAULT_VALUE_ATTRIBUTE] = $pageImageDefault->getDefaultUsages();
-                    }
-                    $pageImageRow[] = $pageImageTag;
-
-                    /**
-                     * Add the row
-                     */
-                    $pageImageRows[] = $pageImageRow;
+                    $pageImagePath->addValue($pageImagePathValue, $pageImagePathDefaultValue);
+                    $pageImageUsage->addValue($pageImagePathUsage,PageImage::getDefaultUsage());
 
                 }
-                $pageImages[self::VALUES_ATTRIBUTE] = $pageImageRows;
-                $fields[] = $pageImages;
+
+                // Image
+                $fields[] = FormField::create("page-image")
+                    ->setType(FormField::TABULAR_TYPE_VALUE)
+                    ->setLabel("Page Images")
+                    ->setTab(self::TAB_IMAGE_VALUE)
+                    ->setDescription("The illustrative images of the page")
+                    ->addColumn($pageImagePath)
+                    ->addColumn($pageImageUsage)
+                    ->toAssociativeArray();
+
 
                 /**
                  * Aliases

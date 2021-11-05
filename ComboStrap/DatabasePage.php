@@ -364,11 +364,7 @@ class DatabasePage
         if (!$res) {
             LogUtility::msg("Something went wrong when deleting the page ({$this->page})");
         }
-        $this->rowId = null;
-        $this->description = null;
-        $this->pageName = null;
-        $this->json = null;
-        $this->canonical = null;
+        $this->buildInitObjectFields();
 
     }
 
@@ -674,7 +670,7 @@ EOF;
              * otherwise as this is a associative
              * array, we will miss a value for the update statement
              */
-            $values[self::ROWID] = $rowId;
+            $values[] = $rowId;
 
             $updateStatement = "update PAGES SET " . implode($columnClauses, ", ") . " where ROWID = ?";
             $res = $this->sqlite->query($updateStatement, $values);
@@ -692,7 +688,7 @@ EOF;
             }
             $countChanges = $this->sqlite->countChanges($res);
             if ($countChanges !== 1) {
-                LogUtility::msg("The database replication has not update exactly one record but ($countChanges) record", LogUtility::LVL_MSG_ERROR, self::REPLICATION_CANONICAL);
+                LogUtility::msg("The database replication has not updated exactly 1 record but ($countChanges) record", LogUtility::LVL_MSG_ERROR, self::REPLICATION_CANONICAL);
             }
             $this->sqlite->res_close($res);
 
@@ -897,13 +893,13 @@ EOF;
      * @param Page $page
      * @deprecated 2012-10-28
      */
-    private function deleteIfExistsAndAddDuplicateAsRedirect(Page $page): void
+    private function deleteIfExistsAndAddRedirectAlias(Page $page): void
     {
 
         if ($this->page != null) {
             $page->getDatabasePage()->deleteIfExist();
-            $alias = $this->page->addAndGetAlias($page->getDokuwikiId(), Alias::REDIRECT);
-            $this->addAlias($alias);
+            $this->addRedirectAlias($page);
+
         }
 
     }
@@ -962,6 +958,15 @@ EOF;
 
     }
 
+    private function buildInitObjectFields()
+    {
+        $this->rowId = null;
+        $this->description = null;
+        $this->canonical = null;
+        $this->json = null;
+        $this->pageName = null;
+    }
+
     public function refresh(): DatabasePage
     {
 
@@ -987,6 +992,7 @@ EOF;
             Analytics::NAME => $this->page->getPageNameNotEmpty(),
             Analytics::TITLE => $this->page->getTitleNotEmpty(),
             Analytics::H1 => $this->page->getH1NotEmpty(),
+            Analytics::DESCRIPTION => $this->page->getDescriptionOrElseDokuWiki(),
             Analytics::DATE_CREATED => $this->page->getCreatedDateAsString(),
             Analytics::DATE_MODIFIED => $this->page->getModifiedDateAsString(),
             Publication::DATE_PUBLISHED => $this->page->getPublishedTimeAsString(),
@@ -1004,11 +1010,12 @@ EOF;
         return $metaRecord;
     }
 
-    public function deleteIfExist()
+    public function deleteIfExist(): DatabasePage
     {
         if ($this->exists()) {
             $this->delete();
         }
+        return $this;
     }
 
     public function getRowId()
@@ -1039,7 +1046,7 @@ EOF;
                     if (!$duplicatePage->exists()) {
                         // Move
                         LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($page)", LogUtility::LVL_MSG_INFO);
-                        $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
+                        $this->addRedirectAlias($duplicatePage);
                     } else {
                         // This can happens if two page were created not on the same website
                         // of if the sqlite database was deleted and rebuilt.
@@ -1091,8 +1098,8 @@ EOF;
                 if ($this->page !== null && $id !== $this->page->getDokuwikiId()) {
                     $duplicatePage = Page::createPageFromId($id);
                     if (!$duplicatePage->exists()) {
-                        $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
-                        LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($page)", LogUtility::LVL_MSG_INFO);
+                        $this->addRedirectAlias($duplicatePage);
+                        LogUtility::msg("The non-existing duplicate page ($id) has been added as redirect alias for the page ($this->page)", LogUtility::LVL_MSG_INFO);
                     } else {
                         LogUtility::msg("The page ($this->page) and the page ($id) have the same canonical ($canonical)", LogUtility::LVL_MSG_ERROR);
                     }
@@ -1105,7 +1112,7 @@ EOF;
                     $duplicatePage = Page::createPageFromId($id);
                     if (!$duplicatePage->exists()) {
 
-                        $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
+                        $this->deleteIfExistsAndAddRedirectAlias($duplicatePage);
 
                     } else {
 
@@ -1159,7 +1166,7 @@ EOF;
                 if ($this->page != null && $value !== $this->page->getDokuwikiId()) {
                     $duplicatePage = Page::createPageFromId($value);
                     if (!$duplicatePage->exists()) {
-                        $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
+                        $this->addRedirectAlias($duplicatePage);
                     } else {
                         LogUtility::msg("The page ($this->page) and the page ($value) have the same $attribute ($value)", LogUtility::LVL_MSG_ERROR);
                     }
@@ -1172,7 +1179,7 @@ EOF;
                     $duplicatePage = Page::createPageFromId($value);
                     if (!$duplicatePage->exists()) {
 
-                        $this->deleteIfExistsAndAddDuplicateAsRedirect($duplicatePage);
+                        $this->deleteIfExistsAndAddRedirectAlias($duplicatePage);
 
                     } else {
                         $existingPages[] = $row;
@@ -1230,6 +1237,12 @@ EOF;
                 LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, Page::ALIAS_ATTRIBUTE);
                 return $res2arr[0];
         }
+    }
+
+    private function addRedirectAlias(Page $page)
+    {
+        $alias = $this->page->addAndGetAlias($page->getDokuwikiId(), Alias::REDIRECT);
+        $this->addAlias($alias);
     }
 
 

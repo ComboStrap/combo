@@ -50,22 +50,37 @@ class Alias
         return $this->path;
     }
 
+    /**
+     * @param $aliases
+     * @param Page $page
+     * @return Alias[]|null
+     */
     public static function toAliasArray($aliases, Page $page): ?array
     {
         if ($aliases === null) return null;
 
         $aliasArray = [];
-        foreach ($aliases as $alias) {
-            if (is_array($alias)) {
-                $path = $alias[Alias::ALIAS_PATH_PROPERTY];
-                $aliasArray[$path] = Alias::create($page, $path)
-                    ->setType($alias[Alias::ALIAS_TYPE_PROPERTY]);
-            } else {
-                if (!is_string($alias)) {
-                    $alias = StringUtility::toString($alias);
-                    LogUtility::msg("The alias element ($alias) is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        foreach ($aliases as $key => $value) {
+            if (is_array($value)) {
+                if(empty($key)){
+                    LogUtility::msg("The key of the frontmatter alias should not be empty as it's the alias path");
+                    continue;
                 }
-                $aliasArray[$alias] = Alias::create($page, $alias);
+                $path = $key;
+                $type = $value[Alias::ALIAS_TYPE_PROPERTY];
+                $aliasArray[$path] = Alias::create($page, $path)
+                    ->setType($type);
+            } else {
+                $path = $value;
+                if(empty($path)){
+                    LogUtility::msg("The value of the frontmatter alias array should not be empty as it's the alias path");
+                    continue;
+                }
+                if (!is_string($path)) {
+                    $path = StringUtility::toString($path);
+                    LogUtility::msg("The alias element ($path) is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                }
+                $aliasArray[$path] = Alias::create($page, $path);
             }
         }
         return $aliasArray;
@@ -103,15 +118,13 @@ class Alias
     public
     static function toMetadataArray(array $aliases): array
     {
-        return array_map(
-            function ($aliasObject) {
-                return [
-                    Alias::ALIAS_PATH_PROPERTY => $aliasObject->getPath(),
-                    Alias::ALIAS_TYPE_PROPERTY => $aliasObject->getType()
-                ];
-            },
-            $aliases
-        );
+        $array = [];
+        foreach ($aliases as $alias) {
+            $array[$alias->getPath()] = [
+                Alias::ALIAS_TYPE_PROPERTY => $alias->getType()
+            ];
+        }
+        return $array;
     }
 
     public

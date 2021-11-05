@@ -21,6 +21,11 @@ class Json
         return new Json("");
     }
 
+    public static function createFromArray(array $actual): Json
+    {
+        return new Json(json_encode($actual));
+    }
+
     public function normalized()
     {
         return json_encode(json_decode($this->jsonString), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

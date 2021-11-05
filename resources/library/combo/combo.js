@@ -117,7 +117,7 @@
             return this.label;
         }
 
-        getUrl(){
+        getUrl() {
             return this.url;
         }
 
@@ -591,13 +591,17 @@
                     let url = dataField["url"];
                     let columns = dataField["columns"];
                     let fieldMetas = [];
+                    if (columns === undefined) {
+                        throw new Error(`The columns should be defined for the tabular field (${label})`);
+                    }
                     for (const column of columns) {
-                        if(column===null){
+                        if (column === null) {
                             throw new Error(`A column of the ${label} field is null`);
                         }
                         let metaField = combo.createMetaField(column);
                         fieldMetas.push(metaField);
                     }
+
                     let fieldValues = dataField["values"];
                     formFieldsByTab[dataFieldTab].push(
                         createFormField()

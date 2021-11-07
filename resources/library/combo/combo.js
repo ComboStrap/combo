@@ -1,125 +1,3 @@
-/**
- * A form field may hold:
- *   * a simple scalar value
- *   * or a table (list of values)
- */
-class ComboFormField {
-
-    /**
-     * The form field type
-     * @param {string} type
-     * @return {ComboFormField}
-     */
-    setType(type) {
-        this.type = type;
-        return this;
-    }
-
-    /**
-     * The global label
-     * (should be not null in case of tabular data)
-     * @param {string} label
-     * @return {ComboFormField}
-     */
-    setLabel(label) {
-        this.label = label;
-        return this;
-    }
-
-    /**
-     * The global Url
-     * (should be not null in case of tabular data)
-     * @param {string} url
-     * @return {ComboFormField}
-     */
-    setUrl(url) {
-        this.url = url;
-        return this;
-    }
-
-    /**
-     * @param {FormMetaField[]} metas - the type of values (equivalent to column metadata for a table)
-     * @return {ComboFormField}
-     */
-    setMetas(metas) {
-        this.metas = metas;
-        return this;
-    }
-
-    /**
-     * @param {FormMetaField} meta - the type of value
-     * @return {ComboFormField}
-     */
-    setMeta(meta) {
-        this.meta = meta;
-        return this;
-    }
-
-    /**
-     * @return {FormMetaField[]}
-     */
-    getMetas() {
-        return this.metas;
-    }
-
-    /**
-     * @return {FormMetaField}
-     */
-    getMeta() {
-        return this.meta;
-    }
-
-    /**
-     *
-     * Type:
-     *   * A single value
-     *   * or an array of an array of values (ie table)
-     * @param {{value: string, default: string}[][]} values - the values attached
-     * @return {ComboFormField}
-     */
-    setValues(values) {
-        this.values = values;
-        return this;
-    }
-
-    /**
-     * @param {{value: string, default: string}} value
-     * @return {ComboFormField}
-     */
-    setValue(value) {
-        this.value = value;
-        return this;
-    }
-
-    /**
-     *
-     * @return {{value: string, default: string}[][]}
-     */
-    getValues() {
-        return this.values;
-    }
-
-    /**
-     *
-     * @return {{value: string, default: string}}
-     */
-    getValue() {
-        return this.value;
-    }
-
-    getType() {
-        return this.type;
-    }
-
-    getLabel() {
-        return this.label;
-    }
-
-    getUrl() {
-        return this.url;
-    }
-
-}
 
 class ComboModal {
 
@@ -311,205 +189,6 @@ class DokuAjaxRequest {
     }
 }
 
-/**
- * Represent a form meta element with:
- *   * a label
- *   * and a control element
- * Without the values
- */
-class FormMetaField {
-
-
-    constructor(properties) {
-
-        if (properties == null) {
-            throw new Error("Properties of a form meta field should not be null");
-        }
-        this.properties = properties;
-    }
-
-    /**
-     * @return string
-     */
-    getLabel() {
-
-        let label = this.properties["label"];
-        if (label === undefined) {
-            return this.getName()
-                .split(/_|-/)
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(" ");
-        }
-        return label;
-    }
-
-    getLabelUrl() {
-        let label = this.properties["url"];
-        if (label === undefined) {
-            return this.getLabel();
-        }
-        return label;
-    }
-
-    getHtmlLabel(forId, customClass) {
-        let label = this.getLabelUrl();
-        let classLabel = "";
-        if (this.getType() === "boolean") {
-            classLabel = "form-check"
-        } else {
-            classLabel = "col-form-label";
-        }
-        return `<label for="${forId}" class="${customClass} ${classLabel}">${label}</label>`
-    }
-
-    getHtmlControl(id, value, defaultValue) {
-
-        let metadataType = this.properties["type"];
-        let mutable = this.properties["mutable"];
-        let domainValues = this.properties["domain-values"];
-        let disabled;
-        let htmlElement;
-
-        /**
-         * The creation of the form element
-         */
-        if (domainValues !== undefined) {
-
-            /**
-             * Select element
-             * @type {string}
-             */
-            htmlElement = "select";
-            let defaultValueHtml = "";
-            if (defaultValue !== undefined) {
-                defaultValueHtml = ` (${defaultValue})`;
-            }
-
-            htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}">`;
-            let selected = "";
-            if (value === null) {
-                selected = "selected";
-            }
-            htmlElement += `<option value="" ${selected}>Default${defaultValueHtml}</option>`;
-            for (let selectValue of domainValues) {
-                if (selectValue === value) {
-                    selected = "selected";
-                } else {
-                    selected = "";
-                }
-                htmlElement += `<option value="${selectValue}" ${selected}>${selectValue}</option>`;
-            }
-            htmlElement += `</select>`;
-            return htmlElement;
-
-
-        } else {
-
-            let htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
-            if (!(defaultValue === null || defaultValue === undefined)) {
-                htmlPlaceholder = `placeholder="${defaultValue}"`;
-            }
-            let htmlValue = "";
-            let inputType;
-            let name = this.getName();
-
-            /**
-             * With disable, the data is not in the form
-             */
-            if (mutable !== undefined && mutable === false) {
-                disabled = "disabled";
-            } else {
-                disabled = "";
-            }
-
-            /**
-             * Input Element
-             * @type {string}
-             */
-            let htmlTag = "input";
-            let htmlClass = "form-control";
-            let checked = "";
-
-            /**
-             * Type ?
-             */
-            switch (metadataType) {
-                case "datetime":
-                    inputType = "datetime-local";
-                    if (value !== null) {
-                        value = value.slice(0, 19);
-                    }
-                    if (value !== null) {
-                        htmlValue = `value="${value}"`;
-                    }
-                    break;
-                case "paragraph":
-                    htmlTag = "textarea";
-                    if (value !== null) {
-                        htmlValue = `${value}`;
-                    }
-                    break;
-                case "boolean":
-                    inputType = "checkbox";
-                    htmlClass = "form-check-input";
-                    if (value === defaultValue) {
-                        checked = "checked"
-                    }
-                    htmlValue = `value="${value}"`;
-                    htmlPlaceholder = "";
-                    break;
-                case "line":
-                default:
-                    inputType = "text";
-                    if (!(value === null || value === undefined)) {
-                        htmlValue = `value="${value}"`;
-                    }
-            }
-
-            switch (htmlTag) {
-                case "textarea":
-                    htmlElement = `<textarea id="${id}" name="${name}" class="${htmlClass}" rows="3" ${htmlPlaceholder} >${htmlValue}</textarea>`;
-                    break;
-                default:
-                case "input":
-                    htmlElement = `<input type="${inputType}" name="${name}" class="${htmlClass}" id="${id}" ${htmlPlaceholder} ${htmlValue} ${checked} ${disabled}>`;
-                    break;
-
-            }
-            return htmlElement;
-        }
-    }
-
-    getType() {
-        return this.properties["type"];
-    }
-
-    getName() {
-        return this.properties["name"];
-    }
-
-    /**
-     * The width of the control
-     * is the most imporant as it can
-     * be used to determine the column width
-     * in case of tabular data
-     * @return {number|*}
-     */
-    getControlWidth() {
-        let width = this.properties["width"];
-        if (width !== undefined) {
-            return width;
-        } else {
-            return 8;
-        }
-    }
-
-    getLabelWidth() {
-        return 12 - this.getLabelWidth();
-    }
-
-
-}
 
 let combo = {};
 
@@ -544,7 +223,6 @@ combo.getModal = function (modalId) {
  * @return ComboModal
  */
 combo.createModal = function (modalId) {
-
     let modal = new ComboModal(modalId);
     comboModals[modalId] = modal;
     return modal;
@@ -569,66 +247,15 @@ combo.destroyAllModals = function () {
 
 /**
  *
- * @param dataFields
+ * @param {{}} dataFields
  * @return {{FormField[]}}
  */
 let toFormFieldsByTabs = function (dataFields) {
 
-    const formFieldsByTab = {};
-    for (const dataField of dataFields) {
-
-        let dataFieldType = dataField["type"];
-        let dataFieldTab = dataField["tab"];
-
-        if (formFieldsByTab[dataFieldTab] === undefined) {
-            formFieldsByTab[dataFieldTab] = [];
-        }
 
 
-        switch (dataFieldType) {
-            case "tabular":
-                let label = dataField["label"];
-                let url = dataField["url"];
-                let columns = dataField["columns"];
-                let fieldMetas = [];
-                if (columns === undefined) {
-                    throw new Error(`The columns should be defined for the tabular field (${label})`);
-                }
-                for (const column of columns) {
-                    if (column === null) {
-                        throw new Error(`A column of the ${label} field is null`);
-                    }
-                    let metaField = combo.createMetaField(column);
-                    fieldMetas.push(metaField);
-                }
-
-                let fieldValues = dataField["values"];
-                formFieldsByTab[dataFieldTab].push(
-                    createFormField()
-                        .setType(dataFieldType)
-                        .setLabel(label)
-                        .setUrl(url)
-                        .setMetas(fieldMetas)
-                        .setValues(fieldValues)
-                );
-                break
-            default:
-                let fieldMeta = combo.createMetaField(dataField);
-                let fieldValue = {
-                    value: dataField["value"],
-                    default: dataField["default"]
-                };
-                formFieldsByTab[dataFieldTab].push(
-                    createFormField()
-                        .setType(dataFieldType)
-                        .setMeta(fieldMeta)
-                        .setValue(fieldValue)
-                );
-                break;
-        }
 
 
-    }
     return formFieldsByTab;
 }
 
@@ -644,7 +271,7 @@ combo.toHtmlId = function (s) {
 
 combo.toForm = function (formId, jsonMetaDataObject) {
 
-    let formFieldsByTab = toFormFieldsByTabs(jsonMetaDataObject["fields"]);
+    let formFieldsByTab = FormMeta.createFromJson(jsonMetaDataObject);
     /**
      * Creating the Body
      * (Starting with the tabs)
@@ -728,7 +355,7 @@ combo.toForm = function (formId, jsonMetaDataObject) {
             rightColSize = 9;
         }
 
-        for (/** @type {ComboFormField} **/ let formField of formFieldsByTab[tab]) {
+        for (/** @type {FormMetaField} **/ let formField of formFieldsByTab[tab]) {
 
             let datatype = formField.getType();
             switch (datatype) {
@@ -785,7 +412,7 @@ combo.toForm = function (formId, jsonMetaDataObject) {
 }
 
 let createFormField = function () {
-    return new ComboFormField();
+    return new FormMetaField();
 }
 
 module.exports = combo;

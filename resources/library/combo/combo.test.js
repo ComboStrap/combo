@@ -1,5 +1,9 @@
-const sum = require('./combo');
+let combo = require("./combo.js");
 
+/**
+ * @jest-environment jsdom
+ * https://jestjs.io/docs/configuration#testenvironment-string
+ */
 test('first test', () => {
 
     let formMetadata = {
@@ -18,4 +22,11 @@ test('first test', () => {
     };
     let form = combo.toForm("formId", formMetadata);
     expect(form).toBe("");
+
+});
+
+test('adds 1 + 2 to equal 3', () => {
+    let a = 1;
+    let b = 1;
+    expect(a).toBe(b);
 });

@@ -1,13 +1,16 @@
 {
-  "name": "combo",
-  "version": "1.0.0",
-  "description": "combo",
-  "main": "index.js",
-  "repository": "https://github.com/ComboStrap/combo",
-  "author": "gerardnico <gerardnico@gmail.com>",
-  "license": "MIT",
-  "private": true,
-  "devDependencies": {
-    "jest": "^27.3.1"
-  }
+    "name": "combo",
+    "version": "1.0.0",
+    "description": "combo",
+    "source": "./resources/library/combo/combo.js",
+    "main": "./resources/library/combo/combo.min.js",
+    "private": true,
+    "scripts": {
+        "watch": "parcel watch",
+        "build": "parcel build"
+    },
+    "devDependencies": {
+        "jest": "^27.3.1",
+        "parcel": "^2.0.0"
+    }
 }

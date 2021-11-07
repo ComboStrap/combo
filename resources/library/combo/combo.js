@@ -644,6 +644,7 @@
 
     combo.toForm = function (formId, jsonMetaDataObject) {
 
+        debugger;
         let formFieldsByTab = toFormFieldsByTabs(jsonMetaDataObject["fields"]);
         /**
          * Creating the Body

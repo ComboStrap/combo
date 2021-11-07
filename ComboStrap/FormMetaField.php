@@ -14,7 +14,7 @@ namespace ComboStrap;
  *
  *
  */
-class FormField
+class FormMetaField
 {
 
 
@@ -70,7 +70,7 @@ class FormField
      */
     private $domainValues;
     /**
-     * @var FormField[]
+     * @var FormMetaField[]
      */
     private $columns;
     /**
@@ -92,9 +92,9 @@ class FormField
         $this->mutable = true;
     }
 
-    public static function create(string $name): FormField
+    public static function create(string $name): FormMetaField
     {
-        return new FormField($name);
+        return new FormMetaField($name);
     }
 
     public function toAssociativeArray(): array
@@ -162,21 +162,21 @@ class FormField
     }
 
     public
-    function setMutable(bool $bool): FormField
+    function setMutable(bool $bool): FormMetaField
     {
         $this->mutable = $bool;
         return $this;
     }
 
     public
-    function setTab(string $tabName): FormField
+    function setTab(string $tabName): FormMetaField
     {
         $this->tab = $tabName;
         return $this;
     }
 
     public
-    function setLabel(string $label): FormField
+    function setLabel(string $label): FormMetaField
     {
         $this->label = $label;
         return $this;
@@ -194,21 +194,21 @@ class FormField
     }
 
     public
-    function setCanonical(string $canonical): FormField
+    function setCanonical(string $canonical): FormMetaField
     {
         $this->canonical = $canonical;
         return $this;
     }
 
     public
-    function setDescription(string $string): FormField
+    function setDescription(string $string): FormMetaField
     {
         $this->description = $string;
         return $this;
     }
 
     public
-    function addValue($value, $default = null): FormField
+    function addValue($value, $default = null): FormMetaField
     {
         $this->values[] = $value;
         $this->defaults[] = $default;
@@ -216,21 +216,21 @@ class FormField
     }
 
     public
-    function setType(string $type): FormField
+    function setType(string $type): FormMetaField
     {
         $this->type = $type;
         return $this;
     }
 
     public
-    function setDomainValues(array $domainValues): FormField
+    function setDomainValues(array $domainValues): FormMetaField
     {
         $this->domainValues = $domainValues;
         return $this;
     }
 
     public
-    function addColumn(FormField $formField): FormField
+    function addColumn(FormMetaField $formField): FormMetaField
     {
         $this->type = self::TABULAR_TYPE_VALUE;
         // A parent node is not mutable
@@ -240,10 +240,20 @@ class FormField
     }
 
     public
-    function setWidth(int $int): FormField
+    function setWidth(int $int): FormMetaField
     {
         $this->width = $int;
         return $this;
+    }
+
+    public function getTab(): string
+    {
+        return $this->tab;
+    }
+
+    public function getName()
+    {
+        return $this->name;
     }
 
 

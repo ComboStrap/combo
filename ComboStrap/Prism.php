@@ -125,7 +125,7 @@ class Prism
             "src" => "$BASE_PRISM_CDN/plugins/line-numbers/prism-line-numbers.min.js",
             "integrity" => "sha256-K837BwIyiXo5k/9fCYgqUyA14bN4/Ve9P2SIT0KmZD0=",
             "crossorigin" => "anonymous"
-            );
+        );
         // https://prismjs.com/plugins/download-button/-->
         $tags['script'][] = array(
             "src" => "$BASE_PRISM_CDN/plugins/download-button/prism-download-button.min.js",
@@ -320,17 +320,22 @@ EOD;
          * Language name mapping between the dokuwiki default
          * and prism
          */
-        if ($language == "rsplus") {
-            $language = "r";
-        }
-        if ($language == "dos") {
-            $language = "batch";
-        }
-        if ($language == "apache") {
-            $language = "apacheconf";
-        }
-        if ($language == "babel") {
-            $language = "javascript";
+        switch ($language) {
+            case "rsplus":
+                $language = "r";
+                break;
+            case "dos":
+                $language = "batch";
+                break;
+            case "apache":
+                $language = "apacheconf";
+                break;
+            case "babel":
+                $language = "javascript";
+                break;
+            case "antlr":
+                $language = "g4";
+                break;
         }
 
         StringUtility::addEolCharacterIfNotPresent($renderer->doc);

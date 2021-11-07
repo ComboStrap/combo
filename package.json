@@ -1,0 +1,13 @@
+{
+  "name": "combo",
+  "version": "1.0.0",
+  "description": "combo",
+  "main": "index.js",
+  "repository": "https://github.com/ComboStrap/combo",
+  "author": "gerardnico <gerardnico@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "jest": "^27.3.1"
+  }
+}

@@ -35,16 +35,11 @@ window.addEventListener("DOMContentLoaded", function () {
     /**
      *
      * @param {ComboModal} managerModal
+     * @param formMetadata
      * @param pageId
      * @return {Promise<*>}
      */
-    async function fetchAndBuildMetadataManager(managerModal, pageId) {
-
-
-        let call = combo
-            .createDokuRequest(metaManagerCall)
-            .setProperty("id", pageId);
-        let jsonMetaDataObject = await call.getJson();
+    function buildMetadataManager(managerModal, formMetadata, pageId) {
 
         /**
          * Header
@@ -55,7 +50,7 @@ window.addEventListener("DOMContentLoaded", function () {
          * Adding the form
          */
         let formId = `${managerModal.getId()}-form`;
-        let form = combo.toForm(formId, jsonMetaDataObject);
+        let form = combo.toForm(formId, formMetadata);
         managerModal.addBody(form);
 
         /**
@@ -97,7 +92,11 @@ window.addEventListener("DOMContentLoaded", function () {
 
         if (managerModal === undefined) {
             managerModal = combo.createModal(modalManagerId);
-            managerModal = await fetchAndBuildMetadataManager(managerModal, pageId);
+            let call = combo
+                .createDokuRequest(metaManagerCall)
+                .setProperty("id", pageId);
+            let formMetadata = await call.getJson();
+            managerModal = buildMetadataManager(managerModal, formMetadata, pageId);
         }
         managerModal.show();
 

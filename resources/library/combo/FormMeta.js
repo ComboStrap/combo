@@ -223,6 +223,10 @@ export default class FormMeta {
         return this;
     }
 
+    /**
+     *
+     * @return {FormMetaField[]}
+     */
     getFields() {
         return Object.values(this.formFields);
     }

@@ -10,13 +10,16 @@ import FormMeta from "./FormMeta";
 test('Json to Form Object', () => {
 
     let formName = "my-form";
+    let firstFiedlName = "first";
+    let firstFieldLabel = "Youpla";
+    let firstFieldTab = "TheTab";
     let formMetadata = {
         "name": formName,
         "fields": {
             "first": {
-                "name": "first",
-                "label": "Youpla",
-                "tab": "TheTab",
+                "name": firstFiedlName,
+                "label": firstFieldLabel,
+                "tab": firstFieldTab,
                 "type": "text",
                 "mutable": true,
                 "link": "<a href=\"https:\/\/combostrap.com\/first\" title=\"The big youpla\" data-bs-toggle=\"tooltip\" style=\"text-decoration:none;\">Youpla<\/a>"
@@ -28,5 +31,9 @@ test('Json to Form Object', () => {
     expect(form.getName()).toBe(formName);
     let fields = form.getFields();
     expect(fields.length).toBe(1);
+    let field = fields[0];
+    expect(field.getName()).toBe(firstFiedlName);
+    expect(field.getLabel()).toBe(firstFieldLabel);
+    expect(field.getTab()).toBe(firstFieldTab);
 
 });

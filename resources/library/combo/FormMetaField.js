@@ -6,6 +6,9 @@
 export default class FormMetaField {
 
 
+    tab;
+
+
     constructor(name) {
         this.name = name;
     }
@@ -106,12 +109,40 @@ export default class FormMetaField {
         return this.name;
     }
 
+    getTab(){
+        return this.tab;
+    }
     static createFromJson(json) {
+        if(!json.hasOwnProperty("name")) {
+            throw new Error("To create a form meta field, the name property is mandatory.")
+        }
         let name = json["name"];
-        return FormMetaField.createFromName(name);
+        let formMetaField =  FormMetaField.createFromName(name);
+        for(let property in json){
+            if(!json.hasOwnProperty(property)) {
+                continue;
+            }
+            let value = json[property];
+            switch (property){
+                case "label":
+                    formMetaField.setLabel(value);
+                    continue;
+                case "tab":
+                    formMetaField.setTab(value);
+                    continue;
+                default:
+                    console.error(`The property (${property} of the form ${name} is unknown`);
+            }
+        }
+        return formMetaField;
     }
 
     static createFromName(name) {
         return new FormMetaField(name);
+    }
+
+    setTab(value) {
+        this.tab = value;
+        return this;
     }
 }

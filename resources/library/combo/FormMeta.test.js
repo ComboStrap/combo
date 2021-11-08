@@ -17,6 +17,8 @@ test('Json to Form Object', () => {
     let firstFieldMutable = true;
     let firstFieldUrl = "https:\/\/combostrap.com\/first";
     let firstFieldDescription = "The big youpla";
+    let firstFieldDefaultValue = "Meta Manager";
+    let firstFieldValue = 1;
     let formMetadata = {
         "name": formName,
         "fields": {
@@ -28,6 +30,8 @@ test('Json to Form Object', () => {
                 "mutable": firstFieldMutable,
                 "url": firstFieldUrl,
                 "description": firstFieldDescription,
+                "default": firstFieldDefaultValue,
+                "value": firstFieldValue
             }
         },
         "tabs": {"TheTab": {"name": "TheTab"}}
@@ -47,5 +51,8 @@ test('Json to Form Object', () => {
     expect(field.isMutable()).toBe(firstFieldMutable);
     expect(field.getUrl()).toBe(firstFieldUrl);
     expect(field.getDescription()).toBe(firstFieldDescription);
+    expect(field.getDescription()).toBe(firstFieldDescription);
+    expect(field.getDefaultValue()).toBe(firstFieldDefaultValue);
+    expect(field.getValue()).toBe(firstFieldValue);
 
 });

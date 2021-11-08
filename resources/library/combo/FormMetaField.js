@@ -12,11 +12,12 @@ export default class FormMetaField {
     tab;
     mutable = true;
     description;
+    values = [];
+    defaultValues = [];
 
     constructor(name) {
         this.name = name;
     }
-
 
 
     /**
@@ -53,42 +54,17 @@ export default class FormMetaField {
 
 
     /**
-     *
-     * Type:
-     *   * A single value
-     *   * or an array of an array of values (ie table)
-     * @param {{value: string, default: string}[][]} values - the values attached
+     * @param  value
+     * @param defaultValue
      * @return {FormMetaField}
      */
-    setValues(values) {
-        this.values = values;
+    addValue(value, defaultValue) {
+        this.values.push(value);
+        this.defaultValues.push(defaultValue);
         return this;
     }
 
-    /**
-     * @param {{value: string, default: string}} value
-     * @return {FormMetaField}
-     */
-    setValue(value) {
-        this.value = value;
-        return this;
-    }
 
-    /**
-     *
-     * @return {{value: string, default: string}[][]}
-     */
-    getValues() {
-        return this.values;
-    }
-
-    /**
-     *
-     * @return {{value: string, default: string}}
-     */
-    getValue() {
-        return this.value;
-    }
 
     getType() {
         return this.type;
@@ -116,45 +92,61 @@ export default class FormMetaField {
         return this.description;
     }
 
-    getTab(){
+    getTab() {
         return this.tab;
     }
+
+    /**
+     *
+     * @param json
+     * @return {FormMetaField}
+     */
     static createFromJson(json) {
-        if(!json.hasOwnProperty("name")) {
+        if (!json.hasOwnProperty("name")) {
             throw new Error("To create a form meta field, the name property is mandatory.")
         }
         let name = json["name"];
-        let formMetaField =  FormMetaField.createFromName(name);
-        for(let property in json){
-            if(!json.hasOwnProperty(property)) {
+        let formMetaField = FormMetaField.createFromName(name);
+
+        let value;
+        let valueDefault;
+        for (let property in json) {
+            if (!json.hasOwnProperty(property)) {
                 continue;
             }
-            let value = json[property];
-            switch (property){
+            let jsonValue = json[property];
+            switch (property) {
                 case "name":
                     continue;
                 case "label":
-                    formMetaField.setLabel(value);
+                    formMetaField.setLabel(jsonValue);
                     continue;
                 case "tab":
-                    formMetaField.setTab(value);
+                    formMetaField.setTab(jsonValue);
                     continue;
                 case "type":
-                    formMetaField.setType(value);
+                    formMetaField.setType(jsonValue);
                     continue;
                 case "mutable":
-                    formMetaField.setMutable(value);
+                    formMetaField.setMutable(jsonValue);
                     continue;
                 case "description":
-                    formMetaField.setDescription(value);
+                    formMetaField.setDescription(jsonValue);
                     continue;
                 case "url":
-                    formMetaField.setUrl(value);
+                    formMetaField.setUrl(jsonValue);
+                    continue;
+                case "value":
+                    value = jsonValue;
+                    continue;
+                case "default":
+                    valueDefault = jsonValue;
                     continue;
                 default:
                     console.error(`The property (${property}) of the form (${name}) is unknown`);
             }
         }
+        formMetaField.addValue(value, valueDefault);
         return formMetaField;
     }
 
@@ -184,4 +176,13 @@ export default class FormMetaField {
         this.description = value;
         return this;
     }
+
+    getDefaultValue() {
+        return this.defaultValues[0];
+    }
+
+    getValue() {
+        return this.values[0];
+    }
+
 }

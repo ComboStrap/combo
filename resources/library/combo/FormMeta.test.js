@@ -15,6 +15,8 @@ test('Json to Form Object', () => {
     let firstFieldTab = "TheTab";
     let firstFieldType = "text";
     let firstFieldMutable = true;
+    let firstFieldUrl = "https:\/\/combostrap.com\/first";
+    let firstFieldDescription = "The big youpla";
     let formMetadata = {
         "name": formName,
         "fields": {
@@ -24,7 +26,8 @@ test('Json to Form Object', () => {
                 "tab": firstFieldTab,
                 "type": firstFieldType,
                 "mutable": firstFieldMutable,
-                "link": "<a href=\"https:\/\/combostrap.com\/first\" title=\"The big youpla\" data-bs-toggle=\"tooltip\" style=\"text-decoration:none;\">Youpla<\/a>"
+                "url": firstFieldUrl,
+                "description": firstFieldDescription,
             }
         },
         "tabs": {"TheTab": {"name": "TheTab"}}
@@ -33,11 +36,16 @@ test('Json to Form Object', () => {
     expect(form.getName()).toBe(formName);
     let fields = form.getFields();
     expect(fields.length).toBe(1);
+    /**
+     * @type {FormMetaField}
+     */
     let field = fields[0];
     expect(field.getName()).toBe(firstFiedlName);
     expect(field.getLabel()).toBe(firstFieldLabel);
     expect(field.getTab()).toBe(firstFieldTab);
     expect(field.getType()).toBe(firstFieldType);
     expect(field.isMutable()).toBe(firstFieldMutable);
+    expect(field.getUrl()).toBe(firstFieldUrl);
+    expect(field.getDescription()).toBe(firstFieldDescription);
 
 });

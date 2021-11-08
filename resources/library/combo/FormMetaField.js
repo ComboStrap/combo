@@ -11,6 +11,7 @@ export default class FormMetaField {
     name;
     tab;
     mutable = true;
+    description;
 
     constructor(name) {
         this.name = name;
@@ -111,6 +112,10 @@ export default class FormMetaField {
         return this.name;
     }
 
+    getDescription() {
+        return this.description;
+    }
+
     getTab(){
         return this.tab;
     }
@@ -138,8 +143,13 @@ export default class FormMetaField {
                     formMetaField.setType(value);
                     continue;
                 case "mutable":
-                    let booleanValue = Boolean.toBoolean(value);
-                    formMetaField.setMutable(booleanValue);
+                    formMetaField.setMutable(value);
+                    continue;
+                case "description":
+                    formMetaField.setDescription(value);
+                    continue;
+                case "url":
+                    formMetaField.setUrl(value);
                     continue;
                 default:
                     console.error(`The property (${property}) of the form (${name}) is unknown`);
@@ -166,7 +176,12 @@ export default class FormMetaField {
      * @param {boolean} value
      */
     setMutable(value) {
-        this.mutable = value;
+        this.mutable = Boolean.toBoolean(value);
+        return this;
+    }
+
+    setDescription(value) {
+        this.description = value;
         return this;
     }
 }

@@ -14,3 +14,9 @@
 
 `.parcelrc` was written to avoid double babel transpilation as dictated in the [doc](https://parceljs.org/languages/javascript/#usage-with-other-tools)
 It disable Babel transpilation in Parcel because Jest needs it also.
+
+ie to avoid
+
+```txt
+@parcel/transformer-babel: @babel/preset-env does not support Parcel's targets, which will likely result in unnecessary transpilation and larger bundle sizes.
+```

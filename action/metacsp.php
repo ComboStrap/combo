@@ -83,7 +83,9 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
             // not same origin
             $httpDirectives = [
                 "content-security-policy: frame-ancestors 'none'", // the page cannot be used in a iframe (clickjacking),
-                "X-Frame-Options: deny" // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
+                "X-Frame-Options: deny", // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
+                "X-Content-Type-Options: nosniff", // stops a browser from trying to MIME-sniff the content type and forces it to stick with the declared content-type
+                "Referrer-Policy: strict-origin-when-cross-origin" // sends the origin if cross origin otherwise the full refer for same origin
             ];
         }
         if (!headers_sent()) {

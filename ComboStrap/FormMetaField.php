@@ -119,7 +119,7 @@ class FormMetaField
                 break;
             case 1:
                 $value = $this->values[0];
-                if (!blank($value)) {
+                if (!($value)) {
                     $associative[self::VALUE_ATTRIBUTE] = $this->values[0];
                 }
                 break;

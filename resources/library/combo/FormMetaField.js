@@ -1,3 +1,5 @@
+import Boolean from "./Boolean";
+
 /**
  * A form field may hold:
  *   * a simple scalar value
@@ -6,15 +8,15 @@
 export default class FormMetaField {
 
 
+    name;
     tab;
-
+    mutable = true;
 
     constructor(name) {
         this.name = name;
     }
 
 
-    name;
 
     /**
      * The form field type
@@ -124,14 +126,23 @@ export default class FormMetaField {
             }
             let value = json[property];
             switch (property){
+                case "name":
+                    continue;
                 case "label":
                     formMetaField.setLabel(value);
                     continue;
                 case "tab":
                     formMetaField.setTab(value);
                     continue;
+                case "type":
+                    formMetaField.setType(value);
+                    continue;
+                case "mutable":
+                    let booleanValue = Boolean.toBoolean(value);
+                    formMetaField.setMutable(booleanValue);
+                    continue;
                 default:
-                    console.error(`The property (${property} of the form ${name} is unknown`);
+                    console.error(`The property (${property}) of the form (${name}) is unknown`);
             }
         }
         return formMetaField;
@@ -141,8 +152,21 @@ export default class FormMetaField {
         return new FormMetaField(name);
     }
 
+    isMutable() {
+        return this.mutable;
+    }
+
     setTab(value) {
         this.tab = value;
+        return this;
+    }
+
+    /**
+     *
+     * @param {boolean} value
+     */
+    setMutable(value) {
+        this.mutable = value;
         return this;
     }
 }

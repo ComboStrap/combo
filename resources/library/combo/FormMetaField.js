@@ -1,4 +1,5 @@
 import Boolean from "./Boolean";
+import Logger from "./Logger";
 
 /**
  * A form field may hold:
@@ -142,8 +143,11 @@ export default class FormMetaField {
                 case "default":
                     valueDefault = jsonValue;
                     continue;
+                case "domain-values":
+                    formMetaField.setDomainValues(jsonValue);
+                    continue;
                 default:
-                    console.error(`The property (${property}) of the form (${name}) is unknown`);
+                    Logger.getLogger().error(`The property (${property}) of the form (${name}) is unknown`);
             }
         }
         formMetaField.addValue(value, valueDefault);
@@ -185,4 +189,16 @@ export default class FormMetaField {
         return this.values[0];
     }
 
+    getDomainValues(){
+        return this.domainValues;
+    }
+
+    setDomainValues(value) {
+        if(!Array.isArray(value)){
+            console.error(`The domains values should be an array. (${value}) is not an array`);
+            return;
+        }
+        this.domainValues = value;
+        return this;
+    }
 }

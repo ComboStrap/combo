@@ -4,7 +4,6 @@
  */
 
 
-
 import FormMeta from "./FormMeta";
 
 test('Json to Form Object', () => {
@@ -19,6 +18,11 @@ test('Json to Form Object', () => {
     let firstFieldDescription = "The big youpla";
     let firstFieldDefaultValue = "Meta Manager";
     let firstFieldValue = 1;
+    let firstFieldDomainValues = [
+        "holy",
+        "median",
+        "landing"
+    ];
     let formMetadata = {
         "name": formName,
         "fields": {
@@ -31,7 +35,8 @@ test('Json to Form Object', () => {
                 "url": firstFieldUrl,
                 "description": firstFieldDescription,
                 "default": firstFieldDefaultValue,
-                "value": firstFieldValue
+                "value": firstFieldValue,
+                "domain-values": firstFieldDomainValues,
             }
         },
         "tabs": {"TheTab": {"name": "TheTab"}}
@@ -54,5 +59,6 @@ test('Json to Form Object', () => {
     expect(field.getDescription()).toBe(firstFieldDescription);
     expect(field.getDefaultValue()).toBe(firstFieldDefaultValue);
     expect(field.getValue()).toBe(firstFieldValue);
+    expect(field.getDomainValues()).toBe(firstFieldDomainValues);
 
 });

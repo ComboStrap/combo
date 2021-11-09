@@ -1,5 +1,6 @@
 import FormMeta from "./FormMeta";
 import Html from "./Html";
+import FormMetaField from "./FormMetaField";
 
 
 
@@ -14,12 +15,12 @@ export function toForm(formId, jsonMetaDataObject) {
     let htmlTabNavs = '<ul class="nav nav-tabs mb-3">';
     let activeClass;
     let ariaSelected;
-    this.getTabPaneId = function (id) {
-        let htmlId = Html.toHtmlId(id);
+    this.getTabPaneId = function (tab) {
+        let htmlId = Html.toHtmlId(tab.getName());
         return `${formId}-tab-pane-${htmlId}`;
     }
-    this.getTabNavId = function (id) {
-        let htmlId = Html.toHtmlId(id);
+    this.getTabNavId = function (tab) {
+        let htmlId = Html.toHtmlId(tab.getName());
         return `${formId}-tab-nav-${htmlId}`;
     }
     this.getControlId = function (id) {
@@ -27,22 +28,16 @@ export function toForm(formId, jsonMetaDataObject) {
         return `${formId}-control-${htmlId}`;
     }
     let tabsMeta = formMeta.getTabs();
-
-    // Merge the tab found in the tab metas and in the field
-    // to be sure to let no error
-    let tabsFromField = Object.keys(formMeta);
-    let tabsFromMeta = Object.keys(tabsMeta);
-    let defaultTab = tabsFromMeta[0];
-    let tabsMerged = tabsFromMeta.concat(tabsFromField.filter(element => tabsFromMeta.indexOf(element) < 0))
-    for (let tab of tabsMerged) {
-        if (tab === defaultTab) {
+    let defaultTab = tabsMeta[0];
+    for (let tab of tabsMeta) {
+        if (Object.is(tab, defaultTab)) {
             activeClass = "active";
             ariaSelected = "true";
         } else {
             activeClass = "";
             ariaSelected = "false";
         }
-        let tabLabel = tabsMeta[tab]["label"];
+        let tabLabel = tab.getLabel();
         let tabPanId = this.getTabPaneId(tab);
         let tabNavId = this.getTabNavId(tab);
         htmlTabNavs += `
@@ -69,10 +64,7 @@ export function toForm(formId, jsonMetaDataObject) {
     let rightColSize;
     let leftColSize;
     let elementIdCounter = 0;
-    for (let tab in formMeta) {
-        if (!formMeta.hasOwnProperty(tab)) {
-            continue;
-        }
+    for (let tab of tabsMeta) {
         let tabPaneId = this.getTabPaneId(tab);
         let tabNavId = this.getTabNavId(tab);
         if (tab === defaultTab) {
@@ -81,21 +73,16 @@ export function toForm(formId, jsonMetaDataObject) {
             activeClass = "";
         }
         htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
-        let grid = tabsMeta[tab]["grid"];
-        if (grid.length === 2) {
-            leftColSize = grid[0];
-            rightColSize = grid[1];
-        } else {
-            leftColSize = 3;
-            rightColSize = 9;
-        }
+        leftColSize = tab.getLabelWidth();
+        rightColSize = tab.getLabelWidth();
 
-        for (/** @type {FormMetaField} **/ let formField of formMeta[tab]) {
+        for (let formField of formMeta.getFieldsForTab(tab.getName())) {
 
             let datatype = formField.getType();
             switch (datatype) {
-                case "tabular":
-                    let url = formField.getUrl();
+                // number of children may also work ?
+                case FormMetaField.TABULAR_TYPE:
+                    let url = formField.getHtmlAnchor();
                     htmlTabPans += `<div class="row mb-3 text-center">${url}</div>`;
                     let colsMeta = formField.getMetas();
                     let rows = formField.getValues();

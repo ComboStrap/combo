@@ -15,11 +15,15 @@ export default class FormMetaField {
     description;
     values = [];
     defaultValues = [];
+    static TABULAR_TYPE = "tabular";
 
     constructor(name) {
         this.name = name;
     }
 
+    getHtmlAnchor(){
+        return `<a href="${this.getUrl()}" title="${this.getDescription()}" data-bs-toggle="tooltip" style="text-decoration:none">${this.getLabel()}</a>`;
+    }
 
     /**
      * The form field type

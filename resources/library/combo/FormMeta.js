@@ -8,6 +8,8 @@ import FormMetaTab from "./FormMetaTab";
 export default class FormMeta {
 
     label;
+
+
     formFields = {};
     name;
     tabs = {};
@@ -237,6 +239,10 @@ export default class FormMeta {
         return Object.values(this.formFields);
     }
 
+    /**
+     *
+     * @return {FormMetaTab[]}
+     */
     getTabs() {
         return Object.values(this.tabs);
     }
@@ -244,4 +250,13 @@ export default class FormMeta {
     addTab(formMetaTab) {
         this.tabs[formMetaTab.getName()]=formMetaTab;
     }
+
+    valueOf(){
+        return this.getName();
+    };
+
+    getFieldsForTab(tabName) {
+        return this.getFields().filter(e=>e.getName()===tabName);
+    }
+
 }

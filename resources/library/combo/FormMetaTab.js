@@ -73,10 +73,16 @@ export default class FormMetaTab {
     }
 
     getLabelWidth(){
+        if(this.widthLabel===undefined){
+            return 3;
+        }
         return this.widthLabel;
     }
 
     getFieldWidth(){
+        if(this.widthField===undefined){
+            return 12 - this.getLabelWidth();
+        }
         return this.widthField;
     }
 }

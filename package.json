@@ -21,5 +21,8 @@
         "bootstrap": {
             "global": "bootstrap"
         }
+    },
+    "jest": {
+        "testEnvironment": "jsdom"
     }
 }

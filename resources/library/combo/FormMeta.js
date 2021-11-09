@@ -137,7 +137,7 @@ export default class FormMeta {
         return this.getFields().filter(e=>e.getName()===tabName);
     }
 
-    toHtmlForm(formId) {
+    toHtmlElement(formId) {
 
         /**
          * Creating the Body

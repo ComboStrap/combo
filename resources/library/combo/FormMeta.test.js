@@ -74,9 +74,9 @@ test('Json to Form Object', () => {
                 }
         }
     };
-    let form = FormMeta.createFromJson(formMetadata);
-    expect(form.getName()).toBe(formName);
-    let fields = form.getFields();
+    let formMeta = FormMeta.createFromJson(formMetadata);
+    expect(formMeta.getName()).toBe(formName);
+    let fields = formMeta.getFields();
     expect(fields.length).toBe(2);
 
     /**
@@ -104,7 +104,7 @@ test('Json to Form Object', () => {
     /**
      * Tab
      */
-    let tabs = form.getTabs()
+    let tabs = formMeta.getTabs()
     expect(tabs.length).toBe(1);
     let firstTab = tabs[0];
     expect(firstTab.getName()).toBe(firstFieldTab);
@@ -115,7 +115,7 @@ test('Json to Form Object', () => {
     /**
      * To html
      */
-    let htmlForm = form.toHtmlForm("formId")
+    let htmlForm = formMeta.toHtmlElement("formId")
     let actual = htmlForm.outerHTML;
     expect(actual).toEqual("<form></form>");
 

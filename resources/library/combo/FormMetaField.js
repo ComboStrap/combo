@@ -9,10 +9,8 @@ import Logger from "./Logger";
 export default class FormMetaField {
 
 
-    name;
-    tab;
+    tab = "unknown";
     mutable = true;
-    description;
     values = [];
     defaultValues = [];
     static TABULAR_TYPE = "tabular";
@@ -24,7 +22,14 @@ export default class FormMetaField {
     }
 
     getLabelLink() {
-        return `<a href="${this.getUrl()}" title="${this.getDescription()}" data-bs-toggle="tooltip" style="text-decoration:none">${this.getLabel()}</a>`;
+        if (this.getUrl() === undefined && this.getDescription() === undefined) {
+            return this.getLabel();
+        }
+        let url = this.getUrl();
+        if (this.getUrl() === undefined) {
+            url = "#";
+        }
+        return `<a href="${url}" title="${this.getDescription()}" data-bs-toggle="tooltip" style="text-decoration:none">${this.getLabel()}</a>`;
     }
 
     /**
@@ -299,7 +304,7 @@ export default class FormMetaField {
                 defaultValueHtml = ` (${defaultValue})`;
             }
 
-            htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}">`;
+            htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}" id="${id}">`;
             let selected = "";
             if (value === null) {
                 selected = "selected";
@@ -386,7 +391,7 @@ export default class FormMetaField {
                     break;
                 default:
                 case "input":
-                    htmlElement = `<input type="${inputType}" name="${name}" class="${htmlClass}" id="${id}" ${htmlPlaceholder} ${htmlValue} ${checked} ${disabled}>`;
+                    htmlElement = `<input type="${inputType}" name="${name}" class="${htmlClass}" id="${id}" ${htmlPlaceholder} ${htmlValue} ${checked} ${disabled}/>`;
                     break;
 
             }

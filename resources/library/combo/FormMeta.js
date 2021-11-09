@@ -45,9 +45,6 @@ export default class FormMeta {
     }
 
 
-
-
-
     getType() {
         return this.properties["type"];
     }
@@ -88,7 +85,7 @@ export default class FormMeta {
         }
         let tabs = json["tabs"];
         for (let tab in tabs) {
-            if(tabs.hasOwnProperty(tab)) {
+            if (tabs.hasOwnProperty(tab)) {
                 form.addTab(FormMetaTab.createFromJson(tabs[tab]));
             }
         }
@@ -106,6 +103,10 @@ export default class FormMeta {
      */
     addFormField(formField) {
         this.formFields[formField.getName()] = formField;
+        // Be sure to have a tab for each field
+        if(!this.tabs.hasOwnProperty(formField.getTab())){
+            this.tabs[formField.getTab()]=FormMetaTab.createFromName(formField.getTab());
+        }
         return this;
     }
 
@@ -126,15 +127,15 @@ export default class FormMeta {
     }
 
     addTab(formMetaTab) {
-        this.tabs[formMetaTab.getName()]=formMetaTab;
+        this.tabs[formMetaTab.getName()] = formMetaTab;
     }
 
-    valueOf(){
+    valueOf() {
         return this.getName();
     };
 
     getFieldsForTab(tabName) {
-        return this.getFields().filter(e=>e.getName()===tabName);
+        return this.getFields().filter(e => e.getTab() === tabName);
     }
 
     toHtmlElement(formId) {
@@ -261,7 +262,7 @@ export default class FormMeta {
         htmlTabPans += "</div>";
 
         let form = document.createElement("form");
-        form.setAttribute("id",formId);
+        form.setAttribute("id", formId);
         form.innerHTML = `${htmlTabNavs} ${htmlTabPans}`;
         return form;
     }

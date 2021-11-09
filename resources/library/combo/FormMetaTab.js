@@ -59,6 +59,9 @@ export default class FormMetaTab {
     }
 
     getLabel(){
+        if(this.label===undefined){
+            return this.name;
+        }
         return this.label;
     }
 
@@ -84,5 +87,9 @@ export default class FormMetaTab {
             return 12 - this.getLabelWidth();
         }
         return this.widthField;
+    }
+
+    static createFromName(name) {
+        return new FormMetaTab(name);
     }
 }

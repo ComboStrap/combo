@@ -5,6 +5,7 @@
 
 
 import FormMeta from "./FormMeta";
+import Xml from "./Xml";
 
 test('Json to Form Object', () => {
 
@@ -105,18 +106,83 @@ test('Json to Form Object', () => {
      * Tab
      */
     let tabs = formMeta.getTabs()
-    expect(tabs.length).toBe(1);
+    expect(tabs.length).toBe(2); // a default tab was created for the second field
     let firstTab = tabs[0];
     expect(firstTab.getName()).toBe(firstFieldTab);
     expect(firstTab.getLabel()).toBe(firstTabLabel);
     expect(firstTab.getLabelWidth()).toBe(firstTabWidhtLabel);
     expect(firstTab.getFieldWidth()).toBe(firstTabWidthField);
 
+    // The default tab
+    let secondTab = tabs[1];
+    expect(secondTab.getName()).toBe("unknown");
+    expect(secondTab.getLabel()).toBe("unknown");
+    expect(secondTab.getLabelWidth()).toBe(3);
+    expect(secondTab.getFieldWidth()).toBe(9);
+
     /**
      * To html
      */
     let htmlForm = formMeta.toHtmlElement("formId")
-    let actual = htmlForm.outerHTML;
-    expect(actual).toEqual("<form></form>");
+    /**
+     * createFromHtmlString and not from xml
+     * because the form has an input element and therefore does not pass XML
+     * because an input element does not close
+     * @type {string}
+     */
+    let actual = Xml.createFromHtmlString(htmlForm.outerHTML).normalize();
+    let expected = `<form id="formId">
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+      <button class="nav-link active" id="formId-tab-nav-TheTab" type="button" role="tab" aria-selected="true" aria-controls="formId-tab-pane-TheTab" data-bs-toggle="tab" data-bs-target="#formId-tab-pane-TheTab">
+      label first tab
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link " id="formId-tab-nav-unknown" type="button" role="tab" aria-selected="false" aria-controls="formId-tab-pane-unknown" data-bs-toggle="tab" data-bs-target="#formId-tab-pane-unknown">
+      unknown
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane active" id="formId-tab-pane-TheTab" role="tabpanel" aria-labelledby="formId-tab-nav-TheTab">
+      <div class="row mb-3">
+        <label for="formId-control-1" class="col-sm-4 col-form-label">
+          <a href="https://combostrap.com/first" title="The big youpla" data-bs-toggle="tooltip" style="text-decoration:none">
+          Youpla
+          </a>
+        </label>
+        <div class="col-sm-4">
+          <select class="form-select" aria-label="Youpla" name="first" id="formId-control-1">
+            <option value="">
+            Default (1)
+            </option>
+            <option value="holy">
+            holy
+            </option>
+            <option value="median">
+            median
+            </option>
+            <option value="landing">
+            landing
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane " id="formId-tab-pane-unknown" role="tabpanel" aria-labelledby="formId-tab-nav-unknown">
+      <div class="row mb-3">
+        <label for="formId-control-2" class="col-sm-3 col-form-label">
+        Second
+        </label>
+        <div class="col-sm-3">
+          <input type="text" name="second" class="form-control" id="formId-control-2" placeholder="Enter a Second">
+          </input>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>`;
+    expect(actual).toEqual(expected);
 
 });

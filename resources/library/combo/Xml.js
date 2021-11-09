@@ -1,3 +1,9 @@
+import Logger from "./Logger";
+
+/**
+ * DOM Xml/Html parsing
+ * https://w3c.github.io/DOM-Parsing/
+ */
 let prettifyXsltProcessor;
 
 
@@ -26,9 +32,24 @@ function initXslProcessor() {
 
 export default class Xml {
 
-    constructor(xmlString) {
+
+    constructor(xmlString, type) {
         this.xmlString = xmlString;
-        this.xmlDoc = new DOMParser().parseFromString(this.xmlString, 'application/xml');
+        /**
+         * https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString
+         * @type {Document}
+         */
+        this.xmlDoc = new DOMParser().parseFromString(this.xmlString, type);
+        const errorNode = this.xmlDoc.querySelector('parsererror');
+        if (errorNode) {
+            // parsing failed
+            Logger.getLogger().error(`Error (${errorNode.textContent}) while parsing the (${type}) string: ${this.xmlString}`);
+        }
+        if(type==="text/html"){
+            this.documentElement = this.xmlDoc.body.firstChild;
+        } else {
+            this.documentElement = this.xmlDoc.documentElement
+        }
     }
 
     /**
@@ -52,13 +73,24 @@ export default class Xml {
             // https://beautifier.io/
 
 
-            return Xml.print(this.xmlDoc.documentElement);
+            return Xml.print(this.documentElement);
         }
 
     }
 
-    static createFromString(xmlString) {
-        return new Xml(xmlString)
+    static createFromXmlString(xmlString) {
+        return new Xml(xmlString, "application/xml")
+    }
+
+    /**
+     * Used when parsing HTML element that are not XHTML compliant
+     * such as input that does not close.
+     *
+     * @param xmlString
+     * @return {Xml}
+     */
+    static createFromHtmlString(xmlString) {
+        return new Xml(xmlString,"text/html")
     }
 
     /**
@@ -71,7 +103,9 @@ export default class Xml {
     static walk(xmlElement, output = [], level = 0) {
 
         let prefix = "  ".repeat(level);
-        let enterTag = `${prefix}<${xmlElement.nodeName}`;
+        // ToLowercase because the HTML DOMParser create uppercase node name on Node
+        let nodeNameLowerCase = xmlElement.nodeName.toLowerCase();
+        let enterTag = `${prefix}<${nodeNameLowerCase}`;
         if (xmlElement.hasAttributes()) {
             for (let attribute of xmlElement.getAttributeNames()) {
                 let value = xmlElement.getAttribute(attribute);
@@ -82,11 +116,34 @@ export default class Xml {
         output.push(enterTag)
         if (xmlElement.hasChildNodes()) {
             level++;
-            for (let child of xmlElement.children) {
-                Xml.walk(child, output, level);
+            let childNodes = xmlElement.childNodes;
+            for (let i = 0; i < childNodes.length; i++) {
+                let child = childNodes[i];
+                let type = child.nodeType;
+                switch (type) {
+                    case child.TEXT_NODE:
+                        /**
+                         * Not complete
+                         * as define here:
+                         * https://w3c.github.io/DOM-Parsing/#xml-serializing-a-text-node
+                         * but enough for now
+                         * @type {string}
+                         */
+                        let textContent = child.textContent.trim();
+                        if (textContent) {
+                            output.push(`${prefix}${textContent}`);
+                        }
+                        break;
+                    case child.ELEMENT_NODE:
+                        if (child instanceof Element) {
+                            Xml.walk(child, output, level);
+                        }
+                        break;
+                }
+
             }
         }
-        output.push(`${prefix}</${xmlElement.nodeName}>`);
+        output.push(`${prefix}</${nodeNameLowerCase}>`);
         return output;
     }
 

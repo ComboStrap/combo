@@ -5,10 +5,19 @@ test('Xml', () => {
 
     let xhtml =
 `
-<form id="1"><div><div><span></span></div></div></form>
+<form id="1"><div><div><span>Test</span></div></div></form>
 `
-    let xml = Xml.createFromString(xhtml);
+    let xml = Xml.createFromXmlString(xhtml);
     let actual = xml.normalize();
-    expect(actual).toBe("");
+    let expected = `<form id="1">
+  <div>
+    <div>
+      <span>
+      Test
+      </span>
+    </div>
+  </div>
+</form>`
+    expect(actual).toBe(expected);
 
 })

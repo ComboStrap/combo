@@ -66,7 +66,6 @@ export default class FormMetaField {
     }
 
 
-
     getType() {
         return this.type;
     }
@@ -104,7 +103,7 @@ export default class FormMetaField {
      */
     static createFromJson(json) {
         if (!json.hasOwnProperty("name")) {
-            throw new Error("To create a form meta field, the name property is mandatory.")
+            Logger.getLogger.error("To create a form meta field, the name property is mandatory.");
         }
         let name = json["name"];
         let formMetaField = FormMetaField.createFromName(name);
@@ -146,11 +145,25 @@ export default class FormMetaField {
                 case "domain-values":
                     formMetaField.setDomainValues(jsonValue);
                     continue;
+                case "width":
+                    formMetaField.setControlWidth(jsonValue);
+                    continue;
                 default:
                     Logger.getLogger().error(`The property (${property}) of the form (${name}) is unknown`);
             }
         }
-        formMetaField.addValue(value, valueDefault);
+        if (!Array.isArray(value)) {
+            formMetaField.addValue(value, valueDefault);
+        } else {
+            value.forEach((element, index) => {
+                let valueDefaultElement = valueDefault[index];
+                if (valueDefaultElement !== undefined) {
+                    formMetaField.addValue(element, valueDefaultElement);
+                } else {
+                    formMetaField.addValue(element);
+                }
+            })
+        }
         return formMetaField;
     }
 
@@ -189,16 +202,39 @@ export default class FormMetaField {
         return this.values[0];
     }
 
-    getDomainValues(){
+    getDomainValues() {
         return this.domainValues;
     }
 
     setDomainValues(value) {
-        if(!Array.isArray(value)){
+        if (!Array.isArray(value)) {
             console.error(`The domains values should be an array. (${value}) is not an array`);
             return;
         }
         this.domainValues = value;
         return this;
     }
+
+    /**
+     *
+     * @param width - the width of the control, not of the label as it can be derived - in a tabular form, there is none, otherwise the {@link FormMetaTab.getWidth total width} of the tab minus this control width)
+     * @return {FormMetaField}
+     */
+    setControlWidth(width) {
+        this.width = width;
+        return this;
+    }
+
+    getControlWidth() {
+        return this.width;
+    }
+
+    getValues(){
+        return this.values;
+    }
+
+    getDefaultValues(){
+        return this.defaultValues;
+    }
+
 }

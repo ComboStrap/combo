@@ -1,277 +1,12 @@
-
-class ComboModal {
-
-    /**
-     * @type HTMLDivElement
-     */
-    modalFooter;
-
-    /**
-     * A valid HTML id
-     * @param modalId
-     */
-    constructor(modalId) {
-
-        this.modalId = modalId;
-
-        this.modalRoot = document.createElement("div");
-
-        document.body.appendChild(this.modalRoot);
-        this.modalRoot.setAttribute("id", modalId);
-        this.modalRoot.classList.add("modal", "fade");
-        // Uncaught RangeError: Maximum call stack size exceeded caused by the tabindex
-        // modalRoot.setAttribute("tabindex", "-1");
-        this.modalRoot.setAttribute("aria-hidden", "true");
-
-        const modalManagerDialog = document.createElement("div");
-        modalManagerDialog.classList.add(
-            "modal-dialog",
-            "modal-dialog-scrollable",
-            "modal-fullscreen-md-down",
-            "modal-lg");
-        // Get the modal more central but fix as we have tab and
-        // we want still the mouse below the tab when we click
-        modalManagerDialog.style.setProperty("margin", "5rem auto");
-        modalManagerDialog.style.setProperty("height", "calc(100% - 9rem)");
-        this.modalRoot.appendChild(modalManagerDialog);
-        this.modalContent = document.createElement("div");
-        this.modalContent.classList.add("modal-content");
-        modalManagerDialog.appendChild(this.modalContent);
-
-        this.modalBody = document.createElement("div");
-        this.modalBody.classList.add("modal-body");
-        this.modalContent.appendChild(this.modalBody);
-
-        /**
-         * The modal can only be invoked when the body has been defined
-         *
-         */
-        let options = {
-            "backdrop": true,
-            "keyboard": true,
-            "focus": true
-        };
-        this.bootStrapModal = new bootstrap.Modal(this.modalRoot, options);
-    }
-
-    setHeader(headerText) {
-        let html = `
-<div class="modal-header">
-    <h5 class="modal-title">${headerText}</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-</div>
-`;
-        this.modalContent.insertAdjacentHTML('afterbegin', html);
-    }
-
-    addBody(htmlBody) {
-
-        this.modalBody.innerHTML = htmlBody;
-
-    }
-
-    createModalFooter() {
-        this.modalFooter = document.createElement("div");
-        this.modalFooter.classList.add("modal-footer");
-        this.modalContent.appendChild(this.modalFooter);
-    }
-
-    /**
-     *
-     * @type HTMLButtonElement|string htmlFooter
-     */
-    addFooterButton(htmlFooter) {
-
-
-        if (this.modalFooter === undefined) {
-            this.createModalFooter();
-        }
-        if (typeof htmlFooter === 'string' || htmlFooter instanceof String) {
-            this.modalFooter.insertAdjacentHTML('beforeend', htmlFooter);
-        } else {
-            this.modalFooter.appendChild(htmlFooter);
-        }
-
-
-    }
-
-    /**
-     *
-     * @return HTMLButtonElement the close button
-     */
-    addFooterCloseButton(label = "Close") {
-        let closeButton = document.createElement("button");
-        closeButton.classList.add("btn", "btn-secondary")
-        closeButton.innerText = label;
-        let modal = this;
-        closeButton.addEventListener("click", function () {
-            modal.bootStrapModal.hide();
-        });
-        this.addFooterButton(closeButton);
-        return closeButton;
-    }
-
-    show() {
-
-
-        this.bootStrapModal.show();
-        /**
-         * Init the tooltip if any
-         */
-        let tooltipSelector = `#${this.modalId} [data-bs-toggle="tooltip"]`;
-        document.querySelectorAll(tooltipSelector).forEach(el => new bootstrap.Tooltip(el));
-    }
-
-    dismiss() {
-        this.bootStrapModal.hide();
-    }
-
-    getId() {
-        return this.modalId;
-    }
-}
-
-class DokuAjaxUrl {
-
-    constructor(call) {
-        this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
-
-        this.url.searchParams.set("call", call);
-        this.url.searchParams.set("id", JSINFO.id);
-    }
-
-
-    setProperty(key, value) {
-        this.url.searchParams.set(key, value);
-        return this;
-    }
-
-    toString() {
-        return this.url.toString();
-    }
-}
-
-class DokuAjaxRequest {
-
-
-    method = "GET";
-
-    constructor(call) {
-
-        this.url = new DokuAjaxUrl(call);
-
-    }
-
-    async getJson() {
-
-        let response = await fetch(this.url.toString(), {method: this.method});
-
-        if (response.status !== 200) {
-            console.log('Bad request, status Code is: ' + response.status);
-            return {};
-        }
-
-        // Parses response data to JSON
-        //   * response.json()
-        //   * response.text()
-        // are promise, you need to pass them to a callback to get the value
-        return response.json();
-
-    }
-
-    setMethod(method) {
-        this.method = method;
-    }
-
-    setProperty(key, value) {
-        this.url.setProperty(key, value);
-        return this;
-    }
-}
-
-
-let combo = {};
-
-/**
- * Create a ajax call
- * @return DokuAjaxRequest
- */
-combo.createDokuRequest = function (call) {
-
-    return new DokuAjaxRequest(call);
-}
-
-combo.createMetaField = function (properties) {
-    return new FormMetaField(properties);
-}
-
-/**
- * A pointer to the created modals
- */
-let comboModals = {};
-
-/**
- *
- * @param modalId
- * @return {ComboModal}
- */
-combo.getModal = function (modalId) {
-    return comboModals[modalId];
-}
-/**
- * Create a modal and return the modal content element
- * @return ComboModal
- */
-combo.createModal = function (modalId) {
-    let modal = new ComboModal(modalId);
-    comboModals[modalId] = modal;
-    return modal;
-}
-
-/**
- * List the managed modals
- */
-combo.listModals = function () {
-    console.log(Object.keys(comboModals).join(", "));
-}
-
-/**
- * Delete all modals
- */
-combo.destroyAllModals = function () {
-    Object.keys(comboModals).forEach(modalId => {
-        document.getElementById(modalId).remove();
-    })
-    comboModals = {};
-}
-
-/**
- *
- * @param {{}} dataFields
- * @return {{FormField[]}}
- */
-let toFormFieldsByTabs = function (dataFields) {
+import FormMeta from "./FormMeta";
+import Html from "./Html";
 
 
 
+export function toForm(formId, jsonMetaDataObject) {
 
+    let formMeta = FormMeta.createFromJson(jsonMetaDataObject);
 
-    return formFieldsByTab;
-}
-
-combo.toHtmlId = function (s) {
-    /**
-     * A point is also replaced otherwise you
-     * can't use the id as selector in CSS
-     */
-    return s
-        .toString() // in case of number
-        .replace(/[_.\s:\/\\]/g, "-");
-}
-
-combo.toForm = function (formId, jsonMetaDataObject) {
-
-    let formFieldsByTab = FormMeta.createFromJson(jsonMetaDataObject);
     /**
      * Creating the Body
      * (Starting with the tabs)
@@ -280,22 +15,22 @@ combo.toForm = function (formId, jsonMetaDataObject) {
     let activeClass;
     let ariaSelected;
     this.getTabPaneId = function (id) {
-        let htmlId = combo.toHtmlId(id);
+        let htmlId = Html.toHtmlId(id);
         return `${formId}-tab-pane-${htmlId}`;
     }
     this.getTabNavId = function (id) {
-        let htmlId = combo.toHtmlId(id);
+        let htmlId = Html.toHtmlId(id);
         return `${formId}-tab-nav-${htmlId}`;
     }
     this.getControlId = function (id) {
-        let htmlId = combo.toHtmlId(id);
+        let htmlId = Html.toHtmlId(id);
         return `${formId}-control-${htmlId}`;
     }
-    let tabsMeta = jsonMetaDataObject["ui"]["tabs"];
+    let tabsMeta = formMeta.getTabs();
 
     // Merge the tab found in the tab metas and in the field
     // to be sure to let no error
-    let tabsFromField = Object.keys(formFieldsByTab);
+    let tabsFromField = Object.keys(formMeta);
     let tabsFromMeta = Object.keys(tabsMeta);
     let defaultTab = tabsFromMeta[0];
     let tabsMerged = tabsFromMeta.concat(tabsFromField.filter(element => tabsFromMeta.indexOf(element) < 0))
@@ -334,8 +69,8 @@ combo.toForm = function (formId, jsonMetaDataObject) {
     let rightColSize;
     let leftColSize;
     let elementIdCounter = 0;
-    for (let tab in formFieldsByTab) {
-        if (!formFieldsByTab.hasOwnProperty(tab)) {
+    for (let tab in formMeta) {
+        if (!formMeta.hasOwnProperty(tab)) {
             continue;
         }
         let tabPaneId = this.getTabPaneId(tab);
@@ -355,7 +90,7 @@ combo.toForm = function (formId, jsonMetaDataObject) {
             rightColSize = 9;
         }
 
-        for (/** @type {FormMetaField} **/ let formField of formFieldsByTab[tab]) {
+        for (/** @type {FormMetaField} **/ let formField of formMeta[tab]) {
 
             let datatype = formField.getType();
             switch (datatype) {
@@ -411,8 +146,4 @@ combo.toForm = function (formId, jsonMetaDataObject) {
     return `<form id="${formId}">${htmlTabNavs} ${htmlTabPans}</form>`;
 }
 
-let createFormField = function () {
-    return new FormMetaField();
-}
 
-module.exports = combo;

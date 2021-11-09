@@ -9,7 +9,7 @@ import FormMeta from "./FormMeta";
 test('Json to Form Object', () => {
 
     let formName = "my-form";
-    let firstFiedlName = "first";
+    let firstFieldName = "first";
     let firstFieldLabel = "Youpla";
     let firstFieldTab = "TheTab";
     let firstFieldType = "text";
@@ -23,11 +23,30 @@ test('Json to Form Object', () => {
         "median",
         "landing"
     ];
+    let secondFieldName = "second";
+    let firstFieldWidth = 8;
+    let secondFieldValue = [
+        null,
+        null,
+        null,
+        null,
+        null
+    ];
+    let secondFieldDefaultValue = [
+        ":illustration.png",
+        null,
+        null,
+        null,
+        null
+    ];
+    let firstTabLabel = "label first tab";
+    let firstTabWidthField = 8;
+    let firstTabWidhtLabel = 4;
     let formMetadata = {
         "name": formName,
         "fields": {
             "first": {
-                "name": firstFiedlName,
+                "name": firstFieldName,
                 "label": firstFieldLabel,
                 "tab": firstFieldTab,
                 "type": firstFieldType,
@@ -37,19 +56,34 @@ test('Json to Form Object', () => {
                 "default": firstFieldDefaultValue,
                 "value": firstFieldValue,
                 "domain-values": firstFieldDomainValues,
+                "width": firstFieldWidth,
+            },
+            "second": {
+                "name": secondFieldName,
+                "value": secondFieldValue,
+                "default": secondFieldDefaultValue
             }
         },
-        "tabs": {"TheTab": {"name": "TheTab"}}
+        "tabs": {
+            firstFieldTab:
+                {
+                    "name": firstFieldTab,
+                    "label": firstTabLabel,
+                    "width-field": firstTabWidthField,
+                    "width-label": firstTabWidhtLabel
+                }
+        }
     };
     let form = FormMeta.createFromJson(formMetadata);
     expect(form.getName()).toBe(formName);
     let fields = form.getFields();
-    expect(fields.length).toBe(1);
+    expect(fields.length).toBe(2);
+
     /**
      * @type {FormMetaField}
      */
     let field = fields[0];
-    expect(field.getName()).toBe(firstFiedlName);
+    expect(field.getName()).toBe(firstFieldName);
     expect(field.getLabel()).toBe(firstFieldLabel);
     expect(field.getTab()).toBe(firstFieldTab);
     expect(field.getType()).toBe(firstFieldType);
@@ -60,5 +94,22 @@ test('Json to Form Object', () => {
     expect(field.getDefaultValue()).toBe(firstFieldDefaultValue);
     expect(field.getValue()).toBe(firstFieldValue);
     expect(field.getDomainValues()).toBe(firstFieldDomainValues);
+    expect(field.getControlWidth()).toBe(firstFieldWidth);
+
+    let field2 = fields[1];
+    expect(field2.getName()).toBe(secondFieldName);
+    expect(field2.getValues()).toEqual(secondFieldValue);
+    expect(field2.getDefaultValues()).toEqual(secondFieldDefaultValue);
+
+    /**
+     * Tab
+     */
+    let tabs = form.getTabs()
+    expect(tabs.length).toBe(1);
+    let firstTab = tabs[0];
+    expect(firstTab.getName()).toBe(firstFieldTab);
+    expect(firstTab.getLabel()).toBe(firstTabLabel);
+    expect(firstTab.getLabelWidth()).toBe(firstTabWidhtLabel);
+    expect(firstTab.getFieldWidth()).toBe(firstTabWidthField);
 
 });

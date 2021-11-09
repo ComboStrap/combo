@@ -1,16 +1,16 @@
+import FormMetaField from "./FormMetaField";
+import FormMetaTab from "./FormMetaTab";
+
 /**
  * Represent the top meta
  * data from a form
  */
-import FormMetaField from "./FormMetaField";
-
-
 export default class FormMeta {
 
     label;
-
     formFields = {};
     name;
+    tabs = {};
 
 
     constructor(name) {
@@ -206,6 +206,12 @@ export default class FormMeta {
                 form.addFormField(FormMetaField.createFromJson(fields[field]));
             }
         }
+        let tabs = json["tabs"];
+        for (let tab in tabs) {
+            if(tabs.hasOwnProperty(tab)) {
+                form.addTab(FormMetaTab.createFromJson(tabs[tab]));
+            }
+        }
         return form;
     }
 
@@ -229,5 +235,13 @@ export default class FormMeta {
      */
     getFields() {
         return Object.values(this.formFields);
+    }
+
+    getTabs() {
+        return Object.values(this.tabs);
+    }
+
+    addTab(formMetaTab) {
+        this.tabs[formMetaTab.getName()]=formMetaTab;
     }
 }

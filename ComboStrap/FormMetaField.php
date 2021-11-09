@@ -19,7 +19,7 @@ class FormMetaField
 
 
     /**
-     * The tabs attribute and value
+     * The JSON attribute
      */
     public const TAB_ATTRIBUTE = "tab";
     public const LABEL_ATTRIBUTE = "label";
@@ -27,7 +27,7 @@ class FormMetaField
     public const HYPERLINK_ATTRIBUTE = "link";
     public const MUTABLE_ATTRIBUTE = "mutable";
     /**
-     * The JSON attribute for each parameter
+     * A value may be a scalar or an array
      */
     public const VALUE_ATTRIBUTE = "value";
     public const DEFAULT_VALUE_ATTRIBUTE = "default";

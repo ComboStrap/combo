@@ -14,7 +14,13 @@ export default class Logger {
 
     error(value){
         console.error(value);
-        if (typeof jest !== 'undefined'){
+        /**
+         * Removed by parcel when build
+         * https://parceljs.org/features/production/#development-branch-removal
+         * And set by Jest to test
+         * https://jestjs.io/docs/environment-variables#node_env
+         */
+        if (process.env.NODE_ENV !== 'production') {
             throw new Error(value);
         }
     }

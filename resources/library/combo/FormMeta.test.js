@@ -5,7 +5,7 @@
 
 
 import FormMeta from "./FormMeta";
-import Xml from "./Xml";
+import Dom from "./Xml";
 
 test('Json to Form Object', () => {
 
@@ -130,7 +130,7 @@ test('Json to Form Object', () => {
      * because an input element does not close
      * @type {string}
      */
-    let actual = Xml.createFromHtmlString(htmlForm.outerHTML).normalize();
+    let actual = Dom.createFromHtmlString(htmlForm.outerHTML).normalize();
     let expected = `<form id="formId">
   <ul class="nav nav-tabs mb-3">
     <li class="nav-item">
@@ -177,7 +177,6 @@ test('Json to Form Object', () => {
         </label>
         <div class="col-sm-3">
           <input type="text" name="second" class="form-control" id="formId-control-2" placeholder="Enter a Second">
-          </input>
         </div>
       </div>
     </div>

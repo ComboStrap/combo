@@ -143,7 +143,10 @@ export default class Xml {
 
             }
         }
-        output.push(`${prefix}</${nodeNameLowerCase}>`);
+        // input is a self-closing tag
+        if(nodeNameLowerCase!=="input") {
+            output.push(`${prefix}</${nodeNameLowerCase}>`);
+        }
         return output;
     }
 

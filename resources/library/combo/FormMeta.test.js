@@ -112,4 +112,11 @@ test('Json to Form Object', () => {
     expect(firstTab.getLabelWidth()).toBe(firstTabWidhtLabel);
     expect(firstTab.getFieldWidth()).toBe(firstTabWidthField);
 
+    /**
+     * To html
+     */
+    let htmlForm = form.toHtmlForm("formId")
+    let actual = htmlForm.outerHTML;
+    expect(actual).toEqual("<form></form>");
+
 });

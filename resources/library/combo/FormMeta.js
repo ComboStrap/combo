@@ -1,5 +1,8 @@
+'use strict';
+
 import FormMetaField from "./FormMetaField";
 import FormMetaTab from "./FormMetaTab";
+import Html from "./Html";
 
 /**
  * Represent the top meta
@@ -41,134 +44,9 @@ export default class FormMeta {
         return label;
     }
 
-    getHtmlLabel(forId, customClass) {
-        let label = this.getLabelUrl();
-        let classLabel = "";
-        if (this.getType() === "boolean") {
-            classLabel = "form-check"
-        } else {
-            classLabel = "col-form-label";
-        }
-        return `<label for="${forId}" class="${customClass} ${classLabel}">${label}</label>`
-    }
-
-    getHtmlControl(id, value, defaultValue) {
-
-        let metadataType = this.properties["type"];
-        let mutable = this.properties["mutable"];
-        let domainValues = this.properties["domain-values"];
-        let disabled;
-        let htmlElement;
-
-        /**
-         * The creation of the form element
-         */
-        if (domainValues !== undefined) {
-
-            /**
-             * Select element
-             * @type {string}
-             */
-            htmlElement = "select";
-            let defaultValueHtml = "";
-            if (defaultValue !== undefined) {
-                defaultValueHtml = ` (${defaultValue})`;
-            }
-
-            htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}">`;
-            let selected = "";
-            if (value === null) {
-                selected = "selected";
-            }
-            htmlElement += `<option value="" ${selected}>Default${defaultValueHtml}</option>`;
-            for (let selectValue of domainValues) {
-                if (selectValue === value) {
-                    selected = "selected";
-                } else {
-                    selected = "";
-                }
-                htmlElement += `<option value="${selectValue}" ${selected}>${selectValue}</option>`;
-            }
-            htmlElement += `</select>`;
-            return htmlElement;
 
 
-        } else {
 
-            let htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
-            if (!(defaultValue === null || defaultValue === undefined)) {
-                htmlPlaceholder = `placeholder="${defaultValue}"`;
-            }
-            let htmlValue = "";
-            let inputType;
-            let name = this.getName();
-
-            /**
-             * With disable, the data is not in the form
-             */
-            if (mutable !== undefined && mutable === false) {
-                disabled = "disabled";
-            } else {
-                disabled = "";
-            }
-
-            /**
-             * Input Element
-             * @type {string}
-             */
-            let htmlTag = "input";
-            let htmlClass = "form-control";
-            let checked = "";
-
-            /**
-             * Type ?
-             */
-            switch (metadataType) {
-                case "datetime":
-                    inputType = "datetime-local";
-                    if (value !== null) {
-                        value = value.slice(0, 19);
-                    }
-                    if (value !== null) {
-                        htmlValue = `value="${value}"`;
-                    }
-                    break;
-                case "paragraph":
-                    htmlTag = "textarea";
-                    if (value !== null) {
-                        htmlValue = `${value}`;
-                    }
-                    break;
-                case "boolean":
-                    inputType = "checkbox";
-                    htmlClass = "form-check-input";
-                    if (value === defaultValue) {
-                        checked = "checked"
-                    }
-                    htmlValue = `value="${value}"`;
-                    htmlPlaceholder = "";
-                    break;
-                case "line":
-                default:
-                    inputType = "text";
-                    if (!(value === null || value === undefined)) {
-                        htmlValue = `value="${value}"`;
-                    }
-            }
-
-            switch (htmlTag) {
-                case "textarea":
-                    htmlElement = `<textarea id="${id}" name="${name}" class="${htmlClass}" rows="3" ${htmlPlaceholder} >${htmlValue}</textarea>`;
-                    break;
-                default:
-                case "input":
-                    htmlElement = `<input type="${inputType}" name="${name}" class="${htmlClass}" id="${id}" ${htmlPlaceholder} ${htmlValue} ${checked} ${disabled}>`;
-                    break;
-
-            }
-            return htmlElement;
-        }
-    }
 
     getType() {
         return this.properties["type"];
@@ -258,5 +136,135 @@ export default class FormMeta {
     getFieldsForTab(tabName) {
         return this.getFields().filter(e=>e.getName()===tabName);
     }
+
+    toHtmlForm(formId) {
+
+        /**
+         * Creating the Body
+         * (Starting with the tabs)
+         */
+        let htmlTabNavs = '<ul class="nav nav-tabs mb-3">';
+        let activeClass;
+        let ariaSelected;
+        this.getTabPaneId = function (tab) {
+            let htmlId = Html.toHtmlId(tab.getName());
+            return `${formId}-tab-pane-${htmlId}`;
+        }
+        this.getTabNavId = function (tab) {
+            let htmlId = Html.toHtmlId(tab.getName());
+            return `${formId}-tab-nav-${htmlId}`;
+        }
+        this.getControlId = function (id) {
+            let htmlId = Html.toHtmlId(id);
+            return `${formId}-control-${htmlId}`;
+        }
+        let tabsMeta = this.getTabs();
+        let defaultTab = tabsMeta[0];
+        for (let tab of tabsMeta) {
+            if (Object.is(tab, defaultTab)) {
+                activeClass = "active";
+                ariaSelected = "true";
+            } else {
+                activeClass = "";
+                ariaSelected = "false";
+            }
+            let tabLabel = tab.getLabel();
+            let tabPanId = this.getTabPaneId(tab);
+            let tabNavId = this.getTabNavId(tab);
+            htmlTabNavs += `
+<li class="nav-item">
+<button
+    class="nav-link ${activeClass}"
+    id="${tabNavId}"
+    type="button"
+    role="tab"
+    aria-selected = "${ariaSelected}"
+    aria-controls = "${tabPanId}"
+    data-bs-toggle = "tab"
+    data-bs-target = "#${tabPanId}" >${tabLabel}
+    </button>
+</li>`
+        }
+        htmlTabNavs += '</ul>';
+
+        /**
+         * Creating the content
+         * @type {string}
+         */
+        let htmlTabPans = "<div class=\"tab-content\">";
+        let rightColSize;
+        let leftColSize;
+        let elementIdCounter = 0;
+        for (let tab of tabsMeta) {
+            let tabPaneId = this.getTabPaneId(tab);
+            let tabNavId = this.getTabNavId(tab);
+            if (tab === defaultTab) {
+                activeClass = "active";
+            } else {
+                activeClass = "";
+            }
+            htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
+            leftColSize = tab.getLabelWidth();
+            rightColSize = tab.getLabelWidth();
+
+            for (let formField of this.getFieldsForTab(tab.getName())) {
+
+                let datatype = formField.getType();
+                switch (datatype) {
+                    // number of children may also work ?
+                    case FormMetaField.TABULAR_TYPE:
+                        let url = formField.getLabelLink();
+                        htmlTabPans += `<div class="row mb-3 text-center">${url}</div>`;
+                        htmlTabPans += `<div class="row mb-3">`;
+                        for (const child of formField.getChildren()) {
+                            let width = child.getControlWidth();
+                            htmlTabPans += `<div class="col-sm-${width} text-center">`;
+                            htmlTabPans += child.getLabelLink();
+                            htmlTabPans += `</div>`;
+                        }
+                        htmlTabPans += `</div>`;
+                        htmlTabPans += `<div class="row mb-3">`;
+                        for (const child of formField.getChildren()) {
+                            let values = child.getValues();
+                            let defaultValues = child.getDefaultValues();
+                            for (let i = 0; i < values.length; i++) {
+                                let value = values[i];
+                                let defaultValue = defaultValues[i];
+                                elementIdCounter++;
+                                let elementId = this.getControlId(elementIdCounter);
+                                let width = child.getControlWidth();
+                                htmlTabPans += `<div class="col-sm-${width}">`;
+                                htmlTabPans += child.toHtmlControl(elementId, value, defaultValue);
+                                htmlTabPans += `</div>`;
+                            }
+                        }
+                        htmlTabPans += `</div>`;
+                        break;
+                    default:
+                        elementIdCounter++;
+                        let elementId = this.getControlId(elementIdCounter);
+                        let labelHtml = formField.toHtmlLabel(elementId, `col-sm-${leftColSize}`);
+                        let value = formField.getValue();
+                        let defaultValue = formField.getValue();
+                        let controlHtml = formField.toHtmlControl(elementId, value, defaultValue)
+                        htmlTabPans += `
+<div class="row mb-3">
+    ${labelHtml}
+    <div class="col-sm-${rightColSize}">${controlHtml}</div>
+</div>
+`;
+                }
+
+            }
+            htmlTabPans += "</div>"
+        }
+        htmlTabPans += "</div>";
+
+        let form = document.createElement("form");
+        form.setAttribute("id",formId);
+        form.innerHTML = `${htmlTabNavs} ${htmlTabPans}`;
+        return form;
+    }
+
 
 }

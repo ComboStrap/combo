@@ -16,12 +16,14 @@ export default class FormMetaField {
     values = [];
     defaultValues = [];
     static TABULAR_TYPE = "tabular";
+    children = {};
+
 
     constructor(name) {
         this.name = name;
     }
 
-    getHtmlAnchor(){
+    getLabelLink() {
         return `<a href="${this.getUrl()}" title="${this.getDescription()}" data-bs-toggle="tooltip" style="text-decoration:none">${this.getLabel()}</a>`;
     }
 
@@ -152,6 +154,15 @@ export default class FormMetaField {
                 case "width":
                     formMetaField.setControlWidth(jsonValue);
                     continue;
+                case "children":
+                    let jsonChildren = jsonValue;
+                    for (let jsonChild in jsonChildren) {
+                        if (jsonChildren.hasOwnProperty(jsonChild)) {
+                            let child = FormMetaField.createFromJson(jsonChild);
+                            formMetaField.addChild(child);
+                        }
+                    }
+                    continue;
                 default:
                     Logger.getLogger().error(`The property (${property}) of the form (${name}) is unknown`);
             }
@@ -233,12 +244,154 @@ export default class FormMetaField {
         return this.width;
     }
 
-    getValues(){
+    getValues() {
         return this.values;
     }
 
-    getDefaultValues(){
+    getDefaultValues() {
         return this.defaultValues;
     }
 
+    /**
+     *
+     * @return {FormMetaField[]}
+     */
+    getChildren() {
+        return Object.values(this.children);
+    }
+
+    addChild(child) {
+        this.children[child.getName()] = child;
+        return this;
+    }
+
+    toHtmlLabel(forId, customClass) {
+        let label = this.getLabelLink();
+        let classLabel = "";
+        if (this.getType() === "boolean") {
+            classLabel = "form-check"
+        } else {
+            classLabel = "col-form-label";
+        }
+        return `<label for="${forId}" class="${customClass} ${classLabel}">${label}</label>`
+    }
+
+    toHtmlControl(id, value, defaultValue) {
+
+        let metadataType = this.getType();
+        let mutable = this.isMutable();
+        let domainValues = this.getDomainValues();
+        let disabled;
+        let htmlElement;
+
+        /**
+         * The creation of the form element
+         */
+        if (domainValues !== undefined) {
+
+            /**
+             * Select element
+             * @type {string}
+             */
+            htmlElement = "select";
+            let defaultValueHtml = "";
+            if (defaultValue !== undefined) {
+                defaultValueHtml = ` (${defaultValue})`;
+            }
+
+            htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}">`;
+            let selected = "";
+            if (value === null) {
+                selected = "selected";
+            }
+            htmlElement += `<option value="" ${selected}>Default${defaultValueHtml}</option>`;
+            for (let selectValue of domainValues) {
+                if (selectValue === value) {
+                    selected = "selected";
+                } else {
+                    selected = "";
+                }
+                htmlElement += `<option value="${selectValue}" ${selected}>${selectValue}</option>`;
+            }
+            htmlElement += `</select>`;
+            return htmlElement;
+
+
+        } else {
+
+            let htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
+            if (!(defaultValue === null || defaultValue === undefined)) {
+                htmlPlaceholder = `placeholder="${defaultValue}"`;
+            }
+            let htmlValue = "";
+            let inputType;
+            let name = this.getName();
+
+            /**
+             * With disable, the data is not in the form
+             */
+            if (mutable !== undefined && mutable === false) {
+                disabled = "disabled";
+            } else {
+                disabled = "";
+            }
+
+            /**
+             * Input Element
+             * @type {string}
+             */
+            let htmlTag = "input";
+            let htmlClass = "form-control";
+            let checked = "";
+
+            /**
+             * Type ?
+             */
+            switch (metadataType) {
+                case "datetime":
+                    inputType = "datetime-local";
+                    if (value !== null) {
+                        value = value.slice(0, 19);
+                    }
+                    if (value !== null) {
+                        htmlValue = `value="${value}"`;
+                    }
+                    break;
+                case "paragraph":
+                    htmlTag = "textarea";
+                    if (value !== null) {
+                        htmlValue = `${value}`;
+                    }
+                    break;
+                case "boolean":
+                    inputType = "checkbox";
+                    htmlClass = "form-check-input";
+                    if (value === defaultValue) {
+                        checked = "checked"
+                    }
+                    htmlValue = `value="${value}"`;
+                    htmlPlaceholder = "";
+                    break;
+                case "line":
+                default:
+                    inputType = "text";
+                    if (!(value === null || value === undefined)) {
+                        htmlValue = `value="${value}"`;
+                    }
+            }
+
+            switch (htmlTag) {
+                case "textarea":
+                    htmlElement = `<textarea id="${id}" name="${name}" class="${htmlClass}" rows="3" ${htmlPlaceholder} >${htmlValue}</textarea>`;
+                    break;
+                default:
+                case "input":
+                    htmlElement = `<input type="${inputType}" name="${name}" class="${htmlClass}" id="${id}" ${htmlPlaceholder} ${htmlValue} ${checked} ${disabled}>`;
+                    break;
+
+            }
+            return htmlElement;
+        }
+
+    }
 }

@@ -31,6 +31,10 @@ export default class Xml {
         this.xmlDoc = new DOMParser().parseFromString(this.xmlString, 'application/xml');
     }
 
+    /**
+     *
+     * @return {string} - a pretty print of the xml string
+     */
     normalize() {
 
         /**
@@ -46,12 +50,9 @@ export default class Xml {
         } else {
             // https://github.com/beautify-web/js-beautify
             // https://beautifier.io/
-            let prettify = Xml.print(this.xmlDoc)
 
-            return `<${this.xmlDoc.documentElement.nodeName}>
-    ${this.xmlDoc.documentElement.innerHTML}
-<${this.xmlDoc.documentElement.nodeName}>
-`
+
+            return Xml.print(this.xmlDoc.documentElement);
         }
 
     }
@@ -60,12 +61,37 @@ export default class Xml {
         return new Xml(xmlString)
     }
 
-    static print(xmlDoc, output) {
+    /**
+     *
+     * @param {Element} xmlElement
+     * @param output
+     * @param level
+     * @return {string[]}
+     */
+    static walk(xmlElement, output = [], level = 0) {
 
-        if(output===undefined){
-            output = ""
+        let prefix = "  ".repeat(level);
+        let enterTag = `${prefix}<${xmlElement.nodeName}`;
+        if (xmlElement.hasAttributes()) {
+            for (let attribute of xmlElement.getAttributeNames()) {
+                let value = xmlElement.getAttribute(attribute);
+                enterTag += ` ${attribute}="${value}"`;
+            }
         }
-        output=`<`
-        return undefined;
+        enterTag += '>';
+        output.push(enterTag)
+        if (xmlElement.hasChildNodes()) {
+            level++;
+            for (let child of xmlElement.children) {
+                Xml.walk(child, output, level);
+            }
+        }
+        output.push(`${prefix}</${xmlElement.nodeName}>`);
+        return output;
+    }
+
+    static print(xmlElement) {
+        let output = this.walk(xmlElement);
+        return output.join("\n")
     }
 }

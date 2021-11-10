@@ -122,14 +122,18 @@ export default class FormMetaField {
     /**
      *
      * @param json
+     * @param {FormMetaField} parent
      * @return {FormMetaField}
      */
-    static createFromJson(json) {
+    static createFromJson(json, parent = null) {
         if (!json.hasOwnProperty("name")) {
             Logger.getLogger().error("To create a form meta field, the name property is mandatory.");
         }
         let name = json["name"];
         let formMetaField = FormMetaField.createFromName(name);
+        if(parent!=null){
+            formMetaField.setParent(parent);
+        }
 
         let value;
         let valueDefault;
@@ -177,7 +181,7 @@ export default class FormMetaField {
                         if (!jsonChildren.hasOwnProperty(jsonChildProp)) {
                             continue;
                         }
-                        let child = FormMetaField.createFromJson(jsonChildren[jsonChildProp]);
+                        let child = FormMetaField.createFromJson(jsonChildren[jsonChildProp], formMetaField);
                         formMetaField.addChild(child);
                     }
                     continue;
@@ -198,6 +202,11 @@ export default class FormMetaField {
             })
         }
         return formMetaField;
+    }
+
+    setParent(parent) {
+        this.parent = parent;
+        return this;
     }
 
     /**
@@ -264,6 +273,9 @@ export default class FormMetaField {
     }
 
     getControlWidth() {
+        if(this.width===undefined && this.parent!==undefined){
+            return 12 / this.parent.getChildren().length;
+        }
         return this.width;
     }
 

@@ -5,7 +5,7 @@
 
 
 import FormMeta from "../FormMeta";
-import Dom from "../Xml";
+import Xml from "../Xml";
 
 /**
  * Test tabs and field children
@@ -135,15 +135,17 @@ test('Json to Form Object', () => {
 
     /**
      * To html
+     * This test is a sort of snapshot test
+     * where the snapshot is the form html in the heredoc
      */
     let htmlForm = formMeta.toHtmlElement("formId")
     /**
-     * createFromHtmlString and not from xml
+     * {@link Xml.createFromHtmlString} and not from {@link Xml.createFromXmlString}
      * because the form has an input element and therefore does not pass XML
      * because an input element does not close
      * @type {string}
      */
-    let actual = Dom.createFromHtmlString(htmlForm.outerHTML).normalize();
+    let actual = Xml.createFromHtmlString(htmlForm.outerHTML).normalize();
     let expected = `<form id="formId">
   <ul class="nav nav-tabs mb-3">
     <li class="nav-item">

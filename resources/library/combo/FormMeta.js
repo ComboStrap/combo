@@ -235,20 +235,24 @@ export default class FormMeta {
                         let url = formField.getLabelLink();
                         htmlTabPans += `<div class="row mb-3 text-center">${url}</div>`;
                         htmlTabPans += `<div class="row mb-3">`;
+                        let rows = 0;
                         for (const child of formField.getChildren()) {
                             let width = child.getControlWidth();
                             htmlTabPans += `<div class="col-sm-${width} text-center">`;
                             htmlTabPans += child.getLabelLink();
                             htmlTabPans += `</div>`;
+                            let valuesLength = child.getValues().length;
+                            if (valuesLength > rows) {
+                                rows = valuesLength;
+                            }
                         }
                         htmlTabPans += `</div>`;
-                        htmlTabPans += `<div class="row mb-3">`;
-                        for (const child of formField.getChildren()) {
-                            let values = child.getValues();
-                            let defaultValues = child.getDefaultValues();
-                            for (let i = 0; i < values.length; i++) {
-                                let value = values[i];
-                                let defaultValue = defaultValues[i];
+
+                        for (let i = 0; i < rows; i++) {
+                            htmlTabPans += `<div class="row mb-3">`;
+                            for (const child of formField.getChildren()) {
+                                let value = child.getValues()[i];
+                                let defaultValue = child.getDefaultValues()[i];
                                 elementIdCounter++;
                                 let elementId = this.getControlId(elementIdCounter);
                                 let width = child.getControlWidth();
@@ -256,8 +260,9 @@ export default class FormMeta {
                                 htmlTabPans += child.toHtmlControl(elementId, value, defaultValue);
                                 htmlTabPans += `</div>`;
                             }
+                            htmlTabPans += `</div>`;
                         }
-                        htmlTabPans += `</div>`;
+
                         break;
 
                 }
@@ -272,8 +277,6 @@ export default class FormMeta {
         form.innerHTML = `${htmlTabNavs} ${htmlTabPans}`;
         return form;
     }
-
-
 
 
     setControlWidth(width) {

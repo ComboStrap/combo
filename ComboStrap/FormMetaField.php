@@ -24,7 +24,7 @@ class FormMetaField
     public const TAB_ATTRIBUTE = "tab";
     public const LABEL_ATTRIBUTE = "label";
     public const DATA_TYPE_ATTRIBUTE = "type";
-    public const HYPERLINK_ATTRIBUTE = "link";
+    public const URL_ATTRIBUTE = "url";
     public const MUTABLE_ATTRIBUTE = "mutable";
     /**
      * A value may be a scalar or an array
@@ -42,6 +42,7 @@ class FormMetaField
     public const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
     public const WIDTH_ATTRIBUTE = "width";
     public const COLUMNS_ATTRIBUTE = "columns";
+    const DESCRIPTION_ATTRIBUTE = "description";
 
 
     private $name;
@@ -105,9 +106,14 @@ class FormMetaField
         $associative = [
             Analytics::NAME => $this->name,
             self::LABEL_ATTRIBUTE => $this->label,
-            self::HYPERLINK_ATTRIBUTE => $this->getHyperLink(),
             self::DATA_TYPE_ATTRIBUTE => $this->type
         ];
+        if ($this->getUrl() != null) {
+            $associative[self::URL_ATTRIBUTE] = $this->getUrl();
+        }
+        if ($this->description != null) {
+            $associative[self::DESCRIPTION_ATTRIBUTE] = $this->description;
+        }
         /**
          * For child form field (ie column), there is no tab
          */
@@ -183,14 +189,14 @@ class FormMetaField
     }
 
     public
-    function getHyperLink(): string
+    function getUrl(): ?string
     {
-        return PluginUtility::getDocumentationHyperLink(
-            $this->canonical,
-            $this->label,
-            false,
-            $this->description
-        );
+        if ($this->canonical == null) {
+            return null;
+        }
+        $url = PluginUtility::$URL_APEX;
+        $url .= "/" . str_replace(":", "/", $this->canonical);
+        return $url;
     }
 
     public

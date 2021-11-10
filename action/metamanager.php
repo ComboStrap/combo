@@ -5,8 +5,8 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\Alias;
 use ComboStrap\Analytics;
 use ComboStrap\DatabasePage;
-use ComboStrap\FormMetaField;
 use ComboStrap\FormMeta;
+use ComboStrap\FormMetaField;
 use ComboStrap\FormMetaTab;
 use ComboStrap\Http;
 use ComboStrap\Identity;
@@ -37,7 +37,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const VALUES_ATTRIBUTE = "values";
     const NAME_ATTRIBUTE = "name";
     //data type
-    const BOOLEAN_TYPE_VALUE = "boolean";
     // width of the label / element
 
     const TAB_TYPE_VALUE = "type";
@@ -100,13 +99,13 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         if (empty($id)) {
             LogUtility::log2file("The page id is empty", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            header("Status: 400");
+            Http::setStatus(400);
             return;
         }
         $page = Page::createPageFromId($id);
         if (!$page->exists()) {
             LogUtility::log2file("The page ($id) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            header("Status: 404");
+            Http::setStatus(404);
             return;
         }
 
@@ -114,8 +113,15 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * Security
          */
         if (!$page->canBeUpdatedByCurrentUser()) {
-            LogUtility::log2file("Not authorized ($id)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            header("Status: 401");
+            Http::setStatus(401);
+            Http::setJsonMime();
+            $user = Identity::getUser();
+            if(empty($user)){
+                $user = "Anonymous";
+            }
+            $message = "Not Authorized: The user ($user) has not the `write` permission for the page (:$id).";
+            echo json_encode(["message" => $message]);
+            PluginUtility::softExit($message, null, self::CANONICAL);
             return;
         }
 
@@ -146,7 +152,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 //                 */
 //                $page->upsertMetadata($jsonArray);
 
-                header("Status: 200");
+                Http::setStatus(200);
 
                 return;
             case "GET":
@@ -179,7 +185,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 }
 
                 $formMeta = FormMeta::create($id)
-                ->setType(FormMeta::FORM_NAV_TABS_TYPE);
+                    ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 
                 /**
                  * The manager
@@ -390,7 +396,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 // End Date
                 $formMeta->addField(FormMetaField::create(Analytics::DATE_END)
                     ->addValue($page->getEndDate())
-                    ->setTab(FormMetaField::DATETIME_TYPE_VALUE)
+                    ->setType(FormMetaField::DATETIME_TYPE_VALUE)
                     ->setTab(self::TAB_TYPE_VALUE)
                     ->setCanonical(Page::EVENT_TYPE)
                     ->setLabel("End Date")
@@ -411,7 +417,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 // Is low quality page
                 $formMeta->addField(FormMetaField::create(Page::LOW_QUALITY_PAGE_INDICATOR)
                     ->addValue($page->getLowQualityIndicator(), false) // the default value is the value returned if checked)
-                    ->setType(self::BOOLEAN_TYPE_VALUE)
+                    ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
                     ->setTab(self::TAB_QUALITY_VALUE)
                     ->setCanonical(LowQualityPage::LOW_QUALITY_PAGE_CANONICAL)
                     ->setLabel("Prevent this page to become a low quality page")
@@ -421,7 +427,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 // Quality Monitoring
                 $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR)
                     ->addValue($page->isQualityMonitored(), false) // the default value is returned if checked
-                    ->setType(self::BOOLEAN_TYPE_VALUE)
+                    ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
                     ->setTab(self::TAB_QUALITY_VALUE)
                     ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)
                     ->setLabel("Disable the quality message of this page")
@@ -468,8 +474,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 );
 
                 // Page Id
+                $pageId = $page->getPageId();
                 $formMeta->addField(FormMetaField::create(Page::PAGE_ID_ATTRIBUTE)
-                    ->addValue($page->getPageId())
+                    ->addValue($pageId)
                     ->setMutable(false)
                     ->setTab(self::TAB_INTEGRATION_VALUE)
                     ->setCanonical(Page::PAGE_ID_ATTRIBUTE)
@@ -523,8 +530,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     );
 
 
-                header('Content-type: application/json');
-                header("Status: 200");
+                Http::setJsonMime();
+                Http::setStatus(200);
                 echo json_encode($formMeta->toAssociativeArray());
                 return;
 

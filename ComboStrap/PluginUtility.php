@@ -1359,10 +1359,13 @@ class PluginUtility
      * An helper function to mimic an exit when it's a test environment
      * @param string|null $message
      */
-    public static function softExit(string $message, \Doku_Event $event = null)
+    public static function softExit(string $message, \Doku_Event $event = null, $canonical = "support")
     {
 
         if (!PluginUtility::isTest()) {
+            if (Http::getStatus() !== 200) {
+                LogUtility::log2file($message, LogUtility::LVL_MSG_ERROR, $canonical);
+            }
             exit;
         } else {
 

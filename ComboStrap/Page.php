@@ -1754,7 +1754,7 @@ class Page extends DokuPath
     public
     function canBeUpdatedByCurrentUser(): bool
     {
-        return Identity::isWriter();
+        return Identity::isWriter($this->getDokuwikiId());
     }
 
     /**

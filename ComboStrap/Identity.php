@@ -141,7 +141,7 @@ class Identity
         }
     }
 
-    private static function getUser()
+    public static function getUser()
     {
         global $INPUT;
         return $INPUT->server->str('REMOTE_USER');

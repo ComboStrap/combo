@@ -58,6 +58,25 @@ class Http
 
     }
 
+    public static function getStatus()
+    {
+        /**
+         * See also {@link Http::getHeader()}
+         * if this does not work
+         */
+        return http_response_code();
+    }
+
+    public static function setMime(string $mime)
+    {
+        header("Content-type: $mime");
+    }
+
+    public static function setJsonMime()
+    {
+        Http::setMime("application/json");
+    }
+
     /**
      * PHP is blocking and fsockopen also.
      * Don't use it in a page rendering flow
@@ -76,5 +95,6 @@ class Http
         fwrite($fp, $out);
         fclose($fp);
     }
+
 
 }

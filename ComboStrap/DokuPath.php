@@ -388,7 +388,7 @@ class DokuPath extends File
      * use this format
      */
     public
-    function getDokuwikiId()
+    function getDokuwikiId(): string
     {
 
         if ($this->getScheme() == self::LOCAL_SCHEME) {

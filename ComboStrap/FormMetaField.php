@@ -35,6 +35,13 @@ class FormMetaField
     /**
      * The constant value
      */
+    public const TYPES = [
+        self::TEXT_TYPE_VALUE,
+        self::TABULAR_TYPE_VALUE,
+        self::DATETIME_TYPE_VALUE,
+        self::PARAGRAPH_TYPE_VALUE,
+        self::BOOLEAN_TYPE_VALUE
+    ];
     public const TEXT_TYPE_VALUE = "text";
     public const TABULAR_TYPE_VALUE = "tabular";
     public const PARAGRAPH_TYPE_VALUE = "paragraph";
@@ -43,6 +50,7 @@ class FormMetaField
     public const WIDTH_ATTRIBUTE = "width";
     public const CHILDREN_ATTRIBUTE = "children";
     const DESCRIPTION_ATTRIBUTE = "description";
+    public const BOOLEAN_TYPE_VALUE = "boolean";
 
 
     private $name;
@@ -73,7 +81,7 @@ class FormMetaField
     /**
      * @var FormMetaField[]
      */
-    private $columns;
+    private $children;
     /**
      * @var int
      */
@@ -125,7 +133,7 @@ class FormMetaField
                 break;
             case 1:
                 $value = $this->values[0];
-                if (!($value)) {
+                if (!blank($value)) {
                     $associative[self::VALUE_ATTRIBUTE] = $this->values[0];
                 }
                 break;
@@ -154,8 +162,8 @@ class FormMetaField
         if ($this->width !== null) {
             $associative[self::WIDTH_ATTRIBUTE] = $this->width;
         }
-        if ($this->columns !== null) {
-            foreach ($this->columns as $column) {
+        if ($this->children !== null) {
+            foreach ($this->children as $column) {
                 $associative[self::CHILDREN_ATTRIBUTE][] = $column->toAssociativeArray();
             }
         } else {
@@ -224,6 +232,10 @@ class FormMetaField
     public
     function setType(string $type): FormMetaField
     {
+        if (!in_array($type, self::TYPES)) {
+            LogUtility::msg("The type ($type) is not a known field type");
+            return $this;
+        }
         $this->type = $type;
         return $this;
     }
@@ -241,7 +253,7 @@ class FormMetaField
         $this->type = self::TABULAR_TYPE_VALUE;
         // A parent node is not mutable
         $this->mutable = false;
-        $this->columns[] = $formField;
+        $this->children[] = $formField;
         return $this;
     }
 

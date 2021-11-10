@@ -4,12 +4,15 @@
  */
 
 
-import FormMeta from "./FormMeta";
-import Dom from "./Xml";
+import FormMeta from "../FormMeta";
+import Dom from "../Xml";
 
+/**
+ * Test tabs and field children
+ */
 test('Json to Form Object', () => {
 
-    let formName = "my-form";
+    let formId = "formId";
     let firstFieldName = "first";
     let firstFieldLabel = "Youpla";
     let firstFieldTab = "TheTab";
@@ -42,9 +45,11 @@ test('Json to Form Object', () => {
     ];
     let firstTabLabel = "label first tab";
     let firstTabWidthField = 8;
-    let firstTabWidhtLabel = 4;
+    let firstTabWidthLabel = 4;
+    let thirdFieldName = "third";
+    let thirdValueDateTime = "3 value";
+    let thirdDefaultValue = "3 default";
     let formMetadata = {
-        "name": formName,
         "fields": {
             "first": {
                 "name": firstFieldName,
@@ -62,7 +67,15 @@ test('Json to Form Object', () => {
             "second": {
                 "name": secondFieldName,
                 "value": secondFieldValue,
-                "default": secondFieldDefaultValue
+                "default": secondFieldDefaultValue,
+                "children": {
+                    "third": {
+                        "name": thirdFieldName,
+                        "value": thirdValueDateTime,
+                        "default": thirdDefaultValue
+                    }
+                }
+
             }
         },
         "tabs": {
@@ -71,12 +84,12 @@ test('Json to Form Object', () => {
                     "name": firstFieldTab,
                     "label": firstTabLabel,
                     "width-field": firstTabWidthField,
-                    "width-label": firstTabWidhtLabel
+                    "width-label": firstTabWidthLabel
                 }
         }
     };
-    let formMeta = FormMeta.createFromJson(formMetadata);
-    expect(formMeta.getId()).toBe(formName);
+    let formMeta = FormMeta.createFromJson(formId, formMetadata);
+    expect(formMeta.getId()).toBe(formId);
     let fields = formMeta.getFields();
     expect(fields.length).toBe(2);
 
@@ -110,7 +123,7 @@ test('Json to Form Object', () => {
     let firstTab = tabs[0];
     expect(firstTab.getName()).toBe(firstFieldTab);
     expect(firstTab.getLabel()).toBe(firstTabLabel);
-    expect(firstTab.getLabelWidth()).toBe(firstTabWidhtLabel);
+    expect(firstTab.getLabelWidth()).toBe(firstTabWidthLabel);
     expect(firstTab.getFieldWidth()).toBe(firstTabWidthField);
 
     // The default tab
@@ -155,7 +168,7 @@ test('Json to Form Object', () => {
         <div class="col-sm-4">
           <select class="form-select" aria-label="Youpla" name="first" id="formId-control-1">
             <option value="">
-            Default (1)
+            Default (Meta Manager)
             </option>
             <option value="holy">
             holy
@@ -171,12 +184,17 @@ test('Json to Form Object', () => {
       </div>
     </div>
     <div class="tab-pane " id="formId-tab-pane-unknown" role="tabpanel" aria-labelledby="formId-tab-nav-unknown">
+      <div class="row mb-3 text-center">
+      Second
+      </div>
       <div class="row mb-3">
-        <label for="formId-control-2" class="col-sm-3 col-form-label">
-        Second
-        </label>
-        <div class="col-sm-3">
-          <input type="text" name="second" class="form-control" id="formId-control-2" placeholder="Enter a Second">
+        <div class="col-sm-undefined text-center">
+        Third
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-sm-undefined">
+          <input type="text" name="third" class="form-control" id="formId-control-2" placeholder="3 default" value="3 value">
         </div>
       </div>
     </div>

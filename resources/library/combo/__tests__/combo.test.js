@@ -1,4 +1,4 @@
-let combo = require("./combo.js");
+let combo = require("../combo.js");
 
 /**
  * @jest-environment jsdom

@@ -215,10 +215,23 @@ export default class FormMeta {
 
             for (let formField of this.getFieldsForTab(tab.getName())) {
 
-                let datatype = formField.getType();
-                switch (datatype) {
-                    // number of children may also work ?
-                    case FormMetaField.TABULAR_TYPE:
+                let children = formField.getChildren();
+                switch (children.length) {
+                    case 0:
+                        elementIdCounter++;
+                        let elementId = this.getControlId(elementIdCounter);
+                        let labelHtml = formField.toHtmlLabel(elementId, `col-sm-${leftColSize}`);
+                        let value = formField.getValue();
+                        let defaultValue = formField.getDefaultValue();
+                        let controlHtml = formField.toHtmlControl(elementId, value, defaultValue)
+                        htmlTabPans += `
+<div class="row mb-3">
+    ${labelHtml}
+    <div class="col-sm-${rightColSize}">${controlHtml}</div>
+</div>
+`;
+                        break;
+                    default:
                         let url = formField.getLabelLink();
                         htmlTabPans += `<div class="row mb-3 text-center">${url}</div>`;
                         htmlTabPans += `<div class="row mb-3">`;
@@ -246,19 +259,7 @@ export default class FormMeta {
                         }
                         htmlTabPans += `</div>`;
                         break;
-                    default:
-                        elementIdCounter++;
-                        let elementId = this.getControlId(elementIdCounter);
-                        let labelHtml = formField.toHtmlLabel(elementId, `col-sm-${leftColSize}`);
-                        let value = formField.getValue();
-                        let defaultValue = formField.getValue();
-                        let controlHtml = formField.toHtmlControl(elementId, value, defaultValue)
-                        htmlTabPans += `
-<div class="row mb-3">
-    ${labelHtml}
-    <div class="col-sm-${rightColSize}">${controlHtml}</div>
-</div>
-`;
+
                 }
 
             }

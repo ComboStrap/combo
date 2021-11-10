@@ -1,6 +1,7 @@
 import Boolean from "./Boolean";
 import Logger from "./Logger";
 
+
 /**
  * A form field may hold:
  *   * a simple scalar value
@@ -13,7 +14,18 @@ export default class FormMetaField {
     mutable = true;
     values = [];
     defaultValues = [];
+
+    /**
+     * Static const function
+     * Waiting for the const keyword
+     * to make them not mutable
+     * @type {string}
+     */
     static TABULAR_TYPE = "tabular";
+    static DATE_TIME = "datetime";
+    static PARAGRAPH = "paragraph";
+    static BOOLEAN = "boolean";
+
     children = {};
 
 
@@ -161,11 +173,12 @@ export default class FormMetaField {
                     continue;
                 case "children":
                     let jsonChildren = jsonValue;
-                    for (let jsonChild in jsonChildren) {
-                        if (jsonChildren.hasOwnProperty(jsonChild)) {
-                            let child = FormMetaField.createFromJson(jsonChild);
-                            formMetaField.addChild(child);
+                    for (let jsonChildProp in jsonChildren) {
+                        if (!jsonChildren.hasOwnProperty(jsonChildProp)) {
+                            continue;
                         }
+                        let child = FormMetaField.createFromJson(jsonChildren[jsonChildProp]);
+                        formMetaField.addChild(child);
                     }
                     continue;
                 default:
@@ -187,6 +200,11 @@ export default class FormMetaField {
         return formMetaField;
     }
 
+    /**
+     *
+     * @param name
+     * @return {FormMetaField}
+     */
     static createFromName(name) {
         return new FormMetaField(name);
     }
@@ -273,7 +291,7 @@ export default class FormMetaField {
     toHtmlLabel(forId, customClass) {
         let label = this.getLabelLink();
         let classLabel = "";
-        if (this.getType() === "boolean") {
+        if (this.getType() === FormMetaField.BOOLEAN) {
             classLabel = "form-check"
         } else {
             classLabel = "col-form-label";
@@ -281,7 +299,7 @@ export default class FormMetaField {
         return `<label for="${forId}" class="${customClass} ${classLabel}">${label}</label>`
     }
 
-    toHtmlControl(id, value, defaultValue) {
+    toHtmlControl(id, value = null, defaultValue = null) {
 
         let metadataType = this.getType();
         let mutable = this.isMutable();
@@ -353,7 +371,7 @@ export default class FormMetaField {
              * Type ?
              */
             switch (metadataType) {
-                case "datetime":
+                case FormMetaField.DATE_TIME:
                     inputType = "datetime-local";
                     if (value !== null) {
                         value = value.slice(0, 19);
@@ -362,13 +380,13 @@ export default class FormMetaField {
                         htmlValue = `value="${value}"`;
                     }
                     break;
-                case "paragraph":
+                case FormMetaField.PARAGRAPH:
                     htmlTag = "textarea";
                     if (value !== null) {
                         htmlValue = `${value}`;
                     }
                     break;
-                case "boolean":
+                case FormMetaField.BOOLEAN:
                     inputType = "checkbox";
                     htmlClass = "form-check-input";
                     if (value === defaultValue) {

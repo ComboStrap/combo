@@ -96,9 +96,16 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * Shared check between post and get HTTP method
          */
         $id = $_GET["id"];
+        if ($id === null) {
+            /**
+             * With {@link TestRequest}
+             * for instance
+             */
+            $id = $_REQUEST["id"];
+        }
 
         if (empty($id)) {
-            LogUtility::log2file("The page id is empty", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::log2file("The page path (id form) is empty", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             Http::setStatus(400);
             return;
         }
@@ -116,7 +123,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             Http::setStatus(401);
             Http::setJsonMime();
             $user = Identity::getUser();
-            if(empty($user)){
+            if (empty($user)) {
                 $user = "Anonymous";
             }
             $message = "Not Authorized: The user ($user) has not the `write` permission for the page (:$id).";
@@ -163,8 +170,15 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $type = $_GET["type"];
                 if ($type === "viewer") {
                     if (!Identity::isManager()) {
+
                         Http::setStatus(401);
-                        $fields = ["message" => "Not Authorized (managers only)"];
+                        $message = "Not Authorized (managers only)";
+                        $fields = ["message" => $message];
+                        Http::setJsonMime();
+                        echo json_encode($fields);
+                        PluginUtility::softExit($message);
+                        return;
+
                     } else {
                         $metadata = p_read_metadata($id);
                         $metasPersistent = $metadata['persistent'];
@@ -178,10 +192,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                         $fields = array_merge($metasPersistent, $metasCurrent);
                         ksort($fields);
                         Http::setStatus(200);
+                        Http::setJsonMime();
+                        echo json_encode($fields);
+                        return;
                     }
-                    header('Content-type: application/json');
-                    echo json_encode($fields);
-                    return;
+
                 }
 
                 $formMeta = FormMeta::create($id)

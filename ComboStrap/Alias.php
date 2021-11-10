@@ -98,10 +98,10 @@ class Alias
     }
 
     /**
-     * @return mixed
+     * @return Page
      */
     public
-    function getPage()
+    function getPage(): Page
     {
         return $this->page;
     }
@@ -142,7 +142,8 @@ class Alias
     function setType(string $type): Alias
     {
         if(!in_array($type,self::getPossibleTypesValues())){
-            LogUtility::msg("The alias type ($type) is unknown");
+            $pageAnchor = $this->getPage()->getAnchorLink();
+            LogUtility::msg("Bad Alias Type. The alias type value ($type) for the alias path ({$this->getPath()}) of the page ({$pageAnchor})");
             return $this;
         }
         $this->type = $type;

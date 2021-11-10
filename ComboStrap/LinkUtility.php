@@ -408,6 +408,7 @@ class LinkUtility
         switch ($this->getType()) {
             case self::TYPE_INTERWIKI:
 
+                PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::TYPE_INTERWIKI);
                 /**
                  * Target
                  */
@@ -416,7 +417,7 @@ class LinkUtility
                     $this->attributes->addHtmlAttributeValue('target', $interWikiConf);
                     $this->attributes->addHtmlAttributeValue('rel', 'noopener');
                 }
-                $this->attributes->addClassName("interwiki");
+                $this->attributes->addClassName(self::getHtmlClassInterWikiLink());
                 $wikiClass = "iw_" . preg_replace('/[^_\-a-z0-9]+/i', '_', $this->getWiki());
                 $this->attributes->addClassName($wikiClass);
                 if (!$this->wikiExists()) {
@@ -867,7 +868,7 @@ EOF;
     }
 
 
-    private
+    public
     function getUrl()
     {
         $url = "";
@@ -928,7 +929,11 @@ EOF;
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $url = $this->renderer->_resolveInterWiki($wiki, $this->dokuwikiUrl->getPathOrId());
+                $extendedPath = $this->dokuwikiUrl->getPathOrId();
+                if($this->dokuwikiUrl->getFragment()!==null){
+                    $extendedPath.="#{$this->dokuwikiUrl->getFragment()}";
+                }
+                $url = $this->renderer->_resolveInterWiki($wiki, $extendedPath);
                 break;
             case self::TYPE_WINDOWS_SHARE:
                 $url = str_replace('\\', '/', $this->getRef());
@@ -1098,7 +1103,7 @@ EOF;
     }
 
     public
-    static function getHtmlClassEmailLink()
+    static function getHtmlClassEmailLink(): string
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {
@@ -1109,7 +1114,18 @@ EOF;
     }
 
     public
-    static function getHtmlClassExternalLink()
+    static function getHtmlClassInterWikiLink(): string
+    {
+        $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
+        if ($oldClassName) {
+            return "interwiki";
+        } else {
+            return "link-interwiki";
+        }
+    }
+
+    public
+    static function getHtmlClassExternalLink(): string
     {
         $oldClassName = PluginUtility::getConfValue(self::CONF_USE_DOKUWIKI_CLASS_NAME);
         if ($oldClassName) {

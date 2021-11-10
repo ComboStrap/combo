@@ -1,0 +1,6 @@
+/* Needed to work with the interwiki functionality - except on button */
+a.link-interwiki:not(.btn) {
+    background-repeat: no-repeat;
+    background-position: 0 center;
+    padding: 0 0 0 18px;
+}

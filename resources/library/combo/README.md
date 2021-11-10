@@ -44,7 +44,8 @@ We are not building a library (in parcel term, this is a node package to be used
 The [entry](https://parceljs.org/features/targets/#entries) is defined in the `source`
 [package.json script](package.json)
 
-[UMD is not supported on Parcel 2](https://parceljs.org/getting-started/migration/#--global), we then used `window``explicitly
+[UMD is not supported on Parcel 2](
+getting-started/migration/#--global), we then used `window``explicitly
 to set the value.
 
   * Old: https://en.parceljs.org/cli.html#expose-modules-as-umd
@@ -52,3 +53,16 @@ to set the value.
     https://github.com/parcel-bundler/parcel/issues/766
     https://github.com/parcel-bundler/parcel/discussions/6437
     https://github.com/parcel-bundler/parcel/discussions/5583
+
+
+## Jest
+
+By default, all test are started in the `jsdom` [environment](https://jestjs.io/docs/configuration#testenvironment-string)
+via the `jest` [package.json](package.json) conf.
+
+You can change it with `jsdoc`
+```javascript
+/**
+* @jest-environment jsdom
+*/
+```

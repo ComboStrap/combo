@@ -393,7 +393,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                     }
                     break;
                 case Alias::SYNONYM:
-                    $res = $this->executeTransparentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
+                    $res = $this->executeTransparentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
@@ -628,7 +628,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
      *   * on the same domain
      *   * no HTTP redirect
      *   * id rewrite
-     * @param string $targetPageId - target page id or an URL
+     * @param string $targetPageId - target page id
      * @param string $targetOriginId - the source of the target (redirect)
      * @return bool - return true if the user has the permission and that the redirect was done
      * @throws Exception

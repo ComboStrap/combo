@@ -25,8 +25,3 @@ test('first test', () => {
 
 });
 
-test('adds 1 + 2 to equal 3', () => {
-    let a = 1;
-    let b = 1;
-    expect(a).toBe(b);
-});

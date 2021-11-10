@@ -114,7 +114,7 @@ export default class FormMetaField {
      */
     static createFromJson(json) {
         if (!json.hasOwnProperty("name")) {
-            Logger.getLogger.error("To create a form meta field, the name property is mandatory.");
+            Logger.getLogger().error("To create a form meta field, the name property is mandatory.");
         }
         let name = json["name"];
         let formMetaField = FormMetaField.createFromName(name);

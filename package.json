@@ -2,12 +2,11 @@
     "name": "combo",
     "version": "1.0.0",
     "description": "combo",
-    "source": "./resources/library/combo/combo.js",
-    "main": "./resources/library/combo/dist/combo.min.js",
+    "types": "./resources/library/combo/dist/types.d.ts",
     "private": true,
     "scripts": {
         "watch": "parcel watch",
-        "build": "parcel build"
+        "build": "parcel build --target global"
     },
     "devDependencies": {
         "@babel/core": "^7.16.0",
@@ -24,5 +23,16 @@
     },
     "jest": {
         "testEnvironment": "jsdom"
+    },
+    "browserslist": "> 0.5%, last 2 versions, not dead",
+    "global": "./resources/library/combo/dist/combo.min.js",
+    "targets": {
+        "global": {
+            "source": "./resources/library/combo/combo.js",
+            "context": "browser",
+            "outputFormat": "global",
+            "includeNodeModules": true,
+            "isLibrary": false
+        }
     }
 }

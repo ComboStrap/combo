@@ -82,7 +82,6 @@ class FormMeta
             $tabs[$tab->getName()] = $tab->toAssociativeArray();
         }
         return [
-            "name" => $this->name,
             "fields" => $fieldsArray,
             "tabs" => $tabs
         ];

@@ -41,7 +41,7 @@ class FormMetaField
     public const DATETIME_TYPE_VALUE = "datetime";
     public const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
     public const WIDTH_ATTRIBUTE = "width";
-    public const COLUMNS_ATTRIBUTE = "columns";
+    public const CHILDREN_ATTRIBUTE = "children";
     const DESCRIPTION_ATTRIBUTE = "description";
 
 
@@ -156,7 +156,7 @@ class FormMetaField
         }
         if ($this->columns !== null) {
             foreach ($this->columns as $column) {
-                $associative[self::COLUMNS_ATTRIBUTE][] = $column->toAssociativeArray();
+                $associative[self::CHILDREN_ATTRIBUTE][] = $column->toAssociativeArray();
             }
         } else {
             /**

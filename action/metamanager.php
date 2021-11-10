@@ -13,7 +13,7 @@ use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
-use ComboStrap\MetadataMenuItem;
+use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Page;
 use ComboStrap\PageImage;
 use ComboStrap\PluginUtility;
@@ -551,7 +551,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         if (!$INFO['exists']) {
             return;
         }
-        array_splice($event->data['items'], -1, 0, array(new MetadataMenuItem()));
+        array_splice($event->data['items'], -1, 0, array(new MetaManagerMenuItem()));
 
     }
 

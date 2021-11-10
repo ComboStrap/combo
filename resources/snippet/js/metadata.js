@@ -1,3 +1,6 @@
+/* global combo */
+// noinspection JSUnresolvedVariable
+
 window.addEventListener("DOMContentLoaded", function () {
 
     const metaManagerCall = "combo-meta-manager";
@@ -37,7 +40,7 @@ window.addEventListener("DOMContentLoaded", function () {
      * @param {ComboModal} managerModal
      * @param formMetadata
      * @param pageId
-     * @return {Promise<*>}
+     * @return {ComboModal}
      */
     function buildMetadataManager(managerModal, formMetadata, pageId) {
 
@@ -50,8 +53,8 @@ window.addEventListener("DOMContentLoaded", function () {
          * Adding the form
          */
         let formId = `${managerModal.getId()}-form`;
-        let form = combo.toForm(formId, formMetadata);
-        managerModal.addBody(form);
+        let form = combo.createFormFromJson(formId, formMetadata);
+        managerModal.addBody(form.toHtmlElement());
 
         /**
          * Footer
@@ -60,9 +63,9 @@ window.addEventListener("DOMContentLoaded", function () {
         viewerButton.classList.add("btn", "btn-link", "text-primary", "text-decoration-bone", "fs-6", "text-muted");
         viewerButton.style.setProperty("font-weight", "300");
         viewerButton.textContent = "Viewer";
-        viewerButton.addEventListener("click", function (event) {
+        viewerButton.addEventListener("click", async function () {
             managerModal.dismiss();
-            openMetaViewer(managerModal, pageId);
+            await openMetaViewer(managerModal, pageId);
         });
         managerModal.addFooterButton(viewerButton);
         managerModal.addFooterCloseButton();

@@ -19,7 +19,7 @@ use dokuwiki\Menu\Item\AbstractItem;
  * @package ComboStrap
  *
  */
-class MetadataMenuItem extends AbstractItem
+class MetaManagerMenuItem extends AbstractItem
 {
 
     const CLASS_HTML = "combo_metadata_item";
@@ -31,7 +31,7 @@ class MetadataMenuItem extends AbstractItem
     public function __construct()
     {
         $snippetManager = PluginUtility::getSnippetManager();
-        $snippetManager->attachJavascriptScriptForRequest(self::CANONICAL,"library:combo:combo.js");
+        $snippetManager->attachJavascriptScriptForRequest(self::CANONICAL,"library:combo:dist:combo.min.js");
         $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
         parent::__construct();
     }

@@ -76,7 +76,7 @@ test('Json to Form Object', () => {
         }
     };
     let formMeta = FormMeta.createFromJson(formMetadata);
-    expect(formMeta.getName()).toBe(formName);
+    expect(formMeta.getId()).toBe(formName);
     let fields = formMeta.getFields();
     expect(fields.length).toBe(2);
 

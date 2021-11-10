@@ -71,7 +71,16 @@ export default class ComboModal {
 
     addBody(htmlBody) {
 
-        this.modalBody.innerHTML = htmlBody;
+        let type = typeof htmlBody;
+        switch (type) {
+            case "string":
+                this.modalBody.innerHTML = htmlBody;
+                break;
+            default:
+            case "object":
+                this.modalBody.append(htmlBody);
+                break;
+        }
 
     }
 
@@ -136,23 +145,22 @@ export default class ComboModal {
     }
 
 
-
     /**
      * Create a modal and return the modal content element
      * @return ComboModal
      */
-    static createFromName(modalName) {
+    static createFromId(modalName) {
         let modal = new ComboModal(modalName);
         comboModals[modalName] = modal;
         return modal;
     }
 
     /**
-     * @param modalName
+     * @param modalId
      * @return {ComboModal}
      */
-    static getModal = function (modalName) {
-        return comboModals[modalName];
+    static getModal = function (modalId) {
+        return comboModals[modalId];
     }
 
     /**

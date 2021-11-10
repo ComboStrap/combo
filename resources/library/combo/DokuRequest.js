@@ -22,7 +22,7 @@ class DokuAjaxUrl {
     }
 }
 
-class DokuAjaxRequest {
+export default class DokuAjaxRequest {
 
 
     method = "GET";

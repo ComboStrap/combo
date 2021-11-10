@@ -34,3 +34,21 @@ It disable Babel transpilation in Parcel because Jest needs it also.
 https://parceljs.org/features/dependency-resolution/#global-aliases
 ```
   * Then added as alias in `package.json` [https://parceljs.org/features/dependency-resolution/#global-aliases|global-aliases]
+
+
+#### Build / UMD
+
+We are not building a library (in parcel term, this is a node package to be used by other)
+
+
+The [entry](https://parceljs.org/features/targets/#entries) is defined in the `source`
+[package.json script](package.json)
+
+[UMD is not supported on Parcel 2](https://parceljs.org/getting-started/migration/#--global), we then used `window``explicitly
+to set the value.
+
+  * Old: https://en.parceljs.org/cli.html#expose-modules-as-umd
+  * MIgration:
+    https://github.com/parcel-bundler/parcel/issues/766
+    https://github.com/parcel-bundler/parcel/discussions/6437
+    https://github.com/parcel-bundler/parcel/discussions/5583

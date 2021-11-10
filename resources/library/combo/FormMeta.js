@@ -3,6 +3,7 @@
 import FormMetaField from "./FormMetaField";
 import FormMetaTab from "./FormMetaTab";
 import Html from "./Html";
+import Logger from "./Logger";
 
 /**
  * Represent the top meta
@@ -10,63 +11,41 @@ import Html from "./Html";
  */
 export default class FormMeta {
 
-    label;
-
-
     formFields = {};
-    name;
     tabs = {};
+    width = 8;
 
 
-    constructor(name) {
+    constructor(id) {
 
-        if (name == null) {
-            throw new Error("Name of a form should not be null");
+        if (id == null) {
+            throw new Error("The if of the form should not be null");
         }
-        this.name = name;
+        this.name = id;
     }
 
     /**
      * @return string
      */
     getLabel() {
-
-        let label = this.properties["label"];
-
         return this.label;
     }
 
-    getLabelUrl() {
-        let label = this.properties["url"];
-        if (label === undefined) {
-            return this.getLabel();
-        }
-        return label;
+    getUrl() {
+        return this.url;
     }
 
-
-    getType() {
-        return this.properties["type"];
-    }
-
-    getName() {
+    getId() {
         return this.name;
     }
 
     /**
      * The width of the control
-     * is the most imporant as it can
-     * be used to determine the column width
-     * in case of tabular data
+     * if there is no tab
      * @return {number|*}
      */
     getControlWidth() {
-        let width = this.properties["width"];
-        if (width !== undefined) {
-            return width;
-        } else {
-            return 8;
-        }
+        return this.width;
     }
 
     getLabelWidth() {
@@ -74,26 +53,50 @@ export default class FormMeta {
     }
 
 
-    static createFromJson(json) {
-        let name = json["name"];
-        let form = FormMeta.createFromName(name);
-        let fields = json["fields"];
-        for (let field in fields) {
-            if (fields.hasOwnProperty(field)) {
-                form.addFormField(FormMetaField.createFromJson(fields[field]));
+    static createFromJson(formId, json) {
+        let form = FormMeta.createFromId(formId);
+        for (let prop in json) {
+            if (!json.hasOwnProperty(prop)) {
+                continue;
             }
-        }
-        let tabs = json["tabs"];
-        for (let tab in tabs) {
-            if (tabs.hasOwnProperty(tab)) {
-                form.addTab(FormMetaTab.createFromJson(tabs[tab]));
+            let value = json[prop];
+            switch (prop) {
+                case "fields":
+                    let fields = value;
+                    for (let field in fields) {
+                        if (fields.hasOwnProperty(field)) {
+                            form.addFormField(FormMetaField.createFromJson(fields[field]));
+                        }
+                    }
+                    continue;
+                case "tabs":
+                    let tabs = value;
+                    for (let tab in tabs) {
+                        if (tabs.hasOwnProperty(tab)) {
+                            form.addTab(FormMetaTab.createFromJson(tabs[tab]));
+                        }
+                    }
+                    break;
+                case "width":
+                    form.setControlWidth(value);
+                    break;
+                case "label":
+                    form.setLabel(value);
+                    break;
+                case "url":
+                    form.setUrl(value);
+                    break;
+                default:
+                    Logger.getLogger().error(`The form property (${prop}) is unknown`);
             }
+
+
         }
         return form;
     }
 
-    static createFromName(name) {
-        return new FormMeta(name);
+    static createFromId(id) {
+        return new FormMeta(id);
     }
 
     /**
@@ -104,8 +107,8 @@ export default class FormMeta {
     addFormField(formField) {
         this.formFields[formField.getName()] = formField;
         // Be sure to have a tab for each field
-        if(!this.tabs.hasOwnProperty(formField.getTab())){
-            this.tabs[formField.getTab()]=FormMetaTab.createFromName(formField.getTab());
+        if (!this.tabs.hasOwnProperty(formField.getTab())) {
+            this.tabs[formField.getTab()] = FormMetaTab.createFromName(formField.getTab());
         }
         return this;
     }
@@ -131,14 +134,16 @@ export default class FormMeta {
     }
 
     valueOf() {
-        return this.getName();
+        return this.getId();
     };
 
     getFieldsForTab(tabName) {
         return this.getFields().filter(e => e.getTab() === tabName);
     }
 
-    toHtmlElement(formId) {
+    toHtmlElement() {
+
+        let formId = this.getId();
 
         /**
          * Creating the Body
@@ -268,4 +273,16 @@ export default class FormMeta {
     }
 
 
+    setControlWidth(width) {
+        this.width = width;
+        return this;
+    }
+
+    setLabel(label) {
+        this.label = label;
+    }
+
+    setUrl(url) {
+        this.url = url;
+    }
 }

@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
+
 use ComboStrap\AdsUtility;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
@@ -8,7 +10,6 @@ use ComboStrap\LazyLoad;
 use ComboStrap\LinkUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
-use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
@@ -20,7 +21,6 @@ use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
 
-require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
 
 
 /**
@@ -241,5 +241,10 @@ $lang[action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED] = PluginUti
  * Link Wizard
  */
 $lang[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_link::TAG, "If unchecked, the link wizard will not search for the term in the path, title, heading and name of the pages");
+
+/**
+ * Url Type
+ */
+$lang[Page::CONF_CANONICAL_URL_TYPE] = PluginUtility::getDocumentationHyperLink("page:url", "The type of url used for a page.");
 
 ?>

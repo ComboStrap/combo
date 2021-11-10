@@ -101,6 +101,7 @@ class Page extends DokuPath
     const IMAGE_META_PROPERTY = 'image';
     const REGION_META_PROPERTY = "region";
     const LANG_META_PROPERTY = "lang";
+    public const SLUG_ATTRIBUTE = "slug";
     const LAYOUT_PROPERTY = "layout";
     const PAGE_ID_ATTRIBUTE = "page_id";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
@@ -137,26 +138,31 @@ class Page extends DokuPath
      * The canonical for the canonical url
      */
     const CANONICAL_CANONICAL_URL = "canonical-url";
-    public const CONF_CANONICAL_URL_TYPE_DEFAULT = self::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH;
-    public const CONF_CANONICAL_URL_MODE_VALUE_SLUG = "slug";
-    public const CONF_CANONICAL_URL_TYPE = "canonicalUrlMode";
-    public const CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG = "hierarchical slug";
-    public const CONF_CANONICAL_URL_MODE_VALUE_NAMESPACE_SLUG = "namespace slug";
-    public const CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH = "permanent canonical path";
-    public const CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH = "permanent page path";
-    public const CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH = "canonical path";
-    public const CONF_CANONICAL_URL_MODE_VALUES = [
-        Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG,
-        Page::CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG,
-        Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH,
-        Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH,
-        Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH,
-        Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH,
+    public const CONF_CANONICAL_URL_TYPE_DEFAULT = self::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH;
+    public const CONF_CANONICAL_URL_TYPE_VALUE_SLUG = "slug";
+    public const CONF_CANONICAL_URL_TYPE = "pageUrlType";
+    public const CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG = "hierarchical slug";
+    public const CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG = "homed slug";
+    public const CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH = "permanent canonical path";
+    public const CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH = "permanent page path";
+    public const CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH = "canonical path";
+    public const CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH = "page path";
+    public const CONF_CANONICAL_URL_TYPE_VALUES = [
+        Page::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH,
+        Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH,
+        Page::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH,
+        Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH,
+        Page::CONF_CANONICAL_URL_TYPE_VALUE_SLUG,
+        Page::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG,
+        Page::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG
     ];
-    public const CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH = "page path";
-    public const SLUG_ATTRIBUTE = "slug";
 
 
+    /**
+     *
+     * Not sure what would be the separator to get the short page id
+     * For now on, the normal dokuwiki id separator
+     */
     const PAGE_ID_URL_SEPARATOR = DokuPath::PATH_SEPARATOR;
 
     /**
@@ -2239,22 +2245,34 @@ class Page extends DokuPath
         return $this->aliases;
     }
 
-    private
+    /**
+     * @return string|null
+     *
+     * Note: The slug is not yet in url format with {@link DokuPath::toSlugPath()}
+     * because it may be composed with the home page names
+     * to form the {@link Page::getUrlPath()}
+     */
+    public
     function getSlugOrDefault(): ?string
     {
 
         if ($this->getSlug() !== null) {
             return $this->getSlug();
-
         }
         return $this->getDefaultSlug();
     }
 
-    private
-    function getDefaultSlug(): ?string
+    /**
+     *
+     * @return string|null
+     *
+     * Note: The slug is not yet in url format with {@link DokuPath::toSlugPath()}
+     * because it may be composed with the home page names
+     * to form the {@link Page::getUrlPath()}
+     */
+    public function getDefaultSlug(): ?string
     {
-
-        return $this->getTitleNotEmpty();
+        return strtolower($this->getTitleNotEmpty());
     }
 
     public
@@ -2576,12 +2594,12 @@ class Page extends DokuPath
          * Type of Url
          */
         if (!$this->exists()) {
-            $urlType = Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH;
+            $urlType = Page::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH;
         } else {
             $confCanonicalType = self::CONF_CANONICAL_URL_TYPE;
             $confDefaultValue = self::CONF_CANONICAL_URL_TYPE_DEFAULT;
             $urlType = PluginUtility::getConfValue($confCanonicalType, $confDefaultValue);
-            if (!in_array($urlType, self::CONF_CANONICAL_URL_MODE_VALUES)) {
+            if (!in_array($urlType, self::CONF_CANONICAL_URL_TYPE_VALUES)) {
                 $urlType = $confDefaultValue;
                 LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
             }
@@ -2589,39 +2607,39 @@ class Page extends DokuPath
             // Not yet sync with the database
             // No permanent canonical url
             if ($this->getPageIdAbbr() === null) {
-                if ($urlType === Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH) {
-                    $urlType = Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH;
+                if ($urlType === Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH) {
+                    $urlType = Page::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH;
                 } else {
-                    $urlType = Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH;
+                    $urlType = Page::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH;
                 }
             }
         }
 
         $path = $this->getPath();
         switch ($urlType) {
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_PAGE_PATH:
+            case Page::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH:
                 $path = $this->getPath();
                 break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_PAGE_PATH:
+            case Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH:
                 $path = $this->toPermanentUrlPath($this->getPath());
                 break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_CANONICAL_PATH:
+            case Page::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH:
                 $path = $this->getCanonicalOrDefault();
                 break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_PERMANENT_CANONICAL_PATH:
+            case Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH:
                 $path = $this->toPermanentUrlPath($this->getCanonicalOrDefault());
                 break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_SLUG:
+            case Page::CONF_CANONICAL_URL_TYPE_VALUE_SLUG:
                 $path = $this->toPermanentUrlPath($this->getSlugOrDefault());
                 break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_HIERARCHICAL_SLUG:
+            case Page::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG:
                 $path = $this->getSlugOrDefault();
                 while (($parent = $this->getParentPage()) != null) {
                     $path = DokuPath::toSlugPath($parent->getPageName()) . $path;
                 }
                 $path = $this->toPermanentUrlPath($path);
                 break;
-            case Page::CONF_CANONICAL_URL_MODE_VALUE_NAMESPACE_SLUG:
+            case Page::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG:
                 $path = $this->getSlugOrDefault();
                 if (($parent = $this->getParentPage()) != null) {
                     $path = DokuPath::toSlugPath($parent->getPageName()) . $path;
@@ -2650,11 +2668,18 @@ class Page extends DokuPath
         return self::encodePageId($abbr);
     }
 
-    public
-    function getSlug(): ?string
+    /**
+     * @return string|null
+     *
+     * * Note: The slug is not yet in url format with {@link DokuPath::toSlugPath()}
+     * because it may be composed with the home page names
+     * to form the {@link Page::getUrlPath()}
+     */
+    public function getSlug(): ?string
     {
         return $this->slug;
     }
+
 
     public
     function setSlug($slug): Page

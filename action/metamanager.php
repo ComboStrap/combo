@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 use ComboStrap\Alias;
 use ComboStrap\Analytics;
 use ComboStrap\DatabasePage;
+use ComboStrap\DokuPath;
 use ComboStrap\FormMeta;
 use ComboStrap\FormMetaField;
 use ComboStrap\FormMetaTab;
@@ -247,7 +248,31 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     FormMetaField::create(Analytics::CANONICAL)
                         ->addValue($page->getCanonical(), $page->getDefaultCanonical())
                         ->setTab(self::TAB_REDIRECTION_VALUE)
-                        ->setDescription("The canonical creates a link that identifies your page uniquely by name")
+                        ->setLabel("Canonical Path")
+                        ->setDescription("The canonical path is a short unique path for the page (used in named permalink)")
+                );
+
+                // Slug
+                $defaultSlug = $page->getDefaultSlug();
+                if(!empty($defaultSlug)){
+                    $defaultSlug = DokuPath::toSlugPath($defaultSlug);
+                }
+                $formMeta->addField(
+                    FormMetaField::create(Page::SLUG_ATTRIBUTE)
+                        ->addValue($page->getSlug(), $defaultSlug)
+                        ->setLabel("Slug Path")
+                        ->setTab(self::TAB_REDIRECTION_VALUE)
+                        ->setDescription("The slug is used in the url of the page (if chosen)")
+                );
+
+                $formMeta->addField(
+                    FormMetaField::create("url-path")
+                        ->addValue($page->getUrlPath())
+                        ->setTab(self::TAB_REDIRECTION_VALUE)
+                        ->setMutable(false)
+                        ->setCanonical("page:url")
+                        ->setLabel("Url Path")
+                        ->setDescription("The path used in the page url")
                 );
 
                 // Layout

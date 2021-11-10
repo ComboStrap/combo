@@ -1,9 +1,8 @@
 <?php
 
 use ComboStrap\DokuPath;
-use ComboStrap\MetadataUtility;
-use ComboStrap\PluginUtility;
 use ComboStrap\Page;
+use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
 

@@ -538,7 +538,8 @@ class DokuPath extends File
         $slugWithoutDoubleSeparator = preg_replace("/" . self::SLUG_SEPARATOR . "{2,}/", self::SLUG_SEPARATOR, $slugWithoutSpace);
         // Root
         DokuPath::addRootSeparatorIfNotPresent($slugWithoutDoubleSeparator);
-        return $slugWithoutDoubleSeparator;
+        // Lower case
+        return strtolower($slugWithoutDoubleSeparator);
     }
 
     private static function getReservedWord(): array

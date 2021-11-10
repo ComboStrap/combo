@@ -13,7 +13,6 @@ use ComboStrap\MediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
-use ComboStrap\MetadataUtility;
 use ComboStrap\Page;
 use ComboStrap\PageProtection;
 use ComboStrap\Prism;
@@ -49,7 +48,6 @@ $meta[action_plugin_combo_router::ROUTER_ENABLE_CONF] = array('onoff');
 $meta['ShowPageNameIsNotUnique'] = array('onoff');
 $meta['ShowMessageClassic'] = array('onoff');
 
-require_once(__DIR__ . '/../action/urlmanager.php');
 $actionChoices = array('multichoice', '_choices' => array(
     action_plugin_combo_router::NOTHING,
     action_plugin_combo_router::GO_TO_BEST_END_PAGE_NAME,
@@ -319,3 +317,8 @@ $meta[action_plugin_combo_staticresource::CONF_STATIC_CACHE_ENABLED] = array("on
  * Link Wizard
  */
 $meta[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = array("onoff");
+
+/**
+ * Canonical Url Type
+ */
+$meta[Page::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' =>  Page::CONF_CANONICAL_URL_TYPE_VALUES);

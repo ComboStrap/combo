@@ -361,3 +361,9 @@ $conf["staticCacheEnabled"] = 1;
  * {@link action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD}
  */
 $conf["enableEnhancedLinkWizard"] = 1;
+
+/**
+ * {@link Page::CONF_CANONICAL_URL_TYPE}
+ * {@link Page::CONF_CANONICAL_URL_TYPE_DEFAULT}
+ */
+$conf["pageUrlType"] = "page path";

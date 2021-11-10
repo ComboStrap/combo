@@ -165,7 +165,7 @@ test('Json to Form Object', () => {
           Youpla
           </a>
         </label>
-        <div class="col-sm-4">
+        <div class="col-sm-8">
           <select class="form-select" aria-label="Youpla" name="first" id="formId-control-1">
             <option value="">
             Default (Meta Manager)

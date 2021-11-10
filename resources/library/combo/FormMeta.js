@@ -211,7 +211,7 @@ export default class FormMeta {
             }
             htmlTabPans += `<div class="tab-pane ${activeClass}" id="${tabPaneId}" role="tabpanel" aria-labelledby="${tabNavId}">`;
             leftColSize = tab.getLabelWidth();
-            rightColSize = tab.getLabelWidth();
+            rightColSize = tab.getFieldWidth();
 
             for (let formField of this.getFieldsForTab(tab.getName())) {
 

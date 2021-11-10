@@ -1207,7 +1207,7 @@ EOF;
         $buildFields = self::PAGE_BUILD_ATTRIBUTES;
         $fields = array_reduce($buildFields, function ($carry, $element) {
             if ($carry !== null) {
-                 return "$carry, p.{$element}";
+                return "$carry, p.{$element}";
             } else {
                 return "p.{$element}";
             }

@@ -517,7 +517,7 @@ class DokuPath extends File
     }
 
 
-    public static function toSlugPath($string)
+    public static function toSlugPath($string): string
     {
         if (empty($string)) return ":";
         // Reserved word to space

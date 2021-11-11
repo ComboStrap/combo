@@ -408,7 +408,10 @@ class LinkUtility
         switch ($this->getType()) {
             case self::TYPE_INTERWIKI:
 
-                PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::TYPE_INTERWIKI);
+                // normal link for the `this` wiki
+                if($this->getWiki()!="this") {
+                    PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::TYPE_INTERWIKI);
+                }
                 /**
                  * Target
                  */

@@ -1962,7 +1962,19 @@ class Page extends DokuPath
     public
     function getDefaultPageName(): string
     {
-        $words = preg_split("/\s/", preg_replace("/-|_/", " ", $this->getDokuPathName()));
+        $pathName = $this->getDokuPathName();
+        /**
+         * If this is a home page, the default
+         * is the parent path name
+         */
+        if ($pathName === Site::getHomePageName()) {
+            $names = $this->getDokuNames();
+            $namesCount = sizeof($names);
+            if ($namesCount >= 2) {
+                $pathName = $names[$namesCount - 2];
+            }
+        }
+        $words = preg_split("/\s/", preg_replace("/-|_/", " ", $pathName));
         $wordsUc = [];
         foreach ($words as $word) {
             $wordsUc[] = ucfirst($word);
@@ -2629,14 +2641,14 @@ class Page extends DokuPath
             case Page::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG:
                 $path = $this->getSlugOrDefault();
                 while (($parent = $this->getParentPage()) != null) {
-                    $path = DokuPath::toSlugPath($parent->getPageName()) . $path;
+                    $path = DokuPath::toSlugPath($parent->getPageNameNotEmpty()) . $path;
                 }
                 $path = $this->toPermanentUrlPath($path);
                 break;
             case Page::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG:
                 $path = $this->getSlugOrDefault();
                 if (($parent = $this->getParentPage()) != null) {
-                    $path = DokuPath::toSlugPath($parent->getPageName()) . $path;
+                    $path = DokuPath::toSlugPath($parent->getPageNameNotEmpty()) . $path;
                 }
                 $path = $this->toPermanentUrlPath($path);
                 break;

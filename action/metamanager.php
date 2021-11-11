@@ -243,6 +243,15 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                         ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
                 );
 
+                // Path
+                $formMeta->addField(FormMetaField::create(Analytics::PATH)
+                    ->addValue($page->getPath())
+                    ->setLabel("Page Path")
+                    ->setMutable(false)
+                    ->setTab(self::TAB_REDIRECTION_VALUE)
+                    ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
+                );
+
                 // Canonical
                 $formMeta->addField(
                     FormMetaField::create(Analytics::CANONICAL)
@@ -307,13 +316,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     ->setDescription("The creation date of the page")
                 );
 
-                // Path
-                $formMeta->addField(FormMetaField::create(Analytics::PATH)
-                    ->addValue($page->getPath())
-                    ->setMutable(false)
-                    ->setTab(self::TAB_PAGE_VALUE)
-                    ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
-                );
+
 
 
                 /**

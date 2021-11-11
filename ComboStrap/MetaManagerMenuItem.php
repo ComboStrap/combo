@@ -43,7 +43,7 @@ class MetaManagerMenuItem extends AbstractItem
      */
     public function getLabel(): string
     {
-        return "Metadata";
+        return "Metadata Manager";
     }
 
     public function getLinkAttributes($classprefix = 'menuitem '): array
@@ -62,7 +62,7 @@ class MetaManagerMenuItem extends AbstractItem
 
     public function getTitle(): string
     {
-        return "Show the Metadata";
+        return "Show and update the Page Metadata";
     }
 
     public function getSvg(): string

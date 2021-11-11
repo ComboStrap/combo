@@ -133,7 +133,7 @@ class FormMetaField
                 break;
             case 1:
                 $value = $this->values[0];
-                if (!blank($value)) {
+                if ($value !== null) {
                     $associative[self::VALUE_ATTRIBUTE] = $this->values[0];
                 }
                 break;
@@ -146,7 +146,7 @@ class FormMetaField
                 break;
             case 1:
                 $value = $this->defaults[0];
-                if (!blank($value)) {
+                if ($value !== null) {
                     $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $value;
                 }
                 break;

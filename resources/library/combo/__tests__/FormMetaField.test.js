@@ -72,4 +72,6 @@ test('Boolean field test', () => {
     expected = '<input type="checkbox" name="test" class="form-check-input" id="1" value="same" checked>';
     expect(actual).toEqualHtmlString(expected);
 
+
+
 })

@@ -2248,9 +2248,6 @@ class Page extends DokuPath
     /**
      * @return string|null
      *
-     * Note: The slug is not yet in url format with {@link DokuPath::toSlugPath()}
-     * because it may be composed with the home page names
-     * to form the {@link Page::getUrlPath()}
      */
     public
     function getSlugOrDefault(): ?string
@@ -2266,13 +2263,10 @@ class Page extends DokuPath
      *
      * @return string|null
      *
-     * Note: The slug is not yet in url format with {@link DokuPath::toSlugPath()}
-     * because it may be composed with the home page names
-     * to form the {@link Page::getUrlPath()}
      */
     public function getDefaultSlug(): ?string
     {
-        return strtolower($this->getTitleNotEmpty());
+        return DokuPath::toSlugPath($this->getTitleNotEmpty());
     }
 
     public
@@ -2671,9 +2665,6 @@ class Page extends DokuPath
     /**
      * @return string|null
      *
-     * * Note: The slug is not yet in url format with {@link DokuPath::toSlugPath()}
-     * because it may be composed with the home page names
-     * to form the {@link Page::getUrlPath()}
      */
     public function getSlug(): ?string
     {
@@ -2685,7 +2676,7 @@ class Page extends DokuPath
     function setSlug($slug): Page
     {
         $slug = DokuPath::toSlugPath($slug);
-        $this->canonical = $slug;
+        $this->slug = $slug;
         $this->setMetadata(Page::SLUG_ATTRIBUTE, $slug);
         return $this;
     }

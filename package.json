@@ -22,7 +22,16 @@
         }
     },
     "jest": {
-        "testEnvironment": "jsdom"
+        "testEnvironment": "jsdom",
+        "moduleFileExtensions": [
+            "mjs",
+            "js",
+            "jsx",
+            "ts",
+            "tsx",
+            "json",
+            "node"
+        ]
     },
     "browserslist": "> 0.5%, last 2 versions, not dead",
     "global": "./resources/library/combo/dist/combo.min.js",

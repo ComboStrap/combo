@@ -39,7 +39,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
      * Key in the frontmatter that disable the message
      */
     const DYNAMIC_QUALITY_MONITORING_INDICATOR = "dynamic_quality_monitoring";
-    const CANONICAL =  "quality:dynamic_monitoring";
+    const CANONICAL = "quality:dynamic_monitoring";
 
 
     function __construct()
@@ -53,15 +53,14 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
 
-        if (!$this->getConf(self::CONF_DISABLE_QUALITY_MONITORING)) {
-            $controller->register_hook(
-                'TPL_ACT_RENDER',
-                'BEFORE',
-                $this,
-                '_displayQualityMessage',
-                array()
-            );
-        }
+
+        $controller->register_hook(
+            'TPL_ACT_RENDER',
+            'BEFORE',
+            $this,
+            '_displayQualityMessage',
+            array()
+        );
 
 
     }
@@ -102,7 +101,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             return null;
         }
 
-        if (!$page->isQualityMonitored()) {
+        if (!$page->isDynamicQualityMonitored()) {
             return null;
         }
 

@@ -469,7 +469,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 // Quality Monitoring
                 $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR)
-                    ->addValue($page->isQualityMonitored(), false) // the default value is returned if checked
+                    ->addValue($page->getDynamicQualityIndicatorOrDefault(), false) // the default value is returned if checked
                     ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
                     ->setTab(self::TAB_QUALITY_VALUE)
                     ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)

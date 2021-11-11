@@ -243,7 +243,7 @@ class Page extends DokuPath
      * @var string|null
      */
     private $scope;
-    private $isDynamicQualityMonitored = true;
+    private $dynamicQualityIndicator;
 
     /**
      * @var string the alias used to build this page
@@ -733,12 +733,12 @@ class Page extends DokuPath
 
     /**
      * If true, the page is quality monitored (a note is shown to the writer)
-     * @return bool
+     * @return null|bool
      */
     public
-    function isQualityMonitored(): bool
+    function getDynamicQualityIndicator(): ?bool
     {
-        return $this->isDynamicQualityMonitored;
+        return $this->dynamicQualityIndicator;
     }
 
     /**
@@ -1842,7 +1842,7 @@ class Page extends DokuPath
                     $this->setPageImage($value);
                     continue 2;
                 case action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR:
-                    $this->setMonitorinQualityIndicator(Boolean::toBoolean($value));
+                    $this->setMonitoringQualityIndicator(Boolean::toBoolean($value));
                     continue 2;
                 default:
                     LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_INFO);
@@ -2491,7 +2491,7 @@ class Page extends DokuPath
         $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
 
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
-        $this->isDynamicQualityMonitored = Boolean::toBoolean($this->getMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR, $this->isDynamicQualityMonitored));
+        $this->dynamicQualityIndicator = Boolean::toBoolean($this->getMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR));
 
     }
 
@@ -2722,9 +2722,9 @@ class Page extends DokuPath
         return $this;
     }
 
-    private function setMonitorinQualityIndicator($boolean): Page
+    public function setMonitoringQualityIndicator($boolean): Page
     {
-        $this->isDynamicQualityMonitored = $boolean;
+        $this->dynamicQualityIndicator = $boolean;
         $this->setMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR, $boolean);
         return $this;
     }
@@ -2746,6 +2746,22 @@ class Page extends DokuPath
             }
         }
         return null;
+    }
+
+    public function isDynamicQualityMonitored(): bool
+    {
+        if (PluginUtility::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING)===1) {
+            return false;
+        }
+        return $this->getDynamicQualityIndicatorOrDefault();
+    }
+
+    public function getDynamicQualityIndicatorOrDefault(): bool
+    {
+        if($this->getDynamicQualityIndicator()!==null){
+            return $this->getDynamicQualityIndicator();
+        }
+        return true;
     }
 
 

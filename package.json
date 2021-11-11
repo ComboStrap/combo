@@ -23,15 +23,7 @@
     },
     "jest": {
         "testEnvironment": "jsdom",
-        "moduleFileExtensions": [
-            "mjs",
-            "js",
-            "jsx",
-            "ts",
-            "tsx",
-            "json",
-            "node"
-        ]
+        "setupFilesAfterEnv": ["./resources/library/combo/__tests__/JestExtend.js"]
     },
     "browserslist": "> 0.5%, last 2 versions, not dead",
     "global": "./resources/library/combo/dist/combo.min.js",

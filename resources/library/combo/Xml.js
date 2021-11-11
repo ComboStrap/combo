@@ -45,7 +45,7 @@ export default class Xml {
             // parsing failed
             Logger.getLogger().error(`Error (${errorNode.textContent}) while parsing the (${type}) string: ${this.xmlString}`);
         }
-        if(type==="text/html"){
+        if (type === "text/html") {
             this.documentElement = this.xmlDoc.body.firstChild;
         } else {
             this.documentElement = this.xmlDoc.documentElement
@@ -90,7 +90,7 @@ export default class Xml {
      * @return {Xml}
      */
     static createFromHtmlString(xmlString) {
-        return new Xml(xmlString,"text/html")
+        return new Xml(xmlString, "text/html")
     }
 
     /**
@@ -109,7 +109,10 @@ export default class Xml {
         if (xmlElement.hasAttributes()) {
             for (let attribute of xmlElement.getAttributeNames()) {
                 let value = xmlElement.getAttribute(attribute);
-                enterTag += ` ${attribute}="${value}"`;
+                enterTag += ` ${attribute}`;
+                if (value !== null && value !== "") {
+                    enterTag += `="${value}"`;
+                }
             }
         }
         enterTag += '>';
@@ -144,7 +147,7 @@ export default class Xml {
             }
         }
         // input is a self-closing tag
-        if(nodeNameLowerCase!=="input") {
+        if (nodeNameLowerCase !== "input") {
             output.push(`${prefix}</${nodeNameLowerCase}>`);
         }
         return output;

@@ -31,14 +31,14 @@ test('html', () => {
 
     let xhtml =
         `
-<form id="1"><div><div><input></div></div></form>
+<form id="1"><div><div><input checked></div></div></form>
 `
     let xml = Xml.createFromHtmlString(xhtml);
     let actual = xml.normalize();
     let expected = `<form id="1">
   <div>
     <div>
-      <input>
+      <input checked>
     </div>
   </div>
 </form>`

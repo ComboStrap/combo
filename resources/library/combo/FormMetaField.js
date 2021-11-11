@@ -131,7 +131,7 @@ export default class FormMetaField {
         }
         let name = json["name"];
         let formMetaField = FormMetaField.createFromName(name);
-        if(parent!=null){
+        if (parent != null) {
             formMetaField.setParent(parent);
         }
 
@@ -273,7 +273,7 @@ export default class FormMetaField {
     }
 
     getControlWidth() {
-        if(this.width===undefined && this.parent!==undefined){
+        if (this.width === undefined && this.parent !== undefined) {
             return 12 / this.parent.getChildren().length;
         }
         return this.width;
@@ -401,10 +401,17 @@ export default class FormMetaField {
                 case FormMetaField.BOOLEAN:
                     inputType = "checkbox";
                     htmlClass = "form-check-input";
-                    if (value === defaultValue) {
-                        checked = "checked"
+                    if (defaultValue !== null) {
+                        htmlValue = `value="${defaultValue}"`;
+                        if (value === defaultValue) {
+                            checked = "checked"
+                        }
+                    } else {
+                        if (value === "on") {
+                            checked = "checked"
+                        }
                     }
-                    htmlValue = `value="${value}"`;
+
                     htmlPlaceholder = "";
                     break;
                 case "line":

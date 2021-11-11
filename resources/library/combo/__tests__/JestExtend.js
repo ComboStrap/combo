@@ -22,13 +22,13 @@ expect.extend({
      * When pass is false, message should return the error message for when expect(x).yourMatcher() fails.
      * When pass is true, message should return the error message for when expect(x).not.yourMatcher() fails.
      *
-     * @param received
+     * @param actual
      * @param expected
      * @return {{actual: string, pass: *, expected, message: {(): string, (): string}}}
      */
-    toEqualHtml(received, expected) {
-        received = Xml.createFromHtmlString(received).normalize();
-        let pass = this.equals(received, expected);
+    toEqualHtmlString(actual, expected) {
+        actual = Xml.createFromHtmlString(actual).normalize();
+        let pass = this.equals(actual, expected);
 
         const options = {
             comment: 'Html String equality',
@@ -38,24 +38,26 @@ expect.extend({
 
         const message = pass
             ? () =>
-                this.utils.matcherHint('toEqualHtml', undefined, undefined, options) +
+                this.utils.matcherHint('toEqualHtmlString', undefined, undefined, options) +
                 '\n\n' +
                 `Expected: not ${this.utils.printExpected(expected)}\n` +
-                `Received: ${this.utils.printReceived(received)}`
+                `Received: ${this.utils.printReceived(actual)}`
             : () => {
-                const diffString = diff(expected, received, {
+                const diffString = diff(expected, actual, {
                     expand: this.expand,
                 });
                 return (
-                    this.utils.matcherHint('toEqualHtml', undefined, undefined, options) +
+                    this.utils.matcherHint('toEqualHtmlString', undefined, undefined, options) +
                     '\n\n' +
                     (diffString && diffString.includes('- Expect')
                         ? `Difference:\n\n${diffString}`
                         : `Expected: ${this.utils.printExpected(expected)}\n` +
-                        `Received: ${this.utils.printReceived(received)}`)
+                        `Received: ${this.utils.printReceived(actual)}`)
                 );
             };
 
-        return {actual: received, expected:expected, message, pass};
+        return {actual: actual, expected: expected, message, pass};
+
+
     },
 });

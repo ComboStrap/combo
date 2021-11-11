@@ -6,6 +6,6 @@ declare namespace jest {
          * See file `JestExtends.js` for the implementation
          * @param expected
          */
-        toEqualHtml<E = any>(expected: E): R;
+        toEqualHtmlString<E = any>(expected: E): R;
     }
 }

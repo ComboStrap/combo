@@ -140,27 +140,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         switch ($requestMethod) {
             case 'POST':
 
-                $jsonString = $_POST["json"];
-//                if (empty($jsonString)) {
-//                    LogUtility::log2file("The json object is missing", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-//                    header("Status: 400");
-//                    return;
-//                }
-//
-//                $jsonArray = \ComboStrap\Json::createFromString($jsonString)->toArray();
-//                if ($jsonArray === null) {
-//                    header("Status: 400");
-//                    LogUtility::log2file("The json received is not conform ($jsonString)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-//                    return;
-//                }
-//
-//                /**
-//                 * Upsert metadata after the page content modification
-//                 * to not trigger another modification because of the replication date
-//                 */
-//                $page->upsertMetadata($jsonArray);
-
-                Http::setStatus(200);
+                $this->handlePost();
 
                 return;
             case "GET":
@@ -200,382 +180,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
                 }
 
-                $formMeta = FormMeta::create($id)
-                    ->setType(FormMeta::FORM_NAV_TABS_TYPE);
-
-                /**
-                 * The manager
-                 */
-                // Name
-                $formMeta->addField(
-                    FormMetaField::create(Analytics::NAME)
-                        ->setMutable(true)
-                        ->setTab(self::TAB_PAGE_VALUE)
-                        ->setLabel("Name")
-                        ->setCanonical(Analytics::NAME)
-                        ->setDescription("The page name is the shortest page description. It should be at maximum a couple of words long. It's used mainly in navigation components.")
-                        ->addValue($page->getPageName(), $page->getDefaultPageName())
-                );
-
-                // Title (title of a component is an heading)
-                $formMeta->addField(
-                    FormMetaField::create(Analytics::TITLE)
-                        ->setLabel("Title")
-                        ->setDescription("The page title is a description advertised to external application such as search engine and browser.")
-                        ->addValue($page->getTitle(), $page->getDefaultTitle())
-                        ->setTab(self::TAB_PAGE_VALUE)
-                );
-
-                // H1
-                $formMeta->addField(
-                    FormMetaField::create(Analytics::H1)
-                        ->addValue($page->getH1(), $page->getDefaultH1())
-                        ->setTab(self::TAB_PAGE_VALUE)
-                        ->setDescription("The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title.")
-                );
-
-                // Description
-                $formMeta->addField(
-                    FormMetaField::create(Analytics::DESCRIPTION)
-                        ->addValue($page->getDescription(), $page->getDescriptionOrElseDokuWiki())
-                        ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
-                        ->setTab(self::TAB_PAGE_VALUE)
-                        ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
-                );
-
-                // Path
-                $formMeta->addField(FormMetaField::create(Analytics::PATH)
-                    ->addValue($page->getPath())
-                    ->setLabel("Page Path")
-                    ->setMutable(false)
-                    ->setTab(self::TAB_REDIRECTION_VALUE)
-                    ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
-                );
-
-                // Canonical
-                $formMeta->addField(
-                    FormMetaField::create(Analytics::CANONICAL)
-                        ->addValue($page->getCanonical(), $page->getDefaultCanonical())
-                        ->setTab(self::TAB_REDIRECTION_VALUE)
-                        ->setLabel("Canonical Path")
-                        ->setDescription("The canonical path is a short unique path for the page (used in named permalink)")
-                );
-
-                // Slug
-                $defaultSlug = $page->getDefaultSlug();
-                if(!empty($defaultSlug)){
-                    $defaultSlug = DokuPath::toSlugPath($defaultSlug);
-                }
-                $formMeta->addField(
-                    FormMetaField::create(Page::SLUG_ATTRIBUTE)
-                        ->addValue($page->getSlug(), $defaultSlug)
-                        ->setLabel("Slug Path")
-                        ->setTab(self::TAB_REDIRECTION_VALUE)
-                        ->setDescription("The slug is used in the url of the page (if chosen)")
-                );
-
-                $formMeta->addField(
-                    FormMetaField::create("url-path")
-                        ->addValue($page->getUrlPath())
-                        ->setTab(self::TAB_REDIRECTION_VALUE)
-                        ->setMutable(false)
-                        ->setCanonical("page:url")
-                        ->setLabel("Url Path")
-                        ->setDescription("The path used in the page url")
-                );
-
-                // Layout
-                $formMeta->addField(
-                    FormMetaField::create(Page::LAYOUT_PROPERTY)
-                        ->addValue($page->getLayout(), $page->getDefaultLayout())
-                        ->setDomainValues($page->getLayoutValues())
-                        ->setTab(self::TAB_PAGE_VALUE)
-                        ->setDescription("A layout chooses the layout of your page (such as the slots and placement of the main content)")
-                );
-
-
-                // Modified Date
-                $formMeta->addField(FormMetaField::create(Analytics::DATE_MODIFIED)
-                    ->addValue($page->getModifiedDateAsString())
-                    ->setMutable(false)
-                    ->setType(FormMetaField::DATETIME_TYPE_VALUE)
-                    ->setTab(self::TAB_PAGE_VALUE)
-                    ->setLabel("Modification Date")
-                    ->setDescription("The last modification date of the page")
-                    ->setCanonical(self::METADATA_CANONICAL)
-                );
-
-                // Created Date
-                $formMeta->addField(FormMetaField::create(Analytics::DATE_CREATED)
-                    ->addValue($page->getCreatedDateAsString())
-                    ->setMutable(false)
-                    ->setType(FormMetaField::DATETIME_TYPE_VALUE)
-                    ->setTab(self::TAB_PAGE_VALUE)
-                    ->setCanonical(self::METADATA_CANONICAL)
-                    ->setLabel("Creation Date")
-                    ->setDescription("The creation date of the page")
-                );
-
-
-
-
-                /**
-                 * Page Image Properties
-                 */
-                $pageImagePath = FormMetaField::create("image-path")
-                    ->setLabel("Path")
-                    ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
-                    ->setDescription("The path of the image")
-                    ->setWidth(8);
-                $pageImageUsage = FormMetaField::create("image-usage")
-                    ->setLabel("Usages")
-                    ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
-                    ->setDomainValues(PageImage::getUsageValues())
-                    ->setWidth(4)
-                    ->setDescription("The possible usages of the image");
-                $pageImagesObjects = $page->getPageImagesObject();
-                $pageImageDefault = $page->getDefaultPageImageObject();
-                for ($i = 0; $i < 5; $i++) {
-
-                    $pageImage = null;
-                    if (isset($pageImagesObjects[$i])) {
-                        $pageImage = $pageImagesObjects[$i];
-                    }
-
-                    /**
-                     * Image
-                     */
-                    $pageImagePathValue = null;
-                    $pageImagePathDefaultValue = null;
-                    $pageImagePathUsage = null;
-                    if ($pageImage != null) {
-                        $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getPath();
-                        $pageImagePathUsage = $pageImage->getUsage();
-                    }
-                    if ($i == 0 && $pageImageDefault !== null) {
-                        $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
-                    }
-                    $pageImagePath->addValue($pageImagePathValue, $pageImagePathDefaultValue);
-                    $pageImageUsage->addValue($pageImagePathUsage, PageImage::getDefaultUsage());
-
-                }
-
-                // Image
-                $formMeta->addField(FormMetaField::create("page-image")
-                    ->setType(FormMetaField::TABULAR_TYPE_VALUE)
-                    ->setLabel("Page Images")
-                    ->setTab(self::TAB_IMAGE_VALUE)
-                    ->setDescription("The illustrative images of the page")
-                    ->addColumn($pageImagePath)
-                    ->addColumn($pageImageUsage)
-                );
-
-
-                /**
-                 * Aliases
-                 */
-                $aliasPath = FormMetaField::create("alias-path")
-                    ->setCanonical(Alias::CANONICAL)
-                    ->setLabel("Alias Path")
-                    ->setDescription("The path of the alias");
-                $aliasType = FormMetaField::create("alias-type")
-                    ->setCanonical(Alias::CANONICAL)
-                    ->setLabel("Alias Type")
-                    ->setDescription("The type of the alias")
-                    ->setDomainValues(Alias::getPossibleTypesValues());
-
-
-                $aliasesValues = $page->getAliases();
-                if (sizeof($aliasesValues) === 0) {
-                    $aliasPath->addValue(null);
-                    $aliasType->addValue(null, Alias::getDefaultType());
-                } else {
-                    foreach ($aliasesValues as $alias) {
-                        $aliasPath->addValue($alias->getPath());
-                        $aliasType->addValue($alias->getType(), Alias::getDefaultType());
-                    }
-                }
-
-                $formMeta->addField(FormMetaField::create(Page::ALIAS_ATTRIBUTE)
-                    ->setLabel("Page Aliases")
-                    ->setDescription("Aliases that will redirect to this page.")
-                    ->setTab(self::TAB_REDIRECTION_VALUE)
-                    ->setType(FormMetaField::TABULAR_TYPE_VALUE)
-                    ->addColumn($aliasPath)
-                    ->addColumn($aliasType)
-                );
-
-
-                // Page Type
-                $formMeta->addField(FormMetaField::create(Page::TYPE_META_PROPERTY)
-                    ->addValue($page->getType(), $page->getDefaultType())
-                    ->setDomainValues($page->getTypeValues())
-                    ->setTab(self::TAB_TYPE_VALUE)
-                    ->setCanonical(self::PAGE_TYPE_CANONICAL)
-                    ->setLabel("Page Type")
-                    ->setDescription("The type of page")
-                );
-
-                // Published Date
-                $formMeta->addField(FormMetaField::create(Publication::DATE_PUBLISHED)
-                    ->addValue($page->getPublishedTimeAsString(), $page->getCreatedDateAsString())
-                    ->setType(FormMetaField::DATETIME_TYPE_VALUE)
-                    ->setTab(self::TAB_TYPE_VALUE)
-                    ->setCanonical(self::PAGE_TYPE_CANONICAL)
-                    ->setLabel("Publication Date")
-                    ->setDescription("The publication date")
-                );
-
-                // Start Date
-                $formMeta->addField(FormMetaField::create(Analytics::DATE_START)
-                    ->addValue($page->getStartDate())
-                    ->setType(FormMetaField::DATETIME_TYPE_VALUE)
-                    ->setTab(self::TAB_TYPE_VALUE)
-                    ->setCanonical(Page::EVENT_TYPE)
-                    ->setLabel("Start Date")
-                    ->setDescription("The start date of an event")
-                );
-
-                // End Date
-                $formMeta->addField(FormMetaField::create(Analytics::DATE_END)
-                    ->addValue($page->getEndDate())
-                    ->setType(FormMetaField::DATETIME_TYPE_VALUE)
-                    ->setTab(self::TAB_TYPE_VALUE)
-                    ->setCanonical(Page::EVENT_TYPE)
-                    ->setLabel("End Date")
-                    ->setDescription("The end date of an event")
-                );
-
-                // ld-json
-                $formMeta->addField(FormMetaField::create(action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY)
-                    ->addValue($page->getLdJson(), "Enter a json-ld value")
-                    ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
-                    ->setTab(self::TAB_TYPE_VALUE)
-                    ->setCanonical(action_plugin_combo_metagoogle::CANONICAL)
-                    ->setLabel("Json-ld")
-                    ->setDescription("Advanced Page metadata definition with the json-ld format")
-                );
-
-
-                // Is low quality page
-                $formMeta->addField(FormMetaField::create(Page::LOW_QUALITY_PAGE_INDICATOR)
-                    ->addValue($page->getLowQualityIndicator(), false) // the default value is the value returned if checked)
-                    ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
-                    ->setTab(self::TAB_QUALITY_VALUE)
-                    ->setCanonical(LowQualityPage::LOW_QUALITY_PAGE_CANONICAL)
-                    ->setLabel("Prevent this page to become a low quality page")
-                    ->setDescription("If checked, this page will never be a low quality page")
-                );
-
-                // Quality Monitoring
-                $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR)
-                    ->addValue($page->getDynamicQualityIndicatorOrDefault(), false) // the default value is returned if checked
-                    ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
-                    ->setTab(self::TAB_QUALITY_VALUE)
-                    ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)
-                    ->setLabel("Disable the quality message of this page")
-                    ->setDescription("If checked, the quality message will not be shown for the page.")
-                );
-
-                // Locale
-                $formMeta->addField(FormMetaField::create("locale")
-                    ->addValue($page->getLocale(), Site::getLocale())
-                    ->setMutable(false)
-                    ->setTab(self::TAB_LANGUAGE_VALUE)
-                    ->setCanonical("locale")
-                    ->setLabel("Locale")
-                    ->setDescription("The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata.")
-                );
-
-                // Lang
-                $formMeta->addField(FormMetaField::create(Page::LANG_META_PROPERTY)
-                    ->addValue($page->getLang(), Site::getLang())
-                    ->setTab(self::TAB_LANGUAGE_VALUE)
-                    ->setCanonical(Page::LANG_META_PROPERTY)
-                    ->setLabel("Language")
-                    ->setDescription("The language of the page")
-                );
-
-                // Country
-                $formMeta->addField(FormMetaField::create(Page::REGION_META_PROPERTY)
-                    ->addValue($page->getLocaleRegion(), Site::getLanguageRegion())
-                    ->setTab(self::TAB_LANGUAGE_VALUE)
-                    ->setLabel("Region")
-                    ->setDescription("The region of the language")
-                );
-
-                // database replication Date
-                $replicationDate = $page->getDatabasePage()->getReplicationDate();
-                $formMeta->addField(FormMetaField::create(DatabasePage::DATE_REPLICATION)
-                    ->addValue($replicationDate != null ? $replicationDate->format(Iso8601Date::getFormat()) : null)
-                    ->setMutable(false)
-                    ->setType(FormMetaField::DATETIME_TYPE_VALUE)
-                    ->setTab(self::TAB_INTEGRATION_VALUE)
-                    ->setCanonical(DatabasePage::REPLICATION_CANONICAL)
-                    ->setLabel("Database Replication Date")
-                    ->setDescription("The last date of database replication")
-                );
-
-                // Page Id
-                $pageId = $page->getPageId();
-                $formMeta->addField(FormMetaField::create(Page::PAGE_ID_ATTRIBUTE)
-                    ->addValue($pageId)
-                    ->setMutable(false)
-                    ->setTab(self::TAB_INTEGRATION_VALUE)
-                    ->setCanonical(Page::PAGE_ID_ATTRIBUTE)
-                    ->setLabel("Page Id")
-                    ->setDescription("An unique identifier for the page")
-                );
-
-                /**
-                 * Tabs (for whatever reason, javascript keep the order of the properties
-                 * and therefore the order of the tabs)
-                 */
-                $formMeta
-                    ->addTab(
-                        FormMetaTab::create(self::TAB_PAGE_VALUE)
-                            ->setLabel("Page")
-                            ->setWidthLabel(3)
-                            ->setWidthField(9)
-                    )
-                    ->addTab(
-                        FormMetaTab::create(self::TAB_TYPE_VALUE)
-                            ->setLabel("Page Type")
-                            ->setWidthLabel(3)
-                            ->setWidthField(9)
-                    )
-                    ->addTab(
-                        FormMetaTab::create(self::TAB_REDIRECTION_VALUE)
-                            ->setLabel("Redirection")
-                            ->setWidthLabel(3)
-                            ->setWidthField(9)
-                    )
-                    ->addTab(
-                        FormMetaTab::create(self::TAB_IMAGE_VALUE)
-                            ->setLabel("Image")
-                            ->setWidthField(12)
-                    )
-                    ->addTab(
-                        FormMetaTab::create(self::TAB_QUALITY_VALUE)
-                            ->setLabel("Quality")
-                            ->setWidthLabel(6)
-                            ->setWidthField(6)
-                    )->addTab(
-                        FormMetaTab::create(self::TAB_LANGUAGE_VALUE)
-                            ->setLabel("Language")
-                            ->setWidthLabel(2)
-                            ->setWidthField(10)
-                    )->addTab(
-                        FormMetaTab::create(self::TAB_INTEGRATION_VALUE)
-                            ->setLabel("Integration")
-                            ->setWidthLabel(4)
-                            ->setWidthField(8)
-                    );
-
-
-                Http::setJsonMime();
-                Http::setStatus(200);
-                echo json_encode($formMeta->toAssociativeArray());
+                $this->handleGetFormMeta($page);
                 return;
 
 
@@ -651,6 +256,415 @@ $frontMatterEndTag$restDocument
 EOF;
             $page->upsertContent($newPageContent, "Metadata manager upsert");
         }
+    }
+
+    private function handlePost()
+    {
+        $jsonString = $_POST["json"];
+//                if (empty($jsonString)) {
+//                    LogUtility::log2file("The json object is missing", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+//                    header("Status: 400");
+//                    return;
+//                }
+//
+//                $jsonArray = \ComboStrap\Json::createFromString($jsonString)->toArray();
+//                if ($jsonArray === null) {
+//                    header("Status: 400");
+//                    LogUtility::log2file("The json received is not conform ($jsonString)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+//                    return;
+//                }
+//
+//                /**
+//                 * Upsert metadata after the page content modification
+//                 * to not trigger another modification because of the replication date
+//                 */
+//                $page->upsertMetadata($jsonArray);
+
+        Http::setStatus(200);
+
+    }
+
+    /**
+     * @param Page $page
+     */
+    private function handleGetFormMeta($page)
+    {
+        $formMeta = FormMeta::create($page->getDokuwikiId())
+            ->setType(FormMeta::FORM_NAV_TABS_TYPE);
+
+        /**
+         * The manager
+         */
+        // Name
+        $formMeta->addField(
+            FormMetaField::create(Analytics::NAME)
+                ->setMutable(true)
+                ->setTab(self::TAB_PAGE_VALUE)
+                ->setLabel("Name")
+                ->setCanonical(Analytics::NAME)
+                ->setDescription("The page name is the shortest page description. It should be at maximum a couple of words long. It's used mainly in navigation components.")
+                ->addValue($page->getPageName(), $page->getDefaultPageName())
+        );
+
+        // Title (title of a component is an heading)
+        $formMeta->addField(
+            FormMetaField::create(Analytics::TITLE)
+                ->setLabel("Title")
+                ->setDescription("The page title is a description advertised to external application such as search engine and browser.")
+                ->addValue($page->getTitle(), $page->getDefaultTitle())
+                ->setTab(self::TAB_PAGE_VALUE)
+        );
+
+        // H1
+        $formMeta->addField(
+            FormMetaField::create(Analytics::H1)
+                ->addValue($page->getH1(), $page->getDefaultH1())
+                ->setTab(self::TAB_PAGE_VALUE)
+                ->setDescription("The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title.")
+        );
+
+        // Description
+        $formMeta->addField(
+            FormMetaField::create(Analytics::DESCRIPTION)
+                ->addValue($page->getDescription(), $page->getDescriptionOrElseDokuWiki())
+                ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
+                ->setTab(self::TAB_PAGE_VALUE)
+                ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
+        );
+
+        // Path
+        $formMeta->addField(FormMetaField::create(Analytics::PATH)
+            ->addValue($page->getPath())
+            ->setLabel("Page Path")
+            ->setMutable(false)
+            ->setTab(self::TAB_REDIRECTION_VALUE)
+            ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
+        );
+
+        // Canonical
+        $formMeta->addField(
+            FormMetaField::create(Analytics::CANONICAL)
+                ->addValue($page->getCanonical(), $page->getDefaultCanonical())
+                ->setTab(self::TAB_REDIRECTION_VALUE)
+                ->setLabel("Canonical Path")
+                ->setDescription("The canonical path is a short unique path for the page (used in named permalink)")
+        );
+
+        // Slug
+        $defaultSlug = $page->getDefaultSlug();
+        if(!empty($defaultSlug)){
+            $defaultSlug = DokuPath::toSlugPath($defaultSlug);
+        }
+        $formMeta->addField(
+            FormMetaField::create(Page::SLUG_ATTRIBUTE)
+                ->addValue($page->getSlug(), $defaultSlug)
+                ->setLabel("Slug Path")
+                ->setTab(self::TAB_REDIRECTION_VALUE)
+                ->setDescription("The slug is used in the url of the page (if chosen)")
+        );
+
+        $formMeta->addField(
+            FormMetaField::create("url-path")
+                ->addValue($page->getUrlPath())
+                ->setTab(self::TAB_REDIRECTION_VALUE)
+                ->setMutable(false)
+                ->setCanonical("page:url")
+                ->setLabel("Url Path")
+                ->setDescription("The path used in the page url")
+        );
+
+        // Layout
+        $formMeta->addField(
+            FormMetaField::create(Page::LAYOUT_PROPERTY)
+                ->addValue($page->getLayout(), $page->getDefaultLayout())
+                ->setDomainValues($page->getLayoutValues())
+                ->setTab(self::TAB_PAGE_VALUE)
+                ->setDescription("A layout chooses the layout of your page (such as the slots and placement of the main content)")
+        );
+
+
+        // Modified Date
+        $formMeta->addField(FormMetaField::create(Analytics::DATE_MODIFIED)
+            ->addValue($page->getModifiedDateAsString())
+            ->setMutable(false)
+            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setTab(self::TAB_PAGE_VALUE)
+            ->setLabel("Modification Date")
+            ->setDescription("The last modification date of the page")
+            ->setCanonical(self::METADATA_CANONICAL)
+        );
+
+        // Created Date
+        $formMeta->addField(FormMetaField::create(Analytics::DATE_CREATED)
+            ->addValue($page->getCreatedDateAsString())
+            ->setMutable(false)
+            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setTab(self::TAB_PAGE_VALUE)
+            ->setCanonical(self::METADATA_CANONICAL)
+            ->setLabel("Creation Date")
+            ->setDescription("The creation date of the page")
+        );
+
+
+
+
+        /**
+         * Page Image Properties
+         */
+        $pageImagePath = FormMetaField::create("image-path")
+            ->setLabel("Path")
+            ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
+            ->setDescription("The path of the image")
+            ->setWidth(8);
+        $pageImageUsage = FormMetaField::create("image-usage")
+            ->setLabel("Usages")
+            ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
+            ->setDomainValues(PageImage::getUsageValues())
+            ->setWidth(4)
+            ->setDescription("The possible usages of the image");
+        $pageImagesObjects = $page->getPageImagesObject();
+        $pageImageDefault = $page->getDefaultPageImageObject();
+        for ($i = 0; $i < 5; $i++) {
+
+            $pageImage = null;
+            if (isset($pageImagesObjects[$i])) {
+                $pageImage = $pageImagesObjects[$i];
+            }
+
+            /**
+             * Image
+             */
+            $pageImagePathValue = null;
+            $pageImagePathDefaultValue = null;
+            $pageImagePathUsage = null;
+            if ($pageImage != null) {
+                $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getPath();
+                $pageImagePathUsage = $pageImage->getUsage();
+            }
+            if ($i == 0 && $pageImageDefault !== null) {
+                $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
+            }
+            $pageImagePath->addValue($pageImagePathValue, $pageImagePathDefaultValue);
+            $pageImageUsage->addValue($pageImagePathUsage, PageImage::getDefaultUsage());
+
+        }
+
+        // Image
+        $formMeta->addField(FormMetaField::create("page-image")
+            ->setType(FormMetaField::TABULAR_TYPE_VALUE)
+            ->setLabel("Page Images")
+            ->setTab(self::TAB_IMAGE_VALUE)
+            ->setDescription("The illustrative images of the page")
+            ->addColumn($pageImagePath)
+            ->addColumn($pageImageUsage)
+        );
+
+
+        /**
+         * Aliases
+         */
+        $aliasPath = FormMetaField::create("alias-path")
+            ->setCanonical(Alias::CANONICAL)
+            ->setLabel("Alias Path")
+            ->setDescription("The path of the alias");
+        $aliasType = FormMetaField::create("alias-type")
+            ->setCanonical(Alias::CANONICAL)
+            ->setLabel("Alias Type")
+            ->setDescription("The type of the alias")
+            ->setDomainValues(Alias::getPossibleTypesValues());
+
+
+        $aliasesValues = $page->getAliases();
+        if (sizeof($aliasesValues) === 0) {
+            $aliasPath->addValue(null);
+            $aliasType->addValue(null, Alias::getDefaultType());
+        } else {
+            foreach ($aliasesValues as $alias) {
+                $aliasPath->addValue($alias->getPath());
+                $aliasType->addValue($alias->getType(), Alias::getDefaultType());
+            }
+        }
+
+        $formMeta->addField(FormMetaField::create(Page::ALIAS_ATTRIBUTE)
+            ->setLabel("Page Aliases")
+            ->setDescription("Aliases that will redirect to this page.")
+            ->setTab(self::TAB_REDIRECTION_VALUE)
+            ->setType(FormMetaField::TABULAR_TYPE_VALUE)
+            ->addColumn($aliasPath)
+            ->addColumn($aliasType)
+        );
+
+
+        // Page Type
+        $formMeta->addField(FormMetaField::create(Page::TYPE_META_PROPERTY)
+            ->addValue($page->getType(), $page->getDefaultType())
+            ->setDomainValues($page->getTypeValues())
+            ->setTab(self::TAB_TYPE_VALUE)
+            ->setCanonical(self::PAGE_TYPE_CANONICAL)
+            ->setLabel("Page Type")
+            ->setDescription("The type of page")
+        );
+
+        // Published Date
+        $formMeta->addField(FormMetaField::create(Publication::DATE_PUBLISHED)
+            ->addValue($page->getPublishedTimeAsString(), $page->getCreatedDateAsString())
+            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setTab(self::TAB_TYPE_VALUE)
+            ->setCanonical(self::PAGE_TYPE_CANONICAL)
+            ->setLabel("Publication Date")
+            ->setDescription("The publication date")
+        );
+
+        // Start Date
+        $formMeta->addField(FormMetaField::create(Analytics::DATE_START)
+            ->addValue($page->getStartDate())
+            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setTab(self::TAB_TYPE_VALUE)
+            ->setCanonical(Page::EVENT_TYPE)
+            ->setLabel("Start Date")
+            ->setDescription("The start date of an event")
+        );
+
+        // End Date
+        $formMeta->addField(FormMetaField::create(Analytics::DATE_END)
+            ->addValue($page->getEndDate())
+            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setTab(self::TAB_TYPE_VALUE)
+            ->setCanonical(Page::EVENT_TYPE)
+            ->setLabel("End Date")
+            ->setDescription("The end date of an event")
+        );
+
+        // ld-json
+        $formMeta->addField(FormMetaField::create(action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY)
+            ->addValue($page->getLdJson(), "Enter a json-ld value")
+            ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
+            ->setTab(self::TAB_TYPE_VALUE)
+            ->setCanonical(action_plugin_combo_metagoogle::CANONICAL)
+            ->setLabel("Json-ld")
+            ->setDescription("Advanced Page metadata definition with the json-ld format")
+        );
+
+
+        // Is low quality page
+        $formMeta->addField(FormMetaField::create(Page::LOW_QUALITY_PAGE_INDICATOR)
+            ->addValue($page->getLowQualityIndicator(), false) // the default value is the value returned if checked)
+            ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
+            ->setTab(self::TAB_QUALITY_VALUE)
+            ->setCanonical(LowQualityPage::LOW_QUALITY_PAGE_CANONICAL)
+            ->setLabel("Prevent this page to become a low quality page")
+            ->setDescription("If checked, this page will never be a low quality page")
+        );
+
+        // Quality Monitoring
+        $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR)
+            ->addValue($page->getDynamicQualityIndicatorOrDefault(), false) // the default value is returned if checked
+            ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
+            ->setTab(self::TAB_QUALITY_VALUE)
+            ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)
+            ->setLabel("Disable the quality message of this page")
+            ->setDescription("If checked, the quality message will not be shown for the page.")
+        );
+
+        // Locale
+        $formMeta->addField(FormMetaField::create("locale")
+            ->addValue($page->getLocale(), Site::getLocale())
+            ->setMutable(false)
+            ->setTab(self::TAB_LANGUAGE_VALUE)
+            ->setCanonical("locale")
+            ->setLabel("Locale")
+            ->setDescription("The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata.")
+        );
+
+        // Lang
+        $formMeta->addField(FormMetaField::create(Page::LANG_META_PROPERTY)
+            ->addValue($page->getLang(), Site::getLang())
+            ->setTab(self::TAB_LANGUAGE_VALUE)
+            ->setCanonical(Page::LANG_META_PROPERTY)
+            ->setLabel("Language")
+            ->setDescription("The language of the page")
+        );
+
+        // Country
+        $formMeta->addField(FormMetaField::create(Page::REGION_META_PROPERTY)
+            ->addValue($page->getLocaleRegion(), Site::getLanguageRegion())
+            ->setTab(self::TAB_LANGUAGE_VALUE)
+            ->setLabel("Region")
+            ->setDescription("The region of the language")
+        );
+
+        // database replication Date
+        $replicationDate = $page->getDatabasePage()->getReplicationDate();
+        $formMeta->addField(FormMetaField::create(DatabasePage::DATE_REPLICATION)
+            ->addValue($replicationDate != null ? $replicationDate->format(Iso8601Date::getFormat()) : null)
+            ->setMutable(false)
+            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setTab(self::TAB_INTEGRATION_VALUE)
+            ->setCanonical(DatabasePage::REPLICATION_CANONICAL)
+            ->setLabel("Database Replication Date")
+            ->setDescription("The last date of database replication")
+        );
+
+        // Page Id
+        $pageId = $page->getPageId();
+        $formMeta->addField(FormMetaField::create(Page::PAGE_ID_ATTRIBUTE)
+            ->addValue($pageId)
+            ->setMutable(false)
+            ->setTab(self::TAB_INTEGRATION_VALUE)
+            ->setCanonical(Page::PAGE_ID_ATTRIBUTE)
+            ->setLabel("Page Id")
+            ->setDescription("An unique identifier for the page")
+        );
+
+        /**
+         * Tabs (for whatever reason, javascript keep the order of the properties
+         * and therefore the order of the tabs)
+         */
+        $formMeta
+            ->addTab(
+                FormMetaTab::create(self::TAB_PAGE_VALUE)
+                    ->setLabel("Page")
+                    ->setWidthLabel(3)
+                    ->setWidthField(9)
+            )
+            ->addTab(
+                FormMetaTab::create(self::TAB_TYPE_VALUE)
+                    ->setLabel("Page Type")
+                    ->setWidthLabel(3)
+                    ->setWidthField(9)
+            )
+            ->addTab(
+                FormMetaTab::create(self::TAB_REDIRECTION_VALUE)
+                    ->setLabel("Redirection")
+                    ->setWidthLabel(3)
+                    ->setWidthField(9)
+            )
+            ->addTab(
+                FormMetaTab::create(self::TAB_IMAGE_VALUE)
+                    ->setLabel("Image")
+                    ->setWidthField(12)
+            )
+            ->addTab(
+                FormMetaTab::create(self::TAB_QUALITY_VALUE)
+                    ->setLabel("Quality")
+                    ->setWidthLabel(6)
+                    ->setWidthField(6)
+            )->addTab(
+                FormMetaTab::create(self::TAB_LANGUAGE_VALUE)
+                    ->setLabel("Language")
+                    ->setWidthLabel(2)
+                    ->setWidthField(10)
+            )->addTab(
+                FormMetaTab::create(self::TAB_INTEGRATION_VALUE)
+                    ->setLabel("Integration")
+                    ->setWidthLabel(4)
+                    ->setWidthField(8)
+            );
+
+
+        Http::setJsonMime();
+        Http::setStatus(200);
+        echo json_encode($formMeta->toAssociativeArray());
     }
 
 

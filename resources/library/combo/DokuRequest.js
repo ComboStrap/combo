@@ -1,5 +1,8 @@
 /* global JSINFO  */
+
 /* global DOKU_BASE */
+
+import ComboModal from "./ComboModal";
 
 class DokuAjaxUrl {
 
@@ -38,7 +41,9 @@ export default class DokuAjaxRequest {
         let response = await fetch(this.url.toString(), {method: this.method});
 
         if (response.status !== 200) {
-            console.log('Bad request, status Code is: ' + response.status);
+            let modal = ComboModal.createTemporary()
+            modal.addBody('Bad request, status Code is: ' + response.status)
+            modal.show();
             return {};
         }
 
@@ -52,11 +57,21 @@ export default class DokuAjaxRequest {
 
     setMethod(method) {
         this.method = method;
+        return this;
     }
 
     setProperty(key, value) {
         this.url.setProperty(key, value);
         return this;
+    }
+
+    async sendAsJson(formData) {
+        let request = new XMLHttpRequest();
+        let response = await fetch(this.url.toString(), {method: this.method});
+        for (let entry of formData) {
+            console.log(entry);
+        }
+        return request.send(formData);
     }
 
     /**

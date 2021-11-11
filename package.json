@@ -12,7 +12,6 @@
         "@babel/core": "^7.16.0",
         "@babel/preset-env": "^7.16.0",
         "babel-jest": "^27.3.1",
-        "bootstrap": "^5.1.3",
         "jest": "^27.3.1",
         "parcel": "^2.0.0"
     },
@@ -23,7 +22,9 @@
     },
     "jest": {
         "testEnvironment": "jsdom",
-        "setupFilesAfterEnv": ["./resources/library/combo/__tests__/JestExtend.js"]
+        "setupFilesAfterEnv": [
+            "./resources/library/combo/__tests__/JestExtend.js"
+        ]
     },
     "browserslist": "> 0.5%, last 2 versions, not dead",
     "global": "./resources/library/combo/dist/combo.min.js",
@@ -35,5 +36,10 @@
             "includeNodeModules": true,
             "isLibrary": false
         }
+    },
+    "dependencies": {
+        "@popperjs/core": "^2.10.2",
+        "bootstrap": "^5.1.3",
+        "nanoid": "^3.1.30"
     }
 }

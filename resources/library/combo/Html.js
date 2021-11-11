@@ -1,3 +1,5 @@
+import {nanoid} from "nanoid";
+
 export default class Html {
 
     static toHtmlId(s) {
@@ -9,4 +11,9 @@ export default class Html {
             .toString() // in case of number
             .replace(/[_.\s:\/\\]/g, "-");
     }
+
+    static createRandomId() {
+        return nanoid();
+    }
+
 }

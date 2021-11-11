@@ -78,9 +78,9 @@ window.addEventListener("DOMContentLoaded", function () {
             event.preventDefault();
             let formData = new FormData(document.getElementById(formId));
             console.log("Submitted");
-            for (let entry of formData) {
-                console.log(entry);
-            }
+            combo.createDokuRequest(metaManagerCall)
+                .setMethod("post")
+                .sendAsJson(formData);
         })
         managerModal.addFooterButton(submitButton);
 

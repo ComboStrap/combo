@@ -2,6 +2,9 @@
  * A pointer to the created modals
  * Private
  */
+import Html from "./Html";
+import {Modal} from "bootstrap";
+
 let comboModals = {};
 
 export default class ComboModal {
@@ -10,6 +13,9 @@ export default class ComboModal {
      * @type HTMLDivElement
      */
     modalFooter;
+    footerButtons = [];
+    bodies = [];
+    isBuild = false;
 
     /**
      * A valid HTML id
@@ -56,39 +62,23 @@ export default class ComboModal {
             "keyboard": true,
             "focus": true
         };
-        this.bootStrapModal = new bootstrap.Modal(this.modalRoot, options);
+        if (process.env.NODE_ENV !== 'production') {
+            this.bootStrapModal = new Modal(this.modalRoot, options);
+        } else {
+            this.bootStrapModal = new bootstrap.Modal(this.modalRoot, options);
+        }
     }
 
     setHeader(headerText) {
-        let html = `
-<div class="modal-header">
-    <h5 class="modal-title">${headerText}</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-</div>
-`;
-        this.modalContent.insertAdjacentHTML('afterbegin', html);
+        this.headerText = headerText;
     }
 
     addBody(htmlBody) {
 
-        let type = typeof htmlBody;
-        switch (type) {
-            case "string":
-                this.modalBody.innerHTML = htmlBody;
-                break;
-            default:
-            case "object":
-                this.modalBody.append(htmlBody);
-                break;
-        }
+        this.bodies.push(htmlBody);
 
     }
 
-    createModalFooter() {
-        this.modalFooter = document.createElement("div");
-        this.modalFooter.classList.add("modal-footer");
-        this.modalContent.appendChild(this.modalFooter);
-    }
 
     /**
      *
@@ -96,16 +86,7 @@ export default class ComboModal {
      */
     addFooterButton(htmlFooter) {
 
-
-        if (this.modalFooter === undefined) {
-            this.createModalFooter();
-        }
-        if (typeof htmlFooter === 'string' || htmlFooter instanceof String) {
-            this.modalFooter.insertAdjacentHTML('beforeend', htmlFooter);
-        } else {
-            this.modalFooter.appendChild(htmlFooter);
-        }
-
+        this.footerButtons.push(htmlFooter);
 
     }
 
@@ -127,6 +108,9 @@ export default class ComboModal {
 
     show() {
 
+        if (!this.isBuild) {
+            this.build()
+        }
 
         this.bootStrapModal.show();
         /**
@@ -149,9 +133,9 @@ export default class ComboModal {
      * Create a modal and return the modal content element
      * @return ComboModal
      */
-    static createFromId(modalName) {
-        let modal = new ComboModal(modalName);
-        comboModals[modalName] = modal;
+    static createFromId(modalId) {
+        let modal = new ComboModal(modalId);
+        comboModals[modalId] = modal;
         return modal;
     }
 
@@ -178,5 +162,57 @@ export default class ComboModal {
             document.getElementById(modalId).remove();
         })
         comboModals = {};
+    }
+
+    static createTemporary() {
+        return this.createFromId(Html.createRandomId());
+    }
+
+    getElement() {
+        return this.modalRoot;
+    }
+
+    /**
+     * Build the modal
+     */
+    build() {
+        this.isBuild = true;
+        if (this.headerText === undefined) {
+            let headerHtml = `
+<div class="modal-header">
+    <h5 class="modal-title">${this.headerText}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+`;
+            this.modalContent.insertAdjacentHTML('afterbegin', headerHtml);
+        }
+
+        for (let body of this.bodies) {
+            let type = typeof body;
+            switch (type) {
+                case "string":
+                    this.modalBody.insertAdjacentHTML('beforeend', body);
+                    break;
+                default:
+                case "object":
+                    this.modalBody.appendChild(body);
+                    break;
+            }
+        }
+
+        /**
+         * Footer button
+         */
+        let modalFooter = document.createElement("div");
+        modalFooter.classList.add("modal-footer");
+        this.modalContent.appendChild(this.modalFooter);
+
+        for (let footerButton of this.footerButtons) {
+            if (typeof footerButton === 'string' || footerButton instanceof String) {
+                modalFooter.insertAdjacentHTML('beforeend', footerButton);
+            } else {
+                modalFooter.appendChild(footerButton);
+            }
+        }
     }
 }

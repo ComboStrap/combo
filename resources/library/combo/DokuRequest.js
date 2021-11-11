@@ -8,12 +8,10 @@ class DokuAjaxUrl {
 
     constructor(call) {
         this.url = new URL(DOKU_BASE + 'lib/exe/ajax.php', window.location.href);
-
         this.url.searchParams.set("call", call);
-
+        this.call = call;
         this.url.searchParams.set("id", JSINFO.id);
     }
-
 
     setProperty(key, value) {
         this.url.searchParams.set(key, value);
@@ -22,6 +20,10 @@ class DokuAjaxUrl {
 
     toString() {
         return this.url.toString();
+    }
+
+    getCall() {
+        return this.call;
     }
 }
 
@@ -42,7 +44,7 @@ export default class DokuAjaxRequest {
 
         if (response.status !== 200) {
             let modal = ComboModal.createTemporary()
-            modal.addBody('Bad request, status Code is: ' + response.status)
+            modal.addBody(`Bad request:  the call ${this.url.getCall()} to the backend sends back the following exit code` + response.status)
             modal.show();
             return {};
         }

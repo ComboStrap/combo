@@ -3,7 +3,7 @@
  * Private
  */
 import Html from "./Html";
-import {Modal} from "bootstrap";
+import {Modal, Tooltip} from "bootstrap";
 
 let comboModals = {};
 
@@ -62,11 +62,11 @@ export default class ComboModal {
             "keyboard": true,
             "focus": true
         };
-        if (process.env.NODE_ENV !== 'production') {
-            this.bootStrapModal = new Modal(this.modalRoot, options);
-        } else {
-            this.bootStrapModal = new bootstrap.Modal(this.modalRoot, options);
-        }
+        /**
+         * No need to use the `bootstrap`
+         * @type {Modal}
+         */
+        this.bootStrapModal = new Modal(this.modalRoot, options);
     }
 
     setHeader(headerText) {
@@ -97,7 +97,7 @@ export default class ComboModal {
     addFooterCloseButton(label = "Close") {
         let closeButton = document.createElement("button");
         closeButton.classList.add("btn", "btn-secondary")
-        closeButton.innerText = label;
+        closeButton.innerHTML = label;
         let modal = this;
         closeButton.addEventListener("click", function () {
             modal.bootStrapModal.hide();
@@ -117,7 +117,7 @@ export default class ComboModal {
          * Init the tooltip if any
          */
         let tooltipSelector = `#${this.modalId} [data-bs-toggle="tooltip"]`;
-        document.querySelectorAll(tooltipSelector).forEach(el => new bootstrap.Tooltip(el));
+        document.querySelectorAll(tooltipSelector).forEach(el => new Tooltip(el));
     }
 
     dismiss() {
@@ -177,7 +177,7 @@ export default class ComboModal {
      */
     build() {
         this.isBuild = true;
-        if (this.headerText === undefined) {
+        if (this.headerText !== undefined) {
             let headerHtml = `
 <div class="modal-header">
     <h5 class="modal-title">${this.headerText}</h5>
@@ -205,7 +205,11 @@ export default class ComboModal {
          */
         let modalFooter = document.createElement("div");
         modalFooter.classList.add("modal-footer");
-        this.modalContent.appendChild(this.modalFooter);
+        this.modalContent.appendChild(modalFooter);
+
+        if (this.footerButtons.length===0){
+            this.addFooterCloseButton();
+        }
 
         for (let footerButton of this.footerButtons) {
             if (typeof footerButton === 'string' || footerButton instanceof String) {

@@ -27,14 +27,23 @@ To avoid this warning:
 It disable Babel transpilation in Parcel because Jest needs it also.
 
 
-#### Bootstrap / Jquery
+#### Bootstrap
 
-  * They have been added as dev dependency
+Bootstrap been added as a dependency
 ```bash
 https://parceljs.org/features/dependency-resolution/#global-aliases
 ```
   * Then added as alias in `package.json` [https://parceljs.org/features/dependency-resolution/#global-aliases|global-aliases]
 
+Then:
+```javascript
+import {Modal} from "bootstrap";
+let bootStrapModal = new Modal(this.modalRoot, options);
+```
+is replaced by when bundling
+```javascript
+let bootStrapModal = new bootstrap.Modal(this.modalRoot, options);
+```
 
 #### Build / UMD
 

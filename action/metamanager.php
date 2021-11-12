@@ -6,11 +6,11 @@ use ComboStrap\Alias;
 use ComboStrap\Analytics;
 use ComboStrap\DatabasePage;
 use ComboStrap\DokuPath;
-use ComboStrap\HttpResponse;
 use ComboStrap\FormMeta;
 use ComboStrap\FormMetaField;
 use ComboStrap\FormMetaTab;
 use ComboStrap\Http;
+use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
@@ -143,7 +143,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         switch ($requestMethod) {
             case 'POST':
 
-                $this->handlePost($event);
+                $this->handlePost($event, $page);
 
                 return;
             case "GET":
@@ -260,18 +260,57 @@ EOF;
         }
     }
 
-    private function handlePost($event)
+    /**
+     * @param $event
+     * @param Page $page
+     */
+    private function handlePost($event, Page $page)
     {
-        if ($_SERVER["CONTENT_TYPE"] === "application/json") {
+        if ($_SERVER["CONTENT_TYPE"] !== "application/json") {
+            /**
+             * We can't set the mime content in a {@link TestRequest}
+             */
+            if (!PluginUtility::isTest()) {
+                HttpResponse::create(HttpResponse::STATUS_UNSUPPORTED_MEDIA_TYPE)
+                    ->setEvent($event)
+                    ->setCanonical(self::CANONICAL)
+                    ->send("The post content should be in json format");
+                return;
+            }
+        }
+
+        /**
+         * We can't simulate a php://input in a {@link TestRequest}
+         * We set therefore the post
+         */
+        if (!PluginUtility::isTest()) {
             $jsonString = file_get_contents('php://input');
             $_POST = \ComboStrap\Json::createFromString($jsonString)->toArray();
-            HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-                ->send();
-
-        } else {
-            HttpResponse::create(HttpResponse::STATUS_UNSUPPORTED_MEDIA_TYPE)
-                ->send("The content should be in json format");
         }
+
+        $modifications = [];
+        $errors = [];
+        foreach ($_POST as $name => $value) {
+            $name = strtolower($name);
+            switch ($name) {
+                case Page::NAME_PROPERTY:
+                    if ($value != $page->getPageName()) {
+                        $page->setPageName($value);
+                    }
+                    continue 2;
+                default:
+                    $oldValue = $page->getMetadata($name);
+                    if ($oldValue !== $value) {
+                        //$page->setMetadata($name, $value);
+                        $errors[] = "The metadata ($name) is not managed but was saved with the value ($value)";
+                    }
+                    continue 2;
+            }
+        }
+        $page->getDatabasePage()->replicateMetaAttributes();
+
+        HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
+            ->sendMessage($errors);
 
 
     }
@@ -279,7 +318,8 @@ EOF;
     /**
      * @param Page $page
      */
-    private function handleGetFormMeta(Page $page)
+    private
+    function handleGetFormMeta(Page $page)
     {
         $formMeta = FormMeta::create($page->getDokuwikiId())
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);

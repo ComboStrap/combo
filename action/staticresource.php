@@ -198,7 +198,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
                 HttpResponse::create(HttpResponse::STATUS_NOT_MODIFIED)
                     ->setEvent($event)
                     ->setCanonical(self::CANONICAL)
-                    ->send("File not modified");
+                    ->sendMessage("File not modified");
                 return;
             }
         }
@@ -239,7 +239,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             http_rangeRequest($filePointer, $mediaToSend->getSize(), $mime);
         } else {
             HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
-                ->send("Could not read $mediaToSend - bad permissions?");
+                ->sendMessage("Could not read $mediaToSend - bad permissions?");
         }
 
     }

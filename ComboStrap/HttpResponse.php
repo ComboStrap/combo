@@ -60,10 +60,12 @@ class HttpResponse
         return $this;
     }
 
-    public function send($payload = null, $contentType = self::TYPE_JSON)
+    public function send($payload = null, $contentType = null)
     {
 
-        Http::setMime($contentType);
+        if ($contentType != null) {
+            Http::setMime($contentType);
+        }
 
         // header should before the status
         // because for instance a `"Location` header changes the status to 302
@@ -85,15 +87,9 @@ class HttpResponse
         /**
          * Payload
          */
-        if ($contentType == self::TYPE_JSON) {
-            if (!is_array($payload)) {
-                $payload = ["message" => $payload];
-            }
-            echo json_encode($payload);
-        } else {
+        if ($payload != null) {
             echo $payload;
         }
-
 
         /**
          * Exit
@@ -146,15 +142,19 @@ class HttpResponse
         return $this;
     }
 
-    public function setMessage(string $message)
-    {
-        $this->msg = $message;
-        return $this;
-    }
 
     public function addHeader(string $header): HttpResponse
     {
         $this->headers[] = $header;
         return $this;
+    }
+
+    /**
+     * @param string|array $messages
+     */
+    public function sendMessage($messages)
+    {
+        $message = json_encode(["message" => $messages]);
+        $this->send($message, self::TYPE_JSON);
     }
 }

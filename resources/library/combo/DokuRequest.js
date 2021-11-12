@@ -3,6 +3,7 @@
 /* global DOKU_BASE */
 
 import ComboModal from "./ComboModal";
+import Browser from "./Browser";
 
 class DokuAjaxUrl {
 
@@ -57,8 +58,12 @@ export default class DokuAjaxRequest {
 
     }
 
+    /**
+     * @param {string} method
+     * @return {DokuAjaxRequest}
+     */
     setMethod(method) {
-        this.method = method;
+        this.method = method.toUpperCase();
         return this;
     }
 
@@ -67,13 +72,25 @@ export default class DokuAjaxRequest {
         return this;
     }
 
-    async sendAsJson(formData) {
-        let request = new XMLHttpRequest();
-        let response = await fetch(this.url.toString(), {method: this.method});
-        for (let entry of formData) {
-            console.log(entry);
-        }
-        return request.send(formData);
+    /**
+     *
+     * @param formData
+     * @return {Promise<Response>}
+     *
+     * We don't send a multipart-form-data
+     * because php does not support them
+     * natively if the name of the input are
+     * not suffixed with `[]` (shame)
+     */
+    sendFormDataAsJson(formData) {
+
+        return fetch(this.url.toString(), {
+            method: this.method,
+            body: JSON.stringify(Browser.formDataToObject(formData)),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
     }
 
     /**

@@ -260,6 +260,11 @@ EOF;
 
     private function handlePost()
     {
+        if ($_SERVER["CONTENT_TYPE"] === "application/json") {
+            $_POST = json_decode(file_get_contents('php://input'), true);
+        }
+        Http::setStatus(404);
+        PluginUtility::softExit();
         $jsonString = $_POST["json"];
 //                if (empty($jsonString)) {
 //                    LogUtility::log2file("The json object is missing", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -352,7 +357,7 @@ EOF;
 
         // Slug
         $defaultSlug = $page->getDefaultSlug();
-        if(!empty($defaultSlug)){
+        if (!empty($defaultSlug)) {
             $defaultSlug = DokuPath::toSlugPath($defaultSlug);
         }
         $formMeta->addField(
@@ -404,8 +409,6 @@ EOF;
             ->setLabel("Creation Date")
             ->setDescription("The creation date of the page")
         );
-
-
 
 
         /**

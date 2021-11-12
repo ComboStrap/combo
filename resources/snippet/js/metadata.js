@@ -54,7 +54,8 @@ window.addEventListener("DOMContentLoaded", function () {
          */
         let formId = `${managerModal.getId()}-form`;
         let form = combo.createFormFromJson(formId, formMetadata);
-        managerModal.addBody(form.toHtmlElement());
+        let htmlFormElement = form.toHtmlElement();
+        managerModal.addBody(htmlFormElement);
 
         /**
          * Footer
@@ -64,7 +65,7 @@ window.addEventListener("DOMContentLoaded", function () {
         viewerButton.style.setProperty("font-weight", "300");
         viewerButton.textContent = "Viewer";
         viewerButton.addEventListener("click", async function () {
-            managerModal.dismiss();
+            managerModal.dismissHide();
             await openMetaViewer(managerModal, pageId);
         });
         managerModal.addFooterButton(viewerButton);
@@ -74,13 +75,19 @@ window.addEventListener("DOMContentLoaded", function () {
         submitButton.setAttribute("type", "submit");
         submitButton.setAttribute("form", formId);
         submitButton.innerText = "Submit";
-        submitButton.addEventListener("click", function (event) {
+        submitButton.addEventListener("click", async function (event) {
             event.preventDefault();
-            let formData = new FormData(document.getElementById(formId));
+            let formData = new FormData(htmlFormElement);
             console.log("Submitted");
-            combo.createDokuRequest(metaManagerCall)
+            let response = await combo.createDokuRequest(metaManagerCall)
                 .setMethod("post")
-                .sendAsJson(formData);
+                .sendFormDataAsJson(formData);
+            if (response.status !== 200) {
+                combo.createChildModal(managerModal)
+                    .centered()
+                    .addBody(`Error: The data could not be saved. The return code was (${response.status})`)
+                    .show();
+            }
         })
         managerModal.addFooterButton(submitButton);
 

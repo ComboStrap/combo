@@ -1,8 +1,18 @@
 /**
+ *
+ * A custom extension
+ *
+ *
+ *
  * As explained in the [ExtendMatcher](https://jestjs.io/docs/expect#expectextendmatchers)
  * and [with a little bit of utility](https://jestjs.io/docs/expect#thisutils)
  *
  * Intellij parse it and helps the diff
+ *
+ * Note that there is already a couple of library:
+ *   * https://github.com/jest-community/awesome-jest
+ *   * https://testing-library.com/docs/ecosystem-jest-dom/ (https://github.com/testing-library/jest-dom)
+ *   *
  *
  */
 import {diff} from 'jest-diff';
@@ -25,6 +35,13 @@ expect.extend({
      * @param actual
      * @param expected
      * @return {{actual: string, pass: *, expected, message: {(): string, (): string}}}
+     *
+     * Note that there is already
+     * https://github.com/testing-library/jest-dom/blob/main/src/to-contain-html.js
+     * but it does not format by trimming whitespace from the start and end of text,
+     * and collapsing multiple adjacent whitespace characters into a single space.
+     * https://testing-library.com/docs/queries/about#normalization
+     *
      */
     toEqualHtmlString(actual, expected) {
         actual = Xml.createFromHtmlString(actual).normalize();

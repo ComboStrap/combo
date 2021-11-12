@@ -25,48 +25,6 @@ export default class ComboModal {
 
         this.modalId = modalId;
 
-        this.modalRoot = document.createElement("div");
-
-        document.body.appendChild(this.modalRoot);
-        this.modalRoot.setAttribute("id", modalId);
-        this.modalRoot.classList.add("modal", "fade");
-        // Uncaught RangeError: Maximum call stack size exceeded caused by the tabindex
-        // modalRoot.setAttribute("tabindex", "-1");
-        this.modalRoot.setAttribute("aria-hidden", "true");
-
-        const modalManagerDialog = document.createElement("div");
-        modalManagerDialog.classList.add(
-            "modal-dialog",
-            "modal-dialog-scrollable",
-            "modal-fullscreen-md-down",
-            "modal-lg");
-        // Get the modal more central but fix as we have tab and
-        // we want still the mouse below the tab when we click
-        modalManagerDialog.style.setProperty("margin", "5rem auto");
-        modalManagerDialog.style.setProperty("height", "calc(100% - 9rem)");
-        this.modalRoot.appendChild(modalManagerDialog);
-        this.modalContent = document.createElement("div");
-        this.modalContent.classList.add("modal-content");
-        modalManagerDialog.appendChild(this.modalContent);
-
-        this.modalBody = document.createElement("div");
-        this.modalBody.classList.add("modal-body");
-        this.modalContent.appendChild(this.modalBody);
-
-        /**
-         * The modal can only be invoked when the body has been defined
-         *
-         */
-        let options = {
-            "backdrop": true,
-            "keyboard": true,
-            "focus": true
-        };
-        /**
-         * No need to use the `bootstrap`
-         * @type {Modal}
-         */
-        this.bootStrapModal = new Modal(this.modalRoot, options);
     }
 
     setHeader(headerText) {
@@ -76,6 +34,7 @@ export default class ComboModal {
     addBody(htmlBody) {
 
         this.bodies.push(htmlBody);
+        return this;
 
     }
 
@@ -103,13 +62,33 @@ export default class ComboModal {
             modal.bootStrapModal.hide();
         });
         this.addFooterButton(closeButton);
+        this.closeButton = closeButton;
         return closeButton;
+    }
+
+    /**
+     * Center the modal
+     * @return {ComboModal}
+     */
+    centered() {
+        this.isCentered = true;
+        return this;
     }
 
     show() {
 
         if (!this.isBuild) {
             this.build()
+        }
+
+        if (this.parentModal !== undefined) {
+            this.parentModal.dismissHide();
+            if (this.closeButton !== undefined) {
+                let parentModal = this.parentModal;
+                this.closeButton.addEventListener("click", function () {
+                    parentModal.show();
+                });
+            }
         }
 
         this.bootStrapModal.show();
@@ -120,12 +99,21 @@ export default class ComboModal {
         document.querySelectorAll(tooltipSelector).forEach(el => new Tooltip(el));
     }
 
-    dismiss() {
+    dismissHide() {
         this.bootStrapModal.hide();
     }
 
     getId() {
         return this.modalId;
+    }
+
+    /**
+     *
+     * @param {ComboModal} parentModal
+     */
+    setParent(parentModal) {
+        this.parentModal = parentModal;
+        return this;
     }
 
 
@@ -164,6 +152,10 @@ export default class ComboModal {
         comboModals = {};
     }
 
+    /**
+     *
+     * @return {ComboModal}
+     */
     static createTemporary() {
         return this.createFromId(Html.createRandomId());
     }
@@ -176,7 +168,58 @@ export default class ComboModal {
      * Build the modal
      */
     build() {
+
         this.isBuild = true;
+
+        this.modalRoot = document.createElement("div");
+
+        document.body.appendChild(this.modalRoot);
+        this.modalRoot.setAttribute("id", this.modalId);
+        this.modalRoot.classList.add("modal", "fade");
+        // Uncaught RangeError: Maximum call stack size exceeded caused by the tabindex
+        // modalRoot.setAttribute("tabindex", "-1");
+        this.modalRoot.setAttribute("aria-hidden", "true");
+
+        const modalManagerDialog = document.createElement("div");
+        modalManagerDialog.classList.add(
+            "modal-dialog",
+            "modal-dialog-scrollable",
+            "modal-fullscreen-md-down",
+            "modal-lg");
+        if (this.isCentered) {
+            modalManagerDialog.classList.add("modal-dialog-centered")
+        }
+        // Get the modal more central but fix as we have tab and
+        // we want still the mouse below the tab when we click
+        modalManagerDialog.style.setProperty("margin", "5rem auto");
+        modalManagerDialog.style.setProperty("height", "calc(100% - 9rem)");
+        this.modalRoot.appendChild(modalManagerDialog);
+        this.modalContent = document.createElement("div");
+        this.modalContent.classList.add("modal-content");
+        modalManagerDialog.appendChild(this.modalContent);
+
+        this.modalBody = document.createElement("div");
+        this.modalBody.classList.add("modal-body");
+        this.modalContent.appendChild(this.modalBody);
+
+        /**
+         * The bootstrap modal function
+         * can only be invoked when the body element has been defined
+         */
+        let options = {
+            "backdrop": true,
+            "keyboard": true,
+            "focus": true
+        };
+        /**
+         * No need to use the `bootstrap`
+         * @type {Modal}
+         */
+        this.bootStrapModal = new Modal(this.modalRoot, options);
+
+        /**
+         * Building the header
+         */
         if (this.headerText !== undefined) {
             let headerHtml = `
 <div class="modal-header">
@@ -187,6 +230,9 @@ export default class ComboModal {
             this.modalContent.insertAdjacentHTML('afterbegin', headerHtml);
         }
 
+        /**
+         * Building the body
+         */
         for (let body of this.bodies) {
             let type = typeof body;
             switch (type) {
@@ -207,7 +253,7 @@ export default class ComboModal {
         modalFooter.classList.add("modal-footer");
         this.modalContent.appendChild(modalFooter);
 
-        if (this.footerButtons.length===0){
+        if (this.footerButtons.length === 0) {
             this.addFooterCloseButton();
         }
 

@@ -3,7 +3,7 @@ import Html from "./Html";
 import ComboModal from "./ComboModal";
 import DokuAjaxRequest from "./DokuRequest";
 
-window['combo'] = class {
+window['combo'] = class combo {
 
     static toHtmlId(name) {
         return Html.toHtmlId(name)
@@ -29,5 +29,16 @@ window['combo'] = class {
         return FormMeta.createFromJson(formId, json);
     }
 
+    /**
+     * @return {ComboModal}
+     */
+    static createTemporaryModal() {
+        return ComboModal.createTemporary();
+    }
+
+    static createChildModal(parentModal) {
+        return combo.createTemporaryModal()
+            .setParent(parentModal);
+    }
 }
 

@@ -141,10 +141,14 @@ class Identity
         }
     }
 
-    public static function getUser()
+    public static function getUser(): string
     {
         global $INPUT;
-        return $INPUT->server->str('REMOTE_USER');
+        $user = $INPUT->server->str('REMOTE_USER');
+        if (empty($user)) {
+            return "Anonymous";
+        }
+        return $user;
     }
 
     private static function getUserGroups()

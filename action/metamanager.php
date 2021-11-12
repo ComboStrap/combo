@@ -6,6 +6,7 @@ use ComboStrap\Alias;
 use ComboStrap\Analytics;
 use ComboStrap\DatabasePage;
 use ComboStrap\DokuPath;
+use ComboStrap\HttpResponse;
 use ComboStrap\FormMeta;
 use ComboStrap\FormMetaField;
 use ComboStrap\FormMetaTab;
@@ -106,14 +107,19 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         }
 
         if (empty($id)) {
-            LogUtility::log2file("The page path (id form) is empty", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            Http::setStatus(400);
+            HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
+                ->setMessage("The page path (id form) is empty")
+                ->setEvent($event)
+                ->setCanonical(self::CANONICAL)
+                ->send();
             return;
         }
         $page = Page::createPageFromId($id);
         if (!$page->exists()) {
-            LogUtility::log2file("The page ($id) does not exist", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            Http::setStatus(404);
+            HttpResponse::create(HttpResponse::STATUS_DOES_NOT_EXIST)
+                ->setMessage("The page ($id) does not exist")
+                ->setCanonical(self::CANONICAL)
+                ->send();
             return;
         }
 
@@ -121,15 +127,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * Security
          */
         if (!$page->canBeUpdatedByCurrentUser()) {
-            Http::setStatus(401);
-            Http::setJsonMime();
             $user = Identity::getUser();
-            if (empty($user)) {
-                $user = "Anonymous";
-            }
-            $message = "Not Authorized: The user ($user) has not the `write` permission for the page (:$id).";
-            echo json_encode(["message" => $message]);
-            PluginUtility::softExit($message, null, self::CANONICAL);
+            HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
+                ->setMessage("Not Authorized: The user ($user) has not the `write` permission for the page (:$id).")
+                ->setEvent($event)
+                ->setCanonical(self::CANONICAL)
+                ->send();
             return;
         }
 
@@ -140,7 +143,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         switch ($requestMethod) {
             case 'POST':
 
-                $this->handlePost();
+                $this->handlePost($event);
 
                 return;
             case "GET":
@@ -151,13 +154,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $type = $_GET["type"];
                 if ($type === "viewer") {
                     if (!Identity::isManager()) {
-
-                        Http::setStatus(401);
-                        $message = "Not Authorized (managers only)";
-                        $fields = ["message" => $message];
-                        Http::setJsonMime();
-                        echo json_encode($fields);
-                        PluginUtility::softExit($message);
+                        HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
+                            ->setMessage("Not Authorized (managers only)")
+                            ->setEvent($event)
+                            ->setCanonical(self::CANONICAL)
+                            ->send();
                         return;
 
                     } else {
@@ -172,9 +173,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                          */
                         $fields = array_merge($metasPersistent, $metasCurrent);
                         ksort($fields);
-                        Http::setStatus(200);
-                        Http::setJsonMime();
-                        echo json_encode($fields);
+                        HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
+                            ->setEvent($event)
+                            ->setCanonical(self::CANONICAL)
+                            ->send($fields);
                         return;
                     }
 
@@ -258,41 +260,26 @@ EOF;
         }
     }
 
-    private function handlePost()
+    private function handlePost($event)
     {
         if ($_SERVER["CONTENT_TYPE"] === "application/json") {
-            $_POST = json_decode(file_get_contents('php://input'), true);
-        }
-        Http::setStatus(404);
-        PluginUtility::softExit();
-        $jsonString = $_POST["json"];
-//                if (empty($jsonString)) {
-//                    LogUtility::log2file("The json object is missing", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-//                    header("Status: 400");
-//                    return;
-//                }
-//
-//                $jsonArray = \ComboStrap\Json::createFromString($jsonString)->toArray();
-//                if ($jsonArray === null) {
-//                    header("Status: 400");
-//                    LogUtility::log2file("The json received is not conform ($jsonString)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-//                    return;
-//                }
-//
-//                /**
-//                 * Upsert metadata after the page content modification
-//                 * to not trigger another modification because of the replication date
-//                 */
-//                $page->upsertMetadata($jsonArray);
+            $jsonString = file_get_contents('php://input');
+            $_POST = \ComboStrap\Json::createFromString($jsonString)->toArray();
+            HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
+                ->send();
 
-        Http::setStatus(200);
+        } else {
+            HttpResponse::create(HttpResponse::STATUS_UNSUPPORTED_MEDIA_TYPE)
+                ->send("The content should be in json format");
+        }
+
 
     }
 
     /**
      * @param Page $page
      */
-    private function handleGetFormMeta($page)
+    private function handleGetFormMeta(Page $page)
     {
         $formMeta = FormMeta::create($page->getDokuwikiId())
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);

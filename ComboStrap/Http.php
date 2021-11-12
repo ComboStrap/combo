@@ -74,7 +74,7 @@ class Http
 
     public static function setJsonMime()
     {
-        Http::setMime("application/json");
+        Http::setMime(HttpResponse::TYPE_JSON);
     }
 
     /**

@@ -176,8 +176,6 @@ class PluginUtility
     const ERROR_MESSAGE = "errorAtt";
     const ERROR_LEVEL = "errorLevel";
     const DISPLAY = "display";
-    const EXIT_KEY = 'exit';
-    const CONTENT_KEY = "content";
 
     /**
      * The URL base of the documentation
@@ -1353,56 +1351,6 @@ class PluginUtility
     {
         // https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         return getenv("CI") === "true";
-    }
-
-    /**
-     * An helper function to mimic an exit when it's a test environment
-     * @param string|null $message
-     */
-    public static function softExit(string $message, \Doku_Event $event = null, $canonical = "support")
-    {
-
-        if (!PluginUtility::isTest()) {
-            if (Http::getStatus() !== 200) {
-                LogUtility::log2file($message, LogUtility::LVL_MSG_ERROR, $canonical);
-            }
-            exit;
-        } else {
-
-            /**
-             * Stop the propagation and prevent the default
-             */
-            if ($event !== null) {
-                $event->stopPropagation();
-                $event->preventDefault();
-            }
-
-            /**
-             * Add test info into the request
-             */
-            $testRequest = TestRequest::getRunning();
-
-            if ($testRequest !== null) {
-                $testRequest->addData(self::EXIT_KEY, $message);
-            }
-
-            /**
-             * Output buffer
-             * Stop the buffer
-             * Test request starts a buffer at {@link TestRequest::execute()},
-             * it will capture the body until this point
-             */
-            ob_end_clean();
-            /**
-             * To avoid phpunit warning `Test code or tested code did not (only) close its own output buffers`
-             * and
-             * Send the output to the void
-             */
-            ob_start(function ($value) {
-            });
-
-        }
-
     }
 
 

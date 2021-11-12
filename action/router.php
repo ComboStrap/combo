@@ -7,6 +7,7 @@ use ComboStrap\Alias;
 use ComboStrap\DatabasePage;
 use ComboStrap\DokuPath;
 use ComboStrap\Http;
+use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -235,10 +236,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         if(!$page->exists()) {
             // Well known
             if (self::isWellKnownFile($id)) {
-                echo self::PAGE_404;
-                Http::setStatus(404);
                 $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
-                exit();
+                HttpResponse::create(HttpResponse::STATUS_NOT_FOUND)
+                    ->send();
+                return;
             }
 
             // Shadow banned
@@ -762,29 +763,6 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
         }
 
-
-        switch ($method) {
-            case self::REDIRECT_PERMANENT_METHOD:
-                // header location should before the status
-                // because it changes it to 302
-                header(self::LOCATION_HEADER_PREFIX . $targetUrl);
-                Http::setStatus(301);
-                break;
-            case self::REDIRECT_NOTFOUND_METHOD:
-                // Empty 404 body to not get the standard 404 page of the browser
-                // but a blank page to avoid a sort of FOUC.
-                // ie the user see a page briefly
-                echo self::PAGE_404;
-                header(self::REFRESH_HEADER_PREFIX . $targetUrl);
-                Http::setStatus(404);
-                break;
-            default:
-                LogUtility::msg("The method ($method) is not an http redirection");
-                header('Location: ' . $targetUrl);
-                Http::setStatus(302);
-                break;
-        }
-
         /**
          * The dokuwiki function {@link send_redirect()}
          * set the `Location header` and in php, the header function
@@ -799,12 +777,27 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
         session_write_close(); // always close the session
 
+        switch ($method) {
+            case self::REDIRECT_PERMANENT_METHOD:
+                HttpResponse::create(HttpResponse::STATUS_PERMANENT_REDIRECT)
+                    ->addHeader(self::LOCATION_HEADER_PREFIX . $targetUrl)
+                    ->send();
+                return true;
+            case self::REDIRECT_NOTFOUND_METHOD:
 
-        /**
-         * Exit
-         */
-        PluginUtility::softExit("Http Redirect executed");
-        return true;
+                // Empty 404 body to not get the standard 404 page of the browser
+                // but a blank page to avoid a sort of FOUC.
+                // ie the user see a page briefly
+                HttpResponse::create(HttpResponse::STATUS_NOT_FOUND)
+                    ->addHeader(self::REFRESH_HEADER_PREFIX . $targetUrl)
+                    ->send(self::PAGE_404,HttpResponse::CONTENT_TYPE_HTML);
+                return true;
+
+            default:
+                LogUtility::msg("The method ($method) is not an http redirection");
+                return false;
+        }
+
 
     }
 

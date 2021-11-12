@@ -1,14 +1,12 @@
 <?php
 
-use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
 use ComboStrap\File;
 use ComboStrap\Http;
-use ComboStrap\Iso8601Date;
+use ComboStrap\HttpResponse;
 use ComboStrap\JavascriptLibrary;
 use ComboStrap\PluginUtility;
-use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Utf8\PhpString;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -197,12 +195,10 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
             $ifNoneMatch = stripslashes($_SERVER['HTTP_IF_NONE_MATCH']);
             if ($ifNoneMatch && $ifNoneMatch === $etag) {
 
-                Http::setStatus(304);
-
-                /**
-                 * Exit
-                 */
-                PluginUtility::softExit("File not modified",$event);
+                HttpResponse::create(HttpResponse::STATUS_NOT_MODIFIED)
+                    ->setEvent($event)
+                    ->setCanonical(self::CANONICAL)
+                    ->send("File not modified");
                 return;
             }
         }
@@ -242,13 +238,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if ($filePointer) {
             http_rangeRequest($filePointer, $mediaToSend->getSize(), $mime);
         } else {
-            Http::setStatus(500)  ;
-            print "Could not read $mediaToSend - bad permissions?";
+            HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
+                ->send("Could not read $mediaToSend - bad permissions?");
         }
-
-
-        PluginUtility::softExit("File Send",$event);
-
 
     }
 

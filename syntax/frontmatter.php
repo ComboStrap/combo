@@ -56,16 +56,21 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const METADATA_IMAGE_CANONICAL = "metadata:image";
     const PATTERN = self::START_TAG . '.*?' . self::END_TAG;
 
+    private static function stripFrontmatterTag($match)
+    {
+        // strip
+        //   from start `---json` + eol = 8
+        //   from end   `---` + eol = 4
+        return substr($match, 7, -3);
+    }
+
     /**
      * @param $match
      * @return array|mixed - null if decodage problem, empty array if no json or an associative array
      */
     public static function frontMatterMatchToAssociativeArray($match)
     {
-        // strip
-        //   from start `---json` + eol = 8
-        //   from end   `---` + eol = 4
-        $jsonString = substr($match, 7, -3);
+        $jsonString = self::stripFrontmatterTag($match);
 
         // Empty front matter
         if (trim($jsonString) == "") {
@@ -227,7 +232,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
                 $state = $data[self::STATUS];
                 if ($state == self::PARSING_STATE_ERROR) {
-                    $json = $data[PluginUtility::PAYLOAD];
+                    $json = self::stripFrontmatterTag($data[PluginUtility::PAYLOAD]);
                     LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. See the errors it by clicking on <a href=\"https://jsonformatter.curiousconcept.com/?data=" . urlencode($json) . "\">this link</a>.", LogUtility::LVL_MSG_ERROR);
                 }
 

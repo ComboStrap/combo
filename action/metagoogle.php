@@ -211,6 +211,11 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                         // https://schema.org/WebPage
                         $schemaType = "WebPage";
                         break;
+                    case PAGE::ARTICLE_TYPE:
+                    default:
+                        $schemaType = "Article";
+                        break;
+
                 }
                 // https://developers.google.com/search/docs/data-types/article
                 // https://schema.org/Article

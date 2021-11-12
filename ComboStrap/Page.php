@@ -2192,9 +2192,8 @@ class Page extends DokuPath
     }
 
     public
-    function setJsonLd(string $jsonLdString): Page
+    function setJsonLd(array $jsonLdArray): Page
     {
-        $jsonLdArray = json_decode($jsonLdString, true);
         $this->setMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY, $jsonLdArray);
         return $this;
     }

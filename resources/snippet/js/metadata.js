@@ -82,12 +82,26 @@ window.addEventListener("DOMContentLoaded", function () {
             let response = await combo.createDokuRequest(metaManagerCall)
                 .setMethod("post")
                 .sendFormDataAsJson(formData);
+            let modalMessage = [];
             if (response.status !== 200) {
-                combo.createChildModal(managerModal)
-                    .centered()
-                    .addBody(`Error: The data could not be saved. The return code was (${response.status})`)
-                    .show();
+                modalMessage.push(`Error: The return code was (${response.status})`);
             }
+            let json = await response.json();
+            if (json !== null) {
+                if (json.hasOwnProperty("message")) {
+                    let jsonMessage = json["message"];
+                    if (Array.isArray(jsonMessage)) {
+                        modalMessage = modalMessage.concat(jsonMessage);
+                    } else {
+                        modalMessage.push(jsonMessage)
+                    }
+
+                }
+            }
+            combo.createChildModal(managerModal)
+                .centered()
+                .addBody(modalMessage.join("<br>"))
+                .show();
         })
         managerModal.addFooterButton(submitButton);
 

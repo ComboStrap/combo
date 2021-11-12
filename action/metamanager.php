@@ -108,18 +108,16 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         if (empty($id)) {
             HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
-                ->setMessage("The page path (id form) is empty")
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
-                ->send();
+                ->sendMessage("The page path (id form) is empty");
             return;
         }
         $page = Page::createPageFromId($id);
         if (!$page->exists()) {
             HttpResponse::create(HttpResponse::STATUS_DOES_NOT_EXIST)
-                ->setMessage("The page ($id) does not exist")
                 ->setCanonical(self::CANONICAL)
-                ->send();
+                ->sendMessage("The page ($id) does not exist");
             return;
         }
 
@@ -129,10 +127,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         if (!$page->canBeUpdatedByCurrentUser()) {
             $user = Identity::getUser();
             HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
-                ->setMessage("Not Authorized: The user ($user) has not the `write` permission for the page (:$id).")
                 ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
-                ->send();
+                ->sendMessage("Not Authorized: The user ($user) has not the `write` permission for the page (:$id).");
             return;
         }
 
@@ -155,10 +152,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 if ($type === "viewer") {
                     if (!Identity::isManager()) {
                         HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
-                            ->setMessage("Not Authorized (managers only)")
                             ->setEvent($event)
                             ->setCanonical(self::CANONICAL)
-                            ->send();
+                            ->sendMessage("Not Authorized (managers only)");
                         return;
 
                     } else {

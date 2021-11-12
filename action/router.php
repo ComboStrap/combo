@@ -950,7 +950,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         // If this is an external redirect (other domain)
         if (Url::isValidURL($calculatedTarget)) {
 
-            $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, true);
+            $this->executeHttpRedirect($calculatedTarget, self::TARGET_ORIGIN_PAGE_RULES, self::REDIRECT_PERMANENT_METHOD);
             return true;
 
         }

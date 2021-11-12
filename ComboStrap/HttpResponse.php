@@ -157,4 +157,5 @@ class HttpResponse
         $message = json_encode(["message" => $messages]);
         $this->send($message, self::TYPE_JSON);
     }
+
 }

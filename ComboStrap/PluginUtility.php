@@ -125,6 +125,7 @@ require_once(__DIR__ . '/Template.php');
 require_once(__DIR__ . '/TemplateUtility.php');
 require_once(__DIR__ . '/TextAlign.php');
 require_once(__DIR__ . '/TextColor.php');
+require_once(__DIR__ . '/ThirdMedia.php');
 require_once(__DIR__ . '/ThirdMediaLink.php');
 require_once(__DIR__ . '/ThirdPartyPlugins.php');
 require_once(__DIR__ . '/TocUtility.php');

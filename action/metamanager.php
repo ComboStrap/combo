@@ -172,7 +172,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
                             ->setEvent($event)
                             ->setCanonical(self::CANONICAL)
-                            ->send($fields);
+                            ->send(json_encode($fields), HttpResponse::TYPE_JSON);
                         return;
                     }
 

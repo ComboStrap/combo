@@ -328,6 +328,15 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             $pageId !== null
         ) {
             $page = DatabasePage::createFromPageIdAbbr($pageId)->getPage();
+            if($page===null){
+                // or the length of the abbr has changed
+                $databasePage = new DatabasePage();
+                $row = $databasePage->getDatabaseRowFromAttribute("substr(".Page::PAGE_ID_ATTRIBUTE.", 1, ".strlen($pageId).")",$pageId);
+                if ($row != null) {
+                    $databasePage->buildDatabaseObjectFields($row);
+                    $page = $databasePage->getPage();
+                }
+            }
             if ($page !== null && $page->exists()) {
                 /**
                  * If the url canonical id has changed, we show it
@@ -349,6 +358,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
             }
             // permanent url not yet in the database
+
 
             // permanent id test
             $identifier = $targetPage->getParentId();

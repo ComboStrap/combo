@@ -694,15 +694,12 @@ EOF;
 
         } else {
 
-            /**
-             * The page id should be null
-             * We create it
-             */
-            $this->createPageIdIfNeeded();
+
 
             $values[PAGE::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getDokuwikiId();
             $values[Analytics::PATH] = $this->page->getPath();
-            $values[Page::PAGE_ID_ATTRIBUTE] = $this->page->getPageId();
+            $this->addPageIdAttribute($values);
+
             /**
              * TODO: Canonical should be able to be null
              * When the not null constraint on canonical is deleted, we can delete
@@ -913,7 +910,7 @@ EOF;
      * Set the field to their values
      * @param $row
      */
-    private function buildDatabaseObjectFields($row)
+    public function buildDatabaseObjectFields($row)
     {
         if ($row === null) {
             LogUtility::msg("A row should not be null");
@@ -1149,7 +1146,7 @@ EOF;
         return $this->getDatabaseRowFromAttribute(Page::DOKUWIKI_ID_ATTRIBUTE, $id);
     }
 
-    private function getDatabaseRowFromAttribute(string $attribute, string $value)
+    public function getDatabaseRowFromAttribute(string $attribute, string $value)
     {
         $query = $this->getParametrizedLookupQuery($attribute);
         $res = $this->sqlite->query($query, $value);
@@ -1243,6 +1240,15 @@ EOF;
     {
         $alias = $this->page->addAndGetAlias($page->getDokuwikiId(), Alias::REDIRECT);
         $this->addAlias($alias);
+    }
+
+    private function addPageIdAttribute(array &$values)
+    {
+
+        $this->createPageIdIfNeeded();
+
+        $values[Page::PAGE_ID_ATTRIBUTE] = $this->page->getPageId();
+        $values[Page::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 
 

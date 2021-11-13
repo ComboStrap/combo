@@ -10,6 +10,7 @@ use ComboStrap\Http;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
+use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PageRules;
 use ComboStrap\PluginUtility;
@@ -790,7 +791,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                 // ie the user see a page briefly
                 HttpResponse::create(HttpResponse::STATUS_NOT_FOUND)
                     ->addHeader(self::REFRESH_HEADER_PREFIX . $targetUrl)
-                    ->send(self::PAGE_404,HttpResponse::CONTENT_TYPE_HTML);
+                    ->send(self::PAGE_404, Mime::HTML);
                 return true;
 
             default:

@@ -10,120 +10,200 @@ class Message
 
     const SIGNATURE_CLASS = "signature";
     const TAG = "message";
-    private $content = "";
-    private $type = self::TYPE_CLASSIC;
+    const TYPE_ERROR = "error";
+    private $content = [];
+    private $type;
 
-    const TYPE_CLASSIC = 'Classic';
+    const TYPE_INFO = 'Classic';
     const TYPE_WARNING = 'Warning';
 
     /**
      * @var Plugin
      */
     private $plugin;
-    private $signatureCanonical;
+    /**
+     * @var string the page canonical
+     */
+    private $canonical = "support";
     private $signatureName;
-    /**
-     * @var TagAttributes
-     */
-    private $tagAttributes;
 
-    /**
-     * @param Plugin $plugin
-     */
-    public function __construct($plugin = null)
-    {
-        $this->plugin = $plugin;
-        $this->tagAttributes = TagAttributes::createEmpty("message")
-            ->addClassName("alert")
-            ->addHtmlAttributeValue("role", "alert");
-    }
+    private $class;
 
 
-    public function addContent($message)
-    {
-        $this->content .= $message;
-    }
-
-    public function setType($type)
+    public function __construct($type)
     {
         $this->type = $type;
     }
 
-    public function setSignatureCanonical($canonical)
+    public static function createInfoMessage($plainText = null): Message
     {
-        $this->signatureCanonical = $canonical;
+        $message = new Message(self::TYPE_INFO);
+        if ($plainText !== null) {
+            $message->addPlainTextContent($plainText);
+        }
+        return $message;
     }
 
-    public function setClass($class)
+    public static function createWarningMessage($plainText = null): Message
     {
-        $this->tagAttributes->addClassName($class);
+        $message = new Message(self::TYPE_WARNING);
+        if ($plainText !== null) {
+            $message->addPlainTextContent($plainText);
+        }
+        return $message;
     }
 
-    public function getContent()
+
+    public
+    function addContent($message, $mime): Message
     {
-        return $this->content;
+        if (!isset($this->content[$mime])) {
+            $this->content[$mime] = [];
+        }
+        $this->content[$mime][] = $message;
+        return $this;
     }
 
-    public function getType()
+    public static function createErrorMessage(string $plainText): Message
+    {
+        $message = new Message(self::TYPE_ERROR);
+        if ($plainText !== null) {
+            $message->addPlainTextContent($plainText);
+        }
+        return $message;
+    }
+
+    public
+    function addHtmlContent($message): Message
+    {
+        return $this->addContent($message, Mime::HTML);
+    }
+
+    public
+    function setCanonical($canonical): Message
+    {
+        $this->canonical = $canonical;
+        return $this;
+    }
+
+    public
+    function setClass($class): Message
+    {
+        $this->class = $class;
+        return $this;
+    }
+
+    public
+    function getContent($mime): string
+    {
+        return implode($this->content[$mime], DOKU_LF);
+    }
+
+    public
+    function getType(): string
     {
         return $this->type;
     }
 
-    public function setSignatureName($signatureName)
+    public
+    function setSignatureName($signatureName): Message
     {
         $this->signatureName = $signatureName;
+        return $this;
     }
 
     /**
-     * Used when sending message and in the main content
+     * Return an HTML Box (Used when sending message and in the main content)
      * @return string
      */
-    public function toHtml()
+    public
+    function toHtmlBox(): string
     {
 
         PluginUtility::getSnippetManager()->upsertCssSnippetForRequest(self::TAG);
         $message = "";
-        if ($this->getContent() <> "") {
 
-            if ($this->getType() == Message::TYPE_CLASSIC) {
-                $this->tagAttributes->addClassName("alert-success");
+        $tagAttributes = TagAttributes::createEmpty("message")
+            ->addClassName("alert")
+            ->addHtmlAttributeValue("role", "alert");
+        if ($this->class !== null) {
+            $tagAttributes->addClassName($this->class);
+        }
+        if (sizeof($this->content) <> 0) {
+
+            if ($this->getType() == Message::TYPE_INFO) {
+                $tagAttributes->addClassName("alert-success");
             } else {
-                $this->tagAttributes->addClassName("alert-warning");
+                $tagAttributes->addClassName("alert-warning");
             }
 
-            $message = $this->tagAttributes->toHtmlEnterTag("div");
-            $message .= $this->getContent();
+            $message = $tagAttributes->toHtmlEnterTag("div");
+            $htmlContent = $this->getContent(Mime::HTML);
+            if ($htmlContent !== null) {
+                $message .= $htmlContent;
+            }
 
             /**
              * If this is a test call without a plugin
              * we have no plugin attached
              */
             $firedByLang = "This message was fired by the ";
-            if($this->plugin!=null){
+            if ($this->plugin != null) {
                 $firedByLang = $this->plugin->getLang('message_come_from');
             }
 
-            $message .= '<div class="' . self::SIGNATURE_CLASS . '">' . $firedByLang . PluginUtility::getDocumentationHyperLink($this->signatureCanonical, $this->signatureName, false) . '</div>';
+            $message .= '<div class="' . self::SIGNATURE_CLASS . '">' . $firedByLang . PluginUtility::getDocumentationHyperLink($this->canonical, $this->signatureName, false) . '</div>';
             $message .= '</div>';
 
             /**
              * In dev, to spot the XHTML compliance error
              */
-            if (PluginUtility::isDevOrTest()){
-                 $isXml = XmlUtility::isXml($message);
-                 if (!$isXml){
-                     LogUtility::msg("This message is not xml compliant ($message)");
-                     $message =<<<EOF
+            if (PluginUtility::isDevOrTest()) {
+                $isXml = XmlUtility::isXml($message);
+                if (!$isXml) {
+                    LogUtility::msg("This message is not xml compliant ($message)");
+                    $message = <<<EOF
 <div class='alert alert-warning'>
     <p>This message is not xml compliant</p>
     <pre>$message</pre>
 </div>
 EOF;
-                 }
+                }
             }
 
         }
         return $message;
+    }
+
+    public
+    function setPlugin($plugin): Message
+    {
+        $this->plugin = $plugin;
+        return $this;
+    }
+
+    public function addPlainTextContent($text): Message
+    {
+        return $this->addContent($text,Mime::PLAIN_TEXT);
+    }
+
+    public function sendLogMsg()
+    {
+        $content = $this->getContent(Mime::PLAIN_TEXT);
+        switch ($this->type){
+            case self::TYPE_WARNING:
+                $type = LogUtility::LVL_MSG_WARNING;
+                break;
+            case self::TYPE_INFO:
+                $type = LogUtility::LVL_MSG_INFO;
+                break;
+            case self::TYPE_ERROR:
+                $type = LogUtility::LVL_MSG_ERROR;
+                break;
+            default:
+                $type = LogUtility::LVL_MSG_ERROR;
+        }
+        LogUtility::msg($content,$type,$this->canonical);
     }
 
 }

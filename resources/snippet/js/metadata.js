@@ -84,7 +84,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 .sendFormDataAsJson(formData);
             let modalMessage = [];
             if (response.status !== 200) {
-                modalMessage.push(`Error: The return code was (${response.status})`);
+                modalMessage.push(`Error, unable to save. (return code: ${response.status})`);
             }
             let json = await response.json();
             if (json !== null) {
@@ -95,7 +95,6 @@ window.addEventListener("DOMContentLoaded", function () {
                     } else {
                         modalMessage.push(jsonMessage)
                     }
-
                 }
             }
             combo.createChildModal(managerModal)

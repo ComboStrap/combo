@@ -92,7 +92,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      *
      * baseonly - run only in the base
      */
-    function getType()
+    function getType(): string
     {
         return 'baseonly';
     }
@@ -162,54 +162,55 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
                 $result[self::STATUS] = self::PARSING_STATE_ERROR;
                 $result[PluginUtility::PAYLOAD] = $match;
-
-            } else {
-
-                if (sizeof($jsonArray) === 0) {
-                    return array(self::STATUS => self::PARSING_STATE_EMPTY);
-                }
-
-                $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
-
-                $page = Page::createPageFromGlobalDokuwikiId();
-
-                /**
-                 * Published is an old alias for date published
-                 */
-                if (isset($jsonArray[Publication::OLD_META_KEY])) {
-                    $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray[Publication::OLD_META_KEY];
-                    unset($jsonArray[Publication::OLD_META_KEY]);
-                }
-
-                if (isset($jsonArray[Page::OLD_REGION_PROPERTY])) {
-                    $jsonArray[Page::REGION_META_PROPERTY] = $jsonArray[Page::OLD_REGION_PROPERTY];
-                    unset($jsonArray[Page::OLD_REGION_PROPERTY]);
-                }
-
-                /**
-                 * Upsert the meta
-                 */
-                $page->upsertMetadataFromAssociativeArray($jsonArray);
-
-                /**
-                 * Return them
-                 */
-                $result[PluginUtility::ATTRIBUTES] = $jsonArray;
-
+                return $result;
             }
 
+            if (sizeof($jsonArray) === 0) {
+                return array(self::STATUS => self::PARSING_STATE_EMPTY);
+            }
+
+            $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+
+            $page = Page::createPageFromGlobalDokuwikiId();
 
             /**
-             * End position is the length of the match + 1 for the newline
+             * Published is an old alias for date published
              */
-            $newLine = 1;
-            $endPosition = $pos + strlen($match) + $newLine;
-            $result[PluginUtility::POSITION] = [$pos, $endPosition];
+            if (isset($jsonArray[Publication::OLD_META_KEY])) {
+                $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray[Publication::OLD_META_KEY];
+                unset($jsonArray[Publication::OLD_META_KEY]);
+            }
 
-            return $result;
+            if (isset($jsonArray[Page::OLD_REGION_PROPERTY])) {
+                $jsonArray[Page::REGION_META_PROPERTY] = $jsonArray[Page::OLD_REGION_PROPERTY];
+                unset($jsonArray[Page::OLD_REGION_PROPERTY]);
+            }
+
+            /**
+             * Upsert the meta
+             */
+            $messages = $page->upsertMetadataFromAssociativeArray($jsonArray);
+            foreach ($messages as $message){
+                $message->sendLogMsg();
+            }
+
+            /**
+             * Return them
+             */
+            $result[PluginUtility::ATTRIBUTES] = $jsonArray;
+
         }
 
-        return array();
+
+        /**
+         * End position is the length of the match + 1 for the newline
+         */
+        $newLine = 1;
+        $endPosition = $pos + strlen($match) + $newLine;
+        $result[PluginUtility::POSITION] = [$pos, $endPosition];
+
+        return $result;
+
     }
 
     /**
@@ -222,7 +223,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         switch ($format) {
@@ -339,7 +340,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         }
         return true;
     }
-
 
 
     private function updateImageStatistics($value, $renderer)

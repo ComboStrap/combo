@@ -9,6 +9,7 @@ use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\SyntaxPlugin;
+use Exception;
 use renderer_plugin_combo_analytics;
 use RuntimeException;
 use syntax_plugin_combo_frontmatter;
@@ -1764,10 +1765,11 @@ class Page extends DokuPath
     }
 
     /**
-     * Frontmatter
+     * Frontmatter / Manager Metadata Update
      * @param $attributes
+     * @return Message[] array
      */
-    public function upsertMetadataFromAssociativeArray($attributes)
+    public function upsertMetadataFromAssociativeArray($attributes): array
     {
 
         /**
@@ -1775,79 +1777,88 @@ class Page extends DokuPath
          * The set function modify the value to be valid
          * or does not store them at all
          */
+        $messages = [];
         foreach ($attributes as $key => $value) {
 
             $lowerKey = trim(strtolower($key));
             if (in_array($lowerKey, self::NOT_MODIFIABLE_METAS)) {
-                LogUtility::msg("The metadata ($lowerKey) is a protected metadata and cannot be modified", LogUtility::LVL_MSG_WARNING);
+                $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified");
                 continue;
             }
-            switch ($lowerKey) {
-                case self::CANONICAL_PROPERTY:
-                    $this->setCanonical($value);
-                    continue 2;
-                case Analytics::DATE_END:
-                    $this->setEndDate($value);
-                    continue 2;
-                case Page::TYPE_META_PROPERTY:
-                    $this->setPageType($value);
-                    continue 2;
-                case Analytics::DATE_START:
-                    $this->setStartDate($value);
-                    continue 2;
-                case Publication::DATE_PUBLISHED:
-                    $this->setPublishedDate($value);
-                    continue 2;
-                case Page::DESCRIPTION_PROPERTY:
-                    $this->setDescription($value);
-                    continue 2;
-                case Page::NAME_PROPERTY:
-                    $this->setPageName($value);
-                    continue 2;
-                case Page::TITLE_META_PROPERTY:
-                    $this->setTitle($value);
-                    continue 2;
-                case Analytics::H1:
-                    $this->setH1($value);
-                    continue 2;
-                case \action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY:
-                    $this->setJsonLd($value);
-                    continue 2;
-                case Page::REGION_META_PROPERTY:
-                    $this->setRegion($value);
-                    continue 2;
-                case Page::LANG_META_PROPERTY:
-                    $this->setLang($value);
-                    continue 2;
-                case Page::LAYOUT_PROPERTY:
-                    $this->setLayout($value);
-                    continue 2;
-                case Page::ALIAS_ATTRIBUTE:
-                    $aliases = Alias::toAliasArray($value, $this);
-                    $this->setAliases($aliases);
-                    continue 2;
-                case Page::PAGE_ID_ATTRIBUTE:
-                    if ($this->getPageId() === null) {
-                        $this->setPageId($value);
-                    } else {
-                        if ($this->getPageId() !== $value) {
-                            LogUtility::msg("The page id is a managed id and cannot be changed, this page has the id ({$this->getPageId()}) that has not the same value than in the frontmatter ({$value})");
+            try {
+                switch ($lowerKey) {
+                    case self::CANONICAL_PROPERTY:
+                        $this->setCanonical($value);
+                        continue 2;
+                    case Analytics::DATE_END:
+                        $this->setEndDate($value);
+                        continue 2;
+                    case Page::TYPE_META_PROPERTY:
+                        $this->setPageType($value);
+                        continue 2;
+                    case Analytics::DATE_START:
+                        $this->setStartDate($value);
+                        continue 2;
+                    case Publication::DATE_PUBLISHED:
+                        $this->setPublishedDate($value);
+                        continue 2;
+                    case Page::DESCRIPTION_PROPERTY:
+                        $this->setDescription($value);
+                        continue 2;
+                    case Page::NAME_PROPERTY:
+                        $this->setPageName($value);
+                        continue 2;
+                    case Page::TITLE_META_PROPERTY:
+                        $this->setTitle($value);
+                        continue 2;
+                    case Analytics::H1:
+                        $this->setH1($value);
+                        continue 2;
+                    case \action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY:
+                        $this->setJsonLd($value);
+                        continue 2;
+                    case Page::REGION_META_PROPERTY:
+                        $this->setRegion($value);
+                        continue 2;
+                    case Page::LANG_META_PROPERTY:
+                        $this->setLang($value);
+                        continue 2;
+                    case Page::LAYOUT_PROPERTY:
+                        $this->setLayout($value);
+                        continue 2;
+                    case Page::ALIAS_ATTRIBUTE:
+                        $aliases = Alias::toAliasArray($value, $this);
+                        $this->setAliases($aliases);
+                        continue 2;
+                    case Page::PAGE_ID_ATTRIBUTE:
+                        if ($this->getPageId() === null) {
+                            $this->setPageId($value);
+                        } else {
+                            if ($this->getPageId() !== $value) {
+                                $messages[] = Message::createErrorMessage("The page id is a managed id and cannot be changed, this page has the id ({$this->getPageId()}) that has not the same value than in the frontmatter ({$value})");
+                            }
                         }
-                    }
-                    continue 2;
-                case Page::LOW_QUALITY_PAGE_INDICATOR:
-                    $this->setLowQualityIndicator(Boolean::toBoolean($value));
-                    continue 2;
-                case PAGE::IMAGE_META_PROPERTY:
-                    $this->setPageImage($value);
-                    continue 2;
-                case action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR:
-                    $this->setMonitoringQualityIndicator(Boolean::toBoolean($value));
-                    continue 2;
-                default:
-                    LogUtility::msg("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)", LogUtility::LVL_MSG_INFO);
-                    $this->setMetadata($key, $value);
-                    continue 2;
+                        continue 2;
+                    case Page::LOW_QUALITY_PAGE_INDICATOR:
+                        $this->setLowQualityIndicator(Boolean::toBoolean($value));
+                        continue 2;
+                    case PAGE::IMAGE_META_PROPERTY:
+                        $this->setPageImage($value);
+                        continue 2;
+                    case action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR:
+                        $this->setMonitoringQualityIndicator(Boolean::toBoolean($value));
+                        continue 2;
+                    default:
+                        $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)");
+                        $this->setMetadata($key, $value);
+                        continue 2;
+                }
+            } catch (Exception $e) {
+                $message = Message::createErrorMessage($e->getMessage());
+                if ($e instanceof ExceptionCombo) {
+                    $message->setCanonical($e->getCanonical());
+                }
+                $messages[] = $message;
             }
 
 
@@ -1856,7 +1867,17 @@ class Page extends DokuPath
         /**
          * Database update
          */
-        $this->getDatabasePage()->replicateMetaAttributes();
+        try {
+            $this->getDatabasePage()->replicateMetaAttributes();
+        } catch (Exception $e) {
+            $message = Message::createErrorMessage($e->getMessage());
+            if ($e instanceof ExceptionCombo) {
+                $message->setCanonical($e->getCanonical());
+            }
+            $messages[] = $message;
+        }
+
+        return $messages;
 
     }
 
@@ -2345,13 +2366,16 @@ class Page extends DokuPath
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public
     function setPublishedDate($value)
     {
         if (Iso8601Date::isValid($value)) {
             $this->setMetadata(Publication::DATE_PUBLISHED, $value);
         } else {
-            LogUtility::msg("The published date value ($value) is not a valid date.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+            throw new ExceptionCombo("The published date value ($value) is not a valid date.", Iso8601Date::CANONICAL);
         }
     }
 
@@ -2380,14 +2404,16 @@ class Page extends DokuPath
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public
     function setRegion($value): Page
     {
         if (empty($region)) return $this;
 
         if (!StringUtility::match($region, "[a-zA-Z]{2}")) {
-            LogUtility::msg("The region value ($region) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
-            return $this;
+            throw new Exception("The region value ($region) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
         }
 
         $this->region = $value;
@@ -2486,7 +2512,11 @@ class Page extends DokuPath
 
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
 
-        $this->aliases = Alias::toAliasArray($this->getMetadata(self::ALIAS_ATTRIBUTE), $this);
+        try {
+            $this->aliases = Alias::toAliasArray($this->getMetadata(self::ALIAS_ATTRIBUTE), $this);
+        } catch (Exception $e) {
+            LogUtility::msg("The key of the frontmatter alias should not be empty as it's the alias path", LogUtility::LVL_MSG_ERROR, Alias::CANONICAL);
+        }
         $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
 
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
@@ -2749,7 +2779,7 @@ class Page extends DokuPath
 
     public function isDynamicQualityMonitored(): bool
     {
-        if (PluginUtility::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING)===1) {
+        if (PluginUtility::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING) === 1) {
             return false;
         }
         return $this->getDynamicQualityIndicatorOrDefault();
@@ -2757,7 +2787,7 @@ class Page extends DokuPath
 
     public function getDynamicQualityIndicatorOrDefault(): bool
     {
-        if($this->getDynamicQualityIndicator()!==null){
+        if ($this->getDynamicQualityIndicator() !== null) {
             return $this->getDynamicQualityIndicator();
         }
         return true;

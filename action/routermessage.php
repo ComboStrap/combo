@@ -81,12 +81,6 @@ class action_plugin_combo_routermessage extends ActionPlugin
     {
 
 
-        // Message
-        $message = new Message($this);
-        $message->setClass(action_plugin_combo_routermessage::REDIRECT_MANAGER_BOX_CLASS);
-        $message->setSignatureCanonical(action_plugin_combo_router::CANONICAL);
-        $message->setSignatureName(action_plugin_combo_router::URL_MANAGER_NAME);
-
         $pageIdOrigin = null;
         $redirectSource = null;
 
@@ -101,36 +95,40 @@ class action_plugin_combo_routermessage extends ActionPlugin
             switch ($redirectSource) {
 
                 case action_plugin_combo_router::TARGET_ORIGIN_PAGE_RULES:
-                    $message->addContent(sprintf($this->getLang('message_redirected_by_redirect'), hsc($pageIdOrigin)));
-                    $message->setType(Message::TYPE_CLASSIC);
+                    $message = Message::createInfoMessage()
+                        ->addHtmlContent("<p>" . sprintf($this->getLang('message_redirected_by_redirect'), hsc($pageIdOrigin)) . "</p>");
                     break;
 
                 case action_plugin_combo_router::TARGET_ORIGIN_START_PAGE:
-                    $message->addContent(sprintf($this->lang['message_redirected_to_startpage'], hsc($pageIdOrigin)));
-                    $message->setType(Message::TYPE_WARNING);
+                    $message = Message::createWarningMessage()
+                        ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_startpage'], hsc($pageIdOrigin)) . "</p>");
                     break;
 
                 case  action_plugin_combo_router::TARGET_ORIGIN_BEST_PAGE_NAME:
-                    $message->addContent(sprintf($this->lang['message_redirected_to_bestpagename'], hsc($pageIdOrigin)));
-                    $message->setType(Message::TYPE_WARNING);
+                    $message = Message::createWarningMessage()
+                        ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestpagename'], hsc($pageIdOrigin)) . "</p>");
                     break;
 
                 case action_plugin_combo_router::TARGET_ORIGIN_BEST_NAMESPACE:
-                    $message->addContent(sprintf($this->lang['message_redirected_to_bestnamespace'], hsc($pageIdOrigin)));
-                    $message->setType(Message::TYPE_WARNING);
+                    $message = Message::createWarningMessage()
+                        ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_bestnamespace'], hsc($pageIdOrigin)) . "</p>");
                     break;
 
                 case action_plugin_combo_router::TARGET_ORIGIN_SEARCH_ENGINE:
-                    $message->addContent(sprintf($this->lang['message_redirected_to_searchengine'], hsc($pageIdOrigin)));
-                    $message->setType(Message::TYPE_WARNING);
+                    $message = Message::createWarningMessage()
+                        ->addHtmlContent("<p>" . sprintf($this->lang['message_redirected_to_searchengine'], hsc($pageIdOrigin)) . "</p>");
                     break;
 
                 case action_plugin_combo_router::GO_TO_EDIT_MODE:
-                    $message->addContent($this->lang['message_redirected_to_edit_mode']);
-                    $message->setType(Message::TYPE_CLASSIC);
+                    $message = Message::createInfoMessage()
+                        ->addHtmlContent("<p>" . $this->lang['message_redirected_to_edit_mode'] . "</p>");
                     break;
+                default:
+                    LogUtility::msg("The redirection source ($redirectSource) is unknown. It was not expected", LogUtility::LVL_MSG_ERROR, action_plugin_combo_router::CANONICAL);
+                    return;
 
             }
+
 
             // Add a list of page with the same name to the message
             // if the redirections is not planned
@@ -138,13 +136,18 @@ class action_plugin_combo_routermessage extends ActionPlugin
                 $this->addToMessagePagesWithSameName($message, $pageIdOrigin);
             }
 
+            if ($event->data === 'show' || $event->data === 'edit' || $event->data === 'search') {
+                $html = $message->setPlugin($this)
+                    ->setClass(action_plugin_combo_routermessage::REDIRECT_MANAGER_BOX_CLASS)
+                    ->setCanonical(action_plugin_combo_router::CANONICAL)
+                    ->setSignatureName(action_plugin_combo_router::URL_MANAGER_NAME)
+                    ->toHtmlBox();
+                ptln($html);
+            }
+
+
         }
 
-        if ($event->data == 'show' || $event->data == 'edit' || $event->data == 'search') {
-
-            ptln($message->toHtml());
-
-        }
 
     }
 
@@ -223,7 +226,6 @@ class action_plugin_combo_routermessage extends ActionPlugin
 
         }
     }
-
 
 
     private static function sessionStart()

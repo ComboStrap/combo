@@ -146,8 +146,8 @@ export default class ComboModal {
      * Delete all modals
      */
     static destroyAllModals = function () {
-        Object.keys(comboModals).forEach(modalId => {
-            document.getElementById(modalId).remove();
+        Object.values(comboModals).forEach(modal => {
+            modal.remove();
         })
         comboModals = {};
     }

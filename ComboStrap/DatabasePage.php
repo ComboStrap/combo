@@ -624,12 +624,10 @@ EOF;
     }
 
     /**
-     * @param array $attributes
      * @return bool when an update as occurred
      *
      * Attribute that are scalar / modifiable in the database
      * (not aliases or json data for instance)
-     *
      */
     public function replicateMetaAttributes(): bool
     {

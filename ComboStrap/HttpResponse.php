@@ -9,7 +9,6 @@ use TestRequest;
 class HttpResponse
 {
     public const EXIT_KEY = 'exit';
-    public const TYPE_JSON = "application/json";
 
 
     const STATUS_NOT_FOUND = 404;
@@ -21,7 +20,6 @@ class HttpResponse
     public const STATUS_BAD_REQUEST = 400;
     public const STATUS_INTERNAL_ERROR = 500;
     public const STATUS_NOT_AUTHORIZED = 401;
-    const CONTENT_TYPE_HTML = "text/html";
 
     /**
      * @var int
@@ -154,8 +152,13 @@ class HttpResponse
      */
     public function sendMessage($messages)
     {
-        $message = json_encode(["message" => $messages]);
-        $this->send($message, self::TYPE_JSON);
+        if (sizeof($messages) > 0) {
+            $message = json_encode(["message" => $messages]);
+            $this->send($message, Mime::JSON);
+        } else {
+            $this->send();
+        }
+
     }
 
 }

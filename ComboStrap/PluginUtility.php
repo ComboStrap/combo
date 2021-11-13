@@ -86,6 +86,7 @@ require_once(__DIR__ . '/LowQualityPage.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');
+require_once(__DIR__ . '/Mime.php');
 require_once(__DIR__ . '/NavBarUtility.php');
 require_once(__DIR__ . '/Opacity.php');
 require_once(__DIR__ . '/Os.php');

@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use Exception;
+
 class Alias
 {
 
@@ -55,6 +57,16 @@ class Alias
      * @param $aliases
      * @param Page $page
      * @return Alias[]|null
+     * @throws Exception
+     *
+     * We throw errors because the alias can be set:
+     *   - from the metadata file
+     *   - from the frontmatter
+     *   - from an ajax request
+     * The channel is never the same and it needs then to catch the errors
+     * and returns the message in the appropriate format
+     *   - toast for the template
+     *   - json for the ajax request
      */
     public static function toAliasArray($aliases, Page $page): ?array
     {
@@ -64,8 +76,7 @@ class Alias
         foreach ($aliases as $key => $value) {
             if (is_array($value)) {
                 if(empty($key)){
-                    LogUtility::msg("The key of the frontmatter alias should not be empty as it's the alias path");
-                    continue;
+                    throw new ExceptionCombo("The key of the alias should not be empty as it's the alias path", self::CANONICAL);
                 }
                 $path = $key;
                 $type = $value[Alias::ALIAS_TYPE_PROPERTY];
@@ -74,12 +85,11 @@ class Alias
             } else {
                 $path = $value;
                 if(empty($path)){
-                    LogUtility::msg("The value of the frontmatter alias array should not be empty as it's the alias path");
-                    continue;
+                    throw new ExceptionCombo("The value of the alias array should not be empty as it's the alias path",self::CANONICAL);
                 }
                 if (!is_string($path)) {
                     $path = StringUtility::toString($path);
-                    LogUtility::msg("The alias element ($path) is not a string", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    throw new Exception("The alias element ($path) is not a string");
                 }
                 $aliasArray[$path] = Alias::create($page, $path);
             }

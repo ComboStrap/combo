@@ -81,9 +81,9 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 return;
             }
 
-            $note = $this->createQualityNote($this);
-            if ($note != null) {
-                ptln($note->toHtml());
+            $htmlNote = $this->createQualityNote($this);
+            if ($htmlNote != null) {
+                ptln($htmlNote);
             }
         }
 
@@ -91,9 +91,9 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
     /**
      * @param $plugin - Plugin
-     * @return Message|null
+     * @return string|null
      */
-    static public function createQualityNote($plugin)
+    static public function createQualityNote($plugin): ?string
     {
         $page = Page::createPageFromRequestedPage();
 
@@ -147,15 +147,17 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             if (sizeof($qualityInfoRules) > 0) {
 
                 $qualityScore = $analyticsArray[Analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
-                $message = new Message($plugin);
-                $message->addContent("<p>Well played, you got a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore} !</p>");
+                $message = Message::createInfoMessage()
+                    ->setPlugin($plugin)
+                    ->addHtmlContent("<p>Well played, you got a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore} !</p>");
+
                 if ($page->isLowQualityPage()) {
                     $analyticsArray = $page->getAnalytics()->getData()->toArray();
                     $mandatoryFailedRules = $analyticsArray[Analytics::QUALITY][Analytics::FAILED_MANDATORY_RULES];
                     $rulesUrl = PluginUtility::getDocumentationHyperLink("quality:rule", "rules");
                     $lqPageUrl = PluginUtility::getDocumentationHyperLink("low_quality_page", "low quality page");
-                    $message->addContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");
-                    $message->addContent("<ul style='margin-bottom: 0'>");
+                    $message->addHtmlContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");
+                    $message->addHtmlContent("<ul style='margin-bottom: 0'>");
                     /**
                      * A low quality page should have
                      * failed mandatory rules
@@ -164,27 +166,23 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                      */
                     if (is_array($mandatoryFailedRules)) {
                         foreach ($mandatoryFailedRules as $mandatoryFailedRule) {
-                            $message->addContent("<li>" . PluginUtility::getDocumentationHyperLink("quality:rule#list", $mandatoryFailedRule) . "</li>");
+                            $message->addHtmlContent("<li>" . PluginUtility::getDocumentationHyperLink("quality:rule#list", $mandatoryFailedRule) . "</li>");
                         }
                     }
-                    $message->addContent("</ul>");
-                    $message->addContent("</div>");
+                    $message->addHtmlContent("</ul>");
+                    $message->addHtmlContent("</div>");
                 }
-                $message->addContent("<p>You can still win a couple of points.</p>");
-                $message->addContent("<ul>");
+                $message->addHtmlContent("<p>You can still win a couple of points.</p>");
+                $message->addHtmlContent("<ul>");
                 foreach ($qualityInfoRules as $qualityRule => $qualityInfo) {
-                    $message->addContent("<li>");
-                    $message->addContent($qualityInfo);
-                    $message->addContent("</li>");
+                    $message->addHtmlContent("<li>$qualityInfo</li>");
                 }
-                $message->addContent("</ul>");
+                $message->addHtmlContent("</ul>");
 
-                $message->setSignatureCanonical("quality:dynamic_monitoring");
-                $message->setSignatureName("Quality Dynamic Monitoring Feature");
-                $message->setType(Message::TYPE_CLASSIC);
-                $message->setClass(self::QUALITY_BOX_CLASS);
-                return $message;
-
+                return $message->setCanonical("quality:dynamic_monitoring")
+                    ->setSignatureName("Quality Dynamic Monitoring Feature")
+                    ->setClass(self::QUALITY_BOX_CLASS)
+                    ->toHtmlBox();
 
             }
         }

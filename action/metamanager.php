@@ -13,9 +13,12 @@ use ComboStrap\Http;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
+use ComboStrap\Json;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
+use ComboStrap\Message;
 use ComboStrap\MetaManagerMenuItem;
+use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PageImage;
 use ComboStrap\PluginUtility;
@@ -172,7 +175,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
                             ->setEvent($event)
                             ->setCanonical(self::CANONICAL)
-                            ->send(json_encode($fields), HttpResponse::TYPE_JSON);
+                            ->send(json_encode($fields), Mime::JSON);
                         return;
                     }
 
@@ -281,32 +284,26 @@ EOF;
          */
         if (!PluginUtility::isTest()) {
             $jsonString = file_get_contents('php://input');
-            $_POST = \ComboStrap\Json::createFromString($jsonString)->toArray();
+            $_POST = Json::createFromString($jsonString)->toArray();
         }
 
-        $modifications = [];
-        $errors = [];
-        foreach ($_POST as $name => $value) {
-            $name = strtolower($name);
-            switch ($name) {
-                case Page::NAME_PROPERTY:
-                    if ($value != $page->getPageName()) {
-                        $page->setPageName($value);
-                    }
-                    continue 2;
-                default:
-                    $oldValue = $page->getMetadata($name);
-                    if ($oldValue !== $value) {
-                        //$page->setMetadata($name, $value);
-                        $errors[] = "The metadata ($name) is not managed but was saved with the value ($value)";
-                    }
-                    continue 2;
+        $messages = $page->upsertMetadataFromAssociativeArray($_POST);
+
+        $arrayMessage = [];
+        $responseStatus = HttpResponse::STATUS_ALL_GOOD;
+        foreach ($messages as $message) {
+            $arrayMessage[] = "{$message->getType()} - {$message->getContent(Mime::PLAIN_TEXT)}";
+            if ($message->getType() === Message::TYPE_ERROR && $responseStatus !== HttpResponse::STATUS_BAD_REQUEST) {
+                $responseStatus = HttpResponse::STATUS_BAD_REQUEST;
             }
         }
-        $page->getDatabasePage()->replicateMetaAttributes();
+
+        if (sizeof($arrayMessage) === 0) {
+            $arrayMessage[] = "The data were updated.";
+        }
 
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-            ->sendMessage($errors);
+            ->sendMessage($arrayMessage);
 
 
     }

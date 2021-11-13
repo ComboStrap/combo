@@ -13,8 +13,8 @@ window['combo'] = class combo {
         return ComboModal.getModal(id);
     }
 
-    static destroyAllModals() {
-        ComboModal.destroyAllModals();
+    static removeAllModals() {
+        ComboModal.removeAllModals();
     }
 
     static createModal(id) {

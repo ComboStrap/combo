@@ -26,6 +26,11 @@ class Json
         return new Json(json_encode($actual));
     }
 
+    public static function getValidationLink(string $json)
+    {
+        return "See the errors it by clicking on <a href=\"https://jsonformatter.curiousconcept.com/?data=" . urlencode($json) . "\">this link</a>";
+    }
+
     public function normalized()
     {
         return json_encode(json_decode($this->jsonString), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

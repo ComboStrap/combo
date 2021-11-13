@@ -234,7 +234,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $state = $data[self::STATUS];
                 if ($state == self::PARSING_STATE_ERROR) {
                     $json = self::stripFrontmatterTag($data[PluginUtility::PAYLOAD]);
-                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. See the errors it by clicking on <a href=\"https://jsonformatter.curiousconcept.com/?data=" . urlencode($json) . "\">this link</a>.", LogUtility::LVL_MSG_ERROR);
+                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. ".\ComboStrap\Json::getValidationLink($json), LogUtility::LVL_MSG_ERROR);
                 }
 
                 /**

@@ -11,25 +11,25 @@ window.addEventListener("DOMContentLoaded", function () {
      */
     async function openMetaViewer(modalManager, pageId) {
         let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-${pageId}`);
-        let modalViewer = combo.getModal(modalViewerId);
-        if (modalViewer === undefined) {
-            modalViewer = combo.createModal(modalViewerId);
-            modalViewer.setHeader("Metadata Viewer");
-            let viewerCall = combo
-                .createDokuRequest(metaManagerCall)
-                .setProperty("id", pageId)
-                .setProperty("type", "viewer");
-            let json = JSON.stringify(await viewerCall.getJson(), null, 2);
+        let modalViewer = combo.createModal(modalViewerId);
+        modalViewer.setHeader("Metadata Viewer");
+        let viewerCall = combo
+            .createDokuRequest(metaManagerCall)
+            .setProperty("id", pageId)
+            .setProperty("type", "viewer");
+        let json = JSON.stringify(await viewerCall.getJson(), null, 2);
 
-            modalViewer.addBody(`
+        modalViewer.addBody(`
 <p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>
 <pre>${json}</pre>
 `);
-            let closeButton = modalViewer.addFooterCloseButton("Return to Metadata Manager");
-            closeButton.addEventListener("click", function () {
-                modalManager.show();
-            });
-        }
+        let closeButton = modalViewer.addFooterCloseButton("Return to Metadata Manager");
+        closeButton.addEventListener("click", function () {
+            modalManager.show();
+        });
+        modalViewer.getElement().addEventListener('hidden.bs.modal', function () {
+            modalViewer.remove();
+        });
         modalViewer.show();
 
     }

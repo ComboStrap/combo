@@ -5,6 +5,10 @@
 import Html from "./Html";
 import {Modal, Tooltip} from "bootstrap";
 
+/**
+ *
+ * @type {Object.<string, ComboModal>}
+ */
 let comboModals = {};
 
 export default class ComboModal {
@@ -24,6 +28,12 @@ export default class ComboModal {
     constructor(modalId) {
 
         this.modalId = modalId;
+        /**
+         * We create it because developpers may want to add
+         * event on it right away
+         * @type {HTMLDivElement}
+         */
+        this.modalRoot = document.createElement("div");
 
     }
 
@@ -145,11 +155,13 @@ export default class ComboModal {
     /**
      * Delete all modals
      */
-    static destroyAllModals = function () {
-        Object.values(comboModals).forEach(modal => {
-            modal.remove();
-        })
-        comboModals = {};
+    static removeAllModals = function () {
+        for (let prop in comboModals) {
+            if (comboModals.hasOwnProperty(prop)) {
+                let modal = comboModals[prop];
+                modal.remove();
+            }
+        }
     }
 
     /**
@@ -171,7 +183,6 @@ export default class ComboModal {
 
         this.isBuild = true;
 
-        this.modalRoot = document.createElement("div");
 
         document.body.appendChild(this.modalRoot);
         this.modalRoot.setAttribute("id", this.modalId);
@@ -264,5 +275,13 @@ export default class ComboModal {
                 modalFooter.appendChild(footerButton);
             }
         }
+    }
+
+    remove() {
+        this.bootStrapModal.dispose();
+        if (this.getId() in comboModals) {
+            delete comboModals[this.getId()];
+        }
+        return this;
     }
 }

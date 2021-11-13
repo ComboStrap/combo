@@ -2212,9 +2212,23 @@ class Page extends DokuPath
         return $ldJson;
     }
 
+    /**
+     * @param array|string $jsonLd
+     * @return $this
+     */
     public
-    function setJsonLd(array $jsonLdArray): Page
+    function setJsonLd($jsonLd): Page
     {
+        if(is_string($jsonLd)){
+            $jsonLdArray = json_decode($jsonLd,true);
+            if($jsonLdArray===false){
+                throw new ExceptionCombo("The json ld is not in a json format. ".Json::getValidationLink($jsonLd),\action_plugin_combo_metagoogle::CANONICAL);
+            }
+        } elseif (is_array($jsonLd)) {
+            $jsonLdArray = $jsonLd;
+        } else {
+            throw new ExceptionCombo("The json ld value should be a string or an array",\action_plugin_combo_metagoogle::CANONICAL);
+        }
         $this->setMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY, $jsonLdArray);
         return $this;
     }

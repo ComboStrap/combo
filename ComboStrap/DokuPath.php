@@ -202,9 +202,10 @@ class DokuPath extends File
         return new DokuPath($absolutePath, DokuPath::MEDIA_TYPE, $rev);
     }
 
-    public static function createUnknownFromId($id)
+    public static function createUnknownFromIdOrPath($id): DokuPath
     {
-        return new DokuPath(DokuPath::PATH_SEPARATOR . $id, DokuPath::UNKNOWN_TYPE);
+        DokuPath::addRootSeparatorIfNotPresent($id);
+        return new DokuPath( $id, DokuPath::UNKNOWN_TYPE);
     }
 
     /**
@@ -401,7 +402,7 @@ class DokuPath extends File
     }
 
     public
-    function getPath()
+    function getPath(): string
     {
 
         return $this->absolutePath;
@@ -550,6 +551,20 @@ class DokuPath extends File
             });
         }
         return self::$reservedWords;
+    }
+
+    /**
+     * @return string - a label from a path (used in link when their is no label available)
+     * The path is separated in words and every word gets an uppercase letter
+     */
+    public function toLabel(): string
+    {
+        $words = preg_split("/\s/", preg_replace("/-|_|:/", " ", $this->getPath()));
+        $wordsUc = [];
+        foreach ($words as $word) {
+            $wordsUc[] = ucfirst($word);
+        }
+        return implode(" ", $wordsUc);
     }
 
 

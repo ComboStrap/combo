@@ -171,6 +171,11 @@ class Page extends DokuPath
      */
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
 
+    /**
+     * The canonical to page metadata
+     */
+    const CANONICAL_PAGE_METADATA = "page:metadata";
+
 
     /**
      * @var array|array[]
@@ -1767,9 +1772,10 @@ class Page extends DokuPath
     /**
      * Frontmatter / Manager Metadata Update
      * @param $attributes
-     * @return Message[] array
+     * @param boolean|false $persistOnlyKnownAttributes - if strict, unknown parameter will not be added and return an error message
+     * @return Message[] array - all messages (error, info, ..)
      */
-    public function upsertMetadataFromAssociativeArray($attributes): array
+    public function upsertMetadataFromAssociativeArray($attributes, bool $persistOnlyKnownAttributes = false): array
     {
 
         /**
@@ -1782,7 +1788,8 @@ class Page extends DokuPath
 
             $lowerKey = trim(strtolower($key));
             if (in_array($lowerKey, self::NOT_MODIFIABLE_METAS)) {
-                $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified");
+                $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified")
+                    ->setCanonical(Page::CANONICAL_PAGE_METADATA);
                 continue;
             }
             try {
@@ -1835,7 +1842,8 @@ class Page extends DokuPath
                             $this->setPageId($value);
                         } else {
                             if ($this->getPageId() !== $value) {
-                                $messages[] = Message::createErrorMessage("The page id is a managed id and cannot be changed, this page has the id ({$this->getPageId()}) that has not the same value than in the frontmatter ({$value})");
+                                $messages[] = Message::createErrorMessage("The page id is a managed id and cannot be changed, this page has the id ({$this->getPageId()}) that has not the same value than in the frontmatter ({$value})")
+                                    ->setCanonical(Page::PAGE_ID_ATTRIBUTE);
                             }
                         }
                         continue 2;
@@ -1849,8 +1857,14 @@ class Page extends DokuPath
                         $this->setMonitoringQualityIndicator(Boolean::toBoolean($value));
                         continue 2;
                     default:
-                        $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is an unknown / not managed meta but was saved with the value ($value)");
-                        $this->setMetadata($key, $value);
+                        if (!$persistOnlyKnownAttributes) {
+                            $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
+                                ->setCanonical(Page::CANONICAL_PAGE_METADATA);
+                            $this->setMetadata($key, $value);
+                        } else {
+                            $messages[] = Message::createErrorMessage("The metadata ($lowerKey) is unknown and was not saved")
+                                ->setCanonical(Page::CANONICAL_PAGE_METADATA);
+                        }
                         continue 2;
                 }
             } catch (Exception $e) {
@@ -2219,15 +2233,15 @@ class Page extends DokuPath
     public
     function setJsonLd($jsonLd): Page
     {
-        if(is_string($jsonLd)){
-            $jsonLdArray = json_decode($jsonLd,true);
-            if($jsonLdArray===false){
-                throw new ExceptionCombo("The json ld is not in a json format. ".Json::getValidationLink($jsonLd),\action_plugin_combo_metagoogle::CANONICAL);
+        if (is_string($jsonLd)) {
+            $jsonLdArray = json_decode($jsonLd, true);
+            if ($jsonLdArray === false) {
+                throw new ExceptionCombo("The json ld is not in a json format. " . Json::getValidationLink($jsonLd), \action_plugin_combo_metagoogle::CANONICAL);
             }
         } elseif (is_array($jsonLd)) {
             $jsonLdArray = $jsonLd;
         } else {
-            throw new ExceptionCombo("The json ld value should be a string or an array",\action_plugin_combo_metagoogle::CANONICAL);
+            throw new ExceptionCombo("The json ld value should be a string or an array", \action_plugin_combo_metagoogle::CANONICAL);
         }
         $this->setMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY, $jsonLdArray);
         return $this;

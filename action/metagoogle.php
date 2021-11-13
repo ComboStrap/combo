@@ -303,7 +303,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
                 // May be added manually by the user itself
                 $ldJson = array(
-                    '@context' => 'http://schema.org',
+                    '@context' => 'https://schema.org',
                     '@type' => $type,
                     'url' => $page->getCanonicalUrl()
                 );

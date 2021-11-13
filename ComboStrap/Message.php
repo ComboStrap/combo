@@ -14,7 +14,7 @@ class Message
     private $content = [];
     private $type;
 
-    const TYPE_INFO = 'Classic';
+    const TYPE_INFO = 'Info';
     const TYPE_WARNING = 'Warning';
 
     /**
@@ -204,6 +204,17 @@ EOF;
                 $type = LogUtility::LVL_MSG_ERROR;
         }
         LogUtility::msg($content,$type,$this->canonical);
+    }
+
+    public function getDocumentationHyperLink(): ?string
+    {
+        if($this->canonical!==null) {
+            $canonicalPath = DokuPath::createUnknownFromIdOrPath($this->canonical);
+            $label = $canonicalPath->toLabel();
+            return PluginUtility::getDocumentationHyperLink($this->canonical,  $label, false);
+        } else {
+            return null;
+        }
     }
 
 }

@@ -273,7 +273,7 @@ EOF;
                 HttpResponse::create(HttpResponse::STATUS_UNSUPPORTED_MEDIA_TYPE)
                     ->setEvent($event)
                     ->setCanonical(self::CANONICAL)
-                    ->send("The post content should be in json format");
+                    ->sendMessage("The post content should be in json format");
                 return;
             }
         }
@@ -287,23 +287,29 @@ EOF;
             $_POST = Json::createFromString($jsonString)->toArray();
         }
 
-        $messages = $page->upsertMetadataFromAssociativeArray($_POST);
+        $upsertMessages = $page->upsertMetadataFromAssociativeArray($_POST, true);
 
-        $arrayMessage = [];
+        $responseMessages = [];
         $responseStatus = HttpResponse::STATUS_ALL_GOOD;
-        foreach ($messages as $message) {
-            $arrayMessage[] = "{$message->getType()} - {$message->getContent(Mime::PLAIN_TEXT)}";
-            if ($message->getType() === Message::TYPE_ERROR && $responseStatus !== HttpResponse::STATUS_BAD_REQUEST) {
+        foreach ($upsertMessages as $upsertMessage) {
+            $responseMessage = [ucfirst($upsertMessage->getType())];
+            $documentationHyperlink = $upsertMessage->getDocumentationHyperLink();
+            if ($documentationHyperlink !== null) {
+                $responseMessage[] = $documentationHyperlink;
+            }
+            $responseMessage[] = $upsertMessage->getContent(Mime::PLAIN_TEXT);
+            $responseMessages[] = implode(" - ", $responseMessage);
+            if ($upsertMessage->getType() === Message::TYPE_ERROR && $responseStatus !== HttpResponse::STATUS_BAD_REQUEST) {
                 $responseStatus = HttpResponse::STATUS_BAD_REQUEST;
             }
         }
 
-        if (sizeof($arrayMessage) === 0) {
-            $arrayMessage[] = "The data were updated.";
+        if (sizeof($responseMessages) === 0) {
+            $responseMessages[] = "The data were updated without errors.";
         }
 
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-            ->sendMessage($arrayMessage);
+            ->sendMessage($responseMessages);
 
 
     }

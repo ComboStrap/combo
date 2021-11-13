@@ -56,6 +56,7 @@ require_once(__DIR__ . '/DatabasePage.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/ExitException.php');
+require_once(__DIR__ . '/ExceptionCombo.php');
 require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FormMeta.php');
@@ -64,7 +65,6 @@ require_once(__DIR__ . '/FormMetaField.php');
 require_once(__DIR__ . '/FontSize.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/HeaderUtility.php');
-
 require_once(__DIR__ . '/HistoricalBreadcrumbMenuItem.php');
 require_once(__DIR__ . '/Hover.php');
 require_once(__DIR__ . '/Http.php');

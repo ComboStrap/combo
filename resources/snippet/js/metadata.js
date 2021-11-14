@@ -17,17 +17,23 @@ window.addEventListener("DOMContentLoaded", function () {
             .setProperty("id", pageId)
             .setProperty("type", "viewer");
         let jsonFormMeta = await viewerCall.getJson();
-        let formViewerId = combo.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
-        let form = combo.createFormFromJson(formViewerId, jsonFormMeta).toHtmlElement();
 
+
+        let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
         // noinspection JSVoidFunctionReturnValueUsed
-        combo.createChildModal(modalManager)
-            .setHeader("Metadata Viewer")
-            .removeOnClose()
-            .addBody(`<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>`)
-            .addBody(form)
-            .show();
+        let modal = combo.getModal(modalViewerId);
+        if (modal === undefined) {
 
+            let formViewerId = combo.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
+            let form = combo.createFormFromJson(formViewerId, jsonFormMeta).toHtmlElement();
+
+            modal = combo.createModal(modalViewerId)
+                .setParent(modalManager)
+                .setHeader("Metadata Viewer")
+                .addBody(`<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>`)
+                .addBody(form);
+        }
+        modal.show();
 
 
     }
@@ -95,7 +101,7 @@ window.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             }
-            combo.createChildModal(managerModal)
+            combo.getOrCreateChildModal(managerModal)
                 .centered()
                 .addBody(modalMessage.join("<br>"))
                 .show();

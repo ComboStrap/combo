@@ -46,8 +46,8 @@ window['combo'] = class combo {
      * @param parentModal
      * @return {ComboModal}
      */
-    static createChildModal(parentModal) {
-        return combo.createTemporaryModal()
+    static getOrCreateChildModal(modalId, parentModal) {
+        return ComboModal.getOrCreate(modalId)
             .setParent(parentModal);
     }
 }

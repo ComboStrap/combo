@@ -42,6 +42,10 @@ export default class ComboModal {
         return this;
     }
 
+    /**
+     * @param htmlBody
+     * @return {ComboModal}
+     */
     addBody(htmlBody) {
 
         this.bodies.push(htmlBody);
@@ -49,6 +53,10 @@ export default class ComboModal {
 
     }
 
+    /**
+     * @deprecated the target of the tabs does not hide anymore
+     * @return {ComboModal}
+     */
     removeOnClose() {
         this.isRemovedWhenClose = true;
         return this;
@@ -99,11 +107,15 @@ export default class ComboModal {
 
         /**
          * Remove on close ?
+         * Included tabs does not work anymore
+         * for whatever reason
          */
         if (this.isRemovedWhenClose === true) {
             let comboModal = this;
             this.getElement().addEventListener('hidden.bs.modal', function () {
-                debugger;
+                /**
+                 * the event is only dispatch on the root element, not all modal
+                 */
                 comboModal.remove();
             });
         }
@@ -298,6 +310,10 @@ export default class ComboModal {
         }
     }
 
+    /**
+     * @deprecated the tabs are not working anymore even with new instance
+     * @return {ComboModal}
+     */
     remove() {
         // Do we have tabs
         this.getElement().querySelectorAll('[data-bs-toggle="tab"]').forEach(tabTriggerElement => {
@@ -312,5 +328,13 @@ export default class ComboModal {
             delete comboModals[this.getId()];
         }
         return this;
+    }
+
+    static getOrCreate(modalId) {
+         let modal = ComboModal.getModal(modalId);
+         if(modal===undefined){
+             modal = ComboModal.createFromId(modalId);
+         }
+         return modal;
     }
 }

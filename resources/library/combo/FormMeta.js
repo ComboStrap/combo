@@ -53,6 +53,12 @@ export default class FormMeta {
     }
 
 
+    /**
+     *
+     * @param {string} formId
+     * @param {Object} json
+     * @return {FormMeta}
+     */
     static createFromJson(formId, json) {
         let form = FormMeta.createFromId(formId);
         for (let prop in json) {
@@ -95,6 +101,11 @@ export default class FormMeta {
         return form;
     }
 
+    /**
+     *
+     * @param id
+     * @return {FormMeta}
+     */
     static createFromId(id) {
         return new FormMeta(id);
     }
@@ -152,11 +163,19 @@ export default class FormMeta {
         let htmlTabNavs = '<ul class="nav nav-tabs mb-3">';
         let activeClass;
         let ariaSelected;
+        /**
+         * @param {FormMetaTab} tab
+         * @return string
+         */
         this.getTabPaneId = function (tab) {
             let htmlId = Html.toHtmlId(tab.getName());
             return `${formId}-tab-pane-${htmlId}`;
         }
-        this.getTabNavId = function (tab) {
+        /**
+         * @param {FormMetaTab} tab
+         * @return string
+         */
+        this.getTabNavId = function (/** @type {FormMetaTab}*/ tab) {
             let htmlId = Html.toHtmlId(tab.getName());
             return `${formId}-tab-nav-${htmlId}`;
         }

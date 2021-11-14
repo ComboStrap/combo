@@ -67,6 +67,7 @@ require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/HeaderUtility.php');
 require_once(__DIR__ . '/HistoricalBreadcrumbMenuItem.php');
 require_once(__DIR__ . '/Hover.php');
+require_once(__DIR__ . '/Html.php');
 require_once(__DIR__ . '/Http.php');
 require_once(__DIR__ . '/HttpResponse.php');
 require_once(__DIR__ . '/Icon.php');

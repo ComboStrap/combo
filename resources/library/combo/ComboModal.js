@@ -3,7 +3,7 @@
  * Private
  */
 import Html from "./Html";
-import {Modal, Tooltip} from "bootstrap";
+import {Modal, Tooltip, Tab} from "bootstrap";
 
 /**
  *
@@ -39,6 +39,7 @@ export default class ComboModal {
 
     setHeader(headerText) {
         this.headerText = headerText;
+        return this;
     }
 
     addBody(htmlBody) {
@@ -46,6 +47,11 @@ export default class ComboModal {
         this.bodies.push(htmlBody);
         return this;
 
+    }
+
+    removeOnClose() {
+        this.isRemovedWhenClose = true;
+        return this;
     }
 
 
@@ -91,6 +97,20 @@ export default class ComboModal {
             this.build()
         }
 
+        /**
+         * Remove on close ?
+         */
+        if (this.isRemovedWhenClose === true) {
+            let comboModal = this;
+            this.getElement().addEventListener('hidden.bs.modal', function () {
+                debugger;
+                comboModal.remove();
+            });
+        }
+
+        /**
+         * Parent child modal
+         */
         if (this.parentModal !== undefined) {
             this.parentModal.dismissHide();
             if (this.closeButton !== undefined) {
@@ -102,6 +122,7 @@ export default class ComboModal {
         }
 
         this.bootStrapModal.show();
+
         /**
          * Init the tooltip if any
          */
@@ -278,6 +299,14 @@ export default class ComboModal {
     }
 
     remove() {
+        // Do we have tabs
+        this.getElement().querySelectorAll('[data-bs-toggle="tab"]').forEach(tabTriggerElement => {
+            let tab = Tab.getInstance(tabTriggerElement);
+            if (tab !== null) {
+                // tab are only created when the user click on them
+                tab.dispose();
+            }
+        })
         this.bootStrapModal.dispose();
         if (this.getId() in comboModals) {
             delete comboModals[this.getId()];

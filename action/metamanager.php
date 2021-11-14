@@ -119,6 +119,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $page = Page::createPageFromId($id);
         if (!$page->exists()) {
             HttpResponse::create(HttpResponse::STATUS_DOES_NOT_EXIST)
+                ->setEvent($event)
                 ->setCanonical(self::CANONICAL)
                 ->sendMessage("The page ($id) does not exist");
             return;
@@ -153,37 +154,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                  */
                 $type = $_GET["type"];
                 if ($type === "viewer") {
-                    if (!Identity::isManager()) {
-                        HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
-                            ->setEvent($event)
-                            ->setCanonical(self::CANONICAL)
-                            ->sendMessage("Not Authorized (managers only)");
-                        return;
-
-                    } else {
-                        $metadata = p_read_metadata($id);
-                        $metasPersistent = $metadata['persistent'];
-                        $metasCurrent = $metadata['current'];
-                        /**
-                         * toc is in the current meta data's, we place it then as high priority
-                         * if it does not work, we need to implement a recursive merge
-                         * because the {@link array_merge_recursive()} just add the values
-                         * (we got them the same value twice)
-                         */
-                        $fields = array_merge($metasPersistent, $metasCurrent);
-                        ksort($fields);
-                        HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
-                            ->setEvent($event)
-                            ->setCanonical(self::CANONICAL)
-                            ->send(json_encode($fields), Mime::JSON);
-                        return;
-                    }
-
+                    $this->handleViewer($event, $page);
+                    return;
                 }
 
-                $this->handleGetFormMeta($page);
+                $this->handleGetFormMeta($event,$page);
                 return;
-
 
         }
 
@@ -309,16 +285,18 @@ EOF;
         }
 
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
+            ->setEvent($event)
             ->sendMessage($responseMessages);
 
 
     }
 
     /**
+     * @param Doku_Event $event
      * @param Page $page
      */
     private
-    function handleGetFormMeta(Page $page)
+    function handleGetFormMeta(Doku_Event $event,Page $page)
     {
         $formMeta = FormMeta::create($page->getDokuwikiId())
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
@@ -690,10 +668,55 @@ EOF;
                     ->setWidthField(8)
             );
 
+        $payload = json_encode($formMeta->toAssociativeArray());
+        HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
+            ->setEvent($event)
+            ->send($payload, Mime::JSON);
+    }
 
-        Http::setJsonMime();
-        Http::setStatus(200);
-        echo json_encode($formMeta->toAssociativeArray());
+    /**
+     * @param Doku_Event $event
+     * @param Page $page
+     */
+    private function handleViewer(Doku_Event $event, $page)
+    {
+        if (!Identity::isManager()) {
+            HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
+                ->setEvent($event)
+                ->setCanonical(self::CANONICAL)
+                ->sendMessage("Not Authorized (managers only)");
+            return;
+        }
+        $metadata = $page->getMetadatas();
+        $persistent = $metadata['persistent'];
+        ksort($persistent);
+        $current = $metadata['current'];
+        ksort($current);
+        $form = FormMeta::create("raw_metadata")
+            ->addField(
+                FormMetaField::create("persistent")
+                    ->setLabel("Persistent Metadata")
+                    ->setTab("persistent")
+                    ->setDescription("The persistent metadata")
+                    ->addValue(json_encode($persistent))
+                    ->setMutable(false)
+                    ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
+            )
+            ->addField(FormMetaField::create("current")
+                ->setLabel("Current Metadata")
+                ->setTab("current")
+                ->setDescription("The current metadata")
+                ->addValue(json_encode($current))
+                ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
+                ->setMutable(false)
+            )
+            ->toAssociativeArray();
+
+        HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
+            ->setEvent($event)
+            ->setCanonical(self::CANONICAL)
+            ->send(json_encode($form), Mime::JSON);
+
     }
 
 

@@ -10,27 +10,25 @@ window.addEventListener("DOMContentLoaded", function () {
      * @type ComboModal modalManager
      */
     async function openMetaViewer(modalManager, pageId) {
-        let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-${pageId}`);
-        let modalViewer = combo.createModal(modalViewerId);
-        modalViewer.setHeader("Metadata Viewer");
+
+
         let viewerCall = combo
             .createDokuRequest(metaManagerCall)
             .setProperty("id", pageId)
             .setProperty("type", "viewer");
-        let json = JSON.stringify(await viewerCall.getJson(), null, 2);
+        let jsonFormMeta = await viewerCall.getJson();
+        let formViewerId = combo.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
+        let form = combo.createFormFromJson(formViewerId, jsonFormMeta).toHtmlElement();
 
-        modalViewer.addBody(`
-<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>
-<pre>${json}</pre>
-`);
-        let closeButton = modalViewer.addFooterCloseButton("Return to Metadata Manager");
-        closeButton.addEventListener("click", function () {
-            modalManager.show();
-        });
-        modalViewer.getElement().addEventListener('hidden.bs.modal', function () {
-            modalViewer.remove();
-        });
-        modalViewer.show();
+        // noinspection JSVoidFunctionReturnValueUsed
+        combo.createChildModal(modalManager)
+            .setHeader("Metadata Viewer")
+            .removeOnClose()
+            .addBody(`<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>`)
+            .addBody(form)
+            .show();
+
+
 
     }
 

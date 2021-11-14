@@ -25,6 +25,12 @@ window['combo'] = class combo {
         return DokuAjaxRequest.createDokuRequest(callName);
     }
 
+    /**
+     *
+     * @param formId
+     * @param json
+     * @return {FormMeta}
+     */
     static createFormFromJson(formId, json) {
         return FormMeta.createFromJson(formId, json);
     }
@@ -36,6 +42,10 @@ window['combo'] = class combo {
         return ComboModal.createTemporary();
     }
 
+    /**
+     * @param parentModal
+     * @return {ComboModal}
+     */
     static createChildModal(parentModal) {
         return combo.createTemporaryModal()
             .setParent(parentModal);

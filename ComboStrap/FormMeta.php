@@ -32,8 +32,12 @@ class FormMeta
      */
     private $type;
 
+    /**
+     * @throws ExceptionComboRuntime
+     */
     public function __construct($name)
     {
+        Html::validNameGuard($name);
         $this->name = $name;
     }
 

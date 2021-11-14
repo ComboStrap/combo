@@ -1,18 +1,15 @@
 <?php
 
+require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\Identity;
 use ComboStrap\DokuPath;
-use ComboStrap\LatePublication;
+use ComboStrap\Identity;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Page;
 use ComboStrap\PageProtection;
 use ComboStrap\Publication;
-use ComboStrap\StringUtility;
 
-require_once(__DIR__ . '/../ComboStrap/LowQualityPage.php');
-require_once(__DIR__ . '/../ComboStrap/PageProtection.php');
-require_once(__DIR__ . '/../ComboStrap/DokuPath.php');
+
 
 /**
  *
@@ -55,10 +52,6 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('FEED_DATA_PROCESS', 'BEFORE', $this, 'handleRssFeed', array());
 
-        /**
-         * Add logged in indicator for Javascript
-         */
-        $controller->register_hook('DOKUWIKI_STARTED', 'AFTER', $this, 'handleAnonymousJsIndicator');
 
         /**
          * Robots meta
@@ -295,23 +288,6 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
 
     }
 
-    /**
-     * @noinspection SpellCheckingInspection
-     * Adding an information to know if the user is signed or not
-     */
-    function handleAnonymousJsIndicator(&$event, $param)
-    {
-
-        global $JSINFO;
-        if (!Identity::isLoggedIn()) {
-            $navigation = Identity::JS_NAVIGATION_ANONYMOUS_VALUE;
-        } else {
-            $navigation = Identity::JS_NAVIGATION_SIGNED_VALUE;
-        }
-        $JSINFO[Identity::JS_NAVIGATION_INDICATOR] = $navigation;
-
-
-    }
 
     /**
      * Handle the meta robots

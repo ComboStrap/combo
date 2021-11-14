@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+
+
 /**
  * Class FormField
  * @package ComboStrap
@@ -182,9 +184,11 @@ class FormMetaField
         return $this;
     }
 
+
     public
     function setTab(string $tabName): FormMetaField
     {
+        Html::validNameGuard($tabName);
         $this->tab = $tabName;
         return $this;
     }

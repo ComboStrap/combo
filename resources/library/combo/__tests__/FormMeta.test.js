@@ -75,7 +75,6 @@ test('Json to Form Object', () => {
                         "default": thirdDefaultValue
                     }
                 }
-
             }
         },
         "tabs": {

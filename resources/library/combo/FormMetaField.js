@@ -290,6 +290,10 @@ export default class FormMetaField {
     /**
      *
      * @return {FormMetaField[]}
+     *
+     * See also the concept of list of objects
+     * https://react-jsonschema-form.readthedocs.io/en/latest/usage/arrays/#arrays-of-objects
+     *
      */
     getChildren() {
         return Object.values(this.children);

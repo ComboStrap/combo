@@ -21,19 +21,18 @@ window.addEventListener("DOMContentLoaded", function () {
 
         let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
         // noinspection JSVoidFunctionReturnValueUsed
-        let modal = combo.getModal(modalViewerId);
-        if (modal === undefined) {
+        let modal = combo.getOrCreateModal(modalViewerId);
 
-            let formViewerId = combo.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
-            let form = combo.createFormFromJson(formViewerId, jsonFormMeta).toHtmlElement();
 
-            modal = combo.createModal(modalViewerId)
-                .setParent(modalManager)
-                .setHeader("Metadata Viewer")
-                .addBody(`<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>`)
-                .addBody(form);
-        }
-        modal.show();
+        let formViewerId = combo.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
+        let form = combo.createFormFromJson(formViewerId, jsonFormMeta).toHtmlElement();
+
+        modal.setParent(modalManager)
+            .resetOnClose()
+            .setHeader("Metadata Viewer")
+            .addBody(`<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>`)
+            .addBody(form)
+            .show();
 
 
     }
@@ -114,19 +113,18 @@ window.addEventListener("DOMContentLoaded", function () {
 
     let openMetadataManager = async function (pageId) {
 
-        let modalManagerId = combo.toHtmlId(`combo-metadata-manager-page-${pageId}`);
-        let managerModal = combo.getModal(modalManagerId);
+        let call = combo
+            .createDokuRequest(metaManagerCall)
+            .setProperty("id", pageId);
+        let formMetadata = await call.getJson();
 
-        if (managerModal === undefined) {
-            managerModal = combo.createModal(modalManagerId);
-            let call = combo
-                .createDokuRequest(metaManagerCall)
-                .setProperty("id", pageId);
-            let formMetadata = await call.getJson();
-            managerModal = buildMetadataManager(managerModal, formMetadata, pageId);
+        let modalManagerId = combo.toHtmlId(`combo-meta-manager-page-${pageId}`);
+        let managerModal = combo.getOrCreateModal(modalManagerId);
+        if(managerModal.wasBuild()) {
+            managerModal.reset();
         }
+        managerModal = buildMetadataManager(managerModal, formMetadata, pageId);
         managerModal.show();
-
 
     }
 
@@ -145,5 +143,6 @@ window.addEventListener("DOMContentLoaded", function () {
         });
 
     });
-});
+})
+;
 

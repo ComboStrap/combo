@@ -9,16 +9,13 @@ window['combo'] = class combo {
         return Html.toHtmlId(name)
     }
 
-    static getModal(id) {
-        return ComboModal.getModal(id);
+
+    static getOrCreateModal(id) {
+        return ComboModal.getOrCreate(id);
     }
 
     static removeAllModals() {
-        ComboModal.removeAllModals();
-    }
-
-    static createModal(id) {
-        return ComboModal.createFromId(id);
+        ComboModal.resetAllModals();
     }
 
     static createDokuRequest(callName) {

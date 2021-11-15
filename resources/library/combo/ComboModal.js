@@ -13,10 +13,7 @@ let comboModals = {};
 
 export default class ComboModal {
 
-    /**
-     * @type HTMLDivElement
-     */
-    modalFooter;
+
     footerButtons = [];
     bodies = [];
     isBuild = false;
@@ -29,7 +26,7 @@ export default class ComboModal {
 
         this.modalId = modalId;
         /**
-         * We create it because developpers may want to add
+         * We create it because developers may want to add
          * event on it right away
          * @type {HTMLDivElement}
          */
@@ -54,11 +51,10 @@ export default class ComboModal {
     }
 
     /**
-     * @deprecated the target of the tabs does not hide anymore
      * @return {ComboModal}
      */
-    removeOnClose() {
-        this.isRemovedWhenClose = true;
+    resetOnClose() {
+        this.isResetOnClose = true;
         return this;
     }
 
@@ -101,8 +97,12 @@ export default class ComboModal {
 
     show() {
 
+        if (this.modalRoot == null) {
+            throw new Error("This modal was removed, you can't use it anymore");
+        }
+
         if (!this.isBuild) {
-            this.build()
+            this.build();
         }
 
         /**
@@ -110,13 +110,13 @@ export default class ComboModal {
          * Included tabs does not work anymore
          * for whatever reason
          */
-        if (this.isRemovedWhenClose === true) {
+        if (this.isResetOnClose === true) {
             let comboModal = this;
             this.getElement().addEventListener('hidden.bs.modal', function () {
                 /**
                  * the event is only dispatch on the root element, not all modal
                  */
-                comboModal.remove();
+                comboModal.reset();
             });
         }
 
@@ -135,11 +135,7 @@ export default class ComboModal {
 
         this.bootStrapModal.show();
 
-        /**
-         * Init the tooltip if any
-         */
-        let tooltipSelector = `#${this.modalId} [data-bs-toggle="tooltip"]`;
-        document.querySelectorAll(tooltipSelector).forEach(el => new Tooltip(el));
+
     }
 
     dismissHide() {
@@ -175,7 +171,12 @@ export default class ComboModal {
      * @return {ComboModal}
      */
     static getModal = function (modalId) {
-        return comboModals[modalId];
+
+        if (modalId in comboModals) {
+            return comboModals[modalId];
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -188,11 +189,11 @@ export default class ComboModal {
     /**
      * Delete all modals
      */
-    static removeAllModals = function () {
+    static resetAllModals = function () {
         for (let prop in comboModals) {
             if (comboModals.hasOwnProperty(prop)) {
                 let modal = comboModals[prop];
-                modal.remove();
+                modal.reset();
             }
         }
     }
@@ -210,12 +211,30 @@ export default class ComboModal {
     }
 
     /**
+     * Calling the {@link show} function will build the
+     * modal, if this is the case, you can't build it anymore
+     * you need to {@link reset} it and recreate it if needed
+     * @return {boolean}
+     */
+    wasBuild() {
+        return this.isBuild;
+    }
+
+    reset() {
+        this.remove();
+        this.modalRoot = document.createElement("div");
+        this.isBuild = false;
+        this.bodies = [];
+        this.footerButtons = [];
+        this.headerText = undefined;
+    }
+
+    /**
      * Build the modal
      */
     build() {
 
         this.isBuild = true;
-
 
         document.body.appendChild(this.modalRoot);
         this.modalRoot.setAttribute("id", this.modalId);
@@ -256,7 +275,8 @@ export default class ComboModal {
             "focus": true
         };
         /**
-         * No need to use the `bootstrap`
+         * No need to use the global `bootstrap.Modal`
+         * Created at build time
          * @type {Modal}
          */
         this.bootStrapModal = new Modal(this.modalRoot, options);
@@ -308,10 +328,15 @@ export default class ComboModal {
                 modalFooter.appendChild(footerButton);
             }
         }
+
+        /**
+         * Init the tooltip if any
+         */
+        let tooltipSelector = `#${this.modalId} [data-bs-toggle="tooltip"]`;
+        document.querySelectorAll(tooltipSelector).forEach(el => new Tooltip(el));
     }
 
     /**
-     * @deprecated the tabs are not working anymore even with new instance
      * @return {ComboModal}
      */
     remove() {
@@ -323,18 +348,23 @@ export default class ComboModal {
                 tab.dispose();
             }
         })
-        this.bootStrapModal.dispose();
+        if (this.bootStrapModal != null) {
+            this.bootStrapModal.dispose();
+            this.bootStrapModal = null;
+        }
         if (this.getId() in comboModals) {
             delete comboModals[this.getId()];
         }
+        this.getElement().remove();
+        this.modalRoot = null;
         return this;
     }
 
     static getOrCreate(modalId) {
-         let modal = ComboModal.getModal(modalId);
-         if(modal===undefined){
-             modal = ComboModal.createFromId(modalId);
-         }
-         return modal;
+        let modal = ComboModal.getModal(modalId);
+        if (modal === null) {
+            modal = ComboModal.createFromId(modalId);
+        }
+        return modal;
     }
 }

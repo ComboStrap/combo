@@ -28,3 +28,63 @@ test('Modal Simple Button', () => {
     expect(modalElement.outerHTML).toEqualHtmlString(expected)
 
 });
+
+test('Modal creation/destruction test', () => {
+
+    /**
+     * At creation time, the dom is not modified
+     * @type {string}
+     */
+    let modalId = "modal-id";
+    let modal = ComboModal.getOrCreate(modalId);
+    let modalElement = document.getElementById(modalId);
+    expect(modalElement).toBeNull();
+    expect(modal.getElement()).not.toBeNull();
+    /**
+     * Remove it right away
+     */
+    modal.remove();
+    expect(modal.getElement()).toBeNull();
+    // show throw an error
+    expect(() => {modal.show()}).toThrow(Error);
+    /**
+     * Rebuild it
+     */
+    let secondModalInstantiation = ComboModal.getOrCreate(modalId);
+    secondModalInstantiation.show(); // add the modal in the DOM
+    modalElement = document.getElementById(modalId);
+    expect(modalElement).not.toBeNull();
+    /**
+     * GettingOrCreate / Showing twice
+     * should not create two elements in the DOM
+     * @type {ComboModal}
+     */
+    let thirdModalInstantiation = ComboModal.getOrCreate(modalId);
+    expect(thirdModalInstantiation).toBe(secondModalInstantiation);
+    thirdModalInstantiation.show();
+    let modalElements = document.querySelectorAll(".modal");
+    expect(modalElements).toHaveLength(1);
+    let firstModalElement = modalElements[0];
+    expect(firstModalElement).toBe(modalElement);
+    /**
+     * Remove
+     */
+    thirdModalInstantiation.remove();
+    modalElements = document.querySelectorAll(".modal");
+    expect(modalElements).toHaveLength(0); // no more in the DOM
+
+});
+
+test('Modal creation/destruction/reset test', () => {
+
+    /**
+     * Should not give any error
+     */
+    let modalId = "modal-id";
+    let modal = ComboModal.getOrCreate(modalId);
+    modal.show();
+    modal.reset();
+    modal.show();
+
+
+})

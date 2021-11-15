@@ -71,6 +71,9 @@ class FormMetaField
      */
     private $label;
     private $description;
+    /**
+     * If canonical is set, an url is also send
+     */
     private $canonical;
     private $values = [];
     private $defaults = [];
@@ -99,7 +102,6 @@ class FormMetaField
     {
         $this->name = $name;
         $this->label = ucfirst($name);
-        $this->canonical = $name;
         $this->description = $name;
         $this->type = self::TEXT_TYPE_VALUE;
         $this->mutable = true;

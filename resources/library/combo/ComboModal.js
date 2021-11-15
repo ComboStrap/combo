@@ -66,7 +66,7 @@ export default class ComboModal {
     addFooterButton(htmlFooter) {
 
         this.footerButtons.push(htmlFooter);
-
+        return this;
     }
 
     /**
@@ -74,16 +74,15 @@ export default class ComboModal {
      * @return HTMLButtonElement the close button
      */
     addFooterCloseButton(label = "Close") {
-        let closeButton = document.createElement("button");
-        closeButton.classList.add("btn", "btn-secondary")
-        closeButton.innerHTML = label;
+        this.closeButton = document.createElement("button");
+        this.closeButton.classList.add("btn", "btn-secondary")
+        this.closeButton.innerHTML = label;
         let modal = this;
-        closeButton.addEventListener("click", function () {
+        this.closeButton.addEventListener("click", function () {
             modal.bootStrapModal.hide();
         });
-        this.addFooterButton(closeButton);
-        this.closeButton = closeButton;
-        return closeButton;
+        this.addFooterButton(this.closeButton);
+        return this;
     }
 
     /**

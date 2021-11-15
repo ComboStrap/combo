@@ -24,6 +24,7 @@ use ComboStrap\Analytics;
 use ComboStrap\ArrayUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Metadata;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
@@ -255,16 +256,11 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     return false;
                 }
 
-                $notModifiableMeta = [
-                    Analytics::PATH,
-                    Analytics::DATE_CREATED,
-                    Analytics::DATE_MODIFIED
-                ];
 
                 /** @var renderer_plugin_combo_analytics $renderer */
                 $jsonArray = $data[PluginUtility::ATTRIBUTES];
                 foreach ($jsonArray as $key => $value) {
-                    if (!in_array($key, $notModifiableMeta)) {
+                    if (!in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
 
                         $renderer->setMeta($key, $value);
                         if ($key === Page::IMAGE_META_PROPERTY) {
@@ -298,42 +294,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                         syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
                     }
                 }
-
-                /**
-                 * Delete the controlled meta that are no more present in the frontmatter
-                 * if they exists
-                 * The managed meta with the exception of
-                 * the {@link action_plugin_combo_metadescription::DESCRIPTION_META_KEY description}
-                 * because it's already managed by dokuwiki in description['abstract']
-                 */
-                $managedMeta = [
-                    Page::CANONICAL_PROPERTY,
-                    Page::TYPE_META_PROPERTY,
-                    Analytics::H1,
-                    Page::IMAGE_META_PROPERTY,
-                    Page::REGION_META_PROPERTY,
-                    Page::LANG_META_PROPERTY,
-                    Analytics::TITLE,
-                    syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
-                    Publication::OLD_META_KEY,
-                    Publication::DATE_PUBLISHED,
-                    Analytics::NAME,
-                    action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
-                    Page::LAYOUT_PROPERTY,
-                    action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY
-                ];
-
-                global $ID;
-                $meta = p_read_metadata($ID);
-                foreach ($managedMeta as $metaKey) {
-                    if (!array_key_exists($metaKey, $jsonArray)) {
-                        if (isset($meta['persistent'][$metaKey])) {
-                            unset($meta['persistent'][$metaKey]);
-                        }
-                    }
-                }
-                p_save_metadata($ID, $meta);
-
 
                 break;
 

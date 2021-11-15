@@ -17,6 +17,7 @@ use ComboStrap\Json;
 use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Message;
+use ComboStrap\Metadata;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -35,7 +36,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 {
 
 
-    const CALL_ID = "combo-meta-manager";
+    const META_MANAGER_CALL_ID = "combo-meta-manager";
+    const META_VIEWER_CALL_ID = "combo-meta-viewer";
     const JSON_PARAM = "json";
     const CANONICAL = "meta-manager";
 
@@ -90,7 +92,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     function _ajax_call(Doku_Event &$event): void
     {
 
-        if ($event->data !== self::CALL_ID) {
+        $call = $event->data;
+        if (!in_array($call, [self::META_MANAGER_CALL_ID, self::META_VIEWER_CALL_ID])) {
             return;
         }
         //no other ajax call handlers needed
@@ -140,25 +143,47 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Functional code
          */
+
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         switch ($requestMethod) {
             case 'POST':
 
-                $this->handlePost($event, $page);
+                if ($_SERVER["CONTENT_TYPE"] !== "application/json") {
+                    /**
+                     * We can't set the mime content in a {@link TestRequest}
+                     */
+                    if (!PluginUtility::isTest()) {
+                        HttpResponse::create(HttpResponse::STATUS_UNSUPPORTED_MEDIA_TYPE)
+                            ->setEvent($event)
+                            ->setCanonical(self::CANONICAL)
+                            ->sendMessage("The post content should be in json format");
+                        return;
+                    }
+                }
+
+                /**
+                 * We can't simulate a php://input in a {@link TestRequest}
+                 * We set therefore the post
+                 */
+                if (!PluginUtility::isTest()) {
+                    $jsonString = file_get_contents('php://input');
+                    $_POST = Json::createFromString($jsonString)->toArray();
+                }
+
+                if ($call === self::META_MANAGER_CALL_ID) {
+                    $this->handleMetaManagerPost($event, $page, $_POST);
+                } else {
+                    $this->handleMetaViewerPost($event, $page,$_POST);
+                }
 
                 return;
             case "GET":
 
-                /**
-                 * The old viewer meta panel
-                 */
-                $type = $_GET["type"];
-                if ($type === "viewer") {
+                if ($call === self::META_MANAGER_CALL_ID) {
+                    $this->handleGetFormMeta($event, $page);
+                } else {
                     $this->handleViewer($event, $page);
-                    return;
                 }
-
-                $this->handleGetFormMeta($event,$page);
                 return;
 
         }
@@ -238,32 +263,12 @@ EOF;
     /**
      * @param $event
      * @param Page $page
+     * @param array $post
      */
-    private function handlePost($event, Page $page)
+    private function handleMetaManagerPost($event, Page $page, array $post)
     {
-        if ($_SERVER["CONTENT_TYPE"] !== "application/json") {
-            /**
-             * We can't set the mime content in a {@link TestRequest}
-             */
-            if (!PluginUtility::isTest()) {
-                HttpResponse::create(HttpResponse::STATUS_UNSUPPORTED_MEDIA_TYPE)
-                    ->setEvent($event)
-                    ->setCanonical(self::CANONICAL)
-                    ->sendMessage("The post content should be in json format");
-                return;
-            }
-        }
 
-        /**
-         * We can't simulate a php://input in a {@link TestRequest}
-         * We set therefore the post
-         */
-        if (!PluginUtility::isTest()) {
-            $jsonString = file_get_contents('php://input');
-            $_POST = Json::createFromString($jsonString)->toArray();
-        }
-
-        $upsertMessages = $page->upsertMetadataFromAssociativeArray($_POST, true);
+        $upsertMessages = $page->upsertMetadataFromAssociativeArray($post, true);
 
         $responseMessages = [];
         $responseStatus = HttpResponse::STATUS_ALL_GOOD;
@@ -296,7 +301,7 @@ EOF;
      * @param Page $page
      */
     private
-    function handleGetFormMeta(Doku_Event $event,Page $page)
+    function handleGetFormMeta(Doku_Event $event, Page $page)
     {
         $formMeta = FormMeta::create($page->getDokuwikiId())
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
@@ -678,7 +683,7 @@ EOF;
      * @param Doku_Event $event
      * @param Page $page
      */
-    private function handleViewer(Doku_Event $event, $page)
+    private function handleViewer(Doku_Event $event, Page $page)
     {
         if (!Identity::isManager()) {
             HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
@@ -714,6 +719,30 @@ EOF;
             ->setEvent($event)
             ->setCanonical(self::CANONICAL)
             ->send(json_encode($form), Mime::JSON);
+
+    }
+
+    private function handleMetaViewerPost(Doku_Event $event, Page $page, array $post)
+    {
+
+        /**
+         * Delete the controlled meta that are no more present in the frontmatter
+         * if they exists
+         */
+        $meta = $page->getMetadatas();
+        foreach (Metadata::MANAGED_METADATA as $metaKey) {
+            if (!array_key_exists($metaKey, $jsonArray)) {
+                if (isset($meta['persistent'][$metaKey])) {
+                    unset($meta['persistent'][$metaKey]);
+                }
+            }
+        }
+        p_save_metadata($ID, $meta);
+
+        echo $post;
+        HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
+            ->setEvent($event)
+            ->sendMessage("Yo all");
 
     }
 

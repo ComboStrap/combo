@@ -84,6 +84,7 @@ require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
+require_once(__DIR__ . '/Metadata.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');

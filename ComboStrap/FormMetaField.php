@@ -42,6 +42,7 @@ class FormMetaField
         self::TABULAR_TYPE_VALUE,
         self::DATETIME_TYPE_VALUE,
         self::PARAGRAPH_TYPE_VALUE,
+        self::JSON_TYPE_VALUE,
         self::BOOLEAN_TYPE_VALUE
     ];
     public const TEXT_TYPE_VALUE = "text";
@@ -53,6 +54,7 @@ class FormMetaField
     public const CHILDREN_ATTRIBUTE = "children";
     const DESCRIPTION_ATTRIBUTE = "description";
     public const BOOLEAN_TYPE_VALUE = "boolean";
+    const JSON_TYPE_VALUE = "json";
 
 
     private $name;

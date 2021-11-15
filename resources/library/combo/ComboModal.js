@@ -30,7 +30,7 @@ export default class ComboModal {
          * event on it right away
          * @type {HTMLDivElement}
          */
-        this.modalRoot = document.createElement("div");
+        this.modalRootHtmlElement = document.createElement("div");
 
     }
 
@@ -97,7 +97,7 @@ export default class ComboModal {
 
     show() {
 
-        if (this.modalRoot == null) {
+        if (this.modalRootHtmlElement == null) {
             throw new Error("This modal was removed, you can't use it anymore");
         }
 
@@ -106,7 +106,7 @@ export default class ComboModal {
         }
 
         /**
-         * Remove on close ?
+         * Reset on close ?
          * Included tabs does not work anymore
          * for whatever reason
          */
@@ -142,7 +142,7 @@ export default class ComboModal {
         this.bootStrapModal.hide();
     }
 
-    getId() {
+    getModalId() {
         return this.modalId;
     }
 
@@ -207,7 +207,7 @@ export default class ComboModal {
     }
 
     getElement() {
-        return this.modalRoot;
+        return this.modalRootHtmlElement;
     }
 
     /**
@@ -221,8 +221,29 @@ export default class ComboModal {
     }
 
     reset() {
-        this.remove();
-        this.modalRoot = document.createElement("div");
+
+        // DOM
+        this.modalRootHtmlElement.querySelectorAll('[data-bs-toggle="tab"]').forEach(tabTriggerElement => {
+            let tab = Tab.getInstance(tabTriggerElement);
+            if (tab !== null) {
+                // tab are only created when the user click on them
+                tab.dispose();
+            }
+        })
+        this.modalRootHtmlElement.remove();
+        this.modalRootHtmlElement = document.createElement("div");
+
+        /**
+         * Bootstrap Modal
+         */
+        if (this.bootStrapModal != null) {
+            this.bootStrapModal.dispose();
+            this.bootStrapModal = null;
+        }
+
+        /**
+         * Content
+         */
         this.isBuild = false;
         this.bodies = [];
         this.footerButtons = [];
@@ -236,12 +257,12 @@ export default class ComboModal {
 
         this.isBuild = true;
 
-        document.body.appendChild(this.modalRoot);
-        this.modalRoot.setAttribute("id", this.modalId);
-        this.modalRoot.classList.add("modal", "fade");
+        document.body.appendChild(this.modalRootHtmlElement);
+        this.modalRootHtmlElement.setAttribute("id", this.modalId);
+        this.modalRootHtmlElement.classList.add("modal", "fade");
         // Uncaught RangeError: Maximum call stack size exceeded caused by the tabindex
         // modalRoot.setAttribute("tabindex", "-1");
-        this.modalRoot.setAttribute("aria-hidden", "true");
+        this.modalRootHtmlElement.setAttribute("aria-hidden", "true");
 
         const modalManagerDialog = document.createElement("div");
         modalManagerDialog.classList.add(
@@ -256,7 +277,7 @@ export default class ComboModal {
         // we want still the mouse below the tab when we click
         modalManagerDialog.style.setProperty("margin", "5rem auto");
         modalManagerDialog.style.setProperty("height", "calc(100% - 9rem)");
-        this.modalRoot.appendChild(modalManagerDialog);
+        this.modalRootHtmlElement.appendChild(modalManagerDialog);
         this.modalContent = document.createElement("div");
         this.modalContent.classList.add("modal-content");
         modalManagerDialog.appendChild(this.modalContent);
@@ -279,7 +300,7 @@ export default class ComboModal {
          * Created at build time
          * @type {Modal}
          */
-        this.bootStrapModal = new Modal(this.modalRoot, options);
+        this.bootStrapModal = new Modal(this.modalRootHtmlElement, options);
 
         /**
          * Building the header
@@ -336,29 +357,7 @@ export default class ComboModal {
         document.querySelectorAll(tooltipSelector).forEach(el => new Tooltip(el));
     }
 
-    /**
-     * @return {ComboModal}
-     */
-    remove() {
-        // Do we have tabs
-        this.getElement().querySelectorAll('[data-bs-toggle="tab"]').forEach(tabTriggerElement => {
-            let tab = Tab.getInstance(tabTriggerElement);
-            if (tab !== null) {
-                // tab are only created when the user click on them
-                tab.dispose();
-            }
-        })
-        if (this.bootStrapModal != null) {
-            this.bootStrapModal.dispose();
-            this.bootStrapModal = null;
-        }
-        if (this.getId() in comboModals) {
-            delete comboModals[this.getId()];
-        }
-        this.getElement().remove();
-        this.modalRoot = null;
-        return this;
-    }
+
 
     static getOrCreate(modalId) {
         let modal = ComboModal.getModal(modalId);

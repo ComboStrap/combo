@@ -55,7 +55,7 @@ window.addEventListener("DOMContentLoaded", function () {
         /**
          * Adding the form
          */
-        let formId = `${managerModal.getId()}-form`;
+        let formId = `${managerModal.getModalId()}-form`;
         let form = combo.createFormFromJson(formId, formMetadata);
         let htmlFormElement = form.toHtmlElement();
         managerModal.addBody(htmlFormElement);

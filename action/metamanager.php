@@ -699,16 +699,14 @@ EOF;
                     ->setTab("persistent")
                     ->setDescription("The persistent metadata")
                     ->addValue(json_encode($persistent))
-                    ->setMutable(false)
-                    ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
+                    ->setType(FormMetaField::JSON_TYPE_VALUE)
             )
             ->addField(FormMetaField::create("current")
                 ->setLabel("Current Metadata")
                 ->setTab("current")
                 ->setDescription("The current metadata")
                 ->addValue(json_encode($current))
-                ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
-                ->setMutable(false)
+                ->setType(FormMetaField::JSON_TYPE_VALUE)
             )
             ->toAssociativeArray();
 

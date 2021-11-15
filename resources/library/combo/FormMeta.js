@@ -232,60 +232,74 @@ export default class FormMeta {
             leftColSize = tab.getLabelWidth();
             rightColSize = tab.getFieldWidth();
 
-            for (let formField of this.getFieldsForTab(tab.getName())) {
+            let fieldsForTab = this.getFieldsForTab(tab.getName());
+            if(fieldsForTab.length===1){
+                let formField = fieldsForTab[0];
+                let elementId = this.getControlId(elementIdCounter);
+                let labelHtml = formField.toHtmlLabel(elementId);
+                let value = formField.getValue();
+                let defaultValue = formField.getDefaultValue();
+                let controlHtml = formField.toHtmlControl(elementId, value, defaultValue)
+                htmlTabPans += `
+<div class="row mb-3 text-center"><div class="col-sm-12">${labelHtml}</div></div>
+<div class="row mb-3"><div class="col-sm-12">${controlHtml}</div></div>
+`;
+            } else {
+                for (let formField of fieldsForTab) {
 
-                let children = formField.getChildren();
-                switch (children.length) {
-                    case 0:
-                        elementIdCounter++;
-                        let elementId = this.getControlId(elementIdCounter);
-                        let labelHtml = formField.toHtmlLabel(elementId, `col-sm-${leftColSize}`);
-                        let value = formField.getValue();
-                        let defaultValue = formField.getDefaultValue();
-                        let controlHtml = formField.toHtmlControl(elementId, value, defaultValue)
-                        htmlTabPans += `
+                    let children = formField.getChildren();
+                    switch (children.length) {
+                        case 0:
+                            elementIdCounter++;
+                            let elementId = this.getControlId(elementIdCounter);
+                            let labelHtml = formField.toHtmlLabel(elementId, `col-sm-${leftColSize}`);
+                            let value = formField.getValue();
+                            let defaultValue = formField.getDefaultValue();
+                            let controlHtml = formField.toHtmlControl(elementId, value, defaultValue)
+                            htmlTabPans += `
 <div class="row mb-3">
     ${labelHtml}
     <div class="col-sm-${rightColSize}">${controlHtml}</div>
 </div>
 `;
-                        break;
-                    default:
-                        let url = formField.getLabelLink();
-                        htmlTabPans += `<div class="row mb-3 text-center">${url}</div>`;
-                        htmlTabPans += `<div class="row mb-3">`;
-                        let rows = 0;
-                        for (const child of formField.getChildren()) {
-                            let width = child.getControlWidth();
-                            htmlTabPans += `<div class="col-sm-${width} text-center">`;
-                            htmlTabPans += child.getLabelLink();
-                            htmlTabPans += `</div>`;
-                            let valuesLength = child.getValues().length;
-                            if (valuesLength > rows) {
-                                rows = valuesLength;
-                            }
-                        }
-                        htmlTabPans += `</div>`;
-
-                        for (let i = 0; i < rows; i++) {
+                            break;
+                        default:
+                            let url = formField.getLabelLink();
+                            htmlTabPans += `<div class="row mb-3 text-center">${url}</div>`;
                             htmlTabPans += `<div class="row mb-3">`;
+                            let rows = 0;
                             for (const child of formField.getChildren()) {
-                                let value = child.getValues()[i];
-                                let defaultValue = child.getDefaultValues()[i];
-                                elementIdCounter++;
-                                let elementId = this.getControlId(elementIdCounter);
                                 let width = child.getControlWidth();
-                                htmlTabPans += `<div class="col-sm-${width}">`;
-                                htmlTabPans += child.toHtmlControl(elementId, value, defaultValue);
+                                htmlTabPans += `<div class="col-sm-${width} text-center">`;
+                                htmlTabPans += child.getLabelLink();
+                                htmlTabPans += `</div>`;
+                                let valuesLength = child.getValues().length;
+                                if (valuesLength > rows) {
+                                    rows = valuesLength;
+                                }
+                            }
+                            htmlTabPans += `</div>`;
+
+                            for (let i = 0; i < rows; i++) {
+                                htmlTabPans += `<div class="row mb-3">`;
+                                for (const child of formField.getChildren()) {
+                                    let value = child.getValues()[i];
+                                    let defaultValue = child.getDefaultValues()[i];
+                                    elementIdCounter++;
+                                    let elementId = this.getControlId(elementIdCounter);
+                                    let width = child.getControlWidth();
+                                    htmlTabPans += `<div class="col-sm-${width}">`;
+                                    htmlTabPans += child.toHtmlControl(elementId, value, defaultValue);
+                                    htmlTabPans += `</div>`;
+                                }
                                 htmlTabPans += `</div>`;
                             }
-                            htmlTabPans += `</div>`;
-                        }
 
-                        break;
+                            break;
+
+                    }
 
                 }
-
             }
             htmlTabPans += "</div>"
         }

@@ -27,6 +27,7 @@ export default class FormMetaField {
     static BOOLEAN = "boolean";
 
     children = {};
+    static JSON = "json";
 
 
     constructor(name) {
@@ -382,6 +383,10 @@ export default class FormMetaField {
             let htmlTag = "input";
             let htmlClass = "form-control";
             let checked = "";
+            /**
+             * Text area
+             */
+            let rows = 3;
 
             /**
              * Type ?
@@ -401,6 +406,14 @@ export default class FormMetaField {
                     if (value !== null) {
                         htmlValue = `${value}`;
                     }
+                    break;
+                case FormMetaField.JSON:
+                    htmlTag = "textarea";
+                    if (value !== null) {
+                        value = JSON.stringify(JSON.parse(value),null,2);
+                        htmlValue = `${value}`;
+                    }
+                    rows = 15;
                     break;
                 case FormMetaField.BOOLEAN:
                     inputType = "checkbox";
@@ -428,7 +441,7 @@ export default class FormMetaField {
 
             switch (htmlTag) {
                 case "textarea":
-                    htmlElement = `<textarea id="${id}" name="${name}" class="${htmlClass}" rows="3" ${htmlPlaceholder} >${htmlValue}</textarea>`;
+                    htmlElement = `<textarea id="${id}" name="${name}" class="${htmlClass}" rows="${rows}" ${htmlPlaceholder} >${htmlValue}</textarea>`;
                     break;
                 default:
                 case "input":

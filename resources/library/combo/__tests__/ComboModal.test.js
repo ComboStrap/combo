@@ -8,7 +8,7 @@ test('Modal Simple Button', () => {
     modal.addBody(htmlBody)
     modal.build();
     let modalElement = modal.getElement();
-    let id = modal.getId();
+    let id = modal.getModalId();
     let expected = `<div id="${id}" class="modal fade" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-md-down modal-lg" style="margin: 5rem auto; height: calc(100% - 9rem);">
     <div class="modal-content">

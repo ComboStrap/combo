@@ -29,18 +29,18 @@ It disable Babel transpilation in Parcel because Jest needs it also.
 
 #### Bootstrap
 
-Bootstrap been added as a dependency
+Bootstrap been added as a [peer dependency](https://classic.yarnpkg.com/en/docs/dependency-types#toc-peerdependencies) (ie needed to run)
 ```bash
 https://parceljs.org/features/dependency-resolution/#global-aliases
 ```
   * Then added as alias in `package.json` [https://parceljs.org/features/dependency-resolution/#global-aliases|global-aliases]
 
-Then:
+Then, al `from "bootstrap"` are replaced by the alias. ie
 ```javascript
 import {Modal} from "bootstrap";
 let bootStrapModal = new Modal(this.modalRoot, options);
 ```
-is replaced by when bundling
+is replaced when bundling by:
 ```javascript
 let bootStrapModal = new bootstrap.Modal(this.modalRoot, options);
 ```
@@ -64,14 +64,30 @@ to set the value.
     https://github.com/parcel-bundler/parcel/discussions/5583
 
 
-## Jest
+## Jest JsDom Execution Environment
 
-By default, all test are started in the `jsdom` [environment](https://jestjs.io/docs/configuration#testenvironment-string)
-via the `jest` [package.json](package.json) conf.
 
-You can change it with `jsdoc`
+In the `jest` [package.json](package.json) conf,  all test are started
+* in the `jsdom` [environment](https://jestjs.io/docs/configuration#testenvironment-string)
+* configured via the [test environment options](https://jestjs.io/docs/configuration#testenvironmentoptions-object) and
+the [possible configuration value of jsdom](https://github.com/jsdom/jsdom#customizing-jsdom)
+
+```json
+{
+    "jest": {
+        "testEnvironment": "jsdom",
+        "testEnvironmentOptions": {
+            "userAgent": "Agent/007"
+        }
+    }
+}
+```
+
+You can change it by test with `jsdoc` annotation
 ```javascript
 /**
 * @jest-environment jsdom
 */
 ```
+
+The jsdom jest environment code can be found [here](https://github.com/facebook/jest/blob/main/packages/jest-environment-jsdom/src/index.ts)

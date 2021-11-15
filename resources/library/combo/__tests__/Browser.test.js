@@ -1,6 +1,18 @@
 import Browser from "../Browser";
-import Json from "../Json";
 
+
+/**
+ * Jsdom in
+ * Jest
+ * https://github.com/jsdom/jsdom
+ */
+test('Browser environment', () => {
+
+    expect(window).not.toBeNull();
+    expect(window.document).not.toBeNull();
+    expect(document).not.toBeNull();
+
+})
 
 /**
  * Because of jsdom has default environment,

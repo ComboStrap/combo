@@ -19,6 +19,9 @@
         "jest": "^27.3.1",
         "parcel": "^2.0.0"
     },
+    "peerDependencies": {
+        "bootstrap": "^5.1.3"
+    },
     "alias": {
         "bootstrap": {
             "global": "bootstrap"
@@ -26,6 +29,9 @@
     },
     "jest": {
         "testEnvironment": "jsdom",
+        "testEnvironmentOptions": {
+            "userAgent": "Agent/007"
+        },
         "setupFilesAfterEnv": [
             "./resources/library/combo/jest/JestExtend.js"
         ]
@@ -42,8 +48,6 @@
         }
     },
     "dependencies": {
-        "@popperjs/core": "^2.10.2",
-        "bootstrap": "^5.1.3",
         "nanoid": "^3.1.30"
     }
 }

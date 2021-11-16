@@ -14,6 +14,7 @@ class Metadata
         Analytics::PATH,
         Analytics::DATE_CREATED,
         Analytics::DATE_MODIFIED,
+        Page::PAGE_ID_ATTRIBUTE,
         "contributor",
         "creator",
         "date",
@@ -34,6 +35,7 @@ class Metadata
         Page::CANONICAL_PROPERTY,
         Page::TYPE_META_PROPERTY,
         Analytics::H1,
+        Page::ALIAS_ATTRIBUTE,
         Page::IMAGE_META_PROPERTY,
         Page::REGION_META_PROPERTY,
         Page::LANG_META_PROPERTY,
@@ -49,5 +51,9 @@ class Metadata
     public const CURRENT_METADATA = "current";
     public const PERSISTENT_METADATA = "persistent";
     const TYPES = [self::CURRENT_METADATA, self::PERSISTENT_METADATA];
+    /**
+     * The canonical to page metadata
+     */
+    public const CANONICAL = "page:metadata";
 
 }

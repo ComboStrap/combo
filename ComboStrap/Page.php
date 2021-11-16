@@ -105,7 +105,7 @@ class Page extends DokuPath
     const PAGE_ID_ATTRIBUTE = "page_id";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
     const DOKUWIKI_ID_ATTRIBUTE = "id";
-
+    const KEYWORDS_ATTRIBUTE = "keywords";
 
     public const HOLY_LAYOUT_VALUE = "holy";
     public const LANDING_LAYOUT_VALUE = "landing";
@@ -176,11 +176,6 @@ class Page extends DokuPath
      * When the value of a metadata has changed
      */
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
-
-    /**
-     * The canonical to page metadata
-     */
-    const CANONICAL_PAGE_METADATA = "page:metadata";
 
 
     /**
@@ -1804,7 +1799,7 @@ class Page extends DokuPath
             $lowerKey = trim(strtolower($key));
             if (in_array($lowerKey, self::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified")
-                    ->setCanonical(Page::CANONICAL_PAGE_METADATA);
+                    ->setCanonical(Metadata::CANONICAL);
                 continue;
             }
             try {
@@ -1871,14 +1866,20 @@ class Page extends DokuPath
                     case action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR:
                         $this->setMonitoringQualityIndicator(Boolean::toBoolean($value));
                         continue 2;
+                    case PAGE::KEYWORDS_ATTRIBUTE:
+                        $this->setMetadata($key, $value);
+                        if(PluginUtility::isTest()){
+                            LogUtility::msg("We got keywords metadata where do they come from ?");
+                        }
+                        continue 2;
                     default:
                         if (!$persistOnlyKnownAttributes) {
                             $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
-                                ->setCanonical(Page::CANONICAL_PAGE_METADATA);
+                                ->setCanonical(Metadata::CANONICAL);
                             $this->setMetadata($key, $value);
                         } else {
                             $messages[] = Message::createErrorMessage("The metadata ($lowerKey) is unknown and was not saved")
-                                ->setCanonical(Page::CANONICAL_PAGE_METADATA);
+                                ->setCanonical(Metadata::CANONICAL);
                         }
                         continue 2;
                 }

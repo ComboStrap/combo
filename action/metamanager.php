@@ -749,17 +749,29 @@ EOF;
                     $postMetaValue = $postMeta[$key];
                     unset($postMeta[$key]);
                 }
-                if (in_array($key, Metadata::MANAGED_METADATA)) {
-                    continue;
-                }
-                if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
-                    continue;
-                }
+                $nonModifiable = array_merge(Metadata::MANAGED_METADATA,Metadata::NOT_MODIFIABLE_METADATA);
+
                 if ($postMetaValue === null) {
+                    if(in_array($key,Metadata::MANAGED_METADATA)){
+                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a managed metadata, you can't delete it");
+                        continue;
+                    }
+                    if(in_array($key,Metadata::NOT_MODIFIABLE_METADATA)){
+                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't delete it");
+                        continue;
+                    }
                     unset($pageMeta[$key]);
                     $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) with the value ($value) was deleted");
                 } else {
                     if($value!==$postMetaValue) {
+                        if(in_array($key,Metadata::MANAGED_METADATA)){
+                            $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a managed metadata, you can't modify it");
+                            continue;
+                        }
+                        if(in_array($key,Metadata::NOT_MODIFIABLE_METADATA)){
+                            $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't modify it");
+                            continue;
+                        }
                         $pageMeta[$key] = $postMetaValue;
                         $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
                     }

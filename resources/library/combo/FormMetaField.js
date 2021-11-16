@@ -34,7 +34,7 @@ export default class FormMetaField {
         this.name = name;
     }
 
-    getLabelLink() {
+    getLabelAnchor() {
         if (this.getUrl() === undefined && this.getDescription() === undefined) {
             return this.getLabel();
         }
@@ -42,7 +42,7 @@ export default class FormMetaField {
         if (this.getUrl() === undefined) {
             url = "#";
         }
-        return `<a href="${url}" title="${this.getDescription()}" data-bs-toggle="tooltip" style="text-decoration:none">${this.getLabel()}</a>`;
+        return `<a href="${url}" title="${this.getDescription()}" data-bs-toggle="tooltip" style="text-decoration:none" target="_blank">${this.getLabel()}</a>`;
     }
 
     /**
@@ -306,7 +306,7 @@ export default class FormMetaField {
     }
 
     toHtmlLabel(forId, customClass) {
-        let label = this.getLabelLink();
+        let label = this.getLabelAnchor();
         let classLabel = "";
         if (this.getType() === FormMetaField.BOOLEAN) {
             classLabel = "form-check"

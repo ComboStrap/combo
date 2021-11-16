@@ -693,7 +693,6 @@ EOF;
         } else {
 
 
-
             $values[PAGE::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getDokuwikiId();
             $values[Analytics::PATH] = $this->page->getPath();
             $this->addPageIdAttribute($values);
@@ -944,6 +943,16 @@ EOF;
                     if ($this->page === null) {
                         $this->page = Page::createPageFromId($value)
                             ->setDatabasePage($this);
+                    }
+                    continue 2;
+                case Page::PAGE_ID_ATTRIBUTE:
+                    if ($this->page !== null) {
+                        /**
+                         * Get back the id from the database if the metadata file was deleted
+                         */
+                        if ($this->page->getPageId() === null && $value !== "") {
+                            $this->page->setPageId($value);
+                        }
                     }
                     continue 2;
                 case Page::NAME_PROPERTY:

@@ -19,6 +19,9 @@ class DokuwikiUrl
      * if you want to use them as literal characters, you must escape them as entities,
      * e.g.  &amp;.
      *
+     * In HTML, Browser will do the translation for you if you give an URL
+     * not encoded but testing library may not and refuse them
+     *
      * This URL encoding is mandatory for the {@link ml} function
      * when there is a width and use them not otherwise
      *
@@ -30,13 +33,13 @@ class DokuwikiUrl
      * https://daringfireball.net/projects/markdown/syntax#autoescape
      *
      */
-    const URL_ENCODED_AND = '&amp;';
+    const AMPERSAND_URL_ENCODED = '&amp;';
 
     /**
      * Used in dokuwiki syntax & in CSS attribute
      * (Css attribute value are then HTML encoded as value of the attribute)
      */
-    const URL_AND = "&";
+    const AMPERSAND_CHARACTER = "&";
     const ANCHOR_ATTRIBUTES = "anchor";
     /**
      * @var array

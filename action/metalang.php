@@ -39,7 +39,7 @@ class action_plugin_combo_metalang extends DokuWiki_Action_Plugin
         $page = Page::createPageFromId($id);
         if (!$page->exists()) {
             // Is it a permanent link
-            $pageId = Page::decodePageId($page->getDokuPathName());
+            $pageId = Page::decodePageId($page->getDokuPathLastName());
             if ($pageId !== null) {
                 $page = DatabasePage::createFromPageIdAbbr($pageId)->getPage();
                 if ($page === null) {

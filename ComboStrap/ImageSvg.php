@@ -52,7 +52,7 @@ class ImageSvg extends Image
      *
      * At contrary to {@link RasterImageLink::getUrl()} this function does not need any width parameter
      */
-    public function getUrl(string $ampersand = DokuwikiUrl::URL_ENCODED_AND): ?string
+    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED): ?string
     {
 
 

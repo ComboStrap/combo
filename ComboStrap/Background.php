@@ -158,7 +158,7 @@ class Background
 
                     $media = MediaLink::createFromCallStackArray($backgroundImageValue);
                     $image = $media->getDefaultImage();
-                    $url = $image->getUrl(DokuwikiUrl::URL_AND, $image->getTargetWidth());
+                    $url = $image->getUrl(DokuwikiUrl::AMPERSAND_CHARACTER, $image->getTargetWidth());
                     if ($url !== false) {
 
                         $backgroundImageStyleValue = "url(" . $url . ")";

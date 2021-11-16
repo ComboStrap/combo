@@ -34,7 +34,7 @@ class JavascriptLibrary extends Media
 
 
 
-    public function getUrl($ampersand = DokuwikiUrl::URL_AND): string
+    public function getUrl($ampersand = DokuwikiUrl::AMPERSAND_CHARACTER): string
     {
         if (!$this->isResourceScript()) {
             LogUtility::msg("Only Javascript script in the resource directory can be served, blank url returned");

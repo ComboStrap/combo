@@ -83,6 +83,8 @@ abstract class Media extends File
         $queryParameters[CacheMedia::CACHE_BUSTER_KEY] = $this->getBuster();
     }
 
-    public abstract function getUrl();
+    public abstract function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED);
+
+
 
 }

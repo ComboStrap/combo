@@ -52,7 +52,6 @@ class RasterImageLink extends ImageLink
     /**
      * RasterImageLink constructor.
      * @param ImageRaster $imageRaster
-     * @param TagAttributes $tagAttributes
      */
     public function __construct($imageRaster)
     {
@@ -70,7 +69,9 @@ class RasterImageLink extends ImageLink
      */
     public function renderMediaTag(): string
     {
-
+        /**
+         * @var ImageRaster $image
+         */
         $image = $this->getDefaultImage();
         if ($image->exists()) {
 
@@ -184,7 +185,7 @@ class RasterImageLink extends ImageLink
                             $sizes .= ", ";
                         }
                         $breakpointWidthMinusMargin = $breakpointWidth - $imageMargin;
-                        $xsmUrl = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND, $breakpointWidthMinusMargin);
+                        $xsmUrl = $image->getUrlForSrcSetAtBreakpoint($breakpointWidthMinusMargin);
                         $srcSet .= "$xsmUrl {$breakpointWidthMinusMargin}w";
                         $sizes .= $this->getSizes($breakpointWidth, $breakpointWidthMinusMargin);
 
@@ -199,7 +200,7 @@ class RasterImageLink extends ImageLink
                 if (!empty($srcSet)) {
                     $srcSet .= ", ";
                     $sizes .= ", ";
-                    $srcUrl = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND, $targetWidth);
+                    $srcUrl = $image->getUrlForSrcSetAtBreakpoint($targetWidth);
                     $srcSet .= "$srcUrl {$targetWidth}w";
                     $sizes .= "{$targetWidth}px";
                 }

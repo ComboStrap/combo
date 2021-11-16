@@ -103,12 +103,34 @@ class ImageRaster extends Image
 
     }
 
+    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED){
+        return $this->getUrlAtBreakpoint($ampersand);
+    }
+
+    /**
+     * In the HTML attribute srcset (not in the img src), if we set,
+     * ```
+     * http://nico.lan/_media/docs/metadata/metadata_manager.png?w=355&amp;h=176&amp;tseed=1636624852&amp;tok=af396a 355w
+     * ```
+     * the request is encoded by the browser one more time and the server gets understand
+     *   * `&amp;&amp;h  =   176`
+     *   * php create therefore the property
+     *      * `&amp;h  =   176`
+     *      * and note `h = 176`
+     *
+     * @param $breakpoint
+     * @return false|string|null
+     */
+    public function getUrlForSrcSetAtBreakpoint($breakpoint){
+        return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_CHARACTER,$breakpoint);
+    }
+
     /**
      * @param string $ampersand - do we encode & or not (in css, you do not, in html, you do)
-     * @param null $breakpointWidth - the breakpoint width - use for responsive image
+     * @param int|null $breakpointWidth - the breakpoint width - use for responsive image
      * @return string|null
      */
-    public function getUrl(string $ampersand = DokuwikiUrl::URL_ENCODED_AND, $breakpointWidth = null)
+    public function getUrlAtBreakpoint(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED, int $breakpointWidth = null)
     {
 
         /**
@@ -179,7 +201,7 @@ class ImageRaster extends Image
     function getAbsoluteUrl()
     {
 
-        return $this->getUrl(DokuwikiUrl::URL_ENCODED_AND, $this->getTargetWidth());
+        return $this->getUrl();
 
     }
 

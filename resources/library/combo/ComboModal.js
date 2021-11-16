@@ -4,6 +4,7 @@
  */
 import Html from "./Html";
 import {Modal, Tooltip, Tab} from "bootstrap";
+import Logger from "./Logger";
 
 /**
  *
@@ -26,11 +27,18 @@ export default class ComboModal {
 
         this.modalId = modalId;
         /**
-         * We create it because developers may want to add
+         * We create the modal root because developers may want to add
          * event on it right away
          * @type {HTMLDivElement}
          */
-        this.modalRootHtmlElement = document.createElement("div");
+        let queryElement = document.getElementById(modalId);
+        if (queryElement != null) {
+            Logger.getLogger().error(`The id (${modalId}) given to create a modal was already used by an element in the DOM. We have reused it.`)
+            this.modalRootHtmlElement = queryElement;
+            this.reset();
+        } else {
+            this.modalRootHtmlElement = document.createElement("div");
+        }
 
     }
 
@@ -355,7 +363,6 @@ export default class ComboModal {
         let tooltipSelector = `#${this.modalId} [data-bs-toggle="tooltip"]`;
         document.querySelectorAll(tooltipSelector).forEach(el => new Tooltip(el));
     }
-
 
 
     static getOrCreate(modalId) {

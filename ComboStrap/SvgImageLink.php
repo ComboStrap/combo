@@ -153,7 +153,7 @@ class SvgImageLink extends ImageLink
         /**
          * Src call
          */
-        $srcValue = $image->getUrl(DokuwikiUrl::URL_ENCODED_AND);
+        $srcValue = $image->getUrl(DokuwikiUrl::AMPERSAND_URL_ENCODED);
         if ($lazyLoad) {
 
             /**

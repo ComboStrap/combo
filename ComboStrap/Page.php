@@ -161,10 +161,18 @@ class Page extends DokuPath
 
     /**
      *
-     * Not sure what would be the separator to get the short page id
-     * For now on, the normal dokuwiki id separator
+     * The page id is separated in the URL with a "-"
+     * and not the standard "/"
+     * because in the devtool or any other tool, they takes
+     * the last part of the path as name.
+     *
+     * The name would be the short page id `22h2s2j4`
+     * and would have therefore no signification
+     *
+     * Instead the name is `metadata-manager-22h2s2j4`
+     * we can see then a page description, even order on it
      */
-    const PAGE_ID_URL_SEPARATOR = DokuPath::PATH_SEPARATOR;
+    const PAGE_ID_URL_SEPARATOR = "-";
 
     /**
      * When the value of a metadata has changed
@@ -342,6 +350,15 @@ class Page extends DokuPath
 
     }
 
+    public static function getShortEncodedPageIdFromUrlId($lastPartName)
+    {
+        $lastPosition = strrpos($lastPartName, Page::PAGE_ID_URL_SEPARATOR);
+        if ($lastPosition === false) {
+            return null;
+        }
+        return substr($lastPartName, $lastPosition + 1);
+    }
+
     /**
      * @return Page - the requested page
      */
@@ -482,9 +499,9 @@ class Page extends DokuPath
             }
 
             if ($scopePath !== ":") {
-                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getDokuPathName();
+                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getDokuPathLastName();
             } else {
-                return DokuPath::PATH_SEPARATOR . $this->getDokuPathName();
+                return DokuPath::PATH_SEPARATOR . $this->getDokuPathLastName();
             }
 
 
@@ -527,7 +544,7 @@ class Page extends DokuPath
                 $barsName[] = TplUtility::getSideKickSlotPageName();
             }
         }
-        return in_array($this->getDokuPathName(), $barsName);
+        return in_array($this->getDokuPathLastName(), $barsName);
     }
 
     public
@@ -543,7 +560,7 @@ class Page extends DokuPath
     function isStartPage()
     {
         global $conf;
-        return $this->getDokuPathName() == $conf['start'];
+        return $this->getDokuPathLastName() == $conf['start'];
     }
 
     /**
@@ -1142,11 +1159,11 @@ class Page extends DokuPath
     {
         global $conf;
         $startPageName = $conf['start'];
-        if ($this->getDokuPathName() == $startPageName) {
+        if ($this->getDokuPathLastName() == $startPageName) {
             return true;
         } else {
             $namespaceName = noNS(cleanID($this->getNamespacePath()));
-            if ($namespaceName == $this->getDokuPathName()) {
+            if ($namespaceName == $this->getDokuPathLastName()) {
                 /**
                  * page named like the NS inside the NS
                  * ie ns:ns
@@ -1997,7 +2014,7 @@ class Page extends DokuPath
     public
     function getDefaultPageName(): string
     {
-        $pathName = $this->getDokuPathName();
+        $pathName = $this->getDokuPathLastName();
         /**
          * If this is a home page, the default
          * is the parent path name

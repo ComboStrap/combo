@@ -400,6 +400,7 @@ export default class FormMetaField {
                     if (value !== null) {
                         htmlValue = `value="${value}"`;
                     }
+                    htmlPlaceholder = ""; // does not apply to local date time
                     break;
                 case FormMetaField.PARAGRAPH:
                     htmlTag = "textarea";
@@ -410,7 +411,7 @@ export default class FormMetaField {
                 case FormMetaField.JSON:
                     htmlTag = "textarea";
                     if (value !== null) {
-                        value = JSON.stringify(JSON.parse(value),null,2);
+                        value = JSON.stringify(JSON.parse(value), null, 2);
                         htmlValue = `${value}`;
                     }
                     rows = 15;
@@ -441,7 +442,7 @@ export default class FormMetaField {
 
             switch (htmlTag) {
                 case "textarea":
-                    htmlElement = `<textarea id="${id}" name="${name}" class="${htmlClass}" rows="${rows}" ${htmlPlaceholder} >${htmlValue}</textarea>`;
+                    htmlElement = `<textarea id="${id}" name="${name}" class="${htmlClass}" rows="${rows}" ${htmlPlaceholder} ${disabled}>${htmlValue}</textarea>`;
                     break;
                 default:
                 case "input":

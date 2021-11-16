@@ -76,6 +76,7 @@ class Page extends DokuPath
      * Default page type configuration
      */
     const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
+    const CONF_DEFAULT_PAGE_TYPE_DEFAULT = self::ARTICLE_TYPE;
 
     /**
      * The scope is the namespace used to store the cache
@@ -986,15 +987,17 @@ class Page extends DokuPath
     private
     function getPersistentMetadata($key)
     {
-        if (isset($this->getMetadatas()['persistent'][$key])) {
-            return $this->getMetadatas()['persistent'][$key];
-        } else {
-            return null;
-        }
+        $key = $this->getMetadatas()[Metadata::PERSISTENT_METADATA][$key];
+        /**
+         * Empty string return null
+         * because Dokuwiki does not allow to delete keys
+         * {@link p_set_metadata()}
+         */
+        return ($key ?: null);
     }
 
     public
-    function getPersistentMetadatas()
+    function getPersistentMetadatas(): array
     {
         return $this->getMetadatas()['persistent'];
     }
@@ -1016,6 +1019,11 @@ class Page extends DokuPath
     function getCurrentMetadata($key)
     {
         $key = $this->getMetadatas()[Metadata::CURRENT_METADATA][$key];
+        /**
+         * Empty string return null
+         * because Dokuwiki does not allow to delete keys
+         * {@link p_set_metadata()}
+         */
         return ($key ?: null);
     }
 
@@ -1650,15 +1658,26 @@ class Page extends DokuPath
     function setMetadata($key, $value)
     {
 
-        $oldValue = $this->metadatas['persistent'][$key];
+        $oldValue = $this->metadatas[Metadata::PERSISTENT_METADATA][$key];
         if (is_bool($value)) {
             $oldValue = Boolean::toBoolean($value);
         }
         if ($oldValue !== $value) {
 
-            $this->metadatas['persistent'][$key] = $value;
+            if ($value !== null) {
+                $this->metadatas['persistent'][$key] = $value;
+            } else {
+                unset($this->metadatas['persistent'][$key]);
+            }
             /**
-             * Don't change the type of the value to a string
+             * Metadata in Dokuwiki is fucked up.
+             *
+             * You can't remove a metadata,
+             * You need to known if this is a rendering or not
+             *
+             * See just how fucked {@link p_set_metadata()} is
+             *
+             * Also don't change the type of the value to a string
              * otherwise dokuwiki will not see a change
              * between true and a string and will not persist the value
              */
@@ -1868,7 +1887,7 @@ class Page extends DokuPath
                         continue 2;
                     case PAGE::KEYWORDS_ATTRIBUTE:
                         $this->setMetadata($key, $value);
-                        if(PluginUtility::isTest()){
+                        if (PluginUtility::isTest()) {
                             LogUtility::msg("We got keywords metadata where do they come from ?");
                         }
                         continue 2;
@@ -2069,7 +2088,7 @@ class Page extends DokuPath
         } else if ($this->isHomePage()) {
             return self::HOME_TYPE;
         } else {
-            $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE);
+            $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE, self::CONF_DEFAULT_PAGE_TYPE_DEFAULT);
             if (!empty($defaultPageTypeConf)) {
                 return $defaultPageTypeConf;
             } else {
@@ -2426,6 +2445,9 @@ class Page extends DokuPath
     public
     function setPageName($value): Page
     {
+        if ($value === "") {
+            $value = null;
+        }
         $this->pageName = $value;
         $this->setMetadata(Page::NAME_PROPERTY, $value);
         return $this;

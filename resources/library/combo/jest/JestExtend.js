@@ -45,6 +45,7 @@ expect.extend({
      */
     toEqualHtmlString(actual, expected) {
         actual = Xml.createFromHtmlString(actual).normalize();
+        expected = expected.trim();
         let pass = this.equals(actual, expected);
 
         const options = {

@@ -173,7 +173,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 if ($call === self::META_MANAGER_CALL_ID) {
                     $this->handleMetaManagerPost($event, $page, $_POST);
                 } else {
-                    $this->handleMetaViewerPost($event, $page, $_POST);
+                    $this->handleViewerPost($event, $page, $_POST);
                 }
 
                 return;
@@ -182,7 +182,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 if ($call === self::META_MANAGER_CALL_ID) {
                     $this->handleGetFormMeta($event, $page);
                 } else {
-                    $this->handleViewer($event, $page);
+                    $this->handleViewerGet($event, $page);
                 }
                 return;
 
@@ -683,7 +683,7 @@ EOF;
      * @param Doku_Event $event
      * @param Page $page
      */
-    private function handleViewer(Doku_Event $event, Page $page)
+    private function handleViewerGet(Doku_Event $event, Page $page)
     {
         if (!Identity::isManager()) {
             HttpResponse::create(HttpResponse::STATUS_NOT_AUTHORIZED)
@@ -693,25 +693,26 @@ EOF;
             return;
         }
         $metadata = $page->getMetadatas();
-        $persistent = $metadata['persistent'];
+        $persistent = $metadata[Metadata::PERSISTENT_METADATA];
         ksort($persistent);
-        $current = $metadata['current'];
+        $current = $metadata[Metadata::CURRENT_METADATA];
         ksort($current);
         $form = FormMeta::create("raw_metadata")
             ->addField(
-                FormMetaField::create("persistent")
-                    ->setLabel("Persistent Metadata")
+                FormMetaField::create(Metadata::PERSISTENT_METADATA)
+                    ->setLabel("Persistent/Default Metadata")
                     ->setTab("persistent")
-                    ->setDescription("The persistent metadata")
+                    ->setDescription("The persistent metadata are the default metadata values.")
                     ->addValue(json_encode($persistent))
                     ->setType(FormMetaField::JSON_TYPE_VALUE)
             )
-            ->addField(FormMetaField::create("current")
+            ->addField(FormMetaField::create(Metadata::CURRENT_METADATA)
                 ->setLabel("Current Metadata")
                 ->setTab("current")
-                ->setDescription("The current metadata")
+                ->setDescription("The current metadata are the metadata values after page processing.")
                 ->addValue(json_encode($current))
                 ->setType(FormMetaField::JSON_TYPE_VALUE)
+                ->setMutable(false)
             )
             ->toAssociativeArray();
 
@@ -722,7 +723,7 @@ EOF;
 
     }
 
-    private function handleMetaViewerPost(Doku_Event $event, Page $page, array $post)
+    private function handleViewerPost(Doku_Event $event, Page $page, array $post)
     {
 
         /**
@@ -734,64 +735,66 @@ EOF;
          * @var Message[]
          */
         $messages = [];
-        foreach (Metadata::TYPES as $metadataType) {
-            $postMeta = json_decode($post[$metadataType], true);
-            if ($postMeta === null) {
-                HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
-                    ->setEvent($event)
-                    ->sendMessage("The metadata $metadataType should be in json format");
-                return;
+        /**
+         * Only Persistent, current cannot be modified
+         */
+        $metadataType = Metadata::PERSISTENT_METADATA;
+        $postMeta = json_decode($post[$metadataType], true);
+        if ($postMeta === null) {
+            HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
+                ->setEvent($event)
+                ->sendMessage("The metadata $metadataType should be in json format");
+            return;
+        }
+        $pageMeta = &$meta[$metadataType];
+        foreach ($pageMeta as $key => $value) {
+            $postMetaValue = null;
+            if (isset($postMeta[$key])) {
+                $postMetaValue = $postMeta[$key];
+                unset($postMeta[$key]);
             }
-            $pageMeta = &$meta[$metadataType];
-            foreach ($pageMeta as $key => $value) {
-                $postMetaValue = null;
-                if (isset($postMeta[$key])) {
-                    $postMetaValue = $postMeta[$key];
-                    unset($postMeta[$key]);
-                }
-                $nonModifiable = array_merge(Metadata::MANAGED_METADATA,Metadata::NOT_MODIFIABLE_METADATA);
 
-                if ($postMetaValue === null) {
-                    if(in_array($key,Metadata::MANAGED_METADATA)){
-                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a managed metadata, you can't delete it");
-                        continue;
-                    }
-                    if(in_array($key,Metadata::NOT_MODIFIABLE_METADATA)){
-                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't delete it");
-                        continue;
-                    }
-                    unset($pageMeta[$key]);
-                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) with the value ($value) was deleted");
-                } else {
-                    if($value!==$postMetaValue) {
-                        if(in_array($key,Metadata::MANAGED_METADATA)){
-                            $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a managed metadata, you can't modify it");
-                            continue;
-                        }
-                        if(in_array($key,Metadata::NOT_MODIFIABLE_METADATA)){
-                            $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't modify it");
-                            continue;
-                        }
-                        $pageMeta[$key] = $postMetaValue;
-                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
-                    }
-                }
-            }
-            foreach ($postMeta as $key => $value) {
+            if ($postMetaValue === null) {
                 if (in_array($key, Metadata::MANAGED_METADATA)) {
+                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a managed metadata, you can't delete it");
                     continue;
                 }
                 if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't delete it");
                     continue;
                 }
-                $pageMeta[$key] = $value;
-                $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was created with the value ($value)");
+                unset($pageMeta[$key]);
+                $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) with the value ($value) was deleted");
+            } else {
+                if ($value !== $postMetaValue) {
+                    if (in_array($key, Metadata::MANAGED_METADATA)) {
+                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a managed metadata, you can't modify it");
+                        continue;
+                    }
+                    if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't modify it");
+                        continue;
+                    }
+                    $pageMeta[$key] = $postMetaValue;
+                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
+                }
             }
         }
+        foreach ($postMeta as $key => $value) {
+            if (in_array($key, Metadata::MANAGED_METADATA)) {
+                continue;
+            }
+            if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+                continue;
+            }
+            $pageMeta[$key] = $value;
+            $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was created with the value ($value)");
+        }
+
 
         p_save_metadata($page->getDokuwikiId(), $meta);
 
-        if(sizeof($messages)!==0) {
+        if (sizeof($messages) !== 0) {
             $messagesToSend = [];
             foreach ($messages as $message) {
                 $messagesToSend[] = $message->getPlainTextContent();

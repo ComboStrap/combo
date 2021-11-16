@@ -32,10 +32,9 @@ test('Datetime test', () => {
      */
     let formMetaField = FormMetaField.createFromName("test")
         .setType(FormMetaField.DATE_TIME);
-    let expected = '<input type="datetime-local" name="test" class="form-control" id="1" placeholder="Enter a Test">';
+    let expected = '<input type="datetime-local" name="test" class="form-control" id="1">';
     let actual = formMetaField.toHtmlControl(1);
-    let actualNormalized = Xml.createFromHtmlString(actual).normalize();
-    expect(actualNormalized).toBe(expected)
+    expect(actual).toEqualHtmlString(expected)
 
 });
 
@@ -73,42 +72,24 @@ test('Boolean field test', () => {
     expect(actual).toEqualHtmlString(expected);
 
 
-
 })
 
 test('Json field test', () => {
 
-    let formMetaField = FormMetaField.createFromName("json test")
-        .setType(FormMetaField.JSON);
+    let formMetaField = FormMetaField.createFromName("json-test")
+        .setType(FormMetaField.JSON)
+        .setMutable(false);
 
     /**
      * No value and default should not give any error
      */
     let actual = formMetaField.toHtmlControl(1);
-    let expected = '<input type="checkbox" name="test" class="form-check-input" id="1">';
+    let expected = `
+<textarea id="1" name="json-test" class="form-control" rows="15" placeholder="Enter a Json Test" disabled>
+</textarea>
+`;
     expect(actual).toEqualHtmlString(expected);
-
-    /**
-     * No value and default should not give any error
-     */
-    actual = formMetaField.toHtmlControl(1, null, false);
-    expected = '<input type="checkbox" name="test" class="form-check-input" id="1" value="false">';
-    expect(actual).toEqualHtmlString(expected);
-
-    /**
-     * The default value is on
-     */
-    actual = formMetaField.toHtmlControl(1, "on");
-    expected = '<input type="checkbox" name="test" class="form-check-input" id="1" checked>';
-    expect(actual).toEqualHtmlString(expected);
-
-    /**
-     * Same value and default
-     */
-    actual = formMetaField.toHtmlControl(1, "same", "same");
-    expected = '<input type="checkbox" name="test" class="form-check-input" id="1" value="same" checked>';
-    expect(actual).toEqualHtmlString(expected);
-
-
 
 })
+
+

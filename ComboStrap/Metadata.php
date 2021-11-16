@@ -48,7 +48,23 @@ class Metadata
         Page::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY
     ];
+
+    /**
+     * Current metadata
+     * will not persist through
+     * the next metadata rendering.
+     * https://www.dokuwiki.org/devel:metadata#metadata_persistence
+     */
     public const CURRENT_METADATA = "current";
+    /**
+     * Persistent metadata
+     * will persist through
+     * the next metadata rendering.
+     *
+     * They are used as the default of the current metadata
+     * and is never cleaned
+     * https://www.dokuwiki.org/devel:metadata#metadata_persistence
+     */
     public const PERSISTENT_METADATA = "persistent";
     const TYPES = [self::CURRENT_METADATA, self::PERSISTENT_METADATA];
     /**

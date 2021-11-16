@@ -148,6 +148,7 @@ window.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             }
+            managerModal.reset();
             combo.createTemporaryModal()
                 .setCallBackOnClose(() => openMetadataManager(pageId))
                 .centered()

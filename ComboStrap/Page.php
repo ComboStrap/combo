@@ -1887,9 +1887,6 @@ class Page extends DokuPath
                         continue 2;
                     case PAGE::KEYWORDS_ATTRIBUTE:
                         $this->setMetadata($key, $value);
-                        if (PluginUtility::isTest()) {
-                            LogUtility::msg("We got keywords metadata where do they come from ?");
-                        }
                         continue 2;
                     default:
                         if (!$persistOnlyKnownAttributes) {

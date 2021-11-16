@@ -41,8 +41,13 @@ export default class FormMetaField {
         let url = this.getUrl();
         if (this.getUrl() === undefined) {
             url = "#";
+            return `
+<span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="${this.getDescription()}">
+    <a href="${url}" title="${this.getDescription()}" style="text-decoration:none;pointer-events: none;">${this.getLabel()}</a>
+</span>`;
+        } else {
+            return `<a href="${url}" title="${this.getDescription()}" data-bs-toggle="tooltip" style="text-decoration:none" target="_blank">${this.getLabel()}</a>`;
         }
-        return `<a href="${url}" title="${this.getDescription()}" data-bs-toggle="tooltip" style="text-decoration:none" target="_blank">${this.getLabel()}</a>`;
     }
 
     /**

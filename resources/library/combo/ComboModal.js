@@ -32,12 +32,17 @@ export default class ComboModal {
          * @type {HTMLDivElement}
          */
         let queryElement = document.getElementById(modalId);
-        if (queryElement != null) {
+        if (queryElement !== null) {
             Logger.getLogger().error(`The id (${modalId}) given to create a modal was already used by an element in the DOM. We have reused it.`)
             this.modalRootHtmlElement = queryElement;
             this.reset();
         } else {
             this.modalRootHtmlElement = document.createElement("div");
+            this.modalRootHtmlElement.setAttribute("id", this.modalId);
+            this.modalRootHtmlElement.classList.add("modal", "fade");
+            // Uncaught RangeError: Maximum call stack size exceeded caused by the tabindex
+            // modalRoot.setAttribute("tabindex", "-1");
+            this.modalRootHtmlElement.setAttribute("aria-hidden", "true");
         }
 
     }
@@ -105,7 +110,7 @@ export default class ComboModal {
     show() {
 
         if (this.modalRootHtmlElement == null) {
-            throw new Error("This modal was removed, you can't use it anymore");
+            throw new Error("This modal has no HTML element, you can't use it anymore");
         }
 
         if (!this.isBuild) {
@@ -128,14 +133,18 @@ export default class ComboModal {
         }
 
         /**
-         * Parent child modal
+         * Callback (Parent Child Relationship)
          */
-        if (this.parentModal !== undefined) {
-            this.parentModal.dismissHide();
+        if (this.callBack !== undefined) {
             if (this.closeButton !== undefined) {
-                let parentModal = this.parentModal;
+                let modal = this;
                 this.closeButton.addEventListener("click", function () {
-                    parentModal.show();
+                    /**
+                     * Two modals cannot be open at the same time
+                     * https://getbootstrap.com/docs/5.0/components/modal/#toggle-between-modals
+                     */
+                    modal.dismissHide();
+                    modal.callBack();
                 });
             }
         }
@@ -146,7 +155,9 @@ export default class ComboModal {
     }
 
     dismissHide() {
-        this.bootStrapModal.hide();
+        if (this.bootStrapModal !== undefined) {
+            this.bootStrapModal.hide();
+        }
     }
 
     getModalId() {
@@ -155,10 +166,10 @@ export default class ComboModal {
 
     /**
      *
-     * @param {ComboModal} parentModal
+     * @param {function} callBack
      */
-    setParent(parentModal) {
-        this.parentModal = parentModal;
+    setCallBackOnClose(callBack) {
+        this.callBack = callBack;
         return this;
     }
 
@@ -228,11 +239,12 @@ export default class ComboModal {
     }
 
     resetIfBuild() {
-        if(this.wasBuild()){
+        if (this.wasBuild()) {
             this.reset();
         }
         return this;
     }
+
     reset() {
 
         // DOM
@@ -243,16 +255,16 @@ export default class ComboModal {
                 tab.dispose();
             }
         })
-        this.modalRootHtmlElement.remove();
-        this.modalRootHtmlElement = document.createElement("div");
 
         /**
          * Bootstrap Modal
+         * dispose should delete the root element
+         * but it does not
          */
-        if (this.bootStrapModal != null) {
-            this.bootStrapModal.dispose();
-            this.bootStrapModal = null;
+        if (this.bootStrapModal !== undefined) {
+            this.dismissHide();
         }
+        this.modalRootHtmlElement.innerHTML = "";
 
         /**
          * Content
@@ -271,11 +283,6 @@ export default class ComboModal {
         this.isBuild = true;
 
         document.body.appendChild(this.modalRootHtmlElement);
-        this.modalRootHtmlElement.setAttribute("id", this.modalId);
-        this.modalRootHtmlElement.classList.add("modal", "fade");
-        // Uncaught RangeError: Maximum call stack size exceeded caused by the tabindex
-        // modalRoot.setAttribute("tabindex", "-1");
-        this.modalRootHtmlElement.setAttribute("aria-hidden", "true");
 
         const modalManagerDialog = document.createElement("div");
         modalManagerDialog.classList.add(
@@ -299,21 +306,25 @@ export default class ComboModal {
         this.modalBody.classList.add("modal-body");
         this.modalContent.appendChild(this.modalBody);
 
+
         /**
-         * The bootstrap modal function
-         * can only be invoked when the body element has been defined
-         */
-        let options = {
-            "backdrop": true,
-            "keyboard": true,
-            "focus": true
-        };
-        /**
-         * No need to use the global `bootstrap.Modal`
-         * Created at build time
+         * No need to use the global variable access mode (ie `bootstrap.Modal`)
+         * It's created at build time
          * @type {Modal}
          */
-        this.bootStrapModal = new Modal(this.modalRootHtmlElement, options);
+        this.bootStrapModal = Modal.getInstance(this.modalRootHtmlElement);
+        if (this.bootStrapModal === null) {
+            /**
+             * The bootstrap modal function
+             * can only be invoked when the body element has been defined
+             */
+            let options = {
+                "backdrop": true,
+                "keyboard": true,
+                "focus": true
+            };
+            this.bootStrapModal = new Modal(this.modalRootHtmlElement, options);
+        }
 
         /**
          * Building the header

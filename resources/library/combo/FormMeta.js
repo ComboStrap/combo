@@ -250,6 +250,7 @@ export default class FormMeta {
 <div class="row mb-3 text-center"><div class="col-sm-12">${labelHtml}</div></div>
 <div class="row mb-3"><div class="col-sm-12">${controlHtml}</div></div>
 `;
+                    htmlTabPans += "</div>"; // close the pan
                     continue;
                 }
 
@@ -310,7 +311,7 @@ export default class FormMeta {
                 }
 
             }
-            htmlTabPans += "</div>"
+            htmlTabPans += "</div>";
         }
         htmlTabPans += "</div>";
 

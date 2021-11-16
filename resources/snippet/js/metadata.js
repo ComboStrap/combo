@@ -10,16 +10,21 @@ window.addEventListener("DOMContentLoaded", function () {
      */
     async function openMetaViewer(modalManager, pageId) {
 
+
+        let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
+        // noinspection JSVoidFunctionReturnValueUsed
+        let modalViewer = combo.getOrCreateModal(modalViewerId);
+
+        if (modalViewer.wasBuild()) {
+            modalViewer.show();
+            return;
+        }
+
         const viewerCallEndpoint = "combo-meta-viewer";
         let viewerCall = combo
             .createDokuRequest(viewerCallEndpoint)
             .setProperty("id", pageId)
         let jsonFormMeta = await viewerCall.getJson();
-
-
-        let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
-        // noinspection JSVoidFunctionReturnValueUsed
-        let modalViewer = combo.getOrCreateModal(modalViewerId);
 
 
         let formViewerId = combo.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
@@ -54,17 +59,17 @@ window.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             }
-            combo.getOrCreateChildModal(modalViewer)
+            modalViewer.reset();
+            combo.createTemporaryModal()
                 .centered()
+                .setCallBackOnClose(() => openMetaViewer(modalManager, pageId))
                 .addBody(modalMessage.join("<br>"))
                 .show();
         });
-
         modalViewer
-            .resetIfBuild()
-            .setParent(modalManager)
+            .setCallBackOnClose(() => openMetadataManager(pageId))
             .setHeader("Metadata Viewer")
-            .addBody(`<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>`)
+            .addBody(`<p>The metadata viewer shows you the content of the metadata file (ie all metadata managed by ComboStrap or not):</p>`)
             .addBody(formHtmlElement)
             .addFooterCloseButton()
             .addFooterButton(submitButton)
@@ -85,6 +90,10 @@ window.addEventListener("DOMContentLoaded", function () {
          */
         let modalManagerId = combo.toHtmlId(`combo-meta-manager-page-${pageId}`);
         let managerModal = combo.getOrCreateModal(modalManagerId)
+        if(managerModal.wasBuild()){
+            managerModal.show();
+            return;
+        }
 
         /**
          * Creating the form
@@ -93,7 +102,7 @@ window.addEventListener("DOMContentLoaded", function () {
             .createDokuRequest(metaManagerCall)
             .setProperty("id", pageId)
             .getJson();
-        let formId =  combo.toHtmlId(`${modalManagerId}-form`);
+        let formId = combo.toHtmlId(`${modalManagerId}-form`);
         let form = combo.createFormFromJson(formId, formMetadata);
         let htmlFormElement = form.toHtmlElement();
 
@@ -139,7 +148,8 @@ window.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             }
-            combo.getOrCreateChildModal(managerModal)
+            combo.createTemporaryModal()
+                .setCallBackOnClose(() => openMetadataManager(pageId))
                 .centered()
                 .addBody(modalMessage.join("<br>"))
                 .show();

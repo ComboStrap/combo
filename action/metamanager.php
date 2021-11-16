@@ -773,15 +773,19 @@ EOF;
                     continue;
                 }
                 $pageMeta[$key] = $value;
-                $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was created to the value ($value)");
+                $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was created with the value ($value)");
             }
         }
 
         p_save_metadata($page->getDokuwikiId(), $meta);
 
-        $messagesToSend = [];
-        foreach($messages as $message){
-            $messagesToSend[]=$message->getPlainTextContent();
+        if(sizeof($messages)!==0) {
+            $messagesToSend = [];
+            foreach ($messages as $message) {
+                $messagesToSend[] = $message->getPlainTextContent();
+            }
+        } else {
+            $messagesToSend = "No metadata has been changed.";
         }
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)

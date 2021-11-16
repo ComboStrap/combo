@@ -61,8 +61,8 @@ window.addEventListener("DOMContentLoaded", function () {
         });
 
         modalViewer
+            .resetIfBuild()
             .setParent(modalManager)
-            .resetOnClose()
             .setHeader("Metadata Viewer")
             .addBody(`<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>`)
             .addBody(formHtmlElement)
@@ -74,41 +74,45 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /**
-     *
-     * @param {ComboModal} managerModal
-     * @param formMetadata
-     * @param pageId
-     * @return {ComboModal}
-     */
-    function buildMetadataManager(managerModal, formMetadata, pageId) {
+    const metaManagerCall = "combo-meta-manager";
+
+    let openMetadataManager = async function (pageId) {
+
 
         /**
-         * Header
+         * The manager modal root
+         * (used in button)
          */
-        managerModal.setHeader(`Metadata Manager for Page (${pageId})`);
+        let modalManagerId = combo.toHtmlId(`combo-meta-manager-page-${pageId}`);
+        let managerModal = combo.getOrCreateModal(modalManagerId)
 
         /**
-         * Adding the form
+         * Creating the form
          */
-        let formId = `${managerModal.getModalId()}-form`;
+        let formMetadata = await combo
+            .createDokuRequest(metaManagerCall)
+            .setProperty("id", pageId)
+            .getJson();
+        let formId =  combo.toHtmlId(`${modalManagerId}-form`);
         let form = combo.createFormFromJson(formId, formMetadata);
         let htmlFormElement = form.toHtmlElement();
-        managerModal.addBody(htmlFormElement);
+
 
         /**
-         * Footer
+         * Viewer Button
          */
         let viewerButton = document.createElement("button");
         viewerButton.classList.add("btn", "btn-link", "text-primary", "text-decoration-bone", "fs-6", "text-muted");
         viewerButton.style.setProperty("font-weight", "300");
-        viewerButton.textContent = "Viewer";
+        viewerButton.textContent = "Open Metadata Viewer";
         viewerButton.addEventListener("click", async function () {
             managerModal.dismissHide();
             await openMetaViewer(managerModal, pageId);
         });
-        managerModal.addFooterButton(viewerButton);
-        managerModal.addFooterCloseButton();
+
+        /**
+         * Submit Button
+         */
         let submitButton = document.createElement("button");
         submitButton.classList.add("btn", "btn-primary");
         submitButton.setAttribute("type", "submit");
@@ -117,7 +121,6 @@ window.addEventListener("DOMContentLoaded", function () {
         submitButton.addEventListener("click", async function (event) {
             event.preventDefault();
             let formData = new FormData(htmlFormElement);
-            console.log("Submitted");
             let response = await combo.createDokuRequest(metaManagerCall)
                 .setMethod("post")
                 .sendFormDataAsJson(formData);
@@ -141,27 +144,18 @@ window.addEventListener("DOMContentLoaded", function () {
                 .addBody(modalMessage.join("<br>"))
                 .show();
         })
-        managerModal.addFooterButton(submitButton);
 
-        return managerModal;
-    }
-
-
-    let openMetadataManager = async function (pageId) {
-
-        const metaManagerCall = "combo-meta-manager";
-        let call = combo
-            .createDokuRequest(metaManagerCall)
-            .setProperty("id", pageId);
-        let formMetadata = await call.getJson();
-
-        let modalManagerId = combo.toHtmlId(`combo-meta-manager-page-${pageId}`);
-        let managerModal = combo.getOrCreateModal(modalManagerId);
-        if (managerModal.wasBuild()) {
-            managerModal.reset();
-        }
-        managerModal = buildMetadataManager(managerModal, formMetadata, pageId);
-        managerModal.show();
+        /**
+         * The modal
+         */
+        managerModal
+            .resetIfBuild()
+            .setHeader(`Metadata Manager for Page (${pageId})`)
+            .addBody(htmlFormElement)
+            .addFooterButton(viewerButton)
+            .addFooterCloseButton()
+            .addFooterButton(submitButton)
+            .show();
 
     }
 

@@ -63,6 +63,8 @@ class HttpResponse
 
         if ($contentType != null) {
             Http::setMime($contentType);
+        } else {
+            Http::setMime(Mime::PLAIN_TEXT);
         }
 
         // header should before the status
@@ -152,12 +154,11 @@ class HttpResponse
      */
     public function sendMessage($messages)
     {
-        if (sizeof($messages) > 0) {
-            $message = json_encode(["message" => $messages]);
-            $this->send($message, Mime::JSON);
-        } else {
-            $this->send();
+        if (is_array($messages) && sizeof($messages) == 0) {
+            $messages = ["No information, no errors"];
         }
+        $message = json_encode(["message" => $messages]);
+        $this->send($message, Mime::JSON);
 
     }
 

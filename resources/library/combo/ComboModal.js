@@ -227,6 +227,12 @@ export default class ComboModal {
         return this.isBuild;
     }
 
+    resetIfBuild() {
+        if(this.wasBuild()){
+            this.reset();
+        }
+        return this;
+    }
     reset() {
 
         // DOM

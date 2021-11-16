@@ -41,9 +41,13 @@ window['combo'] = class combo {
 
     /**
      * @param parentModal
+     * @param modalId
      * @return {ComboModal}
      */
-    static getOrCreateChildModal(modalId, parentModal) {
+    static getOrCreateChildModal(parentModal, modalId=null) {
+        if(modalId===null){
+            modalId = Html.createRandomId();
+        }
         return ComboModal.getOrCreate(modalId)
             .setParent(parentModal);
     }

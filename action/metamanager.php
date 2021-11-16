@@ -173,7 +173,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 if ($call === self::META_MANAGER_CALL_ID) {
                     $this->handleMetaManagerPost($event, $page, $_POST);
                 } else {
-                    $this->handleMetaViewerPost($event, $page,$_POST);
+                    $this->handleMetaViewerPost($event, $page, $_POST);
                 }
 
                 return;
@@ -730,19 +730,62 @@ EOF;
          * if they exists
          */
         $meta = $page->getMetadatas();
-        foreach (Metadata::MANAGED_METADATA as $metaKey) {
-            if (!array_key_exists($metaKey, $jsonArray)) {
-                if (isset($meta['persistent'][$metaKey])) {
-                    unset($meta['persistent'][$metaKey]);
+        /**
+         * @var Message[]
+         */
+        $messages = [];
+        foreach (Metadata::TYPES as $metadataType) {
+            $postMeta = json_decode($post[$metadataType], true);
+            if ($postMeta === null) {
+                HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
+                    ->setEvent($event)
+                    ->sendMessage("The metadata $metadataType should be in json format");
+                return;
+            }
+            $pageMeta = &$meta[$metadataType];
+            foreach ($pageMeta as $key => $value) {
+                $postMetaValue = null;
+                if (isset($postMeta[$key])) {
+                    $postMetaValue = $postMeta[$key];
+                    unset($postMeta[$key]);
+                }
+                if (in_array($key, Metadata::MANAGED_METADATA)) {
+                    continue;
+                }
+                if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+                    continue;
+                }
+                if ($postMetaValue === null) {
+                    unset($pageMeta[$key]);
+                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) with the value ($value) was deleted");
+                } else {
+                    if($value!==$postMetaValue) {
+                        $pageMeta[$key] = $postMetaValue;
+                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
+                    }
                 }
             }
+            foreach ($postMeta as $key => $value) {
+                if (in_array($key, Metadata::MANAGED_METADATA)) {
+                    continue;
+                }
+                if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+                    continue;
+                }
+                $pageMeta[$key] = $value;
+                $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was created to the value ($value)");
+            }
         }
-        p_save_metadata($ID, $meta);
 
-        echo $post;
+        p_save_metadata($page->getDokuwikiId(), $meta);
+
+        $messagesToSend = [];
+        foreach($messages as $message){
+            $messagesToSend[]=$message->getPlainTextContent();
+        }
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)
-            ->sendMessage("Yo all");
+            ->sendMessage($messagesToSend);
 
     }
 

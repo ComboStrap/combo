@@ -100,6 +100,12 @@ class Message
     }
 
     public
+    function getPlainTextContent(): string
+    {
+        return implode($this->content[Mime::PLAIN_TEXT], DOKU_LF);
+    }
+
+    public
     function getType(): string
     {
         return $this->type;

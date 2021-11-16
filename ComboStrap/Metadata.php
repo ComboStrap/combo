@@ -20,7 +20,9 @@ class Metadata
         "description",
         "format",
         "last_change",
-        "user"
+        "user",
+        "internal", // toc, cache, ...
+        "relation"
     ];
 
     /**
@@ -44,5 +46,8 @@ class Metadata
         Page::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY
     ];
+    public const CURRENT_METADATA = "current";
+    public const PERSISTENT_METADATA = "persistent";
+    const TYPES = [self::CURRENT_METADATA, self::PERSISTENT_METADATA];
 
 }

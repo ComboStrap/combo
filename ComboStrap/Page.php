@@ -97,8 +97,6 @@ class Page extends DokuPath
     const SCOPE_CURRENT_VALUE = "current";
 
 
-    const CURRENT_METADATA = "current";
-    const PERSISTENT_METADATA = "persistent";
     const IMAGE_META_PROPERTY = 'image';
     const REGION_META_PROPERTY = "region";
     const LANG_META_PROPERTY = "lang";
@@ -613,8 +611,8 @@ class Page extends DokuPath
     function getInternalReferencedPages(): array
     {
         $metadata = $this->getMetadatas();
-        if (key_exists(self::CURRENT_METADATA, $metadata)) {
-            $current = $metadata[self::CURRENT_METADATA];
+        if (key_exists(Metadata::CURRENT_METADATA, $metadata)) {
+            $current = $metadata[Metadata::CURRENT_METADATA];
             if (key_exists('relation', $current)) {
                 $relation = $current['relation'];
                 if (is_array($relation)) {
@@ -1022,7 +1020,7 @@ class Page extends DokuPath
     private
     function getCurrentMetadata($key)
     {
-        $key = $this->getMetadatas()[self::CURRENT_METADATA][$key];
+        $key = $this->getMetadatas()[Metadata::CURRENT_METADATA][$key];
         return ($key ?: null);
     }
 
@@ -1552,7 +1550,7 @@ class Page extends DokuPath
     public
     function deleteMetadatasAndFlush(): Page
     {
-        $meta = [Page::CURRENT_METADATA => [], Page::PERSISTENT_METADATA => []];
+        $meta = [Metadata::CURRENT_METADATA => [], Metadata::PERSISTENT_METADATA => []];
         p_save_metadata($this->getDokuwikiId(), $meta);
         return $this;
     }
@@ -2374,9 +2372,9 @@ class Page extends DokuPath
          * We have created therefore a description property below the description array
          * We delete it
          */
-        $descriptionArray = $this->metadatas[Page::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY];
+        $descriptionArray = $this->metadatas[Metadata::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY];
         if ($descriptionArray != null && array_key_exists(Page::DESCRIPTION_PROPERTY, $descriptionArray)) {
-            unset($this->metadatas[Page::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY][Page::DESCRIPTION_PROPERTY]);
+            unset($this->metadatas[Metadata::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY][Page::DESCRIPTION_PROPERTY]);
             $this->flushMeta();
         }
 

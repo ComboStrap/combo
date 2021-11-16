@@ -19,7 +19,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
         let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
         // noinspection JSVoidFunctionReturnValueUsed
-        let modal = combo.getOrCreateModal(modalViewerId);
+        let modalViewer = combo.getOrCreateModal(modalViewerId);
 
 
         let formViewerId = combo.toHtmlId(`combo-metadata-viewer-form-${pageId}`);
@@ -33,7 +33,8 @@ window.addEventListener("DOMContentLoaded", function () {
         submitButton.setAttribute("type", "submit");
         submitButton.setAttribute("form", formHtmlElement.id);
         submitButton.innerText = "Submit";
-        submitButton.addEventListener("click", async function () {
+        submitButton.addEventListener("click", async function (event) {
+            event.preventDefault();
             let formData = new FormData(formHtmlElement);
             let response = await combo.createDokuRequest(viewerCallEndpoint)
                 .setMethod("post")
@@ -53,13 +54,14 @@ window.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             }
-            combo.getOrCreateChildModal(managerModal)
+            combo.getOrCreateChildModal(modalViewer)
                 .centered()
                 .addBody(modalMessage.join("<br>"))
                 .show();
         });
 
-        modal.setParent(modalManager)
+        modalViewer
+            .setParent(modalManager)
             .resetOnClose()
             .setHeader("Metadata Viewer")
             .addBody(`<p>The metadata viewer shows you the content of the metadadata file (ie all metadata managed by ComboStrap or not):</p>`)

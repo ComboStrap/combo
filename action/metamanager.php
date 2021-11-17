@@ -268,6 +268,11 @@ EOF;
     private function handleMetaManagerPost($event, Page $page, array $post)
     {
 
+        $default = [
+            Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR => Page::CAN_BE_LOW_QUALITY_PAGE_DEFAULT,
+            action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR => action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
+        ];
+        $post = array_merge($default, $post);
         $upsertMessages = $page->upsertMetadataFromAssociativeArray($post, true);
 
         $responseMessages = [];
@@ -567,8 +572,10 @@ EOF;
 
 
         // Is low quality page
-        $formMeta->addField(FormMetaField::create(Page::LOW_QUALITY_PAGE_INDICATOR)
-            ->addValue($page->getLowQualityIndicator(), false) // the default value is the value returned if checked)
+        $formMeta->addField(FormMetaField::create(Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR)
+            // the inverse of the default value is returned if checked - you don't modify a default
+            // by default the page can be a low quality
+            ->addValue($page->getCanBeOfLowQuality(), true)
             ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
             ->setTab(self::TAB_QUALITY_VALUE)
             ->setCanonical(LowQualityPage::LOW_QUALITY_PAGE_CANONICAL)
@@ -577,8 +584,10 @@ EOF;
         );
 
         // Quality Monitoring
-        $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR)
-            ->addValue($page->getDynamicQualityIndicatorOrDefault(), false) // the default value is returned if checked
+        $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR)
+            // the inverse of the default value is returned if checked - you don't modify a default
+            // by default, the page is monitored
+            ->addValue($page->getQualityMonitoringIndicator(), true)
             ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
             ->setTab(self::TAB_QUALITY_VALUE)
             ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)

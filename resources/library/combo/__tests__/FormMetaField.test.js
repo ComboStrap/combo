@@ -52,9 +52,10 @@ test('Boolean field test', () => {
 
     /**
      * No value and default should not give any error
+     * We send a value when it's not the default
      */
     actual = formMetaField.toHtmlControl(1, null, false);
-    expected = '<input type="checkbox" name="test" class="form-check-input" id="1" value="false">';
+    expected = '<input type="checkbox" name="test" class="form-check-input" id="1" value="true">';
     expect(actual).toEqualHtmlString(expected);
 
     /**

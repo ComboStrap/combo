@@ -425,6 +425,11 @@ export default class FormMetaField {
                     inputType = "checkbox";
                     htmlClass = "form-check-input";
                     if (defaultValue !== null) {
+                        if(typeof defaultValue === "boolean"){
+                            // the inverse of the default value is send
+                            // you don't modify a default
+                            defaultValue = !defaultValue;
+                        }
                         htmlValue = `value="${defaultValue}"`;
                         if (value === defaultValue) {
                             checked = "checked"

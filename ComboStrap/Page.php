@@ -11,7 +11,6 @@ use dokuwiki\Extension\Event;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
 use renderer_plugin_combo_analytics;
-use RuntimeException;
 use syntax_plugin_combo_frontmatter;
 
 
@@ -53,7 +52,8 @@ class Page extends DokuPath
      * otherwise the {@link \renderer_plugin_combo_analytics}
      * will do it
      */
-    const LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
+    const CAN_BE_LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
+    const CAN_BE_LOW_QUALITY_PAGE_DEFAULT = true;
 
     /**
      * @link https://ogp.me/#types Facebook ogp
@@ -216,21 +216,18 @@ class Page extends DokuPath
     private $title;
     private $author;
     private $authorId;
-    private $lowQualityIndicator;
+    private $canBeOfLowQuality;
     private $region;
     private $lang;
     /**
      * @var string
      */
     private $pageId;
+
     /**
      * @var boolean|null
      */
-    private $isLowQualityIndicator;
-    /**
-     * @var boolean|null
-     */
-    private $defaultLowQuality;
+    private $lowQualityIndicatorCalculated;
     private $layout;
     /**
      * @var Alias[]
@@ -252,7 +249,7 @@ class Page extends DokuPath
      * @var string|null
      */
     private $scope;
-    private $dynamicQualityIndicator;
+    private $qualityMonitoringIndicator;
 
     /**
      * @var string the alias used to build this page
@@ -688,10 +685,10 @@ class Page extends DokuPath
      * @param boolean $value true if this is a low quality page rank false otherwise
      */
     public
-    function setLowQualityIndicator(bool $value): Page
+    function setCanBeOfLowQuality(bool $value): Page
     {
-        $this->lowQualityIndicator = $value;
-        return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_PAGE_INDICATOR, $value);
+        $this->canBeOfLowQuality = $value;
+        return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::CAN_BE_LOW_QUALITY_PAGE_INDICATOR, $value);
     }
 
     /**
@@ -717,26 +714,28 @@ class Page extends DokuPath
 
     /**
      * Low page quality
-     * @return bool true if this is a low internal page rank
+     * @return bool true if this is a low quality page
      */
     function isLowQualityPage(): bool
     {
 
-        $lowQualityIndicator = $this->getLowQualityIndicator();
-        if ($lowQualityIndicator == null) {
-            return $this->getDefaultLowQualityIndicator() === true;
+        $canBeOfLowQuality = $this->getCanBeOfLowQuality();
+        if ($canBeOfLowQuality === false) {
+            return false;
         }
-        return $lowQualityIndicator === true;
+        if (!Site::isLowQualityProtectionEnable()) {
+            return false;
+        }
+        return $this->getLowQualityIndicatorCalculated();
 
 
     }
 
 
-    public
-    function getLowQualityIndicator(): ?bool
+    public function getCanBeOfLowQuality(): ?bool
     {
 
-        return $this->lowQualityIndicator;
+        return $this->canBeOfLowQuality;
 
     }
 
@@ -770,9 +769,9 @@ class Page extends DokuPath
      * @return null|bool
      */
     public
-    function getDynamicQualityIndicator(): ?bool
+    function getQualityMonitoringIndicator(): ?bool
     {
-        return $this->dynamicQualityIndicator;
+        return $this->qualityMonitoringIndicator;
     }
 
     /**
@@ -1010,7 +1009,10 @@ class Page extends DokuPath
          * because Dokuwiki does not allow to delete keys
          * {@link p_set_metadata()}
          */
-        return ($key ?: null);
+        if ($key === "") {
+            return null;
+        }
+        return $key;
     }
 
     public
@@ -1041,7 +1043,10 @@ class Page extends DokuPath
          * because Dokuwiki does not allow to delete keys
          * {@link p_set_metadata()}
          */
-        return ($key ?: null);
+        if ($key === "") {
+            return null;
+        }
+        return $key;
     }
 
     /**
@@ -1200,10 +1205,10 @@ class Page extends DokuPath
     function getMetadata($key, $default = null)
     {
         $persistentMetadata = $this->getPersistentMetadata($key);
-        if (empty($persistentMetadata)) {
+        if ($persistentMetadata === null) {
             $persistentMetadata = $this->getCurrentMetadata($key);
         }
-        if ($persistentMetadata == null) {
+        if ($persistentMetadata === null) {
             return $default;
         } else {
             return $persistentMetadata;
@@ -1648,14 +1653,19 @@ class Page extends DokuPath
      *
      * @param $key
      * @param $value
+     * @param $default - use in case of boolean
      */
     public
-    function setMetadata($key, $value)
+    function setMetadata($key, $value, $default = null)
     {
 
         $oldValue = $this->metadatas[Metadata::PERSISTENT_METADATA][$key];
         if (is_bool($value)) {
-            $oldValue = Boolean::toBoolean($value);
+            if ($oldValue === null) {
+                $oldValue = $default;
+            } else {
+                $oldValue = Boolean::toBoolean($oldValue);
+            }
         }
         if ($oldValue !== $value) {
 
@@ -1871,14 +1881,14 @@ class Page extends DokuPath
                             }
                         }
                         continue 2;
-                    case Page::LOW_QUALITY_PAGE_INDICATOR:
-                        $this->setLowQualityIndicator(Boolean::toBoolean($value));
+                    case Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
+                        $this->setCanBeOfLowQuality(Boolean::toBoolean($value));
                         continue 2;
                     case PAGE::IMAGE_META_PROPERTY:
                         $this->setPageImage($value);
                         continue 2;
-                    case action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR:
-                        $this->setMonitoringQualityIndicator(Boolean::toBoolean($value));
+                    case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
+                        $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
                         continue 2;
                     case PAGE::KEYWORDS_ATTRIBUTE:
                         $this->setMetadata($key, $value);
@@ -2113,9 +2123,9 @@ class Page extends DokuPath
     }
 
     public
-    function setDefaultLowQualityIndicator($bool): Page
+    function setLowQualityIndicatorCalculation($bool): Page
     {
-        $this->defaultLowQuality = $bool;
+        $this->lowQualityIndicatorCalculated = $bool;
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool);
     }
 
@@ -2159,7 +2169,7 @@ class Page extends DokuPath
 
 
     public
-    function getDefaultLowQualityIndicator()
+    function getLowQualityIndicatorCalculated()
     {
         /**
          * By default, if a file has not been through
@@ -2180,11 +2190,7 @@ class Page extends DokuPath
             if ($value !== null) return $value;
         }
 
-        if (Site::isLowQualityProtectionEnable()) {
-            return true;
-        } else {
-            return false;
-        }
+        return null;
 
     }
 
@@ -2430,7 +2436,7 @@ class Page extends DokuPath
     public
     function setEndDate($value)
     {
-        $this->setDateAttribute(Analytics::DATE_END,$this->endDate, $value);
+        $this->setDateAttribute(Analytics::DATE_END, $this->endDate, $value);
     }
 
     /**
@@ -2439,7 +2445,7 @@ class Page extends DokuPath
     public
     function setStartDate($value)
     {
-        $this->setDateAttribute(Analytics::DATE_START,$this->startDate, $value);
+        $this->setDateAttribute(Analytics::DATE_START, $this->startDate, $value);
     }
 
     /**
@@ -2448,7 +2454,7 @@ class Page extends DokuPath
     public
     function setPublishedDate($value)
     {
-        $this->setDateAttribute(Publication::DATE_PUBLISHED,$this->publishedDate, $value);
+        $this->setDateAttribute(Publication::DATE_PUBLISHED, $this->publishedDate, $value);
     }
 
     public
@@ -2594,13 +2600,15 @@ class Page extends DokuPath
         $this->author = $this->getMetadata('creator');
         $this->authorId = $this->getMetadata('user');
 
-        $this->lowQualityIndicator = $this->getMetadataAsBoolean(self::LOW_QUALITY_PAGE_INDICATOR);
-
         $this->region = $this->getMetadata(self::REGION_META_PROPERTY);
         $this->lang = $this->getMetadata(self::LANG_META_PROPERTY);
 
-        $this->isLowQualityIndicator = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_PAGE_INDICATOR));
-        $this->defaultLowQuality = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_INDICATOR_CALCULATED));
+        $this->canBeOfLowQuality = Boolean::toBoolean(
+            $this->getMetadata(self::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
+                self::CAN_BE_LOW_QUALITY_PAGE_DEFAULT
+            )
+        );
+        $this->lowQualityIndicatorCalculated = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_INDICATOR_CALCULATED));
 
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
 
@@ -2612,7 +2620,14 @@ class Page extends DokuPath
         $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
 
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
-        $this->dynamicQualityIndicator = Boolean::toBoolean($this->getMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR));
+        /**
+         * A boolean is never null
+         */
+        $this->qualityMonitoringIndicator = Boolean::toBoolean(
+            $this->getMetadata(
+                action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
+                action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
+            ));
 
         $publishedString = $this->getMetadata(Publication::DATE_PUBLISHED);
         if ($publishedString === null) {
@@ -2885,10 +2900,10 @@ class Page extends DokuPath
         return $this;
     }
 
-    public function setMonitoringQualityIndicator($boolean): Page
+    public function setQualityMonitoringIndicator($boolean): Page
     {
-        $this->dynamicQualityIndicator = $boolean;
-        $this->setMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR, $boolean);
+        $this->qualityMonitoringIndicator = $boolean;
+        $this->setMetadata(action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR, $boolean, action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT);
         return $this;
     }
 
@@ -2913,19 +2928,21 @@ class Page extends DokuPath
 
     public function isDynamicQualityMonitored(): bool
     {
-        if (PluginUtility::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING) === 1) {
-            return false;
+        if ($this->getQualityMonitoringIndicator() !== null) {
+            return $this->getQualityMonitoringIndicator();
         }
-        return $this->getDynamicQualityIndicatorOrDefault();
+        return $this->getDefaultQualityMonitoring();
     }
 
-    public function getDynamicQualityIndicatorOrDefault(): bool
+    public function getDefaultQualityMonitoring(): bool
     {
-        if ($this->getDynamicQualityIndicator() !== null) {
-            return $this->getDynamicQualityIndicator();
+        if (PluginUtility::getConfValue(action_plugin_combo_qualitymessage::CONF_DISABLE_QUALITY_MONITORING) === 1) {
+            return false;
+        } else {
+            return true;
         }
-        return true;
     }
+
 
     /**
      * @throws ExceptionCombo

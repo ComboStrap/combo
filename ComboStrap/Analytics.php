@@ -152,9 +152,9 @@ class Analytics
         /**
          * Don't render if the analytics file exists
          * If the data is stale, the render function may create a cycle
-         * (for instance, the {@link Page::getDefaultLowQualityIndicator()}
+         * (for instance, the {@link Page::getLowQualityIndicatorCalculated()}
          * used this data but the {@link renderer_plugin_combo_analytics}
-         * will set it {@link Page::setDefaultLowQualityIndicator()}
+         * will set it {@link Page::setLowQualityIndicatorCalculation()}
          * creating a loop
          */
         if(!$this->exists()){

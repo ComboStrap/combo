@@ -258,6 +258,18 @@ class Page extends DokuPath
      * @var string the alias used to build this page
      */
     private $buildAliasPath;
+    /**
+     * @var DateTime|null
+     */
+    private $publishedDate;
+    /**
+     * @var DateTime|null
+     */
+    private $startDate;
+    /**
+     * @var DateTime|null
+     */
+    private $endDate;
 
     /**
      * Page constructor.
@@ -1201,29 +1213,7 @@ class Page extends DokuPath
     public
     function getPublishedTime(): ?DateTime
     {
-        $property = Publication::DATE_PUBLISHED;
-        $persistentMetadata = $this->getPersistentMetadata($property);
-        if (empty($persistentMetadata)) {
-            /**
-             * Old metadata key
-             */
-            $persistentMetadata = $this->getPersistentMetadata("published");
-            if (empty($persistentMetadata)) {
-                return null;
-            }
-        }
-        // Ms level parsing
-        try {
-            $dateTime = Iso8601Date::createFromString($persistentMetadata)->getDateTime();
-        } catch (\Exception $e) {
-            /**
-             * Should not happen as the data is validate in entry
-             * at the {@link \syntax_plugin_combo_frontmatter}
-             */
-            LogUtility::msg("The published date property ($property) of the page ($this) has a value  ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            return null;
-        }
-        return $dateTime;
+        return $this->publishedDate;
     }
 
 
@@ -1234,7 +1224,7 @@ class Page extends DokuPath
     function getPublishedElseCreationTime(): ?DateTime
     {
         $publishedDate = $this->getPublishedTime();
-        if (empty($publishedDate)) {
+        if ($publishedDate === null) {
             $publishedDate = $this->getCreatedTime();
         }
         return $publishedDate;
@@ -2288,10 +2278,13 @@ class Page extends DokuPath
     }
 
     public
-    function setPageType(string $string): Page
+    function setPageType(string $value): Page
     {
-        $this->type = $string;
-        $this->setMetadata(Page::TYPE_META_PROPERTY, $string);
+        if ($value === "") {
+            $value = null;
+        }
+        $this->type = $value;
+        $this->setMetadata(Page::TYPE_META_PROPERTY, $value);
         return $this;
     }
 
@@ -2431,37 +2424,31 @@ class Page extends DokuPath
         return $this;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function setEndDate($value)
     {
-        if (Iso8601Date::isValid($value)) {
-            $this->setMetadata(Analytics::DATE_END, $value);
-        } else {
-            LogUtility::msg("The end date value ($value) is not a valid date.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-        }
-    }
-
-    public
-    function setStartDate($value)
-    {
-        if (Iso8601Date::isValid($value)) {
-            $this->setMetadata(Analytics::DATE_START, $value);
-        } else {
-            LogUtility::msg("The start date value ($value) is not a valid date.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-        }
+        $this->setDateAttribute(Analytics::DATE_END,$this->endDate, $value);
     }
 
     /**
-     * @throws Exception
+     * @throws ExceptionCombo
+     */
+    public
+    function setStartDate($value)
+    {
+        $this->setDateAttribute(Analytics::DATE_START,$this->startDate, $value);
+    }
+
+    /**
+     * @throws ExceptionCombo
      */
     public
     function setPublishedDate($value)
     {
-        if (Iso8601Date::isValid($value)) {
-            $this->setMetadata(Publication::DATE_PUBLISHED, $value);
-        } else {
-            throw new ExceptionCombo("The published date value ($value) is not a valid date.", Iso8601Date::CANONICAL);
-        }
+        $this->setDateAttribute(Publication::DATE_PUBLISHED,$this->publishedDate, $value);
     }
 
     public
@@ -2487,6 +2474,9 @@ class Page extends DokuPath
     public
     function setH1($value): Page
     {
+        if ($value === "") {
+            $value = null;
+        }
         $this->h1 = $value;
         $this->setMetadata(Analytics::H1, $value);
         return $this;
@@ -2502,7 +2492,7 @@ class Page extends DokuPath
             $value = null;
         } else {
             if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
-                throw new ExceptionCombo("The region value ($value) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)","region");
+                throw new ExceptionCombo("The region value ($value) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)", "region");
             }
         }
         $this->region = $value;
@@ -2520,7 +2510,7 @@ class Page extends DokuPath
             $value = null;
         } else {
             if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
-                throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters","lang");
+                throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters", "lang");
             }
         }
         $this->lang = $value;
@@ -2531,6 +2521,9 @@ class Page extends DokuPath
     public
     function setLayout($value): Page
     {
+        if ($value === "") {
+            $value = null;
+        }
         $this->layout = $value;
         $this->setMetadata(Page::LAYOUT_PROPERTY, $value);
         return $this;
@@ -2621,6 +2614,44 @@ class Page extends DokuPath
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
         $this->dynamicQualityIndicator = Boolean::toBoolean($this->getMetadata(action_plugin_combo_qualitymessage::DYNAMIC_QUALITY_MONITORING_INDICATOR));
 
+        $publishedString = $this->getMetadata(Publication::DATE_PUBLISHED);
+        if ($publishedString === null) {
+            /**
+             * Old metadata key
+             */
+            $publishedString = $this->getPersistentMetadata("published");
+        }
+        if ($publishedString !== null) {
+            try {
+                $this->publishedDate = Iso8601Date::createFromString($publishedString)->getDateTime();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The published date property of the page ($this) has a value  ($publishedString) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+            }
+        } else {
+            $this->publishedDate = null;
+        }
+
+        $startDateString = $this->getMetadata(Analytics::DATE_START);
+        if ($startDateString !== null) {
+            try {
+                $this->startDate = Iso8601Date::createFromString($startDateString)->getDateTime();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The start date property of the page ($this) has a value ($startDateString) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+            }
+        } else {
+            $this->startDate = null;
+        }
+
+        $endDateString = $this->getMetadata(Analytics::DATE_END);
+        if ($endDateString !== null) {
+            try {
+                $this->endDate = Iso8601Date::createFromString($endDateString)->getDateTime();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The end date property of the page ($this) has a value ($endDateString) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
+            }
+        } else {
+            $this->endDate = null;
+        }
     }
 
     public
@@ -2894,6 +2925,28 @@ class Page extends DokuPath
             return $this->getDynamicQualityIndicator();
         }
         return true;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private function setDateAttribute(string $name, &$startDate, $value)
+    {
+        if ($value === "") {
+            $stringValue = null;
+            $startDate = null;
+        } else {
+            if (!is_string($value)) {
+                throw new ExceptionCombo("The $name value ($value) should be in a string format.", Iso8601Date::CANONICAL);
+            }
+            $stringValue = $value;
+            try {
+                $startDate = Iso8601Date::createFromString($value)->getDateTime();
+            } catch (ExceptionCombo $e) {
+                throw new ExceptionCombo("The $name value ($value) is not a valid date.", Iso8601Date::CANONICAL);
+            }
+        }
+        $this->setMetadata($name, $stringValue);
     }
 
 

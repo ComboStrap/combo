@@ -537,7 +537,7 @@ EOF;
 
         // Start Date
         $formMeta->addField(FormMetaField::create(Analytics::DATE_START)
-            ->addValue($page->getStartDate())
+            ->addValue($page->getStartDateAsString())
             ->setType(FormMetaField::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(Page::EVENT_TYPE)
@@ -547,7 +547,7 @@ EOF;
 
         // End Date
         $formMeta->addField(FormMetaField::create(Analytics::DATE_END)
-            ->addValue($page->getEndDate())
+            ->addValue($page->getEndDateAsString())
             ->setType(FormMetaField::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(Page::EVENT_TYPE)

@@ -8,12 +8,8 @@ window.addEventListener("DOMContentLoaded", function () {
      *
      * @type ComboModal modalManager
      */
-    async function openMetaViewer(modalManager, pageId) {
+    async function openMetaViewer(modalViewer, modalManager, pageId) {
 
-
-        let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
-        // noinspection JSVoidFunctionReturnValueUsed
-        let modalViewer = combo.getOrCreateModal(modalViewerId);
 
         if (modalViewer.wasBuild()) {
             modalViewer.show();
@@ -44,27 +40,9 @@ window.addEventListener("DOMContentLoaded", function () {
             let response = await combo.createDokuRequest(viewerCallEndpoint)
                 .setMethod("post")
                 .sendFormDataAsJson(formData);
-            let modalMessage = [];
-            if (response.status !== 200) {
-                modalMessage.push(`Error, unable to save. (return code: ${response.status})`);
-            }
-            let json = await response.json();
-            if (json !== null) {
-                if (json.hasOwnProperty("message")) {
-                    let jsonMessage = json["message"];
-                    if (Array.isArray(jsonMessage)) {
-                        modalMessage = modalMessage.concat(jsonMessage);
-                    } else {
-                        modalMessage.push(jsonMessage)
-                    }
-                }
-            }
             modalViewer.reset();
-            combo.createTemporaryModal()
-                .centered()
-                .setCallBackOnClose(() => openMetaViewer(modalManager, pageId))
-                .addBody(modalMessage.join("<br>"))
-                .show();
+            modalManager.reset();
+            await processResponse(response,() => openMetaViewer(modalManager, pageId));
         });
         modalViewer
             .setCallBackOnClose(() => openMetadataManager(pageId))
@@ -81,6 +59,40 @@ window.addEventListener("DOMContentLoaded", function () {
 
     const metaManagerCall = "combo-meta-manager";
 
+    /**
+     *
+     * @param {Response} response
+     * @param {function} callBack
+     * @return {Promise<void>}
+     */
+    async function processResponse(response, callBack) {
+        let modalMessage = [];
+        if (response.status !== 200) {
+            modalMessage.push(`Error, unable to save. (return code: ${response.status})`);
+        }
+        try {
+            let json = await response.json();
+            if (json !== null) {
+                if (json.hasOwnProperty("message")) {
+                    let jsonMessage = json["message"];
+                    if (Array.isArray(jsonMessage)) {
+                        modalMessage = modalMessage.concat(jsonMessage);
+                    } else {
+                        modalMessage.push(jsonMessage)
+                    }
+                }
+            }
+        } catch (/** @type Error */ e) {
+            modalMessage.push(e.message)
+        }
+
+        combo.createTemporaryModal()
+            .setCallBackOnClose(callBack)
+            .centered()
+            .addBody(modalMessage.join("<br>"))
+            .show();
+    }
+
     let openMetadataManager = async function (pageId) {
 
 
@@ -94,6 +106,13 @@ window.addEventListener("DOMContentLoaded", function () {
             managerModal.show();
             return;
         }
+
+        /**
+         * The viewer
+         * We create it here because it needs to be reset if there is a submit on the manager.
+         */
+        let modalViewerId = combo.toHtmlId(`combo-metadata-viewer-modal-${pageId}`);
+        let modalViewer = combo.getOrCreateModal(modalViewerId);
 
         /**
          * Creating the form
@@ -116,7 +135,7 @@ window.addEventListener("DOMContentLoaded", function () {
         viewerButton.textContent = "Open Metadata Viewer";
         viewerButton.addEventListener("click", async function () {
             managerModal.dismissHide();
-            await openMetaViewer(managerModal, pageId);
+            await openMetaViewer(modalViewer, managerModal, pageId);
         });
 
         /**
@@ -133,27 +152,9 @@ window.addEventListener("DOMContentLoaded", function () {
             let response = await combo.createDokuRequest(metaManagerCall)
                 .setMethod("post")
                 .sendFormDataAsJson(formData);
-            let modalMessage = [];
-            if (response.status !== 200) {
-                modalMessage.push(`Error, unable to save. (return code: ${response.status})`);
-            }
-            let json = await response.json();
-            if (json !== null) {
-                if (json.hasOwnProperty("message")) {
-                    let jsonMessage = json["message"];
-                    if (Array.isArray(jsonMessage)) {
-                        modalMessage = modalMessage.concat(jsonMessage);
-                    } else {
-                        modalMessage.push(jsonMessage)
-                    }
-                }
-            }
             managerModal.reset();
-            combo.createTemporaryModal()
-                .setCallBackOnClose(() => openMetadataManager(pageId))
-                .centered()
-                .addBody(modalMessage.join("<br>"))
-                .show();
+            modalViewer.reset();
+            await processResponse(response, () => openMetadataManager(pageId));
         })
 
         /**

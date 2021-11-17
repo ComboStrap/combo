@@ -117,7 +117,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         /**
          * @var Image[]
          */
-        $facebookImages = $page->getPageImagesAsImageOrDefault();
+        $facebookImages = $page->getPageImagesOrDefault();
         if (empty($facebookImages)) {
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {

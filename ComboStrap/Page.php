@@ -267,6 +267,10 @@ class Page extends DokuPath
      * @var DateTime|null
      */
     private $endDate;
+    /**
+     * @var PageImage[]
+     */
+    private $pageImages;
 
     /**
      * Page constructor.
@@ -927,10 +931,10 @@ class Page extends DokuPath
      * An array of local/internal images that represents the same image
      * but in different dimension and ratio
      * (may be empty)
-     * @return Image[]
+     * @return PageImage[]
      */
     public
-    function getPageImagesAsImageOrDefault(): array
+    function getPageImagesOrDefault(): array
     {
 
         /**
@@ -938,11 +942,11 @@ class Page extends DokuPath
          * for the same image
          * We may get an array then
          */
-        $pageImages = $this->getPageImagesObject();
+        $pageImages = $this->getPageImages();
         if (empty($pageImages)) {
             $defaultPageImage = $this->getDefaultPageImageObject();
             if ($defaultPageImage != null) {
-                return [$defaultPageImage->getImage()];
+                return [$defaultPageImage];
             } else {
                 return [];
             }
@@ -965,7 +969,7 @@ class Page extends DokuPath
     function getImage(): ?Image
     {
 
-        $images = $this->getPageImagesAsImageOrDefault();
+        $images = $this->getPageImagesOrDefault();
         if (sizeof($images) >= 1) {
             return $images[0];
         } else {
@@ -1885,7 +1889,8 @@ class Page extends DokuPath
                         $this->setCanBeOfLowQuality(Boolean::toBoolean($value));
                         continue 2;
                     case PAGE::IMAGE_META_PROPERTY:
-                        $this->setPageImage($value);
+                        $images = PageImage::toPageImageArray($value, $this);
+                        $this->setPageImage($images);
                         continue 2;
                     case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
                         $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
@@ -2195,56 +2200,23 @@ class Page extends DokuPath
     }
 
     /**
-     * @param string|null $tag
-     * @return PageImage[]|null
+     * @return PageImage[]
      */
     public
-    function getPageImagesObject($tag = null): array
+    function getPageImages(): array
     {
-        $pagesImages = $this->getMetadata(self::IMAGE_META_PROPERTY);
-        if ($pagesImages === null) {
-            return [];
-        } else {
-            if (is_array($pagesImages)) {
-                $images = [];
-                foreach ($pagesImages as $key => $value) {
-
-                    $usage = PageImage::getDefaultUsage();
-                    if (is_numeric($key)) {
-                        $imagePath = $value;
-                    } else {
-                        $imagePath = $key;
-                        if (is_array($value) && isset($value[PageImage::USAGE_ATTRIBUTE])) {
-                            $usage = $value[PageImage::USAGE_ATTRIBUTE];
-                            if (!is_array($usage)) {
-                                $usage = [$usage];
-                            }
-                        }
-                    }
-                    DokuPath::addRootSeparatorIfNotPresent($imagePath);
-                    $images[$imagePath] = PageImage::create($imagePath)
-                        ->setUsage($usage);
-                }
-                return $images;
-            } else {
-                /**
-                 * A single image
-                 */
-                DokuPath::addRootSeparatorIfNotPresent($pagesImages);
-                return [$pagesImages => PageImage::create($pagesImages)];
-            }
-        }
-
+        return $this->pageImages;
     }
 
     /**
-     * @param string|array $pageImageData
+     * @param PageImage[] $pageImages
      * @return Page
      */
     public
-    function setPageImage($pageImageData): Page
+    function setPageImage(array $pageImages): Page
     {
-        $this->setMetadata(self::IMAGE_META_PROPERTY, $pageImageData);
+        $this->pageImages = $pageImages;
+        $this->setMetadata(self::IMAGE_META_PROPERTY, PageImage::toMetadataArray($pageImages));
         return $this;
     }
 
@@ -2615,7 +2587,12 @@ class Page extends DokuPath
         try {
             $this->aliases = Alias::toAliasArray($this->getMetadata(self::ALIAS_ATTRIBUTE), $this);
         } catch (Exception $e) {
-            LogUtility::msg("The key of the frontmatter alias should not be empty as it's the alias path", LogUtility::LVL_MSG_ERROR, Alias::CANONICAL);
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, Alias::CANONICAL);
+        }
+        try {
+            $this->pageImages = PageImage::toPageImageArray($this->getMetadata(self::IMAGE_META_PROPERTY), $this);
+        } catch (Exception $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, PageImage::CANONICAL);
         }
         $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
 

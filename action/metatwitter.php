@@ -145,7 +145,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Card image
          */
-        $twitterImages = $page->getPageImagesAsImageOrDefault();
+        $twitterImages = $page->getPageImagesOrDefault();
         if (empty($twitterImages)) {
             $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {

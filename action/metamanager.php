@@ -638,7 +638,7 @@ EOF;
             ->setDomainValues(PageImage::getUsageValues())
             ->setWidth(4)
             ->setDescription("The possible usages of the image");
-        $pageImagesObjects = $page->getPageImagesObject();
+        $pageImagesObjects = $page->getPageImages();
         $pageImageDefault = $page->getDefaultPageImageObject();
         for ($i = 0; $i < 5; $i++) {
 

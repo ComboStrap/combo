@@ -2273,7 +2273,7 @@ class Page extends DokuPath
             $firstImage = $this->getFirstImage();
             if ($firstImage != null) {
                 if ($firstImage->getDokuPath()->getScheme() == DokuPath::LOCAL_SCHEME) {
-                    return PageImage::create($firstImage);
+                    return PageImage::create($firstImage, $this);
                 }
             }
         }
@@ -2354,12 +2354,22 @@ class Page extends DokuPath
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function setDescription($description): Page
     {
 
-        if ($description === "") {
-            $description = null;
+        if ($description === "" || $description === null) {
+            if ($this->descriptionOrigin === syntax_plugin_combo_frontmatter::CANONICAL) {
+                throw new ExceptionCombo("The description cannot be empty", Page::DESCRIPTION_PROPERTY);
+            } else {
+                // The original description is from Dokuwiki, we don't send an error
+                // otherwise all page without a first description would get an error
+                // (What fucked up is fucked up)
+                return $this;
+            }
         }
 
         /**
@@ -2379,26 +2389,12 @@ class Page extends DokuPath
             $this->flushMeta();
         }
 
-        /**
-         *
-         */
-        if ($description !== null) {
-            $this->setMetadata(Page::DESCRIPTION_PROPERTY,
-                array(
-                    "abstract" => $description,
-                    "origin" => syntax_plugin_combo_frontmatter::CANONICAL
-                ));
-        } else {
-            /**
-             * It should not happen often
-             * (Use default on the next page rendering unfortunately)
-             */
-            $this->setMetadata(Page::DESCRIPTION_PROPERTY,
-                array(
-                    "abstract" => "",
-                    "origin" => Page::DESCRIPTION_DOKUWIKI_ORIGIN
-                ));
-        }
+        $this->setMetadata(Page::DESCRIPTION_PROPERTY,
+            array(
+                "abstract" => $description,
+                "origin" => syntax_plugin_combo_frontmatter::CANONICAL
+            ));
+
         return $this;
     }
 
@@ -2941,6 +2937,26 @@ class Page extends DokuPath
             }
         }
         $this->setMetadata($name, $stringValue);
+    }
+
+    /**
+     * @param array $usages
+     * @return Image[]
+     */
+    public function getImagesOrDefaultForTheFollowingUsages(array $usages): array
+    {
+        $usages = array_merge($usages, [PageImage::ALL]);
+        $images = [];
+        foreach ($this->getPageImagesOrDefault() as $pageImage) {
+            foreach ($usages as $usage) {
+                if (in_array($usage, $pageImage->getUsages())) {
+                    $images[] = $pageImage->getImage();
+                    continue 2;
+                }
+            }
+        }
+        return $images;
+
     }
 
 

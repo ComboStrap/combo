@@ -31,7 +31,7 @@ class BreadcrumbHierarchical
      *
      * @return string
      */
-    static function render()
+    static function render(): string
     {
 
         global $conf;
@@ -50,7 +50,8 @@ class BreadcrumbHierarchical
         $htmlOutput .= '<li class="breadcrumb-item">' . PHP_EOL;
         $page = $conf['start'];
         $link = LinkUtility::createFromPageId($page);
-        $htmlOutput .= $link->renderOpenTag().ucfirst($link->getName()).$link->renderClosingTag();
+        $pageNameNotEmpty = $link->getInternalPage()->getPageNameNotEmpty();
+        $htmlOutput .= $link->renderOpenTag(). $pageNameNotEmpty .$link->renderClosingTag();
         $htmlOutput .= '</li>' . PHP_EOL;
 
         // Print the parts if there is more than one
@@ -82,7 +83,7 @@ class BreadcrumbHierarchical
                 // html_wikilink because the page has the form pagename: and not pagename:pagename
                 if ($exist) {
                     $link = LinkUtility::createFromPageId($page);
-                    $htmlOutput .= $link->renderOpenTag().ucfirst($link->getName()).$link->renderClosingTag();
+                    $htmlOutput .= $link->renderOpenTag().$link->getInternalPage()->getPageNameNotEmpty().$link->renderClosingTag();
                 } else {
                     $htmlOutput .= ucfirst($currentPart);
                 }

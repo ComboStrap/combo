@@ -6,6 +6,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageImage;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
@@ -117,7 +118,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         /**
          * @var Image[]
          */
-        $facebookImages = $page->getPageImagesOrDefault();
+        $facebookImages = $page->getImagesOrDefaultForTheFollowingUsages([PageImage::FACEBOOK,PageImage::SOCIAL,PageImage::ALL]);
         if (empty($facebookImages)) {
             $defaultFacebookImage = PluginUtility::getConfValue(self::CONF_DEFAULT_FACEBOOK_IMAGE);
             if (!empty($defaultFacebookImage)) {

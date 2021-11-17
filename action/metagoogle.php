@@ -3,6 +3,7 @@
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageImage;
 use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) die();
@@ -78,7 +79,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
             "image/webp",
             "image/svg+xml",
         ];
-        $imagesSet = $page->getPageImagesOrDefault();
+        $imagesSet = $page->getImagesOrDefaultForTheFollowingUsages([PageImage::ALL,PageImage::SOCIAL,PageImage::GOOGLE]);
         $schemaImages = array();
         foreach ($imagesSet as $image) {
 

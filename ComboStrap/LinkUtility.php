@@ -410,7 +410,7 @@ class LinkUtility
 
                 // normal link for the `this` wiki
                 if($this->getWiki()!="this") {
-                    PluginUtility::getSnippetManager()->attachCssSnippetForRequest(self::TYPE_INTERWIKI);
+                    PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TYPE_INTERWIKI);
                 }
                 /**
                  * Target

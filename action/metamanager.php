@@ -9,12 +9,10 @@ use ComboStrap\DokuPath;
 use ComboStrap\FormMeta;
 use ComboStrap\FormMetaField;
 use ComboStrap\FormMetaTab;
-use ComboStrap\Http;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
 use ComboStrap\Json;
-use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
@@ -62,6 +60,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      * The canonical for page type
      */
     const PAGE_TYPE_CANONICAL = "page:type";
+    const IMAGE_PATH = "image-path";
+    const IMAGE_USAGE = "image-usage";
+    const ALIAS_PATH = "alias-path";
+    const ALIAS_TYPE = "alias-type";
+    const SUCCESS_MESSAGE = "The data were updated without errors.";
 
 
     public function register(Doku_Event_Handler $controller)
@@ -268,11 +271,58 @@ EOF;
     private function handleManagerPost($event, Page $page, array $post)
     {
 
-        $default = [
+        /**
+         * Boolean default
+         * are not send back
+         */
+        $defaultBoolean = [
             Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR => Page::CAN_BE_LOW_QUALITY_PAGE_DEFAULT,
             action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR => action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
         ];
-        $post = array_merge($default, $post);
+        $post = array_merge($defaultBoolean, $post);
+
+        /**
+         * Building back images
+         */
+        $aliasPaths = $post[self::IMAGE_PATH];
+        unset($post[self::IMAGE_PATH]);
+        $imagesUsage = $post[self::IMAGE_USAGE];
+        unset($post[self::IMAGE_USAGE]);
+        $aliases = [];
+        foreach ($aliasPaths as $key => $imagesPath) {
+            if ($imagesPath !== "") {
+                $aliases[$imagesPath] = PageImage::create($imagesPath)
+                    ->setUsage($imagesUsage[$key]);
+            }
+        }
+        $post[PAGE::IMAGE_META_PROPERTY] = PageImage::toMetadataArray($aliases);
+
+        /**
+         * Building Alias
+         */
+        $aliasPaths = $post[self::ALIAS_PATH];
+        unset($post[self::ALIAS_PATH]);
+        $aliasTypes = $post[self::ALIAS_TYPE];
+        unset($post[self::ALIAS_TYPE]);
+        $aliases = [];
+        if (is_array($aliasPaths)) {
+            foreach ($aliasPaths as $key => $aliasPath) {
+                if ($aliasPath !== "") {
+                    $aliases[$aliasPath] = Alias::create($page, $aliasPath)
+                        ->setType($aliasTypes[$key]);
+                }
+            }
+        } else {
+            if ($aliasPaths !== "") {
+                $aliases[] = Alias::create($page, $aliasPaths)
+                    ->setType($aliasTypes);
+            }
+        }
+        $post[Page::ALIAS_ATTRIBUTE] = Alias::toMetadataArray($aliases);
+
+        /**
+         * Upsert
+         */
         $upsertMessages = $page->upsertMetadataFromAssociativeArray($post, true);
 
         $responseMessages = [];
@@ -291,7 +341,7 @@ EOF;
         }
 
         if (sizeof($responseMessages) === 0) {
-            $responseMessages[] = "The data were updated without errors.";
+            $responseMessages[] = self::SUCCESS_MESSAGE;
         }
 
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
@@ -308,7 +358,7 @@ EOF;
     private
     function handleManagerGet(Doku_Event $event, Page $page)
     {
-        $formMeta = $this->getFormMetadata($page);
+        $formMeta = $this->getFormMetadataForPage($page);
         $payload = json_encode($formMeta->toAssociativeArray());
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)
@@ -448,7 +498,7 @@ EOF;
      * @param Page $page
      * @return FormMeta
      */
-    static function getFormMetadata(Page $page): FormMeta
+    static function getFormMetadataForPage(Page $page): FormMeta
     {
         $formMeta = FormMeta::create($page->getDokuwikiId())
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
@@ -577,12 +627,12 @@ EOF;
         /**
          * Page Image Properties
          */
-        $pageImagePath = FormMetaField::create("image-path")
+        $pageImagePath = FormMetaField::create(self::IMAGE_PATH)
             ->setLabel("Path")
             ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
             ->setDescription("The path of the image")
             ->setWidth(8);
-        $pageImageUsage = FormMetaField::create("image-usage")
+        $pageImageUsage = FormMetaField::create(self::IMAGE_USAGE)
             ->setLabel("Usages")
             ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
             ->setDomainValues(PageImage::getUsageValues())
@@ -605,7 +655,7 @@ EOF;
             $pageImagePathUsage = null;
             if ($pageImage != null) {
                 $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getPath();
-                $pageImagePathUsage = $pageImage->getUsage();
+                $pageImagePathUsage = $pageImage->getUsages();
             }
             if ($i == 0 && $pageImageDefault !== null) {
                 $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
@@ -629,11 +679,11 @@ EOF;
         /**
          * Aliases
          */
-        $aliasPath = FormMetaField::create("alias-path")
+        $aliasPath = FormMetaField::create(self::ALIAS_PATH)
             ->setCanonical(Alias::CANONICAL)
             ->setLabel("Alias Path")
             ->setDescription("The path of the alias");
-        $aliasType = FormMetaField::create("alias-type")
+        $aliasType = FormMetaField::create(self::ALIAS_TYPE)
             ->setCanonical(Alias::CANONICAL)
             ->setLabel("Alias Type")
             ->setDescription("The type of the alias")

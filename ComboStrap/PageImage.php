@@ -15,6 +15,7 @@ class PageImage
     const ALL = "all";
     const DEFAULT = self::ALL;
     const USAGE_ATTRIBUTE = "usage";
+    const PATH_ATTRIBUTE = "path";
 
     /**
      * @var Image
@@ -43,6 +44,22 @@ class PageImage
     }
 
     /**
+     * @param PageImage[] $pageImages
+     * @return array
+     */
+    public static function toMetadataArray($pageImages): array
+    {
+        $pageImagesMeta = [];
+        foreach ($pageImages as $pageImage) {
+            $pageImagesMeta[] = [
+                self::PATH_ATTRIBUTE => $pageImage->getImage()->getDokuPath(),
+                self::USAGE_ATTRIBUTE => $pageImage->getUsages()
+            ];
+        };
+        return array_values($pageImagesMeta);
+    }
+
+    /**
      * @param array $usage
      * @return $this
      */
@@ -57,7 +74,7 @@ class PageImage
         return $this->image;
     }
 
-    public function getUsage(): array
+    public function getUsages(): array
     {
         return $this->usage;
     }
@@ -79,6 +96,8 @@ class PageImage
         ];
 
     }
+
+
 
 
 }

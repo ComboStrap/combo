@@ -75,21 +75,26 @@ class Alias
         $aliasArray = [];
         foreach ($aliases as $key => $value) {
             if (is_array($value)) {
-                if(empty($key)){
-                    throw new ExceptionCombo("The key of the alias should not be empty as it's the alias path", self::CANONICAL);
+                $path = $value[Alias::ALIAS_PATH_PROPERTY];
+                if (empty($path)) {
+                    if (is_string($key)) {
+                        // Old way (deprecated)
+                        $path = $key;
+                    } else {
+                        throw new ExceptionCombo("The path of the alias should not be empty to create a path", self::CANONICAL);
+                    }
                 }
-                $path = $key;
                 $type = $value[Alias::ALIAS_TYPE_PROPERTY];
                 $aliasArray[$path] = Alias::create($page, $path)
                     ->setType($type);
             } else {
                 $path = $value;
-                if(empty($path)){
-                    throw new ExceptionCombo("The value of the alias array should not be empty as it's the alias path",self::CANONICAL);
+                if (empty($path)) {
+                    throw new ExceptionCombo("The value of the alias array should not be empty as it's the alias path", self::CANONICAL);
                 }
                 if (!is_string($path)) {
                     $path = StringUtility::toString($path);
-                    throw new Exception("The alias element ($path) is not a string");
+                    throw new ExceptionCombo("The alias element ($path) is not a string", self::CANONICAL);
                 }
                 $aliasArray[$path] = Alias::create($page, $path);
             }
@@ -142,16 +147,17 @@ class Alias
         $array = [];
         foreach ($aliases as $alias) {
             $array[$alias->getPath()] = [
+                Alias::ALIAS_PATH_PROPERTY => $alias->getPath(),
                 Alias::ALIAS_TYPE_PROPERTY => $alias->getType()
             ];
         }
-        return $array;
+        return array_values($array);
     }
 
     public
     function setType(string $type): Alias
     {
-        if(!in_array($type,self::getPossibleTypesValues())){
+        if (!in_array($type, self::getPossibleTypesValues())) {
             $pageAnchor = $this->getPage()->getAnchorLink();
             LogUtility::msg("Bad Alias Type. The alias type value ($type) for the alias path ({$this->getPath()}) of the page ({$pageAnchor})");
             return $this;

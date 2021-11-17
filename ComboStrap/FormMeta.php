@@ -117,7 +117,7 @@ class FormMeta
      * that should be send with a post request
      * (Used in test)
      */
-    public function toHtmlFormData(): array
+    public function toHtmlSubmitFormData(): array
     {
         $data = [];
         $this->toPostDataRecurse($data, $this->fields);

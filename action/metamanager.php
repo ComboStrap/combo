@@ -326,6 +326,7 @@ EOF;
                 ->setLabel("Title")
                 ->setDescription("The page title is a description advertised to external application such as search engine and browser.")
                 ->addValue($page->getTitle(), $page->getDefaultTitle())
+                ->setCanonical(Analytics::TITLE)
                 ->setTab(self::TAB_PAGE_VALUE)
         );
 
@@ -334,6 +335,7 @@ EOF;
             FormMetaField::create(Analytics::H1)
                 ->addValue($page->getH1(), $page->getDefaultH1())
                 ->setTab(self::TAB_PAGE_VALUE)
+                ->setCanonical(Analytics::H1)
                 ->setDescription("The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title.")
         );
 
@@ -343,6 +345,7 @@ EOF;
                 ->addValue($page->getDescription(), $page->getDescriptionOrElseDokuWiki())
                 ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
                 ->setTab(self::TAB_PAGE_VALUE)
+                ->setCanonical(Analytics::DESCRIPTION)
                 ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
         );
 
@@ -351,6 +354,7 @@ EOF;
             ->addValue($page->getPath())
             ->setLabel("Page Path")
             ->setMutable(false)
+            ->setCanonical(Analytics::PATH)
             ->setTab(self::TAB_REDIRECTION_VALUE)
             ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
         );
@@ -360,6 +364,7 @@ EOF;
             FormMetaField::create(Analytics::CANONICAL)
                 ->addValue($page->getCanonical(), $page->getDefaultCanonical())
                 ->setTab(self::TAB_REDIRECTION_VALUE)
+                ->setCanonical(Analytics::CANONICAL)
                 ->setLabel("Canonical Path")
                 ->setDescription("The canonical path is a short unique path for the page (used in named permalink)")
         );
@@ -374,6 +379,7 @@ EOF;
                 ->addValue($page->getSlug(), $defaultSlug)
                 ->setLabel("Slug Path")
                 ->setTab(self::TAB_REDIRECTION_VALUE)
+                ->setCanonical(Page::SLUG_ATTRIBUTE)
                 ->setDescription("The slug is used in the url of the page (if chosen)")
         );
 
@@ -392,6 +398,7 @@ EOF;
             FormMetaField::create(Page::LAYOUT_PROPERTY)
                 ->addValue($page->getLayout(), $page->getDefaultLayout())
                 ->setDomainValues($page->getLayoutValues())
+                ->setCanonical(Page::LAYOUT_PROPERTY)
                 ->setTab(self::TAB_PAGE_VALUE)
                 ->setDescription("A layout chooses the layout of your page (such as the slots and placement of the main content)")
         );
@@ -499,6 +506,7 @@ EOF;
 
         $formMeta->addField(FormMetaField::create(Page::ALIAS_ATTRIBUTE)
             ->setLabel("Page Aliases")
+            ->setCanonical(Page::ALIAS_ATTRIBUTE)
             ->setDescription("Aliases that will redirect to this page.")
             ->setTab(self::TAB_REDIRECTION_VALUE)
             ->setType(FormMetaField::TABULAR_TYPE_VALUE)

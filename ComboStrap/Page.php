@@ -177,6 +177,7 @@ class Page extends DokuPath
      * When the value of a metadata has changed
      */
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
+    const DESCRIPTION_DOKUWIKI_ORIGIN = "dokuwiki";
 
 
     /**
@@ -517,7 +518,11 @@ class Page extends DokuPath
 
     public function setCanonical($canonical): Page
     {
-        $canonical = DokuPath::toValidAbsolutePath($canonical);
+        if ($canonical === "") {
+            $canonical = null;
+        } else {
+            $canonical = DokuPath::toValidAbsolutePath($canonical);
+        }
         $this->canonical = $canonical;
         $this->setMetadata(Page::CANONICAL_PROPERTY, $this->canonical);
         return $this;
@@ -1309,10 +1314,10 @@ class Page extends DokuPath
         }
 
         $description = $descriptionArray['abstract'];
-        $this->descriptionOrigin = "dokuwiki";
+        $this->descriptionOrigin = self::DESCRIPTION_DOKUWIKI_ORIGIN;
         if (array_key_exists('origin', $descriptionArray)) {
             $this->descriptionOrigin = $descriptionArray['origin'];
-            if ($this->descriptionOrigin !== "dokuwiki") {
+            if ($this->descriptionOrigin !== self::DESCRIPTION_DOKUWIKI_ORIGIN) {
                 return [$description, ""];
             }
         }
@@ -1888,6 +1893,9 @@ class Page extends DokuPath
                     case PAGE::KEYWORDS_ATTRIBUTE:
                         $this->setMetadata($key, $value);
                         continue 2;
+                    case PAGE::SLUG_ATTRIBUTE:
+                        $this->setSlug($value);
+                        continue 2;
                     default:
                         if (!$persistOnlyKnownAttributes) {
                             $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
@@ -2378,6 +2386,11 @@ class Page extends DokuPath
     public
     function setDescription($description): Page
     {
+
+        if ($description === "") {
+            $description = null;
+        }
+
         /**
          * Dokuwiki has already a description
          * We use it to be conform
@@ -2398,11 +2411,23 @@ class Page extends DokuPath
         /**
          *
          */
-        $this->setMetadata(Page::DESCRIPTION_PROPERTY,
-            array(
-                "abstract" => $description,
-                "origin" => syntax_plugin_combo_frontmatter::CANONICAL
-            ));
+        if ($description !== null) {
+            $this->setMetadata(Page::DESCRIPTION_PROPERTY,
+                array(
+                    "abstract" => $description,
+                    "origin" => syntax_plugin_combo_frontmatter::CANONICAL
+                ));
+        } else {
+            /**
+             * It should not happen often
+             * (Use default on the next page rendering unfortunately)
+             */
+            $this->setMetadata(Page::DESCRIPTION_PROPERTY,
+                array(
+                    "abstract" => "",
+                    "origin" => Page::DESCRIPTION_DOKUWIKI_ORIGIN
+                ));
+        }
         return $this;
     }
 
@@ -2473,20 +2498,31 @@ class Page extends DokuPath
     public
     function setRegion($value): Page
     {
-        if (empty($region)) return $this;
-
-        if (!StringUtility::match($region, "[a-zA-Z]{2}")) {
-            throw new Exception("The region value ($region) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)", LogUtility::LVL_MSG_ERROR, "region");
+        if ($value === "") {
+            $value = null;
+        } else {
+            if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
+                throw new ExceptionCombo("The region value ($value) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)","region");
+            }
         }
-
         $this->region = $value;
         $this->setMetadata(Page::REGION_META_PROPERTY, $value);
         return $this;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function setLang($value): Page
     {
+        if ($value === "") {
+            $value = null;
+        } else {
+            if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
+                throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters","lang");
+            }
+        }
         $this->lang = $value;
         $this->setMetadata(Page::LANG_META_PROPERTY, $value);
         return $this;
@@ -2779,7 +2815,11 @@ class Page extends DokuPath
     public
     function setSlug($slug): Page
     {
-        $slug = DokuPath::toSlugPath($slug);
+        if ($slug === "") {
+            $slug = null;
+        } else {
+            $slug = DokuPath::toSlugPath($slug);
+        }
         $this->slug = $slug;
         $this->setMetadata(Page::SLUG_ATTRIBUTE, $slug);
         return $this;

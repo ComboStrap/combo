@@ -20,6 +20,7 @@ class HttpResponse
     public const STATUS_BAD_REQUEST = 400;
     public const STATUS_INTERNAL_ERROR = 500;
     public const STATUS_NOT_AUTHORIZED = 401;
+    const MESSAGE_ATTRIBUTE = "message";
 
     /**
      * @var int

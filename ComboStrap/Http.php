@@ -69,7 +69,8 @@ class Http
 
     public static function setMime(string $mime)
     {
-        header("Content-type: $mime");
+        $contentTypeHeader = Mime::HEADER_CONTENT_TYPE;
+        header("$contentTypeHeader: $mime");
     }
 
     public static function setJsonMime()

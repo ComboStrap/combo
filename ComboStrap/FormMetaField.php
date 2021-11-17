@@ -4,7 +4,6 @@
 namespace ComboStrap;
 
 
-
 /**
  * Class FormField
  * @package ComboStrap
@@ -134,31 +133,13 @@ class FormMetaField
         if ($this->tab != null) {
             $associative[self::TAB_ATTRIBUTE] = $this->tab;
         }
-        switch (sizeof($this->values)) {
-            case 0:
-                break;
-            case 1:
-                $value = $this->values[0];
-                if ($value !== null) {
-                    $associative[self::VALUE_ATTRIBUTE] = $this->values[0];
-                }
-                break;
-            default:
-                $associative[self::VALUE_ATTRIBUTE] = $this->values;
-                break;
+
+        if ($this->getValue() !== null) {
+            $associative[self::VALUE_ATTRIBUTE] = $this->getValue();
         }
-        switch (sizeof($this->defaults)) {
-            case 0:
-                break;
-            case 1:
-                $value = $this->defaults[0];
-                if ($value !== null) {
-                    $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $value;
-                }
-                break;
-            default:
-                $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $this->defaults;
-                break;
+
+        if ($this->getDefaultValue() !== null) {
+            $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $this->getDefaultValue();
         }
 
         if ($this->domainValues !== null) {
@@ -280,6 +261,53 @@ class FormMetaField
     public function getName()
     {
         return $this->name;
+    }
+
+    public function getValue()
+    {
+        switch (sizeof($this->values)) {
+            case 0:
+                return null;
+            case 1:
+                $value = $this->values[0];
+                if ($value !== null) {
+                    return $this->values[0];
+                }
+                return null;
+            default:
+                return $this->values;
+        }
+    }
+
+    public function isMutable(): bool
+    {
+        return $this->mutable;
+    }
+
+    public function getChildren(): ?array
+    {
+        return $this->children;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function getDefaultValue()
+    {
+        switch (sizeof($this->defaults)) {
+            case 0:
+                return null;
+            case 1:
+                $value = $this->defaults[0];
+                if ($value !== null) {
+                    return $value;
+                }
+                return null;
+            default:
+                return $this->defaults;
+        }
     }
 
 

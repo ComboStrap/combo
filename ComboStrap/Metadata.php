@@ -4,7 +4,9 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
+use action_plugin_combo_qualitymessage;
 use syntax_plugin_combo_disqus;
 
 class Metadata
@@ -18,7 +20,7 @@ class Metadata
         "contributor",
         "creator",
         "date",
-        "description",
+        action_plugin_combo_metadescription::DESCRIPTION_META_KEY, // Dokuwiki implements it as an array (you can't be modified directly)
         "format",
         "last_change",
         "user",
@@ -27,9 +29,10 @@ class Metadata
     ];
 
     /**
-     * The managed meta with the exception of
-     * the {@link action_plugin_combo_metadescription::DESCRIPTION_META_KEY description}
-     * because it's already managed by dokuwiki in description['abstract']
+     * The managed meta
+     * This meta could be replicated
+     *   * in the {@link \syntax_plugin_combo_frontmatter}
+     *   * or in the database
      */
     const MANAGED_METADATA = [
         Page::CANONICAL_PROPERTY,
@@ -48,7 +51,12 @@ class Metadata
         Page::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,
         Analytics::DATE_START,
-        Analytics::DATE_END
+        Analytics::DATE_END,
+        Page::PAGE_ID_ATTRIBUTE,
+        action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
+            Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
+        Page::SLUG_ATTRIBUTE,
+        action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR
     ];
 
     /**

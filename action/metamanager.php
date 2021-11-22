@@ -215,65 +215,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     }
 
-    function updateFrontmatter(Page $page)
-    {
-
-        /**
-         * Default value
-         */
-        $updateFrontMatter = PluginUtility::getConfValue(syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
-        /**
-         * If a frontmatter exists already, we update it
-         */
-        $content = $page->getContent();
-        $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
-        if (strpos($content, $frontMatterStartTag) === 0) {
-            $updateFrontMatter = 1;
-        }
-
-        if ($updateFrontMatter === 0) {
-            return;
-        }
-
-        $pattern = syntax_plugin_combo_frontmatter::PATTERN;
-        $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
-
-        /**
-         * The split normally returns an array
-         * where the first element is empty followed by the frontmatter
-         */
-        $emptyString = array_shift($split);
-        if (!empty($emptyString)) {
-            return;
-        }
-
-        $frontMatter = array_shift($split);
-
-        $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
-        $frontMatterMetadata = array_merge($frontMatterMetadata, $page->getNonDefaultMetadatasValuesInStorageFormat());
-        $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-        /**
-         * Building the document again
-         */
-        $restDocument = "";
-        while (($element = array_shift($split)) != null) {
-            $restDocument .= $element;
-        }
-
-        /**
-         * Build the new document
-         */
-        $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-        $newPageContent = <<<EOF
-$frontMatterStartTag
-$frontMatterJsonString
-$frontMatterEndTag$restDocument
-EOF;
-        $page->upsertContent($newPageContent, "Metadata manager upsert");
-
-    }
-
     /**
      * @param $event
      * @param Page $page
@@ -355,7 +296,7 @@ EOF;
             $responseMessages[] = self::SUCCESS_MESSAGE;
         }
 
-        $this->updateFrontmatter($page);
+        syntax_plugin_combo_frontmatter::updateFrontmatter($page);
 
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)
@@ -452,10 +393,10 @@ EOF;
                 $postMetaValue = $postMeta[$key];
                 unset($postMeta[$key]);
             }
-
+            $managedMetaMessageSuffix = "is a managed metadata, you can't delete it directly (use the metadata manager)";
             if ($postMetaValue === null) {
                 if (in_array($key, Metadata::MANAGED_METADATA)) {
-                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a managed metadata, you can't delete it");
+                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) $managedMetaMessageSuffix");
                     continue;
                 }
                 if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
@@ -467,7 +408,7 @@ EOF;
             } else {
                 if ($value !== $postMetaValue) {
                     if (in_array($key, Metadata::MANAGED_METADATA)) {
-                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a managed metadata, you can't modify it");
+                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) $managedMetaMessageSuffix");
                         continue;
                     }
                     if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {

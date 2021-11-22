@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use DateTime;
@@ -2614,7 +2615,7 @@ class Page extends DokuPath
             /**
              * Old metadata key
              */
-            $publishedString = $this->getPersistentMetadata("published");
+            $publishedString = $this->getPersistentMetadata(Publication::OLD_META_KEY);
         }
         if ($publishedString !== null) {
             try {
@@ -3013,8 +3014,7 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Analytics::TITLE] = $this->getTitle();
                     }
                     break;
-                case
-                syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER:
+                case syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER:
                     /**
                      * @deprecated
                      */
@@ -3053,6 +3053,29 @@ class Page extends DokuPath
                 case Analytics::DATE_END:
                     if ($this->getEndDate() !== null) {
                         $nonDefaultMetadatas[Analytics::DATE_END] = $this->getEndDateAsString();
+                    }
+                    break;
+                case Page::PAGE_ID_ATTRIBUTE:
+                    $nonDefaultMetadatas[Page::PAGE_ID_ATTRIBUTE] = $this->getPageId();
+                    break;
+                case action_plugin_combo_metadescription::DESCRIPTION_META_KEY:
+                    if (!in_array($this->getDescription(), [$this->getDefaultDescription(), null])) {
+                        $nonDefaultMetadatas[action_plugin_combo_metadescription::DESCRIPTION_META_KEY] = $this->getDescription();
+                    }
+                    break;
+                case Page::SLUG_ATTRIBUTE:
+                    if (!in_array($this->getSlug(), [$this->getDefaultSlug(), null])) {
+                        $nonDefaultMetadatas[Page::SLUG_ATTRIBUTE] = $this->getSlug();
+                    }
+                    break;
+                case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
+                    if (!in_array($this->getQualityMonitoringIndicator(), [$this->getDefaultQualityMonitoring(), null])) {
+                        $nonDefaultMetadatas[action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR] = $this->getQualityMonitoringIndicator();
+                    }
+                    break;
+                case Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
+                    if (!in_array($this->getCanBeOfLowQuality(), [true, null])) {
+                        $nonDefaultMetadatas[Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR] = $this->getCanBeOfLowQuality();
                     }
                     break;
                 default:

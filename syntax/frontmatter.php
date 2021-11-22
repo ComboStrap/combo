@@ -60,6 +60,72 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const PATTERN = self::START_TAG . '.*?' . self::END_TAG;
 
 
+    /**
+     * Update the frontmatter with the managed metadata
+     * Used after a submit from the form
+     * @param Page $page
+     */
+    public static function updateFrontmatter(Page $page)
+    {
+
+        /**
+         * Default value
+         */
+        $updateFrontMatter = PluginUtility::getConfValue(syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
+        /**
+         * If a frontmatter exists already, we update it
+         */
+        $content = $page->getContent();
+        $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
+        if (strpos($content, $frontMatterStartTag) === 0) {
+            $updateFrontMatter = 1;
+        }
+
+        if ($updateFrontMatter === 0) {
+            return;
+        }
+
+        $pattern = syntax_plugin_combo_frontmatter::PATTERN;
+        $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
+
+        /**
+         * The split normally returns an array
+         * where the first element is empty followed by the frontmatter
+         */
+        $emptyString = array_shift($split);
+        if (!empty($emptyString)) {
+            return;
+        }
+
+        $frontMatter = array_shift($split);
+
+        $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
+        $nonDefaultMetadatasValuesInStorageFormat = $page->getNonDefaultMetadatasValuesInStorageFormat();
+        $frontMatterMetadata = array_merge($frontMatterMetadata, $nonDefaultMetadatasValuesInStorageFormat);
+        $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        /**
+         * Building the document again
+         */
+        $restDocument = "";
+        while (($element = array_shift($split)) != null) {
+            $restDocument .= $element;
+        }
+
+        /**
+         * Build the new document
+         */
+        $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
+        $newPageContent = <<<EOF
+$frontMatterStartTag
+$frontMatterJsonString
+$frontMatterEndTag$restDocument
+EOF;
+        $page->upsertContent($newPageContent, "Metadata manager upsert");
+
+    }
+
+
     private static function stripFrontmatterTag($match)
     {
         // strip

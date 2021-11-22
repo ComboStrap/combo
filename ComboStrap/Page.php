@@ -1624,6 +1624,7 @@ class Page extends DokuPath
         $array[Analytics::NAME] = $this->getPageNameNotEmpty();
         $array["url"] = $this->getCanonicalUrl();
         $array[self::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
+        $array[Page::SLUG_ATTRIBUTE] = $this->getSlugOrDefault();
 
         /**
          * When creating a page, the file

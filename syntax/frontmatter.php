@@ -46,6 +46,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const STATUS = "status";
     const CANONICAL = "frontmatter";
     const CONF_ENABLE_SECTION_EDITING = 'enableFrontMatterSectionEditing';
+    const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT = "enableFrontMatterOnSubmit ";
+    const CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT = 0;
 
     /**
      * Used in the move plugin
@@ -56,6 +58,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const END_TAG = '---';
     const METADATA_IMAGE_CANONICAL = "metadata:image";
     const PATTERN = self::START_TAG . '.*?' . self::END_TAG;
+
 
     private static function stripFrontmatterTag($match)
     {
@@ -191,7 +194,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
              * Upsert the meta
              */
             $messages = $page->upsertMetadataFromAssociativeArray($jsonArray);
-            foreach ($messages as $message){
+            foreach ($messages as $message) {
                 $message->sendLogMsg();
             }
 
@@ -235,7 +238,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 $state = $data[self::STATUS];
                 if ($state == self::PARSING_STATE_ERROR) {
                     $json = self::stripFrontmatterTag($data[PluginUtility::PAYLOAD]);
-                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. ".\ComboStrap\Json::getValidationLink($json), LogUtility::LVL_MSG_ERROR);
+                    LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. " . \ComboStrap\Json::getValidationLink($json), LogUtility::LVL_MSG_ERROR);
                 }
 
                 /**

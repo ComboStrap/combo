@@ -215,52 +215,63 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     }
 
-    function updateFrontmatter($page, $jsonArray)
+    function updateFrontmatter(Page $page)
     {
+
         /**
-         * Page modification if any
+         * Default value
+         */
+        $updateFrontMatter = PluginUtility::getConfValue(syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
+        /**
+         * If a frontmatter exists already, we update it
          */
         $content = $page->getContent();
         $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
         if (strpos($content, $frontMatterStartTag) === 0) {
+            $updateFrontMatter = 1;
+        }
 
-            $pattern = syntax_plugin_combo_frontmatter::PATTERN;
-            $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
+        if ($updateFrontMatter === 0) {
+            return;
+        }
 
-            /**
-             * The split normally returns an array
-             * where the first element is empty followed by the frontmatter
-             */
-            $emptyString = array_shift($split);
-            if (!empty($emptyString)) {
-                return;
-            }
+        $pattern = syntax_plugin_combo_frontmatter::PATTERN;
+        $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
 
-            $frontMatter = array_shift($split);
+        /**
+         * The split normally returns an array
+         * where the first element is empty followed by the frontmatter
+         */
+        $emptyString = array_shift($split);
+        if (!empty($emptyString)) {
+            return;
+        }
 
-            $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
-            $frontMatterMetadata = array_merge($frontMatterMetadata, $jsonArray);
-            $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $frontMatter = array_shift($split);
 
-            /**
-             * Building the document again
-             */
-            $restDocument = "";
-            while (($element = array_shift($split)) != null) {
-                $restDocument .= $element;
-            }
+        $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
+        $frontMatterMetadata = array_merge($frontMatterMetadata, $page->getNonDefaultMetadatas());
+        $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-            /**
-             * Build the new document
-             */
-            $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-            $newPageContent = <<<EOF
+        /**
+         * Building the document again
+         */
+        $restDocument = "";
+        while (($element = array_shift($split)) != null) {
+            $restDocument .= $element;
+        }
+
+        /**
+         * Build the new document
+         */
+        $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
+        $newPageContent = <<<EOF
 $frontMatterStartTag
 $frontMatterJsonString
 $frontMatterEndTag$restDocument
 EOF;
-            $page->upsertContent($newPageContent, "Metadata manager upsert");
-        }
+        $page->upsertContent($newPageContent, "Metadata manager upsert");
+
     }
 
     /**
@@ -343,6 +354,8 @@ EOF;
         if (sizeof($responseMessages) === 0) {
             $responseMessages[] = self::SUCCESS_MESSAGE;
         }
+
+        $this->updateFrontmatter($page);
 
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)

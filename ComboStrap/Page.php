@@ -1599,7 +1599,7 @@ class Page extends DokuPath
      * used in templating
      */
     public
-    function getMetadataForRendering()
+    function getMetadataForRendering(): array
     {
 
 
@@ -2962,6 +2962,11 @@ class Page extends DokuPath
         }
         return $images;
 
+    }
+
+    public function getNonDefaultMetadatas(): array
+    {
+        return [];
     }
 
 

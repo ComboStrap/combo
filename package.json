@@ -6,7 +6,7 @@
     "private": true,
     "scripts": {
         "watch": "parcel watch",
-        "build": "parcel build --target global"
+        "build": "parcel build --target combo"
     },
     "devDependencies": {
         "@babel/core": "^7.16.0",
@@ -36,9 +36,9 @@
         ]
     },
     "browserslist": "> 0.5%, last 2 versions, not dead",
-    "global": "./resources/library/combo/dist/combo.min.js",
+    "combo": "./resources/library/combo/dist/combo.min.js",
     "targets": {
-        "global": {
+        "combo": {
             "source": "./resources/library/combo/combo.js",
             "context": "browser",
             "outputFormat": "global",

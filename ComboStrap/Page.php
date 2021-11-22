@@ -2195,7 +2195,11 @@ class Page extends DokuPath
             if ($value !== null) return $value;
         }
 
-        return null;
+        if (!Site::isLowQualityProtectionEnable()) {
+            return false;
+        } else {
+            return true;
+        }
 
     }
 

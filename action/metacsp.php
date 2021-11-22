@@ -82,10 +82,18 @@ class action_plugin_combo_metacsp extends DokuWiki_Action_Plugin
         if (strpos($httpHeaderReferer, Site::getBaseUrl()) === false) {
             // not same origin
             $httpDirectives = [
-                "content-security-policy: frame-ancestors 'none'", // the page cannot be used in a iframe (clickjacking),
-                "X-Frame-Options: deny", // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
-                "X-Content-Type-Options: nosniff", // stops a browser from trying to MIME-sniff the content type and forces it to stick with the declared content-type
-                "Referrer-Policy: strict-origin-when-cross-origin" // sends the origin if cross origin otherwise the full refer for same origin
+                // the page cannot be used in a iframe (clickjacking),
+                "content-security-policy: frame-ancestors 'none'",
+                // the page cannot be used in a iframe (clickjacking) - deprecated for frame ancestores
+                "X-Frame-Options: SAMEORIGIN",
+                // stops a browser from trying to MIME-sniff the content type and forces it to stick with the declared content-type
+                "X-Content-Type-Options: nosniff",
+                // sends the origin if cross origin otherwise the full refer for same origin
+                "Referrer-Policy: strict-origin-when-cross-origin",
+                // controls DNS prefetching, allowing browsers to proactively perform domain name resolution on external links, images, CSS, JavaScript, and more. This prefetching is performed in the background, so the DNS is more likely to be resolved by the time the referenced items are needed. This reduces latency when the user clicks a link.
+                "X-DNS-Prefetch-Control: on",
+                // This header stops pages from loading when they detect reflected cross-site scripting (XSS) attacks. Although this protection is not necessary when sites implement a strong Content-Security-Policy disabling the use of inline JavaScript ('unsafe-inline'), it can still provide protection for older web browsers that don't support CSP.
+                "X-XSS-Protection: 1; mode=block"
             ];
         }
         if (!headers_sent()) {

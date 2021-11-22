@@ -129,19 +129,17 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 }
                 $forumShortName = hsc($forumShortName);
 
+                /**
+                 * @deprecated the page id is used
+                 */
                 $disqusIdentifier = $page->getMetadata(self::META_DISQUS_IDENTIFIER);
                 if (empty($disqusIdentifier)) {
 
                     $disqusIdentifier = $attributes[self::ATTRIBUTE_IDENTIFIER];
                     if (empty($disqusIdentifier)) {
-                        $disqusIdentifier = $page->getDokuwikiId();
+                        $disqusIdentifier = $page->getPageId();
                     }
 
-                    $canonical = $page->getCanonicalOrDefault();
-                    if (!empty($canonical)) {
-                        $disqusIdentifier = $canonical;
-                    }
-                    $page->setMetadata(self::META_DISQUS_IDENTIFIER, $disqusIdentifier);
                 }
                 $disqusConfig = "this.page.identifier = \"$disqusIdentifier\";";
 

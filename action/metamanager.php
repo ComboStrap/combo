@@ -250,7 +250,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $frontMatter = array_shift($split);
 
         $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
-        $frontMatterMetadata = array_merge($frontMatterMetadata, $page->getNonDefaultMetadatas());
+        $frontMatterMetadata = array_merge($frontMatterMetadata, $page->getNonDefaultMetadatasValuesInStorageFormat());
         $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
         /**

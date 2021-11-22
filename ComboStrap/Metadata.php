@@ -46,7 +46,9 @@ class Metadata
         Analytics::NAME,
         action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
         Page::LAYOUT_PROPERTY,
-        action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY
+        action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,
+        Analytics::DATE_START,
+        Analytics::DATE_END
     ];
 
     /**

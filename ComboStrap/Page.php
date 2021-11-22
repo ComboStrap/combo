@@ -3,6 +3,7 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use DateTime;
 use dokuwiki\Cache\CacheInstructions;
@@ -11,6 +12,7 @@ use dokuwiki\Extension\Event;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
 use renderer_plugin_combo_analytics;
+use syntax_plugin_combo_disqus;
 use syntax_plugin_combo_frontmatter;
 
 
@@ -1156,7 +1158,7 @@ class Page extends DokuPath
         if (!empty($region)) {
             return $region;
         } else {
-            return Site::getLanguageRegion();
+            return $this->getDefaultRegion();
         }
 
     }
@@ -1172,7 +1174,7 @@ class Page extends DokuPath
     {
         $lang = $this->getLang();
         if (empty($lang)) {
-            return Site::getLang();
+            return $this->getDefaultLang();
         }
         return $lang;
     }
@@ -2569,7 +2571,7 @@ class Page extends DokuPath
          * in current but not persistent
          * and hold the heading 1, see {@link p_get_first_heading}
          */
-        $this->title = $this->getMetadata(Analytics::TITLE);
+        $this->title = $this->getPersistentMetadata(Analytics::TITLE);
         $this->author = $this->getMetadata('creator');
         $this->authorId = $this->getMetadata('user');
 
@@ -2964,9 +2966,112 @@ class Page extends DokuPath
 
     }
 
-    public function getNonDefaultMetadatas(): array
+    public function getNonDefaultMetadatasValuesInStorageFormat(): array
     {
-        return [];
+        $nonDefaultMetadatas = [];
+        foreach (Metadata::MANAGED_METADATA as $metaKey) {
+            switch ($metaKey) {
+                case Page::CANONICAL_PROPERTY:
+                    if ($this->getCanonical() !== $this->getDefaultCanonical()) {
+                        $nonDefaultMetadatas[Page::CANONICAL_PROPERTY] = $this->getCanonical();
+                    }
+                    break;
+                case Page::TYPE_META_PROPERTY:
+                    if (!in_array($this->getType(), [$this->getDefaultType(), null])) {
+                        $nonDefaultMetadatas[Page::TYPE_META_PROPERTY] = $this->getType();
+                    }
+                    break;
+                case Analytics::H1:
+                    if (!in_array($this->getH1(), [$this->getDefaultH1(), null])) {
+                        $nonDefaultMetadatas[Analytics::H1] = $this->getH1();
+                    }
+                    break;
+                case Page::ALIAS_ATTRIBUTE:
+                    $aliases = $this->getAliases();
+                    if (sizeof($aliases) !== 0) {
+                        $nonDefaultMetadatas[Page::ALIAS_ATTRIBUTE] = Alias::toMetadataArray($this->getAliases());
+                    }
+                    break;
+                case Page::IMAGE_META_PROPERTY:
+                    $images = $this->getPageImages();
+                    if (sizeof($images) !== 0) {
+                        $nonDefaultMetadatas[Page::IMAGE_META_PROPERTY] = PageImage::toMetadataArray($this->getPageImages());
+                    };
+                    break;
+                case Page::REGION_META_PROPERTY:
+                    if (!in_array($this->getLocaleRegion(), [$this->getDefaultRegion(), null])) {
+                        $nonDefaultMetadatas[Page::REGION_META_PROPERTY] = $this->getLocaleRegion();
+                    }
+                    break;
+                case Page::LANG_META_PROPERTY:
+                    if (!in_array($this->getLang(), [$this->getDefaultLang(), null])) {
+                        $nonDefaultMetadatas[Page::LANG_META_PROPERTY] = $this->getLang();
+                    }
+                    break;
+                case Analytics::TITLE:
+                    if (!in_array($this->getTitle(), [$this->getDefaultTitle(), null])) {
+                        $nonDefaultMetadatas[Analytics::TITLE] = $this->getTitle();
+                    }
+                    break;
+                case
+                syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER:
+                    /**
+                     * @deprecated
+                     */
+                    $disqus = $this->getMetadata(syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER);
+                    if ($disqus !== null) {
+                        $nonDefaultMetadatas[syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER] = $disqus;
+                    }
+                    break;
+                case Publication::OLD_META_KEY:
+                case Publication::DATE_PUBLISHED:
+                    if ($this->getPublishedTime() !== null) {
+                        $nonDefaultMetadatas[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
+                    }
+                    break;
+                case Analytics::NAME:
+                    if ($this->getPageName() !== $this->getDefaultPageName()) {
+                        $nonDefaultMetadatas[Analytics::NAME] = $this->getPageName();
+                    }
+                    break;
+                case action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY:
+                case action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY:
+                    if ($this->getLdJson() !== null) {
+                        $nonDefaultMetadatas[Analytics::NAME] = $this->getLdJson();
+                    }
+                    break;
+                case Page::LAYOUT_PROPERTY:
+                    if (!in_array($this->getLayout(), [$this->getDefaultLayout(), null])) {
+                        $nonDefaultMetadatas[Page::LAYOUT_PROPERTY] = $this->getLayout();
+                    }
+                    break;
+                case Analytics::DATE_START:
+                    if ($this->getStartDate() !== null) {
+                        $nonDefaultMetadatas[Analytics::DATE_START] = $this->getStartDateAsString();
+                    }
+                    break;
+                case Analytics::DATE_END:
+                    if ($this->getEndDate() !== null) {
+                        $nonDefaultMetadatas[Analytics::DATE_END] = $this->getEndDateAsString();
+                    }
+                    break;
+                default:
+                    LogUtility::msg("The managed metadata ($metaKey) is not taken into account in the non default metadata computation.", LogUtility::LVL_MSG_ERROR);
+            }
+
+
+        }
+        return $nonDefaultMetadatas;
+    }
+
+    private function getDefaultRegion()
+    {
+        return Site::getLanguageRegion();
+    }
+
+    private function getDefaultLang()
+    {
+        return Site::getLang();
     }
 
 

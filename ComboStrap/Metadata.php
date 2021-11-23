@@ -54,7 +54,7 @@ class Metadata
         Analytics::DATE_END,
         Page::PAGE_ID_ATTRIBUTE,
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
-            Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
+        Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
         Page::SLUG_ATTRIBUTE,
         action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR
     ];
@@ -81,5 +81,22 @@ class Metadata
      * The canonical to page metadata
      */
     public const CANONICAL = "page:metadata";
+
+    /**
+     * Delete the managed metadata
+     * @param $metadataArray -  a metadata array
+     * @return array - the metadata array without the managed metadata
+     */
+    public static function deleteManagedMetadata($metadataArray): array
+    {
+
+        $cleanedMetadata = [];
+        foreach ($metadataArray as $key => $value) {
+            if (!in_array($key, Metadata::MANAGED_METADATA)) {
+                $cleanedMetadata[$key] = $value;
+            }
+        }
+        return $cleanedMetadata;
+    }
 
 }

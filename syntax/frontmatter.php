@@ -99,10 +99,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
         $frontMatter = array_shift($split);
 
-        $frontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
+        $originalFrontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
+        $userDefinedMetadata = Metadata::deleteManagedMetadata($originalFrontMatterMetadata);
         $nonDefaultMetadatasValuesInStorageFormat = $page->getNonDefaultMetadatasValuesInStorageFormat();
-        $frontMatterMetadata = array_merge($frontMatterMetadata, $nonDefaultMetadatasValuesInStorageFormat);
-        $frontMatterJsonString = json_encode($frontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $targetFrontMatterMetadata = array_merge($nonDefaultMetadatasValuesInStorageFormat, $userDefinedMetadata);
+        ksort($targetFrontMatterMetadata);
+        $targetFrontMatterJsonString = json_encode($targetFrontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
         /**
          * Building the document again
@@ -118,7 +120,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
         $newPageContent = <<<EOF
 $frontMatterStartTag
-$frontMatterJsonString
+$targetFrontMatterJsonString
 $frontMatterEndTag$restDocument
 EOF;
         $page->upsertContent($newPageContent, "Metadata manager upsert");

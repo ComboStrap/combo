@@ -90,6 +90,9 @@ class Metadata
     public static function deleteManagedMetadata($metadataArray): array
     {
 
+        if (sizeof($metadataArray) === 0) {
+            return $metadataArray;
+        }
         $cleanedMetadata = [];
         foreach ($metadataArray as $key => $value) {
             if (!in_array($key, Metadata::MANAGED_METADATA)) {

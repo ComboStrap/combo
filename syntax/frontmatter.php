@@ -69,50 +69,63 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     {
 
         /**
-         * Default value
+         * Default update value for the frontmatter
          */
         $updateFrontMatter = PluginUtility::getConfValue(syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
+        $originalFrontMatterMetadata = [];
+
         /**
          * If a frontmatter exists already, we update it
          */
         $content = $page->getContent();
         $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
         if (strpos($content, $frontMatterStartTag) === 0) {
+
+            /**
+             * We update it
+             */
             $updateFrontMatter = 1;
+
+            /**
+             * Extract the actual values
+             */
+            $pattern = syntax_plugin_combo_frontmatter::PATTERN;
+            $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
+
+            /**
+             * The split normally returns an array
+             * where the first element is empty followed by the frontmatter
+             */
+            $emptyString = array_shift($split);
+            if (!empty($emptyString)) {
+                return;
+            }
+
+            $frontMatterMatch = array_shift($split);
+            $originalFrontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatterMatch);
+
+            /**
+             * Building the document again
+             */
+            $contentWithoutFrontMatter = "";
+            while (($element = array_shift($split)) != null) {
+                $contentWithoutFrontMatter .= $element;
+            }
+        } else {
+            $contentWithoutFrontMatter = DOKU_LF . $content;
         }
 
         if ($updateFrontMatter === 0) {
             return;
         }
 
-        $pattern = syntax_plugin_combo_frontmatter::PATTERN;
-        $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
 
-        /**
-         * The split normally returns an array
-         * where the first element is empty followed by the frontmatter
-         */
-        $emptyString = array_shift($split);
-        if (!empty($emptyString)) {
-            return;
-        }
-
-        $frontMatter = array_shift($split);
-
-        $originalFrontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatter);
         $userDefinedMetadata = Metadata::deleteManagedMetadata($originalFrontMatterMetadata);
         $nonDefaultMetadatasValuesInStorageFormat = $page->getNonDefaultMetadatasValuesInStorageFormat();
         $targetFrontMatterMetadata = array_merge($nonDefaultMetadatasValuesInStorageFormat, $userDefinedMetadata);
         ksort($targetFrontMatterMetadata);
         $targetFrontMatterJsonString = \ComboStrap\Json::createFromArray($targetFrontMatterMetadata)->toFrontMatterFormat();
 
-        /**
-         * Building the document again
-         */
-        $restDocument = "";
-        while (($element = array_shift($split)) != null) {
-            $restDocument .= $element;
-        }
 
         /**
          * Build the new document
@@ -121,7 +134,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $newPageContent = <<<EOF
 $frontMatterStartTag
 $targetFrontMatterJsonString
-$frontMatterEndTag$restDocument
+$frontMatterEndTag$contentWithoutFrontMatter
 EOF;
         $page->upsertContent($newPageContent, "Metadata manager upsert");
 

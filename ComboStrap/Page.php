@@ -3057,7 +3057,7 @@ class Page extends DokuPath
                     }
                     break;
                 case Analytics::NAME:
-                    if ($this->getPageName() !== $this->getDefaultPageName()) {
+                    if (!in_array($this->getPageName(), [$this->getDefaultPageName(), null])) {
                         $nonDefaultMetadatas[Analytics::NAME] = $this->getPageName();
                     }
                     break;

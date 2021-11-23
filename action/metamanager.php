@@ -224,7 +224,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     {
 
         /**
-         * Boolean default
+         * Boolean form field (default values)
          * are not send back
          */
         $defaultBoolean = [
@@ -243,7 +243,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $aliases = [];
         foreach ($aliasPaths as $key => $imagesPath) {
             if ($imagesPath !== "") {
-                $aliases[$imagesPath] = PageImage::create($imagesPath)
+                $aliases[$imagesPath] = PageImage::create($imagesPath,$page)
                     ->setUsage($imagesUsage[$key]);
             }
         }

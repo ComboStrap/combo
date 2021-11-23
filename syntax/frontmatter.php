@@ -104,7 +104,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $nonDefaultMetadatasValuesInStorageFormat = $page->getNonDefaultMetadatasValuesInStorageFormat();
         $targetFrontMatterMetadata = array_merge($nonDefaultMetadatasValuesInStorageFormat, $userDefinedMetadata);
         ksort($targetFrontMatterMetadata);
-        $targetFrontMatterJsonString = json_encode($targetFrontMatterMetadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $targetFrontMatterJsonString = \ComboStrap\Json::createFromArray($targetFrontMatterMetadata)->toFrontMatterFormat();
 
         /**
          * Building the document again

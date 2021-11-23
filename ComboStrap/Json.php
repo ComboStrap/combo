@@ -6,6 +6,11 @@ namespace ComboStrap;
 
 class Json
 {
+    const FIELD_SEPARATOR = ",";
+    const START_JSON = self::TYPE_OBJECT . DOKU_LF;
+    const TYPE_OBJECT = "{";
+    const PARENT_TYPE_ARRAY = "[";
+    const TAB_SPACES_COUNTER = 4;
     private $jsonString;
     /**
      * @var array
@@ -45,7 +50,12 @@ class Json
         return json_encode($jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
-    public function toFrontMatterFormat()
+    /**
+     * This formatting make the object on one line for a list of object
+     * making the frontmatter compact (one line, one meta)
+     * @return string
+     */
+    public function toFrontMatterFormat(): string
     {
         $jsonArray = $this->getJsonArray();
         if (sizeof($jsonArray) === 0) {
@@ -57,38 +67,97 @@ class Json
         return $jsonString;
     }
 
-    private function flatRecursiveEncoding($jsonValue, &$jsonString, $level = 0)
+    private function flatRecursiveEncoding(array $jsonProperty, &$jsonString, $level = 0, $endOfFieldCharacter = DOKU_LF, $type = self::TYPE_OBJECT)
     {
         /**
          * Open the root object
          */
-        if ($level === 0) {
-            $jsonString = "{" . DOKU_LF;
-        }
-        if (is_array($jsonValue)) {
-            foreach ($jsonValue as $key => $value) {
-                $tab = str_repeat(" ", ($level + 1) * 4);
-                $jsonString .= $tab;
-                $jsonEncodedKey = json_encode($key);
-                if (is_array($value)) {
-                    $parentLevel = $level + 1;
-                    $jsonString .= "$jsonEncodedKey: [" . DOKU_LF;
-                    $this->flatRecursiveEncoding($value, $jsonString, $parentLevel);
-                    $jsonString .= $tab . "]" . DOKU_LF;
-                } else {
-                    $jsonEncodedValue = json_encode($value);
-                    $jsonString .= "$jsonEncodedKey:$jsonEncodedValue," . DOKU_LF;
-                }
-            }
+        if ($type === self::TYPE_OBJECT) {
+            $jsonString .= "{";
         } else {
-            $jsonEncodedValue = json_encode($jsonValue);
-            $jsonString .= "$jsonEncodedValue," . DOKU_LF;
+            $jsonString .= "[";
         }
+
         /**
-         * Close the object
+         * Level indentation
          */
-        if ($level === 0) {
-            $jsonString .= "}" . DOKU_LF;
+        $levelSpaceIndentation = str_repeat(" ", ($level + 1) * self::TAB_SPACES_COUNTER);
+
+        /**
+         * Loop
+         */
+        $elementCounter = 0;
+        foreach ($jsonProperty as $key => $value) {
+
+            $elementCounter++;
+
+            /**
+             * Close the previous property
+             */
+            $isFirstProperty = $elementCounter === 1;
+            if ($isFirstProperty && ($type !== self::TYPE_OBJECT || $level === 0)) {
+                $jsonString .= DOKU_LF;
+            }
+            if (!$isFirstProperty) {
+                $jsonString .= ",$endOfFieldCharacter";
+            }
+            if ($endOfFieldCharacter === DOKU_LF) {
+                $tab = $levelSpaceIndentation;
+            } else {
+                $tab = " ";
+            }
+            $jsonString .= $tab;
+
+            /**
+             * Recurse
+             */
+            $jsonEncodedKey = json_encode($key);
+            if (is_array($value)) {
+                $childLevel = $level + 1;
+                if (is_numeric($key)) {
+                    /**
+                     * List of object
+                     */
+                    $childType = self::TYPE_OBJECT;
+                    $childEndOField = "";
+                } else {
+                    /**
+                     * Array
+                     */
+                    $jsonString .= "$jsonEncodedKey: ";
+                    $childType = self::PARENT_TYPE_ARRAY;
+                    $childEndOField = $endOfFieldCharacter;
+                }
+                $this->flatRecursiveEncoding($value, $jsonString, $childLevel, $childEndOField, $childType);
+
+            } else {
+                /**
+                 * Single property
+                 */
+                $jsonEncodedValue = json_encode($value);
+                $jsonString .= "$jsonEncodedKey: $jsonEncodedValue";
+
+            }
+
+        }
+
+        /**
+         * Close the object or array
+         */
+        if ($type === self::TYPE_OBJECT) {
+            if ($level === 0) {
+                $jsonString .= DOKU_LF;
+            } else {
+                $jsonString .= " ";
+            }
+            $jsonString .= "}";
+
+        } else {
+            /**
+             * The array is not going one level back
+             */
+            $closingLevelSpaceIndentation = str_repeat(" ", $level * self::TAB_SPACES_COUNTER);
+            $jsonString .= DOKU_LF . $closingLevelSpaceIndentation . "]";
         }
     }
 

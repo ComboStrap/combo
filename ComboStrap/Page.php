@@ -180,7 +180,18 @@ class Page extends DokuPath
      * When the value of a metadata has changed
      */
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
+
+    /**
+     * To indicate from where the description comes
+     * This is when it's the original dokuwiki description
+     */
     const DESCRIPTION_DOKUWIKI_ORIGIN = "dokuwiki";
+    /**
+     * The origin of the description was set to frontmatter
+     * due to historic reason to say to it comes from combo
+     * (You may set it via the metadata manager and get this origin)
+     */
+    const DESCRIPTION_COMBO_ORIGIN = syntax_plugin_combo_frontmatter::CANONICAL;
 
 
     /**
@@ -1324,6 +1335,22 @@ class Page extends DokuPath
             }
         }
 
+        /**
+         * Description Plugin integration
+         * https://github.com/lupo49/plugin-description/blob/master/syntax.php#L42
+         */
+        $pluginDescriptionMeta = 'plugin_description';
+        $descriptionPlugin = $this->getMetadata($pluginDescriptionMeta);
+        if ($descriptionPlugin !== null && isset($descriptionPlugin["keywords"])) {
+            $description = $descriptionPlugin["keywords"];
+            $this->descriptionOrigin = $pluginDescriptionMeta;
+            return [$description, ""];
+        }
+
+        /**
+         * Dokuwiki description
+         * With some trick
+         */
         // suppress the carriage return
         $description = str_replace("\n", " ", $descriptionArray['abstract']);
         // suppress the h1
@@ -2370,7 +2397,7 @@ class Page extends DokuPath
     {
 
         if ($description === "" || $description === null) {
-            if ($this->descriptionOrigin === syntax_plugin_combo_frontmatter::CANONICAL) {
+            if ($this->descriptionOrigin === self::DESCRIPTION_COMBO_ORIGIN) {
                 throw new ExceptionCombo("The description cannot be empty", Page::DESCRIPTION_PROPERTY);
             } else {
                 // The original description is from Dokuwiki, we don't send an error
@@ -2400,7 +2427,7 @@ class Page extends DokuPath
         $this->setMetadata(Page::DESCRIPTION_PROPERTY,
             array(
                 "abstract" => $description,
-                "origin" => syntax_plugin_combo_frontmatter::CANONICAL
+                "origin" => self::DESCRIPTION_COMBO_ORIGIN
             ));
 
         return $this;
@@ -3095,6 +3122,11 @@ class Page extends DokuPath
     private function getDefaultLang()
     {
         return Site::getLang();
+    }
+
+    public function getDescriptionOrigin(): string
+    {
+        return $this->descriptionOrigin;
     }
 
 

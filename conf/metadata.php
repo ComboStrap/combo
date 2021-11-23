@@ -322,3 +322,8 @@ $meta[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = array(
  * Canonical Url Type
  */
 $meta[Page::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' =>  Page::CONF_CANONICAL_URL_TYPE_VALUES);
+
+/**
+ * Frontmatter on sumbit
+ */
+$meta[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = array("onoff");

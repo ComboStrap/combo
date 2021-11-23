@@ -247,4 +247,9 @@ $lang[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = Plugin
  */
 $lang[Page::CONF_CANONICAL_URL_TYPE] = PluginUtility::getDocumentationHyperLink("page:url", "The type of url used for a page.");
 
+/**
+ * Frontmatter
+ */
+$lang[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::CANONICAL, "If checked, the metadata manager will create a frontmatter on submit.");
+
 ?>

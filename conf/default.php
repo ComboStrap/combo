@@ -39,7 +39,7 @@ $conf['disqusDefaultAttributes'] = 'shortName=""';
 /**
  * Enable ie {@link action_plugin_combo_router::ROUTER_ENABLE_CONF}
  */
-$conf['enableRouter']=1;
+$conf['enableRouter'] = 1;
 /**
  * ie {@link action_plugin_combo_router::GO_TO_BEST_END_PAGE_NAME}
  */
@@ -367,3 +367,9 @@ $conf["enableEnhancedLinkWizard"] = 1;
  * {@link Page::CONF_CANONICAL_URL_TYPE_DEFAULT}
  */
 $conf["pageUrlType"] = "page path";
+
+/**
+ * {@link syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT}
+ * {@link syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT}
+ */
+$conf["enableFrontMatterOnSubmit"] = 0;

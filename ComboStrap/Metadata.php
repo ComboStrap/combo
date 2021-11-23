@@ -12,6 +12,10 @@ use syntax_plugin_combo_disqus;
 class Metadata
 {
 
+    /**
+     * We allow only to modify the
+     * persistent meta
+     */
     const NOT_MODIFIABLE_METADATA = [
         Analytics::PATH,
         Analytics::DATE_CREATED,
@@ -21,7 +25,7 @@ class Metadata
         "creator",
         "date",
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY, // Dokuwiki implements it as an array (you can't be modified directly)
-        "format",
+        // "format",
         "last_change",
         "user",
         "internal", // toc, cache, ...
@@ -60,19 +64,17 @@ class Metadata
     ];
 
     /**
-     * Current metadata
-     * will not persist through
-     * the next metadata rendering.
+     * Current metadata / runtime metadata / calculated metadata
+     * The data may be deleted
      * https://www.dokuwiki.org/devel:metadata#metadata_persistence
      */
     public const CURRENT_METADATA = "current";
     /**
-     * Persistent metadata
-     * will persist through
-     * the next metadata rendering.
+     * Persistent metadata (data that should be in a backup)
      *
      * They are used as the default of the current metadata
      * and is never cleaned
+     *
      * https://www.dokuwiki.org/devel:metadata#metadata_persistence
      */
     public const PERSISTENT_METADATA = "persistent";

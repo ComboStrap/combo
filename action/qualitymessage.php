@@ -82,7 +82,7 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 return;
             }
 
-            $htmlNote = $this->createQualityNote($this);
+            $htmlNote = $this->createQualityNote();
             if ($htmlNote != null) {
                 ptln($htmlNote);
             }
@@ -91,10 +91,9 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
     }
 
     /**
-     * @param $plugin - Plugin
      * @return string|null
      */
-    static public function createQualityNote($plugin): ?string
+    static public function createQualityNote(): ?string
     {
         $page = Page::createPageFromRequestedPage();
 
@@ -149,7 +148,6 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
                 $qualityScore = $analyticsArray[Analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
                 $message = Message::createInfoMessage()
-                    ->setPlugin($plugin)
                     ->addHtmlContent("<p>Well played, you got a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore} !</p>");
 
                 if ($page->isLowQualityPage()) {

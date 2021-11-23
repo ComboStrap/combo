@@ -137,7 +137,8 @@ class action_plugin_combo_routermessage extends ActionPlugin
             }
 
             if ($event->data === 'show' || $event->data === 'edit' || $event->data === 'search') {
-                $html = $message->setPlugin($this)
+                $html = $message
+                    ->setPlugin($this)
                     ->setClass(action_plugin_combo_routermessage::REDIRECT_MANAGER_BOX_CLASS)
                     ->setCanonical(action_plugin_combo_router::CANONICAL)
                     ->setSignatureName(action_plugin_combo_router::URL_MANAGER_NAME)

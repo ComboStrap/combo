@@ -186,7 +186,7 @@ class DatabasePage
         /**
          * Set the replication date
          */
-        $this->page->setMetadata(self::DATE_REPLICATION, $replicationDate);
+        $this->page->setRuntimeMetadata(self::DATE_REPLICATION, $replicationDate);
         return true;
 
     }

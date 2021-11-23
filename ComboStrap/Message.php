@@ -181,8 +181,15 @@ EOF;
         return $message;
     }
 
-    public
-    function setPlugin($plugin): Message
+    /**
+     * This is barely used because the syntax plugin does
+     * not even inherit from {@link \dokuwiki\Extension\Plugin}
+     * but from {@link \dokuwiki\Parsing\ParserMode\Plugin}
+     * What fuck up is fucked upx
+     * @param Plugin $plugin
+     * @return $this
+     */
+    public function setPlugin(Plugin $plugin): Message
     {
         $this->plugin = $plugin;
         return $this;

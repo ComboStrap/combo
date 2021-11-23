@@ -566,7 +566,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
             $ID,
             array("format" => array($mode => array("Content-Type" => 'application/json'))),
             false,
-            true // Persistence is needed because there is a cache
+            false // Persistence is needed because there is a cache
         );
         $json_encoded = json_encode($finalStats, JSON_PRETTY_PRINT);
 

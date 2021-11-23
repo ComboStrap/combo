@@ -106,7 +106,12 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
         if ($level == 1) {
 
             global $ID;
-            p_set_metadata($ID, array(Analytics::H1_PARSED => trim($text)));
+            p_set_metadata(
+                $ID,
+                array(Analytics::H1_PARSED => trim($text)),
+                false,
+                false // runtime meta
+            );
 
         }
     }

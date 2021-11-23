@@ -1688,13 +1688,14 @@ class Page extends DokuPath
      *
      * @param $key
      * @param $value
-     * @param $default - use in case of boolean
+     * @param null $default - use in case of boolean
+     * @param string $type
      */
     public
-    function setMetadata($key, $value, $default = null)
+    function setMetadata($key, $value, $default = null, string $type = Metadata::PERSISTENT_METADATA)
     {
 
-        $oldValue = $this->metadatas[Metadata::PERSISTENT_METADATA][$key];
+        $oldValue = $this->metadatas[$type][$key];
         if (is_bool($value)) {
             if ($oldValue === null) {
                 $oldValue = $default;
@@ -1705,9 +1706,9 @@ class Page extends DokuPath
         if ($oldValue !== $value) {
 
             if ($value !== null) {
-                $this->metadatas['persistent'][$key] = $value;
+                $this->metadatas[$type][$key] = $value;
             } else {
-                unset($this->metadatas['persistent'][$key]);
+                unset($this->metadatas[$type][$key]);
             }
             /**
              * Metadata in Dokuwiki is fucked up.
@@ -1724,7 +1725,9 @@ class Page extends DokuPath
             p_set_metadata($this->getDokuwikiId(),
                 [
                     $key => $value
-                ]
+                ],
+                false,
+                $type === Metadata::PERSISTENT_METADATA
             );
             /**
              * Event
@@ -2161,8 +2164,13 @@ class Page extends DokuPath
     public
     function setLowQualityIndicatorCalculation($bool): Page
     {
+
         $this->lowQualityIndicatorCalculated = $bool;
-        return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool);
+        /**
+         * It's a calculated metadata, we don't need it to be persistent
+         */
+        $type = Metadata::CURRENT_METADATA;
+        return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool, $type);
     }
 
 
@@ -2178,15 +2186,16 @@ class Page extends DokuPath
      * and that the protection is on, delete the cache
      * @param string $lowQualityAttributeName
      * @param $value
+     * @param string $type
      * @return Page
      */
     private
-    function setQualityIndicatorAndDeleteCacheIfNeeded(string $lowQualityAttributeName, $value): Page
+    function setQualityIndicatorAndDeleteCacheIfNeeded(string $lowQualityAttributeName, $value, string $type = Metadata::PERSISTENT_METADATA): Page
     {
         $actualValue = $this->getMetadataAsBoolean($lowQualityAttributeName);
         if ($actualValue === null || $value !== $actualValue) {
             $beforeLowQualityPage = $this->isLowQualityPage();
-            $this->setMetadata($lowQualityAttributeName, $value);
+            $this->setMetadata($lowQualityAttributeName, $value, null, $type);
             $afterLowQualityPage = $this->isLowQualityPage();
             if ($beforeLowQualityPage !== $afterLowQualityPage) {
                 /**
@@ -3127,6 +3136,17 @@ class Page extends DokuPath
     public function getDescriptionOrigin(): string
     {
         return $this->descriptionOrigin;
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     * @return Page
+     */
+    public function setRuntimeMetadata(string $key, string $value): Page
+    {
+        $this->setMetadata($key, $value, null, Metadata::CURRENT_METADATA);
+        return $this;
     }
 
 

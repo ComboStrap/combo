@@ -42,7 +42,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 .sendFormDataAsJson(formData);
             modalViewer.reset();
             modalManager.reset();
-            await processResponse(response,() => openMetaViewer(modalManager, pageId));
+            await processResponse(response, () => openMetaViewer(modalViewer, modalManager, pageId));
         });
         modalViewer
             .setCallBackOnClose(() => openMetadataManager(pageId))
@@ -102,7 +102,7 @@ window.addEventListener("DOMContentLoaded", function () {
          */
         let modalManagerId = combo.toHtmlId(`combo-meta-manager-page-${pageId}`);
         let managerModal = combo.getOrCreateModal(modalManagerId)
-        if(managerModal.wasBuild()){
+        if (managerModal.wasBuild()) {
             managerModal.show();
             return;
         }

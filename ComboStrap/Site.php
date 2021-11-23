@@ -13,6 +13,9 @@
 namespace ComboStrap;
 
 
+
+use RuntimeException;
+
 class Site
 {
 
@@ -146,8 +149,8 @@ class Site
 
             if (extension_loaded("intl")) {
                 $locale = locale_get_default();
-                $localeParts = preg_split("/_/",$locale,2);
-                if(sizeof($localeParts)===2){
+                $localeParts = preg_split("/_/", $locale, 2);
+                if (sizeof($localeParts) === 2) {
                     return $localeParts[1];
                 }
             }
@@ -304,7 +307,12 @@ class Site
     public static function getDataDirectory()
     {
         global $conf;
-        return File::createFromPath( $conf['datadir'])->getParent()->getAbsoluteFileSystemPath();
+        $dataDirectory = $conf['datadir'];
+        if($dataDirectory===null){
+            throw new RuntimeException("The base directory ($dataDirectory) is null");
+        }
+        $file = File::createFromPath($dataDirectory)->getParent();
+        return $file->getAbsoluteFileSystemPath();
     }
 
     public static function isLowQualityProtectionEnable(): bool

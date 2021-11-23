@@ -51,7 +51,6 @@ require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/ConditionalValue.php');
-require_once(__DIR__ . '/ConfUtility.php');
 require_once(__DIR__ . '/DatabasePage.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
@@ -1092,7 +1091,7 @@ class PluginUtility
     static function setConf($key, $value, $namespace = 'plugin')
     {
         global $conf;
-        if ($namespace != null) {
+        if ($namespace !== null) {
             $conf[$namespace][PluginUtility::PLUGIN_BASE_NAME][$key] = $value;
         } else {
             $conf[$key] = $value;

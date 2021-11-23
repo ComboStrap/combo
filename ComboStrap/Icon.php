@@ -55,6 +55,7 @@ class Icon
     );
 
     const CONF_DEFAULT_ICON_LIBRARY = "defaultIconLibrary";
+    const CONF_DEFAULT_ICON_LIBRARY_DEFAULT = self::MATERIAL_DESIGN_ACRONYM;
 
     /**
      * Deprecated library acronym / name
@@ -69,7 +70,7 @@ class Icon
      */
     const PUBLIC_LIBRARY_ACRONYM = array(
         "bi" => self::BOOTSTRAP,
-        "mdi" => self::MATERIAL_DESIGN,
+        self::MATERIAL_DESIGN_ACRONYM => self::MATERIAL_DESIGN,
         "fe" => self::FEATHER,
         "codicon" => self::CODE_ICON,
         "logos" => self::LOGOS,
@@ -82,6 +83,7 @@ class Icon
     const CODE_ICON = "codicon";
     const LOGOS = "logos";
     const CARBON = "carbon";
+    const MATERIAL_DESIGN_ACRONYM = "mdi";
 
 
     /**
@@ -89,7 +91,7 @@ class Icon
      * @param TagAttributes $tagAttributes -  the icon attributes
      * @return bool|mixed - false if any error or the HTML
      */
-    static public function renderIconByAttributes($tagAttributes)
+    static public function renderIconByAttributes(TagAttributes $tagAttributes)
     {
 
 
@@ -126,7 +128,7 @@ class Icon
         } else {
 
             // It may be a icon already downloaded
-            $iconNameSpace = ConfUtility::getConf(self::CONF_ICONS_MEDIA_NAMESPACE);
+            $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE,self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
             if (substr($iconNameSpace, 0, 1) != DokuPath::PATH_SEPARATOR) {
                 $iconNameSpace = DokuPath::PATH_SEPARATOR . $iconNameSpace;
             }
@@ -162,7 +164,7 @@ class Icon
 
                 // Name parsing to extract the library name and icon name
                 $sepPosition = strpos($iconNameAttribute, ":");
-                $library = PluginUtility::getConfValue(self::CONF_DEFAULT_ICON_LIBRARY);
+                $library = PluginUtility::getConfValue(self::CONF_DEFAULT_ICON_LIBRARY, self::CONF_DEFAULT_ICON_LIBRARY_DEFAULT);
                 $iconName = $iconNameAttribute;
                 if ($sepPosition != false) {
                     $library = substr($iconNameAttribute, 0, $sepPosition);

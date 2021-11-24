@@ -3035,7 +3035,7 @@ class Page extends DokuPath
     public function getNonDefaultMetadatasValuesInStorageFormat(): array
     {
         $nonDefaultMetadatas = [];
-        foreach (Metadata::MANAGED_METADATA as $metaKey) {
+        foreach (Metadata::FORM_MANAGED_METADATA as $metaKey) {
             switch ($metaKey) {
                 case Page::CANONICAL_PROPERTY:
                     if ($this->getCanonical() !== $this->getDefaultCanonical()) {

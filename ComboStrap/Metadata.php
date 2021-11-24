@@ -25,24 +25,31 @@ class Metadata
         "creator",
         "date",
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY, // Dokuwiki implements it as an array (you can't modify it directly)
+        "last_change" // not sure why it's in the persistent data
     ];
 
+    /**
+     * Metadata that we can lose
+     * because they are generated
+     */
     const RUNTIME_META = [
         "format",
-        "last_change",
-        "user",
         "internal", // toc, cache, ...
-        "relation"
+        "relation",
+        DatabasePage::DATE_REPLICATION,
+        Analytics::H1_PARSED,
+        Page::LOW_QUALITY_INDICATOR_CALCULATED
     ];
 
 
     /**
-     * The managed meta
+     * The meta that are modifiable in the form.
+     *
      * This meta could be replicated
      *   * in the {@link \syntax_plugin_combo_frontmatter}
      *   * or in the database
      */
-    const MANAGED_METADATA = [
+    const FORM_MANAGED_METADATA = [
         Page::CANONICAL_PROPERTY,
         Page::TYPE_META_PROPERTY,
         Analytics::H1,
@@ -51,7 +58,6 @@ class Metadata
         Page::REGION_META_PROPERTY,
         Page::LANG_META_PROPERTY,
         Analytics::TITLE,
-        syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
         Publication::OLD_META_KEY,
         Publication::DATE_PUBLISHED,
         Analytics::NAME,
@@ -60,11 +66,11 @@ class Metadata
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,
         Analytics::DATE_START,
         Analytics::DATE_END,
-        Page::PAGE_ID_ATTRIBUTE,
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
         Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
         Page::SLUG_ATTRIBUTE,
-        action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR
+        action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
+        Page::KEYWORDS_ATTRIBUTE
     ];
 
     /**
@@ -101,7 +107,7 @@ class Metadata
         }
         $cleanedMetadata = [];
         foreach ($metadataArray as $key => $value) {
-            if (!in_array($key, Metadata::MANAGED_METADATA)) {
+            if (!in_array($key, Metadata::FORM_MANAGED_METADATA)) {
                 $cleanedMetadata[$key] = $value;
             }
         }
@@ -133,6 +139,22 @@ class Metadata
         }
         $metaArray[] = $attributes;
 
+    }
+
+    /**
+     * Delete the runtime if present
+     * (They were saved in persistent)
+     */
+    public static function deleteIfPresent(array &$persistentPageMeta, array $attributeToDeletes): bool
+    {
+        $unsetWasPerformed = false;
+        foreach ($attributeToDeletes as $runtimeMeta) {
+            if (isset($persistentPageMeta[$runtimeMeta])) {
+                unset($persistentPageMeta[$runtimeMeta]);
+                $unsetWasPerformed = true;
+            }
+        }
+        return $unsetWasPerformed;
     }
 
 }

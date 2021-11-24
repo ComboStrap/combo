@@ -243,7 +243,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $aliases = [];
         foreach ($aliasPaths as $key => $imagesPath) {
             if ($imagesPath !== "") {
-                $aliases[$imagesPath] = PageImage::create($imagesPath,$page)
+                $aliases[$imagesPath] = PageImage::create($imagesPath, $page)
                     ->setUsage($imagesUsage[$key]);
             }
         }
@@ -298,6 +298,25 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         syntax_plugin_combo_frontmatter::updateFrontmatter($page);
 
+        /**
+         * Delete runtime in persistent
+         */
+        $metadata = $page->getMetadatas();
+        $persistent = &$metadata[Metadata::PERSISTENT_METADATA];
+        $runtime = Metadata::RUNTIME_META;
+        if (PluginUtility::isDevOrTest()) {
+            // Now known as page id
+            // Not runtime but as polluted the dev environment
+            $runtime[] = "uuid";
+        }
+        $deleteWasPerformed = Metadata::deleteIfPresent($persistent, $runtime);
+        if ($deleteWasPerformed) {
+            p_save_metadata($page->getDokuwikiId(), $metadata);
+        }
+
+        /**
+         * Response
+         */
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)
             ->sendMessage($responseMessages);
@@ -366,10 +385,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private function handleViewerPost(Doku_Event $event, Page $page, array $post)
     {
 
-        /**
-         * Delete the controlled meta that are no more present in the frontmatter
-         * if they exists
-         */
         $meta = $page->getMetadatas();
         /**
          * @var Message[]
@@ -378,59 +393,78 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Only Persistent, current cannot be modified
          */
-        $metadataType = Metadata::PERSISTENT_METADATA;
-        $postMeta = json_decode($post[$metadataType], true);
+        $persistentMetadataType = Metadata::PERSISTENT_METADATA;
+        $postMeta = json_decode($post[$persistentMetadataType], true);
         if ($postMeta === null) {
             HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
                 ->setEvent($event)
-                ->sendMessage("The metadata $metadataType should be in json format");
+                ->sendMessage("The metadata $persistentMetadataType should be in json format");
             return;
         }
-        $pageMeta = &$meta[$metadataType];
-        foreach ($pageMeta as $key => $value) {
+        $persistentPageMeta = &$meta[$persistentMetadataType];
+
+
+        $managedMetaMessageSuffix = "is a managed metadata, you need to use the metadata manager to delete it";
+
+        /**
+         * Process the actual attribute
+         */
+        foreach ($persistentPageMeta as $key => $value) {
             $postMetaValue = null;
             if (isset($postMeta[$key])) {
                 $postMetaValue = $postMeta[$key];
                 unset($postMeta[$key]);
             }
-            $managedMetaMessageSuffix = "is a managed metadata, you can't delete it directly (use the metadata manager)";
+
             if ($postMetaValue === null) {
-                if (in_array($key, Metadata::MANAGED_METADATA)) {
-                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) $managedMetaMessageSuffix");
+                if (in_array($key, Metadata::FORM_MANAGED_METADATA)) {
+                    $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) $managedMetaMessageSuffix");
                     continue;
                 }
                 if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
-                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't delete it");
+                    $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) is a internal metadata, you can't delete it");
                     continue;
                 }
-                unset($pageMeta[$key]);
-                $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) with the value ($value) was deleted");
+                unset($persistentPageMeta[$key]);
+                $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) with the value ($value) was deleted");
             } else {
                 if ($value !== $postMetaValue) {
-                    if (in_array($key, Metadata::MANAGED_METADATA)) {
-                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) $managedMetaMessageSuffix");
+                    if (in_array($key, Metadata::FORM_MANAGED_METADATA)) {
+                        $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) $managedMetaMessageSuffix");
                         continue;
                     }
                     if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
-                        $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't modify it");
+                        $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) is a internal metadata, you can't modify it");
                         continue;
                     }
-                    $pageMeta[$key] = $postMetaValue;
-                    $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
+                    $persistentPageMeta[$key] = $postMetaValue;
+                    $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) was updated to the value ($postMetaValue) - Old value ($value)");
                 }
             }
         }
+        /**
+         * Process the new attribute
+         */
         foreach ($postMeta as $key => $value) {
-            if (in_array($key, Metadata::MANAGED_METADATA)) {
+            if (in_array($key, Metadata::FORM_MANAGED_METADATA)) {
+                // This meta should be modified via the form
+                $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) can only be added via the meta manager");
                 continue;
             }
             if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
+                // this meta are not modifiable
+                $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) is a internal metadata, you can't modify it");
                 continue;
             }
-            $pageMeta[$key] = $value;
-            $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) was created with the value ($value)");
+            $persistentPageMeta[$key] = $value;
+            $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) was created with the value ($value)");
         }
 
+        /**
+         * Delete the runtime if present
+         * (They were saved in persistent)
+         */
+        Metadata::deleteIfPresent($persistentPageMeta, Metadata::RUNTIME_META);
 
         p_save_metadata($page->getDokuwikiId(), $meta);
 
@@ -500,9 +534,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
         );
 
-        // Path
+        // Keywords
+
+
         $formMeta->addField(FormMetaField::create(Page::KEYWORDS_ATTRIBUTE)
-            ->addValue($page->getKeywords(),$page->getDefaultKeywords())
+            ->addValue(
+                action_plugin_combo_metakeywords::toFormValue($page->getKeywords()),
+                action_plugin_combo_metakeywords::toFormValue($page->getDefaultKeywords())
+            )
             ->setLabel("Keywords")
             ->setMutable(true)
             ->setCanonical(Page::KEYWORDS_ATTRIBUTE)

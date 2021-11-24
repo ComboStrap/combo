@@ -13,6 +13,16 @@ class action_plugin_combo_metakeywords extends DokuWiki_Action_Plugin
 {
 
 
+
+    public static function toFormValue($getKeywords): ?string
+    {
+        if ($getKeywords !== null) {
+            return implode(",", $getKeywords);
+        }
+        return null;
+    }
+
+
     public function register(Doku_Event_Handler $controller)
     {
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'meta_keywords', array());

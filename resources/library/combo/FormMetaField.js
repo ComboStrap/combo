@@ -364,7 +364,13 @@ export default class FormMetaField {
 
         } else {
 
-            let htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
+            let htmlPlaceholder = '';
+            if (mutable) {
+                htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
+            } else {
+                htmlPlaceholder = `placeholder="No value"`;
+            }
+
             if (!(defaultValue === null || defaultValue === undefined)) {
                 htmlPlaceholder = `placeholder="${defaultValue}"`;
             }
@@ -425,7 +431,7 @@ export default class FormMetaField {
                     inputType = "checkbox";
                     htmlClass = "form-check-input";
                     if (defaultValue !== null) {
-                        if(typeof defaultValue === "boolean"){
+                        if (typeof defaultValue === "boolean") {
                             // the inverse of the default value is send
                             // you don't modify a default
                             defaultValue = !defaultValue;

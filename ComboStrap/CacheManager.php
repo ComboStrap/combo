@@ -12,9 +12,14 @@ class CacheManager
     /**
      * The meta key that has the expiration date
      */
-    const DATE_CACHE_EXPIRATION_META_KEY = "date_cache_expiration";
+    const META_CACHE_EXPIRATION_DATE_NAME = "date_cache_expiration";
+    /**
+     * The meta that has the cron expression
+     */
+    const META_CACHE_EXPIRATION_FREQUENCY_NAME = "cache_expiration_frequency";
     const RESULT_STATUS = 'result';
     const DATE_MODIFIED = 'ftime';
+    public const PAGE_CACHE_MANAGEMENT_CANONICAL = "page:cache";
 
     /**
      * Just an utility variable to tracks the slot processed

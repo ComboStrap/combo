@@ -70,7 +70,8 @@ class Metadata
         Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
         Page::SLUG_ATTRIBUTE,
         action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
-        Page::KEYWORDS_ATTRIBUTE
+        Page::KEYWORDS_ATTRIBUTE,
+        CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME
     ];
 
     /**

@@ -6,6 +6,7 @@ namespace ComboStrap;
 use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
+use Cron\CronExpression;
 use DateTime;
 use dokuwiki\Cache\CacheInstructions;
 use dokuwiki\Cache\CacheRenderer;
@@ -286,6 +287,11 @@ class Page extends DokuPath
      */
     private $pageImages;
     private $keywords;
+    /**
+     * @var string
+     */
+    private $cacheExpirationFrequency;
+    private $cacheExpirationDate;
 
     /**
      * Page constructor.
@@ -1723,6 +1729,10 @@ class Page extends DokuPath
              * Also don't change the type of the value to a string
              * otherwise dokuwiki will not see a change
              * between true and a string and will not persist the value
+             *
+             * A metadata is also not immediately flushed on disk
+             * in a test when rendering
+             * They are going into the global $METADATA_RENDERERS
              */
             p_set_metadata($this->getDokuwikiId(),
                 [
@@ -2686,31 +2696,29 @@ class Page extends DokuPath
             $this->publishedDate = null;
         }
 
-        $startDateString = $this->getMetadata(Analytics::DATE_START);
-        if ($startDateString !== null) {
-            try {
-                $this->startDate = Iso8601Date::createFromString($startDateString)->getDateTime();
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("The start date property of the page ($this) has a value ($startDateString) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            }
-        } else {
-            $this->startDate = null;
+        try {
+            $this->startDate = $this->getMetadataAsDate(Analytics::DATE_START);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
 
-        $endDateString = $this->getMetadata(Analytics::DATE_END);
-        if ($endDateString !== null) {
-            try {
-                $this->endDate = Iso8601Date::createFromString($endDateString)->getDateTime();
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("The end date property of the page ($this) has a value ($endDateString) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            }
-        } else {
-            $this->endDate = null;
+        try {
+            $this->endDate = $this->getMetadataAsDate(Analytics::DATE_END);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
+
 
         $keywordsString = $this->getMetadata(Page::KEYWORDS_ATTRIBUTE);
         if ($keywordsString !== null) {
             $this->keywords = explode(",", $keywordsString);
+        }
+
+        $this->cacheExpirationFrequency = $this->getMetadata(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME);
+        try {
+            $this->cacheExpirationDate = $this->getMetadataAsDate(CacheManager::META_CACHE_EXPIRATION_DATE_NAME);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
 
     }
@@ -2991,25 +2999,26 @@ class Page extends DokuPath
 
 
     /**
+     * TODO ? Put it in the {@link Page::setMetadata()} function
      * @throws ExceptionCombo
      */
-    private function setDateAttribute(string $name, &$startDate, $value)
+    private function setDateAttribute(string $name, &$dateValue, $value, $type = Metadata::PERSISTENT_METADATA)
     {
         if ($value === "") {
             $stringValue = null;
-            $startDate = null;
+            $dateValue = null;
         } else {
             if (!is_string($value)) {
                 throw new ExceptionCombo("The $name value ($value) should be in a string format.", Iso8601Date::CANONICAL);
             }
             $stringValue = $value;
             try {
-                $startDate = Iso8601Date::createFromString($value)->getDateTime();
+                $dateValue = Iso8601Date::createFromString($value)->getDateTime();
             } catch (ExceptionCombo $e) {
                 throw new ExceptionCombo("The $name value ($value) is not a valid date.", Iso8601Date::CANONICAL);
             }
         }
-        $this->setMetadata($name, $stringValue);
+        $this->setMetadata($name, $stringValue, null, $type);
     }
 
     /**
@@ -3236,6 +3245,60 @@ class Page extends DokuPath
         } else {
             throw new ExceptionCombo("The keywords value is not an array or a string (value: $value)");
         }
+    }
+
+    public function getCacheExpirationDate(): ?DateTime
+    {
+        return $this->cacheExpirationDate;
+    }
+
+    public function getCacheExpirationFrequency(): ?string
+    {
+        return $this->cacheExpirationFrequency;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setCacheExpirationFrequency(string $cronExpression)
+    {
+        try {
+            $cacheExpirationDate = Cron::getDate($cronExpression);
+            $this->setCacheExpirationDate($cacheExpirationDate);
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL);
+        }
+        $this->setMetadata(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME, $cronExpression);
+    }
+
+    public function getExpirationDate()
+    {
+        return $this->cacheExpirationDate;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private function getMetadataAsDate(string $metaName)
+    {
+        $date = $this->getMetadata($metaName);
+        if ($date === null) {
+            return null;
+        }
+        try {
+            $dateTime = Iso8601Date::createFromString($date)->getDateTime();
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionCombo("The meta ($metaName) has a value ($date) that is not a valid date format", Iso8601Date::CANONICAL);
+        }
+        return $dateTime;
+    }
+
+    public function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
+    {
+        $this->cacheExpirationDate = $cacheExpirationDate;
+        $dateAsString = Iso8601Date::createFromDateTime($cacheExpirationDate)->toString();
+        $this->setMetadata(CacheManager::META_CACHE_EXPIRATION_DATE_NAME, $dateAsString, null, Metadata::CURRENT_METADATA);
+        return $this;
     }
 
 

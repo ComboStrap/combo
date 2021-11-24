@@ -2,8 +2,9 @@
 
 
 use ComboStrap\CacheManager;
-use ComboStrap\Iso8601Date;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
+use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -17,6 +18,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
  *
  * Depend on the cron dependency
  * https://github.com/dragonmantank/cron-expression
+ * @deprecated
  */
 class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
 {
@@ -29,9 +31,6 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
     const PARSING_STATE_UNSUCCESSFUL = "unsuccessful";
 
     const EXPIRATION_ATTRIBUTE = "expiration";
-
-
-    const CANONICAL = "page:cache";
 
 
     function getType()
@@ -83,19 +82,21 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                 $attributes = TagAttributes::createFromTagMatch($match);
                 $value = $attributes->getValue(self::EXPIRATION_ATTRIBUTE);
                 $status = self::PARSING_STATE_SUCCESSFUL;
-                $date = "";
+
+
+                $requestPage = Page::createPageFromRequestedPage();
                 try {
-                    $cron = Cron\CronExpression::factory($value);
-                    $date = $cron->getNextRunDate()->format(Iso8601Date::getFormat());
-                } catch (InvalidArgumentException $e) {
+                    $requestPage->setCacheExpirationFrequency($value);
+                } catch (ExceptionCombo $e) {
                     $status = self::PARSING_STATE_UNSUCCESSFUL;
                 }
+
+                LogUtility::msg("The cache syntax component has been deprecated for the cache frequency metadata", LogUtility::LVL_MSG_INFO, CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL);
 
                 return array(
                     PluginUtility::STATE => $state,
                     self::PARSING_STATUS => $status,
-                    PluginUtility::PAYLOAD => $value,
-                    PluginUtility::ATTRIBUTES => [CacheManager::DATE_CACHE_EXPIRATION_META_KEY => $date]
+                    PluginUtility::PAYLOAD => $value
                 );
 
 
@@ -114,7 +115,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
 
         switch ($format) {
@@ -122,32 +123,9 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
             case 'xhtml':
                 if ($data[self::PARSING_STATUS] !== self::PARSING_STATE_SUCCESSFUL) {
                     $cronExpression = $data[PluginUtility::PAYLOAD];
-                    LogUtility::msg("The expression ($cronExpression) is not a valid expression", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                    LogUtility::msg("The expression ($cronExpression) is not a valid expression", LogUtility::LVL_MSG_ERROR, CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL);
                 }
                 break;
-            case 'metadata':
-
-                if ($data[self::PARSING_STATUS] != self::PARSING_STATE_SUCCESSFUL) {
-                    return false;
-                }
-
-                /** @var Doku_Renderer_metadata $renderer */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                global $ID;
-                p_set_metadata($ID, $attributes);
-                break;
-
-            case renderer_plugin_combo_analytics::RENDERER_FORMAT:
-                if ($data[self::PARSING_STATUS] != self::PARSING_STATE_SUCCESSFUL) {
-                    return false;
-                }
-                /** @var renderer_plugin_combo_analytics $renderer */
-                $attributes = $data[PluginUtility::ATTRIBUTES];
-                foreach ($attributes as $key => $value) {
-                    $renderer->setAnalyticsMetaForReporting($key, $value);
-                }
-                break;
-
 
         }
         // unsupported $mode

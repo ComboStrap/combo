@@ -3,9 +3,12 @@
 use ComboStrap\Analytics;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
+use ComboStrap\Cron;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\File;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
+use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
 use ComboStrap\TplUtility;
@@ -82,7 +85,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('PARSER_CACHE_USE', 'AFTER', $this, 'logCacheUsage', array());
 
-        $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'purgeIfNeeded', array());
+        $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'pageCacheExpiration', array());
 
         /**
          * To add the cache result in the header
@@ -132,10 +135,11 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
     /**
      *
+     * Purge the cache if needed
      * @param Doku_Event $event
      * @param $params
      */
-    function purgeIfNeeded(Doku_Event $event, $params)
+    function pageCacheExpiration(Doku_Event $event, $params)
     {
 
         /**
@@ -168,13 +172,13 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * rendering for a request.
          *
          * The first will be purged, the other one not
-         * because they can use the first one
+         * because they can't use the first one
          */
         if (!PluginUtility::getCacheManager()->isCacheLogPresent($pageId, $data->mode)) {
-            $expirationStringDate = p_get_metadata($pageId, CacheManager::DATE_CACHE_EXPIRATION_META_KEY, METADATA_DONT_RENDER);
-            if ($expirationStringDate !== null) {
+            $page = Page::createPageFromId($pageId);
+            $expirationDate = $page->getExpirationDate();
+            if ($expirationDate !== null) {
 
-                $expirationDate = Iso8601Date::createFromString($expirationStringDate)->getDateTime();
                 $actualDate = new DateTime();
                 if ($expirationDate < $actualDate) {
                     /**
@@ -182,6 +186,22 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                      * We request a purge
                      */
                     $data->depends["purge"] = true;
+
+                    /**
+                     * Calculate a new expiration date
+                     */
+                    $cacheExpression = $page->getCacheExpirationFrequency();
+                    if ($cacheExpression !== null) {
+                        try {
+                            $newDate = Cron::getDate($cacheExpression);
+                            if ($newDate < $actualDate) {
+                                LogUtility::msg("The new calculated date cache expiration frequency ($newDate) is lower than the current date ($actualDate)");
+                            }
+                            $page->setCacheExpirationDate($newDate);
+                        } catch (ExceptionCombo $e) {
+                            LogUtility::msg("The cache expiration frequency ($cacheExpression) is not a value cron expression");
+                        }
+                    }
                 }
             }
         }

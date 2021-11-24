@@ -6,7 +6,6 @@ namespace ComboStrap;
 
 use dokuwiki\Extension\Plugin;
 use dokuwiki\Extension\SyntaxPlugin;
-use TestRequest;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -51,6 +50,7 @@ require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/ConditionalValue.php');
+require_once(__DIR__ . '/Cron.php');
 require_once(__DIR__ . '/DatabasePage.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');

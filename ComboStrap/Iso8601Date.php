@@ -169,6 +169,11 @@ class Iso8601Date
         }
     }
 
+    public static function createFromDateTime(DateTime $dateTime): Iso8601Date
+    {
+        return new Iso8601Date($dateTime);
+    }
+
     public function getDateTime()
     {
         return $this->dateTime;

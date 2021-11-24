@@ -4,6 +4,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
 use ComboStrap\Analytics;
+use ComboStrap\CacheManager;
 use ComboStrap\DatabasePage;
 use ComboStrap\DokuPath;
 use ComboStrap\FormMeta;
@@ -51,6 +52,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const TAB_INTEGRATION_VALUE = "integration";
     const TAB_IMAGE_VALUE = "image";
     const TAB_REDIRECTION_VALUE = "redirection";
+    const TAB_CACHE_VALUE = "cache";
 
     /**
      * The canonical for the metadata page
@@ -65,6 +67,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const ALIAS_PATH = "alias-path";
     const ALIAS_TYPE = "alias-type";
     const SUCCESS_MESSAGE = "The data were updated without errors.";
+
 
 
     public function register(Doku_Event_Handler $controller)
@@ -840,6 +843,30 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->setDescription("An unique identifier for the page")
         );
 
+        // Cache cron expiration expression
+        $formMeta->addField(FormMetaField::create(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME)
+            ->addValue($page->getCacheExpirationFrequency())
+            ->setMutable(true)
+            ->setTab(self::TAB_CACHE_VALUE)
+            ->setCanonical(CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL)
+            ->setLabel("Cache Expiration Frequency")
+            ->setDescription("A page expiration frequency expressed as a cron expression")
+        );
+
+        // Cache expiration date
+        $cacheExpirationDate = $page->getCacheExpirationDate();
+        if($cacheExpirationDate!==null){
+            $cacheExpirationDate = Iso8601Date::createFromDateTime($cacheExpirationDate)->toString();
+        }
+        $formMeta->addField(FormMetaField::create(CacheManager::META_CACHE_EXPIRATION_DATE_NAME)
+            ->addValue($cacheExpirationDate)
+            ->setMutable(false)
+            ->setTab(self::TAB_CACHE_VALUE)
+            ->setCanonical(CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL)
+            ->setLabel("Cache Expiration Date")
+            ->setDescription("The next cache expiration date (calculated from the cache frequency expression)")
+        );
+
         /**
          * Tabs (for whatever reason, javascript keep the order of the properties
          * and therefore the order of the tabs)
@@ -881,6 +908,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             )->addTab(
                 FormMetaTab::create(self::TAB_INTEGRATION_VALUE)
                     ->setLabel("Integration")
+                    ->setWidthLabel(4)
+                    ->setWidthField(8)
+            )->addTab(
+                FormMetaTab::create(self::TAB_CACHE_VALUE)
+                    ->setLabel("Cache")
                     ->setWidthLabel(4)
                     ->setWidthField(8)
             );

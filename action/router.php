@@ -225,7 +225,6 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         }
 
 
-
     }
 
     /**
@@ -238,11 +237,12 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
      * @param $event
      * @throws Exception
      */
-    function ban(&$event){
+    function ban(&$event)
+    {
 
         $id = self::getOriginalIdFromRequest();
         $page = Page::createPageFromId($id);
-        if(!$page->exists()) {
+        if (!$page->exists()) {
             // Well known
             if (self::isWellKnownFile($id)) {
                 $this->logRedirection($id, "", self::TARGET_ORIGIN_WELL_KNOWN, self::REDIRECT_NOTFOUND_METHOD);
@@ -323,7 +323,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
          * Page Id Website / root Permalink ?
          */
         $shortPageId = Page::getShortEncodedPageIdFromUrlId($targetPage->getDokuPathLastName());
-        if($shortPageId!==null) {
+        if ($shortPageId !== null) {
             $pageId = Page::decodePageId($shortPageId);
             if ($targetPage->getParentPage() === null && $pageId !== null) {
                 $page = DatabasePage::createFromPageId($pageId)->getPage();
@@ -406,7 +406,13 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
          * Identifier is an alias
          */
         $targetPage = DatabasePage::createFromAlias($identifier)->getPage();
-        if ($targetPage !== null && $targetPage->exists()) {
+        if (
+            $targetPage !== null
+            && $targetPage->exists()
+            // The build alias is the file system metadata alias
+            // it may be null if the replication in the database was not successful
+            && $targetPage->getBuildAlias() !== null
+        ) {
             $buildAlias = $targetPage->getBuildAlias();
             switch ($buildAlias->getType()) {
                 case Alias::REDIRECT:

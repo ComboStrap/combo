@@ -176,7 +176,20 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         if (!PluginUtility::getCacheManager()->isCacheLogPresent($pageId, $data->mode)) {
             $page = Page::createPageFromId($pageId);
+            $cacheExpirationFrequency = $page->getCacheExpirationFrequency();
+            if ($cacheExpirationFrequency === null) {
+                return;
+            }
             $expirationDate = $page->getExpirationDate();
+
+            if ($expirationDate === null) {
+                try {
+                    $expirationDate = Cron::getDate($cacheExpirationFrequency);
+                    $page->setCacheExpirationDate($expirationDate);
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("The cache expiration frequency ($cacheExpirationFrequency) is not a valid cron expression");
+                }
+            }
             if ($expirationDate !== null) {
 
                 $actualDate = new DateTime();
@@ -190,17 +203,14 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                     /**
                      * Calculate a new expiration date
                      */
-                    $cacheExpression = $page->getCacheExpirationFrequency();
-                    if ($cacheExpression !== null) {
-                        try {
-                            $newDate = Cron::getDate($cacheExpression);
-                            if ($newDate < $actualDate) {
-                                LogUtility::msg("The new calculated date cache expiration frequency ($newDate) is lower than the current date ($actualDate)");
-                            }
-                            $page->setCacheExpirationDate($newDate);
-                        } catch (ExceptionCombo $e) {
-                            LogUtility::msg("The cache expiration frequency ($cacheExpression) is not a value cron expression");
+                    try {
+                        $newDate = Cron::getDate($cacheExpirationFrequency);
+                        if ($newDate < $actualDate) {
+                            LogUtility::msg("The new calculated date cache expiration frequency ({$newDate->format(Iso8601Date::getFormat())}) is lower than the current date ({$actualDate->format(Iso8601Date::getFormat())})");
                         }
+                        $page->setCacheExpirationDate($newDate);
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg("The cache expiration frequency ($cacheExpirationFrequency) is not a value cron expression");
                     }
                 }
             }

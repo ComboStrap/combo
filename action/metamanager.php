@@ -861,6 +861,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(CacheManager::META_CACHE_EXPIRATION_DATE_NAME)
             ->addValue($cacheExpirationDate)
             ->setMutable(false)
+            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_CACHE_VALUE)
             ->setCanonical(CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL)
             ->setLabel("Cache Expiration Date")

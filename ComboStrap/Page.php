@@ -1026,7 +1026,7 @@ class Page extends DokuPath
      * @param $key
      * @return mixed|null
      */
-    private
+    public
     function getPersistentMetadata($key)
     {
         $key = $this->getMetadatas()[Metadata::PERSISTENT_METADATA][$key];
@@ -1060,7 +1060,7 @@ class Page extends DokuPath
 
     }
 
-    private
+    public
     function getCurrentMetadata($key)
     {
         $key = $this->getMetadatas()[Metadata::CURRENT_METADATA][$key];
@@ -1946,6 +1946,9 @@ class Page extends DokuPath
                         continue 2;
                     case PAGE::SLUG_ATTRIBUTE:
                         $this->setSlug($value);
+                        continue 2;
+                    case CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME:
+                        $this->setCacheExpirationFrequency($value);
                         continue 2;
                     default:
                         if (!$persistOnlyKnownAttributes) {
@@ -3044,7 +3047,9 @@ class Page extends DokuPath
     public function getNonDefaultMetadatasValuesInStorageFormat(): array
     {
         $nonDefaultMetadatas = [];
-        foreach (Metadata::FORM_MANAGED_METADATA as $metaKey) {
+        $metaToPreserve = Metadata::FORM_MANAGED_METADATA;
+        $metaToPreserve[] = Page::PAGE_ID_ATTRIBUTE;
+        foreach ($metaToPreserve as $metaKey) {
             switch ($metaKey) {
                 case Page::CANONICAL_PROPERTY:
                     if ($this->getCanonical() !== $this->getDefaultCanonical()) {
@@ -3260,7 +3265,7 @@ class Page extends DokuPath
     /**
      * @throws ExceptionCombo
      */
-    public function setCacheExpirationFrequency(string $cronExpression)
+    public function setCacheExpirationFrequency(string $cronExpression): Page
     {
         try {
             $cacheExpirationDate = Cron::getDate($cronExpression);
@@ -3269,6 +3274,7 @@ class Page extends DokuPath
             throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL);
         }
         $this->setMetadata(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME, $cronExpression);
+        return $this;
     }
 
     public function getExpirationDate()

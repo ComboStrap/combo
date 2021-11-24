@@ -285,6 +285,7 @@ class Page extends DokuPath
      * @var PageImage[]
      */
     private $pageImages;
+    private $keywords;
 
     /**
      * Page constructor.
@@ -350,7 +351,8 @@ class Page extends DokuPath
 
     public static function createPageFromId($id): Page
     {
-        return new Page(DokuPath::PATH_SEPARATOR . $id);
+        DokuPath::addRootSeparatorIfNotPresent($id);
+        return new Page($id);
     }
 
     public static function createPageFromNonQualifiedPath($pathOrId): Page
@@ -1930,7 +1932,7 @@ class Page extends DokuPath
                         $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
                         continue 2;
                     case PAGE::KEYWORDS_ATTRIBUTE:
-                        $this->setMetadata($key, $value);
+                        $this->setKeywords($value);
                         continue 2;
                     case PAGE::SLUG_ATTRIBUTE:
                         $this->setSlug($value);
@@ -2392,7 +2394,28 @@ class Page extends DokuPath
         if (sizeof($names) == 0) {
             return null;
         }
-        $parentNames = array_slice($names, 0, sizeof($names) - 1);
+        $slice = 1;
+        if ($this->isHomePage()) {
+            /**
+             * The parent of a home page
+             * is in the parent directory
+             */
+            $slice = 2;
+        }
+        /**
+         * Delete the last or the two last parts
+         */
+        if (sizeof($names) < $slice) {
+            return null;
+        }
+        /**
+         * Get the actual directory for a page
+         * or the parent directory for a home page
+         */
+        $parentNames = array_slice($names, 0, sizeof($names) - $slice);
+        /**
+         * Create the parent namespace id
+         */
         $parentNamespaceId = implode($parentNames, DokuPath::PATH_SEPARATOR);
         return self::getHomePageFromNamespace($parentNamespaceId);
 
@@ -2684,6 +2707,12 @@ class Page extends DokuPath
         } else {
             $this->endDate = null;
         }
+
+        $keywordsString = $this->getMetadata(Page::KEYWORDS_ATTRIBUTE);
+        if ($keywordsString !== null) {
+            $this->keywords = explode(",", $keywordsString);
+        }
+
     }
 
     public
@@ -3147,6 +3176,66 @@ class Page extends DokuPath
     {
         $this->setMetadata($key, $value, null, Metadata::CURRENT_METADATA);
         return $this;
+    }
+
+    public function getKeywords()
+    {
+        return $this->keywords;
+    }
+
+    public function getKeywordsOrDefault()
+    {
+        $keyWords = $this->getKeywords();
+        if ($keyWords === null) {
+            return $this->getDefaultKeywords();
+        }
+        return $keyWords;
+    }
+
+    /**
+     * The default of dokuwiki is the parts of the {@link Page::getDokuwikiId() dokuwiki id}
+     * @return false|string[]
+     */
+    public function getDefaultKeywords()
+    {
+        $keyWords = explode(" ", $this->getPageNameNotEmpty());
+        $actualPage = $this;
+        while (($parentPage = $actualPage->getParentPage()) !== null) {
+            if (!$parentPage->isRootHomePage()) {
+                $parentKeyWords = explode(" ", $parentPage->getPageNameNotEmpty());
+                $keyWords = array_merge($keyWords, $parentKeyWords);
+            }
+            $actualPage = $parentPage;
+        }
+        $keyWords = array_map(function ($element) {
+            return strtolower($element);
+        }, $keyWords);
+        return array_unique($keyWords);
+
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setKeywords($value): Page
+    {
+        $persistentKeyWordsString = null;
+        if (is_array($value)) {
+            $this->keywords = $value;
+            $persistentKeyWordsString = implode(",", $value);
+        }
+
+        if (is_string($value)) {
+            $this->keywords = explode(",", $value);
+            $persistentKeyWordsString = $value;
+        }
+
+        if ($persistentKeyWordsString !== null) {
+            $this->setMetadata(Page::KEYWORDS_ATTRIBUTE, $persistentKeyWordsString);
+            return $this;
+        } else {
+            throw new ExceptionCombo("The keywords value is not an array or a string (value: $value)");
+        }
     }
 
 

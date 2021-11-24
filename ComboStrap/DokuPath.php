@@ -107,12 +107,20 @@ class DokuPath extends File
 
         } else {
 
-            if (substr($absolutePath, 0, 1) != DokuPath::PATH_SEPARATOR) {
+            if (substr($absolutePath, 0, 1) !== DokuPath::PATH_SEPARATOR) {
                 if (PluginUtility::isDevOrTest()) {
                     // Feel too much the log, test are not seeing anything, may be minimap ?
                     LogUtility::msg("The path given ($absolutePath) is not qualified", LogUtility::LVL_MSG_ERROR);
                 }
                 $this->absolutePath = ":" . $absolutePath;
+            }
+            if (substr($absolutePath, 1, 1) === DokuPath::PATH_SEPARATOR) {
+                /**
+                 * path given is `::path`
+                 */
+                if (PluginUtility::isDevOrTest()) {
+                    LogUtility::msg("The path given ($absolutePath) has too much separator", LogUtility::LVL_MSG_ERROR);
+                }
             }
             $this->scheme = self::LOCAL_SCHEME;
 
@@ -342,7 +350,17 @@ class DokuPath extends File
     public
     function getDokuNames()
     {
-        return preg_split("/" . self::PATH_SEPARATOR . "/", $this->getDokuwikiId());
+
+        $names = explode( self::PATH_SEPARATOR, $this->getDokuwikiId());
+
+        if($names[0]===""){
+            /**
+             * Case of only one string without path separator
+             * the first element returned is an empty string
+             */
+            $names = array_splice($names,1);
+        }
+        return $names;
     }
 
     /**

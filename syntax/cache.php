@@ -144,7 +144,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                 /** @var renderer_plugin_combo_analytics $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 foreach ($attributes as $key => $value) {
-                    $renderer->setMeta($key, $value);
+                    $renderer->setAnalyticsMetaForReporting($key, $value);
                 }
                 break;
 

@@ -342,18 +342,14 @@ EOF;
 
 
                 /** @var renderer_plugin_combo_analytics $renderer */
-                $jsonArray = $data[PluginUtility::ATTRIBUTES];
-                foreach ($jsonArray as $key => $value) {
-                    if (!in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+                $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
+                foreach ($frontMatterJsonArray as $key => $value) {
 
-                        $renderer->setMeta($key, $value);
-                        if ($key === Page::IMAGE_META_PROPERTY) {
-                            $this->updateImageStatistics($value, $renderer);
-                        }
-
-                    } else {
-                        LogUtility::msg("The metadata ($key) cannot be set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    $renderer->setAnalyticsMetaForReporting($key, $value);
+                    if ($key === Page::IMAGE_META_PROPERTY) {
+                        $this->updateImageStatistics($value, $renderer);
                     }
+
                 }
                 break;
 
@@ -367,9 +363,9 @@ EOF;
                 /**
                  * Register media in index
                  */
-                $jsonArray = $data[PluginUtility::ATTRIBUTES];
-                if (isset($jsonArray[Page::IMAGE_META_PROPERTY])) {
-                    $value = $jsonArray[Page::IMAGE_META_PROPERTY];
+                $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
+                if (isset($frontMatterJsonArray[Page::IMAGE_META_PROPERTY])) {
+                    $value = $frontMatterJsonArray[Page::IMAGE_META_PROPERTY];
                     $imageValues = [];
                     ArrayUtility::toFlatArray($imageValues, $value);
                     foreach ($imageValues as $imageValue) {

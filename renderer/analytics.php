@@ -747,7 +747,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
         $this->headerId = 0;
     }
 
-    public function setMeta($key, $value)
+    public function setAnalyticsMetaForReporting($key, $value)
     {
         $this->metadata[$key] = $value;
     }

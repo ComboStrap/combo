@@ -13,10 +13,10 @@ class Metadata
 {
 
     /**
-     * We allow only to modify the
-     * persistent meta
+     * The user can't delete this metadata
+     * in the persistent metadata
      */
-    const NOT_MODIFIABLE_METADATA = [
+    const NOT_MODIFIABLE_PERSISTENT_METADATA = [
         Analytics::PATH,
         Analytics::DATE_CREATED,
         Analytics::DATE_MODIFIED,
@@ -24,13 +24,17 @@ class Metadata
         "contributor",
         "creator",
         "date",
-        action_plugin_combo_metadescription::DESCRIPTION_META_KEY, // Dokuwiki implements it as an array (you can't be modified directly)
-        // "format",
+        action_plugin_combo_metadescription::DESCRIPTION_META_KEY, // Dokuwiki implements it as an array (you can't modify it directly)
+    ];
+
+    const RUNTIME_META = [
+        "format",
         "last_change",
         "user",
         "internal", // toc, cache, ...
         "relation"
     ];
+
 
     /**
      * The managed meta
@@ -86,7 +90,7 @@ class Metadata
 
     /**
      * Delete the managed metadata
-     * @param $metadataArray -  a metadata array
+     * @param $metadataArray - a metadata array
      * @return array - the metadata array without the managed metadata
      */
     public static function deleteManagedMetadata($metadataArray): array
@@ -102,6 +106,33 @@ class Metadata
             }
         }
         return $cleanedMetadata;
+    }
+
+    /**
+     * This function will upsert the meta array
+     * with a unique property
+     * @param $metaArray
+     * @param string $uniqueAttribute
+     * @param array $attributes
+     */
+    public static function upsertMetaOnUniqueAttribute(&$metaArray, string $uniqueAttribute, array $attributes)
+    {
+
+        foreach ($metaArray as $key => $meta) {
+            if (!is_numeric($key)) {
+                LogUtility::msg("The passed array is not a meta array because the index are not numeric. Unable to update it.");
+                return;
+            }
+            if (isset($meta[$uniqueAttribute])) {
+                $value = $meta[$uniqueAttribute];
+                if ($value === $attributes[$uniqueAttribute]) {
+                    $metaArray[$key] = $attributes;
+                    return;
+                }
+            }
+        }
+        $metaArray[] = $attributes;
+
     }
 
 }

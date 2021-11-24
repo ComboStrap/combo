@@ -399,7 +399,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) $managedMetaMessageSuffix");
                     continue;
                 }
-                if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+                if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
                     $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't delete it");
                     continue;
                 }
@@ -411,7 +411,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                         $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) $managedMetaMessageSuffix");
                         continue;
                     }
-                    if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+                    if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
                         $messages[] = Message::createInfoMessage("The $metadataType metadata ($key) is a internal metadata, you can't modify it");
                         continue;
                     }
@@ -424,7 +424,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             if (in_array($key, Metadata::MANAGED_METADATA)) {
                 continue;
             }
-            if (in_array($key, Metadata::NOT_MODIFIABLE_METADATA)) {
+            if (in_array($key, Metadata::NOT_MODIFIABLE_PERSISTENT_METADATA)) {
                 continue;
             }
             $pageMeta[$key] = $value;
@@ -498,6 +498,16 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->setTab(self::TAB_PAGE_VALUE)
                 ->setCanonical(Analytics::DESCRIPTION)
                 ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
+        );
+
+        // Path
+        $formMeta->addField(FormMetaField::create(Page::KEYWORDS_ATTRIBUTE)
+            ->addValue($page->getKeywords(),$page->getDefaultKeywords())
+            ->setLabel("Keywords")
+            ->setMutable(true)
+            ->setCanonical(Page::KEYWORDS_ATTRIBUTE)
+            ->setTab(self::TAB_PAGE_VALUE)
+            ->setDescription("The keywords added to your page (separated by a comma)")
         );
 
         // Path

@@ -556,7 +556,9 @@ class Page extends DokuPath
 
     public function setCanonical($canonical): Page
     {
-        if ($canonical === "") {
+        if ($canonical === "" || $canonical === ":") {
+            // form send empty string
+            // for the root `:`, non canonical
             $canonical = null;
         } else {
             $canonical = DokuPath::toValidAbsolutePath($canonical);
@@ -3050,11 +3052,12 @@ class Page extends DokuPath
         foreach ($metaToPreserve as $metaKey) {
             switch ($metaKey) {
                 case Page::CANONICAL_PROPERTY:
-                    if ($this->getCanonical() !== $this->getDefaultCanonical()) {
+                    if (!in_array($this->getCanonical(), [$this->getDefaultCanonical(), null])) {
                         $nonDefaultMetadatas[Page::CANONICAL_PROPERTY] = $this->getCanonical();
                     }
                     break;
-                case Page::TYPE_META_PROPERTY:
+                case
+                Page::TYPE_META_PROPERTY:
                     if (!in_array($this->getType(), [$this->getDefaultType(), null])) {
                         $nonDefaultMetadatas[Page::TYPE_META_PROPERTY] = $this->getType();
                     }
@@ -3270,6 +3273,10 @@ class Page extends DokuPath
      */
     public function setCacheExpirationFrequency(string $cronExpression): Page
     {
+        if ($cronExpression === "") {
+            // html form send a empty value
+            return $this;
+        }
         try {
             $cacheExpirationDate = Cron::getDate($cronExpression);
             $this->setCacheExpirationDate($cacheExpirationDate);

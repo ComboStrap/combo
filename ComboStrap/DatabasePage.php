@@ -500,7 +500,7 @@ class DatabasePage
          * Render and save on the file system
          */
         $analyticsJson = $this->page->getAnalytics()->getData();
-        $analyticsJsonAsString = $analyticsJson->toString();
+        $analyticsJsonAsString = $analyticsJson->toPrettyJsonString();
         $analyticsJsonAsArray = $analyticsJson->toArray();
         /**
          * Same data as {@link Page::getMetadataForRendering()}

@@ -27,7 +27,7 @@ class CacheManager
     /**
      * @return CacheManager
      */
-    public static function get()
+    public static function get(): CacheManager
     {
         global $comboCacheManagerScript;
         if (empty($comboCacheManagerScript)) {
@@ -87,7 +87,7 @@ class CacheManager
 
     }
 
-    public function getXhtmlRenderCacheSlotResults()
+    public function getXhtmlRenderCacheSlotResults(): array
     {
         $xhtmlRenderResult = [];
         foreach ($this->cacheDataBySlots as $pageId => $modes) {
@@ -100,13 +100,12 @@ class CacheManager
         return $xhtmlRenderResult;
     }
 
-    public function getCacheSlotResults()
+    public function getCacheSlotResults(): array
     {
-
         return $this->cacheDataBySlots;
     }
 
-    public function isCacheLogPresent($pageId, $mode)
+    public function isCacheLogPresent($pageId, $mode): bool
     {
         return isset($this->cacheDataBySlots[$pageId][$mode]);
     }

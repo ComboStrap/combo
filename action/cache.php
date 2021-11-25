@@ -90,7 +90,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         /**
          * To add the cache result in the header
          */
-        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'addMeta', array());
+        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'addLogCacheInHtmlMeta', array());
 
         /**
          * To reset the cache manager
@@ -224,39 +224,22 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      * @param Doku_Event $event
      * @param $params
      */
-    function addMeta(Doku_Event $event, $params)
+    function addLogCacheInHtmlMeta(Doku_Event $event, $params)
     {
 
         $cacheManager = PluginUtility::getCacheManager();
-        $slots = $cacheManager->getCacheSlotResults();
-        foreach ($slots as $slotId => $modes) {
+        $cacheJson = \ComboStrap\Json::createFromArray($cacheManager->getCacheSlotResults());
 
-            $cachedMode = [];
-            foreach ($modes as $mode => $values) {
-                if ($values[CacheManager::RESULT_STATUS] === true) {
-                    $metaContentData = $mode;
-                    if (!PluginUtility::isTest()) {
-                        /**
-                         * @var DateTime $dateModified
-                         */
-                        $dateModified = $values[CacheManager::DATE_MODIFIED];
-                        $metaContentData .= ":" . $dateModified->format('Y-m-d\TH:i:s');
-                    }
-                    $cachedMode[] = $metaContentData;
-                }
-            }
-
-            if (sizeof($cachedMode) === 0) {
-                $value = "nocache";
-            } else {
-                sort($cachedMode);
-                $value = implode(",", $cachedMode);
-            }
-
-            // Add cache information into the head meta
-            // to test
-            $event->data["meta"][] = array("name" => self::COMBO_CACHE_PREFIX . $slotId, "content" => hsc($value));
+        if(PluginUtility::isDevOrTest()){
+            $result = $cacheJson->toPrettyJsonString();
+        } else {
+            $result = $cacheJson->toMinifiedJsonString();
         }
+
+        $event->data["script"][] = array(
+            "type" => "application/combo+cache+json",
+            "_data" => $result,
+        );
 
     }
 

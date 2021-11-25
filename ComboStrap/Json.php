@@ -44,10 +44,16 @@ class Json
         return "See the errors it by clicking on <a href=\"https://jsonformatter.curiousconcept.com/?data=" . urlencode($json) . "\">this link</a>";
     }
 
-    public function normalized()
+    /**
+     * Used to make diff
+     * @return false|string
+     */
+    public function toNormalizedJsonString()
     {
-        $jsonArray = $this->getJsonArray();
-        return json_encode($jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($this->jsonString === null && $this->jsonArray !== null) {
+            $this->jsonString = json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        }
+        return $this->jsonString;
     }
 
     /**
@@ -182,9 +188,9 @@ class Json
 
     }
 
-    public function toString()
+    public function toPrettyJsonString()
     {
-        return $this->normalized();
+        return $this->toNormalizedJsonString();
     }
 
     private function getJsonString()
@@ -201,6 +207,14 @@ class Json
             $this->jsonArray = json_decode($this->jsonString, true);
         }
         return $this->jsonArray;
+    }
+
+    public function toMinifiedJsonString()
+    {
+        if ($this->jsonString === null && $this->jsonArray !== null) {
+            $this->jsonString = json_encode($this->jsonArray);
+        }
+        return $this->jsonString;
     }
 
 

@@ -474,4 +474,21 @@ export default class FormMetaField {
         }
 
     }
+
+    /**
+     * Added to be able to add metadata to the returned Json Form
+     * It has not yet all properties
+     * @return
+     */
+    toJavascriptObject() {
+        return {
+            "name": this.getName(),
+            "label": this.getLabel(),
+            "type": this.getType(),
+            "description": this.getDescription(),
+            "tab": this.getTab(),
+            "mutable": this.isMutable(),
+            "value": this.getValue()
+        }
+    }
 }

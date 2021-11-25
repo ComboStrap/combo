@@ -16,6 +16,7 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 require_once(__DIR__ . '/DokuPath.php');
 require_once(__DIR__ . '/Media.php');
 require_once(__DIR__ . '/MediaLink.php');
+require_once(__DIR__ . '/Metadata.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -42,6 +43,7 @@ require_once(__DIR__ . '/Boldness.php');
 require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/BreadcrumbHierarchical.php');
+require_once(__DIR__ . '/CacheExpirationFrequencyMeta.php');
 require_once(__DIR__ . '/CacheByLogicalKey.php');
 require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
 require_once(__DIR__ . '/CacheManager.php');
@@ -83,7 +85,6 @@ require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
-require_once(__DIR__ . '/Metadata.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');

@@ -10,10 +10,6 @@ class CacheManager
 {
 
     /**
-     * The meta key that has the expiration date
-     */
-    const META_CACHE_EXPIRATION_DATE_NAME = "date_cache_expiration";
-    /**
      * The meta that has the cron expression
      */
     const META_CACHE_EXPIRATION_FREQUENCY_NAME = "cache_expiration_frequency";

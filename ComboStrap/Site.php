@@ -13,7 +13,6 @@
 namespace ComboStrap;
 
 
-
 use RuntimeException;
 
 class Site
@@ -308,7 +307,7 @@ class Site
     {
         global $conf;
         $dataDirectory = $conf['datadir'];
-        if($dataDirectory===null){
+        if ($dataDirectory === null) {
             throw new RuntimeException("The base directory ($dataDirectory) is null");
         }
         $file = File::createFromPath($dataDirectory)->getParent();
@@ -339,6 +338,22 @@ class Site
     {
         global $conf;
         return $conf['tagline'];
+    }
+
+    /**
+     * @return int|null
+     */
+    public static function getCacheTime(): ?int
+    {
+        global $conf;
+        $cacheTime = $conf['cachetime'];
+        if ($cacheTime === null) {
+            return null;
+        }
+        if (is_numeric($cacheTime)) {
+            return intval($cacheTime);
+        }
+        return null;
     }
 
 

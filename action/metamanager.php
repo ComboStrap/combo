@@ -4,6 +4,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
 use ComboStrap\Analytics;
+use ComboStrap\CacheExpirationFrequencyMeta;
 use ComboStrap\CacheManager;
 use ComboStrap\DatabasePage;
 use ComboStrap\DokuPath;
@@ -858,8 +859,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         if($cacheExpirationDate!==null){
             $cacheExpirationDate = Iso8601Date::createFromDateTime($cacheExpirationDate)->toString();
         }
-        $formMeta->addField(FormMetaField::create(CacheManager::META_CACHE_EXPIRATION_DATE_NAME)
-            ->addValue($cacheExpirationDate)
+        $formMeta->addField(FormMetaField::create(CacheExpirationFrequencyMeta::META_CACHE_EXPIRATION_DATE_NAME)
+            ->addValue($cacheExpirationDate, $page->getDefaultCacheExpirationDate())
             ->setMutable(false)
             ->setType(FormMetaField::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_CACHE_VALUE)

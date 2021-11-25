@@ -7,10 +7,92 @@ namespace ComboStrap;
 use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
-use syntax_plugin_combo_disqus;
+use DateTime;
 
-class Metadata
+abstract class Metadata
 {
+
+    /**
+     * @var Page
+     */
+    private $page;
+
+    /**
+     * CacheExpirationFrequencyMeta constructor.
+     * @param $page
+     */
+    public function __construct($page)
+    {
+        $this->page = $page;
+    }
+
+    protected function save()
+    {
+        $name = $this->getName();
+        $persistentValue = $this->getPersistentValue();
+        $defaultValue = $this->getDefaultValue();
+        $type = $this->getPersistenceType();
+        $this->page->setMetadata($name, $persistentValue, $defaultValue, $type);
+    }
+
+    protected function getPage(): Page
+    {
+        return $this->page;
+    }
+
+    /**
+     * @return string|array|null
+     */
+    protected function getMetadataValue()
+    {
+        return $this->page->getMetadata($this->getName());
+    }
+
+    /**
+     * @return string the name of the metadata (property)
+     */
+    public abstract function getName(): string;
+
+    /**
+     * @return string|array|null the value to be persisted on the file system
+     */
+    public abstract function getPersistentValue();
+
+    /**
+     * @return mixed
+     */
+    public abstract function getPersistentDefaultValue();
+
+    /**
+     * @return mixed
+     */
+    public abstract function getPersistenceType();
+
+    /**
+     * Helper function for date metadata
+     * @param DateTime|null $dateTime
+     * @return string|null
+     */
+    protected function toPersistentDateTime(?DateTime $dateTime): ?string
+    {
+        if ($dateTime === null) {
+            return null;
+        }
+        return Iso8601Date::createFromDateTime($dateTime)->toString();
+    }
+
+    protected function toDateTime($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+        try {
+            return Iso8601Date::createFromString($value)->getDateTime();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The meta ({$this->getName()}) has a value ($value) that is not a valid date format", Iso8601Date::CANONICAL);
+            return null;
+        }
+    }
 
     /**
      * The user can't delete this metadata

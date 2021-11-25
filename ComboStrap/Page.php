@@ -291,6 +291,9 @@ class Page extends DokuPath
      * @var string
      */
     private $cacheExpirationFrequency;
+    /**
+     * @var CacheExpirationFrequencyMeta
+     */
     private $cacheExpirationDate;
 
     /**
@@ -2617,12 +2620,17 @@ class Page extends DokuPath
     function buildPropertiesFromFileSystem()
     {
 
-        if (!$this->exists()) {
-            $this->metadatas = [];
-            return;
-        }
+        /**
+         * New meta system
+         * Even if it does not exist, the metadata object should be instantiated
+         * otherwise, there is a null exception
+         */
+        $this->cacheExpirationDate = CacheExpirationFrequencyMeta::createForPage($this);
+
 
         /**
+         * Old system
+         *
          * Updating the metadata must happen first
          * All meta function depends on it
          *
@@ -2630,6 +2638,9 @@ class Page extends DokuPath
          * because it can trigger a rendering of the meta again)
          *
          * This is not a {@link Page::renderAndFlushMetadata()}
+         *
+         * Metadata may be created even if the file does not exist
+         * (when the page is rendered for the first time for instance)
          */
         $this->metadatas = p_read_metadata($this->getDokuwikiId());
 
@@ -2699,30 +2710,17 @@ class Page extends DokuPath
             $this->publishedDate = null;
         }
 
-        try {
-            $this->startDate = $this->getMetadataAsDate(Analytics::DATE_START);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
-        }
 
-        try {
-            $this->endDate = $this->getMetadataAsDate(Analytics::DATE_END);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
-        }
-
-
+        $this->startDate = $this->getMetadataAsDate(Analytics::DATE_START);
+        $this->endDate = $this->getMetadataAsDate(Analytics::DATE_END);
         $keywordsString = $this->getMetadata(Page::KEYWORDS_ATTRIBUTE);
         if ($keywordsString !== null) {
             $this->keywords = explode(",", $keywordsString);
         }
 
+
         $this->cacheExpirationFrequency = $this->getMetadata(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME);
-        try {
-            $this->cacheExpirationDate = $this->getMetadataAsDate(CacheManager::META_CACHE_EXPIRATION_DATE_NAME);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
-        }
+
 
     }
 
@@ -3254,7 +3252,12 @@ class Page extends DokuPath
 
     public function getCacheExpirationDate(): ?DateTime
     {
-        return $this->cacheExpirationDate;
+        return $this->cacheExpirationDate->getValue();
+    }
+
+    public function getDefaultCacheExpirationDate(): ?DateTime
+    {
+        return $this->cacheExpirationDate->getDefaultValue();
     }
 
     public function getCacheExpirationFrequency(): ?string
@@ -3282,10 +3285,8 @@ class Page extends DokuPath
         return $this->cacheExpirationDate;
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    private function getMetadataAsDate(string $metaName)
+
+    public function getMetadataAsDate(string $metaName)
     {
         $date = $this->getMetadata($metaName);
         if ($date === null) {
@@ -3294,16 +3295,15 @@ class Page extends DokuPath
         try {
             $dateTime = Iso8601Date::createFromString($date)->getDateTime();
         } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The meta ($metaName) has a value ($date) that is not a valid date format", Iso8601Date::CANONICAL);
+            LogUtility::msg("The meta ($metaName) has a value ($date) that is not a valid date format", Iso8601Date::CANONICAL);
+            return null;
         }
         return $dateTime;
     }
 
     public function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
     {
-        $this->cacheExpirationDate = $cacheExpirationDate;
-        $dateAsString = Iso8601Date::createFromDateTime($cacheExpirationDate)->toString();
-        $this->setMetadata(CacheManager::META_CACHE_EXPIRATION_DATE_NAME, $dateAsString, null, Metadata::CURRENT_METADATA);
+        $this->cacheExpirationDate->setValue($cacheExpirationDate);
         return $this;
     }
 

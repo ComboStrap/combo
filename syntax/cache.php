@@ -127,6 +127,19 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                 }
                 break;
 
+            case "metadata":
+                if ($data[self::PARSING_STATUS] === self::PARSING_STATE_SUCCESSFUL) {
+                    $cronExpression = $data[PluginUtility::PAYLOAD];
+                    $requestPage = Page::createPageFromRequestedPage();
+                    try {
+                        $requestPage->setCacheExpirationFrequency($cronExpression);
+                    } catch (ExceptionCombo $e) {
+                        // should not happen as we test for its validity
+                    }
+
+                }
+
+
         }
         // unsupported $mode
         return false;

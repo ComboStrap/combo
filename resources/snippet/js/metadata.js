@@ -136,16 +136,30 @@ window.addEventListener("DOMContentLoaded", function () {
                     if (!cachePageJson.hasOwnProperty(slot)) {
                         continue;
                     }
-                    let name = `cache_slot_${slot}`;
-                    formMetadata["fields"][name] =
-                        combo.createFormMetaField(name)
-                            .setMutable(false)
-                            .setLabel(`Cache (${slot})`)
-                            .setType("text")
-                            .setDescription(`Slot Cache Information for the slot (${slot})`)
-                            .setTab("cache")
-                            .addValue(slot)
-                            .toJavascriptObject();
+
+                    let formatResults = cachePageJson[slot];
+                    for (let formatResult in formatResults) {
+                        if (!formatResults.hasOwnProperty(formatResult)) {
+                            continue;
+                        }
+                        let name = `cache_slot_${slot}_${formatResult}`;
+                        let result = formatResults[formatResult];
+                        let styledFormatResult;
+                        if (formatResult === "i") {
+                            styledFormatResult = "Parse Instructions"
+                        } else {
+                            styledFormatResult = formatResult.charAt(0).toUpperCase() + formatResult.slice(1);
+                        }
+                        formMetadata["fields"][name] =
+                            combo.createFormMetaField(name)
+                                .setMutable(false)
+                                .setLabel(`Cache Hit for ${styledFormatResult} ${slot}`)
+                                .setType("text")
+                                .setDescription(`${styledFormatResult} Slot Cache Information for the slot (${slot})`)
+                                .setTab("cache")
+                                .addValue(`${result["result"]} (${result["mtime"]})`)
+                                .toJavascriptObject();
+                    }
                 }
             }
             let formId = combo.toHtmlId(`${modalManagerId}-form`);

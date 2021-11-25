@@ -919,8 +919,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             )->addTab(
                 FormMetaTab::create(self::TAB_CACHE_VALUE)
                     ->setLabel("Cache")
-                    ->setWidthLabel(4)
-                    ->setWidthField(8)
+                    ->setWidthLabel(6)
+                    ->setWidthField(6)
             );
         return $formMeta;
     }

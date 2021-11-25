@@ -210,7 +210,7 @@ class Site
         $conf['template'] = $template;
     }
 
-    public static function setRenderingCacheOn()
+    public static function setCacheXhtmlOn()
     {
         // ensure the value is not -1, which disables caching
         // https://www.dokuwiki.org/config:cachetime

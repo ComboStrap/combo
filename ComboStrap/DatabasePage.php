@@ -975,7 +975,7 @@ EOF;
     {
 
         if ($this->page != null) {
-            $this->page->refresh();
+            $this->page->rebuild();
             $row = $this->getDatabaseRowFromPage($this->page);
             $this->buildDatabaseObjectFields($row);
         }

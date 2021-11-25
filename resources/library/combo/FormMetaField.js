@@ -407,11 +407,15 @@ export default class FormMetaField {
                     inputType = "datetime-local";
                     if (value !== null) {
                         value = value.slice(0, 19);
-                    }
-                    if (value !== null) {
                         htmlValue = `value="${value}"`;
+                    } else {
+                       if(!mutable && defaultValue!==null){
+                           defaultValue = defaultValue.slice(0, 19);
+                           htmlValue = `value="${defaultValue}"`;
+                       }
                     }
                     htmlPlaceholder = ""; // does not apply to local date time
+
                     break;
                 case FormMetaField.PARAGRAPH:
                     htmlTag = "textarea";

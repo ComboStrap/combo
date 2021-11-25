@@ -859,8 +859,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         if($cacheExpirationDate!==null){
             $cacheExpirationDate = Iso8601Date::createFromDateTime($cacheExpirationDate)->toString();
         }
+        $defaultCacheExpirationDate = $page->getDefaultCacheExpirationDate();
+        if($defaultCacheExpirationDate!==null) {
+            $defaultCacheExpirationDate = Iso8601Date::createFromDateTime($defaultCacheExpirationDate)->toString();
+        }
         $formMeta->addField(FormMetaField::create(CacheExpirationFrequencyMeta::META_CACHE_EXPIRATION_DATE_NAME)
-            ->addValue($cacheExpirationDate, $page->getDefaultCacheExpirationDate())
+            ->addValue($cacheExpirationDate, $defaultCacheExpirationDate)
             ->setMutable(false)
             ->setType(FormMetaField::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_CACHE_VALUE)

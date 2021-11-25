@@ -37,7 +37,11 @@ class CacheExpirationFrequencyMeta extends Metadata
         $file = File::createFromPath($xhtmlCache->cache);
         if ($file->exists()) {
             $cacheIntervalInSecond = Site::getCacheTime();
-            $expirationTime = $file->getModifiedTime();
+            /**
+             * Not the modified time (it's modified by a process when the cache is read
+             * for whatever reason)
+             */
+            $expirationTime = $file->getCreationTime();
             if ($cacheIntervalInSecond !== null) {
                 $expirationTime->modify('+' . $cacheIntervalInSecond . ' seconds');
             }

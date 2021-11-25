@@ -157,5 +157,10 @@ class File
         return strval($this->getModifiedTime()->getTimestamp());
     }
 
+    public function getCreationTime()
+    {
+        return Iso8601Date::createFromTimestamp(filectime($this->path))->getDateTime();
+    }
+
 
 }

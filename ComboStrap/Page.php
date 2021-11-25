@@ -636,7 +636,7 @@ class Page extends DokuPath
      * @return $this
      */
     public
-    function refresh(): Page
+    function rebuild(): Page
     {
         $this->buildPropertiesFromFileSystem();
         return $this;
@@ -1143,7 +1143,7 @@ class Page extends DokuPath
      * and therefore you may get no metadata and no backlinks
      */
     public
-    function renderAndFlushMetadata(): Page
+    function renderMetadataAndFlush(): Page
     {
 
         if (!$this->exists()) {
@@ -2637,7 +2637,7 @@ class Page extends DokuPath
          * Read / not {@link p_get_metadata()}
          * because it can trigger a rendering of the meta again)
          *
-         * This is not a {@link Page::renderAndFlushMetadata()}
+         * This is not a {@link Page::renderMetadataAndFlush()}
          *
          * Metadata may be created even if the file does not exist
          * (when the page is rendered for the first time for instance)

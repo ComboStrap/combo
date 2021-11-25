@@ -16,6 +16,7 @@ class CacheManager
     const RESULT_STATUS = 'result';
     const DATE_MODIFIED = 'ftime';
     public const PAGE_CACHE_MANAGEMENT_CANONICAL = "page:cache";
+    public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
 
     /**
      * Just an utility variable to tracks the slot processed
@@ -76,7 +77,7 @@ class CacheManager
          */
         if (!isset($this->cacheDataBySlots[$pageId][$cacheParser->mode])) {
             $date = null;
-            if(file_exists($cacheParser->cache)){
+            if (file_exists($cacheParser->cache)) {
                 $date = Iso8601Date::createFromTimestamp(filemtime($cacheParser->cache))->getDateTime();
             }
             $this->cacheDataBySlots[$pageId][$cacheParser->mode] = [
@@ -91,7 +92,7 @@ class CacheManager
     {
         $xhtmlRenderResult = [];
         foreach ($this->cacheDataBySlots as $pageId => $modes) {
-            foreach($modes as $mode => $values) {
+            foreach ($modes as $mode => $values) {
                 if ($mode === "xhtml") {
                     $xhtmlRenderResult[$pageId] = $this->cacheDataBySlots[$pageId][$mode][self::RESULT_STATUS];
                 }
@@ -108,6 +109,26 @@ class CacheManager
     public function isCacheLogPresent($pageId, $mode): bool
     {
         return isset($this->cacheDataBySlots[$pageId][$mode]);
+    }
+
+
+    public function getCacheSlotResultsAsHtmlDataBlockArray()
+    {
+        $htmlDataBlock = [];
+        foreach ($this->getCacheSlotResults() as $pageId => $resultByFormat) {
+            foreach ($resultByFormat as $format => $result) {
+                $modifiedDate = $result[self::DATE_MODIFIED];
+                if ($modifiedDate !== null) {
+                    $modifiedDate = Iso8601Date::createFromDateTime($modifiedDate)->toString();
+                }
+                $htmlDataBlock[$pageId][$format] = [
+                    self::RESULT_STATUS => $result[self::RESULT_STATUS],
+                    "mtime" => $modifiedDate
+                ];
+            }
+
+        }
+        return $htmlDataBlock;
     }
 
 

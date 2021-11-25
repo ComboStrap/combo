@@ -3287,9 +3287,9 @@ class Page extends DokuPath
         return $this;
     }
 
-    public function getExpirationDate()
+    public function getExpirationDate(): ?DateTime
     {
-        return $this->cacheExpirationDate;
+        return $this->cacheExpirationDate->getValue();
     }
 
 

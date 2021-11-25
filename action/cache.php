@@ -88,9 +88,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'pageCacheExpiration', array());
 
         /**
-         * To add the cache result in the header
+         * To add the cache result in the HTML
          */
-        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'addLogCacheInHtmlMeta', array());
+        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, 'addCacheLogHtmlDataBlock', array());
 
         /**
          * To reset the cache manager
@@ -224,11 +224,12 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
      * @param Doku_Event $event
      * @param $params
      */
-    function addLogCacheInHtmlMeta(Doku_Event $event, $params)
+    function addCacheLogHtmlDataBlock(Doku_Event $event, $params)
     {
 
         $cacheManager = PluginUtility::getCacheManager();
-        $cacheJson = \ComboStrap\Json::createFromArray($cacheManager->getCacheSlotResults());
+        $cacheSlotResults = $cacheManager->getCacheSlotResultsAsHtmlDataBlockArray();
+        $cacheJson = \ComboStrap\Json::createFromArray($cacheSlotResults);
 
         if(PluginUtility::isDevOrTest()){
             $result = $cacheJson->toPrettyJsonString();
@@ -237,7 +238,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         }
 
         $event->data["script"][] = array(
-            "type" => "application/combo+cache+json",
+            "type" => CacheManager::APPLICATION_COMBO_CACHE_JSON,
             "_data" => $result,
         );
 

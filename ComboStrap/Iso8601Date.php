@@ -174,6 +174,11 @@ class Iso8601Date
         return new Iso8601Date($dateTime);
     }
 
+    public static function createFromNow(): Iso8601Date
+    {
+        return new Iso8601Date();
+    }
+
     public function getDateTime()
     {
         return $this->dateTime;

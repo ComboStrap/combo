@@ -150,14 +150,16 @@ window.addEventListener("DOMContentLoaded", function () {
                         } else {
                             styledFormatResult = formatResult.charAt(0).toUpperCase() + formatResult.slice(1);
                         }
+                        let hit = result["result"];
                         formMetadata["fields"][name] =
                             combo.createFormMetaField(name)
                                 .setMutable(false)
-                                .setLabel(`Cache Hit for ${styledFormatResult} ${slot}`)
-                                .setType("text")
-                                .setDescription(`${styledFormatResult} Slot Cache Information for the slot (${slot})`)
+                                .setLabel(`Cache Hit for ${styledFormatResult} (${slot})`)
+                                .setType("boolean")
+                                .setUrl("https://combostrap.com/page/cache")
+                                .setDescription(`${styledFormatResult} Slot Cache Information for the slot (${slot}) - (File cache time ${result["mtime"]})`)
                                 .setTab("cache")
-                                .addValue(`${result["result"]} (${result["mtime"]})`)
+                                .addValue(hit,true)
                                 .toJavascriptObject();
                     }
                 }

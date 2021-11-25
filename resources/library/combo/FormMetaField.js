@@ -314,7 +314,7 @@ export default class FormMetaField {
         let label = this.getLabelAnchor();
         let classLabel = "";
         if (this.getType() === FormMetaField.BOOLEAN) {
-            classLabel = "form-check"
+            classLabel = "form-check-label"
         } else {
             classLabel = "col-form-label";
         }
@@ -435,11 +435,6 @@ export default class FormMetaField {
                     inputType = "checkbox";
                     htmlClass = "form-check-input";
                     if (defaultValue !== null) {
-                        if (typeof defaultValue === "boolean") {
-                            // the inverse of the default value is send
-                            // you don't modify a default
-                            defaultValue = !defaultValue;
-                        }
                         htmlValue = `value="${defaultValue}"`;
                         if (value === defaultValue) {
                             checked = "checked"
@@ -488,7 +483,9 @@ export default class FormMetaField {
             "description": this.getDescription(),
             "tab": this.getTab(),
             "mutable": this.isMutable(),
-            "value": this.getValue()
+            "value": this.getValue(),
+            "default" : this.getDefaultValue(),
+            "url" : this.getUrl()
         }
     }
 }

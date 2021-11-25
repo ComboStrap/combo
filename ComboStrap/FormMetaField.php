@@ -203,18 +203,21 @@ class FormMetaField
         return $this;
     }
 
-    public
-    function setDescription(string $string): FormMetaField
+    public function setDescription(string $string): FormMetaField
     {
         $this->description = $string;
         return $this;
     }
 
-    public
-    function addValue($value, $default = null): FormMetaField
+    /**
+     * @param $value
+     * @param null $defaultValuePlaceholderOrReturned - the value set as placeholder or return value for a checked checkbox
+     * @return $this
+     */
+    public function addValue($value, $defaultValuePlaceholderOrReturned = null): FormMetaField
     {
         $this->values[] = $value;
-        $this->defaults[] = $default;
+        $this->defaults[] = $defaultValuePlaceholderOrReturned;
         return $this;
     }
 

@@ -167,7 +167,7 @@ class DatabasePage
         /**
          * Replication Date
          */
-        $replicationDate = Iso8601Date::createFromString()->toString();
+        $replicationDate = Iso8601Date::createFromNow()->toString();
         $res = $this->replicatePage($replicationDate);
         if ($res === false) {
             return false;

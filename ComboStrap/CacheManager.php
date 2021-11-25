@@ -15,7 +15,7 @@ class CacheManager
     const META_CACHE_EXPIRATION_FREQUENCY_NAME = "cache_expiration_frequency";
     const RESULT_STATUS = 'result';
     const DATE_MODIFIED = 'ftime';
-    public const PAGE_CACHE_MANAGEMENT_CANONICAL = "page:cache";
+    public const PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL = "page-cache-expiration-frequency";
     public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
 
     /**

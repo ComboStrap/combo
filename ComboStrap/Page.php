@@ -1738,13 +1738,17 @@ class Page extends DokuPath
              * A metadata is also not immediately flushed on disk
              * in a test when rendering
              * They are going into the global $METADATA_RENDERERS
+             *
+             * A current metadata is never stored if not set in the rendering process
+             * We persist therefore always
              */
+            $persistent = true;
             p_set_metadata($this->getDokuwikiId(),
                 [
                     $key => $value
                 ],
                 false,
-                $type === Metadata::PERSISTENT_METADATA
+                $persistent
             );
             /**
              * Event
@@ -3281,7 +3285,7 @@ class Page extends DokuPath
             $cacheExpirationDate = Cron::getDate($cronExpression);
             $this->setCacheExpirationDate($cacheExpirationDate);
         } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL);
+            throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL);
         }
         $this->setMetadata(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME, $cronExpression);
         return $this;

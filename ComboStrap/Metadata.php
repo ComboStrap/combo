@@ -113,6 +113,10 @@ abstract class Metadata
     /**
      * Metadata that we can lose
      * because they are generated
+     *
+     * They still needs to be saved in as persistent metadata
+     * otherwise they are just not persisted
+     * https://forum.dokuwiki.org/d/19764-how-to-test-a-current-metadata-setting
      */
     const RUNTIME_META = [
         "format",

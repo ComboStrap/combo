@@ -302,21 +302,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         syntax_plugin_combo_frontmatter::updateFrontmatter($page);
 
-        /**
-         * Delete runtime in persistent
-         */
-        $metadata = $page->getMetadatas();
-        $persistent = &$metadata[Metadata::PERSISTENT_METADATA];
-        $runtime = Metadata::RUNTIME_META;
-        if (PluginUtility::isDevOrTest()) {
-            // Now known as page id
-            // Not runtime but as polluted the dev environment
-            $runtime[] = "uuid";
-        }
-        $deleteWasPerformed = Metadata::deleteIfPresent($persistent, $runtime);
-        if ($deleteWasPerformed) {
-            p_save_metadata($page->getDokuwikiId(), $metadata);
-        }
+
 
         /**
          * Response
@@ -774,7 +760,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR)
             // the inverse of the default value is returned if checked - you don't modify a default
             // by default the page can be a low quality
-            ->addValue($page->getCanBeOfLowQuality(), true)
+            ->addValue($page->getCanBeOfLowQuality(), false)
             ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
             ->setTab(self::TAB_QUALITY_VALUE)
             ->setCanonical(LowQualityPage::LOW_QUALITY_PAGE_CANONICAL)
@@ -786,7 +772,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR)
             // the inverse of the default value is returned if checked - you don't modify a default
             // by default, the page is monitored
-            ->addValue($page->getQualityMonitoringIndicator(), true)
+            ->addValue($page->getQualityMonitoringIndicator(), false)
             ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
             ->setTab(self::TAB_QUALITY_VALUE)
             ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)
@@ -849,7 +835,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->addValue($page->getCacheExpirationFrequency())
             ->setMutable(true)
             ->setTab(self::TAB_CACHE_VALUE)
-            ->setCanonical(CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL)
+            ->setCanonical(CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL)
             ->setLabel("Cache Expiration Frequency")
             ->setDescription("A page expiration frequency expressed as a cron expression")
         );
@@ -868,7 +854,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->setMutable(false)
             ->setType(FormMetaField::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_CACHE_VALUE)
-            ->setCanonical(CacheManager::PAGE_CACHE_MANAGEMENT_CANONICAL)
+            ->setCanonical(CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL)
             ->setLabel("Cache Expiration Date")
             ->setDescription("The next cache expiration date (calculated from the cache frequency expression)")
         );

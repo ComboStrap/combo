@@ -39,7 +39,7 @@ class PageImages extends Metadata
             $pageImagesMeta[$absolutePath] = [
                 PageImage::PATH_ATTRIBUTE => $absolutePath
             ];
-            if ($pageImage->getUsages() !== null && sizeof($pageImage->getUsages()) !== 0) {
+            if ($pageImage->getUsages() !== null && $pageImage->getUsages() !== $pageImage->getDefaultUsage()) {
                 $pageImagesMeta[$absolutePath][PageImage::USAGE_ATTRIBUTE] = implode(", ", $pageImage->getUsages());
             }
         };

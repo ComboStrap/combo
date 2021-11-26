@@ -35,10 +35,13 @@ class PageImages extends Metadata
     {
         $pageImagesMeta = [];
         foreach ($pageImages as $pageImage) {
-            $pageImagesMeta[] = [
-                PageImage::PATH_ATTRIBUTE => $pageImage->getImage()->getDokuPath(),
-                PageImage::USAGE_ATTRIBUTE => $pageImage->getUsages()
+            $absolutePath = $pageImage->getImage()->getDokuPath()->getAbsolutePath();
+            $pageImagesMeta[$absolutePath] = [
+                PageImage::PATH_ATTRIBUTE => $absolutePath
             ];
+            if ($pageImage->getUsages() !== null && sizeof($pageImage->getUsages()) !== 0) {
+                $pageImagesMeta[$absolutePath][PageImage::USAGE_ATTRIBUTE] = implode(", ", $pageImage->getUsages());
+            }
         };
         return array_values($pageImagesMeta);
     }
@@ -57,12 +60,14 @@ class PageImages extends Metadata
         if (is_array($persistentValue)) {
             $images = [];
             foreach ($persistentValue as $key => $value) {
-                $usage = PageImage::getDefaultUsage();
+                $usage = null;
                 if (is_numeric($key)) {
                     if (is_array($value)) {
-                        $usage = $value[PageImage::USAGE_ATTRIBUTE];
-                        if(is_string($usage)){
-                            $usage = explode(",",$usage);
+                        if (isset($value[PageImage::USAGE_ATTRIBUTE])) {
+                            $usage = $value[PageImage::USAGE_ATTRIBUTE];
+                            if (is_string($usage)) {
+                                $usage = explode(",", $usage);
+                            }
                         }
                         $imagePath = $value[PageImage::PATH_ATTRIBUTE];
                     } else {
@@ -73,13 +78,15 @@ class PageImages extends Metadata
                     if (is_array($value) && isset($value[PageImage::USAGE_ATTRIBUTE])) {
                         $usage = $value[PageImage::USAGE_ATTRIBUTE];
                         if (!is_array($usage)) {
-                            $usage = explode(",",$usage);;
+                            $usage = explode(",", $usage);;
                         }
                     }
                 }
                 DokuPath::addRootSeparatorIfNotPresent($imagePath);
-                $pageImage = PageImage::create($imagePath, $this->getPage())
-                    ->setUsages($usage);
+                $pageImage = PageImage::create($imagePath, $this->getPage());
+                if ($usage !== null) {
+                    $pageImage->setUsages($usage);
+                }
                 $images[$imagePath] = $pageImage;
 
             }
@@ -162,12 +169,18 @@ class PageImages extends Metadata
     /**
      * @throws ExceptionCombo
      */
-    public function addImage(string $imagePath): PageImages
+    public function addImage(string $imagePath, $usages = []): PageImages
     {
         $pageImage = PageImage::create($imagePath, $this->getPage());
         if (!$pageImage->getImage()->exists()) {
             throw new ExceptionCombo("The image ($imagePath) does not exists", $this->getCanonical());
         }
+        if (is_string($usages)) {
+            $usages = explode(",", $usages);
+        }
+        $pageImage->setUsages($usages);
+
+
         $this->pageImages[$imagePath] = $pageImage;
         $this->persistToFileSystem();
         return $this;
@@ -175,7 +188,7 @@ class PageImages extends Metadata
 
     private function buildCheck()
     {
-        if(!$this->wasBuild && $this->pageImages===null){
+        if (!$this->wasBuild && $this->pageImages === null) {
             $this->wasBuild = true;
             $this->buildFromFileSystem();
         }

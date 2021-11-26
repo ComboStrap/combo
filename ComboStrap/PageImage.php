@@ -21,7 +21,7 @@ class PageImage
      * @var Image
      */
     private $image;
-    private $usages = [self::DEFAULT];
+    private $usages;
     /**
      * @var Page
      */
@@ -58,7 +58,7 @@ class PageImage
     {
         foreach ($usages as $usage) {
             $value = trim($usage);
-            if(!in_array($value,self::getUsageValues())){
+            if (!in_array($value, self::getUsageValues())) {
                 throw new ExceptionCombo("The page image usage value ($value) is not valid.");
             }
             $this->usages[$value] = $value;
@@ -73,7 +73,10 @@ class PageImage
 
     public function getUsages(): array
     {
-        return $this->usages;
+        if ($this->usages === null) {
+            return [];
+        }
+        return array_values($this->usages);
     }
 
     public static function getDefaultUsage(): array

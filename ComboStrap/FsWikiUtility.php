@@ -24,6 +24,7 @@ class FsWikiUtility
     /**
      * Determine if the current page is a sidebar (a bar)
      * @return bool
+     * TODO: Duplicate of {@link Page::isSlot()}
      */
     public static function isSideBar()
     {
@@ -38,7 +39,6 @@ class FsWikiUtility
         }
         return $isSidebar;
     }
-
 
 
     /**
@@ -95,7 +95,7 @@ class FsWikiUtility
     public static function getHomePagePath($namespacePath): ?string
     {
         $homePage = Page::getHomePageFromNamespace($namespacePath);
-        if($homePage->exists()){
+        if ($homePage->exists()) {
             return $homePage->getAbsolutePath();
         } else {
             return null;
@@ -160,23 +160,46 @@ class FsWikiUtility
 
     /**
      * Find the pages in the tree
-     * @param $namespaces (default to the root tree)
-     * @param $depth
+     * @param $startPath
+     * @param int $depth
      * @return array
      */
-    public static function getPages($namespaces = array(''), $depth = 0)
+    public static function getPages($startPath, int $depth = 0): array
     {
+
+        if($startPath === null || $startPath==="" ){
+            throw new \RuntimeException("A start path is mandatory");
+        }
+
+        $startPath = str_replace(':', '/', $startPath);
+
         // Run as admin to overcome the fact that
         // anonymous user cannot set all links and backlinks
         global $conf;
-        $datadir = $conf['datadir'];
+        $dataDir = $conf['datadir'];
 
         $pages = array();
-        foreach ($namespaces as $ns) {
 
+        // This is a page
+        if (page_exists($startPath)) {
+            $pages[] = array(
+                'id' => $startPath,
+                'ns' => getNS($startPath),
+                'title' => p_get_first_heading($startPath, false),
+                'size' => filesize(wikiFN($startPath)),
+                'mtime' => filemtime(wikiFN($startPath)),
+                'perm' => 16,
+                'type' => 'f',
+                'level' => 0,
+                'open' => 1,
+            );
+        } else {
+            /**
+             * Directory
+             */
             search(
                 $pages,
-                $datadir,
+                $dataDir,
                 'search_universal',
                 array(
                     'depth' => $depth,
@@ -187,24 +210,8 @@ class FsWikiUtility
                     'firsthead' => false,
                     'meta' => false,
                 ),
-                str_replace(':', '/', $ns)
+                $startPath
             );
-
-            // add the ns start page
-            if ($ns && page_exists($ns)) {
-                $pages[] = array(
-                    'id' => $ns,
-                    'ns' => getNS($ns),
-                    'title' => p_get_first_heading($ns, false),
-                    'size' => filesize(wikiFN($ns)),
-                    'mtime' => filemtime(wikiFN($ns)),
-                    'perm' => 16,
-                    'type' => 'f',
-                    'level' => 0,
-                    'open' => 1,
-                );
-            }
-
         }
         return $pages;
     }

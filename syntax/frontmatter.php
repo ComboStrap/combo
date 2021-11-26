@@ -24,6 +24,7 @@ use ComboStrap\Analytics;
 use ComboStrap\ArrayUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -58,6 +59,14 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     const END_TAG = '---';
     const METADATA_IMAGE_CANONICAL = "metadata:image";
     const PATTERN = self::START_TAG . '.*?' . self::END_TAG;
+
+    /**
+     * The update status for the update of the frontmatter
+     */
+    const UPDATE_EXIT_CODE_DONE = 000;
+    const UPDATE_EXIT_CODE_NOT_ENABLED = 100;
+    const UPDATE_EXIT_CODE_NOT_CHANGED = 200;
+    const UPDATE_EXIT_CODE_ERROR = 500;
 
 
     /**
@@ -98,7 +107,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
              */
             $emptyString = array_shift($split);
             if (!empty($emptyString)) {
-                return;
+                return Message::createErrorMessage("The frontmatter is not the first element")
+                    ->setStatus(self::UPDATE_EXIT_CODE_ERROR);
             }
 
             $frontMatterMatch = array_shift($split);
@@ -116,7 +126,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         }
 
         if ($updateFrontMatter === 0) {
-            return;
+            return Message::createInfoMessage("The frontmatter is not enabled")
+                ->setStatus(self::UPDATE_EXIT_CODE_NOT_ENABLED);
         }
 
 
@@ -124,6 +135,16 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $nonDefaultMetadatasValuesInStorageFormat = $page->getNonDefaultMetadatasValuesInStorageFormat();
         $targetFrontMatterMetadata = array_merge($nonDefaultMetadatasValuesInStorageFormat, $userDefinedMetadata);
         ksort($targetFrontMatterMetadata);
+
+        /**
+         * Same ?
+         */
+        if ($originalFrontMatterMetadata === $targetFrontMatterMetadata) {
+            return Message::createInfoMessage("The frontmatter are the same (no update)")
+                ->setStatus(self::UPDATE_EXIT_CODE_NOT_CHANGED);
+        }
+
+
         $targetFrontMatterJsonString = \ComboStrap\Json::createFromArray($targetFrontMatterMetadata)->toFrontMatterFormat();
 
 
@@ -137,6 +158,9 @@ $targetFrontMatterJsonString
 $frontMatterEndTag$contentWithoutFrontMatter
 EOF;
         $page->upsertContent($newPageContent, "Metadata manager upsert");
+
+        return Message::createInfoMessage("The frontmatter was changed")
+                ->setStatus(self::UPDATE_EXIT_CODE_DONE);
 
     }
 

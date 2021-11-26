@@ -42,7 +42,7 @@ ini_set('memory_limit', '256M');
  * docker exec -ti $(CONTAINER) /bin/bash
  * ```
  * ```
- * set animal=foo
+ * set animal=animal-directory-name
  * php ./bin/plugin.php combo --help
  * ```
  * or via the IDE
@@ -56,8 +56,10 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
 {
     const REPLICATE = "replicate";
     const ANALYTICS = "analytics";
+    const FRONTMATTER = "frontmatter";
     const SYNC = "sync";
     const PLUGINS_TO_UPDATE = "plugins-to-update";
+
 
     /**
      * register options and arguments
@@ -66,27 +68,41 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
     protected function setup(Options $options)
     {
         $help = <<<EOF
-Commands for the Combo Plugin.
+ComboStrap Administrative Commands
 
-If you want to use it for an animal farm, you need to set it first in a environment variable
 
 Example:
-```dos
-set animal=foo
-php ./bin/plugin.php combo --help
+  * Replicate all pages into the database
+```bash
+php ./bin/plugin.php combo replicate :
+# or
+php ./bin/plugin.php combo replicate /
 ```
+  * Replicate only the page `:namespace:my-page`
+```bash
+php ./bin/plugin.php combo replicate :namespace:my-page
+# or
+php ./bin/plugin.php combo replicate /namespace/my-page
+```
+
+Animal: If you want to use it for an animal farm, you need to set first the animal directory name in a environment variable
+```bash
+set animal=animal-directory-name
+```
+
 EOF;
 
         $options->setHelp($help);
         $options->registerOption('version', 'print version', 'v');
-        $options->registerCommand(self::REPLICATE, "Replicate the data into the database");
+        $options->registerCommand(self::REPLICATE, "Replicate the file system metadata into the database");
         $options->registerCommand(self::ANALYTICS, "Start the analytics and export optionally the data");
         $options->registerCommand(self::PLUGINS_TO_UPDATE, "List the plugins to update");
-        $options->registerOption(
-            'namespaces',
-            "If no namespace is given, the root namespace is assumed.",
-            'n',
-            true
+        $options->registerCommand(self::FRONTMATTER, "Replicate the file system metadata into the page frontmatter");
+        $options->registerCommand(self::SYNC, "Delete the non-existing pages in the database");
+        $options->registerArgument(
+            'path',
+            "The start path (a page or a directory). For all pages, type the root directory '/'",
+            false
         );
         $options->registerOption(
             'output',
@@ -100,7 +116,7 @@ EOF;
             'dry',
             "Optional, dry-run",
             'd', false);
-        $options->registerCommand(self::SYNC, "Sync the database (ie delete the non-existent pages in the database)");
+
 
     }
 
@@ -111,24 +127,39 @@ EOF;
     protected function main(Options $options)
     {
 
-        $namespaces = array_map('cleanID', $options->getArgs());
-        if (!count($namespaces)) $namespaces = array(''); //import from top
 
+        $args = $options->getArgs();
+        $sizeof = sizeof($args);
+        switch ($sizeof){
+            case 0:
+                fwrite(STDERR, "The start path is mandatory and was not given");
+                exit(1);
+            case 1:
+                $startPath = $args[0];
+                if(!in_array($startPath,[":","/"])) {
+                    // cleanId would return blank for a root
+                    $startPath = cleanID($startPath);
+                }
+                break;
+            default:
+                fwrite(STDERR, "Too much arguments given $sizeof");
+                exit(1);
+        }
 
         $depth = $options->getOpt('depth', 0);
         $cmd = $options->getCmd();
-        if ($cmd === "") {
-            $cmd = self::REPLICATE;
-        }
         switch ($cmd) {
             case self::REPLICATE:
                 $force = $options->getOpt('force', false);
-                $this->replicate($namespaces, $force, $depth);
+                $this->replicate($startPath, $force, $depth);
+                break;
+            case self::FRONTMATTER:
+                $this->frontmatter($startPath, $depth);
                 break;
             case self::ANALYTICS:
                 $output = $options->getOpt('output', '');
                 //if ($output == '-') $output = 'php://stdout';
-                $this->analytics($namespaces, $output, $depth);
+                $this->analytics($startPath, $output, $depth);
                 break;
             case self::SYNC:
                 $this->sync();
@@ -144,14 +175,17 @@ EOF;
                 $extension = $this->loadHelper('extension_extension');
                 foreach ($pluginList as $name) {
                     $extension->setExtension($name);
-                    if($extension->updateAvailable()){
+                    if ($extension->updateAvailable()) {
                         echo "The extension $name should be updated";
                     }
                 }
                 break;
             default:
-                fwrite(STDERR, "Combo: Command unknown (" . $cmd . ")");
-                $options->help();
+                if ($cmd !== "") {
+                    fwrite(STDERR, "Combo: Command unknown (" . $cmd . ")");
+                } else {
+                    echo $options->help();
+                }
                 exit(1);
         }
 
@@ -308,5 +342,22 @@ EOF;
         }
 
 
+    }
+
+    private function frontmatter($namespaces, $depth)
+    {
+        $pages = FsWikiUtility::getPages($namespaces, $depth);
+        $pageCounter = 0;
+        $totalNumberOfPages = sizeof($pages);
+        while ($pageArray = array_shift($pages)) {
+            $id = $pageArray['id'];
+            $page = Page::createPageFromId($id);
+
+            $pageCounter++;
+            $message = syntax_plugin_combo_frontmatter::updateFrontmatter($page);
+            LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) " . $message->getPlainTextContent(), LogUtility::LVL_MSG_INFO);
+
+
+        }
     }
 }

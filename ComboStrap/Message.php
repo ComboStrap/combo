@@ -28,6 +28,10 @@ class Message
     private $signatureName;
 
     private $class;
+    /**
+     * @var int
+     */
+    private $status;
 
 
     public function __construct($type)
@@ -72,6 +76,7 @@ class Message
         }
         return $message;
     }
+
 
     public
     function addHtmlContent($message): Message
@@ -228,6 +233,12 @@ EOF;
         } else {
             return null;
         }
+    }
+
+    public function setStatus(int $status): Message
+    {
+        $this->status = $status;
+        return $this;
     }
 
 }

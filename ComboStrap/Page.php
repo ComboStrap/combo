@@ -2655,6 +2655,9 @@ class Page extends DokuPath
         [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
         $this->h1 = $this->getMetadata(Analytics::H1);
         $this->canonical = $this->getMetadata(Page::CANONICAL_PROPERTY);
+        if($this->canonical!==null) {
+            DokuPath::addRootSeparatorIfNotPresent($this->canonical);
+        }
         $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
         /**
          * `title` is created by DokuWiki
@@ -3051,7 +3054,7 @@ class Page extends DokuPath
     public function getNonDefaultMetadatasValuesInStorageFormat(): array
     {
         $nonDefaultMetadatas = [];
-        $metaToPreserve = Metadata::FORM_MANAGED_METADATA;
+        $metaToPreserve = Metadata::FORM_METADATA;
         $metaToPreserve[] = Page::PAGE_ID_ATTRIBUTE;
         foreach ($metaToPreserve as $metaKey) {
             switch ($metaKey) {
@@ -3162,10 +3165,19 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR] = $this->getCanBeOfLowQuality();
                     }
                     break;
+                case CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME:
+                    if ($this->getCacheExpirationFrequency() !== null) {
+                        $nonDefaultMetadatas[CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME] = $this->getCacheExpirationFrequency();
+                    }
+                    break;
+                case Page::KEYWORDS_ATTRIBUTE:
+                    if ($this->getKeywords() !==null && sizeof($this->getKeywords()) !== 0) {
+                        $nonDefaultMetadatas[Page::KEYWORDS_ATTRIBUTE] = implode(",", $this->getKeywords());
+                    }
+                    break;
                 default:
                     LogUtility::msg("The managed metadata ($metaKey) is not taken into account in the non default metadata computation.", LogUtility::LVL_MSG_ERROR);
             }
-
 
         }
         return $nonDefaultMetadatas;

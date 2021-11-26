@@ -128,6 +128,7 @@ abstract class Metadata
     ];
 
 
+
     /**
      * The meta that are modifiable in the form.
      *
@@ -135,7 +136,7 @@ abstract class Metadata
      *   * in the {@link \syntax_plugin_combo_frontmatter}
      *   * or in the database
      */
-    const FORM_MANAGED_METADATA = [
+    const FORM_METADATA = [
         Page::CANONICAL_PROPERTY,
         Page::TYPE_META_PROPERTY,
         Analytics::H1,
@@ -194,7 +195,7 @@ abstract class Metadata
         }
         $cleanedMetadata = [];
         foreach ($metadataArray as $key => $value) {
-            if (!in_array($key, Metadata::FORM_MANAGED_METADATA)) {
+            if (!in_array($key, Metadata::FORM_METADATA)) {
                 $cleanedMetadata[$key] = $value;
             }
         }

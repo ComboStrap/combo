@@ -106,7 +106,7 @@ class CacheExpirationFrequencyMeta extends Metadata
     }
 
 
-    public function loadFromFileSystem()
+    public function buildFromFileSystem()
     {
         $value = $this->getFileSystemValue();
         try {

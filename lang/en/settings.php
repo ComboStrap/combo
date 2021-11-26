@@ -11,6 +11,7 @@ use ComboStrap\LinkUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
+use ComboStrap\PageImages;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\Publication;
@@ -136,7 +137,7 @@ $lang[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = PluginUtility
 /**
  * Page Image
  */
-$lang[Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL, "Metadata Image") . " - Disable the use of the first image as a page image";
+$lang[PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL, "Metadata Image") . " - Disable the use of the first image as a page image";
 
 /**
  * Default

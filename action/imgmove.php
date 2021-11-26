@@ -4,6 +4,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageImages;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -80,12 +81,12 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             return $match;
         } else {
 
-            if (!isset($jsonArray[Page::IMAGE_META_PROPERTY])) {
+            if (!isset($jsonArray[PageImages::IMAGE_META_PROPERTY])) {
                 return $match;
             }
 
             try {
-                $images = &$jsonArray[Page::IMAGE_META_PROPERTY];
+                $images = &$jsonArray[PageImages::IMAGE_META_PROPERTY];
                 if (is_array($images)) {
                     foreach ($images as &$subImage) {
                         if (is_array($subImage)) {

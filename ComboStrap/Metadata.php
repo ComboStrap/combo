@@ -36,7 +36,7 @@ abstract class Metadata
     }
 
 
-    public abstract function loadFromFileSystem();
+    public abstract function buildFromFileSystem();
 
     public abstract function setFromPersistentFormat($value);
 
@@ -160,7 +160,7 @@ abstract class Metadata
         Page::TYPE_META_PROPERTY,
         Analytics::H1,
         Aliases::ALIAS_ATTRIBUTE,
-        Page::IMAGE_META_PROPERTY,
+        PageImages::IMAGE_META_PROPERTY,
         Page::REGION_META_PROPERTY,
         Page::LANG_META_PROPERTY,
         Analytics::TITLE,

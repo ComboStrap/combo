@@ -27,6 +27,7 @@ use ComboStrap\MediaLink;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\Page;
+use ComboStrap\PageImages;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 
@@ -370,7 +371,7 @@ EOF;
                 foreach ($frontMatterJsonArray as $key => $value) {
 
                     $renderer->setAnalyticsMetaForReporting($key, $value);
-                    if ($key === Page::IMAGE_META_PROPERTY) {
+                    if ($key === PageImages::IMAGE_META_PROPERTY) {
                         $this->updateImageStatistics($value, $renderer);
                     }
 
@@ -388,8 +389,8 @@ EOF;
                  * Register media in index
                  */
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
-                if (isset($frontMatterJsonArray[Page::IMAGE_META_PROPERTY])) {
-                    $value = $frontMatterJsonArray[Page::IMAGE_META_PROPERTY];
+                if (isset($frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY])) {
+                    $value = $frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY];
                     $imageValues = [];
                     ArrayUtility::toFlatArray($imageValues, $value);
                     foreach ($imageValues as $imageValue) {

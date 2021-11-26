@@ -21,6 +21,7 @@
 
 
 use ComboStrap\Icon;
+use ComboStrap\PageImages;
 use ComboStrap\Prism;
 
 
@@ -180,7 +181,7 @@ $conf['twitter:widgets:theme'] = "light";
 $conf['twitter:widgets:border-color'] = "#55acee";
 
 /**
- * Page Image {@link Page::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
+ * Page Image {@link PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
  */
 $conf['disableFirstImageAsPageImage'] = 0;
 

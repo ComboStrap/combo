@@ -36,10 +36,6 @@ class Page extends DokuPath
     const CANONICAL_PROPERTY = 'canonical';
     const TITLE_META_PROPERTY = 'title';
 
-    const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
-
-    const FIRST_IMAGE_META_RELATION = "firstimage";
-
     const NOT_MODIFIABLE_METAS = [
         "date",
         "user",
@@ -102,7 +98,6 @@ class Page extends DokuPath
     const SCOPE_CURRENT_VALUE = "current";
 
 
-    const IMAGE_META_PROPERTY = 'image';
     const REGION_META_PROPERTY = "region";
     const LANG_META_PROPERTY = "lang";
     public const SLUG_ATTRIBUTE = "slug";
@@ -282,7 +277,7 @@ class Page extends DokuPath
      */
     private $endDate;
     /**
-     * @var PageImage[]
+     * @var PageImages
      */
     private $pageImages;
     private $keywords;
@@ -904,8 +899,8 @@ class Page extends DokuPath
     {
 
         $relation = $this->getCurrentMetadata('relation');
-        if (isset($relation[Page::FIRST_IMAGE_META_RELATION])) {
-            $firstImageId = $relation[Page::FIRST_IMAGE_META_RELATION];
+        if (isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
+            $firstImageId = $relation[PageImages::FIRST_IMAGE_META_RELATION];
             if (empty($firstImageId)) {
                 return null;
             } else {
@@ -1926,8 +1921,7 @@ class Page extends DokuPath
                         $this->setLayout($value);
                         continue 2;
                     case Aliases::ALIAS_ATTRIBUTE:
-                        $this->aliases = Aliases::createFromPage($this)
-                            ->setFromPersistentFormat($value);
+                        $this->aliases->setFromPersistentFormat($value);
                         continue 2;
                     case Page::PAGE_ID_ATTRIBUTE:
                         if ($this->getPageId() === null) {
@@ -1942,9 +1936,8 @@ class Page extends DokuPath
                     case Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
                         $this->setCanBeOfLowQuality(Boolean::toBoolean($value));
                         continue 2;
-                    case PAGE::IMAGE_META_PROPERTY:
-                        $images = PageImage::toPageImageArray($value, $this);
-                        $this->setPageImage($images);
+                    case PageImages::IMAGE_META_PROPERTY:
+                        $this->pageImages->setFromPersistentFormat($value);
                         continue 2;
                     case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
                         $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
@@ -2272,20 +2265,9 @@ class Page extends DokuPath
     public
     function getPageImages(): array
     {
-        return $this->pageImages;
+        return $this->pageImages->getAll();
     }
 
-    /**
-     * @param PageImage[] $pageImages
-     * @return Page
-     */
-    public
-    function setPageImage(array $pageImages): Page
-    {
-        $this->pageImages = $pageImages;
-        $this->setMetadata(self::IMAGE_META_PROPERTY, PageImage::toMetadataArray($pageImages));
-        return $this;
-    }
 
     public
     function getLdJson()
@@ -2304,6 +2286,7 @@ class Page extends DokuPath
     /**
      * @param array|string $jsonLd
      * @return $this
+     * @throws ExceptionCombo
      */
     public
     function setJsonLd($jsonLd): Page
@@ -2336,7 +2319,7 @@ class Page extends DokuPath
     public
     function getDefaultPageImageObject(): ?PageImage
     {
-        if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+        if (!PluginUtility::getConfValue(PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             $firstImage = $this->getFirstImage();
             if ($firstImage != null) {
                 if ($firstImage->getDokuPath()->getScheme() == DokuPath::LOCAL_SCHEME) {
@@ -2604,6 +2587,8 @@ class Page extends DokuPath
          */
         $this->cacheExpirationDate = CacheExpirationFrequencyMeta::createForPage($this);
         $this->aliases = Aliases::createFromPage($this);
+        $this->pageImages = PageImages::createFromPage($this);
+
 
 
         /**
@@ -2653,11 +2638,6 @@ class Page extends DokuPath
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
 
 
-        try {
-            $this->pageImages = PageImage::toPageImageArray($this->getMetadata(self::IMAGE_META_PROPERTY), $this);
-        } catch (Exception $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, PageImage::CANONICAL);
-        }
         $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
 
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
@@ -2991,11 +2971,11 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Aliases::ALIAS_ATTRIBUTE] = $this->aliases->toPersistentValue();
                     }
                     break;
-                case Page::IMAGE_META_PROPERTY:
+                case PageImages::IMAGE_META_PROPERTY:
                     $images = $this->getPageImages();
                     if (sizeof($images) !== 0) {
-                        $nonDefaultMetadatas[Page::IMAGE_META_PROPERTY] = PageImage::toMetadataArray($this->getPageImages());
-                    };
+                        $nonDefaultMetadatas[PageImages::IMAGE_META_PROPERTY] = $this->pageImages->toPersistentValue();
+                    }
                     break;
                 case Page::REGION_META_PROPERTY:
                     if (!in_array($this->getLocaleRegion(), [$this->getDefaultRegion(), null])) {

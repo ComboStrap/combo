@@ -208,7 +208,7 @@ class Aliases extends Metadata
     /**
      *
      */
-    public function loadFromFileSystem(): Aliases
+    public function buildFromFileSystem(): Aliases
     {
         $aliases = $this->getFileSystemValue();
         $this->aliases = self::toNativeAliasArray($aliases);
@@ -236,7 +236,7 @@ class Aliases extends Metadata
     private function buildCheck()
     {
         if (!$this->wasBuild && $this->aliases === null) {
-            $this->loadFromFileSystem();
+            $this->buildFromFileSystem();
             $this->wasBuild = true;
         }
     }

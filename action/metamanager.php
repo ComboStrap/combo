@@ -23,6 +23,7 @@ use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PageImage;
+use ComboStrap\PageImages;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 use ComboStrap\Site;
@@ -249,10 +250,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         foreach ($aliasPaths as $key => $imagesPath) {
             if ($imagesPath !== "") {
                 $aliases[$imagesPath] = PageImage::create($imagesPath, $page)
-                    ->setUsage($imagesUsage[$key]);
+                    ->setUsages($imagesUsage[$key]);
             }
         }
-        $post[PAGE::IMAGE_META_PROPERTY] = PageImage::toMetadataArray($aliases);
+        $post[PageImages::IMAGE_META_PROPERTY] = PageImages::toMetadataArray($aliases);
 
         /**
          * Building Alias

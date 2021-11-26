@@ -122,6 +122,10 @@ class ImageRaster extends Image
      * @return false|string|null
      */
     public function getUrlForSrcSetAtBreakpoint($breakpoint){
+        if(PluginUtility::isTest()){
+            // The test library does not support ampersand character
+            return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_URL_ENCODED,$breakpoint);
+        }
         return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_CHARACTER,$breakpoint);
     }
 

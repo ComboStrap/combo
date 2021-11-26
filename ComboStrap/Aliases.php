@@ -217,7 +217,11 @@ class Aliases extends Metadata
 
     public function getSize(): int
     {
-        return sizeof($this->aliases);
+        $aliases = $this->aliases;
+        if($this->aliases===null){
+            return 0;
+        }
+        return sizeof($aliases);
     }
 
     public function setFromPersistentFormat($value): Aliases

@@ -74,12 +74,12 @@ class PageImage
     public function getUsages(): array
     {
         if ($this->usages === null) {
-            return [];
+            return $this->getDefaultUsage();
         }
         return array_values($this->usages);
     }
 
-    public static function getDefaultUsage(): array
+    public function getDefaultUsage(): array
     {
         return [self::DEFAULT];
     }

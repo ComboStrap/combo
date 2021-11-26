@@ -32,6 +32,7 @@ require_once(__DIR__ . '/Metadata.php');
  */
 require_once(__DIR__ . '/AdsUtility.php');
 require_once(__DIR__ . '/Alias.php');
+require_once(__DIR__ . '/Aliases.php');
 require_once(__DIR__ . '/Align.php');
 require_once(__DIR__ . '/Analytics.php');
 require_once(__DIR__ . '/AnalyticsMenuItem.php');

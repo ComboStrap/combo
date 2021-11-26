@@ -3,6 +3,7 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
+use ComboStrap\Aliases;
 use ComboStrap\Analytics;
 use ComboStrap\CacheExpirationFrequencyMeta;
 use ComboStrap\CacheManager;
@@ -260,21 +261,19 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         unset($post[self::ALIAS_PATH]);
         $aliasTypes = $post[self::ALIAS_TYPE];
         unset($post[self::ALIAS_TYPE]);
-        $aliases = [];
+        $aliases = Aliases::createFromPage($page);
         if (is_array($aliasPaths)) {
             foreach ($aliasPaths as $key => $aliasPath) {
                 if ($aliasPath !== "") {
-                    $aliases[$aliasPath] = Alias::create($page, $aliasPath)
-                        ->setType($aliasTypes[$key]);
+                    $aliases->addAlias($aliasPath, $aliasTypes[$key]);
                 }
             }
         } else {
             if ($aliasPaths !== "") {
-                $aliases[] = Alias::create($page, $aliasPaths)
-                    ->setType($aliasTypes);
+                $aliases->addAlias($aliasPaths, $aliasTypes);
             }
         }
-        $post[Page::ALIAS_ATTRIBUTE] = Alias::toMetadataArray($aliases);
+        $post[Aliases::ALIAS_ATTRIBUTE] = $aliases->toPersistentValue();
 
         /**
          * Upsert
@@ -695,9 +694,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             }
         }
 
-        $formMeta->addField(FormMetaField::create(Page::ALIAS_ATTRIBUTE)
+        $formMeta->addField(FormMetaField::create(Aliases::ALIAS_ATTRIBUTE)
             ->setLabel("Page Aliases")
-            ->setCanonical(Page::ALIAS_ATTRIBUTE)
+            ->setCanonical(Aliases::ALIAS_ATTRIBUTE)
             ->setDescription("Aliases that will redirect to this page.")
             ->setTab(self::TAB_REDIRECTION_VALUE)
             ->setType(FormMetaField::TABULAR_TYPE_VALUE)

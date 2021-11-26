@@ -118,7 +118,6 @@ class Page extends DokuPath
     const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
 
     const OLD_REGION_PROPERTY = "country";
-    const ALIAS_ATTRIBUTE = "alias";
     // Length to get the same probability than uuid v4
     const PAGE_ID_LENGTH = 21;
     // The page id abbreviation is used in the url
@@ -245,11 +244,11 @@ class Page extends DokuPath
     private $lowQualityIndicatorCalculated;
     private $layout;
     /**
-     * @var Alias[]
+     * @var Aliases
      */
     private $aliases;
     /**
-     * @var a slug path
+     * @var string a slug path
      */
     private $slug;
     /**
@@ -1926,9 +1925,9 @@ class Page extends DokuPath
                     case Page::LAYOUT_PROPERTY:
                         $this->setLayout($value);
                         continue 2;
-                    case Page::ALIAS_ATTRIBUTE:
-                        $aliases = Alias::toAliasArray($value, $this);
-                        $this->setAliases($aliases);
+                    case Aliases::ALIAS_ATTRIBUTE:
+                        $this->aliases = Aliases::createFromPage($this)
+                            ->setFromPersistentFormat($value);
                         continue 2;
                     case Page::PAGE_ID_ATTRIBUTE:
                         if ($this->getPageId() === null) {
@@ -2351,14 +2350,9 @@ class Page extends DokuPath
     public
     function addAndGetAlias($aliasPath, $aliasType): Alias
     {
-        $aliases = $this->getAliases();
-        $newAlias = Alias::create($this, $aliasPath);
-        if (!blank($aliasType)) {
-            $newAlias->setType($aliasType);
-        }
-        $aliases[$aliasPath] = $newAlias;
-        $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
-        return $newAlias;
+
+        return $this->aliases->addAndGetAlias($aliasPath, $aliasType);
+
     }
 
 
@@ -2368,20 +2362,7 @@ class Page extends DokuPath
     public
     function getAliases(): array
     {
-        /**
-         * We don't do that on build because
-         * we are using a set a metadata method that creates
-         * a cycle via the {@link Page::PAGE_METADATA_MUTATION_EVENT}
-         */
-        if ($this->aliases === null) {
-            $aliases = $this->getAndDeleteDeprecatedAlias();
-            /**
-             * To validate the migration we set a value
-             * (the array may be empty)
-             */
-            $this->setAliases($aliases);
-        }
-        return $this->aliases;
+        return $this->aliases->getAll();
     }
 
     /**
@@ -2592,16 +2573,6 @@ class Page extends DokuPath
         return $this;
     }
 
-    /**
-     * @param Alias[] $aliases
-     */
-    private
-    function setAliases(array $aliases): Page
-    {
-        $this->aliases = $aliases;
-        $this->setMetadata(self::ALIAS_ATTRIBUTE, Alias::toMetadataArray($aliases));
-        return $this;
-    }
 
     /**
      *
@@ -2632,6 +2603,7 @@ class Page extends DokuPath
          * otherwise, there is a null exception
          */
         $this->cacheExpirationDate = CacheExpirationFrequencyMeta::createForPage($this);
+        $this->aliases = Aliases::createFromPage($this);
 
 
         /**
@@ -2655,7 +2627,7 @@ class Page extends DokuPath
         [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
         $this->h1 = $this->getMetadata(Analytics::H1);
         $this->canonical = $this->getMetadata(Page::CANONICAL_PROPERTY);
-        if($this->canonical!==null) {
+        if ($this->canonical !== null) {
             DokuPath::addRootSeparatorIfNotPresent($this->canonical);
         }
         $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
@@ -2680,11 +2652,7 @@ class Page extends DokuPath
 
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
 
-        try {
-            $this->aliases = Alias::toAliasArray($this->getMetadata(self::ALIAS_ATTRIBUTE), $this);
-        } catch (Exception $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, Alias::CANONICAL);
-        }
+
         try {
             $this->pageImages = PageImage::toPageImageArray($this->getMetadata(self::IMAGE_META_PROPERTY), $this);
         } catch (Exception $e) {
@@ -2740,63 +2708,6 @@ class Page extends DokuPath
         return $this;
     }
 
-    /**
-     * Code refactoring
-     * This method is not in the database page
-     * because it would create a cycle
-     *
-     * The old data was saved in the database
-     * but should have been saved on the file system
-     *
-     * Once
-     * @return Alias[]
-     * @deprecated 2021-10-31
-     */
-    private
-    function getAndDeleteDeprecatedAlias(): array
-    {
-        $sqlite = Sqlite::getSqlite();
-        if ($sqlite === null) return [];
-
-        $canonicalOrDefault = $this->getCanonicalOrDefault();
-        $res = $sqlite->query("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", $canonicalOrDefault);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the deprecated alias selection query", LogUtility::LVL_MSG_ERROR);
-            return [];
-        }
-        $deprecatedAliasInDb = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
-        $deprecatedAliases = [];
-        array_map(
-            function ($row) use ($deprecatedAliases) {
-                $alias = $row['ALIAS'];
-                $deprecatedAliases[$alias] = Alias::create($this, $alias)
-                    ->setType(Alias::REDIRECT);
-            },
-            $deprecatedAliasInDb
-        );
-
-        /**
-         * Delete them
-         */
-        try {
-            if (sizeof($deprecatedAliasInDb) > 0) {
-                $res = $sqlite->query("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", $canonicalOrDefault);
-                if (!$res) {
-                    LogUtility::msg("An exception has occurred with the delete deprecated alias statement", LogUtility::LVL_MSG_ERROR);
-                }
-                $sqlite->res_close($res);
-            }
-        } catch (\Exception $e) {
-            LogUtility::msg("An exception has occurred with the deletion of deprecated aliases. Message: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
-        }
-
-        /**
-         * Return
-         */
-        return $deprecatedAliases;
-
-    }
 
     function getPageIdAbbr()
     {
@@ -3074,10 +2985,10 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Analytics::H1] = $this->getH1();
                     }
                     break;
-                case Page::ALIAS_ATTRIBUTE:
-                    $aliases = $this->getAliases();
-                    if (sizeof($aliases) !== 0) {
-                        $nonDefaultMetadatas[Page::ALIAS_ATTRIBUTE] = Alias::toMetadataArray($this->getAliases());
+                case Aliases::ALIAS_ATTRIBUTE:
+
+                    if ($this->aliases->getSize()!== 0) {
+                        $nonDefaultMetadatas[Aliases::ALIAS_ATTRIBUTE] = $this->aliases->toPersistentValue();
                     }
                     break;
                 case Page::IMAGE_META_PROPERTY:
@@ -3171,7 +3082,7 @@ class Page extends DokuPath
                     }
                     break;
                 case Page::KEYWORDS_ATTRIBUTE:
-                    if ($this->getKeywords() !==null && sizeof($this->getKeywords()) !== 0) {
+                    if ($this->getKeywords() !== null && sizeof($this->getKeywords()) !== 0) {
                         $nonDefaultMetadatas[Page::KEYWORDS_ATTRIBUTE] = implode(",", $this->getKeywords());
                     }
                     break;

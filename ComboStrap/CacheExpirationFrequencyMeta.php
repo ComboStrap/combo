@@ -52,7 +52,7 @@ class CacheExpirationFrequencyMeta extends Metadata
 
     }
 
-    public function getPersistentDefaultValue(): string
+    public function toPersistentDefaultValue(): string
     {
 
         return $this->toPersistentDateTime($this->getDefaultValue());
@@ -64,7 +64,7 @@ class CacheExpirationFrequencyMeta extends Metadata
 
         if (!$this->wasBuildOrSet) {
             $this->wasBuildOrSet = true;
-            $this->cacheExpirationDate = $this->toDateTime($this->getMetadataValue());
+            $this->cacheExpirationDate = $this->toDateTime($this->getFileSystemValue());
             if ($this->cacheExpirationDate === null) {
                 $cronExpression = $this->getPage()->getCacheExpirationFrequency();
                 if ($cronExpression !== null) {
@@ -84,7 +84,7 @@ class CacheExpirationFrequencyMeta extends Metadata
     {
         $this->wasBuildOrSet = true;
         $this->cacheExpirationDate = $cacheExpirationDate;
-        $this->save();
+        $this->persistToFileSystem();
         return $this;
     }
 
@@ -94,7 +94,7 @@ class CacheExpirationFrequencyMeta extends Metadata
     }
 
 
-    public function getPersistentValue()
+    public function toPersistentValue()
     {
         return $this->toPersistentDateTime($this->getValue());
     }
@@ -103,5 +103,30 @@ class CacheExpirationFrequencyMeta extends Metadata
     public function getPersistenceType()
     {
         return Metadata::CURRENT_METADATA;
+    }
+
+
+    public function loadFromFileSystem()
+    {
+        $value = $this->getFileSystemValue();
+        try {
+            $this->cacheExpirationDate = $this->fromPersistentDateTime($value);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), $this->getCanonical());
+        }
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setFromPersistentFormat($value): CacheExpirationFrequencyMeta
+    {
+        $this->fromPersistentDateTime($value);
+        return $this;
+    }
+
+    public function getCanonical(): string
+    {
+        return ":page-cache-expiration-frequency";
     }
 }

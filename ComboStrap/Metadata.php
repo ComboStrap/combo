@@ -26,14 +26,21 @@ abstract class Metadata
         $this->page = $page;
     }
 
-    protected function save()
+    protected function persistToFileSystem()
     {
         $name = $this->getName();
-        $persistentValue = $this->getPersistentValue();
-        $defaultValue = $this->getDefaultValue();
+        $persistentValue = $this->toPersistentValue();
+        $defaultValue = $this->toPersistentDefaultValue();
         $type = $this->getPersistenceType();
         $this->page->setMetadata($name, $persistentValue, $defaultValue, $type);
     }
+
+
+    public abstract function loadFromFileSystem();
+
+    public abstract function setFromPersistentFormat($value);
+
+    public abstract function getCanonical();
 
     protected function getPage(): Page
     {
@@ -43,7 +50,7 @@ abstract class Metadata
     /**
      * @return string|array|null
      */
-    protected function getMetadataValue()
+    protected function getFileSystemValue()
     {
         return $this->page->getMetadata($this->getName());
     }
@@ -56,12 +63,13 @@ abstract class Metadata
     /**
      * @return string|array|null the value to be persisted on the file system
      */
-    public abstract function getPersistentValue();
+    public abstract function toPersistentValue();
+
 
     /**
      * @return mixed
      */
-    public abstract function getPersistentDefaultValue();
+    public abstract function toPersistentDefaultValue();
 
     /**
      * @return mixed
@@ -79,6 +87,17 @@ abstract class Metadata
             return null;
         }
         return Iso8601Date::createFromDateTime($dateTime)->toString();
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    protected function fromPersistentDateTime(?string $dateTime): ?DateTime
+    {
+        if ($dateTime === null) {
+            return null;
+        }
+        return Iso8601Date::createFromString($dateTime)->getDateTime();
     }
 
     protected function toDateTime($value)
@@ -140,7 +159,7 @@ abstract class Metadata
         Page::CANONICAL_PROPERTY,
         Page::TYPE_META_PROPERTY,
         Analytics::H1,
-        Page::ALIAS_ATTRIBUTE,
+        Aliases::ALIAS_ATTRIBUTE,
         Page::IMAGE_META_PROPERTY,
         Page::REGION_META_PROPERTY,
         Page::LANG_META_PROPERTY,

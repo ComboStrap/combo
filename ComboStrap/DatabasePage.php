@@ -1238,7 +1238,7 @@ EOF;
                         $res2arr
                     )
                 );
-                LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, Page::ALIAS_ATTRIBUTE);
+                LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, Aliases::ALIAS_ATTRIBUTE);
                 return $res2arr[0];
         }
     }

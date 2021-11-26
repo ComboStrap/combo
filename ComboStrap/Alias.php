@@ -4,7 +4,6 @@
 namespace ComboStrap;
 
 
-use Exception;
 
 class Alias
 {
@@ -53,55 +52,6 @@ class Alias
         return $this->path;
     }
 
-    /**
-     * @param $aliases
-     * @param Page $page
-     * @return Alias[]|null
-     * @throws Exception
-     *
-     * We throw errors because the alias can be set:
-     *   - from the metadata file
-     *   - from the frontmatter
-     *   - from an ajax request
-     * The channel is never the same and it needs then to catch the errors
-     * and returns the message in the appropriate format
-     *   - toast for the template
-     *   - json for the ajax request
-     */
-    public static function toAliasArray($aliases, Page $page): ?array
-    {
-        if ($aliases === null) return null;
-
-        $aliasArray = [];
-        foreach ($aliases as $key => $value) {
-            if (is_array($value)) {
-                $path = $value[Alias::ALIAS_PATH_PROPERTY];
-                if (empty($path)) {
-                    if (is_string($key)) {
-                        // Old way (deprecated)
-                        $path = $key;
-                    } else {
-                        throw new ExceptionCombo("The path of the alias should not be empty to create a path", self::CANONICAL);
-                    }
-                }
-                $type = $value[Alias::ALIAS_TYPE_PROPERTY];
-                $aliasArray[$path] = Alias::create($page, $path)
-                    ->setType($type);
-            } else {
-                $path = $value;
-                if (empty($path)) {
-                    throw new ExceptionCombo("The value of the alias array should not be empty as it's the alias path", self::CANONICAL);
-                }
-                if (!is_string($path)) {
-                    $path = StringUtility::toString($path);
-                    throw new ExceptionCombo("The alias element ($path) is not a string", self::CANONICAL);
-                }
-                $aliasArray[$path] = Alias::create($page, $path);
-            }
-        }
-        return $aliasArray;
-    }
-
     public static function getPossibleTypesValues(): array
     {
         return self::ALIAS_TYPE_VALUES;
@@ -135,23 +85,6 @@ class Alias
     static function create(Page $page, $alias): Alias
     {
         return new Alias($page, $alias);
-    }
-
-    /**
-     * @param Alias[] $aliases
-     * @return array - the array to be saved in a text/json file
-     */
-    public
-    static function toMetadataArray(array $aliases): array
-    {
-        $array = [];
-        foreach ($aliases as $alias) {
-            $array[$alias->getPath()] = [
-                Alias::ALIAS_PATH_PROPERTY => $alias->getPath(),
-                Alias::ALIAS_TYPE_PROPERTY => $alias->getType()
-            ];
-        }
-        return array_values($array);
     }
 
     public

@@ -286,7 +286,7 @@ class Page extends DokuPath
      */
     private $cacheExpirationFrequency;
     /**
-     * @var CacheExpirationFrequencyMeta
+     * @var CacheExpirationDate
      */
     private $cacheExpirationDate;
 
@@ -2585,7 +2585,7 @@ class Page extends DokuPath
          * Even if it does not exist, the metadata object should be instantiated
          * otherwise, there is a null exception
          */
-        $this->cacheExpirationDate = CacheExpirationFrequencyMeta::createForPage($this);
+        $this->cacheExpirationDate = CacheExpirationDate::createForPage($this);
         $this->aliases = Aliases::createFromPage($this);
         $this->pageImages = PageImages::createFromPage($this);
 

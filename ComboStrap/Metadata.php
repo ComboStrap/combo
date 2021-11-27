@@ -7,10 +7,10 @@ namespace ComboStrap;
 use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
-use DateTime;
 
 abstract class Metadata
 {
+    const CANONICAL = "page:metadata";
 
     /**
      * @var Page
@@ -40,7 +40,13 @@ abstract class Metadata
 
     public abstract function setFromPersistentFormat($value);
 
-    public abstract function getCanonical();
+    public function getCanonical(): string
+    {
+        /**
+         * The canonical to page metadata
+         */
+        return self::CANONICAL;
+    }
 
     protected function getPage(): Page
     {
@@ -76,29 +82,6 @@ abstract class Metadata
      */
     public abstract function getPersistenceType();
 
-    /**
-     * Helper function for date metadata
-     * @param DateTime|null $dateTime
-     * @return string|null
-     */
-    protected function toPersistentDateTime(?DateTime $dateTime): ?string
-    {
-        if ($dateTime === null) {
-            return null;
-        }
-        return Iso8601Date::createFromDateTime($dateTime)->toString();
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    protected function fromPersistentDateTime(?string $dateTime): ?DateTime
-    {
-        if ($dateTime === null) {
-            return null;
-        }
-        return Iso8601Date::createFromString($dateTime)->getDateTime();
-    }
 
     protected function toDateTime($value)
     {
@@ -195,10 +178,7 @@ abstract class Metadata
      */
     public const PERSISTENT_METADATA = "persistent";
     const TYPES = [self::CURRENT_METADATA, self::PERSISTENT_METADATA];
-    /**
-     * The canonical to page metadata
-     */
-    public const CANONICAL = "page:metadata";
+
 
     /**
      * Delete the managed metadata

@@ -114,7 +114,7 @@ class PageImages extends Metadata
         try {
             $this->pageImages = $this->toPageImageArray($this->getFileSystemValue());
         } catch (Exception $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $this->getCanonical());
         }
     }
 

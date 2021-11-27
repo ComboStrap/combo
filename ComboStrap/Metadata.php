@@ -147,7 +147,6 @@ abstract class Metadata
     ];
 
 
-
     /**
      * The meta that are modifiable in the form.
      *
@@ -208,7 +207,6 @@ abstract class Metadata
      */
     public static function deleteManagedMetadata($metadataArray): array
     {
-
         if (sizeof($metadataArray) === 0) {
             return $metadataArray;
         }

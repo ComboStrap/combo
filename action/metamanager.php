@@ -9,6 +9,7 @@ use ComboStrap\CacheExpirationFrequencyMeta;
 use ComboStrap\CacheManager;
 use ComboStrap\DatabasePage;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\FormMeta;
 use ComboStrap\FormMetaField;
 use ComboStrap\FormMetaTab;
@@ -239,21 +240,26 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         ];
         $post = array_merge($defaultBoolean, $post);
 
+        $processingMessages = [];
         /**
          * Building back images
          */
-        $aliasPaths = $post[self::IMAGE_PATH];
+        $imagePaths = $post[self::IMAGE_PATH];
         unset($post[self::IMAGE_PATH]);
         $imagesUsage = $post[self::IMAGE_USAGE];
         unset($post[self::IMAGE_USAGE]);
-        $aliases = [];
-        foreach ($aliasPaths as $key => $imagesPath) {
+        $pageImages = PageImages::createFromPage($page);
+        foreach ($imagePaths as $key => $imagesPath) {
             if ($imagesPath !== "") {
-                $aliases[$imagesPath] = PageImage::create($imagesPath, $page)
-                    ->setUsages($imagesUsage[$key]);
+                try {
+                    $pageImages->addImage($imagesPath, $imagesUsage[$key]);
+                } catch (ExceptionCombo $e) {
+                    $processingMessages[] = Message::createErrorMessage($e->getMessage())
+                        ->setCanonical($e->getCanonical());
+                }
             }
         }
-        $post[PageImages::IMAGE_META_PROPERTY] = PageImages::toMetadataArray($aliases);
+        $post[PageImages::IMAGE_META_PROPERTY] = $pageImages->toPersistentValue();
 
         /**
          * Building Alias
@@ -280,18 +286,19 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * Upsert
          */
         $upsertMessages = $page->upsertMetadataFromAssociativeArray($post, true);
+        $processingMessages = array_merge($upsertMessages,$processingMessages);
 
         $responseMessages = [];
         $responseStatus = HttpResponse::STATUS_ALL_GOOD;
-        foreach ($upsertMessages as $upsertMessage) {
-            $responseMessage = [ucfirst($upsertMessage->getType())];
-            $documentationHyperlink = $upsertMessage->getDocumentationHyperLink();
+        foreach ($processingMessages as $upsertMessages) {
+            $responseMessage = [ucfirst($upsertMessages->getType())];
+            $documentationHyperlink = $upsertMessages->getDocumentationHyperLink();
             if ($documentationHyperlink !== null) {
                 $responseMessage[] = $documentationHyperlink;
             }
-            $responseMessage[] = $upsertMessage->getContent(Mime::PLAIN_TEXT);
+            $responseMessage[] = $upsertMessages->getContent(Mime::PLAIN_TEXT);
             $responseMessages[] = implode(" - ", $responseMessage);
-            if ($upsertMessage->getType() === Message::TYPE_ERROR && $responseStatus !== HttpResponse::STATUS_BAD_REQUEST) {
+            if ($upsertMessages->getType() === Message::TYPE_ERROR && $responseStatus !== HttpResponse::STATUS_BAD_REQUEST) {
                 $responseStatus = HttpResponse::STATUS_BAD_REQUEST;
             }
         }
@@ -655,7 +662,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
             }
             $pageImagePath->addValue($pageImagePathValue, $pageImagePathDefaultValue);
-            $pageImageUsage->addValue($pageImagePathUsage, PageImage::getDefaultUsage());
+            $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
 
         }
 
@@ -747,9 +754,13 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // ld-json
+        $jsonLdValue = $page->getLdJson();
+        if($jsonLdValue!==null){
+            $jsonLdValue=Json::createFromArray($jsonLdValue)->toPrettyJsonString();
+        }
         $formMeta->addField(FormMetaField::create(action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY)
-            ->addValue($page->getLdJson(), "Enter a json-ld value")
-            ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
+            ->addValue($jsonLdValue, "Enter a json-ld value")
+            ->setType(FormMetaField::JSON_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(action_plugin_combo_metagoogle::CANONICAL)
             ->setLabel("Json-ld")

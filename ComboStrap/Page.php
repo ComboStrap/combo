@@ -3015,7 +3015,7 @@ class Page extends DokuPath
                 case action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY:
                 case action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY:
                     if ($this->getLdJson() !== null) {
-                        $nonDefaultMetadatas[Analytics::NAME] = $this->getLdJson();
+                        $nonDefaultMetadatas[action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY] = $this->getLdJson();
                     }
                     break;
                 case Page::LAYOUT_PROPERTY:

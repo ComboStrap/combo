@@ -114,6 +114,9 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
             $frontMatterMatch = array_shift($split);
             $originalFrontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatterMatch);
+            if($originalFrontMatterMetadata===null){
+                return Message::createErrorMessage("The existing frontmatter is not a valid json.");
+            }
 
             /**
              * Building the document again
@@ -176,9 +179,9 @@ EOF;
 
     /**
      * @param $match
-     * @return array|mixed - null if decodage problem, empty array if no json or an associative array
+     * @return array|null - null if decodage problem, empty array if no json or an associative array
      */
-    public static function frontMatterMatchToAssociativeArray($match)
+    public static function frontMatterMatchToAssociativeArray($match): ?array
     {
         $jsonString = self::stripFrontmatterTag($match);
 

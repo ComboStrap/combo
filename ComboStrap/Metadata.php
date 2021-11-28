@@ -90,7 +90,8 @@ abstract class Metadata
             ->setTab($this->getTab())
             ->setCanonical($this->getCanonical())
             ->setLabel($this->getLabel())
-            ->setDescription($this->getDescription());
+            ->setDescription($this->getDescription())
+            ->setMutable($this->getMutable());
     }
 
     /**
@@ -269,5 +270,11 @@ abstract class Metadata
         }
         return $unsetWasPerformed;
     }
+
+    /**
+     * @return bool can the user change the value
+     */
+    public abstract function getMutable(): bool;
+
 
 }

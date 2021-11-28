@@ -100,4 +100,9 @@ class CacheExpirationDate extends MetadataDateTime
     {
         return "Cache Expiration Date";
     }
+
+    public function getMutable(): bool
+    {
+        return false;
+    }
 }

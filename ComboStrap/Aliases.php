@@ -323,4 +323,9 @@ class Aliases extends Metadata
         $this->persistToFileSystem();
         return $this;
     }
+
+    public function getMutable(): bool
+    {
+        return true;
+    }
 }

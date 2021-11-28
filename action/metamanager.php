@@ -253,6 +253,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             $processingMessages[] = Message::createErrorMessage($e->getMessage())
                 ->setCanonical($e->getCanonical());
         }
+        try {
+            LdJson::createFromPage($page)
+                ->setFromFormData($post);
+        } catch (ExceptionCombo $e) {
+            $processingMessages[] = Message::createErrorMessage($e->getMessage())
+                ->setCanonical($e->getCanonical());
+        }
+
 
         /**
          * When the migration to the new metadata system is done,
@@ -262,6 +270,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         unset($post[Aliases::ALIAS_PATH]);
         unset($post[PageImages::IMAGE_PATH]);
         unset($post[PageImages::IMAGE_USAGE]);
+        unset($post[LdJson::JSON_LD_META_PROPERTY]);
 
         /**
          * Old metadata system

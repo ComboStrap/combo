@@ -46,4 +46,10 @@ class LdJson extends MetadataJson
     {
         return \action_plugin_combo_metamanager::TAB_TYPE_VALUE;
     }
+
+
+    public function getMutable(): bool
+    {
+        return true;
+    }
 }

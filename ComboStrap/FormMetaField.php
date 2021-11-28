@@ -318,9 +318,24 @@ class FormMetaField
         return $this;
     }
 
-    public function isMultiple()
+    public function isMultiple(): bool
     {
         return $this->multiple;
+    }
+
+    /**
+     * If this is a scalar value, you can set/overwrite the value
+     * with this function
+     * @param $value
+     * @param null $default
+     * @return $this
+     */
+    public function setValue($value, $default = null): FormMetaField
+    {
+        $this->values = [];
+        $this->defaults = [];
+        return $this->addValue($value, $default);
+
     }
 
 

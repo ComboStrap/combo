@@ -29,7 +29,7 @@ abstract class MetadataJson extends MetadataScalar
 
     }
 
-    public function setValue(array $value): MetadataJson
+    public function setValue(?array $value): MetadataJson
     {
         $this->json = $value;
         $this->persistToFileSystem();
@@ -97,11 +97,25 @@ abstract class MetadataJson extends MetadataScalar
     {
 
         $formField = parent::toFormField();
-        $value = json_encode($this->json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        return $formField->addValue($value);
+        if ($this->json !== null && $this->json !== "") {
+            $value = json_encode($this->json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            $formField->setValue($value);
+        }
+        return $formField;
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setFromFormData($formData)
+    {
+        // From the form data, we receive a string
+        $value = $formData[$this->getName()];
+        $this->setFromPersistentFormat($value);
+        return $this;
+
+    }
 
 
 }

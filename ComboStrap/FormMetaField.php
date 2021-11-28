@@ -39,21 +39,19 @@ class FormMetaField
     public const TYPES = [
         self::TEXT_TYPE_VALUE,
         self::TABULAR_TYPE_VALUE,
-        self::DATETIME_TYPE_VALUE,
+        MetadataDateTime::DATETIME_TYPE_VALUE,
         self::PARAGRAPH_TYPE_VALUE,
-        self::JSON_TYPE_VALUE,
+        MetadataJson::JSON_TYPE_VALUE,
         self::BOOLEAN_TYPE_VALUE
     ];
     public const TEXT_TYPE_VALUE = "text";
     public const TABULAR_TYPE_VALUE = "tabular";
     public const PARAGRAPH_TYPE_VALUE = "paragraph";
-    public const DATETIME_TYPE_VALUE = "datetime";
     public const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
     public const WIDTH_ATTRIBUTE = "width";
     public const CHILDREN_ATTRIBUTE = "children";
     const DESCRIPTION_ATTRIBUTE = "description";
     public const BOOLEAN_TYPE_VALUE = "boolean";
-    const JSON_TYPE_VALUE = "json";
 
 
     private $name;
@@ -110,6 +108,8 @@ class FormMetaField
     {
         return new FormMetaField($name);
     }
+
+
 
     public function toAssociativeArray(): array
     {

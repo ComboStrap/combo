@@ -17,7 +17,9 @@ require_once(__DIR__ . '/DokuPath.php');
 require_once(__DIR__ . '/Media.php');
 require_once(__DIR__ . '/MediaLink.php');
 require_once(__DIR__ . '/Metadata.php');
+require_once(__DIR__ . '/MetadataScalar.php');
 require_once(__DIR__ . '/MetadataDateTime.php');
+require_once(__DIR__ . '/MetadataJson.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -83,6 +85,7 @@ require_once(__DIR__ . '/Iso8601Date.php');
 require_once(__DIR__ . '/Json.php');
 require_once(__DIR__ . '/JavascriptLibrary.php');
 require_once(__DIR__ . '/Lang.php');
+require_once(__DIR__ . '/LdJson.php');
 require_once(__DIR__ . '/LineSpacing.php');
 require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');

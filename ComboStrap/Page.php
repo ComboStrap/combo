@@ -1908,7 +1908,7 @@ class Page extends DokuPath
                     case Analytics::H1:
                         $this->setH1($value);
                         continue 2;
-                    case \action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY:
+                    case LdJson::JSON_LD_META_PROPERTY:
                         $this->setJsonLd($value);
                         continue 2;
                     case Page::REGION_META_PROPERTY:
@@ -2272,7 +2272,7 @@ class Page extends DokuPath
     public
     function getLdJson()
     {
-        $ldJson = $this->getMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY);
+        $ldJson = $this->getMetadata(LdJson::JSON_LD_META_PROPERTY);
         if (empty($ldJson) && $this->getTypeNotEmpty() === "organization") {
             // deprecated, old syntax
             $metadata = $this->getMetadata("organization");
@@ -2301,7 +2301,7 @@ class Page extends DokuPath
         } else {
             throw new ExceptionCombo("The json ld value should be a string or an array", \action_plugin_combo_metagoogle::CANONICAL);
         }
-        $this->setMetadata(\action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY, $jsonLdArray);
+        $this->setMetadata(LdJson::JSON_LD_META_PROPERTY, $jsonLdArray);
         return $this;
     }
 
@@ -3013,9 +3013,9 @@ class Page extends DokuPath
                     }
                     break;
                 case action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY:
-                case action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY:
+                case LdJson::JSON_LD_META_PROPERTY:
                     if ($this->getLdJson() !== null) {
-                        $nonDefaultMetadatas[action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY] = $this->getLdJson();
+                        $nonDefaultMetadatas[LdJson::JSON_LD_META_PROPERTY] = $this->getLdJson();
                     }
                     break;
                 case Page::LAYOUT_PROPERTY:

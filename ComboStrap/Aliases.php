@@ -4,9 +4,13 @@
 namespace ComboStrap;
 
 
+use action_plugin_combo_metamanager;
+
 class Aliases extends Metadata
 {
     public const ALIAS_ATTRIBUTE = "alias";
+    public const ALIAS_PATH = "alias-path";
+    public const ALIAS_TYPE = "alias-type";
 
     /**
      * @var Alias[]
@@ -218,7 +222,7 @@ class Aliases extends Metadata
     public function getSize(): int
     {
         $aliases = $this->aliases;
-        if($this->aliases===null){
+        if ($this->aliases === null) {
             return 0;
         }
         return sizeof($aliases);
@@ -245,4 +249,56 @@ class Aliases extends Metadata
         }
     }
 
+
+    public function getTab(): string
+    {
+        return action_plugin_combo_metamanager::TAB_REDIRECTION_VALUE;
+    }
+
+    public function getDataType(): string
+    {
+        return FormMetaField::TABULAR_TYPE_VALUE;
+    }
+
+    public function getDescription(): string
+    {
+        return "Aliases that will redirect to this page.";
+    }
+
+    public function getLabel(): string
+    {
+        return "Page Aliases";
+    }
+
+    public function toFormField(): FormMetaField
+    {
+
+        $aliasPath = FormMetaField::create(Aliases::ALIAS_PATH)
+            ->setCanonical(Alias::CANONICAL)
+            ->setLabel("Alias Path")
+            ->setDescription("The path of the alias");
+        $aliasType = FormMetaField::create(Aliases::ALIAS_TYPE)
+            ->setCanonical(Alias::CANONICAL)
+            ->setLabel("Alias Type")
+            ->setDescription("The type of the alias")
+            ->setDomainValues(Alias::getPossibleTypesValues());
+
+
+        $aliasesValues = $this->aliases;
+        foreach ($aliasesValues as $alias) {
+            $aliasPath->addValue($alias->getPath());
+            $aliasType->addValue($alias->getType(), Alias::getDefaultType());
+        }
+        /**
+         * To be able to add one
+         */
+        $aliasPath->addValue(null);
+        $aliasType->addValue(null, Alias::getDefaultType());
+
+        $formField = parent::toFormField();
+        return $formField
+            ->addColumn($aliasPath)
+            ->addColumn($aliasType);
+
+    }
 }

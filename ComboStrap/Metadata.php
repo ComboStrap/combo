@@ -26,6 +26,9 @@ abstract class Metadata
         $this->page = $page;
     }
 
+
+    public abstract function getTab();
+
     protected function persistToFileSystem()
     {
         $name = $this->getName();
@@ -39,6 +42,12 @@ abstract class Metadata
     public abstract function buildFromFileSystem();
 
     public abstract function setFromPersistentFormat($value);
+
+    public abstract function getDataType(): string;
+
+    public abstract function getDescription(): string;
+
+    public abstract function getLabel(): string;
 
     public function getCanonical(): string
     {
@@ -70,6 +79,19 @@ abstract class Metadata
      * @return string|array|null the value to be persisted on the file system
      */
     public abstract function toPersistentValue();
+
+    /**
+     * @return FormMetaField the field for this metadata
+     */
+    public function toFormField(): FormMetaField
+    {
+        return FormMetaField::create($this->getName())
+            ->setType($this->getDataType())
+            ->setTab($this->getTab())
+            ->setCanonical($this->getCanonical())
+            ->setLabel($this->getLabel())
+            ->setDescription($this->getDescription());
+    }
 
 
     /**
@@ -149,7 +171,7 @@ abstract class Metadata
         Publication::OLD_META_KEY,
         Publication::DATE_PUBLISHED,
         Analytics::NAME,
-        action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY,
+        LdJson::JSON_LD_META_PROPERTY,
         Page::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,
         Analytics::DATE_START,

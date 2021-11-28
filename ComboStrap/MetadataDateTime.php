@@ -6,8 +6,9 @@ namespace ComboStrap;
 
 use DateTime;
 
-abstract class MetadataDateTime extends Metadata
+abstract class MetadataDateTime extends MetadataScalar
 {
+    public const DATETIME_TYPE_VALUE = "datetime";
     /**
      * @var DateTime
      */
@@ -51,6 +52,11 @@ abstract class MetadataDateTime extends Metadata
 
         return $this->toPersistentDateTimeUtility($this->getDefaultValue());
 
+    }
+
+    public function getDataType(): string
+    {
+        return self::DATETIME_TYPE_VALUE;
     }
 
 
@@ -107,6 +113,8 @@ abstract class MetadataDateTime extends Metadata
         }
         return Iso8601Date::createFromDateTime($value)->toString();
     }
+
+
 
 
 }

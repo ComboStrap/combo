@@ -5,12 +5,15 @@ namespace ComboStrap;
 
 
 use Exception;
+use syntax_plugin_combo_pageimage;
 
 class PageImages extends Metadata
 {
     public const IMAGE_META_PROPERTY = 'image';
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
     public const FIRST_IMAGE_META_RELATION = "firstimage";
+    public const IMAGE_PATH = "image-path";
+    public const IMAGE_USAGE = "image-usage";
 
 
     /**
@@ -193,4 +196,75 @@ class PageImages extends Metadata
             $this->buildFromFileSystem();
         }
     }
+
+    public function getTab(): string
+    {
+        return \action_plugin_combo_metamanager::TAB_IMAGE_VALUE;
+    }
+
+    public function getDataType(): string
+    {
+        return FormMetaField::TABULAR_TYPE_VALUE;
+    }
+
+    public function getDescription(): string
+    {
+        return "The illustrative images of the page";
+    }
+
+    public function getLabel(): string
+    {
+        return "Page Images";
+    }
+
+    public function toFormField(): FormMetaField
+    {
+
+        $pageImagePath = FormMetaField::create(self::IMAGE_PATH)
+            ->setLabel("Path")
+            ->setCanonical($this->getCanonical())
+            ->setDescription("The path of the image")
+            ->setWidth(8);
+        $pageImageUsage = FormMetaField::create(self::IMAGE_USAGE)
+            ->setLabel("Usages")
+            ->setCanonical($this->getCanonical())
+            ->setDomainValues(PageImage::getUsageValues())
+            ->setWidth(4)
+            ->setDescription("The possible usages of the image");
+        $pageImagesObjects = $this->pageImages;
+        $pageImageDefault = $this->getPage()->getDefaultPageImageObject();
+        for ($i = 0; $i < 5; $i++) {
+
+            $pageImage = null;
+            if (isset($pageImagesObjects[$i])) {
+                $pageImage = $pageImagesObjects[$i];
+            }
+
+            /**
+             * Image
+             */
+            $pageImagePathValue = null;
+            $pageImagePathDefaultValue = null;
+            $pageImagePathUsage = null;
+            if ($pageImage != null) {
+                $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getPath();
+                $pageImagePathUsage = $pageImage->getUsages();
+            }
+            if ($i == 0 && $pageImageDefault !== null) {
+                $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
+            }
+            $pageImagePath->addValue($pageImagePathValue, $pageImagePathDefaultValue);
+            $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
+
+        }
+
+        // Image
+        $formMeta = parent::toFormField();
+        return $formMeta
+            ->addColumn($pageImagePath)
+            ->addColumn($pageImageUsage);
+
+    }
+
+
 }

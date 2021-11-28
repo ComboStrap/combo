@@ -32,7 +32,6 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
 
     const CANONICAL = "google";
-    const JSON_LD_META_PROPERTY = "json-ld";
     const NEWSARTICLE_SCHEMA_ORG_LOWERCASE = "newsarticle";
     const BLOGPOSTING_SCHEMA_ORG_LOWERCASE = "blogposting";
     const DATE_PUBLISHED_KEY = "datePublished";

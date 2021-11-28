@@ -81,9 +81,23 @@ class CacheExpirationDate extends MetadataDateTime
     }
 
 
-
     public function getCanonical(): string
     {
-        return ":page-cache-expiration-frequency";
+        return CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL;
+    }
+
+    public function getTab(): string
+    {
+        return \action_plugin_combo_metamanager::TAB_CACHE_VALUE;
+    }
+
+    public function getDescription(): string
+    {
+        return "The next cache expiration date (calculated from the cache frequency expression)";
+    }
+
+    public function getLabel(): string
+    {
+        return "Cache Expiration Date";
     }
 }

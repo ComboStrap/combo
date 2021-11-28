@@ -17,9 +17,12 @@ use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
 use ComboStrap\Json;
+use ComboStrap\LdJson;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
+use ComboStrap\MetadataDateTime;
+use ComboStrap\MetadataJson;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -66,12 +69,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      * The canonical for page type
      */
     const PAGE_TYPE_CANONICAL = "page:type";
-    const IMAGE_PATH = "image-path";
-    const IMAGE_USAGE = "image-usage";
-    const ALIAS_PATH = "alias-path";
-    const ALIAS_TYPE = "alias-type";
     const SUCCESS_MESSAGE = "The data were updated without errors.";
-
 
 
     public function register(Doku_Event_Handler $controller)
@@ -244,10 +242,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Building back images
          */
-        $imagePaths = $post[self::IMAGE_PATH];
-        unset($post[self::IMAGE_PATH]);
-        $imagesUsage = $post[self::IMAGE_USAGE];
-        unset($post[self::IMAGE_USAGE]);
+        $imagePaths = $post[PageImages::IMAGE_PATH];
+        unset($post[PageImages::IMAGE_PATH]);
+        $imagesUsage = $post[PageImages::IMAGE_USAGE];
+        unset($post[PageImages::IMAGE_USAGE]);
         $pageImages = PageImages::createFromPage($page);
         foreach ($imagePaths as $key => $imagesPath) {
             if ($imagesPath !== "") {
@@ -264,10 +262,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Building Alias
          */
-        $aliasPaths = $post[self::ALIAS_PATH];
-        unset($post[self::ALIAS_PATH]);
-        $aliasTypes = $post[self::ALIAS_TYPE];
-        unset($post[self::ALIAS_TYPE]);
+        $aliasPaths = $post[Aliases::ALIAS_PATH];
+        unset($post[Aliases::ALIAS_PATH]);
+        $aliasTypes = $post[Aliases::ALIAS_TYPE];
+        unset($post[Aliases::ALIAS_TYPE]);
         $aliases = Aliases::createFromPage($page);
         if (is_array($aliasPaths)) {
             foreach ($aliasPaths as $key => $aliasPath) {
@@ -286,7 +284,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * Upsert
          */
         $upsertMessages = $page->upsertMetadataFromAssociativeArray($post, true);
-        $processingMessages = array_merge($upsertMessages,$processingMessages);
+        $processingMessages = array_merge($upsertMessages, $processingMessages);
 
         $responseMessages = [];
         $responseStatus = HttpResponse::STATUS_ALL_GOOD;
@@ -309,7 +307,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         $frontMatterMessage = syntax_plugin_combo_frontmatter::updateFrontmatter($page);
         $responseMessages[] = $frontMatterMessage;
-
 
 
         /**
@@ -361,14 +358,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     ->setTab("persistent")
                     ->setDescription("The persistent metadata contains raw values. They contains the values set by the user and the fixed values such as page id.")
                     ->addValue(json_encode($persistent))
-                    ->setType(FormMetaField::JSON_TYPE_VALUE)
+                    ->setType(MetadataJson::JSON_TYPE_VALUE)
             )
             ->addField(FormMetaField::create(Metadata::CURRENT_METADATA)
                 ->setLabel("Current (Derived) Metadata")
                 ->setTab("current")
                 ->setDescription("The current metadata are the derived / calculated / runtime metadata values (extended with the persistent metadata).")
                 ->addValue(json_encode($current))
-                ->setType(FormMetaField::JSON_TYPE_VALUE)
+                ->setType(MetadataJson::JSON_TYPE_VALUE)
                 ->setMutable(false)
             )
             ->toAssociativeArray();
@@ -606,7 +603,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(Analytics::DATE_MODIFIED)
             ->addValue($page->getModifiedDateAsString())
             ->setMutable(false)
-            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_PAGE_VALUE)
             ->setLabel("Modification Date")
             ->setDescription("The last modification date of the page")
@@ -617,7 +614,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(Analytics::DATE_CREATED)
             ->addValue($page->getCreatedDateAsString())
             ->setMutable(false)
-            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_PAGE_VALUE)
             ->setCanonical(self::METADATA_CANONICAL)
             ->setLabel("Creation Date")
@@ -628,89 +625,15 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Page Image Properties
          */
-        $pageImagePath = FormMetaField::create(self::IMAGE_PATH)
-            ->setLabel("Path")
-            ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
-            ->setDescription("The path of the image")
-            ->setWidth(8);
-        $pageImageUsage = FormMetaField::create(self::IMAGE_USAGE)
-            ->setLabel("Usages")
-            ->setCanonical(syntax_plugin_combo_pageimage::CANONICAL)
-            ->setDomainValues(PageImage::getUsageValues())
-            ->setWidth(4)
-            ->setDescription("The possible usages of the image");
-        $pageImagesObjects = $page->getPageImages();
-        $pageImageDefault = $page->getDefaultPageImageObject();
-        for ($i = 0; $i < 5; $i++) {
-
-            $pageImage = null;
-            if (isset($pageImagesObjects[$i])) {
-                $pageImage = $pageImagesObjects[$i];
-            }
-
-            /**
-             * Image
-             */
-            $pageImagePathValue = null;
-            $pageImagePathDefaultValue = null;
-            $pageImagePathUsage = null;
-            if ($pageImage != null) {
-                $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getPath();
-                $pageImagePathUsage = $pageImage->getUsages();
-            }
-            if ($i == 0 && $pageImageDefault !== null) {
-                $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
-            }
-            $pageImagePath->addValue($pageImagePathValue, $pageImagePathDefaultValue);
-            $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
-
-        }
-
-        // Image
-        $formMeta->addField(FormMetaField::create("page-image")
-            ->setType(FormMetaField::TABULAR_TYPE_VALUE)
-            ->setLabel("Page Images")
-            ->setTab(self::TAB_IMAGE_VALUE)
-            ->setDescription("The illustrative images of the page")
-            ->addColumn($pageImagePath)
-            ->addColumn($pageImageUsage)
-        );
+        $pageImages = PageImages::createFromPage($page);
+        $formMeta->addField($pageImages->toFormField());
 
 
         /**
          * Aliases
          */
-        $aliasPath = FormMetaField::create(self::ALIAS_PATH)
-            ->setCanonical(Alias::CANONICAL)
-            ->setLabel("Alias Path")
-            ->setDescription("The path of the alias");
-        $aliasType = FormMetaField::create(self::ALIAS_TYPE)
-            ->setCanonical(Alias::CANONICAL)
-            ->setLabel("Alias Type")
-            ->setDescription("The type of the alias")
-            ->setDomainValues(Alias::getPossibleTypesValues());
-
-
-        $aliasesValues = $page->getAliases();
-        if (sizeof($aliasesValues) === 0) {
-            $aliasPath->addValue(null);
-            $aliasType->addValue(null, Alias::getDefaultType());
-        } else {
-            foreach ($aliasesValues as $alias) {
-                $aliasPath->addValue($alias->getPath());
-                $aliasType->addValue($alias->getType(), Alias::getDefaultType());
-            }
-        }
-
-        $formMeta->addField(FormMetaField::create(Aliases::ALIAS_ATTRIBUTE)
-            ->setLabel("Page Aliases")
-            ->setCanonical(Aliases::ALIAS_ATTRIBUTE)
-            ->setDescription("Aliases that will redirect to this page.")
-            ->setTab(self::TAB_REDIRECTION_VALUE)
-            ->setType(FormMetaField::TABULAR_TYPE_VALUE)
-            ->addColumn($aliasPath)
-            ->addColumn($aliasType)
-        );
+        $aliases = Aliases::createFromPage($page);
+        $formMeta->addField($aliases->toFormField());
 
 
         // Page Type
@@ -726,7 +649,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         // Published Date
         $formMeta->addField(FormMetaField::create(Publication::DATE_PUBLISHED)
             ->addValue($page->getPublishedTimeAsString(), $page->getCreatedDateAsString())
-            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(self::PAGE_TYPE_CANONICAL)
             ->setLabel("Publication Date")
@@ -736,7 +659,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         // Start Date
         $formMeta->addField(FormMetaField::create(Analytics::DATE_START)
             ->addValue($page->getStartDateAsString())
-            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(Page::EVENT_TYPE)
             ->setLabel("Start Date")
@@ -746,7 +669,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         // End Date
         $formMeta->addField(FormMetaField::create(Analytics::DATE_END)
             ->addValue($page->getEndDateAsString())
-            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(Page::EVENT_TYPE)
             ->setLabel("End Date")
@@ -754,18 +677,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // ld-json
-        $jsonLdValue = $page->getLdJson();
-        if($jsonLdValue!==null){
-            $jsonLdValue=Json::createFromArray($jsonLdValue)->toPrettyJsonString();
-        }
-        $formMeta->addField(FormMetaField::create(action_plugin_combo_metagoogle::JSON_LD_META_PROPERTY)
-            ->addValue($jsonLdValue, "Enter a json-ld value")
-            ->setType(FormMetaField::JSON_TYPE_VALUE)
-            ->setTab(self::TAB_TYPE_VALUE)
-            ->setCanonical(action_plugin_combo_metagoogle::CANONICAL)
-            ->setLabel("Json-ld")
-            ->setDescription("Advanced Page metadata definition with the json-ld format")
-        );
+        $ldJson = LdJson::createFromPage($page);
+        $formFieldLdJson = $ldJson->toFormField();
+        $formMeta->addField($formFieldLdJson);
 
 
         // Is low quality page
@@ -824,7 +738,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(DatabasePage::DATE_REPLICATION)
             ->addValue($replicationDate != null ? $replicationDate->format(Iso8601Date::getFormat()) : null)
             ->setMutable(false)
-            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
+            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_INTEGRATION_VALUE)
             ->setCanonical(DatabasePage::REPLICATION_CANONICAL)
             ->setLabel("Database Replication Date")
@@ -853,23 +767,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Cache expiration date
-        $cacheExpirationDate = $page->getCacheExpirationDate();
-        if($cacheExpirationDate!==null){
-            $cacheExpirationDate = Iso8601Date::createFromDateTime($cacheExpirationDate)->toString();
-        }
-        $defaultCacheExpirationDate = $page->getDefaultCacheExpirationDate();
-        if($defaultCacheExpirationDate!==null) {
-            $defaultCacheExpirationDate = Iso8601Date::createFromDateTime($defaultCacheExpirationDate)->toString();
-        }
-        $formMeta->addField(FormMetaField::create(CacheExpirationDate::META_CACHE_EXPIRATION_DATE_NAME)
-            ->addValue($cacheExpirationDate, $defaultCacheExpirationDate)
-            ->setMutable(false)
-            ->setType(FormMetaField::DATETIME_TYPE_VALUE)
-            ->setTab(self::TAB_CACHE_VALUE)
-            ->setCanonical(CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL)
-            ->setLabel("Cache Expiration Date")
-            ->setDescription("The next cache expiration date (calculated from the cache frequency expression)")
-        );
+        $cacheExpirationDate = CacheExpirationDate::createForPage($page);
+        $formMeta->addField(FormMetaField::createFromMetadata($cacheExpirationDate));
 
         /**
          * Tabs (for whatever reason, javascript keep the order of the properties

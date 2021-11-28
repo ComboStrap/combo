@@ -6,7 +6,6 @@ namespace ComboStrap;
 
 abstract class MetadataJson extends MetadataScalar
 {
-    public const JSON_TYPE_VALUE = "json";
 
     /**
      * @var array|null
@@ -91,7 +90,7 @@ abstract class MetadataJson extends MetadataScalar
 
     public function getDataType(): string
     {
-        return self::JSON_TYPE_VALUE;
+        return DataType::JSON_TYPE_VALUE;
     }
 
     public function toFormField(): FormMetaField

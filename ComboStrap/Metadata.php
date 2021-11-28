@@ -93,6 +93,12 @@ abstract class Metadata
             ->setDescription($this->getDescription());
     }
 
+    /**
+     * @param $formData - the data received from the form
+     * @return mixed
+     */
+    public abstract function setFromFormData($formData);
+
 
     /**
      * @return mixed

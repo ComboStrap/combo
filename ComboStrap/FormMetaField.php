@@ -24,7 +24,6 @@ class FormMetaField
      */
     public const TAB_ATTRIBUTE = "tab";
     public const LABEL_ATTRIBUTE = "label";
-    public const DATA_TYPE_ATTRIBUTE = "type";
     public const URL_ATTRIBUTE = "url";
     public const MUTABLE_ATTRIBUTE = "mutable";
     /**
@@ -33,25 +32,12 @@ class FormMetaField
     public const VALUE_ATTRIBUTE = "value";
     public const DEFAULT_VALUE_ATTRIBUTE = "default";
 
-    /**
-     * The constant value
-     */
-    public const TYPES = [
-        self::TEXT_TYPE_VALUE,
-        self::TABULAR_TYPE_VALUE,
-        MetadataDateTime::DATETIME_TYPE_VALUE,
-        self::PARAGRAPH_TYPE_VALUE,
-        MetadataJson::JSON_TYPE_VALUE,
-        self::BOOLEAN_TYPE_VALUE
-    ];
-    public const TEXT_TYPE_VALUE = "text";
-    public const TABULAR_TYPE_VALUE = "tabular";
-    public const PARAGRAPH_TYPE_VALUE = "paragraph";
     public const DOMAIN_VALUES_ATTRIBUTE = "domain-values";
     public const WIDTH_ATTRIBUTE = "width";
     public const CHILDREN_ATTRIBUTE = "children";
     const DESCRIPTION_ATTRIBUTE = "description";
-    public const BOOLEAN_TYPE_VALUE = "boolean";
+    const NAME_ATTRIBUTE = "name";
+    const MULTIPLE_ATTRIBUTE = "multiple";
 
 
     private $name;
@@ -90,6 +76,11 @@ class FormMetaField
      * @var int
      */
     private $width;
+    /**
+     * Multiple value can be chosen
+     * @var bool
+     */
+    private $multiple = false;
 
 
     /**
@@ -100,7 +91,7 @@ class FormMetaField
         $this->name = $name;
         $this->label = ucfirst($name);
         $this->description = $name;
-        $this->type = self::TEXT_TYPE_VALUE;
+        $this->type = DataType::TEXT_TYPE_VALUE;
         $this->mutable = true;
     }
 
@@ -108,7 +99,6 @@ class FormMetaField
     {
         return new FormMetaField($name);
     }
-
 
 
     public function toAssociativeArray(): array
@@ -119,7 +109,7 @@ class FormMetaField
         $associative = [
             Analytics::NAME => $this->name,
             self::LABEL_ATTRIBUTE => $this->label,
-            self::DATA_TYPE_ATTRIBUTE => $this->type
+            DataType::DATA_TYPE_ATTRIBUTE => $this->type
         ];
         if ($this->getUrl() != null) {
             $associative[self::URL_ATTRIBUTE] = $this->getUrl();
@@ -134,17 +124,6 @@ class FormMetaField
             $associative[self::TAB_ATTRIBUTE] = $this->tab;
         }
 
-        if ($this->getValue() !== null) {
-            $associative[self::VALUE_ATTRIBUTE] = $this->getValue();
-        }
-
-        if ($this->getDefaultValue() !== null) {
-            $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $this->getDefaultValue();
-        }
-
-        if ($this->domainValues !== null) {
-            $associative[self::DOMAIN_VALUES_ATTRIBUTE] = $this->domainValues;
-        }
 
         if ($this->width !== null) {
             $associative[self::WIDTH_ATTRIBUTE] = $this->width;
@@ -154,11 +133,31 @@ class FormMetaField
                 $associative[self::CHILDREN_ATTRIBUTE][] = $column->toAssociativeArray();
             }
         } else {
+
             /**
-             * Mutable is only valid for leaf field
+             * Only valid for leaf field
              */
+            if ($this->getValue() !== null) {
+                $associative[self::VALUE_ATTRIBUTE] = $this->getValue();
+            }
+
+            if ($this->getDefaultValue() !== null) {
+                $associative[self::DEFAULT_VALUE_ATTRIBUTE] = $this->getDefaultValue();
+            }
+
+            if ($this->domainValues !== null) {
+                $associative[self::DOMAIN_VALUES_ATTRIBUTE] = $this->domainValues;
+                if ($this->multiple) {
+                    $associative[self::MULTIPLE_ATTRIBUTE] = $this->multiple;
+                }
+            }
+
             $associative[self::MUTABLE_ATTRIBUTE] = $this->mutable;
+
+
         }
+
+
         return $associative;
     }
 
@@ -224,7 +223,7 @@ class FormMetaField
     public
     function setType(string $type): FormMetaField
     {
-        if (!in_array($type, self::TYPES)) {
+        if (!in_array($type, DataType::TYPES)) {
             LogUtility::msg("The type ($type) is not a known field type");
             return $this;
         }
@@ -242,7 +241,7 @@ class FormMetaField
     public
     function addColumn(FormMetaField $formField): FormMetaField
     {
-        $this->type = self::TABULAR_TYPE_VALUE;
+        $this->type = DataType::TABULAR_TYPE_VALUE;
         // A parent node is not mutable
         $this->mutable = false;
         $this->children[] = $formField;
@@ -311,6 +310,12 @@ class FormMetaField
             default:
                 return $this->defaults;
         }
+    }
+
+    public function setMultiple(bool $bool): FormMetaField
+    {
+        $this->multiple = $bool;
+        return $this;
     }
 
 

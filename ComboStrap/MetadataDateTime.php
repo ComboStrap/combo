@@ -8,7 +8,6 @@ use DateTime;
 
 abstract class MetadataDateTime extends MetadataScalar
 {
-    public const DATETIME_TYPE_VALUE = "datetime";
     /**
      * @var DateTime
      */
@@ -56,7 +55,7 @@ abstract class MetadataDateTime extends MetadataScalar
 
     public function getDataType(): string
     {
-        return self::DATETIME_TYPE_VALUE;
+        return DataType::DATETIME_TYPE_VALUE;
     }
 
 

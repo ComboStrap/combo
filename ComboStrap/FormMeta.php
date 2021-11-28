@@ -132,7 +132,7 @@ class FormMeta
             if ($element->isMutable()) {
 
                 $value = $element->getValue();
-                if ($element->getType() === FormMetaField::BOOLEAN_TYPE_VALUE) {
+                if ($element->getType() === DataType::BOOLEAN_TYPE_VALUE) {
                     if ($value === $element->getDefaultValue()) {
                         continue;
                     }

@@ -5,7 +5,7 @@ namespace ComboStrap;
 
 
 use Exception;
-use syntax_plugin_combo_pageimage;
+
 
 class PageImages extends Metadata
 {
@@ -204,7 +204,7 @@ class PageImages extends Metadata
 
     public function getDataType(): string
     {
-        return FormMetaField::TABULAR_TYPE_VALUE;
+        return DataType::TABULAR_TYPE_VALUE;
     }
 
     public function getDescription(): string
@@ -230,6 +230,7 @@ class PageImages extends Metadata
             ->setCanonical($this->getCanonical())
             ->setDomainValues(PageImage::getUsageValues())
             ->setWidth(4)
+            ->setMultiple(true)
             ->setDescription("The possible usages of the image");
         $pageImagesObjects = $this->pageImages;
         $pageImageDefault = $this->getPage()->getDefaultPageImageObject();
@@ -267,4 +268,26 @@ class PageImages extends Metadata
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setFromFormData($formData)
+    {
+        $imagePaths = $formData[self::IMAGE_PATH];
+        if ($imagePaths !== null) {
+            $usages = $formData[self::IMAGE_USAGE];
+            $this->pageImages = [];
+            $counter = 0;
+            foreach ($imagePaths as $imagePath) {
+                $usage = $usages[$counter];
+                $usages = explode(",",$usage);
+                if ($imagePath !== null || $imagePath !== "") {
+                    $this->pageImages[] = PageImage::create($imagePath,$this->getPage())
+                        ->setUsages($usages);
+                }
+                $counter++;
+            }
+        }
+        $this->persistToFileSystem();
+    }
 }

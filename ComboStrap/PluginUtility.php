@@ -58,6 +58,7 @@ require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/Cron.php');
 require_once(__DIR__ . '/DatabasePage.php');
+require_once(__DIR__ . '/DataType.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/ExitException.php');

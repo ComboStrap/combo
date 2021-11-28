@@ -257,7 +257,7 @@ class Aliases extends Metadata
 
     public function getDataType(): string
     {
-        return FormMetaField::TABULAR_TYPE_VALUE;
+        return DataType::TABULAR_TYPE_VALUE;
     }
 
     public function getDescription(): string
@@ -300,5 +300,25 @@ class Aliases extends Metadata
             ->addColumn($aliasPath)
             ->addColumn($aliasType);
 
+    }
+
+    public function setFromFormData($formData): Aliases
+    {
+        $pathData = $formData[self::ALIAS_PATH];
+        if ($pathData !== null) {
+            $this->aliases = [];
+            $typeData = $formData[self::ALIAS_TYPE];
+            $counter = 0;
+            foreach ($pathData as $path) {
+                if ($path !== "" && $path !== null) {
+                    $type = $typeData[$counter];
+                    $this->aliases[] = Alias::create($this->getPage(), $path)
+                        ->setType($type);
+                }
+                $counter++;
+            }
+        }
+        $this->persistToFileSystem();
+        return $this;
     }
 }

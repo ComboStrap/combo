@@ -14,6 +14,7 @@ export default class FormMetaField {
     mutable = true;
     values = [];
     defaultValues = [];
+    multiple = false;
 
     /**
      * Static const function
@@ -178,6 +179,9 @@ export default class FormMetaField {
                 case "domain-values":
                     formMetaField.setDomainValues(jsonValue);
                     continue;
+                case "multiple":
+                    formMetaField.setMultiple(jsonValue);
+                    continue;
                 case "width":
                     formMetaField.setControlWidth(jsonValue);
                     continue;
@@ -208,6 +212,11 @@ export default class FormMetaField {
             })
         }
         return formMetaField;
+    }
+
+    setMultiple(multiple) {
+        this.multiple = multiple;
+        return this;
     }
 
     setParent(parent) {
@@ -344,7 +353,12 @@ export default class FormMetaField {
                 defaultValueHtml = ` (${defaultValue})`;
             }
 
-            htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}" id="${id}">`;
+            let multiple = "";
+            if (this.getMultiple()) {
+                multiple = "multiple";
+            }
+
+            htmlElement = `<select class="form-select" aria-label="${this.getLabel()}" name="${this.getName()}" id="${id}" ${multiple}>`;
             let selected = "";
             if (value === null) {
                 selected = "selected";
@@ -409,10 +423,10 @@ export default class FormMetaField {
                         value = value.slice(0, 19);
                         htmlValue = `value="${value}"`;
                     } else {
-                       if(!mutable && defaultValue!==null){
-                           defaultValue = defaultValue.slice(0, 19);
-                           htmlValue = `value="${defaultValue}"`;
-                       }
+                        if (!mutable && defaultValue !== null) {
+                            defaultValue = defaultValue.slice(0, 19);
+                            htmlValue = `value="${defaultValue}"`;
+                        }
                     }
                     htmlPlaceholder = ""; // does not apply to local date time
 
@@ -484,8 +498,12 @@ export default class FormMetaField {
             "tab": this.getTab(),
             "mutable": this.isMutable(),
             "value": this.getValue(),
-            "default" : this.getDefaultValue(),
-            "url" : this.getUrl()
+            "default": this.getDefaultValue(),
+            "url": this.getUrl()
         }
+    }
+
+    getMultiple() {
+        return this.multiple;
     }
 }

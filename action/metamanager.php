@@ -8,6 +8,7 @@ use ComboStrap\Analytics;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
 use ComboStrap\DatabasePage;
+use ComboStrap\DataType;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FormMeta;
@@ -358,14 +359,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     ->setTab("persistent")
                     ->setDescription("The persistent metadata contains raw values. They contains the values set by the user and the fixed values such as page id.")
                     ->addValue(json_encode($persistent))
-                    ->setType(MetadataJson::JSON_TYPE_VALUE)
+                    ->setType(DataType::JSON_TYPE_VALUE)
             )
             ->addField(FormMetaField::create(Metadata::CURRENT_METADATA)
                 ->setLabel("Current (Derived) Metadata")
                 ->setTab("current")
                 ->setDescription("The current metadata are the derived / calculated / runtime metadata values (extended with the persistent metadata).")
                 ->addValue(json_encode($current))
-                ->setType(MetadataJson::JSON_TYPE_VALUE)
+                ->setType(DataType::JSON_TYPE_VALUE)
                 ->setMutable(false)
             )
             ->toAssociativeArray();
@@ -523,7 +524,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(
             FormMetaField::create(Analytics::DESCRIPTION)
                 ->addValue($page->getDescription(), $page->getDescriptionOrElseDokuWiki())
-                ->setType(FormMetaField::PARAGRAPH_TYPE_VALUE)
+                ->setType(DataType::PARAGRAPH_TYPE_VALUE)
                 ->setTab(self::TAB_PAGE_VALUE)
                 ->setCanonical(Analytics::DESCRIPTION)
                 ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
@@ -603,7 +604,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(Analytics::DATE_MODIFIED)
             ->addValue($page->getModifiedDateAsString())
             ->setMutable(false)
-            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
+            ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_PAGE_VALUE)
             ->setLabel("Modification Date")
             ->setDescription("The last modification date of the page")
@@ -614,7 +615,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(Analytics::DATE_CREATED)
             ->addValue($page->getCreatedDateAsString())
             ->setMutable(false)
-            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
+            ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_PAGE_VALUE)
             ->setCanonical(self::METADATA_CANONICAL)
             ->setLabel("Creation Date")
@@ -649,7 +650,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         // Published Date
         $formMeta->addField(FormMetaField::create(Publication::DATE_PUBLISHED)
             ->addValue($page->getPublishedTimeAsString(), $page->getCreatedDateAsString())
-            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
+            ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(self::PAGE_TYPE_CANONICAL)
             ->setLabel("Publication Date")
@@ -659,7 +660,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         // Start Date
         $formMeta->addField(FormMetaField::create(Analytics::DATE_START)
             ->addValue($page->getStartDateAsString())
-            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
+            ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(Page::EVENT_TYPE)
             ->setLabel("Start Date")
@@ -669,7 +670,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         // End Date
         $formMeta->addField(FormMetaField::create(Analytics::DATE_END)
             ->addValue($page->getEndDateAsString())
-            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
+            ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
             ->setCanonical(Page::EVENT_TYPE)
             ->setLabel("End Date")
@@ -687,7 +688,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             // the inverse of the default value is returned if checked - you don't modify a default
             // by default the page can be a low quality
             ->addValue($page->getCanBeOfLowQuality(), false)
-            ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
+            ->setType(DataType::BOOLEAN_TYPE_VALUE)
             ->setTab(self::TAB_QUALITY_VALUE)
             ->setCanonical(LowQualityPage::LOW_QUALITY_PAGE_CANONICAL)
             ->setLabel("Prevent this page to become a low quality page")
@@ -699,7 +700,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             // the inverse of the default value is returned if checked - you don't modify a default
             // by default, the page is monitored
             ->addValue($page->getQualityMonitoringIndicator(), false)
-            ->setType(FormMetaField::BOOLEAN_TYPE_VALUE)
+            ->setType(DataType::BOOLEAN_TYPE_VALUE)
             ->setTab(self::TAB_QUALITY_VALUE)
             ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)
             ->setLabel("Disable the quality message of this page")
@@ -738,7 +739,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(FormMetaField::create(DatabasePage::DATE_REPLICATION)
             ->addValue($replicationDate != null ? $replicationDate->format(Iso8601Date::getFormat()) : null)
             ->setMutable(false)
-            ->setType(MetadataDateTime::DATETIME_TYPE_VALUE)
+            ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_INTEGRATION_VALUE)
             ->setCanonical(DatabasePage::REPLICATION_CANONICAL)
             ->setLabel("Database Replication Date")

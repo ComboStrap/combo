@@ -20,4 +20,12 @@ abstract class MetadataScalar extends Metadata
 
     }
 
+    public function setFromFormData($formData)
+    {
+        $value = $formData[$this->getName()];
+        $this->setFromPersistentFormat($value);
+        return $this;
+    }
+
+
 }

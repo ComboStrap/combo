@@ -123,4 +123,59 @@ test('Json field test', () => {
 
 })
 
+test('Select field test', () => {
+
+    let formMetaField = FormMetaField.createFromName("test")
+        .setDomainValues(["blue","sky"]);
+
+    /**
+     * Label test
+     * @type {string}
+     */
+    let actual = formMetaField.toHtmlLabel("1","col-sm-6");
+    let expected = `<label for="1" class="col-sm-6 col-form-label">
+Test
+</label>`;
+    expect(actual).toEqualHtmlString(expected);
+
+    /**
+     * Select test
+     * @type {string}
+     */
+    actual = formMetaField.toHtmlControl("1","col-sm-6");
+    expected = `<select class="form-select" aria-label="Test" name="test" id="1">
+  <option value>
+  Default (null)
+  </option>
+  <option value="blue">
+  blue
+  </option>
+  <option value="sky">
+  sky
+  </option>
+</select>`;
+    expect(actual).toEqualHtmlString(expected);
+
+    /**
+     * Select multiple test
+     */
+    formMetaField.setMultiple(true)
+    actual = formMetaField.toHtmlControl("1","col-sm-6");
+    expected = `<select class="form-select" aria-label="Test" name="test" id="1" multiple>
+  <option value>
+  Default (null)
+  </option>
+  <option value="blue">
+  blue
+  </option>
+  <option value="sky">
+  sky
+  </option>
+</select>`;
+    expect(actual).toEqualHtmlString(expected);
+
+
+
+
+})
 

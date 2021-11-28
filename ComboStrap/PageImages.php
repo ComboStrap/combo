@@ -274,7 +274,7 @@ class PageImages extends Metadata
             foreach ($imagePaths as $imagePath) {
                 $usage = $usages[$counter];
                 $usages = explode(",", $usage);
-                if ($imagePath !== null || $imagePath !== "") {
+                if ($imagePath !== null && $imagePath !== "") {
                     $this->pageImages[] = PageImage::create($imagePath, $this->getPage())
                         ->setUsages($usages);
                 }
@@ -282,5 +282,6 @@ class PageImages extends Metadata
             }
         }
         $this->persistToFileSystem();
+        return $this;
     }
 }

@@ -115,25 +115,31 @@ class FormMeta
      *
      * It transforms the fields to an associative array
      * that should be send with a post request
-     * (Used in test)
+     *
+     * ie Equivalent to the javascript api formdata output
+     * (Used in test to simulate a post)
      */
-    public function toHtmlSubmitFormData(): array
+    public function toFormData(): array
     {
         $data = [];
-        $this->toPostDataRecurse($data, $this->fields);
+        $this->toFormDataRecurse($data, $this->fields);
         return $data;
     }
 
-    private function toPostDataRecurse(&$data, $fields)
+    /**
+     * @param $data
+     * @param FormMetaField[] $fields
+     */
+    private function toFormDataRecurse(&$data, array $fields)
     {
 
-        foreach ($fields as $element) {
+        foreach ($fields as $field) {
 
-            if ($element->isMutable()) {
+            if ($field->isMutable()) {
 
-                $value = $element->getValue();
-                if ($element->getType() === DataType::BOOLEAN_TYPE_VALUE) {
-                    if ($value === $element->getDefaultValue()) {
+                $value = $field->getValue();
+                if ($field->getType() === DataType::BOOLEAN_TYPE_VALUE) {
+                    if ($value === $field->getDefaultValue()) {
                         continue;
                     }
                 }
@@ -141,23 +147,27 @@ class FormMeta
                     // A form would return empty string
                     $value = "";
                 }
-                if(is_array($value)){
+                if (is_array($value)) {
                     $temp = [];
-                    foreach ($value as $subValue){
-                        if($subValue===null){
+                    foreach ($value as $subValue) {
+                        if ($subValue === null) {
                             $temp[] = "";
                         } else {
-                            $temp[] = $subValue;
+                            if (is_array($subValue) && $field->isMultiple()) {
+                                $temp[] = implode(",", $subValue);
+                            } else {
+                                $temp[] = $subValue;
+                            }
                         }
                     }
                     $value = $temp;
                 }
-                $data[$element->getName()] = $value;
+                $data[$field->getName()] = $value;
 
             }
-            $formMetaChildren = $element->getChildren();
+            $formMetaChildren = $field->getChildren();
             if ($formMetaChildren != null) {
-                $this->toPostDataRecurse($data, $formMetaChildren);
+                $this->toFormDataRecurse($data, $formMetaChildren);
             }
         }
 

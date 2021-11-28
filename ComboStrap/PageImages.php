@@ -172,17 +172,18 @@ class PageImages extends Metadata
     /**
      * @throws ExceptionCombo
      */
-    public function addImage(string $imagePath, $usages = []): PageImages
+    public function addImage(string $imagePath, $usages = null): PageImages
     {
         $pageImage = PageImage::create($imagePath, $this->getPage());
         if (!$pageImage->getImage()->exists()) {
             throw new ExceptionCombo("The image ($imagePath) does not exists", $this->getCanonical());
         }
-        if (is_string($usages)) {
-            $usages = explode(",", $usages);
+        if ($usages !== null) {
+            if (is_string($usages)) {
+                $usages = explode(",", $usages);
+            }
+            $pageImage->setUsages($usages);
         }
-        $pageImage->setUsages($usages);
-
 
         $this->pageImages[$imagePath] = $pageImage;
         $this->persistToFileSystem();
@@ -232,32 +233,24 @@ class PageImages extends Metadata
             ->setWidth(4)
             ->setMultiple(true)
             ->setDescription("The possible usages of the image");
-        $pageImagesObjects = $this->pageImages;
-        $pageImageDefault = $this->getPage()->getDefaultPageImageObject();
-        for ($i = 0; $i < 5; $i++) {
 
-            $pageImage = null;
-            if (isset($pageImagesObjects[$i])) {
-                $pageImage = $pageImagesObjects[$i];
-            }
 
-            /**
-             * Image
-             */
-            $pageImagePathValue = null;
-            $pageImagePathDefaultValue = null;
-            $pageImagePathUsage = null;
-            if ($pageImage != null) {
+        /** @noinspection PhpIfWithCommonPartsInspection */
+        if ($this->pageImages !== null) {
+            foreach ($this->pageImages as $pageImage) {
                 $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getPath();
                 $pageImagePathUsage = $pageImage->getUsages();
+                $pageImagePath->addValue($pageImagePathValue);
+                $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
             }
-            if ($i == 0 && $pageImageDefault !== null) {
-                $pageImagePathDefaultValue = $pageImageDefault->getImage()->getDokuPath()->getPath();
-            }
-            $pageImagePath->addValue($pageImagePathValue, $pageImagePathDefaultValue);
-            $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
-
+            $pageImagePath->addValue(null);
+            $pageImageUsage->addValue(null, PageImage::DEFAULT);
+        } else {
+            $pageImageDefault = $this->getPage()->getDefaultPageImageObject();
+            $pageImagePath->addValue(null, $pageImageDefault);
+            $pageImageUsage->addValue(null, PageImage::DEFAULT);
         }
+
 
         // Image
         $formMeta = parent::toFormField();
@@ -280,9 +273,9 @@ class PageImages extends Metadata
             $counter = 0;
             foreach ($imagePaths as $imagePath) {
                 $usage = $usages[$counter];
-                $usages = explode(",",$usage);
+                $usages = explode(",", $usage);
                 if ($imagePath !== null || $imagePath !== "") {
-                    $this->pageImages[] = PageImage::create($imagePath,$this->getPage())
+                    $this->pageImages[] = PageImage::create($imagePath, $this->getPage())
                         ->setUsages($usages);
                 }
                 $counter++;

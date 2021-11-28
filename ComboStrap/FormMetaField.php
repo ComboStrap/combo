@@ -318,5 +318,10 @@ class FormMetaField
         return $this;
     }
 
+    public function isMultiple()
+    {
+        return $this->multiple;
+    }
+
 
 }

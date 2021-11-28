@@ -74,8 +74,9 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
      * Update the frontmatter with the managed metadata
      * Used after a submit from the form
      * @param Page $page
+     * @return Message
      */
-    public static function updateFrontmatter(Page $page)
+    public static function updateFrontmatter(Page $page): Message
     {
 
         /**

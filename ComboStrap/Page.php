@@ -2590,7 +2590,6 @@ class Page extends DokuPath
         $this->pageImages = PageImages::createFromPage($this);
 
 
-
         /**
          * Old system
          *
@@ -2967,7 +2966,7 @@ class Page extends DokuPath
                     break;
                 case Aliases::ALIAS_ATTRIBUTE:
 
-                    if ($this->aliases->getSize()!== 0) {
+                    if ($this->aliases->getSize() !== 0) {
                         $nonDefaultMetadatas[Aliases::ALIAS_ATTRIBUTE] = $this->aliases->toPersistentValue();
                     }
                     break;
@@ -3141,6 +3140,7 @@ class Page extends DokuPath
      */
     public function setKeywords($value): Page
     {
+
         $persistentKeyWordsString = null;
         if (is_array($value)) {
             $this->keywords = $value;
@@ -3148,7 +3148,9 @@ class Page extends DokuPath
         }
 
         if (is_string($value)) {
-            $this->keywords = explode(",", $value);
+            if ($value !== "") {
+                $this->keywords = explode(",", $value);
+            }
             $persistentKeyWordsString = $value;
         }
 

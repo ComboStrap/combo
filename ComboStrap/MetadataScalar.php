@@ -16,7 +16,9 @@ abstract class MetadataScalar extends Metadata
     {
 
         $formField = parent::toFormField();
-        return $formField->addValue($this->toPersistentValue(), $this->toPersistentDefaultValue());
+        return $formField
+            ->addValue($this->toPersistentValue(), $this->toPersistentDefaultValue())
+            ->setMutable(false);
 
     }
 

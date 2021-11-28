@@ -285,9 +285,11 @@ class Aliases extends Metadata
 
 
         $aliasesValues = $this->aliases;
-        foreach ($aliasesValues as $alias) {
-            $aliasPath->addValue($alias->getPath());
-            $aliasType->addValue($alias->getType(), Alias::getDefaultType());
+        if ($aliasesValues !== null) {
+            foreach ($aliasesValues as $alias) {
+                $aliasPath->addValue($alias->getPath());
+                $aliasType->addValue($alias->getType(), Alias::getDefaultType());
+            }
         }
         /**
          * To be able to add one
@@ -305,7 +307,7 @@ class Aliases extends Metadata
     public function setFromFormData($formData): Aliases
     {
         $pathData = $formData[self::ALIAS_PATH];
-        if ($pathData !== null) {
+        if ($pathData !== null && $pathData !== "") {
             $this->aliases = [];
             $typeData = $formData[self::ALIAS_TYPE];
             $counter = 0;

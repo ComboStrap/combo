@@ -267,7 +267,7 @@ class PageImages extends Metadata
     public function setFromFormData($formData)
     {
         $imagePaths = $formData[self::IMAGE_PATH];
-        if ($imagePaths !== null) {
+        if ($imagePaths !== null && $imagePaths !== "") {
             $usages = $formData[self::IMAGE_USAGE];
             $this->pageImages = [];
             $counter = 0;

@@ -240,49 +240,34 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $post = array_merge($defaultBoolean, $post);
 
         $processingMessages = [];
-        /**
-         * Building back images
-         */
-        $imagePaths = $post[PageImages::IMAGE_PATH];
-        unset($post[PageImages::IMAGE_PATH]);
-        $imagesUsage = $post[PageImages::IMAGE_USAGE];
-        unset($post[PageImages::IMAGE_USAGE]);
-        $pageImages = PageImages::createFromPage($page);
-        foreach ($imagePaths as $key => $imagesPath) {
-            if ($imagesPath !== "") {
-                try {
-                    $pageImages->addImage($imagesPath, $imagesUsage[$key]);
-                } catch (ExceptionCombo $e) {
-                    $processingMessages[] = Message::createErrorMessage($e->getMessage())
-                        ->setCanonical($e->getCanonical());
-                }
-            }
-        }
-        $post[PageImages::IMAGE_META_PROPERTY] = $pageImages->toPersistentValue();
 
         /**
-         * Building Alias
+         * New Metadata processing
          */
-        $aliasPaths = $post[Aliases::ALIAS_PATH];
-        unset($post[Aliases::ALIAS_PATH]);
-        $aliasTypes = $post[Aliases::ALIAS_TYPE];
+        Aliases::createFromPage($page)
+            ->setFromFormData($post);
+        try {
+            PageImages::createFromPage($page)
+                ->setFromFormData($post);
+        } catch (ExceptionCombo $e) {
+            $processingMessages[] = Message::createErrorMessage($e->getMessage())
+                ->setCanonical($e->getCanonical());
+        }
+
+        /**
+         * When the migration to the new metadata system is done,
+         * this unset is no more needed
+         */
         unset($post[Aliases::ALIAS_TYPE]);
-        $aliases = Aliases::createFromPage($page);
-        if (is_array($aliasPaths)) {
-            foreach ($aliasPaths as $key => $aliasPath) {
-                if ($aliasPath !== "") {
-                    $aliases->addAlias($aliasPath, $aliasTypes[$key]);
-                }
-            }
-        } else {
-            if ($aliasPaths !== "") {
-                $aliases->addAlias($aliasPaths, $aliasTypes);
-            }
-        }
-        $post[Aliases::ALIAS_ATTRIBUTE] = $aliases->toPersistentValue();
+        unset($post[Aliases::ALIAS_PATH]);
+        unset($post[PageImages::IMAGE_PATH]);
+        unset($post[PageImages::IMAGE_USAGE]);
 
         /**
-         * Upsert
+         * Old metadata system
+         * We upsert as if the data comes from
+         * the file system/frontmatter
+         * This is the case for all scalar value
          */
         $upsertMessages = $page->upsertMetadataFromAssociativeArray($post, true);
         $processingMessages = array_merge($upsertMessages, $processingMessages);
@@ -307,7 +292,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         }
 
         $frontMatterMessage = syntax_plugin_combo_frontmatter::updateFrontmatter($page);
-        $responseMessages[] = $frontMatterMessage;
+        $responseMessages[] = $frontMatterMessage->getPlainTextContent();
 
 
         /**
@@ -769,7 +754,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         // Cache expiration date
         $cacheExpirationDate = CacheExpirationDate::createForPage($page);
-        $formMeta->addField(FormMetaField::createFromMetadata($cacheExpirationDate));
+        $formMeta->addField($cacheExpirationDate->toFormField());
 
         /**
          * Tabs (for whatever reason, javascript keep the order of the properties

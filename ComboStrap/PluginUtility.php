@@ -63,6 +63,7 @@ require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/ExitException.php');
 require_once(__DIR__ . '/ExceptionCombo.php');
+require_once(__DIR__ . '/ExceptionComboRuntime.php');
 require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FormMeta.php');

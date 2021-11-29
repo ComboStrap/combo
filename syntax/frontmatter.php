@@ -153,6 +153,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $targetFrontMatterJsonString = \ComboStrap\Json::createFromArray($targetFrontMatterMetadata)->toFrontMatterFormat();
 
 
+
         /**
          * Build the new document
          */

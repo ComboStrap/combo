@@ -58,7 +58,7 @@ class Json
 
     /**
      * This formatting make the object on one line for a list of object
-     * making the frontmatter compact (one line, one meta)
+     * making the frontmatter compacter (one line, one meta)
      * @return string
      */
     public function toFrontMatterFormat(): string
@@ -70,10 +70,19 @@ class Json
         $jsonString = "";
         $this->flatRecursiveEncoding($jsonArray, $jsonString);
 
+        /**
+         * Double Guard (frontmatter should be quick enough)
+         * to support this overhead
+         */
+        $decoding = json_decode($jsonString);
+        if ($decoding === null) {
+            throw new ExceptionComboRuntime("The generated frontmatter json is no a valid json");
+        }
         return $jsonString;
+
     }
 
-    private function flatRecursiveEncoding(array $jsonProperty, &$jsonString, $level = 0, $endOfFieldCharacter = DOKU_LF, $type = self::TYPE_OBJECT)
+    private function flatRecursiveEncoding(array $jsonProperty, &$jsonString, $level = 0, $endOfFieldCharacter = DOKU_LF, $type = self::TYPE_OBJECT, $parentType = self::TYPE_OBJECT)
     {
         /**
          * Open the root object
@@ -101,7 +110,8 @@ class Json
              * Close the previous property
              */
             $isFirstProperty = $elementCounter === 1;
-            if ($isFirstProperty && ($type !== self::TYPE_OBJECT || $level === 0)) {
+            if ($isFirstProperty && $parentType !== self::PARENT_TYPE_ARRAY) {
+                // go the line if this is not a list of object
                 $jsonString .= DOKU_LF;
             }
             if (!$isFirstProperty) {
@@ -131,10 +141,13 @@ class Json
                      * Array
                      */
                     $jsonString .= "$jsonEncodedKey: ";
-                    $childType = self::PARENT_TYPE_ARRAY;
+                    $childType = self::TYPE_OBJECT;
+                    if ($value[0] !== null) {
+                        $childType = self::PARENT_TYPE_ARRAY;
+                    }
                     $childEndOField = $endOfFieldCharacter;
                 }
-                $this->flatRecursiveEncoding($value, $jsonString, $childLevel, $childEndOField, $childType);
+                $this->flatRecursiveEncoding($value, $jsonString, $childLevel, $childEndOField, $childType, $type);
 
             } else {
                 /**
@@ -150,24 +163,24 @@ class Json
         /**
          * Close the object or array
          */
+        $closingLevelSpaceIndentation = str_repeat(" ", $level * self::TAB_SPACES_COUNTER);
         if ($type === self::TYPE_OBJECT) {
-            if ($level === 0) {
-                $jsonString .= DOKU_LF;
+            if ($parentType !== self::PARENT_TYPE_ARRAY) {
+                $jsonString .= DOKU_LF . $closingLevelSpaceIndentation;
             } else {
                 $jsonString .= " ";
             }
             $jsonString .= "}";
-
         } else {
             /**
              * The array is not going one level back
              */
-            $closingLevelSpaceIndentation = str_repeat(" ", $level * self::TAB_SPACES_COUNTER);
             $jsonString .= DOKU_LF . $closingLevelSpaceIndentation . "]";
         }
     }
 
-    public static function createFromString($jsonString): Json
+    public
+    static function createFromString($jsonString): Json
     {
         return new Json($jsonString);
     }
@@ -175,25 +188,29 @@ class Json
     /**
      * @return mixed
      */
-    public function toJsonObject()
+    public
+    function toJsonObject()
     {
         $jsonString = $this->getJsonString();
         return json_decode($jsonString);
 
     }
 
-    public function toArray()
+    public
+    function toArray()
     {
         return $this->getJsonArray();
 
     }
 
-    public function toPrettyJsonString()
+    public
+    function toPrettyJsonString()
     {
         return $this->toNormalizedJsonString();
     }
 
-    private function getJsonString()
+    private
+    function getJsonString()
     {
         if ($this->jsonString === null && $this->jsonArray !== null) {
             $this->jsonString = json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -201,7 +218,8 @@ class Json
         return $this->jsonString;
     }
 
-    private function getJsonArray()
+    private
+    function getJsonArray()
     {
         if ($this->jsonArray === null && $this->jsonString !== null) {
             $this->jsonArray = json_decode($this->jsonString, true);
@@ -209,7 +227,8 @@ class Json
         return $this->jsonArray;
     }
 
-    public function toMinifiedJsonString()
+    public
+    function toMinifiedJsonString()
     {
         if ($this->jsonString === null && $this->jsonArray !== null) {
             $this->jsonString = json_encode($this->jsonArray);

@@ -16,9 +16,9 @@ abstract class MetadataScalar extends Metadata
     {
 
         $formField = parent::toFormField();
-        $value = $this->toPersistentValue();
-        if ($value !== null) {
-            $formField->setValue($value, $this->toPersistentDefaultValue());
+        $persistentValue = $this->toPersistentValue();
+        if ($persistentValue !== null) {
+            $formField->setValue($persistentValue, $this->toPersistentDefaultValue());
         }
         return $formField;
 
@@ -29,6 +29,43 @@ abstract class MetadataScalar extends Metadata
         $value = $formData[$this->getName()];
         $this->setFromPersistentFormat($value);
         return $this;
+    }
+
+    public abstract function getValue();
+
+    public abstract function getDefaultValue();
+
+    public function getValueOrDefault()
+    {
+
+        $value = $this->getValue();
+        if ($value === null || $value === "") {
+            return $this->getDefaultValue();
+        }
+        return $value;
+
+    }
+
+
+    public
+    function toPersistentDefaultValue()
+    {
+        return $this->getDefaultValue();
+    }
+
+    public
+    function toPersistentValue()
+    {
+        return $this->getValue();
+    }
+
+
+    public
+    function setFromPersistentFormat($value)
+    {
+
+        return $this->setValue($value);
+
     }
 
 

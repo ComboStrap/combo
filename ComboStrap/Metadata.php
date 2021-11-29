@@ -177,7 +177,7 @@ abstract class Metadata
         Analytics::TITLE,
         Publication::OLD_META_KEY,
         Publication::DATE_PUBLISHED,
-        Analytics::NAME,
+        PageName::NAME_PROPERTY,
         LdJson::JSON_LD_META_PROPERTY,
         Page::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,

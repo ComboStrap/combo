@@ -32,7 +32,7 @@ class DatabasePage
             self::ANALYTICS_ATTRIBUTE,
             Analytics::DESCRIPTION,
             Analytics::CANONICAL,
-            Analytics::NAME,
+            PageName::NAME_PROPERTY,
             Analytics::TITLE,
             Analytics::H1,
             Publication::DATE_PUBLISHED,
@@ -955,7 +955,7 @@ EOF;
                         }
                     }
                     continue 2;
-                case Page::NAME_PROPERTY:
+                case PageName::NAME_PROPERTY:
                     $this->pageName = $value;
             }
         }
@@ -993,7 +993,7 @@ EOF;
         $metaRecord = array(
             Analytics::CANONICAL => $this->page->getCanonicalOrDefault(),
             Page::PATH_ATTRIBUTE => $this->page->getAbsolutePath(),
-            Analytics::NAME => $this->page->getPageNameNotEmpty(),
+            PageName::NAME_PROPERTY => $this->page->getPageNameNotEmpty(),
             Analytics::TITLE => $this->page->getTitleNotEmpty(),
             Analytics::H1 => $this->page->getH1NotEmpty(),
             Analytics::DESCRIPTION => $this->page->getDescriptionOrElseDokuWiki(),

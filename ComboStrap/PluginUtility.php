@@ -20,6 +20,7 @@ require_once(__DIR__ . '/Metadata.php');
 require_once(__DIR__ . '/MetadataScalar.php');
 require_once(__DIR__ . '/MetadataDateTime.php');
 require_once(__DIR__ . '/MetadataJson.php');
+require_once(__DIR__ . '/MetadataText.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -100,6 +101,7 @@ require_once(__DIR__ . '/NavBarUtility.php');
 require_once(__DIR__ . '/Opacity.php');
 require_once(__DIR__ . '/Os.php');
 require_once(__DIR__ . '/Page.php');
+require_once(__DIR__ . '/PageName.php');
 require_once(__DIR__ . '/PageImages.php');
 require_once(__DIR__ . '/PageImage.php');
 require_once(__DIR__ . '/PageProtection.php');

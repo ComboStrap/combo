@@ -5,6 +5,7 @@ use ComboStrap\Analytics;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\PageImages;
+use ComboStrap\PageName;
 use ComboStrap\PageSql;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -48,7 +49,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         Analytics::DATE_MODIFIED,
         Analytics::DATE_CREATED,
         Publication::DATE_PUBLISHED,
-        Analytics::NAME
+        PageName::NAME_PROPERTY
     ];
 
     const CANONICAL = "template";

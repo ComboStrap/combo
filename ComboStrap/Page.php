@@ -70,7 +70,6 @@ class Page extends DokuPath
     const WEB_PAGE_TYPE = "webpage";
     const OTHER_TYPE = "other";
 
-    const NAME_PROPERTY = "name";
     const DESCRIPTION_PROPERTY = "description";
     /**
      * Default page type configuration
@@ -220,6 +219,9 @@ class Page extends DokuPath
     private $databasePage;
     private $canonical;
     private $h1;
+    /**
+     * @var PageName
+     */
     private $pageName;
     private $type;
     private $title;
@@ -1581,7 +1583,7 @@ class Page extends DokuPath
      * element that is added for cache debugging
      */
     public
-    function getCacheHtmlId()
+    function getCacheHtmlId(): string
     {
         return "cache-" . str_replace(":", "-", $this->getDokuwikiId());
     }
@@ -1594,22 +1596,17 @@ class Page extends DokuPath
         return $this;
     }
 
-    public
-    function getPageName()
+    public function getPageName(): string
     {
-        return $this->pageName;
+
+        return $this->pageName->getValue();
 
     }
 
     public
     function getPageNameNotEmpty(): string
     {
-        $name = $this->getPageName();
-        if (!blank($name)) {
-            return $name;
-        } else {
-            return $this->getDefaultPageName();
-        }
+        return $this->pageName->getValueOrDefault();
     }
 
     /**
@@ -1653,7 +1650,7 @@ class Page extends DokuPath
         $array[Page::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
         $array[Analytics::PATH] = $this->getAbsolutePath();
         $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
-        $array[Analytics::NAME] = $this->getPageNameNotEmpty();
+        $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
         $array["url"] = $this->getCanonicalUrl();
         $array[self::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
         $array[Page::SLUG_ATTRIBUTE] = $this->getSlugOrDefault();
@@ -1894,8 +1891,8 @@ class Page extends DokuPath
                     case Page::DESCRIPTION_PROPERTY:
                         $this->setDescription($value);
                         continue 2;
-                    case Page::NAME_PROPERTY:
-                        $this->setPageName($value);
+                    case PageName::NAME_PROPERTY:
+                        $this->pageName->setValue($value);
                         continue 2;
                     case Page::TITLE_META_PROPERTY:
                         $this->setTitle($value);
@@ -2087,24 +2084,7 @@ class Page extends DokuPath
     public
     function getDefaultPageName(): string
     {
-        $pathName = $this->getDokuPathLastName();
-        /**
-         * If this is a home page, the default
-         * is the parent path name
-         */
-        if ($pathName === Site::getHomePageName()) {
-            $names = $this->getDokuNames();
-            $namesCount = sizeof($names);
-            if ($namesCount >= 2) {
-                $pathName = $names[$namesCount - 2];
-            }
-        }
-        $words = preg_split("/\s/", preg_replace("/-|_/", " ", $pathName));
-        $wordsUc = [];
-        foreach ($words as $word) {
-            $wordsUc[] = ucfirst($word);
-        }
-        return implode(" ", $wordsUc);
+        return $this->pageName->getDefaultValue();
     }
 
     public
@@ -2473,16 +2453,16 @@ class Page extends DokuPath
         $this->setDateAttribute(Publication::DATE_PUBLISHED, $this->publishedDate, $value);
     }
 
+    /**
+     * Utility to {@link PageName::setValue()}
+     * Used mostly to create page in test
+     * @throws ExceptionCombo
+     */
     public
     function setPageName($value): Page
     {
-        if ($value === "") {
-            $value = null;
-        }
-        $this->pageName = $value;
-        $this->setMetadata(Page::NAME_PROPERTY, $value);
+        $this->pageName->setValue($value);
         return $this;
-
     }
 
     public
@@ -2583,6 +2563,7 @@ class Page extends DokuPath
         $this->cacheExpirationDate = CacheExpirationDate::createForPage($this);
         $this->aliases = Aliases::createFromPage($this);
         $this->pageImages = PageImages::createFromPage($this);
+        $this->pageName = PageName::createFromPage($this);
 
 
         /**
@@ -2602,7 +2583,6 @@ class Page extends DokuPath
         $this->metadatas = p_read_metadata($this->getDokuwikiId());
 
         $this->pageId = $this->getMetadata(self::PAGE_ID_ATTRIBUTE);
-        $this->pageName = $this->getMetadata(self::NAME_PROPERTY);
         [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
         $this->h1 = $this->getMetadata(Analytics::H1);
         $this->canonical = $this->getMetadata(Page::CANONICAL_PROPERTY);
@@ -3001,9 +2981,9 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
                     }
                     break;
-                case Analytics::NAME:
+                case PageName::NAME_PROPERTY:
                     if (!in_array($this->getPageName(), [$this->getDefaultPageName(), null])) {
-                        $nonDefaultMetadatas[Analytics::NAME] = $this->getPageName();
+                        $nonDefaultMetadatas[PageName::NAME_PROPERTY] = $this->getPageName();
                     }
                     break;
                 case action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY:
@@ -3216,6 +3196,46 @@ class Page extends DokuPath
     {
         $this->cacheExpirationDate->setValue($cacheExpirationDate);
         return $this;
+    }
+
+    /**
+     * @return bool - true if the page has changed
+     */
+    public function isParseCacheUsable(): bool
+    {
+        $instructionCache = $this->getInstructionsCache();
+        return $instructionCache->useCache() === true;
+    }
+
+    /**
+     * Parse a page and put the instructions in the cache
+     * @return $this
+     */
+    public function parse(): Page
+    {
+
+        /**
+         * The id is not passed while on handler
+         * Therefore the global id should be set
+         */
+        global $ID;
+        $oldId = $ID;
+        $ID = $this->getDokuwikiId();
+
+        p_cached_instructions(
+            $this->getAbsoluteFileSystemPath(),
+            false,
+            $this->getDokuwikiId()
+        );
+
+        // back
+        $ID = $oldId;
+
+        // the parsing may have set new values
+        $this->rebuild();
+
+        return $this;
+
     }
 
 

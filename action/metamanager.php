@@ -29,6 +29,7 @@ use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
+use ComboStrap\PageName;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 use ComboStrap\Site;
@@ -484,7 +485,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * with a new frontmatter
          * The frontmatter data should be first replicated into the metadata file
          */
-        throw new \ComboStrap\ExceptionComboRuntime("To do");
+        if (!$page->isParseCacheUsable()) {
+            $page->parse();
+        }
 
         /**
          * Creation
@@ -496,15 +499,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * The manager
          */
         // Name
-        $formMeta->addField(
-            FormMetaField::create(Analytics::NAME)
-                ->setMutable(true)
-                ->setTab(self::TAB_PAGE_VALUE)
-                ->setLabel("Name")
-                ->setCanonical(Analytics::NAME)
-                ->setDescription("The page name is the shortest page description. It should be at maximum a couple of words long. It's used mainly in navigation components.")
-                ->addValue($page->getPageName(), $page->getDefaultPageName())
-        );
+        $pageName = PageName::createFromPage($page);
+        $formMeta->addField($pageName->toFormField());
+
 
         // Title (title of a component is an heading)
         $formMeta->addField(

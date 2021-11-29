@@ -52,4 +52,9 @@ class LdJson extends MetadataJson
     {
         return true;
     }
+
+    public function getDefaultValue()
+    {
+        return null;
+    }
 }

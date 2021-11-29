@@ -478,6 +478,17 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      */
     static function getFormMetadataForPage(Page $page): FormMeta
     {
+
+        /**
+         * Case when the page was changed externally
+         * with a new frontmatter
+         * The frontmatter data should be first replicated into the metadata file
+         */
+        throw new \ComboStrap\ExceptionComboRuntime("To do");
+
+        /**
+         * Creation
+         */
         $formMeta = FormMeta::create($page->getDokuwikiId())
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 

@@ -54,9 +54,10 @@ ini_set('memory_limit', '256M');
  */
 class cli_plugin_combo extends DokuWiki_CLI_Plugin
 {
-    const REPLICATE = "replicate";
+
+    const METADATA_TO_DATABASE = "metadata-to-database";
     const ANALYTICS = "analytics";
-    const FRONTMATTER = "frontmatter";
+    const METADATA_FRONTMATTER = "metadata-to-frontmatter";
     const SYNC = "sync";
     const PLUGINS_TO_UPDATE = "plugins-to-update";
 
@@ -74,15 +75,15 @@ ComboStrap Administrative Commands
 Example:
   * Replicate all pages into the database
 ```bash
-php ./bin/plugin.php combo replicate :
+php ./bin/plugin.php combo metadata-to-database :
 # or
-php ./bin/plugin.php combo replicate /
+php ./bin/plugin.php combo metadata-to-database /
 ```
   * Replicate only the page `:namespace:my-page`
 ```bash
-php ./bin/plugin.php combo replicate :namespace:my-page
+php ./bin/plugin.php combo metadata-to-database :namespace:my-page
 # or
-php ./bin/plugin.php combo replicate /namespace/my-page
+php ./bin/plugin.php combo metadata-to-database /namespace/my-page
 ```
 
 Animal: If you want to use it for an animal farm, you need to set first the animal directory name in a environment variable
@@ -94,10 +95,10 @@ EOF;
 
         $options->setHelp($help);
         $options->registerOption('version', 'print version', 'v');
-        $options->registerCommand(self::REPLICATE, "Replicate the file system metadata into the database");
+        $options->registerCommand(self::METADATA_TO_DATABASE, "Replicate the file system metadata into the database");
         $options->registerCommand(self::ANALYTICS, "Start the analytics and export optionally the data");
         $options->registerCommand(self::PLUGINS_TO_UPDATE, "List the plugins to update");
-        $options->registerCommand(self::FRONTMATTER, "Replicate the file system metadata into the page frontmatter");
+        $options->registerCommand(self::METADATA_FRONTMATTER, "Replicate the file system metadata into the page frontmatter");
         $options->registerCommand(self::SYNC, "Delete the non-existing pages in the database");
         $options->registerArgument(
             'path',
@@ -130,13 +131,13 @@ EOF;
 
         $args = $options->getArgs();
         $sizeof = sizeof($args);
-        switch ($sizeof){
+        switch ($sizeof) {
             case 0:
                 fwrite(STDERR, "The start path is mandatory and was not given");
                 exit(1);
             case 1:
                 $startPath = $args[0];
-                if(!in_array($startPath,[":","/"])) {
+                if (!in_array($startPath, [":", "/"])) {
                     // cleanId would return blank for a root
                     $startPath = cleanID($startPath);
                 }
@@ -149,11 +150,11 @@ EOF;
         $depth = $options->getOpt('depth', 0);
         $cmd = $options->getCmd();
         switch ($cmd) {
-            case self::REPLICATE:
+            case self::METADATA_TO_DATABASE:
                 $force = $options->getOpt('force', false);
                 $this->replicate($startPath, $force, $depth);
                 break;
-            case self::FRONTMATTER:
+            case self::METADATA_FRONTMATTER:
                 $this->frontmatter($startPath, $depth);
                 break;
             case self::ANALYTICS:
@@ -349,15 +350,75 @@ EOF;
         $pages = FsWikiUtility::getPages($namespaces, $depth);
         $pageCounter = 0;
         $totalNumberOfPages = sizeof($pages);
+        $pagesWithChanges = [];
+        $pagesWithError = [];
+        $pagesWithOthers = [];
+        $notChangedCounter = 0;
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
             $page = Page::createPageFromId($id);
-
+            LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
             $pageCounter++;
             $message = syntax_plugin_combo_frontmatter::updateFrontmatter($page);
-            LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) " . $message->getPlainTextContent(), LogUtility::LVL_MSG_INFO);
+
+            switch ($message->getStatus()) {
+                case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_NOT_CHANGED:
+                    $notChangedCounter++;
+                    break;
+                case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_DONE:
+                    $pagesWithChanges[] = $id;
+                    break;
+                case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_ERROR:
+                    $pagesWithError[$id] = $message->getPlainTextContent();
+                    break;
+                default:
+                    $pagesWithOthers[$id] = $message->getPlainTextContent();
+                    break;
+
+            }
 
 
+        }
+
+        echo "\n";
+        echo "Result:\n";
+        echo "$notChangedCounter pages without any frontmatter modifications\n";
+
+        if (sizeof($pagesWithError) > 0) {
+            echo "\n";
+            echo "The following pages had errors";
+            $pageCounter = 0;
+            $totalNumberOfPages = sizeof($pagesWithError);
+            foreach ($pagesWithError as $id => $message) {
+                $pageCounter++;
+                LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) " . $message, LogUtility::LVL_MSG_ERROR);
+            }
+        } else {
+            echo "No error\n";
+        }
+
+        if (sizeof($pagesWithChanges) > 0) {
+            echo "\n";
+            echo "The following pages had changed";
+            $pageCounter = 0;
+            $totalNumberOfPages = sizeof($pagesWithChanges);
+            foreach ($pagesWithChanges as $id) {
+                $pageCounter++;
+                LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_ERROR);
+            }
+        } else {
+            echo "No changes\n";
+        }
+
+        if (sizeof($pagesWithOthers) > 0) {
+            echo "\n";
+            echo "The following pages had an other status";
+            $pageCounter = 0;
+            $totalNumberOfPages = sizeof($pagesWithOthers);
+            foreach ($pagesWithOthers as $id => $message) {
+                $pageCounter++;
+                LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) " . $message, LogUtility::LVL_MSG_ERROR);
+            }
         }
     }
 }

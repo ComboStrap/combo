@@ -971,14 +971,9 @@ class Page extends DokuPath
             } else {
                 return [];
             }
-        } else {
-            return array_map(
-                function ($a) {
-                    return $a->getImage();
-                },
-                $pageImages
-            );
         }
+        return $pageImages;
+
 
     }
 
@@ -992,7 +987,7 @@ class Page extends DokuPath
 
         $images = $this->getPageImagesOrDefault();
         if (sizeof($images) >= 1) {
-            return $images[0];
+            return $images[0]->getImage();
         } else {
             return null;
         }

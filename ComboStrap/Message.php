@@ -235,10 +235,20 @@ EOF;
         }
     }
 
+    /**
+     * An exit code / status
+     * @param int $status
+     * @return $this
+     */
     public function setStatus(int $status): Message
     {
         $this->status = $status;
         return $this;
+    }
+
+    public function getStatus(): int
+    {
+        return $this->status;
     }
 
 }

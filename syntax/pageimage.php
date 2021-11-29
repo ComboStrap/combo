@@ -176,7 +176,8 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                         $bestRatioDistance = 9999;
 
                         $targetRatio = self::getTargetAspectRatio($stringRatio);
-                        foreach ($page->getPageImagesOrDefault() as $image) {
+                        foreach ($page->getPageImagesOrDefault() as $pageImage) {
+                            $image = $pageImage->getImage();
                             $ratioDistance = $targetRatio - $image->getIntrinsicAspectRatio();
                             if ($ratioDistance < $bestRatioDistance) {
                                 $bestRatioDistance = $ratioDistance;

@@ -58,6 +58,9 @@ class PageImage
     {
         foreach ($usages as $usage) {
             $value = trim($usage);
+            if ($value === "") {
+                continue;
+            }
             if (!in_array($value, self::getUsageValues())) {
                 throw new ExceptionCombo("The page image usage value ($value) is not valid.");
             }

@@ -95,7 +95,7 @@ abstract class MetadataJson extends MetadataScalar
 
     public function toFormField(): FormMetaField
     {
-
+        $this->buildCheck();
         $formField = parent::toFormField();
         if ($this->json !== null && $this->json !== "") {
             $value = json_encode($this->json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

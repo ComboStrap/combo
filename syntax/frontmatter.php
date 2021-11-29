@@ -20,7 +20,6 @@
  *
  */
 
-use ComboStrap\Analytics;
 use ComboStrap\ArrayUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;

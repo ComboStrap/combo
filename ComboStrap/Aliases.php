@@ -273,6 +273,8 @@ class Aliases extends Metadata
     public function toFormField(): FormMetaField
     {
 
+        $this->buildCheck();
+
         $aliasPath = FormMetaField::create(Aliases::ALIAS_PATH)
             ->setCanonical(Alias::CANONICAL)
             ->setLabel("Alias Path")

@@ -113,7 +113,12 @@ abstract class MetadataDateTime extends MetadataScalar
         return Iso8601Date::createFromDateTime($value)->toString();
     }
 
-
+    public function toFormField(): FormMetaField
+    {
+        $this->buildCheck();
+        return parent::toFormField()
+            ->setValue($this->toPersistentValue(),$this->toPersistentDefaultValue());
+    }
 
 
 }

@@ -220,7 +220,7 @@ class PageImages extends Metadata
 
     public function toFormField(): FormMetaField
     {
-
+        $this->buildCheck();
         $pageImagePath = FormMetaField::create(self::IMAGE_PATH)
             ->setLabel("Path")
             ->setCanonical($this->getCanonical())
@@ -238,7 +238,7 @@ class PageImages extends Metadata
         /** @noinspection PhpIfWithCommonPartsInspection */
         if ($this->pageImages !== null) {
             foreach ($this->pageImages as $pageImage) {
-                $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getPath();
+                $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getAbsolutePath();
                 $pageImagePathUsage = $pageImage->getUsages();
                 $pageImagePath->addValue($pageImagePathValue);
                 $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
@@ -246,7 +246,7 @@ class PageImages extends Metadata
             $pageImagePath->addValue(null);
             $pageImageUsage->addValue(null, PageImage::DEFAULT);
         } else {
-            $pageImageDefault = $this->getPage()->getDefaultPageImageObject();
+            $pageImageDefault = $this->getPage()->getDefaultPageImageObject()->getImage()->getDokuPath()->getAbsolutePath();
             $pageImagePath->addValue(null, $pageImageDefault);
             $pageImageUsage->addValue(null, PageImage::DEFAULT);
         }

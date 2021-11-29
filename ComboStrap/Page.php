@@ -131,29 +131,6 @@ class Page extends DokuPath
     // No separator, no uppercase to be consistent on the whole url
     const PAGE_ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
 
-    /**
-     * The canonical for the canonical url
-     */
-    const CANONICAL_CANONICAL_URL = "canonical-url";
-    public const CONF_CANONICAL_URL_TYPE_DEFAULT = self::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH;
-    public const CONF_CANONICAL_URL_TYPE_VALUE_SLUG = "slug";
-    public const CONF_CANONICAL_URL_TYPE = "pageUrlType";
-    public const CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG = "hierarchical slug";
-    public const CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG = "homed slug";
-    public const CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH = "permanent canonical path";
-    public const CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH = "permanent page path";
-    public const CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH = "canonical path";
-    public const CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH = "page path";
-    public const CONF_CANONICAL_URL_TYPE_VALUES = [
-        Page::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH,
-        Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH,
-        Page::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH,
-        Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH,
-        Page::CONF_CANONICAL_URL_TYPE_VALUE_SLUG,
-        Page::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG,
-        Page::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG
-    ];
-
 
     /**
      *
@@ -1275,19 +1252,31 @@ class Page extends DokuPath
     public function getCanonicalUrl(array $urlParameters = []): ?string
     {
 
+
         /**
-         * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
+         * Default
          */
-        if ($this->isRootHomePage()) {
-            return DOKU_URL;
+        $absoluteUrl = false;
+
+        /**
+         * Conf
+         */
+        $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
+        if($urlType===PageUrlType::PAGE_PATH){
+            $absolutePath = Site::getCanonicalConfForRelativeVsAsboluteUrl();
+            if($absolutePath===1) {
+                $absoluteUrl = true;
+            }
         }
 
         /**
-         * We are not honoring the below configuration
-         * https://www.dokuwiki.org/config:canonical
-         * that could make the url relative
+         * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
          */
-        return wl($this->getUrlId(), $urlParameters, true, '&');
+        if ($absoluteUrl && $this->isRootHomePage()) {
+            return DOKU_URL;
+        }
+
+        return wl($this->getUrlId(), $urlParameters, $absoluteUrl, '&');
 
 
     }
@@ -2702,53 +2691,33 @@ class Page extends DokuPath
         /**
          * Type of Url
          */
-        if (!$this->exists()) {
-            $urlType = Page::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH;
-        } else {
-            $confCanonicalType = self::CONF_CANONICAL_URL_TYPE;
-            $confDefaultValue = self::CONF_CANONICAL_URL_TYPE_DEFAULT;
-            $urlType = PluginUtility::getConfValue($confCanonicalType, $confDefaultValue);
-            if (!in_array($urlType, self::CONF_CANONICAL_URL_TYPE_VALUES)) {
-                $urlType = $confDefaultValue;
-                LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
-            }
-
-            // Not yet sync with the database
-            // No permanent canonical url
-            if ($this->getPageIdAbbr() === null) {
-                if ($urlType === Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH) {
-                    $urlType = Page::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH;
-                } else {
-                    $urlType = Page::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH;
-                }
-            }
-        }
+        $urlType =  PageUrlType::getOrCreateForPage($this)->getValue();
 
         $path = $this->getPath();
         switch ($urlType) {
-            case Page::CONF_CANONICAL_URL_TYPE_VALUE_PAGE_PATH:
+            case PageUrlType::PAGE_PATH:
                 $path = $this->getPath();
                 break;
-            case Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH:
+            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH:
                 $path = $this->toPermanentUrlPath($this->getPath());
                 break;
-            case Page::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH:
+            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH:
                 $path = $this->getCanonicalOrDefault();
                 break;
-            case Page::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH:
+            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH:
                 $path = $this->toPermanentUrlPath($this->getCanonicalOrDefault());
                 break;
-            case Page::CONF_CANONICAL_URL_TYPE_VALUE_SLUG:
+            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_SLUG:
                 $path = $this->toPermanentUrlPath($this->getSlugOrDefault());
                 break;
-            case Page::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG:
+            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG:
                 $path = $this->getSlugOrDefault();
                 while (($parent = $this->getParentPage()) != null) {
                     $path = DokuPath::toSlugPath($parent->getPageNameNotEmpty()) . $path;
                 }
                 $path = $this->toPermanentUrlPath($path);
                 break;
-            case Page::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG:
+            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG:
                 $path = $this->getSlugOrDefault();
                 if (($parent = $this->getParentPage()) != null) {
                     $path = DokuPath::toSlugPath($parent->getPageNameNotEmpty()) . $path;
@@ -2756,7 +2725,7 @@ class Page extends DokuPath
                 $path = $this->toPermanentUrlPath($path);
                 break;
             default:
-                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL_CANONICAL_URL);
+                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, PageUrlType::CANONICAL);
 
         }
         return $path;
@@ -2813,7 +2782,7 @@ class Page extends DokuPath
     }
 
     private
-    function getDefaultDescription()
+    function getDefaultDescription(): ?string
     {
         return $this->descriptionDefault;
     }

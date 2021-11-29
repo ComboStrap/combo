@@ -17,6 +17,7 @@ use ComboStrap\Site;
 use ComboStrap\Sqlite;
 use ComboStrap\Url;
 use ComboStrap\UrlManagerBestEndPage;
+use ComboStrap\PageUrlType;
 
 
 /**
@@ -334,7 +335,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
             /**
              * Page Id Abbr ?
-             * {@link Page::CONF_CANONICAL_URL_TYPE}
+             * {@link PageUrlType::CONF_CANONICAL_URL_TYPE}
              */
             if (
                 $pageId !== null

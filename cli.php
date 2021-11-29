@@ -130,34 +130,22 @@ EOF;
 
 
         $args = $options->getArgs();
-        $sizeof = sizeof($args);
-        switch ($sizeof) {
-            case 0:
-                fwrite(STDERR, "The start path is mandatory and was not given");
-                exit(1);
-            case 1:
-                $startPath = $args[0];
-                if (!in_array($startPath, [":", "/"])) {
-                    // cleanId would return blank for a root
-                    $startPath = cleanID($startPath);
-                }
-                break;
-            default:
-                fwrite(STDERR, "Too much arguments given $sizeof");
-                exit(1);
-        }
+
 
         $depth = $options->getOpt('depth', 0);
         $cmd = $options->getCmd();
         switch ($cmd) {
             case self::METADATA_TO_DATABASE:
+                $startPath = $this->getStartPath($args);
                 $force = $options->getOpt('force', false);
                 $this->replicate($startPath, $force, $depth);
                 break;
             case self::METADATA_FRONTMATTER:
+                $startPath = $this->getStartPath($args);
                 $this->frontmatter($startPath, $depth);
                 break;
             case self::ANALYTICS:
+                $startPath = $this->getStartPath($args);
                 $output = $options->getOpt('output', '');
                 //if ($output == '-') $output = 'php://stdout';
                 $this->analytics($startPath, $output, $depth);
@@ -327,6 +315,7 @@ EOF;
 
     private function sync()
     {
+        LogUtility::msg("Sync started");
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query("select ID from pages");
         if (!$res) {
@@ -334,13 +323,16 @@ EOF;
         }
         $res2arr = $sqlite->res2arr($res);
         $sqlite->res_close($res);
+        $counter=0;
         foreach ($res2arr as $row) {
+            $counter++;
             $id = $row['ID'];
             if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
                 Page::createPageFromId($id)->getDatabasePage()->delete();
             }
         }
+        LogUtility::msg("Sync finished ($counter pages checked)");
 
 
     }
@@ -420,5 +412,26 @@ EOF;
                 LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) " . $message, LogUtility::LVL_MSG_ERROR);
             }
         }
+    }
+
+    private function getStartPath($args)
+    {
+        $sizeof = sizeof($args);
+        switch ($sizeof) {
+            case 0:
+                fwrite(STDERR, "The start path is mandatory and was not given");
+                exit(1);
+            case 1:
+                $startPath = $args[0];
+                if (!in_array($startPath, [":", "/"])) {
+                    // cleanId would return blank for a root
+                    $startPath = cleanID($startPath);
+                }
+                break;
+            default:
+                fwrite(STDERR, "Too much arguments given $sizeof");
+                exit(1);
+        }
+        return $startPath;
     }
 }

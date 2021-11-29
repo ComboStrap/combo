@@ -23,6 +23,7 @@
 use ComboStrap\Icon;
 use ComboStrap\PageImages;
 use ComboStrap\Prism;
+use ComboStrap\PageUrlType;
 
 
 /**
@@ -365,8 +366,8 @@ $conf["staticCacheEnabled"] = 1;
 $conf["enableEnhancedLinkWizard"] = 1;
 
 /**
- * {@link Page::CONF_CANONICAL_URL_TYPE}
- * {@link Page::CONF_CANONICAL_URL_TYPE_DEFAULT}
+ * {@link PageUrlType::CONF_CANONICAL_URL_TYPE}
+ * {@link PageUrlType::CONF_CANONICAL_URL_TYPE_DEFAULT}
  */
 $conf["pageUrlType"] = "page path";
 

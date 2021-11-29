@@ -24,8 +24,7 @@ use ComboStrap\Site;
 use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
-
-
+use ComboStrap\PageUrlType;
 
 
 require_once(__DIR__ . '/../syntax/related.php');
@@ -322,7 +321,7 @@ $meta[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = array(
 /**
  * Canonical Url Type
  */
-$meta[Page::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' =>  Page::CONF_CANONICAL_URL_TYPE_VALUES);
+$meta[PageUrlType::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' => PageUrlType::CONF_CANONICAL_URL_TYPE_VALUES);
 
 /**
  * Frontmatter on sumbit

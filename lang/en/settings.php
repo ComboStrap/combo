@@ -21,7 +21,7 @@ use ComboStrap\Site;
 use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
-
+use ComboStrap\PageUrlType;
 
 
 /**
@@ -246,7 +246,7 @@ $lang[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = Plugin
 /**
  * Url Type
  */
-$lang[Page::CONF_CANONICAL_URL_TYPE] = PluginUtility::getDocumentationHyperLink("page:url", "The type of url used for a page.");
+$lang[PageUrlType::CONF_CANONICAL_URL_TYPE] = PluginUtility::getDocumentationHyperLink("page:url", "The type of url used for a page.");
 
 /**
  * Frontmatter

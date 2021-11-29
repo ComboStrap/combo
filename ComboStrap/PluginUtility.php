@@ -110,6 +110,7 @@ require_once(__DIR__ . '/PageSql.php');
 require_once(__DIR__ . '/PageSqlParser/PageSqlLexer.php');
 require_once(__DIR__ . '/PageSqlParser/PageSqlParser.php');
 require_once(__DIR__ . '/PageSqlTreeListener.php');
+require_once(__DIR__ . '/PageUrlType.php');
 require_once(__DIR__ . '/PagesIndex.php');
 require_once(__DIR__ . '/PipelineUtility.php');
 require_once(__DIR__ . '/Position.php');

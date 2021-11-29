@@ -356,5 +356,15 @@ class Site
         return null;
     }
 
+    /**
+     * Absolute vs Relative URL
+     * https://www.dokuwiki.org/config:canonical
+     */
+    public static function getCanonicalConfForRelativeVsAsboluteUrl()
+    {
+        global $conf;
+        return $conf['canonical'];
+    }
+
 
 }

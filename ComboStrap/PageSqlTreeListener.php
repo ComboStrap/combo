@@ -121,7 +121,7 @@ final class PageSqlTreeListener implements ParseTreeListener
 
                         // variable name
                         $variableName = strtolower($text);
-                        if (substr($this->physicalSql, -1) === "n") {
+                        if (substr($this->physicalSql, -1) === "\n") {
                             $this->physicalSql .= "\t";
                         }
                         if ($this->type === self::BACKLINKS) {
@@ -173,20 +173,20 @@ final class PageSqlTreeListener implements ParseTreeListener
                         break;
                 }
                 break;
-            case PageSqlParser:: AND:
-            case PageSqlParser:: OR:
+            case PageSqlParser::AND:
+            case PageSqlParser::OR:
                 if ($this->ruleState === PageSqlParser::RULE_predicates) {
                     $this->physicalSql .= " {$text}\n";
                 }
                 return;
             case PageSqlParser::LIMIT:
-            case PageSqlParser:: NOT:
+            case PageSqlParser::NOT:
                 $this->physicalSql .= "{$text} ";
                 return;
-            case PageSqlParser:: DESC:
-            case PageSqlParser:: LPAREN:
-            case PageSqlParser:: RPAREN:
-            case PageSqlParser:: ASC:
+            case PageSqlParser::DESC:
+            case PageSqlParser::LPAREN:
+            case PageSqlParser::RPAREN:
+            case PageSqlParser::ASC:
                 $this->physicalSql .= "{$text}";
                 break;
             case PageSqlParser:: COMMA:

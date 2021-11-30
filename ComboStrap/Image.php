@@ -44,7 +44,9 @@ abstract class Image extends Media
     public static function createImageFromDokuwikiAbsolutePath($dokuWikiAbsolutePathOrId, $rev = null, $attributes = null)
     {
 
-        DokuPath::addRootSeparatorIfNotPresent($dokuWikiAbsolutePathOrId);
+        if (!media_isexternal($dokuWikiAbsolutePathOrId)) {
+            DokuPath::addRootSeparatorIfNotPresent($dokuWikiAbsolutePathOrId);
+        }
         /**
          * Processing
          */

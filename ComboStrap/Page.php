@@ -712,7 +712,8 @@ class Page extends DokuPath
          * Same as
          * idx_get_indexer()->lookupKey('relation_references', $ID);
          */
-        foreach (ft_backlinks($this->getDokuwikiId()) as $backlinkId) {
+        $ft_backlinks = ft_backlinks($this->getDokuwikiId());
+        foreach ($ft_backlinks as $backlinkId) {
             $backlinks[$backlinkId] = Page::createPageFromId($backlinkId);
         }
         return $backlinks;

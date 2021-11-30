@@ -7,7 +7,6 @@
 use ComboStrap\Bootstrap;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
-use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) die();
 

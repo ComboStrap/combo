@@ -8,10 +8,9 @@ require_once(__DIR__ . "/../ComboStrap/XhtmlUtility.php");
 
 use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;
-use ComboStrap\ThirdPartyPlugins;
 use ComboStrap\PluginUtility;
-use ComboStrap\Tag;
 use ComboStrap\TagAttributes;
+use ComboStrap\ThirdPartyPlugins;
 
 if (!defined('DOKU_INC')) die();
 
@@ -279,7 +278,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
      *
      *
      */
-    function render($format, Doku_Renderer $renderer, $data)
+    function render($format, Doku_Renderer $renderer, $data): bool
     {
         // The data
         switch ($format) {

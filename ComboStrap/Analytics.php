@@ -98,7 +98,7 @@ class Analytics
             /**
              * If there is no cache
              */
-            if (!$this->cacheIsStale()) {
+            if (!$this->isCached()) {
                 return true;
             }
         }

@@ -11,7 +11,7 @@ class CacheExpirationFrequency extends MetadataText
      * The meta that has the cron expression
      */
     public const META_CACHE_EXPIRATION_FREQUENCY_NAME = "cache_expiration_frequency";
-    public const CANONICAL_NAME = "page-cache-expiration-frequency";
+    public const CANONICAL_PROPERTY = "page-cache-expiration-frequency";
 
     public static function createFromPage(Page $page): CacheExpirationFrequency
     {
@@ -40,7 +40,7 @@ class CacheExpirationFrequency extends MetadataText
             parent::setValue($cronExpression);
             return $this;
         } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::CANONICAL_NAME);
+            throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::CANONICAL_PROPERTY);
         }
 
     }
@@ -78,7 +78,7 @@ class CacheExpirationFrequency extends MetadataText
 
     public function getCanonical(): string
     {
-        return self::CANONICAL_NAME;
+        return self::CANONICAL_PROPERTY;
     }
 
 

@@ -10,7 +10,7 @@ use action_plugin_combo_qualitymessage;
 
 abstract class Metadata
 {
-    const CANONICAL_NAME = "page:metadata";
+    const CANONICAL_PROPERTY = "page:metadata";
 
     /**
      * @var Page
@@ -54,7 +54,7 @@ abstract class Metadata
         /**
          * The canonical to page metadata
          */
-        return self::CANONICAL_NAME;
+        return self::CANONICAL_PROPERTY;
     }
 
     protected function getPage(): Page
@@ -182,7 +182,7 @@ abstract class Metadata
      *   * or in the database
      */
     const FORM_METADATA = [
-        Page::CANONICAL_PROPERTY,
+        Canonical::CANONICAL_PROPERTY,
         Page::TYPE_META_PROPERTY,
         Analytics::H1,
         Aliases::ALIAS_ATTRIBUTE,

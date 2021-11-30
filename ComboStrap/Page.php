@@ -33,7 +33,6 @@ require_once(__DIR__ . '/PluginUtility.php');
  */
 class Page extends DokuPath
 {
-    const CANONICAL_PROPERTY = 'canonical';
     const TITLE_META_PROPERTY = 'title';
 
     const NOT_MODIFIABLE_METAS = [
@@ -572,13 +571,15 @@ class Page extends DokuPath
 
 
     /**
+     *
      * @return bool
-     * @deprecated for {@link Page::isHomePage()}
+     * Used to delete the part path of a page for default name or canonical value
      */
     public
     function isStartPage(): bool
     {
-        return $this->isHomePage();
+        $startPageName = Site::getHomePageName();
+        return $this->getDokuPathLastName() === $startPageName;
     }
 
     /**
@@ -1244,21 +1245,16 @@ class Page extends DokuPath
     }
 
     /**
-     * The Url used:
+     * The unique page Url (also known as Canonical URL) used:
      *   * in the link
      *   * in the canonical ref
      *   * in the site map
      * @param array $urlParameters
+     * @param bool $absoluteUrl - by default, dokuwiki allows the canonical to be relative but it's mandatory to be absolute for the HTML meta
      * @return string|null
      */
-    public function getCanonicalUrl(array $urlParameters = []): ?string
+    public function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrl = false): ?string
     {
-
-
-        /**
-         * Default
-         */
-        $absoluteUrl = false;
 
         /**
          * Conf
@@ -1587,7 +1583,7 @@ class Page extends DokuPath
         return $this;
     }
 
-    public function getPageName(): string
+    public function getPageName(): ?string
     {
 
         return $this->pageName->getValue();
@@ -1638,7 +1634,7 @@ class Page extends DokuPath
         $title = str_replace('"', "'", $title);
         $array[Analytics::TITLE] = $title;
         $array[Page::PAGE_ID_ATTRIBUTE] = $this->getPageId();
-        $array[Page::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
+        $array[Canonical::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
         $array[Analytics::PATH] = $this->getAbsolutePath();
         $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
@@ -1859,12 +1855,12 @@ class Page extends DokuPath
             $lowerKey = trim(strtolower($key));
             if (in_array($lowerKey, self::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified")
-                    ->setCanonical(Metadata::CANONICAL_NAME);
+                    ->setCanonical(Metadata::CANONICAL_PROPERTY);
                 continue;
             }
             try {
                 switch ($lowerKey) {
-                    case self::CANONICAL_PROPERTY:
+                    case Canonical::CANONICAL_PROPERTY:
                         $this->setCanonical($value);
                         continue 2;
                     case Analytics::DATE_END:
@@ -1937,11 +1933,11 @@ class Page extends DokuPath
                     default:
                         if (!$persistOnlyKnownAttributes) {
                             $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
-                                ->setCanonical(Metadata::CANONICAL_NAME);
+                                ->setCanonical(Metadata::CANONICAL_PROPERTY);
                             $this->setMetadata($key, $value);
                         } else {
                             $messages[] = Message::createErrorMessage("The metadata ($lowerKey) is unknown and was not saved")
-                                ->setCanonical(Metadata::CANONICAL_NAME);
+                                ->setCanonical(Metadata::CANONICAL_PROPERTY);
                         }
                         continue 2;
                 }
@@ -2675,7 +2671,7 @@ class Page extends DokuPath
                 $path = $this->toPermanentUrlPath($path);
                 break;
             default:
-                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, PageUrlType::CANONICAL_NAME);
+                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, PageUrlType::CANONICAL_PROPERTY);
 
         }
         return $path;
@@ -2842,9 +2838,9 @@ class Page extends DokuPath
         $metaToPreserve[] = Page::PAGE_ID_ATTRIBUTE;
         foreach ($metaToPreserve as $metaKey) {
             switch ($metaKey) {
-                case Page::CANONICAL_PROPERTY:
+                case Canonical::CANONICAL_PROPERTY:
                     if (!in_array($this->getCanonical(), [$this->getDefaultCanonical(), null])) {
-                        $nonDefaultMetadatas[Page::CANONICAL_PROPERTY] = $this->getCanonical();
+                        $nonDefaultMetadatas[Canonical::CANONICAL_PROPERTY] = $this->getCanonical();
                     }
                     break;
                 case

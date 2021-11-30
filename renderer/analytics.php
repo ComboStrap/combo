@@ -2,6 +2,7 @@
 
 
 use ComboStrap\Analytics;
+use ComboStrap\Canonical;
 use ComboStrap\LinkUtility;
 use ComboStrap\Page;
 use ComboStrap\StringUtility;
@@ -269,7 +270,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * A canonical should be present
          */
         $canonicalScore = $this->getConf(self::CONF_QUALITY_SCORE_CANONICAL_PRESENT, 5);
-        if (empty($this->metadata[Page::CANONICAL_PROPERTY])) {
+        if (empty($this->metadata[Canonical::CANONICAL_PROPERTY])) {
             global $conf;
             $root = $conf['start'];
             if ($ID != $root) {

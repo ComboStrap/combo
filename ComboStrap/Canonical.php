@@ -7,7 +7,15 @@ namespace ComboStrap;
 class Canonical extends MetadataWikiPath
 {
 
-    public const CANONICAL_NAME = "canonical";
+    public const CANONICAL_PROPERTY = "canonical";
+
+    /**
+     * The auto-canonical feature does not create any canonical value on the file system
+     * but creates a canonical in the database (where the {@link \action_plugin_combo_router}
+     * takes its information and it enables to route via a calculated canonical
+     * (ie the {@link Canonical::getDefaultValue()}
+     */
+    public const CONF_CANONICAL_LAST_NAMES_COUNT = 'MinimalNamesCountForAutomaticCanonical';
 
     public static function createFromPage(Page $page): Canonical
     {
@@ -31,7 +39,7 @@ class Canonical extends MetadataWikiPath
 
     public function getName(): string
     {
-        return self::CANONICAL_NAME;
+        return self::CANONICAL_PROPERTY;
     }
 
     public function getPersistenceType(): string
@@ -50,8 +58,8 @@ class Canonical extends MetadataWikiPath
          * The last part of the id as canonical
          */
         // How many last parts are taken into account in the canonical processing (2 by default)
-        $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_canonical::CONF_CANONICAL_LAST_NAMES_COUNT);
-        if (empty($this->getCanonical()) && $canonicalLastNamesCount > 0) {
+        $canonicalLastNamesCount = PluginUtility::getConfValue(self::CONF_CANONICAL_LAST_NAMES_COUNT);
+        if ($canonicalLastNamesCount > 0) {
             /**
              * Takes the last names part
              */
@@ -80,20 +88,23 @@ class Canonical extends MetadataWikiPath
                 $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
             }
             /**
-             * If this is a start page, delete the name
+             * If this is a `start` page, delete the name
              * ie javascript:start will become javascript
+             * (Not a home page)
              */
-            if ($this->getPage()->isHomePage()) {
+            if ($this->getPage()->isStartPage()) {
                 $names = array_slice($names, 0, $namesLength - 1);
             }
-            return implode(":", $names);
+            $calculatedCanonical = implode(":", $names);
+            DokuPath::addRootSeparatorIfNotPresent($calculatedCanonical);
+            return $calculatedCanonical;
         }
         return null;
     }
 
     public function getCanonical(): string
     {
-        return self::CANONICAL_NAME;
+        return self::CANONICAL_PROPERTY;
     }
 
 

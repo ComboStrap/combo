@@ -45,7 +45,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     const ATTRIBUTES_IN_PAGE_TABLE = [
         "id",
-        Canonical::CANONICAL_NAME,
+        Canonical::CANONICAL_PROPERTY,
         Analytics::PATH,
         Analytics::DATE_MODIFIED,
         Analytics::DATE_CREATED,

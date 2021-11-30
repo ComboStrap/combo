@@ -3,6 +3,7 @@
 require_once(__DIR__ . '/../../ComboStrap/PluginUtility.php');
 
 use ComboStrap\AdsUtility;
+use ComboStrap\Canonical;
 use ComboStrap\FloatAttribute;
 use ComboStrap\Icon;
 use ComboStrap\Identity;
@@ -52,7 +53,7 @@ $lang['WeightFactorForStartPage'] = PluginUtility::getDocumentationHyperLink("be
 $lang['WeightFactorForSameNamespace'] = PluginUtility::getDocumentationHyperLink("best:page:name", action_plugin_combo_router::NAME . " - Best Page Name") . ' - Weight factor for same namespace to calculate the score for the best page.';
 
 
-$lang[action_plugin_combo_canonical::CONF_CANONICAL_LAST_NAMES_COUNT] = PluginUtility::getDocumentationHyperLink("automatic:canonical", 'Automatic Canonical') . ' - The number of last part of a page path to create a ' . PluginUtility::getDocumentationHyperLink("canonical", "canonical") . ' (0 to disable)';
+$lang[Canonical::CONF_CANONICAL_LAST_NAMES_COUNT] = PluginUtility::getDocumentationHyperLink("automatic:canonical", 'Automatic Canonical') . ' - The number of last part of a page path to create a ' . PluginUtility::getDocumentationHyperLink("canonical", "canonical") . ' (0 to disable)';
 $lang[action_plugin_combo_canonical::CONF_CANONICAL_FOR_GA_PAGE_VIEW] = PluginUtility::getDocumentationHyperLink(action_plugin_combo_canonical::CANONICAL, 'Canonical') . ' - If enable and if set, the canonical will be reported to the Google Analytics Plugin as page path';
 
 $lang[UrlManagerBestEndPage::CONF_MINIMAL_SCORE_FOR_REDIRECT] = PluginUtility::getDocumentationHyperLink("best:end:page:name", action_plugin_combo_router::NAME . ' - Best End Page Name') . ' - The number of last part of a DokuWiki Id to perform a ' . PluginUtility::getDocumentationHyperLink(action_plugin_combo_router::PERMANENT_REDIRECT_CANONICAL, "permanent redirect") . ' (0 to disable)';

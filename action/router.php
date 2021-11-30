@@ -73,7 +73,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     const CANONICAL = 'router';
     const PAGE_404 = "<html lang=\"en\"><body></body></html>";
     const REFRESH_HEADER_PREFIX = 'Refresh: 0;url=';
-    const LOCATION_HEADER_PREFIX = "Location: ";
+    const LOCATION_HEADER_NAME = "Location";
+    const LOCATION_HEADER_PREFIX = self::LOCATION_HEADER_NAME . ": ";
     public const URL_MANAGER_NAME = "Router";
 
 
@@ -397,7 +398,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
          */
         $targetPage = DatabasePage::createFromCanonical($identifier)->getPage();
         if ($targetPage !== null && $targetPage->exists()) {
-            $res = $this->executeTransparentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_CANONICAL);
+            $res = $this->executePermanentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_CANONICAL);
             if ($res) {
                 return;
             }
@@ -729,7 +730,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     }
 
     /**
-     * An HTTP Redirect to an internal page, no external resources
+     * The general HTTP Redirect method to an internal page
+     * where the redirection method decide which type of redirection
      * @param string $target - a dokuwiki id or an url
      * @param string $targetOrigin - the origin of the target (the algorithm used to get the target origin)
      * @param string $method - the redirection method
@@ -776,6 +778,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             }
 
             $targetUrl = wl($link[0], $urlParams, true, '&');
+            // %3A back to :
+            $targetUrl = str_replace("%3A",":",$targetUrl);
             if ($link[1]) {
                 $targetUrl .= '#' . rawurlencode($link[1]);
             }

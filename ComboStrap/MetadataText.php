@@ -14,7 +14,7 @@ abstract class MetadataText extends MetadataScalar
     /**
      * @var string|null
      */
-    private $value;
+    protected $value;
     private $wasBuild;
 
     public function getDataType(): string

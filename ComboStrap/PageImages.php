@@ -152,7 +152,7 @@ class PageImages extends Metadata
         return null;
     }
 
-    public function getPersistenceType()
+    public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }

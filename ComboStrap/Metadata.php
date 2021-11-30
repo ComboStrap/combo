@@ -10,7 +10,7 @@ use action_plugin_combo_qualitymessage;
 
 abstract class Metadata
 {
-    const CANONICAL = "page:metadata";
+    const CANONICAL_NAME = "page:metadata";
 
     /**
      * @var Page
@@ -54,7 +54,7 @@ abstract class Metadata
         /**
          * The canonical to page metadata
          */
-        return self::CANONICAL;
+        return self::CANONICAL_NAME;
     }
 
     protected function getPage(): Page

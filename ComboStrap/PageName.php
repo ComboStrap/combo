@@ -35,7 +35,7 @@ class PageName extends MetadataText
         return self::NAME_PROPERTY;
     }
 
-    public function getPersistenceType()
+    public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }

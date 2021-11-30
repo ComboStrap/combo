@@ -75,7 +75,7 @@ class CacheExpirationDate extends MetadataDateTime
     }
 
 
-    public function getPersistenceType()
+    public function getPersistenceType(): string
     {
         return Metadata::CURRENT_METADATA;
     }
@@ -83,7 +83,7 @@ class CacheExpirationDate extends MetadataDateTime
 
     public function getCanonical(): string
     {
-        return CacheExpirationFrequency::CANONICAL;
+        return CacheExpirationFrequency::CANONICAL_NAME;
     }
 
     public function getTab(): string

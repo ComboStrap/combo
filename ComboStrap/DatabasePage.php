@@ -31,7 +31,7 @@ class DatabasePage
             Page::DOKUWIKI_ID_ATTRIBUTE,
             self::ANALYTICS_ATTRIBUTE,
             Analytics::DESCRIPTION,
-            Analytics::CANONICAL,
+            Canonical::CANONICAL_NAME,
             PageName::NAME_PROPERTY,
             Analytics::TITLE,
             Analytics::H1,
@@ -702,7 +702,7 @@ EOF;
              * When the not null constraint on canonical is deleted, we can delete
              * the line below
              */
-            $values[Analytics::CANONICAL] = $this->page->getCanonicalOrDefault();
+            $values[Canonical::CANONICAL_NAME] = $this->page->getCanonicalOrDefault();
             $res = $this->sqlite->storeEntry('PAGES', $values);
             $this->sqlite->res_close($res);
             if ($res === false) {
@@ -991,7 +991,7 @@ EOF;
     private function getMetaRecord(): array
     {
         $metaRecord = array(
-            Analytics::CANONICAL => $this->page->getCanonicalOrDefault(),
+            Canonical::CANONICAL_NAME => $this->page->getCanonicalOrDefault(),
             Page::PATH_ATTRIBUTE => $this->page->getAbsolutePath(),
             PageName::NAME_PROPERTY => $this->page->getPageNameNotEmpty(),
             Analytics::TITLE => $this->page->getTitleNotEmpty(),

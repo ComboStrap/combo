@@ -194,6 +194,9 @@ class Page extends DokuPath
      * @var DatabasePage
      */
     private $databasePage;
+    /**
+     * @var Canonical
+     */
     private $canonical;
     private $h1;
     /**
@@ -532,17 +535,12 @@ class Page extends DokuPath
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function setCanonical($canonical): Page
     {
-        if ($canonical === "" || $canonical === ":") {
-            // form send empty string
-            // for the root `:`, non canonical
-            $canonical = null;
-        } else {
-            $canonical = DokuPath::toValidAbsolutePath($canonical);
-        }
-        $this->canonical = $canonical;
-        $this->setMetadata(Page::CANONICAL_PROPERTY, $this->canonical);
+        $this->canonical->setValue($canonical);
         return $this;
     }
 
@@ -573,11 +571,14 @@ class Page extends DokuPath
     }
 
 
+    /**
+     * @return bool
+     * @deprecated for {@link Page::isHomePage()}
+     */
     public
-    function isStartPage()
+    function isStartPage(): bool
     {
-        global $conf;
-        return $this->getDokuPathLastName() == $conf['start'];
+        return $this->isHomePage();
     }
 
     /**
@@ -591,11 +592,7 @@ class Page extends DokuPath
     function getCanonicalOrDefault(): ?string
     {
 
-        $canonical = $this->getCanonical();
-        if (empty($canonical)) {
-            $canonical = $this->getDefaultCanonical();
-        }
-        return $canonical;
+        return $this->canonical->getValueOrDefault();
 
     }
 
@@ -1267,9 +1264,9 @@ class Page extends DokuPath
          * Conf
          */
         $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
-        if($urlType===PageUrlType::PAGE_PATH){
+        if ($urlType === PageUrlType::PAGE_PATH) {
             $absolutePath = Site::getCanonicalConfForRelativeVsAsboluteUrl();
-            if($absolutePath===1) {
+            if ($absolutePath === 1) {
                 $absoluteUrl = true;
             }
         }
@@ -1862,7 +1859,7 @@ class Page extends DokuPath
             $lowerKey = trim(strtolower($key));
             if (in_array($lowerKey, self::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified")
-                    ->setCanonical(Metadata::CANONICAL);
+                    ->setCanonical(Metadata::CANONICAL_NAME);
                 continue;
             }
             try {
@@ -1940,11 +1937,11 @@ class Page extends DokuPath
                     default:
                         if (!$persistOnlyKnownAttributes) {
                             $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
-                                ->setCanonical(Metadata::CANONICAL);
+                                ->setCanonical(Metadata::CANONICAL_NAME);
                             $this->setMetadata($key, $value);
                         } else {
                             $messages[] = Message::createErrorMessage("The metadata ($lowerKey) is unknown and was not saved")
-                                ->setCanonical(Metadata::CANONICAL);
+                                ->setCanonical(Metadata::CANONICAL_NAME);
                         }
                         continue 2;
                 }
@@ -2010,10 +2007,9 @@ class Page extends DokuPath
         return $this->type;
     }
 
-    public
-    function getCanonical()
+    public function getCanonical(): ?string
     {
-        return $this->canonical;
+        return $this->canonical->getValue();
     }
 
     /**
@@ -2024,49 +2020,7 @@ class Page extends DokuPath
     public
     function getDefaultCanonical(): ?string
     {
-        /**
-         * The last part of the id as canonical
-         */
-        // How many last parts are taken into account in the canonical processing (2 by default)
-        $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_canonical::CONF_CANONICAL_LAST_NAMES_COUNT);
-        if (empty($this->getCanonical()) && $canonicalLastNamesCount > 0) {
-            /**
-             * Takes the last names part
-             */
-            $namesOriginal = $this->getDokuNames();
-            /**
-             * Delete the identical names at the end
-             * To resolve this problem
-             * The page (viz:viz) and the page (data:viz:viz) have the same canonical.
-             * The page (viz:viz) will get the canonical viz
-             * The page (data:viz) will get the canonical  data:viz
-             */
-            $i = sizeof($namesOriginal) - 1;
-            $names = $namesOriginal;
-            while ($namesOriginal[$i] == $namesOriginal[$i - 1]) {
-                unset($names[$i]);
-                $i--;
-                if ($i <= 0) {
-                    break;
-                }
-            }
-            /**
-             * Minimal length check
-             */
-            $namesLength = sizeof($names);
-            if ($namesLength > $canonicalLastNamesCount) {
-                $names = array_slice($names, $namesLength - $canonicalLastNamesCount);
-            }
-            /**
-             * If this is a start page, delete the name
-             * ie javascript:start will become javascript
-             */
-            if ($this->isStartPage()) {
-                $names = array_slice($names, 0, $namesLength - 1);
-            }
-            return implode(":", $names);
-        }
-        return null;
+        return $this->canonical->getDefaultValue();
     }
 
     public
@@ -2303,8 +2257,8 @@ class Page extends DokuPath
 
 
     /**
-     * @deprecated for {@link Aliases}
      * @return Alias[]
+     * @deprecated for {@link Aliases}
      */
     public
     function getAliases(): array
@@ -2555,6 +2509,7 @@ class Page extends DokuPath
         $this->pageName = PageName::createFromPage($this);
         $this->cacheExpirationFrequency = CacheExpirationFrequency::createFromPage($this);
         $this->ldJson = LdJson::createFromPage($this);
+        $this->canonical = Canonical::createFromPage($this);
 
 
         /**
@@ -2576,10 +2531,6 @@ class Page extends DokuPath
         $this->pageId = $this->getMetadata(self::PAGE_ID_ATTRIBUTE);
         [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
         $this->h1 = $this->getMetadata(Analytics::H1);
-        $this->canonical = $this->getMetadata(Page::CANONICAL_PROPERTY);
-        if ($this->canonical !== null) {
-            DokuPath::addRootSeparatorIfNotPresent($this->canonical);
-        }
         $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
         /**
          * `title` is created by DokuWiki
@@ -2690,7 +2641,7 @@ class Page extends DokuPath
         /**
          * Type of Url
          */
-        $urlType =  PageUrlType::getOrCreateForPage($this)->getValue();
+        $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
 
         $path = $this->getPath();
         switch ($urlType) {
@@ -2724,7 +2675,7 @@ class Page extends DokuPath
                 $path = $this->toPermanentUrlPath($path);
                 break;
             default:
-                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, PageUrlType::CANONICAL);
+                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, PageUrlType::CANONICAL_NAME);
 
         }
         return $path;
@@ -3106,8 +3057,8 @@ class Page extends DokuPath
     }
 
     /**
-     * @deprecated for {@link CacheExpirationDate}
      * @return DateTime|null
+     * @deprecated for {@link CacheExpirationDate}
      */
     public function getCacheExpirationDate(): ?DateTime
     {
@@ -3115,8 +3066,8 @@ class Page extends DokuPath
     }
 
     /**
-     * @deprecated for {@link CacheExpirationDate}
      * @return DateTime|null
+     * @deprecated for {@link CacheExpirationDate}
      */
     public function getDefaultCacheExpirationDate(): ?DateTime
     {
@@ -3124,8 +3075,8 @@ class Page extends DokuPath
     }
 
     /**
-     * @deprecated for {@link CacheExpirationFrequency}
      * @return string|null
+     * @deprecated for {@link CacheExpirationFrequency}
      */
     public function getCacheExpirationFrequency(): ?string
     {
@@ -3133,8 +3084,8 @@ class Page extends DokuPath
     }
 
     /**
-     * @deprecated for {@link CacheExpirationFrequency}
      * @throws ExceptionCombo
+     * @deprecated for {@link CacheExpirationFrequency}
      */
     public function setCacheExpirationFrequency(string $cronExpression): Page
     {
@@ -3144,8 +3095,8 @@ class Page extends DokuPath
     }
 
     /**
-     * @deprecated for {@link CacheExpirationDate}
      * @return DateTime|null
+     * @deprecated for {@link CacheExpirationDate}
      */
     public function getExpirationDate(): ?DateTime
     {
@@ -3154,9 +3105,9 @@ class Page extends DokuPath
 
 
     /**
-     * @deprecated for a metadata that extends {@link MetadataDateTime}
      * @param string $metaName
      * @return DateTime|false|mixed|null
+     * @deprecated for a metadata that extends {@link MetadataDateTime}
      */
     public function getMetadataAsDate(string $metaName)
     {
@@ -3174,9 +3125,9 @@ class Page extends DokuPath
     }
 
     /**
-     * @deprecated for {@link CacheExpirationDate}
      * @param DateTime $cacheExpirationDate
      * @return $this
+     * @deprecated for {@link CacheExpirationDate}
      */
     public function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
     {

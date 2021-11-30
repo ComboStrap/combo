@@ -8,6 +8,7 @@ use ComboStrap\Analytics;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CacheManager;
+use ComboStrap\Canonical;
 use ComboStrap\DatabasePage;
 use ComboStrap\DataType;
 use ComboStrap\DokuPath;
@@ -559,11 +560,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Canonical
+        $canonical = Canonical::createFromPage($page);
         $formMeta->addField(
-            FormMetaField::create(Analytics::CANONICAL)
+            FormMetaField::create(Canonical::CANONICAL_NAME)
                 ->addValue($page->getCanonical(), $page->getDefaultCanonical())
                 ->setTab(self::TAB_REDIRECTION_VALUE)
-                ->setCanonical(Analytics::CANONICAL)
+                ->setCanonical(Canonical::CANONICAL_NAME)
                 ->setLabel("Canonical Path")
                 ->setDescription("The canonical path is a short unique path for the page (used in named permalink)")
         );
@@ -765,7 +767,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->addValue($page->getCacheExpirationFrequency())
             ->setMutable(true)
             ->setTab(self::TAB_CACHE_VALUE)
-            ->setCanonical(CacheExpirationFrequency::CANONICAL)
+            ->setCanonical(CacheExpirationFrequency::CANONICAL_NAME)
             ->setLabel("Cache Expiration Frequency")
             ->setDescription("A page expiration frequency expressed as a cron expression")
         );

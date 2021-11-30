@@ -21,7 +21,7 @@ class LdJson extends MetadataJson
         return self::JSON_LD_META_PROPERTY;
     }
 
-    public function getPersistenceType()
+    public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }

@@ -10,7 +10,7 @@ class PageUrlType extends MetadataText
     /**
      * The canonical page for the page url type
      */
-    public const CANONICAL = "page:url";
+    public const CANONICAL_NAME = "page:url";
 
     public const CONF_CANONICAL_URL_TYPE = "pageUrlType";
     public const CONF_CANONICAL_URL_TYPE_DEFAULT = self::PAGE_PATH;
@@ -61,7 +61,7 @@ class PageUrlType extends MetadataText
         $urlType = PluginUtility::getConfValue($confCanonicalType, $confDefaultValue);
         if (!in_array($urlType, self::CONF_CANONICAL_URL_TYPE_VALUES)) {
             $urlType = $confDefaultValue;
-            LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, self::CANONICAL_NAME);
         }
 
         // Not yet sync with the database
@@ -98,7 +98,7 @@ class PageUrlType extends MetadataText
         return PageUrlType::CONF_CANONICAL_URL_TYPE;
     }
 
-    public function getPersistenceType()
+    public function getPersistenceType(): string
     {
         return Metadata::PERSISTENT_METADATA;
     }

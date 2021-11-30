@@ -21,6 +21,7 @@ require_once(__DIR__ . '/MetadataScalar.php');
 require_once(__DIR__ . '/MetadataDateTime.php');
 require_once(__DIR__ . '/MetadataJson.php');
 require_once(__DIR__ . '/MetadataText.php');
+require_once(__DIR__ . '/MetadataWikiPath.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -56,6 +57,7 @@ require_once(__DIR__ . '/CacheManager.php');
 require_once(__DIR__ . '/CacheMedia.php');
 require_once(__DIR__ . '/Call.php');
 require_once(__DIR__ . '/CallStack.php');
+require_once(__DIR__ . '/Canonical.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/Cron.php');

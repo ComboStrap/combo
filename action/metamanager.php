@@ -6,6 +6,7 @@ use ComboStrap\Alias;
 use ComboStrap\Aliases;
 use ComboStrap\Analytics;
 use ComboStrap\CacheExpirationDate;
+use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CacheManager;
 use ComboStrap\DatabasePage;
 use ComboStrap\DataType;
@@ -760,11 +761,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Cache cron expiration expression
-        $formMeta->addField(FormMetaField::create(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME)
+        $formMeta->addField(FormMetaField::create(CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME)
             ->addValue($page->getCacheExpirationFrequency())
             ->setMutable(true)
             ->setTab(self::TAB_CACHE_VALUE)
-            ->setCanonical(CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL)
+            ->setCanonical(CacheExpirationFrequency::CANONICAL)
             ->setLabel("Cache Expiration Frequency")
             ->setDescription("A page expiration frequency expressed as a cron expression")
         );

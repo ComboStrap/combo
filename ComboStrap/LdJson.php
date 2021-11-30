@@ -57,4 +57,21 @@ class LdJson extends MetadataJson
     {
         return null;
     }
+
+    public function getValue(): ?array
+    {
+        $value = parent::getValue();
+
+        if ($value === null && $this->getPage()->getTypeNotEmpty() === "organization") {
+            // deprecated, old syntax
+            $metadata = $this->getPage()->getMetadata("organization");
+            if (!empty($metadata)) {
+                return ["organization" => $metadata];
+            }
+        }
+        return $value;
+
+    }
+
+
 }

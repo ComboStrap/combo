@@ -29,8 +29,29 @@ abstract class MetadataJson extends MetadataScalar
 
     }
 
-    public function setValue(?array $value): MetadataJson
+    /**
+     * @param array|string|null $value
+     * @return $this
+     * @throws ExceptionCombo
+     */
+    public function setValue($value): MetadataJson
     {
+        if ($value === null || $value === "") {
+            // html form return empty string
+            $this->json = null;
+            return $this;
+        }
+        if (is_string($value)) {
+            $json = json_decode($value, true);
+            if ($json === null) {
+                throw new ExceptionCombo("The string given is not a valid json $value");
+            }
+            $this->json = $json;
+            return $this;
+        }
+        if (!is_array($value)) {
+            throw new ExceptionCombo("The json persistent value is not an array, nor a string");
+        }
         $this->json = $value;
         $this->persistToFileSystem();
         return $this;
@@ -41,21 +62,6 @@ abstract class MetadataJson extends MetadataScalar
      */
     public function setFromPersistentFormat($value): MetadataJson
     {
-        if ($value === null || $value === "") {
-            $this->setValue(null);
-            return $this;
-        }
-        if (is_string($value)) {
-            $json = json_decode($value, true);
-            if ($json === null) {
-                throw new ExceptionCombo("The string given is not a valid json $value");
-            }
-            $this->setValue($json);
-            return $this;
-        }
-        if (!is_array($value)) {
-            throw new ExceptionCombo("The json persistent value is not an array, nor a string");
-        }
         $this->setValue($value);
         return $this;
     }

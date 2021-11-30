@@ -49,6 +49,7 @@ require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');
 require_once(__DIR__ . '/BreadcrumbHierarchical.php');
 require_once(__DIR__ . '/CacheExpirationDate.php');
+require_once(__DIR__ . '/CacheExpirationFrequency.php');
 require_once(__DIR__ . '/CacheByLogicalKey.php');
 require_once(__DIR__ . '/CacheInstructionsByLogicalKey.php');
 require_once(__DIR__ . '/CacheManager.php');

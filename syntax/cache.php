@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\CacheManager;
+use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -91,7 +91,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                     $status = self::PARSING_STATE_UNSUCCESSFUL;
                 }
 
-                LogUtility::msg("The cache syntax component has been deprecated for the cache frequency metadata", LogUtility::LVL_MSG_INFO, CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL);
+                LogUtility::msg("The cache syntax component has been deprecated for the cache frequency metadata", LogUtility::LVL_MSG_INFO, CacheExpirationFrequency::CANONICAL);
 
                 return array(
                     PluginUtility::STATE => $state,
@@ -123,7 +123,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
             case 'xhtml':
                 if ($data[self::PARSING_STATUS] !== self::PARSING_STATE_SUCCESSFUL) {
                     $cronExpression = $data[PluginUtility::PAYLOAD];
-                    LogUtility::msg("The expression ($cronExpression) is not a valid expression", LogUtility::LVL_MSG_ERROR, CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL);
+                    LogUtility::msg("The expression ($cronExpression) is not a valid expression", LogUtility::LVL_MSG_ERROR, CacheExpirationFrequency::CANONICAL);
                 }
                 break;
 

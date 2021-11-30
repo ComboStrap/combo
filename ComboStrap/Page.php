@@ -261,13 +261,18 @@ class Page extends DokuPath
     private $pageImages;
     private $keywords;
     /**
-     * @var string
+     * @var CacheExpirationFrequency
      */
     private $cacheExpirationFrequency;
     /**
      * @var CacheExpirationDate
      */
     private $cacheExpirationDate;
+    /**
+     *
+     * @var LdJson
+     */
+    private $ldJson;
 
     /**
      * Page constructor.
@@ -1881,7 +1886,7 @@ class Page extends DokuPath
                         $this->setDescription($value);
                         continue 2;
                     case PageName::NAME_PROPERTY:
-                        $this->pageName->setValue($value);
+                        $this->pageName->setFromPersistentFormat($value);
                         continue 2;
                     case Page::TITLE_META_PROPERTY:
                         $this->setTitle($value);
@@ -1890,7 +1895,7 @@ class Page extends DokuPath
                         $this->setH1($value);
                         continue 2;
                     case LdJson::JSON_LD_META_PROPERTY:
-                        $this->setJsonLd($value);
+                        $this->ldJson->setFromPersistentFormat($value);
                         continue 2;
                     case Page::REGION_META_PROPERTY:
                         $this->setRegion($value);
@@ -1929,8 +1934,8 @@ class Page extends DokuPath
                     case PAGE::SLUG_ATTRIBUTE:
                         $this->setSlug($value);
                         continue 2;
-                    case CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME:
-                        $this->setCacheExpirationFrequency($value);
+                    case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:
+                        $this->cacheExpirationFrequency->setFromPersistentFormat($value);
                         continue 2;
                     default:
                         if (!$persistOnlyKnownAttributes) {
@@ -2233,39 +2238,27 @@ class Page extends DokuPath
     }
 
 
+    /**
+     * @return array|null
+     * @deprecated for {@link LdJson}
+     */
     public
-    function getLdJson()
+    function getLdJson(): ?array
     {
-        $ldJson = $this->getMetadata(LdJson::JSON_LD_META_PROPERTY);
-        if (empty($ldJson) && $this->getTypeNotEmpty() === "organization") {
-            // deprecated, old syntax
-            $metadata = $this->getMetadata("organization");
-            if (!empty($metadata)) {
-                return ["organization" => $metadata];
-            }
-        }
-        return $ldJson;
+        return $this->ldJson->getValue();
+
     }
 
     /**
      * @param array|string $jsonLd
      * @return $this
      * @throws ExceptionCombo
+     * @deprecated for {@link LdJson}
      */
     public
     function setJsonLd($jsonLd): Page
     {
-        if (is_string($jsonLd)) {
-            $jsonLdArray = json_decode($jsonLd, true);
-            if ($jsonLdArray === false) {
-                throw new ExceptionCombo("The json ld is not in a json format. " . Json::getValidationLink($jsonLd), \action_plugin_combo_metagoogle::CANONICAL);
-            }
-        } elseif (is_array($jsonLd)) {
-            $jsonLdArray = $jsonLd;
-        } else {
-            throw new ExceptionCombo("The json ld value should be a string or an array", \action_plugin_combo_metagoogle::CANONICAL);
-        }
-        $this->setMetadata(LdJson::JSON_LD_META_PROPERTY, $jsonLdArray);
+        $this->ldJson->setValue($jsonLd);
         return $this;
     }
 
@@ -2294,6 +2287,12 @@ class Page extends DokuPath
         return null;
     }
 
+    /**
+     * @param $aliasPath
+     * @param $aliasType
+     * @return Alias
+     * @deprecated for {@link Aliases}
+     */
     public
     function addAndGetAlias($aliasPath, $aliasType): Alias
     {
@@ -2304,6 +2303,7 @@ class Page extends DokuPath
 
 
     /**
+     * @deprecated for {@link Aliases}
      * @return Alias[]
      */
     public
@@ -2553,6 +2553,8 @@ class Page extends DokuPath
         $this->aliases = Aliases::createFromPage($this);
         $this->pageImages = PageImages::createFromPage($this);
         $this->pageName = PageName::createFromPage($this);
+        $this->cacheExpirationFrequency = CacheExpirationFrequency::createFromPage($this);
+        $this->ldJson = LdJson::createFromPage($this);
 
 
         /**
@@ -2637,9 +2639,6 @@ class Page extends DokuPath
         if ($keywordsString !== null) {
             $this->keywords = explode(",", $keywordsString);
         }
-
-
-        $this->cacheExpirationFrequency = $this->getMetadata(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME);
 
 
     }
@@ -2999,9 +2998,9 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR] = $this->getCanBeOfLowQuality();
                     }
                     break;
-                case CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME:
+                case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:
                     if ($this->getCacheExpirationFrequency() !== null) {
-                        $nonDefaultMetadatas[CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME] = $this->getCacheExpirationFrequency();
+                        $nonDefaultMetadatas[CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME] = $this->getCacheExpirationFrequency();
                     }
                     break;
                 case Page::KEYWORDS_ATTRIBUTE:
@@ -3106,46 +3105,59 @@ class Page extends DokuPath
         }
     }
 
+    /**
+     * @deprecated for {@link CacheExpirationDate}
+     * @return DateTime|null
+     */
     public function getCacheExpirationDate(): ?DateTime
     {
         return $this->cacheExpirationDate->getValue();
     }
 
+    /**
+     * @deprecated for {@link CacheExpirationDate}
+     * @return DateTime|null
+     */
     public function getDefaultCacheExpirationDate(): ?DateTime
     {
         return $this->cacheExpirationDate->getDefaultValue();
     }
 
+    /**
+     * @deprecated for {@link CacheExpirationFrequency}
+     * @return string|null
+     */
     public function getCacheExpirationFrequency(): ?string
     {
-        return $this->cacheExpirationFrequency;
+        return $this->cacheExpirationFrequency->getValue();
     }
 
     /**
+     * @deprecated for {@link CacheExpirationFrequency}
      * @throws ExceptionCombo
      */
     public function setCacheExpirationFrequency(string $cronExpression): Page
     {
-        if ($cronExpression === "") {
-            // html form send a empty value
-            return $this;
-        }
-        try {
-            $cacheExpirationDate = Cron::getDate($cronExpression);
-            $this->setCacheExpirationDate($cacheExpirationDate);
-        } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheManager::PAGE_CACHE_EXPIRATION_FREQUENCY_CANONICAL);
-        }
-        $this->setMetadata(CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME, $cronExpression);
+
+        $this->cacheExpirationFrequency->setValue($cronExpression);
         return $this;
     }
 
+    /**
+     * @deprecated for {@link CacheExpirationDate}
+     * @return DateTime|null
+     */
     public function getExpirationDate(): ?DateTime
     {
         return $this->cacheExpirationDate->getValue();
     }
 
 
+    /**
+     * @deprecated for a metadata that extends {@link MetadataDateTime}
+     * @param string $metaName
+     * @return DateTime|false|mixed|null
+     */
     public function getMetadataAsDate(string $metaName)
     {
         $date = $this->getMetadata($metaName);
@@ -3161,6 +3173,11 @@ class Page extends DokuPath
         return $dateTime;
     }
 
+    /**
+     * @deprecated for {@link CacheExpirationDate}
+     * @param DateTime $cacheExpirationDate
+     * @return $this
+     */
     public function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
     {
         $this->cacheExpirationDate->setValue($cacheExpirationDate);

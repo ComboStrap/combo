@@ -107,9 +107,24 @@ abstract class Metadata
     public abstract function toPersistentDefaultValue();
 
     /**
-     * @return mixed
+     *
+     * Return if the metadata value should be backup up (derived value or not)
+     *
+     * If the value is {@link Metadata::PERSISTENT_METADATA}, it's yes
+     * If the value is {@link Metadata::CURRENT_METADATA}, it's no
+     *
+     * @return string
+     *
+     * We are making the difference between a metadata that is derived
+     * called {@link Metadata::CURRENT_METADATA} for Dokuwiki
+     * and that is not called {@link Metadata::PERSISTENT_METADATA} for Dokuwiki
+     *
+     * Unfortunately, Dokuwiki makes this distinction only in rendering
+     * https://forum.dokuwiki.org/d/19764-how-to-test-a-current-metadata-setting
+     * Therefore all metadata are persistent
+     *
      */
-    public abstract function getPersistenceType();
+    public abstract function getPersistenceType(): string;
 
 
     protected function toDateTime($value)
@@ -188,7 +203,7 @@ abstract class Metadata
         Page::SLUG_ATTRIBUTE,
         action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
         Page::KEYWORDS_ATTRIBUTE,
-        CacheManager::META_CACHE_EXPIRATION_FREQUENCY_NAME
+        CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME
     ];
 
     /**

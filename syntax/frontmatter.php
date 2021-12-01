@@ -87,7 +87,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         /**
          * If a frontmatter exists already, we update it
          */
-        $content = $page->getContent();
+        $content = $page->getTextContent();
         $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
         if (strpos($content, $frontMatterStartTag) === 0) {
 

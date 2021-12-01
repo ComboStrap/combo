@@ -835,7 +835,7 @@ class Page extends DokuPath
 
 
     public
-    function getContent()
+    function getTextContent()
     {
         /**
          * TODO: change with {@link DokuPath} ?
@@ -1369,31 +1369,6 @@ class Page extends DokuPath
 
     }
 
-    /**
-     * @param string $outputFormat For instance, "xhtml" or {@links Analytics::RENDERER_NAME_MODE}
-     * @return \dokuwiki\Cache\Cache the cache of the page
-     *
-     * Output of {@link DokuWiki_Syntax_Plugin::render()}
-     *
-     */
-    public
-    function getRenderCache(string $outputFormat)
-    {
-
-        if ($this->isStrapSideSlot()) {
-
-            /**
-             * Logical cache based on scope (ie logical id) is the scope and part of the key
-             */
-            return new CacheByLogicalKey($this, $outputFormat);
-
-        } else {
-
-            return new CacheRenderer($this->getDokuwikiId(), $this->getAbsoluteFileSystemPath(), $outputFormat);
-
-        }
-    }
-
 
 
     public
@@ -1424,8 +1399,7 @@ class Page extends DokuPath
     }
 
 
-    public
-    function getScope()
+    public function getScope()
     {
         /**
          * The scope may change
@@ -2039,7 +2013,7 @@ class Page extends DokuPath
          * The indicator {@link Page::LOW_QUALITY_INDICATOR_CALCULATED} is new
          * but if the analytics was done, we can get it
          */
-        if ($this->getAnalyticsDocument()->exists()) {
+        if ($this->getAnalyticsDocument()->getFile()->exists()) {
             $value = $this->getAnalyticsDocument()->getData()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
             if ($value !== null) return $value;
         }
@@ -3012,7 +2986,7 @@ class Page extends DokuPath
      */
     public function isParseCacheUsable(): bool
     {
-        return $this->getInstructionsDocument()->isStale() === false;
+        return $this->getInstructionsDocument()->shouldCompile() === false;
     }
 
     /**

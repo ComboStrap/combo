@@ -4,7 +4,6 @@ namespace ComboStrap;
 
 use action_plugin_combo_router;
 
-include_once(__DIR__ . "/PagesIndex.php");
 
 /**
  * Class UrlManagerBestEndPage

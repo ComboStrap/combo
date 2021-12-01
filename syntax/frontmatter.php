@@ -21,6 +21,9 @@
  */
 
 use ComboStrap\ArrayUtility;
+use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Message;
@@ -114,7 +117,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
 
             $frontMatterMatch = array_shift($split);
             $originalFrontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatterMatch);
-            if($originalFrontMatterMetadata===null){
+            if ($originalFrontMatterMetadata === null) {
                 return Message::createErrorMessage("The existing frontmatter is not a valid json.");
             }
 
@@ -152,7 +155,6 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         $targetFrontMatterJsonString = \ComboStrap\Json::createFromArray($targetFrontMatterMetadata)->toFrontMatterFormat();
 
 
-
         /**
          * Build the new document
          */
@@ -165,7 +167,7 @@ EOF;
         $page->upsertContent($newPageContent, "Metadata manager upsert");
 
         return Message::createInfoMessage("The frontmatter was changed")
-                ->setStatus(self::UPDATE_EXIT_CODE_DONE);
+            ->setStatus(self::UPDATE_EXIT_CODE_DONE);
 
     }
 
@@ -384,24 +386,40 @@ EOF;
 
             case "metadata":
 
+                global $ID;
                 /** @var Doku_Renderer_metadata $renderer */
                 if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
+                    if (PluginUtility::isDevOrTest()) {
+                        // fail if test
+                        throw new ExceptionComboRuntime("Front Matter: The json object for the page ($ID) is not valid. ", LogUtility::LVL_MSG_ERROR);
+                    }
                     return false;
                 }
 
                 /**
                  * Register media in index
                  */
+                $page = Page::createPageFromId($ID);
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
                 if (isset($frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY])) {
                     $value = $frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY];
-                    $imageValues = [];
-                    ArrayUtility::toFlatArray($imageValues, $value);
-                    foreach ($imageValues as $imageValue) {
-                        $media = MediaLink::createFromRenderMatch($imageValue);
-                        $attributes = $media->toCallStackArray();
-                        syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
+                    try {
+                        $pageImages = PageImages::createFromPage($page)
+                            ->buildFromPersistentFormat($value);
+                        foreach ($pageImages->getAll() as $imageValue) {
+                            $imagePath = $imageValue->getImage()->getDokuPath()->getAbsolutePath();
+                            $attributes = [DokuPath::PATH_ATTRIBUTE => $imagePath];
+                            if(media_isexternal($imagePath)){
+                                $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] =MediaLink::EXTERNAL_MEDIA_CALL_NAME;
+                            } else {
+                                $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] =MediaLink::INTERNAL_MEDIA_CALL_NAME;
+                            }
+                            syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
+                        }
+                    } catch (ExceptionCombo $e) {
+                        LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                     }
+
                 }
 
                 break;

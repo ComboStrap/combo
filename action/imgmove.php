@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -16,6 +17,7 @@ require_once(__DIR__ . '/../ComboStrap/LinkUtility.php');
  */
 class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
 {
+    const CANONICAL = "move";
 
     /**
      * As explained https://www.dokuwiki.org/plugin:move
@@ -39,6 +41,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          */
         $event->data['handlers'][syntax_plugin_combo_media::COMPONENT] = array($this, 'move_combo_img');
         $event->data['handlers'][syntax_plugin_combo_frontmatter::COMPONENT] = array($this, 'move_combo_frontmatter_img');
+
     }
 
     /**
@@ -54,7 +57,8 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         /**
          * The original move method
          * is {@link helper_plugin_move_handler::media()}
-         *
+         * Rewrite the media links match
+         * from {@link syntax_plugin_combo_media}
          */
         $handler->media($match, $state, $pos);
 
@@ -86,35 +90,39 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             }
 
             try {
-                $images = &$jsonArray[PageImages::IMAGE_META_PROPERTY];
-                if (is_array($images)) {
-                    foreach ($images as &$subImage) {
-                        if (is_array($subImage)) {
-                            foreach($subImage as &$subSubImage){
-                                if(is_string($subSubImage)) {
-                                    $this->moveImage($subSubImage, $handler);
-                                } else {
-                                    LogUtility::msg("The image frontmatter value (".hsc(var_export($subSubImage))." is not a string and cannot be therefore moved", LogUtility::LVL_MSG_ERROR,syntax_plugin_combo_frontmatter::METADATA_IMAGE_CANONICAL);
-                                    return $match;
-                                }
-                            }
-                        } else {
-                            $this->moveImage( $subImage, $handler);
-                        }
-                    }
-                } else {
-                    $this->moveImage($images, $handler);
+                $images = $jsonArray[PageImages::IMAGE_META_PROPERTY];
+
+                /**
+                 * The id of the page is private in the handler, why not ?
+                 * fuck
+                 * We try what we can
+                 */
+                global $ID;
+                $id = $ID;
+                if ($ID === null) {
+
+                    $id = "fake_id_for_move";
                 }
-            } catch(Exception $e){
-                // Could not resolve the image, return the data without modification
+                $fakePage = Page::createPageFromId($id);
+                $oldPagesImages = PageImages::createFromPage($fakePage)
+                    ->buildFromPersistentFormat($images);
+                $newPagesImages = PageImages::createFromPage($fakePage);
+
+                foreach ($oldPagesImages->getAll() as $oldPageImage) {
+                    $imagePath = $oldPageImage->getImage()->getDokuPath()->getAbsolutePath();
+                    $this->moveImage($imagePath, $handler);
+                    $newPagesImages->addImage($imagePath, $oldPageImage->getUsages());
+                }
+                $jsonArray[PageImages::IMAGE_META_PROPERTY] = $newPagesImages->toPersistentValue();
+
+
+            } catch (ExceptionCombo $e) {
+                // Could not resolve the image, image does not exist, ... return the data without modification
+                LogUtility::log2file($e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
                 return $match;
             }
 
-            $jsonEncode = json_encode($jsonArray, JSON_PRETTY_PRINT);
-            if ($jsonEncode === false) {
-                LogUtility::msg("A move error has occurred while trying to store the modified metadata as json (" . hsc(var_export($images, true)) . ")", LogUtility::LVL_MSG_ERROR);
-                return $match;
-            }
+            $jsonEncode = \ComboStrap\Json::createFromArray($jsonArray)->toFrontMatterFormat();
             $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
             $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
 
@@ -141,7 +149,7 @@ EOF;
      * Move a single image and update the JSon
      * @param $value
      * @param helper_plugin_move_handler $handler
-     * @throws Exception on bad argument
+     * @throws ExceptionCombo on bad argument
      */
     private function moveImage(&$value, $handler)
     {
@@ -149,8 +157,7 @@ EOF;
             $newId = $handler->resolveMoves($value, "media");
             $value = DokuPath::IdToAbsolutePath($newId);
         } catch (Exception $e) {
-            LogUtility::msg("A move error has occurred while trying to move the image ($value). The target resolution function send the following error message: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
-            throw new RuntimeException();
+            throw new ExceptionCombo("A move error has occurred while trying to move the image ($value). The target resolution function send the following error message: " . $e->getMessage(), self::CANONICAL);
         }
     }
 

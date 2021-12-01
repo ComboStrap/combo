@@ -102,23 +102,26 @@ class PageImages extends Metadata
             $images = [$persistentValue => PageImage::create($persistentValue, $this->getPage())];
         }
 
-        foreach ($images as $pageImage) {
-            if (!$pageImage->getImage()->exists()) {
-                throw new ExceptionCombo("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
-            }
-        }
 
         return $images;
 
     }
 
-    public function buildFromFileSystem()
+    public function buildFromFileSystem(): PageImages
+    {
+
+        return $this->buildFromPersistentFormat($this->getFileSystemValue());
+
+    }
+
+    public function buildFromPersistentFormat($value): PageImages
     {
         try {
-            $this->pageImages = $this->toPageImageArray($this->getFileSystemValue());
+            $this->pageImages = $this->toPageImageArray($value);
         } catch (Exception $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $this->getCanonical());
         }
+        return $this;
     }
 
     /**
@@ -127,9 +130,12 @@ class PageImages extends Metadata
     public function setFromPersistentFormat($value): PageImages
     {
         $this->pageImages = PageImages::toPageImageArray($value);
+
+        $this->checkImageExistence();
         $this->persistToFileSystem();
         return $this;
     }
+
 
     public function getCanonical(): string
     {
@@ -141,9 +147,13 @@ class PageImages extends Metadata
         return self::IMAGE_META_PROPERTY;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function toPersistentValue()
     {
         $this->buildCheck();
+        $this->checkImageExistence();
         return $this->toMetadataArray($this->pageImages);
     }
 
@@ -281,6 +291,7 @@ class PageImages extends Metadata
                 $counter++;
             }
         }
+        $this->checkImageExistence();
         $this->persistToFileSystem();
         return $this;
     }
@@ -288,5 +299,25 @@ class PageImages extends Metadata
     public function getMutable(): bool
     {
         return true;
+    }
+
+    /**
+     *
+     * We check the existence of the image also when persisting,
+     * not when building
+     * because when moving a media, the images does not exist any more
+     *
+     * We can then build the the pageimages with non-existing images
+     * but we can't save
+     *
+     * @throws ExceptionCombo
+     */
+    private function checkImageExistence()
+    {
+        foreach ($this->pageImages as $pageImage) {
+            if (!$pageImage->getImage()->exists()) {
+                throw new ExceptionCombo("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
+            }
+        }
     }
 }

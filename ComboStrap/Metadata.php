@@ -145,9 +145,9 @@ abstract class Metadata
      * in the persistent metadata
      */
     const NOT_MODIFIABLE_PERSISTENT_METADATA = [
-        Analytics::PATH,
-        Analytics::DATE_CREATED,
-        Analytics::DATE_MODIFIED,
+        AnalyticsDocument::PATH,
+        AnalyticsDocument::DATE_CREATED,
+        AnalyticsDocument::DATE_MODIFIED,
         Page::PAGE_ID_ATTRIBUTE,
         "contributor",
         "creator",
@@ -169,7 +169,7 @@ abstract class Metadata
         "internal", // toc, cache, ...
         "relation",
         DatabasePage::DATE_REPLICATION,
-        Analytics::H1_PARSED,
+        AnalyticsDocument::H1_PARSED,
         Page::LOW_QUALITY_INDICATOR_CALCULATED
     ];
 
@@ -184,20 +184,20 @@ abstract class Metadata
     const FORM_METADATA = [
         Canonical::CANONICAL_PROPERTY,
         Page::TYPE_META_PROPERTY,
-        Analytics::H1,
+        AnalyticsDocument::H1,
         Aliases::ALIAS_ATTRIBUTE,
         PageImages::IMAGE_META_PROPERTY,
         Page::REGION_META_PROPERTY,
         Page::LANG_META_PROPERTY,
-        Analytics::TITLE,
+        AnalyticsDocument::TITLE,
         Publication::OLD_META_KEY,
         Publication::DATE_PUBLISHED,
         PageName::NAME_PROPERTY,
         LdJson::JSON_LD_META_PROPERTY,
         Page::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,
-        Analytics::DATE_START,
-        Analytics::DATE_END,
+        AnalyticsDocument::DATE_START,
+        AnalyticsDocument::DATE_END,
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
         Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
         Page::SLUG_ATTRIBUTE,

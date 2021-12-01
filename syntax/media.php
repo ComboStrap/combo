@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\DokuPath;
 use ComboStrap\Image;
@@ -65,17 +65,17 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     public static function updateStatistics($attributes, renderer_plugin_combo_analytics $renderer)
     {
         $media = MediaLink::createFromCallStackArray($attributes);
-        $renderer->stats[Analytics::MEDIA_COUNT]++;
+        $renderer->stats[AnalyticsDocument::MEDIA_COUNT]++;
         $scheme = $media->getMedia()->getDokuPath()->getScheme();
         switch ($scheme) {
             case DokuPath::LOCAL_SCHEME:
-                $renderer->stats[Analytics::INTERNAL_MEDIA_COUNT]++;
+                $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
                 if (!$media->getMedia()->exists()) {
-                    $renderer->stats[Analytics::INTERNAL_BROKEN_MEDIA_COUNT]++;
+                    $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
             case DokuPath::INTERNET_SCHEME:
-                $renderer->stats[Analytics::EXTERNAL_MEDIA_COUNT]++;
+                $renderer->stats[AnalyticsDocument::EXTERNAL_MEDIA_COUNT]++;
                 break;
         }
     }

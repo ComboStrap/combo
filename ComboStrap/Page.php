@@ -275,6 +275,14 @@ class Page extends DokuPath
      * @var LdJson
      */
     private $ldJson;
+    /**
+     * @var HtmlDocument
+     */
+    private $htmlDocument;
+    /**
+     * @var InstructionsDocument
+     */
+    private $instructionsDocument;
 
     /**
      * Page constructor.
@@ -647,34 +655,28 @@ class Page extends DokuPath
     }
 
 
-    /**
-     * @param string $mode delete the cache for the format XHTML and {@link renderer_plugin_combo_analytics::RENDERER_NAME_MODE}
-     */
     public
-    function deleteCache($mode = "xhtml")
+    function deleteCache()
     {
 
         if ($this->exists()) {
 
-            $cache = $this->getInstructionsCache();
-            $cache->removeCache();
-            $this->deleteRenderCache($mode);
+            $this->getInstructionsDocument()->deleteIfExists();
+            $this->getHtmlDocument()->deleteIfExists();
+            $this->getAnalyticsDocument()->deleteIfExists();
 
         }
     }
 
-    public
-    function deleteRenderCache($mode = "xhtml")
+    public function getHtmlDocument(): HtmlDocument
     {
-
-        if ($this->exists()) {
-
-            $cache = $this->getRenderCache($mode);
-            $cache->removeCache();
-
+        if ($this->htmlDocument === null) {
+            $this->htmlDocument = new HtmlDocument($this);
         }
+        return $this->htmlDocument;
 
     }
+
 
 
     /**
@@ -836,6 +838,7 @@ class Page extends DokuPath
     function getContent()
     {
         /**
+         * TODO: change with {@link DokuPath} ?
          * use {@link io_readWikiPage(wikiFN($id, $rev), $id, $rev)};
          */
         return rawWiki($this->getDokuwikiId());
@@ -1356,113 +1359,13 @@ class Page extends DokuPath
 
     }
 
-    public
-    function hasXhtmlCache(): bool
-    {
 
-        $renderCache = $this->getRenderCache("xhtml");
-        return file_exists($renderCache->cache);
-
-    }
-
-    public
-    function hasInstructionCache(): bool
-    {
-
-        $instructionCache = $this->getInstructionsCache();
-        /**
-         * $cache->cache is the file
-         */
-        return file_exists($instructionCache->cache);
-
-    }
 
     public
     function toXhtml(): string
     {
 
-        if (!$this->isStrapSideSlot()) {
-            $template = Site::getTemplate();
-            LogUtility::msg("This function renders only sidebar for the " . PluginUtility::getDocumentationHyperLink("strap", "strap template") . ". (Actual page: $this, actual template: $template)", LogUtility::LVL_MSG_ERROR);
-            return "";
-        }
-
-
-        /**
-         * Global ID is the ID of the HTTP request
-         * (ie the page id)
-         * We change it for the run
-         * And restore it at the end
-         */
-        global $ID;
-        $keep = $ID;
-        $ID = $this->getDokuwikiId();
-
-        /**
-         * The code below is adapted from {@link p_cached_output()}
-         * $ret = p_cached_output($file, 'xhtml', $pageid);
-         *
-         * We don't use {@link CacheRenderer}
-         * because the cache key is the physical file
-         */
-        global $conf;
-        $format = 'xhtml';
-
-        $renderCache = $this->getRenderCache($format);
-        if ($renderCache->useCache()) {
-            $xhtml = $renderCache->retrieveCache(false);
-            if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                $logicalId = $this->getLogicalId();
-                $scope = $this->getScope();
-                $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
-            }
-        } else {
-
-            /**
-             * Get the instructions
-             * Adapted from {@link p_cached_instructions()}
-             */
-            $instructionsCache = $this->getInstructionsCache();
-            if ($instructionsCache->useCache()) {
-                $instructions = $instructionsCache->retrieveCache();
-            } else {
-                // no cache - do some work
-                $instructions = p_get_instructions($this->getContent());
-                if (!$instructionsCache->storeCache($instructions)) {
-                    $message = 'Unable to save cache file. Hint: disk full; file permissions; safe_mode setting ?';
-                    msg($message, -1);
-                    // close restore ID
-                    $ID = $keep;
-                    return "<div class=\"text-warning\">$message</div>";
-                }
-            }
-
-            /**
-             * Due to the instructions parsing, they may have been changed
-             * by a component
-             */
-            $logicalId = $this->getLogicalId();
-            $scope = $this->getScope();
-
-            /**
-             * Render
-             */
-            $xhtml = p_render($format, $instructions, $info);
-            if ($info['cache'] && $renderCache->storeCache($xhtml)) {
-                if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$renderCache->cache}\"></div>" . $xhtml;
-                }
-            } else {
-                $renderCache->removeCache();   //   try to delete cachefile
-                if (($conf['allowdebug'] || PluginUtility::isDevOrTest()) && $format == 'xhtml') {
-                    $xhtml = "<div id=\"{$this->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\"></div>" . $xhtml;
-                }
-            }
-        }
-
-        // restore ID
-        $ID = $keep;
-        return $xhtml;
+        return $this->getHtmlDocument()->getOrGenerateContent();
 
     }
 
@@ -1491,37 +1394,7 @@ class Page extends DokuPath
         }
     }
 
-    /**
-     * @return CacheInstructions
-     * The cache of the {@link CallStack call stack} (ie list of output of {@link DokuWiki_Syntax_Plugin::handle})
-     */
-    public
-    function getInstructionsCache()
-    {
 
-        if ($this->isStrapSideSlot()) {
-
-            /**
-             * @noinspection PhpIncompatibleReturnTypeInspection
-             * No inspection because this is not the same object interface
-             * because we can't overide the constructor of {@link CacheInstructions}
-             * but they should used the same interface (ie manipulate array data)
-             */
-            return new CacheInstructionsByLogicalKey($this);
-
-        } else {
-
-            return new CacheInstructions($this->getDokuwikiId(), $this->getAbsoluteFileSystemPath());
-
-        }
-
-    }
-
-    public
-    function deleteXhtmlCache()
-    {
-        $this->deleteCache("xhtml");
-    }
 
     public
     function getAnchorLink(): string
@@ -1626,18 +1499,18 @@ class Page extends DokuPath
          * and therefore will be not visible
          * We render at least the id
          */
-        $array[Analytics::H1] = $this->getH1NotEmpty();
+        $array[AnalyticsDocument::H1] = $this->getH1NotEmpty();
         $title = $this->getTitleNotEmpty();
         /**
          * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
          * @see {@link \syntax_plugin_combo_pipeline}
          */
         $title = str_replace('"', "'", $title);
-        $array[Analytics::TITLE] = $title;
+        $array[AnalyticsDocument::TITLE] = $title;
         $array[Page::PAGE_ID_ATTRIBUTE] = $this->getPageId();
         $array[Canonical::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
-        $array[Analytics::PATH] = $this->getAbsolutePath();
-        $array[Analytics::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
+        $array[AnalyticsDocument::PATH] = $this->getAbsolutePath();
+        $array[AnalyticsDocument::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
         $array["url"] = $this->getCanonicalUrl();
         $array[self::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
@@ -1650,13 +1523,13 @@ class Page extends DokuPath
          *
          */
         if ($this->exists()) {
-            $array[Analytics::DATE_CREATED] = $this->getCreatedDateAsString();
-            $array[Analytics::DATE_MODIFIED] = $this->getModifiedDateAsString();
+            $array[AnalyticsDocument::DATE_CREATED] = $this->getCreatedDateAsString();
+            $array[AnalyticsDocument::DATE_MODIFIED] = $this->getModifiedDateAsString();
         }
 
         $array[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
-        $array[Analytics::DATE_START] = $this->getStartDateAsString();
-        $array[Analytics::DATE_END] = $this->getStartDateAsString();
+        $array[AnalyticsDocument::DATE_START] = $this->getStartDateAsString();
+        $array[AnalyticsDocument::DATE_END] = $this->getStartDateAsString();
         $array[Page::LAYOUT_PROPERTY] = $this->getMetadata(Page::LAYOUT_PROPERTY);
 
         return $array;
@@ -1752,7 +1625,7 @@ class Page extends DokuPath
     public
     function getEndDate(): ?DateTime
     {
-        $dateEndProperty = Analytics::DATE_END;
+        $dateEndProperty = AnalyticsDocument::DATE_END;
         $persistentMetadata = $this->getPersistentMetadata($dateEndProperty);
         if (empty($persistentMetadata)) {
             return null;
@@ -1782,7 +1655,7 @@ class Page extends DokuPath
     public
     function getStartDate(): ?DateTime
     {
-        $dateStartProperty = Analytics::DATE_START;
+        $dateStartProperty = AnalyticsDocument::DATE_START;
         $persistentMetadata = $this->getPersistentMetadata($dateStartProperty);
         if (empty($persistentMetadata)) {
             return null;
@@ -1816,9 +1689,9 @@ class Page extends DokuPath
 
 
     public
-    function getAnalytics(): Analytics
+    function getAnalyticsDocument(): AnalyticsDocument
     {
-        return new Analytics($this);
+        return new AnalyticsDocument($this);
     }
 
     public
@@ -1864,13 +1737,13 @@ class Page extends DokuPath
                     case Canonical::CANONICAL_PROPERTY:
                         $this->setCanonical($value);
                         continue 2;
-                    case Analytics::DATE_END:
+                    case AnalyticsDocument::DATE_END:
                         $this->setEndDate($value);
                         continue 2;
                     case Page::TYPE_META_PROPERTY:
                         $this->setPageType($value);
                         continue 2;
-                    case Analytics::DATE_START:
+                    case AnalyticsDocument::DATE_START:
                         $this->setStartDate($value);
                         continue 2;
                     case Publication::DATE_PUBLISHED:
@@ -1885,7 +1758,7 @@ class Page extends DokuPath
                     case Page::TITLE_META_PROPERTY:
                         $this->setTitle($value);
                         continue 2;
-                    case Analytics::H1:
+                    case AnalyticsDocument::H1:
                         $this->setH1($value);
                         continue 2;
                     case LdJson::JSON_LD_META_PROPERTY:
@@ -2048,7 +1921,7 @@ class Page extends DokuPath
     public
     function getDefaultH1()
     {
-        $h1Parsed = $this->getMetadata(Analytics::H1_PARSED);
+        $h1Parsed = $this->getMetadata(AnalyticsDocument::H1_PARSED);
         if (!empty($h1Parsed)) {
             return $h1Parsed;
         }
@@ -2135,12 +2008,12 @@ class Page extends DokuPath
             $afterLowQualityPage = $this->isLowQualityPage();
             if ($beforeLowQualityPage !== $afterLowQualityPage) {
                 /**
-                 * Delete the cache to rewrite the links
+                 * Delete the html document cache to rewrite the links
                  * if the protection is on
                  */
                 if (Site::isLowQualityProtectionEnable()) {
                     foreach ($this->getBacklinks() as $backlink) {
-                        $backlink->deleteXhtmlCache();
+                        $backlink->getHtmlDocument()->deleteIfExists();
                     }
                 }
             }
@@ -2166,8 +2039,8 @@ class Page extends DokuPath
          * The indicator {@link Page::LOW_QUALITY_INDICATOR_CALCULATED} is new
          * but if the analytics was done, we can get it
          */
-        if ($this->getAnalytics()->exists()) {
-            $value = $this->getAnalytics()->getData()->toArray()[Analytics::QUALITY][Analytics::LOW];
+        if ($this->getAnalyticsDocument()->exists()) {
+            $value = $this->getAnalyticsDocument()->getData()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
             if ($value !== null) return $value;
         }
 
@@ -2372,7 +2245,7 @@ class Page extends DokuPath
     public
     function setEndDate($value)
     {
-        $this->setDateAttribute(Analytics::DATE_END, $this->endDate, $value);
+        $this->setDateAttribute(AnalyticsDocument::DATE_END, $this->endDate, $value);
     }
 
     /**
@@ -2381,7 +2254,7 @@ class Page extends DokuPath
     public
     function setStartDate($value)
     {
-        $this->setDateAttribute(Analytics::DATE_START, $this->startDate, $value);
+        $this->setDateAttribute(AnalyticsDocument::DATE_START, $this->startDate, $value);
     }
 
     /**
@@ -2420,7 +2293,7 @@ class Page extends DokuPath
             $value = null;
         }
         $this->h1 = $value;
-        $this->setMetadata(Analytics::H1, $value);
+        $this->setMetadata(AnalyticsDocument::H1, $value);
         return $this;
     }
 
@@ -2527,14 +2400,14 @@ class Page extends DokuPath
 
         $this->pageId = $this->getMetadata(self::PAGE_ID_ATTRIBUTE);
         [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
-        $this->h1 = $this->getMetadata(Analytics::H1);
+        $this->h1 = $this->getMetadata(AnalyticsDocument::H1);
         $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
         /**
          * `title` is created by DokuWiki
          * in current but not persistent
          * and hold the heading 1, see {@link p_get_first_heading}
          */
-        $this->title = $this->getPersistentMetadata(Analytics::TITLE);
+        $this->title = $this->getPersistentMetadata(AnalyticsDocument::TITLE);
         $this->author = $this->getMetadata('creator');
         $this->authorId = $this->getMetadata('user');
 
@@ -2581,8 +2454,8 @@ class Page extends DokuPath
         }
 
 
-        $this->startDate = $this->getMetadataAsDate(Analytics::DATE_START);
-        $this->endDate = $this->getMetadataAsDate(Analytics::DATE_END);
+        $this->startDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_START);
+        $this->endDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_END);
         $keywordsString = $this->getMetadata(Page::KEYWORDS_ATTRIBUTE);
         if ($keywordsString !== null) {
             $this->keywords = explode(",", $keywordsString);
@@ -2850,9 +2723,9 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Page::TYPE_META_PROPERTY] = $this->getType();
                     }
                     break;
-                case Analytics::H1:
+                case AnalyticsDocument::H1:
                     if (!in_array($this->getH1(), [$this->getDefaultH1(), null])) {
-                        $nonDefaultMetadatas[Analytics::H1] = $this->getH1();
+                        $nonDefaultMetadatas[AnalyticsDocument::H1] = $this->getH1();
                     }
                     break;
                 case Aliases::ALIAS_ATTRIBUTE:
@@ -2877,9 +2750,9 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Page::LANG_META_PROPERTY] = $this->getLang();
                     }
                     break;
-                case Analytics::TITLE:
+                case AnalyticsDocument::TITLE:
                     if (!in_array($this->getTitle(), [$this->getDefaultTitle(), null])) {
-                        $nonDefaultMetadatas[Analytics::TITLE] = $this->getTitle();
+                        $nonDefaultMetadatas[AnalyticsDocument::TITLE] = $this->getTitle();
                     }
                     break;
                 case syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER:
@@ -2913,14 +2786,14 @@ class Page extends DokuPath
                         $nonDefaultMetadatas[Page::LAYOUT_PROPERTY] = $this->getLayout();
                     }
                     break;
-                case Analytics::DATE_START:
+                case AnalyticsDocument::DATE_START:
                     if ($this->getStartDate() !== null) {
-                        $nonDefaultMetadatas[Analytics::DATE_START] = $this->getStartDateAsString();
+                        $nonDefaultMetadatas[AnalyticsDocument::DATE_START] = $this->getStartDateAsString();
                     }
                     break;
-                case Analytics::DATE_END:
+                case AnalyticsDocument::DATE_END:
                     if ($this->getEndDate() !== null) {
-                        $nonDefaultMetadatas[Analytics::DATE_END] = $this->getEndDateAsString();
+                        $nonDefaultMetadatas[AnalyticsDocument::DATE_END] = $this->getEndDateAsString();
                     }
                     break;
                 case Page::PAGE_ID_ATTRIBUTE:
@@ -2983,6 +2856,7 @@ class Page extends DokuPath
      * @param string $key
      * @param string $value
      * @return Page
+     * Works only in the render function of the syntax plugin
      */
     public function setRuntimeMetadata(string $key, string $value): Page
     {
@@ -3133,42 +3007,35 @@ class Page extends DokuPath
     }
 
     /**
+     * @deprecated use {@link Page::getInstructionsDocument()} instead
      * @return bool - true if the page has changed
      */
     public function isParseCacheUsable(): bool
     {
-        $instructionCache = $this->getInstructionsCache();
-        return $instructionCache->useCache() === true;
+        return $this->getInstructionsDocument()->isStale() === false;
     }
 
     /**
-     * Parse a page and put the instructions in the cache
      * @return $this
+     * @deprecated use {@link Page::getInstructionsDocument()} instead
+     * Parse a page and put the instructions in the cache
      */
     public function parse(): Page
     {
 
-        /**
-         * The id is not passed while on handler
-         * Therefore the global id should be set
-         */
-        global $ID;
-        $oldId = $ID;
-        $ID = $this->getDokuwikiId();
-
-        p_cached_instructions(
-            $this->getAbsoluteFileSystemPath(),
-            false,
-            $this->getDokuwikiId()
-        );
-
-        // back
-        $ID = $oldId;
-
-        // the parsing may have set new values
-        $this->rebuild();
+        $this->getInstructionsDocument()
+            ->compile();
 
         return $this;
+
+    }
+
+    public function getInstructionsDocument(): InstructionsDocument
+    {
+        if ($this->instructionsDocument === null) {
+            $this->instructionsDocument = new InstructionsDocument($this);
+        }
+        return $this->instructionsDocument;
 
     }
 

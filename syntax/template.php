@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
@@ -46,9 +46,9 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     const ATTRIBUTES_IN_PAGE_TABLE = [
         "id",
         Canonical::CANONICAL_PROPERTY,
-        Analytics::PATH,
-        Analytics::DATE_MODIFIED,
-        Analytics::DATE_CREATED,
+        AnalyticsDocument::PATH,
+        AnalyticsDocument::DATE_MODIFIED,
+        AnalyticsDocument::DATE_CREATED,
         Publication::DATE_PUBLISHED,
         PageName::NAME_PROPERTY
     ];

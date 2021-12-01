@@ -11,7 +11,7 @@
  */
 if (!defined('DOKU_INC')) die();
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\DatabasePage;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
@@ -279,28 +279,28 @@ EOF;
             /**
              * Analytics
              */
-            $analytics = $page->getAnalytics();
+            $analytics = $page->getAnalyticsDocument();
             $data = $analytics->getData()->toArray();
 
             if (!empty($fileHandle)) {
-                $statistics = $data[Analytics::STATISTICS];
+                $statistics = $data[AnalyticsDocument::STATISTICS];
                 $row = array(
                     'id' => $id,
-                    'backlinks' => $statistics[Analytics::INTERNAL_BACKLINK_COUNT],
-                    'broken_links' => $statistics[Analytics::INTERNAL_LINK_BROKEN_COUNT],
-                    'changes' => $statistics[Analytics::EDITS_COUNT],
-                    'chars' => $statistics[Analytics::CHAR_COUNT],
-                    'external_links' => $statistics[Analytics::EXTERNAL_LINK_COUNT],
-                    'external_medias' => $statistics[Analytics::EXTERNAL_MEDIA_COUNT],
-                    Analytics::H1 => $statistics[Analytics::HEADING_COUNT][Analytics::H1],
-                    'h2' => $statistics[Analytics::HEADING_COUNT]['h2'],
-                    'h3' => $statistics[Analytics::HEADING_COUNT]['h3'],
-                    'h4' => $statistics[Analytics::HEADING_COUNT]['h4'],
-                    'h5' => $statistics[Analytics::HEADING_COUNT]['h5'],
-                    'internal_links' => $statistics[Analytics::INTERNAL_LINK_COUNT],
-                    'internal_medias' => $statistics[Analytics::INTERNAL_MEDIA_COUNT],
-                    'words' => $statistics[Analytics::WORD_COUNT],
-                    'low' => $data[Analytics::QUALITY]['low']
+                    'backlinks' => $statistics[AnalyticsDocument::INTERNAL_BACKLINK_COUNT],
+                    'broken_links' => $statistics[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT],
+                    'changes' => $statistics[AnalyticsDocument::EDITS_COUNT],
+                    'chars' => $statistics[AnalyticsDocument::CHAR_COUNT],
+                    'external_links' => $statistics[AnalyticsDocument::EXTERNAL_LINK_COUNT],
+                    'external_medias' => $statistics[AnalyticsDocument::EXTERNAL_MEDIA_COUNT],
+                    AnalyticsDocument::H1 => $statistics[AnalyticsDocument::HEADING_COUNT][AnalyticsDocument::H1],
+                    'h2' => $statistics[AnalyticsDocument::HEADING_COUNT]['h2'],
+                    'h3' => $statistics[AnalyticsDocument::HEADING_COUNT]['h3'],
+                    'h4' => $statistics[AnalyticsDocument::HEADING_COUNT]['h4'],
+                    'h5' => $statistics[AnalyticsDocument::HEADING_COUNT]['h5'],
+                    'internal_links' => $statistics[AnalyticsDocument::INTERNAL_LINK_COUNT],
+                    'internal_medias' => $statistics[AnalyticsDocument::INTERNAL_MEDIA_COUNT],
+                    'words' => $statistics[AnalyticsDocument::WORD_COUNT],
+                    'low' => $data[AnalyticsDocument::QUALITY]['low']
                 );
                 fwrite($fileHandle, implode(",", $row) . PHP_EOL);
             }

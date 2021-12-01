@@ -684,10 +684,10 @@ EOF;
             /**
              * Internal link count
              */
-            if (!array_key_exists(Analytics::INTERNAL_LINK_COUNT, $stats)) {
-                $stats[Analytics::INTERNAL_LINK_COUNT] = 0;
+            if (!array_key_exists(AnalyticsDocument::INTERNAL_LINK_COUNT, $stats)) {
+                $stats[AnalyticsDocument::INTERNAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::INTERNAL_LINK_COUNT]++;
+            $stats[AnalyticsDocument::INTERNAL_LINK_COUNT]++;
 
 
             /**
@@ -695,8 +695,8 @@ EOF;
              */
             $id = $this->getInternalPage()->getDokuwikiId();
             if (!$this->getInternalPage()->exists()) {
-                $stats[Analytics::INTERNAL_LINK_BROKEN_COUNT]++;
-                $stats[Analytics::INFO][] = "The internal link `{$id}` does not exist";
+                $stats[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT]++;
+                $stats[AnalyticsDocument::INFO][] = "The internal link `{$id}` does not exist";
             }
 
             /**
@@ -710,49 +710,49 @@ EOF;
                 array_shift($b);
             }
             $length = count($a) + count($b);
-            $stats[Analytics::INTERNAL_LINK_DISTANCE][] = $length;
+            $stats[AnalyticsDocument::INTERNAL_LINK_DISTANCE][] = $length;
 
         } else if ($this->getType() == self::TYPE_EXTERNAL) {
 
-            if (!array_key_exists(Analytics::EXTERNAL_LINK_COUNT, $stats)) {
-                $stats[Analytics::EXTERNAL_LINK_COUNT] = 0;
+            if (!array_key_exists(AnalyticsDocument::EXTERNAL_LINK_COUNT, $stats)) {
+                $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::EXTERNAL_LINK_COUNT]++;
+            $stats[AnalyticsDocument::EXTERNAL_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_LOCAL) {
 
-            if (!array_key_exists(Analytics::LOCAL_LINK_COUNT, $stats)) {
-                $stats[Analytics::LOCAL_LINK_COUNT] = 0;
+            if (!array_key_exists(AnalyticsDocument::LOCAL_LINK_COUNT, $stats)) {
+                $stats[AnalyticsDocument::LOCAL_LINK_COUNT] = 0;
             }
-            $stats[Analytics::LOCAL_LINK_COUNT]++;
+            $stats[AnalyticsDocument::LOCAL_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_INTERWIKI) {
 
-            if (!array_key_exists(Analytics::INTERWIKI_LINK_COUNT, $stats)) {
-                $stats[Analytics::INTERWIKI_LINK_COUNT] = 0;
+            if (!array_key_exists(AnalyticsDocument::INTERWIKI_LINK_COUNT, $stats)) {
+                $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT] = 0;
             }
-            $stats[Analytics::INTERWIKI_LINK_COUNT]++;
+            $stats[AnalyticsDocument::INTERWIKI_LINK_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_EMAIL) {
 
-            if (!array_key_exists(Analytics::EMAIL_COUNT, $stats)) {
-                $stats[Analytics::EMAIL_COUNT] = 0;
+            if (!array_key_exists(AnalyticsDocument::EMAIL_COUNT, $stats)) {
+                $stats[AnalyticsDocument::EMAIL_COUNT] = 0;
             }
-            $stats[Analytics::EMAIL_COUNT]++;
+            $stats[AnalyticsDocument::EMAIL_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_WINDOWS_SHARE) {
 
-            if (!array_key_exists(Analytics::WINDOWS_SHARE_COUNT, $stats)) {
-                $stats[Analytics::WINDOWS_SHARE_COUNT] = 0;
+            if (!array_key_exists(AnalyticsDocument::WINDOWS_SHARE_COUNT, $stats)) {
+                $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT] = 0;
             }
-            $stats[Analytics::WINDOWS_SHARE_COUNT]++;
+            $stats[AnalyticsDocument::WINDOWS_SHARE_COUNT]++;
 
         } else if ($this->getType() == self::TYPE_INTERNAL_TEMPLATE) {
 
-            if (!array_key_exists(Analytics::TEMPLATE_LINK_COUNT, $stats)) {
-                $stats[Analytics::TEMPLATE_LINK_COUNT] = 0;
+            if (!array_key_exists(AnalyticsDocument::TEMPLATE_LINK_COUNT, $stats)) {
+                $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT] = 0;
             }
-            $stats[Analytics::TEMPLATE_LINK_COUNT]++;
+            $stats[AnalyticsDocument::TEMPLATE_LINK_COUNT]++;
 
         } else {
 

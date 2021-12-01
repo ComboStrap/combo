@@ -33,9 +33,23 @@ class JavascriptLibrary extends Media
     }
 
 
-
-    public function getUrl($ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED): string
+    /**
+     *
+     * @param string $ampersand
+     * @return string
+     */
+    public function getUrl($ampersand = DokuwikiUrl::AMPERSAND_CHARACTER): string
     {
+        /**
+         * The ampersand must not be send encoded
+         *
+         * The url properties when used in a header
+         * are encoded via the {@link _tpl_metaheaders_action}
+         * that uses the {@link buildAttributes()} function
+         * that uses the function {@link htmlspecialchars} against the url
+         */
+        $ampersand = DokuwikiUrl::AMPERSAND_CHARACTER;
+
         if (!$this->isResourceScript()) {
             LogUtility::msg("Only Javascript script in the resource directory can be served, blank url returned");
             return "";

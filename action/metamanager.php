@@ -4,7 +4,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
 use ComboStrap\Aliases;
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
 use ComboStrap\CacheManager;
@@ -507,30 +507,30 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         // Title (title of a component is an heading)
         $formMeta->addField(
-            FormMetaField::create(Analytics::TITLE)
+            FormMetaField::create(AnalyticsDocument::TITLE)
                 ->setLabel("Title")
                 ->setDescription("The page title is a description advertised to external application such as search engine and browser.")
                 ->addValue($page->getTitle(), $page->getDefaultTitle())
-                ->setCanonical(Analytics::TITLE)
+                ->setCanonical(AnalyticsDocument::TITLE)
                 ->setTab(self::TAB_PAGE_VALUE)
         );
 
         // H1
         $formMeta->addField(
-            FormMetaField::create(Analytics::H1)
+            FormMetaField::create(AnalyticsDocument::H1)
                 ->addValue($page->getH1(), $page->getDefaultH1())
                 ->setTab(self::TAB_PAGE_VALUE)
-                ->setCanonical(Analytics::H1)
+                ->setCanonical(AnalyticsDocument::H1)
                 ->setDescription("The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title.")
         );
 
         // Description
         $formMeta->addField(
-            FormMetaField::create(Analytics::DESCRIPTION)
+            FormMetaField::create(AnalyticsDocument::DESCRIPTION)
                 ->addValue($page->getDescription(), $page->getDescriptionOrElseDokuWiki())
                 ->setType(DataType::PARAGRAPH_TYPE_VALUE)
                 ->setTab(self::TAB_PAGE_VALUE)
-                ->setCanonical(Analytics::DESCRIPTION)
+                ->setCanonical(AnalyticsDocument::DESCRIPTION)
                 ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
         );
 
@@ -550,11 +550,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Path
-        $formMeta->addField(FormMetaField::create(Analytics::PATH)
+        $formMeta->addField(FormMetaField::create(AnalyticsDocument::PATH)
             ->addValue($page->getPath())
             ->setLabel("Page Path")
             ->setMutable(false)
-            ->setCanonical(Analytics::PATH)
+            ->setCanonical(AnalyticsDocument::PATH)
             ->setTab(self::TAB_REDIRECTION_VALUE)
             ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
         );
@@ -606,7 +606,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
         // Modified Date
-        $formMeta->addField(FormMetaField::create(Analytics::DATE_MODIFIED)
+        $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_MODIFIED)
             ->addValue($page->getModifiedDateAsString())
             ->setMutable(false)
             ->setType(DataType::DATETIME_TYPE_VALUE)
@@ -617,7 +617,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Created Date
-        $formMeta->addField(FormMetaField::create(Analytics::DATE_CREATED)
+        $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_CREATED)
             ->addValue($page->getCreatedDateAsString())
             ->setMutable(false)
             ->setType(DataType::DATETIME_TYPE_VALUE)
@@ -663,7 +663,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Start Date
-        $formMeta->addField(FormMetaField::create(Analytics::DATE_START)
+        $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_START)
             ->addValue($page->getStartDateAsString())
             ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
@@ -673,7 +673,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // End Date
-        $formMeta->addField(FormMetaField::create(Analytics::DATE_END)
+        $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_END)
             ->addValue($page->getEndDateAsString())
             ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)

@@ -13,6 +13,8 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  * Parent in th hierarchy should be first
  * Ie before {@link ImageLink, SvgImageLink, RasterImageLink)
  */
+require_once(__DIR__ . '/Document.php');
+require_once(__DIR__ . '/OutputDocument.php');
 require_once(__DIR__ . '/DokuPath.php');
 require_once(__DIR__ . '/Media.php');
 require_once(__DIR__ . '/MediaLink.php');
@@ -39,7 +41,7 @@ require_once(__DIR__ . '/AdsUtility.php');
 require_once(__DIR__ . '/Alias.php');
 require_once(__DIR__ . '/Aliases.php');
 require_once(__DIR__ . '/Align.php');
-require_once(__DIR__ . '/Analytics.php');
+require_once(__DIR__ . '/AnalyticsDocument.php');
 require_once(__DIR__ . '/AnalyticsMenuItem.php');
 require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/ArrayCaseInsensitive.php');
@@ -76,6 +78,7 @@ require_once(__DIR__ . '/FormMetaField.php');
 require_once(__DIR__ . '/FontSize.php');
 require_once(__DIR__ . '/FsWikiUtility.php');
 require_once(__DIR__ . '/HeaderUtility.php');
+require_once(__DIR__ . '/HtmlDocument.php');
 require_once(__DIR__ . '/HistoricalBreadcrumbMenuItem.php');
 require_once(__DIR__ . '/Hover.php');
 require_once(__DIR__ . '/Html.php');
@@ -87,6 +90,7 @@ require_once(__DIR__ . '/Image.php');
 require_once(__DIR__ . '/ImageLink.php');
 require_once(__DIR__ . '/ImageRaster.php');
 require_once(__DIR__ . '/ImageSvg.php');
+require_once(__DIR__ . '/InstructionsDocument.php');
 require_once(__DIR__ . '/Iso8601Date.php');
 require_once(__DIR__ . '/Json.php');
 require_once(__DIR__ . '/JavascriptLibrary.php');

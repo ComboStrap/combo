@@ -13,6 +13,8 @@
 namespace ComboStrap;
 
 
+use DateTime;
+
 class File
 {
 
@@ -55,10 +57,13 @@ class File
     }
 
     /**
-     * @return \DateTime - The date time
+     * @return null|DateTime - The date time
      */
-    public function getModifiedTime(): \DateTime
+    public function getModifiedTime(): ?DateTime
     {
+        if(!$this->exists()){
+            return null;
+        }
         return Iso8601Date::createFromTimestamp(filemtime($this->path))->getDateTime();
     }
 
@@ -160,6 +165,14 @@ class File
     public function getCreationTime()
     {
         return Iso8601Date::createFromTimestamp(filectime($this->path))->getDateTime();
+    }
+
+    public function removeIfExists(): File
+    {
+        if($this->exists()){
+            $this->remove();
+        }
+        return $this;
     }
 
 

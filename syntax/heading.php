@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
@@ -108,7 +108,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             global $ID;
             p_set_metadata(
                 $ID,
-                array(Analytics::H1_PARSED => trim($text)),
+                array(AnalyticsDocument::H1_PARSED => trim($text)),
                 false,
                 false // runtime meta
             );

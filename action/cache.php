@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
 use ComboStrap\Cron;
@@ -293,7 +293,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * The side slot cache is deleted only when the
          * below property are updated
          */
-        $descriptionProperties = [Page::TITLE_META_PROPERTY, PageName::NAME_PROPERTY, Analytics::H1, Page::DESCRIPTION_PROPERTY];
+        $descriptionProperties = [Page::TITLE_META_PROPERTY, PageName::NAME_PROPERTY, AnalyticsDocument::H1, Page::DESCRIPTION_PROPERTY];
         if (!in_array($data["name"], $descriptionProperties)) return;
 
         self::removeSideSlotCache();

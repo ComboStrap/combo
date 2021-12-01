@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
 use ComboStrap\Dimension;
 use ComboStrap\DokuPath;
@@ -149,13 +149,13 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                if (!$tagAttributes->hasAttribute(Analytics::PATH)) {
+                if (!$tagAttributes->hasAttribute(AnalyticsDocument::PATH)) {
 
                     LogUtility::msg("The path is mandatory and was not found", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return false;
                 }
 
-                $path = $tagAttributes->getValueAndRemove(Analytics::PATH);
+                $path = $tagAttributes->getValueAndRemove(AnalyticsDocument::PATH);
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
                 $page = Page::createPageFromQualifiedPath($path);

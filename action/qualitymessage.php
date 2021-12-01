@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\Identity;
 use ComboStrap\Message;
 use ComboStrap\Page;
@@ -107,8 +107,8 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
         if ($page->exists()) {
 
-            $analyticsArray = $page->getAnalytics()->getData()->toArray();
-            $rules = $analyticsArray[Analytics::QUALITY][Analytics::RULES];
+            $analyticsArray = $page->getAnalyticsDocument()->getData()->toArray();
+            $rules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::RULES];
 
 
             /**
@@ -123,14 +123,14 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
             /**
              * If there is no info, nothing to show
              */
-            if (!array_key_exists(Analytics::INFO, $rules)) {
+            if (!array_key_exists(AnalyticsDocument::INFO, $rules)) {
                 return null;
             }
 
             /**
              * The error info
              */
-            $qualityInfoRules = $rules[Analytics::INFO];
+            $qualityInfoRules = $rules[AnalyticsDocument::INFO];
 
             /**
              * Excluding the excluded rules
@@ -146,13 +146,13 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
             if (sizeof($qualityInfoRules) > 0) {
 
-                $qualityScore = $analyticsArray[Analytics::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
+                $qualityScore = $analyticsArray[AnalyticsDocument::QUALITY][renderer_plugin_combo_analytics::SCORING][renderer_plugin_combo_analytics::SCORE];
                 $message = Message::createInfoMessage()
                     ->addHtmlContent("<p>Well played, you got a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore} !</p>");
 
                 if ($page->isLowQualityPage()) {
-                    $analyticsArray = $page->getAnalytics()->getData()->toArray();
-                    $mandatoryFailedRules = $analyticsArray[Analytics::QUALITY][Analytics::FAILED_MANDATORY_RULES];
+                    $analyticsArray = $page->getAnalyticsDocument()->getData()->toArray();
+                    $mandatoryFailedRules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::FAILED_MANDATORY_RULES];
                     $rulesUrl = PluginUtility::getDocumentationHyperLink("quality:rule", "rules");
                     $lqPageUrl = PluginUtility::getDocumentationHyperLink("low_quality_page", "low quality page");
                     $message->addHtmlContent("<div class='alert alert-info'>This is a {$lqPageUrl} because it has failed the following mandatory {$rulesUrl}:");

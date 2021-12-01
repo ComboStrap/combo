@@ -13,11 +13,9 @@
 namespace ComboStrap;
 
 
-use dokuwiki\Cache\CacheParser;
-use dokuwiki\Cache\CacheRenderer;
 use renderer_plugin_combo_analytics;
 
-class Analytics
+class AnalyticsDocument extends OutputDocument
 {
 
 
@@ -65,28 +63,10 @@ class Analytics
     const DATE_END = "date_end";
     const DATE_START = "date_start";
     const H1_PARSED = "h1_parsed";
-    private $page;
-    /**
-     * @var CacheRenderer
-     */
-    private $cacheFile;
-
-    /**
-     *
-     * Analytics constructor.
-     */
-    public function __construct(Page $page)
-    {
-        $this->page = $page;
-        $cache = new CacheRenderer($this->page->getDokuwikiId(), $this->page->getAbsoluteFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
-
-        $this->cacheFile = File::createFromPath($cache->cache);
-
-    }
 
 
     /**
-     * @return bool - if a {@link Analytics::render(false)} for the page should occurs
+     * @return bool - if a {@link AnalyticsDocument::render(false)} for the page should occurs
      */
     public
     function shouldAnalyticsProcessOccurs(): bool
@@ -98,47 +78,15 @@ class Analytics
             /**
              * If there is no cache
              */
-            if (!$this->isCached()) {
+            if (!$this->exists()) {
                 return true;
             }
         }
-
 
         return false;
     }
 
 
-
-    public function isCached(): bool
-    {
-        return $this->cacheFile->exists();
-    }
-
-
-    /**
-     * Generate the analytics file and return the data
-     *
-     * @return null|Json
-     *
-     * The p_render function was seen from the {@link p_cached_output} function
-     * used the in the switch of the {@link \dokuwiki\Action\Export::preProcess()} function
-     */
-    function render(): Json
-    {
-        if (!$this->page->exists()) {
-            return Json::createEmpty();
-        }
-        global $ID;
-        $oldId = $ID;
-        $ID = $this->page->getDokuwikiId();
-
-        $result = p_cached_output($this->page->getAbsoluteFileSystemPath(), renderer_plugin_combo_analytics::RENDERER_NAME_MODE, $this->page->getDokuwikiId());
-
-        $ID = $oldId;
-
-        return Json::createFromString($result);
-
-    }
 
     /**
      * Return the JSON analytics data
@@ -155,31 +103,21 @@ class Analytics
          * will set it {@link Page::setLowQualityIndicatorCalculation()}
          * creating a loop
          */
-        if(!$this->exists()){
-            return $this->render();
+        if (!$this->exists()) {
+            return Json::createFromString($this->compile());
         } else {
-            return Json::createFromString($this->cacheFile->getContent());
+            return Json::createFromString($this->getOrGenerateContent());
         }
     }
 
-    public function delete()
+
+    function getExtension(): string
     {
-        $this->page->deleteRenderCache(renderer_plugin_combo_analytics::RENDERER_NAME_MODE);
+        return renderer_plugin_combo_analytics::RENDERER_FORMAT;
     }
 
-    public function getModifiedTime()
+    function getRendererName(): string
     {
-        if($this->cacheFile->exists()){
-            return $this->cacheFile->getModifiedTime();
-        } else {
-            return null;
-        }
+        return renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
     }
-
-    public function exists()
-    {
-        return $this->cacheFile->exists();
-    }
-
-
 }

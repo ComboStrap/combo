@@ -2,7 +2,7 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\Analytics;
+use ComboStrap\AnalyticsDocument;
 use ComboStrap\PluginUtility;
 
 if (!defined('DOKU_INC')) die();
@@ -112,7 +112,7 @@ class syntax_plugin_combo_analytics extends DokuWiki_Syntax_Plugin
             $state = $data[PluginUtility::STATE];
             if ($state == DOKU_LEXER_SPECIAL) {
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $renderer->stats[Analytics::SYNTAX_COUNT] = $attributes;
+                $renderer->stats[AnalyticsDocument::SYNTAX_COUNT] = $attributes;
                 return true;
             }
 

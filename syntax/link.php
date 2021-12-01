@@ -1,10 +1,7 @@
 <?php
 
 
-require_once(__DIR__ . "/../ComboStrap/Analytics.php");
 require_once(__DIR__ . "/../ComboStrap/PluginUtility.php");
-require_once(__DIR__ . "/../ComboStrap/LinkUtility.php");
-require_once(__DIR__ . "/../ComboStrap/XhtmlUtility.php");
 
 use ComboStrap\CallStack;
 use ComboStrap\LinkUtility;

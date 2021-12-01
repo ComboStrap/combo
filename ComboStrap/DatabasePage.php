@@ -30,14 +30,14 @@ class DatabasePage
             self::ROWID,
             Page::DOKUWIKI_ID_ATTRIBUTE,
             self::ANALYTICS_ATTRIBUTE,
-            Analytics::DESCRIPTION,
+            AnalyticsDocument::DESCRIPTION,
             Canonical::CANONICAL_PROPERTY,
             PageName::NAME_PROPERTY,
-            Analytics::TITLE,
-            Analytics::H1,
+            AnalyticsDocument::TITLE,
+            AnalyticsDocument::H1,
             Publication::DATE_PUBLISHED,
-            Analytics::DATE_START,
-            Analytics::DATE_END,
+            AnalyticsDocument::DATE_START,
+            AnalyticsDocument::DATE_END,
             Page::REGION_META_PROPERTY,
             Page::LANG_META_PROPERTY,
             Page::TYPE_META_PROPERTY
@@ -322,7 +322,7 @@ class DatabasePage
         /**
          * When the file does not exist
          */
-        $modifiedTime = $this->page->getAnalytics()->getModifiedTime();
+        $modifiedTime = $this->page->getAnalyticsDocument()->getModifiedTime();
         if ($modifiedTime === null) {
             return true;
         }
@@ -499,7 +499,7 @@ class DatabasePage
         /**
          * Render and save on the file system
          */
-        $analyticsJson = $this->page->getAnalytics()->getData();
+        $analyticsJson = $this->page->getAnalyticsDocument()->getData();
         $analyticsJsonAsString = $analyticsJson->toPrettyJsonString();
         $analyticsJsonAsArray = $analyticsJson->toArray();
         /**
@@ -508,7 +508,7 @@ class DatabasePage
         $record = $this->getMetaRecord();
         $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
         $record['IS_LOW_QUALITY'] = ($page->isLowQualityPage() === true ? 1 : 0);
-        $record['WORD_COUNT'] = $analyticsJsonAsArray[Analytics::WORD_COUNT];
+        $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
         $record['BACKLINK_COUNT'] = $this->getBacklinkCount();
         $record['IS_HOME'] = ($page->isHomePage() === true ? 1 : 0);
         $record[self::DATE_REPLICATION] = $replicationDate;
@@ -694,7 +694,7 @@ EOF;
 
 
             $values[PAGE::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getDokuwikiId();
-            $values[Analytics::PATH] = $this->page->getPath();
+            $values[AnalyticsDocument::PATH] = $this->page->getPath();
             $this->addPageIdAttribute($values);
 
             /**
@@ -992,14 +992,14 @@ EOF;
             Canonical::CANONICAL_PROPERTY => $this->page->getCanonicalOrDefault(),
             Page::PATH_ATTRIBUTE => $this->page->getAbsolutePath(),
             PageName::NAME_PROPERTY => $this->page->getPageNameNotEmpty(),
-            Analytics::TITLE => $this->page->getTitleNotEmpty(),
-            Analytics::H1 => $this->page->getH1NotEmpty(),
-            Analytics::DESCRIPTION => $this->page->getDescriptionOrElseDokuWiki(),
-            Analytics::DATE_CREATED => $this->page->getCreatedDateAsString(),
-            Analytics::DATE_MODIFIED => $this->page->getModifiedDateAsString(),
+            AnalyticsDocument::TITLE => $this->page->getTitleNotEmpty(),
+            AnalyticsDocument::H1 => $this->page->getH1NotEmpty(),
+            AnalyticsDocument::DESCRIPTION => $this->page->getDescriptionOrElseDokuWiki(),
+            AnalyticsDocument::DATE_CREATED => $this->page->getCreatedDateAsString(),
+            AnalyticsDocument::DATE_MODIFIED => $this->page->getModifiedDateAsString(),
             Publication::DATE_PUBLISHED => $this->page->getPublishedTimeAsString(),
-            Analytics::DATE_START => $this->page->getEndDateAsString(),
-            Analytics::DATE_END => $this->page->getStartDateAsString(),
+            AnalyticsDocument::DATE_START => $this->page->getEndDateAsString(),
+            AnalyticsDocument::DATE_END => $this->page->getStartDateAsString(),
             Page::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
             Page::LANG_META_PROPERTY => $this->page->getLangOrDefault(),
             Page::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),

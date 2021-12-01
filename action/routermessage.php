@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
+use ComboStrap\Index;
 use ComboStrap\LogUtility;
 use ComboStrap\Message;
 use ComboStrap\PagesIndex;
@@ -156,17 +157,17 @@ class action_plugin_combo_routermessage extends ActionPlugin
     /**
      * Add the page with the same page name but in an other location
      * @param $message
-     * @param $pageId
+     * @param $pageIdOrigin
      */
-    function addToMessagePagesWithSameName($message, $pageId)
+    function addToMessagePagesWithSameName($message, $pageIdOrigin)
     {
 
         if ($this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1) {
 
             global $ID;
             // The page name
-            $pageName = noNS($pageId);
-            $pagesWithSameName = PagesIndex::pagesWithSameName($pageName, $ID);
+            $pageName = noNS($pageIdOrigin);
+            $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageIdOrigin);
 
             if (count($pagesWithSameName) > 0) {
 
@@ -180,12 +181,15 @@ class action_plugin_combo_routermessage extends ActionPlugin
                 $message->addContent('<ul>');
 
                 $i = 0;
-                foreach ($pagesWithSameName as $PageId => $title) {
+                foreach ($pagesWithSameName as $pageId => $title) {
+                    if ($pageId === $ID) {
+                        continue;
+                    }
                     $i++;
                     if ($i > 10) {
                         $message->addContent('<li>' .
                             tpl_link(
-                                wl($pageId) . "?do=search&q=" . rawurldecode($pageName),
+                                wl($pageIdOrigin) . "?do=search&q=" . rawurldecode($pageName),
                                 "More ...",
                                 'class="" rel="nofollow" title="More..."',
                                 $return = true
@@ -193,11 +197,11 @@ class action_plugin_combo_routermessage extends ActionPlugin
                         break;
                     }
                     if ($title == null) {
-                        $title = $PageId;
+                        $title = $pageId;
                     }
                     $message->addContent('<li>' .
                         tpl_link(
-                            wl($PageId),
+                            wl($pageId),
                             $title,
                             'class="" rel="nofollow" title="' . $title . '"',
                             $return = true

@@ -32,9 +32,8 @@ class UrlManagerBestEndPage
     {
 
         $result = array();
-        $pageName = noNS($pageId);
 
-        $pagesWithSameName = PagesIndex::pagesWithSameName($pageName, $pageId);
+        $pagesWithSameName = Index::getOrCreate()->getPagesWithSameLastName($pageId);
         if (count($pagesWithSameName) > 0) {
 
             // Default value

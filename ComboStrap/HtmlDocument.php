@@ -35,12 +35,12 @@ class HtmlDocument extends OutputDocument
         return self::extension;
     }
 
-    public function shouldCompile(): bool
+    public function shouldProcess(): bool
     {
         if (!Site::isHtmlRenderCacheOn()) {
             return true;
         }
-        return parent::shouldCompile();
+        return parent::shouldProcess();
     }
 
 

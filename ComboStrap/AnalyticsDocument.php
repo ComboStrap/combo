@@ -81,7 +81,7 @@ class AnalyticsDocument extends OutputDocument
          * will set it {@link Page::setLowQualityIndicatorCalculation()}
          * creating a loop
          */
-        if(!$this->getFile()->exists()){
+        if(!$this->getCacheFile()->exists()){
             return Json::createEmpty();
         }
         return Json::createFromString(parent::getFileContent());

@@ -6,7 +6,7 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\CacheInstructions;
 
-class InstructionsDocument extends Document
+class InstructionsDocument extends PageCompilerDocument
 {
 
     private $file;
@@ -47,10 +47,10 @@ class InstructionsDocument extends Document
         return "i";
     }
 
-    function compile()
+    function process()
     {
 
-        if (!$this->shouldCompile()) {
+        if (!$this->shouldProcess()) {
             return $this->getFileContent();
         }
 
@@ -100,12 +100,12 @@ class InstructionsDocument extends Document
         return "i";
     }
 
-    public function getFile(): File
+    public function getCacheFile(): File
     {
         return $this->file;
     }
 
-    public function shouldCompile(): bool
+    public function shouldProcess(): bool
     {
         return $this->cache->useCache() === false;
     }

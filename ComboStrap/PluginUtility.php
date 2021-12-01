@@ -13,7 +13,8 @@ require_once(__DIR__ . '/../vendor/autoload.php');
  * Parent in th hierarchy should be first
  * Ie before {@link ImageLink, SvgImageLink, RasterImageLink)
  */
-require_once(__DIR__ . '/Document.php');
+require_once(__DIR__ . '/CachedDocument.php');
+require_once(__DIR__ . '/PageCompilerDocument.php');
 require_once(__DIR__ . '/OutputDocument.php');
 require_once(__DIR__ . '/DokuPath.php');
 require_once(__DIR__ . '/Media.php');

@@ -9,6 +9,8 @@ use dokuwiki\Cache\Cache;
  * Class Cache
  * A wrapper around {@link \dokuwiki\Cache\Cache}
  * @package ComboStrap
+ * that takes into account the arguments / properties of the media
+ * to create the cache file
  */
 class CacheMedia
 {
@@ -167,6 +169,7 @@ class CacheMedia
     {
         return File::createFromPath($this->fileCache->cache);
     }
+
 
 
 }

@@ -28,7 +28,7 @@ class CacheExpirationDate extends MetadataDateTime
 
     public function getDefaultValue(): ?DateTime
     {
-        $file = $this->getPage()->getHtmlDocument()->getFile();
+        $file = $this->getPage()->getHtmlDocument()->getCacheFile();
         if ($file->exists()) {
             $cacheIntervalInSecond = Site::getCacheTime();
             /**

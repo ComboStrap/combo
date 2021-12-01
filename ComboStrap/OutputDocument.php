@@ -6,7 +6,7 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\CacheRenderer;
 
-abstract class OutputDocument extends Document
+abstract class OutputDocument extends PageCompilerDocument
 {
 
 
@@ -44,14 +44,14 @@ abstract class OutputDocument extends Document
 
     }
 
-    function compile()
+    function process()
     {
 
         if (!$this->getPage()->exists()) {
             return "";
         }
 
-        if (!$this->shouldCompile() && $this->getFile()->exists() && PluginUtility::isDevOrTest()) {
+        if (!$this->shouldProcess() && $this->getCacheFile()->exists() && PluginUtility::isDevOrTest()) {
             LogUtility::msg("The file ({$this->getExtension()}) should not compile and exists, compilation is not needed", LogUtility::LVL_MSG_ERROR);
         }
 
@@ -70,7 +70,7 @@ abstract class OutputDocument extends Document
          * $ret = p_cached_output($file, 'xhtml', $pageid);
          */
 
-        $instructions = $this->getPage()->getInstructionsDocument()->getOrGenerateContent();
+        $instructions = $this->getPage()->getInstructionsDocument()->getOrProcessContent();
 
 
         /**
@@ -98,7 +98,7 @@ abstract class OutputDocument extends Document
                 (Site::debugIsOn() || PluginUtility::isDevOrTest())
                 && $this->getExtension() === HtmlDocument::extension
             ) {
-                $result = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$this->getFile()->getAbsoluteFileSystemPath()}\"></div>" . $result;
+                $result = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$this->getCacheFile()->getAbsoluteFileSystemPath()}\"></div>" . $result;
             }
         } else {
             $this->cache->removeCache(); // try to delete cachefile
@@ -114,14 +114,14 @@ abstract class OutputDocument extends Document
 
     }
 
-    public function getFile(): File
+    public function getCacheFile(): File
     {
         return $this->file;
     }
 
-    public function shouldCompile(): bool
+    public function shouldProcess(): bool
     {
-        if(!$this->getFile()->exists()){
+        if(!$this->getCacheFile()->exists()){
             return true;
         }
         return $this->cache->useCache() === false;

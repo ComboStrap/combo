@@ -1365,7 +1365,7 @@ class Page extends DokuPath
     function toXhtml(): string
     {
 
-        return $this->getHtmlDocument()->getOrGenerateContent();
+        return $this->getHtmlDocument()->getOrProcessContent();
 
     }
 
@@ -2013,7 +2013,7 @@ class Page extends DokuPath
          * The indicator {@link Page::LOW_QUALITY_INDICATOR_CALCULATED} is new
          * but if the analytics was done, we can get it
          */
-        if ($this->getAnalyticsDocument()->getFile()->exists()) {
+        if ($this->getAnalyticsDocument()->getCacheFile()->exists()) {
             $value = $this->getAnalyticsDocument()->getData()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
             if ($value !== null) return $value;
         }
@@ -2986,7 +2986,7 @@ class Page extends DokuPath
      */
     public function isParseCacheUsable(): bool
     {
-        return $this->getInstructionsDocument()->shouldCompile() === false;
+        return $this->getInstructionsDocument()->shouldProcess() === false;
     }
 
     /**
@@ -2998,7 +2998,7 @@ class Page extends DokuPath
     {
 
         $this->getInstructionsDocument()
-            ->compile();
+            ->process();
 
         return $this;
 

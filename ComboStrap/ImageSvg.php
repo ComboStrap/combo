@@ -7,6 +7,8 @@ namespace ComboStrap;
  * Class ImageSvg
  * @package ComboStrap
  * A svg image
+ *
+ * TODO: implements {@link CachedDocument} ? to not cache the optimization in {@link ImageSvg::getSvgFile()}
  */
 class ImageSvg extends Image
 {

@@ -64,6 +64,11 @@ class AnalyticsDocument extends OutputDocument
     const DATE_START = "date_start";
     const H1_PARSED = "h1_parsed";
 
+    public function getOrProcessJson(): Json
+    {
+        $content = parent::getOrProcessContent();
+        return Json::createFromString($content);
+    }
 
 
     /**
@@ -71,7 +76,7 @@ class AnalyticsDocument extends OutputDocument
      *
      * @return Json
      */
-    public function getData(): Json
+    public function getJson(): Json
     {
         /**
          * Don't render if the analytics file exists

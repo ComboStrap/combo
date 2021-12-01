@@ -499,7 +499,7 @@ class DatabasePage
         /**
          * Render and save on the file system
          */
-        $analyticsJson = $this->page->getAnalyticsDocument()->getData();
+        $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
         $analyticsJsonAsString = $analyticsJson->toPrettyJsonString();
         $analyticsJsonAsArray = $analyticsJson->toArray();
         /**

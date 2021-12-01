@@ -2014,7 +2014,7 @@ class Page extends DokuPath
          * but if the analytics was done, we can get it
          */
         if ($this->getAnalyticsDocument()->getCacheFile()->exists()) {
-            $value = $this->getAnalyticsDocument()->getData()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+            $value = $this->getAnalyticsDocument()->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
             if ($value !== null) return $value;
         }
 

@@ -280,7 +280,7 @@ EOF;
              * Analytics
              */
             $analytics = $page->getAnalyticsDocument();
-            $data = $analytics->getData()->toArray();
+            $data = $analytics->getOrProcessContent()->toArray();
 
             if (!empty($fileHandle)) {
                 $statistics = $data[AnalyticsDocument::STATISTICS];

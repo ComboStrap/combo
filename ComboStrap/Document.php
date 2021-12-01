@@ -40,6 +40,7 @@ abstract class Document
 
     /**
      * @return string - the file extension / format
+     * For instance, "xhtml" for an html document
      */
     abstract function getExtension(): string;
 
@@ -54,25 +55,25 @@ abstract class Document
      */
     abstract function getRendererName(): string;
 
-    public function exists(): bool
-    {
-        return $this->getFile()->exists();
-    }
 
     /**
-     * Generate the content if it does not exists or the content is stale
-     * otherwise return the content
+     * Get the data from the cache file
+     * or compile the content
+     *
      * @return false|mixed|string
      */
     public function getOrGenerateContent()
     {
-        if ($this->isStale() || !$this->getFile()->exists()) {
+        if ($this->shouldCompile()) {
 
+            /**
+             * Cache Miss
+             */
             return $this->compile();
 
         } else {
 
-            $content = $this->getFile()->getContent();
+            $content = $this->getFileContent();
 
             /**
              * Cache hit
@@ -89,14 +90,21 @@ abstract class Document
         }
 
 
-
     }
 
-    public function delete(): Document
+    /**
+     *
+     * @return null|mixed the content of the file (by default in a text format)
+     * @noinspection PhpReturnDocTypeMismatchInspection
+     */
+    public function getFileContent()
     {
-        $this->getFile()->remove();
-        return $this;
+        if (!$this->getFile()->exists()) {
+            return null;
+        }
+        return $this->getFile()->getTextContent();
     }
+
 
     public function deleteIfExists(): Document
     {
@@ -104,20 +112,17 @@ abstract class Document
         return $this;
     }
 
-    public function getModifiedTime(): ?\DateTime
-    {
-
-        return $this->getFile()->getModifiedTime();
-
-    }
-
     abstract public function getFile(): File;
 
     /**
-     * @return bool if the output file is stale
-     * The most obvious reason would be that the source file has changed
-     * but change in configuration may also stale output file
+     * @return bool true if the {@link Document::compile() compilation} should occurs
+     *
+     * For instance:
+     *   * if the output cache file is stale: The most obvious reason would be that the source file has changed but change in configuration may also stale output file
+     *   * True if the cache page does not exist
+     *   * True if the cache is not allowed
+     *
      */
-    abstract public function isStale(): bool;
+    abstract public function shouldCompile(): bool;
 
 }

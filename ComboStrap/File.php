@@ -117,7 +117,10 @@ class File
         return mimetype($this->getBaseName(), true)[1];
     }
 
-    public function getContent()
+    /**
+     * @return false|string
+     */
+    public function getTextContent()
     {
         return file_get_contents($this->getAbsoluteFileSystemPath());
     }

@@ -223,7 +223,7 @@ class XmlDocument
         if (in_array($file->getExtension(), ["html", "htm"])) {
             $mime = XmlDocument::HTML_TYPE;
         }
-        return new XmlDocument($file->getContent(), $mime);
+        return new XmlDocument($file->getTextContent(), $mime);
     }
 
     public

@@ -50,8 +50,8 @@ class InstructionsDocument extends Document
     function compile()
     {
 
-        if (!$this->isStale()) {
-            return $this->getOrGenerateContent();
+        if (!$this->shouldCompile()) {
+            return $this->getFileContent();
         }
 
         /**
@@ -66,7 +66,7 @@ class InstructionsDocument extends Document
          * Get the instructions
          * Adapted from {@link p_cached_instructions()}
          */
-        $instructions = p_get_instructions($this->getPage()->getContent());
+        $instructions = p_get_instructions($this->getPage()->getTextContent());
 
         // close restore ID
         $ID = $oldId;
@@ -84,17 +84,14 @@ class InstructionsDocument extends Document
 
     }
 
-    public function getOrGenerateContent()
+    public function getFileContent()
     {
         /**
          * The data is {@link serialize serialized} for instructions
-         * we can't use the parent method
+         * we can't use the parent method that retrieve text by default
          */
-        if ($this->isStale() || !$this->getFile()->exists()) {
-            return $this->compile();
-        } else {
-            return $this->cache->retrieveCache();
-        }
+        return $this->cache->retrieveCache();
+
     }
 
 
@@ -108,7 +105,7 @@ class InstructionsDocument extends Document
         return $this->file;
     }
 
-    public function isStale(): bool
+    public function shouldCompile(): bool
     {
         return $this->cache->useCache() === false;
     }

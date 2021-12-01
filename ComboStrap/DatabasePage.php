@@ -322,7 +322,7 @@ class DatabasePage
         /**
          * When the file does not exist
          */
-        $modifiedTime = $this->page->getAnalyticsDocument()->getModifiedTime();
+        $modifiedTime = $this->page->getAnalyticsDocument()->getFile()->getModifiedTime();
         if ($modifiedTime === null) {
             return true;
         }

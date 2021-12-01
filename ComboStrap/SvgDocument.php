@@ -131,7 +131,7 @@ class SvgDocument extends XmlDocument
      */
     public static function createFromPath($file)
     {
-        $svg = new SvgDocument($file->getContent());
+        $svg = new SvgDocument($file->getTextContent());
         $svg->setName($file->getBaseNameWithoutExtension());
         return $svg;
     }

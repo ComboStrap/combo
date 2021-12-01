@@ -297,7 +297,7 @@ class Site
         $conf['youarehere'] = 1;
     }
 
-    public static function isRenderCacheOn(): bool
+    public static function isHtmlRenderCacheOn(): bool
     {
         global $conf;
         return $conf['cachetime'] !== -1;

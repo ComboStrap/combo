@@ -65,28 +65,6 @@ class AnalyticsDocument extends OutputDocument
     const H1_PARSED = "h1_parsed";
 
 
-    /**
-     * @return bool - if a {@link AnalyticsDocument::render(false)} for the page should occurs
-     */
-    public
-    function shouldAnalyticsProcessOccurs(): bool
-    {
-        /**
-         * If render cache is on
-         */
-        if (Site::isRenderCacheOn()) {
-            /**
-             * If there is no cache
-             */
-            if (!$this->exists()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
 
     /**
      * Return the JSON analytics data
@@ -103,11 +81,11 @@ class AnalyticsDocument extends OutputDocument
          * will set it {@link Page::setLowQualityIndicatorCalculation()}
          * creating a loop
          */
-        if (!$this->exists()) {
-            return Json::createFromString($this->compile());
-        } else {
-            return Json::createFromString($this->getOrGenerateContent());
+        if(!$this->getFile()->exists()){
+            return Json::createEmpty();
         }
+        return Json::createFromString(parent::getFileContent());
+
     }
 
 

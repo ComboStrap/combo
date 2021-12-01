@@ -26,8 +26,22 @@ abstract class OutputDocument extends Document
     public function __construct($page)
     {
         parent::__construct($page);
-        $this->cache = new CacheRenderer($this->getPage()->getDokuwikiId(), $this->getPage()->getAbsoluteFileSystemPath(), $this->getRendererName());
+
+        if ($page->isStrapSideSlot()) {
+
+            /**
+             * Logical cache based on scope (ie logical id) is the scope and part of the key
+             */
+            $this->cache = new CacheByLogicalKey($page, $this->getExtension());
+
+        } else {
+
+            $this->cache = new CacheRenderer($page->getDokuwikiId(), $this->getPage()->getAbsoluteFileSystemPath(), $this->getExtension());
+
+        }
+
         $this->file = File::createFromPath($this->cache->cache);
+
     }
 
     function compile()
@@ -37,8 +51,8 @@ abstract class OutputDocument extends Document
             return "";
         }
 
-        if (!$this->isStale() && $this->getFile()->exists() && PluginUtility::isDevOrTest()) {
-            LogUtility::msg("The file ({$this->getExtension()}) is not stale and exists, compilation is not needed", LogUtility::LVL_MSG_ERROR);
+        if (!$this->shouldCompile() && $this->getFile()->exists() && PluginUtility::isDevOrTest()) {
+            LogUtility::msg("The file ({$this->getExtension()}) should not compile and exists, compilation is not needed", LogUtility::LVL_MSG_ERROR);
         }
 
         /**
@@ -74,8 +88,12 @@ abstract class OutputDocument extends Document
         // restore ID
         $ID = $keep;
 
-        // Store
-        if ($info['cache'] && $this->cache->storeCache($result)) {
+        /**
+         * Store
+         * if the cache is not on, don't store
+         */
+        $enabledCache = $info['cache'];
+        if ($enabledCache && $this->cache->storeCache($result)) {
             if (
                 (Site::debugIsOn() || PluginUtility::isDevOrTest())
                 && $this->getExtension() === HtmlDocument::extension
@@ -101,10 +119,14 @@ abstract class OutputDocument extends Document
         return $this->file;
     }
 
-    public function isStale(): bool
+    public function shouldCompile(): bool
     {
+        if(!$this->getFile()->exists()){
+            return true;
+        }
         return $this->cache->useCache() === false;
     }
+
 
 
 }

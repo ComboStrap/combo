@@ -219,7 +219,7 @@ class SvgImageLink extends ImageLink
                 /**
                  * Svg tag
                  */
-                $imgHTML = $image->getSvgFile()->getContent();
+                $imgHTML = $image->getSvgFile()->getTextContent();
 
             }
 

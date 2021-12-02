@@ -86,8 +86,11 @@ class UrlManagerBestEndPage
             $redirectType = action_plugin_combo_router::REDIRECT_NOTFOUND_METHOD;
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
                 $page = Page::createPageFromId($bestPageId);
-                $alias = $page->addAndGetAlias($missingPageId, Alias::REDIRECT);
-                $page->getDatabasePage()->addAlias($alias);
+                Aliases::createForPageWithDefaultStore($page)
+                    ->addAlias($missingPageId, Alias::REDIRECT)
+                    ->persist()
+                    ->setStore(MetadataDbStore::getOrCreate())
+                    ->persist();
                 $redirectType = action_plugin_combo_router::REDIRECT_PERMANENT_METHOD;
             }
             $return = array(

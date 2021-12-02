@@ -38,6 +38,11 @@ class MetadataDokuWikiStore implements MetadataStore
         $resource->setMetadata($name, $persistentValue, $defaultValue, $type);
     }
 
+    /**
+     * @param Metadata $metadata
+     * @param null $default
+     * @return mixed|null
+     */
     public function get(Metadata $metadata, $default = null)
     {
         $resource = $metadata->getResource();
@@ -47,7 +52,7 @@ class MetadataDokuWikiStore implements MetadataStore
         if (!($resource instanceof Page)) {
             throw new ExceptionComboRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        $resource->getMetadata($metadata->getName(), $default);
+        return $resource->getMetadata($metadata->getName(), $default);
     }
 
 

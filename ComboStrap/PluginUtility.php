@@ -30,7 +30,7 @@ require_once(__DIR__ . '/MetadataJson.php');
 require_once(__DIR__ . '/MetadataText.php');
 require_once(__DIR__ . '/MetadataWikiPath.php');
 require_once(__DIR__ . '/MetadataStore.php');
-require_once(__DIR__ . '/Resource.php');
+require_once(__DIR__ . '/ResourceCombo.php');
 
 
 /**
@@ -112,6 +112,7 @@ require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
 require_once(__DIR__ . '/MetadataDokuWikiStore.php');
+require_once(__DIR__ . '/MetadataDbStore.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');
 require_once(__DIR__ . '/Mime.php');

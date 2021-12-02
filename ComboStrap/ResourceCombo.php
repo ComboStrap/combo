@@ -4,7 +4,15 @@
 namespace ComboStrap;
 
 
-interface Resource
+/**
+ * Interface ComboResource
+ * @package ComboStrap
+ *
+ * Not Resource
+ * because
+ * https://www.php.net/manual/en/language.types.resource.php
+ */
+interface ResourceCombo
 {
 
     public function getDefaultMetadataStore(): MetadataStore;
@@ -14,5 +22,10 @@ interface Resource
      * ie the file system url, the dokuwiki url
      */
     public function getPath(): Path;
+
+    /**
+     * @return mixed - the unique id
+     */
+    public function getUid();
 
 }

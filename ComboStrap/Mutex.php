@@ -20,7 +20,7 @@ class Mutex
      */
     private $filePath;
     /**
-     * @var false|resource
+     * @var false|ResourceCombo
      */
     private $filePointer;
 

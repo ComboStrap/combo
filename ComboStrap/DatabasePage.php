@@ -3,13 +3,13 @@
 
 namespace ComboStrap;
 
-use Exception;
-use http\Exception\RuntimeException;
-
 /**
  * The class that manage the replication
  * Class Replicate
  * @package ComboStrap
+ *
+ * The database can also be seen as a {@link MetadataStore}
+ * and an {@link Index}
  */
 class DatabasePage
 {
@@ -769,115 +769,12 @@ EOF;
     }
 
 
-    /**
-     * @param Alias $alias
-     * @return $this
-     */
-    public function addAlias(Alias $alias): DatabasePage
-    {
 
-        $row = array(
-            Page::PAGE_ID_ATTRIBUTE => $this->page->getPageId(),
-            Alias::ALIAS_PATH_PROPERTY => $alias->getPath(),
-            Alias::ALIAS_TYPE_PROPERTY => $alias->getType()
-        );
 
-        // Page has change of location
-        // Creation of an alias
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->storeEntry('PAGE_ALIASES', $row);
-        if (!$res) {
-            LogUtility::msg("There was a problem during PAGE_ALIASES insertion");
-        }
-        $sqlite->res_close($res);
 
-        return $this;
-    }
 
-    private function replicateAliases(): bool
-    {
 
-        $fileSystemAliases = Aliases::createForPageWithDefaultStore($this->page)->getAll();
-        $dbAliases = $this->getAliases();
-        foreach ($fileSystemAliases as $fileSystemAlias) {
 
-            if (key_exists($fileSystemAlias->getPath(), $dbAliases)) {
-                unset($dbAliases[$fileSystemAlias->getPath()]);
-            } else {
-                $this->addAlias($fileSystemAlias);
-            }
-        }
-
-        if (sizeof($dbAliases) > 0) {
-
-            foreach ($dbAliases as $dbAlias) {
-                $this->deleteAlias($dbAlias);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * @return Aliases
-     */
-    public function getAliases()
-    {
-        $aliases = Aliases::create();
-        if ($this->sqlite === null) {
-            return [];
-        }
-        if ($this->page === null) {
-            LogUtility::msg("The page is unknown. We can't retrieve the aliases");
-            return [];
-        }
-        if ($this->page->getPageId() === null) {
-            LogUtility::msg("The page id is null. We can't retrieve the aliases");
-            return [];
-        }
-        $pageIdAttribute = Page::PAGE_ID_ATTRIBUTE;
-        $res = $this->sqlite->query("select PATH, TYPE from PAGE_ALIASES where $pageIdAttribute = ? ", $this->page->getPageId());
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$this->page}) selection query");
-        }
-        $rowAliases = $this->sqlite->res2arr($res);
-        $this->sqlite->res_close($res);
-        $dbAliases = [];
-        foreach ($rowAliases as $row) {
-            $dbAliases[$row['PATH']] = Alias::create($this->page, $row['PATH'])
-                ->setType($row["TYPE"]);
-        }
-        return $dbAliases;
-    }
-
-    /**
-     * @param Alias $dbAliasPath
-     * @return $this
-     */
-    public function deleteAlias(Alias $dbAliasPath): DatabasePage
-    {
-        $delete = <<<EOF
-delete from PAGE_ALIASES where UUID = ? and PATH = ?
-EOF;
-        $row = [
-            "UUID" => $this->page->getPageId(),
-            "PATH" => $dbAliasPath->getPath()
-        ];
-        $res = $this->sqlite->query($delete, $row);
-
-        if ($res === false) {
-            $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
-            $message = "";
-            $errorCode = $errorInfo[0];
-            if ($errorCode === '0000') {
-                $message = ("No rows were deleted");
-            }
-            $errorInfoAsString = var_export($errorInfo, true);
-            LogUtility::msg("There was a problem during the alias delete. $message. : {$errorInfoAsString}");
-        }
-        return $this;
-
-    }
 
     /**
      * Redirect are now added during a move
@@ -892,7 +789,6 @@ EOF;
         if ($this->page != null) {
             $page->getDatabasePage()->deleteIfExist();
             $this->addRedirectAlias($page);
-
         }
 
     }

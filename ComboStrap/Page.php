@@ -27,7 +27,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * This is just a wrapper around a file with the mime Dokuwiki
  * that has a doku path (ie with the `:` separator)
  */
-class Page implements Resource
+class Page implements ResourceCombo
 {
     const TITLE_META_PROPERTY = 'title';
 
@@ -3040,5 +3040,18 @@ class Page implements Resource
     public function exists(): bool
     {
         return FileSystems::exists($this->dokuPath);
+    }
+
+    /**
+     * @deprecated uses {@link Page::getPath()} instead
+     */
+    public function getDokuwikiId()
+    {
+        return $this->getPath()->getDokuwikiId();
+    }
+
+    public function getUid(): ?string
+    {
+        return $this->getPageId();
     }
 }

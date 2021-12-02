@@ -8,6 +8,7 @@ use action_plugin_combo_metamanager;
 
 class Aliases extends Metadata
 {
+
     public const ALIAS_ATTRIBUTE = "alias";
     public const ALIAS_PATH = "alias-path";
     public const ALIAS_TYPE = "alias-type";
@@ -30,7 +31,7 @@ class Aliases extends Metadata
 
     }
 
-    public static function create()
+    public static function create(): Aliases
     {
         return new Aliases();
     }
@@ -82,10 +83,13 @@ class Aliases extends Metadata
 
     /**
      * @param Alias[] $aliases
-     * @return array - the array to be saved in a text/json file
+     * @return null|array - the array to be saved in a text/json file
      */
-    public static function toMetadataArray(array $aliases): array
+    public static function toMetadataArray(?array $aliases): ?array
     {
+        if($aliases === null){
+            return null;
+        }
         $array = [];
         foreach ($aliases as $alias) {
             $array[$alias->getPath()] = [
@@ -147,7 +151,7 @@ class Aliases extends Metadata
         array_map(
             function ($row) use ($deprecatedAliases) {
                 $alias = $row['ALIAS'];
-                $deprecatedAliases[$alias] = Alias::create($this, $alias)
+                $deprecatedAliases[$alias] = Alias::create($this->getResource(), $alias)
                     ->setType(Alias::REDIRECT);
             },
             $deprecatedAliasInDb
@@ -187,7 +191,13 @@ class Aliases extends Metadata
          * we are using a set a metadata method that creates
          * a cycle via the {@link Page::PAGE_METADATA_MUTATION_EVENT}
          */
-        if ($this->aliases === null) {
+        if (
+            $this->aliases === null
+            &&
+            $this->getStore() !== null
+            &&
+            $this->getStore() instanceof MetadataDokuWikiStore
+        ) {
             $this->aliases = $this->getAndDeleteDeprecatedAlias();
             /**
              * To validate the migration we set a value
@@ -195,17 +205,24 @@ class Aliases extends Metadata
              */
             $this->persist();
         }
+
+        if ($this->aliases === null) {
+            return [];
+        }
         return array_values($this->aliases);
     }
 
-    public function addAlias($aliasPath, $aliasType = Alias::REDIRECT): Aliases
+    public
+    function addAlias($aliasPath, $aliasType = Alias::REDIRECT): Aliases
     {
         $this->addAndGetAlias($aliasPath, $aliasType);
         return $this;
     }
 
-    public function addAndGetAlias($aliasPath, $aliasType = Alias::REDIRECT): Alias
+    public
+    function addAndGetAlias($aliasPath, $aliasType = Alias::REDIRECT): Alias
     {
+        $this->buildCheck();
         $alias = Alias::create($this->getResource(), $aliasPath);
 
         if (!blank($aliasType)) {
@@ -213,7 +230,6 @@ class Aliases extends Metadata
         }
 
         $this->aliases[$aliasPath] = $alias;
-        $this->persist();
         return $alias;
     }
 
@@ -221,14 +237,17 @@ class Aliases extends Metadata
     /**
      *
      */
-    public function buildFromStore(): Aliases
+    public
+    function buildFromStore(): Aliases
     {
+        $this->wasBuild = true;
         $aliases = $this->getStoreValue();
         $this->aliases = self::toNativeAliasArray($aliases);
         return $this;
     }
 
-    public function getSize(): int
+    public
+    function getSize(): int
     {
         $aliases = $this->aliases;
         if ($this->aliases === null) {
@@ -237,49 +256,60 @@ class Aliases extends Metadata
         return sizeof($aliases);
     }
 
-    public function setFromPersistentFormat($value): Aliases
+    public
+    function setFromPersistentFormat($value): Aliases
     {
         $this->aliases = $this->toNativeAliasArray($value);
-        $this->persist();
         return $this;
     }
 
 
-    public function getCanonical(): string
+    public
+    function getCanonical(): string
     {
         return Alias::CANONICAL;
     }
 
-    private function buildCheck()
+    private
+    function buildCheck()
     {
-        if (!$this->wasBuild && $this->aliases === null) {
+        if (
+            !$this->wasBuild
+            && $this->aliases === null
+            && $this->getStore() !== null
+        ) {
             $this->buildFromStore();
             $this->wasBuild = true;
         }
     }
 
 
-    public function getTab(): string
+    public
+    function getTab(): string
     {
         return action_plugin_combo_metamanager::TAB_REDIRECTION_VALUE;
     }
 
-    public function getDataType(): string
+    public
+    function getDataType(): string
     {
         return DataType::TABULAR_TYPE_VALUE;
     }
 
-    public function getDescription(): string
+    public
+    function getDescription(): string
     {
         return "Aliases that will redirect to this page.";
     }
 
-    public function getLabel(): string
+    public
+    function getLabel(): string
     {
         return "Page Aliases";
     }
 
-    public function toFormField(): FormMetaField
+    public
+    function toFormField(): FormMetaField
     {
 
         $this->buildCheck();
@@ -315,7 +345,8 @@ class Aliases extends Metadata
 
     }
 
-    public function setFromFormData($formData): Aliases
+    public
+    function setFromFormData($formData): Aliases
     {
         $pathData = $formData[self::ALIAS_PATH];
         if ($pathData !== null && $pathData !== "") {
@@ -331,12 +362,26 @@ class Aliases extends Metadata
                 $counter++;
             }
         }
-        $this->persist();
         return $this;
     }
 
-    public function getMutable(): bool
+    public
+    function getMutable(): bool
     {
         return true;
     }
+
+    public
+    function has(Alias $alias): bool
+    {
+        return isset($this->aliases[$alias->getPath()]);
+    }
+
+    public
+    function remove(Alias $alias)
+    {
+        unset($this->aliases[$alias->getPath()]);
+    }
+
+
 }

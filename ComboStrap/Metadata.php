@@ -14,7 +14,7 @@ abstract class Metadata
 
     /**
      * The metadata is for this resource
-     * @var Resource
+     * @var ResourceCombo $resource
      */
     private $resource;
 
@@ -44,16 +44,20 @@ abstract class Metadata
         return $this->setStore($this->resource->getDefaultMetadataStore());
     }
 
+    protected function getStore(): ?MetadataStore
+    {
+        return $this->store;
+    }
 
     public abstract function getTab();
 
-    protected function persist()
+    public function persist()
     {
-        if($this->store===null){
+        if ($this->store === null) {
             throw new ExceptionComboRuntime("The metadata store is not set, you can't persist the metadata ($this)");
         }
         $this->store->set($this);
-
+        return $this;
     }
 
     public function __toString()
@@ -81,19 +85,19 @@ abstract class Metadata
     }
 
     /**
-     * @return Resource - The resource
+     * @return ResourceCombo - The resource
      */
-    public function getResource(): Resource
+    public function getResource(): ResourceCombo
     {
         return $this->resource;
     }
 
     /**
      * For which resources is the metadata for
-     * @param $resource
+     * @param ResourceCombo $resource
      * @return $this
      */
-    public function setResource($resource): Metadata
+    public function setResource(ResourceCombo $resource): Metadata
     {
         $this->resource = $resource;
         return $this;
@@ -104,7 +108,7 @@ abstract class Metadata
      */
     protected function getStoreValue()
     {
-        if($this->store===null){
+        if ($this->store === null) {
             throw new ExceptionComboRuntime("The metadata store is not set, you can't get a value");
         }
         return $this->store->get($this);

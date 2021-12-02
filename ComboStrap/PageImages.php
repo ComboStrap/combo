@@ -114,13 +114,12 @@ class PageImages extends Metadata
 
     }
 
+    /**
+     * @throws ExceptionCombo if the usage is not good
+     */
     public function buildFromPersistentFormat($value): PageImages
     {
-        try {
-            $this->pageImages = $this->toPageImageArray($value);
-        } catch (Exception $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $this->getCanonical());
-        }
+        $this->pageImages = $this->toPageImageArray($value);
         return $this;
     }
 
@@ -196,6 +195,16 @@ class PageImages extends Metadata
         }
 
         $this->pageImages[$imagePath] = $pageImage;
+
+        /**
+         * What fucked up is fucked up
+         * The runtime {@link Doku_Renderer_metadata::_recordMediaUsage()}
+         * ```
+         * meta['relation']['media'][$src] = $exist
+         * ```
+         * is only set when parsing to add page to the index
+         * We just set a persistent default via the
+         */
         $this->persistToFileSystem();
         return $this;
     }

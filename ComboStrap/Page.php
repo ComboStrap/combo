@@ -904,7 +904,7 @@ class Page extends DokuPath
     }
 
     /**
-     * Return the media found in the index
+     * Return the media stored during parsing
      *
      * They are saved via the function {@link \Doku_Renderer_metadata::_recordMediaUsage()}
      * called by the {@link \Doku_Renderer_metadata::internalmedia()}
@@ -913,7 +913,7 @@ class Page extends DokuPath
      * {@link \Doku_Renderer_metadata::externalmedia()} does not save them
      */
     public
-    function getExistingInternalMediaIdFromTheIndex()
+    function getMediasMetadata()
     {
 
         $medias = [];
@@ -1124,6 +1124,9 @@ class Page extends DokuPath
     {
 
         if (!$this->exists()) {
+            if(PluginUtility::isDevOrTest()){
+                LogUtility::msg("You can't render the metadata of a page that does not exist");
+            }
             return $this;
         }
 
@@ -1548,7 +1551,7 @@ class Page extends DokuPath
              * Metadata in Dokuwiki is fucked up.
              *
              * You can't remove a metadata,
-             * You need to known if this is a rendering or not
+             * You need to know if this is a rendering or not
              *
              * See just how fucked {@link p_set_metadata()} is
              *

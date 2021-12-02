@@ -76,7 +76,8 @@ abstract class Image extends Media
 
     public static function createImageFromId(string $imageId,$rev = '',$attributes = null)
     {
-        return self::createImageFromDokuwikiAbsolutePath(":$imageId", $rev,$attributes);
+        DokuPath::addRootSeparatorIfNotPresent($imageId);
+        return self::createImageFromDokuwikiAbsolutePath($imageId, $rev,$attributes);
     }
 
     /**

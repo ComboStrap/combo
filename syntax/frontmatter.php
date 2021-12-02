@@ -409,10 +409,10 @@ EOF;
                         foreach ($pageImages->getAll() as $imageValue) {
                             $imagePath = $imageValue->getImage()->getDokuPath()->getAbsolutePath();
                             $attributes = [DokuPath::PATH_ATTRIBUTE => $imagePath];
-                            if(media_isexternal($imagePath)){
-                                $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] =MediaLink::EXTERNAL_MEDIA_CALL_NAME;
+                            if (media_isexternal($imagePath)) {
+                                $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
                             } else {
-                                $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] =MediaLink::INTERNAL_MEDIA_CALL_NAME;
+                                $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::INTERNAL_MEDIA_CALL_NAME;
                             }
                             syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
                         }

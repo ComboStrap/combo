@@ -4,10 +4,12 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
 use ComboStrap\DatabasePage;
+use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\File;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
 
@@ -29,9 +31,10 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         $lockFileModifiedTimestamp = $lockFileDateTimeModified->getTimestamp();
         $now = time();
 
-        $lockFileAgeInMinute = ($now - $lockFileModifiedTimestamp) / 60;
+        $distance = $now - $lockFileModifiedTimestamp;
+        $lockFileAgeInMinute = ($distance) / 60;
         if ($lockFileAgeInMinute > 5) {
-            LogUtility::msg("The move lockfile ($lockFile) exists and is older than 10 minutes (exactly $lockFileAgeInMinute minutes). If you are no more in a move, you should delete this file otherwise it will disable the move of page and the cache.");
+            LogUtility::msg("The move lockfile ($lockFile) exists and is older than 5 minutes (exactly $lockFileAgeInMinute minutes). If you are no more in a move, you should delete this file otherwise it will disable the move of page and the cache.");
             return true;
         }
         return false;
@@ -111,12 +114,21 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         $targetId = $event->data["dst_id"];
         try {
             $page = Page::createPageFromId($id);
-            $page->getDatabasePage()->moveTo($targetId);
+            $databasePage = $page->getDatabasePage();
+            if (!$databasePage->exists()) {
+                return;
+            }
+            $databasePage->moveTo($targetId);
             $alias = $page->addAndGetAlias($page->getDokuwikiId(), Alias::REDIRECT);
             $page->getDatabasePage()->addAlias($alias);
         } catch (Exception $exception) {
             // We catch the errors if any to not stop the move
-            LogUtility::msg("An error occurred during the move replication to the database. Error message was: " . $exception->getMessage(), LogUtility::LVL_MSG_ERROR, DatabasePage::REPLICATION_CANONICAL);
+            $message = "An error occurred during the move replication to the database. Error message was: " . $exception->getMessage();
+            if (PluginUtility::isDevOrTest()) {
+                throw new RuntimeException($exception);
+            } else {
+                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, DatabasePage::REPLICATION_CANONICAL);
+            }
         }
 
     }

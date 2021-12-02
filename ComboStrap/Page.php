@@ -618,13 +618,15 @@ class Page extends DokuPath
     }
 
     /**
-     * Refresh from disk
+     * Rebuild the page
+     * (refresh from disk, reset object to null)
      * @return $this
      */
     public
     function rebuild(): Page
     {
         $this->buildPropertiesFromFileSystem();
+        $this->databasePage = null;
         return $this;
     }
 

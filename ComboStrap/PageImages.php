@@ -9,6 +9,8 @@ use Exception;
 
 class PageImages extends Metadata
 {
+
+    const CANONICAL = "page:image";
     public const IMAGE_META_PROPERTY = 'image';
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
     public const FIRST_IMAGE_META_RELATION = "firstimage";
@@ -138,7 +140,7 @@ class PageImages extends Metadata
 
     public function getCanonical(): string
     {
-        return "page:image";
+        return self::CANONICAL;
     }
 
     public function getName(): string
@@ -183,6 +185,7 @@ class PageImages extends Metadata
      */
     public function addImage(string $imagePath, $usages = null): PageImages
     {
+        DokuPath::addRootSeparatorIfNotPresent($imagePath);
         $pageImage = PageImage::create($imagePath, $this->getPage());
         if (!$pageImage->getImage()->exists()) {
             throw new ExceptionCombo("The image ($imagePath) does not exists", $this->getCanonical());
@@ -328,5 +331,23 @@ class PageImages extends Metadata
                 throw new ExceptionCombo("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
             }
         }
+    }
+
+    /**
+     * @param $sourceImagePath
+     * @return PageImage - the removed page image
+     * @throws ExceptionCombo - if the image is unknown
+     */
+    public function remove($sourceImagePath): PageImage
+    {
+        $this->buildCheck();
+        DokuPath::addRootSeparatorIfNotPresent($sourceImagePath);
+        if(!isset($this->pageImages[$sourceImagePath])){
+            throw new ExceptionCombo("The image path $sourceImagePath is not in the page image for the page {$this->getPage()} and can't be removed",$this->getCanonical());
+        }
+        $pageImage = $this->pageImages[$sourceImagePath];
+        unset($this->pageImages[$sourceImagePath]);
+        $this->persistToFileSystem();
+        return $pageImage;
     }
 }

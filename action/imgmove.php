@@ -26,6 +26,38 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
     function register(Doku_Event_Handler $controller)
     {
         $controller->register_hook('PLUGIN_MOVE_HANDLERS_REGISTER', 'BEFORE', $this, 'handle_move', array());
+
+
+        $controller->register_hook('PLUGIN_MOVE_MEDIA_RENAME', 'AFTER', $this, 'pageImageUpdate', array());
+    }
+
+    /**
+     * Update the metadatas
+     * @param Doku_Event $event
+     * @param $params
+     */
+    function pageImageUpdate(Doku_Event $event, $params){
+
+        $affectedPagesId = $event->data["affected_pages"];
+        $sourceImageId =  $event->data["src_id"];
+        $targetImageId =  $event->data["dst_id"];
+        foreach ($affectedPagesId as $affectedPageId){
+            $affectedPage = Page::createPageFromId($affectedPageId);
+            $pageImages = PageImages::createFromPage($affectedPage);
+            $removedPageImage = null;
+            try {
+                $removedPageImage = $pageImages->remove($sourceImageId);
+            } catch (ExceptionCombo $e) {
+                LogUtility::log2file($e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+                continue;
+            }
+            try {
+                $pageImages->addImage($targetImageId, $removedPageImage->getUsages());
+            } catch (ExceptionCombo $e) {
+                LogUtility::log2file($e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+            }
+        }
+
     }
 
     /**

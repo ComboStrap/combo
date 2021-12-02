@@ -57,9 +57,7 @@ class action_plugin_combo_metacanonical
          * Calling the wl function will not work because
          * {@link wl()} use the constant DOKU_URL that is set before any test via getBaseURL(true)
          */
-
-
-        $canonicalUrl = $page->getCanonicalUrl([], true);
+        $canonicalUrl = $page->getAbsoluteCanonicalUrl();
 
         /**
          * Replace the meta entry

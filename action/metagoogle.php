@@ -230,7 +230,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => $schemaType,
-                    'url' => $page->getCanonicalUrl(),
+                    'url' => $page->getAbsoluteCanonicalUrl(),
                     "headline" => $page->getTitleNotEmpty(),
                     self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(Iso8601Date::getFormat())
                 );
@@ -305,7 +305,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 $ldJson = array(
                     '@context' => 'https://schema.org',
                     '@type' => $type,
-                    'url' => $page->getCanonicalUrl()
+                    'url' => $page->getAbsoluteCanonicalUrl()
                 );
                 break;
         }

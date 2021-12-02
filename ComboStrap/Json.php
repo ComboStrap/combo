@@ -50,10 +50,7 @@ class Json
      */
     public function toNormalizedJsonString()
     {
-        if ($this->jsonString === null && $this->jsonArray !== null) {
-            $this->jsonString = json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        }
-        return $this->jsonString;
+        return json_encode($this->getJsonArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     /**

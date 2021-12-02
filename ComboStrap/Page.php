@@ -3026,5 +3026,13 @@ class Page extends DokuPath
 
     }
 
+    /**
+     * @return string|null -the absolute canonical url
+     */
+    public function getAbsoluteCanonicalUrl(): ?string
+    {
+        return $this->getCanonicalUrl([],true);
+    }
+
 
 }

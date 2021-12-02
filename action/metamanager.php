@@ -410,7 +410,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             }
 
             if ($postMetaValue === null) {
-                if (in_array($key, Metadata::FORM_METADATA)) {
+                if (in_array($key, Metadata::MUTABLE_METADATA)) {
                     $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) $managedMetaMessageSuffix");
                     continue;
                 }
@@ -422,7 +422,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) with the value ($value) was deleted");
             } else {
                 if ($value !== $postMetaValue) {
-                    if (in_array($key, Metadata::FORM_METADATA)) {
+                    if (in_array($key, Metadata::MUTABLE_METADATA)) {
                         $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) $managedMetaMessageSuffix");
                         continue;
                     }
@@ -439,7 +439,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * Process the new attribute
          */
         foreach ($postMeta as $key => $value) {
-            if (in_array($key, Metadata::FORM_METADATA)) {
+            if (in_array($key, Metadata::MUTABLE_METADATA)) {
                 // This meta should be modified via the form
                 $messages[] = Message::createInfoMessage("The $persistentMetadataType metadata ($key) can only be added via the meta manager");
                 continue;

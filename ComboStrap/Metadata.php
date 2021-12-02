@@ -181,7 +181,7 @@ abstract class Metadata
      *   * in the {@link \syntax_plugin_combo_frontmatter}
      *   * or in the database
      */
-    const FORM_METADATA = [
+    const MUTABLE_METADATA = [
         Canonical::CANONICAL_PROPERTY,
         Page::TYPE_META_PROPERTY,
         AnalyticsDocument::H1,
@@ -199,11 +199,11 @@ abstract class Metadata
         AnalyticsDocument::DATE_START,
         AnalyticsDocument::DATE_END,
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
-        Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
         Page::SLUG_ATTRIBUTE,
-        action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
         Page::KEYWORDS_ATTRIBUTE,
-        CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME
+        CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME,
+        action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
+        Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
     ];
 
     /**
@@ -236,7 +236,7 @@ abstract class Metadata
         }
         $cleanedMetadata = [];
         foreach ($metadataArray as $key => $value) {
-            if (!in_array($key, Metadata::FORM_METADATA)) {
+            if (!in_array($key, Metadata::MUTABLE_METADATA)) {
                 $cleanedMetadata[$key] = $value;
             }
         }

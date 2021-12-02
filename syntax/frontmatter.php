@@ -274,7 +274,7 @@ EOF;
 
             $result = [];
             // Decode problem
-            if ($jsonArray == null) {
+            if ($jsonArray === null) {
 
                 $result[self::STATUS] = self::PARSING_STATE_ERROR;
                 $result[PluginUtility::PAYLOAD] = $match;
@@ -282,6 +282,20 @@ EOF;
             }
 
             if (sizeof($jsonArray) === 0) {
+                /**
+                 * Empty string
+                 * Rare case, we delete all mutable meta if present
+                 */
+                global $ID;
+                $meta = p_read_metadata($ID);
+                foreach (Metadata::MUTABLE_METADATA as $metaKey) {
+                    if (!array_key_exists($metaKey, $jsonArray)) {
+                        if (isset($meta['persistent'][$metaKey])) {
+                            unset($meta['persistent'][$metaKey]);
+                        }
+                    }
+                }
+                p_save_metadata($ID, $meta);
                 return array(self::STATUS => self::PARSING_STATE_EMPTY);
             }
 
@@ -388,7 +402,7 @@ EOF;
 
                 global $ID;
                 /** @var Doku_Renderer_metadata $renderer */
-                if ($data[self::STATUS] != self::PARSING_STATE_SUCCESSFUL) {
+                if ($data[self::STATUS] === self::PARSING_STATE_ERROR) {
                     if (PluginUtility::isDevOrTest()) {
                         // fail if test
                         throw new ExceptionComboRuntime("Front Matter: The json object for the page ($ID) is not valid. ", LogUtility::LVL_MSG_ERROR);

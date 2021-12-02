@@ -231,7 +231,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                     "@context" => "https://schema.org",
                     "@type" => $schemaType,
                     'url' => $page->getAbsoluteCanonicalUrl(),
-                    "headline" => $page->getTitleNotEmpty(),
+                    "headline" => $page->getTitleOrDefault(),
                     self::DATE_PUBLISHED_KEY => $page->getPublishedElseCreationTime()->format(Iso8601Date::getFormat())
                 );
 

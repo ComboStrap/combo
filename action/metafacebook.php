@@ -81,7 +81,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
          * "og:description" is already created in the {@link action_plugin_combo_metadescription}
          */
         $facebookMeta = array(
-            "og:title" => StringUtility::truncateString($page->getTitleNotEmpty(), 70)
+            "og:title" => StringUtility::truncateString($page->getTitleOrDefault(), 70)
         );
         $descriptionOrElseDokuWiki = $page->getDescriptionOrElseDokuWiki();
         if (!empty($descriptionOrElseDokuWiki)) {

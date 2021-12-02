@@ -680,7 +680,6 @@ class Page extends DokuPath
     }
 
 
-
     /**
      *
      * @return string - the full path to the meta file
@@ -790,7 +789,7 @@ class Page extends DokuPath
      * @return string the title, or h1 if empty or the id if empty
      */
     public
-    function getTitleNotEmpty(): string
+    function getTitleOrDefault(): string
     {
         $pageTitle = $this->getTitle();
         if ($pageTitle === null) {
@@ -802,15 +801,15 @@ class Page extends DokuPath
     }
 
     public
-    function getH1NotEmpty()
+    function getH1OrDefault()
     {
 
         $h1Title = $this->getH1();
         if ($h1Title == null) {
             return $this->getDefaultH1();
-        } else {
-            return $h1Title;
         }
+        return $h1Title;
+
 
     }
 
@@ -1126,7 +1125,7 @@ class Page extends DokuPath
     {
 
         if (!$this->exists()) {
-            if(PluginUtility::isDevOrTest()){
+            if (PluginUtility::isDevOrTest()) {
                 LogUtility::msg("You can't render the metadata of a page that does not exist");
             }
             return $this;
@@ -1354,7 +1353,7 @@ class Page extends DokuPath
         // suppress the carriage return
         $description = str_replace("\n", " ", $descriptionArray['abstract']);
         // suppress the h1
-        $description = str_replace($this->getH1NotEmpty(), "", $description);
+        $description = str_replace($this->getH1OrDefault(), "", $description);
         // Suppress the star, the tab, About
         $description = preg_replace('/(\*|\t|About)/im', "", $description);
         // Suppress all double space and trim
@@ -1365,7 +1364,6 @@ class Page extends DokuPath
     }
 
 
-
     public
     function toXhtml(): string
     {
@@ -1373,7 +1371,6 @@ class Page extends DokuPath
         return $this->getHtmlDocument()->getOrProcessContent();
 
     }
-
 
 
     public
@@ -1478,8 +1475,8 @@ class Page extends DokuPath
          * and therefore will be not visible
          * We render at least the id
          */
-        $array[AnalyticsDocument::H1] = $this->getH1NotEmpty();
-        $title = $this->getTitleNotEmpty();
+        $array[AnalyticsDocument::H1] = $this->getH1OrDefault();
+        $title = $this->getTitleOrDefault();
         /**
          * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
          * @see {@link \syntax_plugin_combo_pipeline}
@@ -1890,8 +1887,8 @@ class Page extends DokuPath
         if ($this->isRootHomePage() && !empty(Site::getTagLine())) {
             return Site::getTagLine();
         }
-        if (!empty($this->getH1())) {
-            return $this->getH1();
+        if (!empty($this->getH1OrDefault())) {
+            return $this->getH1OrDefault();
         }
         return $this->getPageNameNotEmpty();
 
@@ -2136,7 +2133,7 @@ class Page extends DokuPath
      */
     public function getDefaultSlug(): ?string
     {
-        return DokuPath::toSlugPath($this->getTitleNotEmpty());
+        return DokuPath::toSlugPath($this->getTitleOrDefault());
     }
 
     public
@@ -2687,7 +2684,7 @@ class Page extends DokuPath
     public function getNonDefaultMetadatasValuesInStorageFormat(): array
     {
         $nonDefaultMetadatas = [];
-        $metaToPreserve = Metadata::FORM_METADATA;
+        $metaToPreserve = Metadata::MUTABLE_METADATA;
         $metaToPreserve[] = Page::PAGE_ID_ATTRIBUTE;
         foreach ($metaToPreserve as $metaKey) {
             switch ($metaKey) {
@@ -2986,8 +2983,8 @@ class Page extends DokuPath
     }
 
     /**
-     * @deprecated use {@link Page::getInstructionsDocument()} instead
      * @return bool - true if the page has changed
+     * @deprecated use {@link Page::getInstructionsDocument()} instead
      */
     public function isParseCacheUsable(): bool
     {
@@ -3022,7 +3019,7 @@ class Page extends DokuPath
     {
 
         Index::getOrCreate()->deletePage($this);
-        saveWikiText($this->getDokuwikiId(),"","Delete");
+        saveWikiText($this->getDokuwikiId(), "", "Delete");
 
     }
 
@@ -3031,7 +3028,7 @@ class Page extends DokuPath
      */
     public function getAbsoluteCanonicalUrl(): ?string
     {
-        return $this->getCanonicalUrl([],true);
+        return $this->getCanonicalUrl([], true);
     }
 
 

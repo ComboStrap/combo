@@ -553,7 +553,7 @@ EOF;
                             $description = $linkedPage->getDescriptionOrElseDokuWiki();
                             if (empty($description)) {
                                 // Rare case
-                                $description = $linkedPage->getH1NotEmpty();
+                                $description = $linkedPage->getH1OrDefault();
                             }
                             if (!empty($acronym)) {
                                 $description = $description . " ($acronym)";

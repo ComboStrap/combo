@@ -115,7 +115,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
 
         $twitterMeta = array(
             self::META_CARD => "summary",
-            self::META_TITLE => StringUtility::truncateString($page->getTitleNotEmpty(), 70),
+            self::META_TITLE => StringUtility::truncateString($page->getTitleOrDefault(), 70),
             self::META_CREATOR => self::COMBO_STRAP_TWITTER_HANDLE,
             self::META_CREATOR_ID => self::COMBO_STRAP_TWITTER_ID
         );

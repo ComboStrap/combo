@@ -127,7 +127,7 @@ class HistoricalBreadcrumbMenuItem extends AbstractItem
         if ($name == "start") {
             $name = "Home Page";
         } else {
-            $name = $page->getTitleNotEmpty();
+            $name = $page->getTitleOrDefault();
         }
         $tagAttributes = null;
         if ($class != null) {

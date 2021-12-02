@@ -36,26 +36,28 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
      * @param Doku_Event $event
      * @param $params
      */
-    function pageImageUpdate(Doku_Event $event, $params){
+    function pageImageUpdate(Doku_Event $event, $params)
+    {
 
         $affectedPagesId = $event->data["affected_pages"];
-        $sourceImageId =  $event->data["src_id"];
-        $targetImageId =  $event->data["dst_id"];
-        foreach ($affectedPagesId as $affectedPageId){
+        $sourceImageId = $event->data["src_id"];
+        $targetImageId = $event->data["dst_id"];
+        foreach ($affectedPagesId as $affectedPageId) {
             $affectedPage = Page::createPageFromId($affectedPageId);
             $pageImages = PageImages::createFromPage($affectedPage);
             $removedPageImage = null;
-            try {
-                $removedPageImage = $pageImages->remove($sourceImageId);
-            } catch (ExceptionCombo $e) {
-                LogUtility::log2file($e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+
+            $removedPageImage = $pageImages->removeIfExists($sourceImageId);
+            if ($removedPageImage === null) {
+                // This is a move of an image in the markup
                 continue;
             }
             try {
                 $pageImages->addImage($targetImageId, $removedPageImage->getUsages());
             } catch (ExceptionCombo $e) {
-                LogUtility::log2file($e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+                LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             }
+
         }
 
     }
@@ -150,7 +152,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
 
             } catch (ExceptionCombo $e) {
                 // Could not resolve the image, image does not exist, ... return the data without modification
-                LogUtility::log2file($e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+                LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                 return $match;
             }
 

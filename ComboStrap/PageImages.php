@@ -335,15 +335,14 @@ class PageImages extends Metadata
 
     /**
      * @param $sourceImagePath
-     * @return PageImage - the removed page image
-     * @throws ExceptionCombo - if the image is unknown
+     * @return PageImage|null - the removed page image or null
      */
-    public function remove($sourceImagePath): PageImage
+    public function removeIfExists($sourceImagePath): ?PageImage
     {
         $this->buildCheck();
         DokuPath::addRootSeparatorIfNotPresent($sourceImagePath);
         if(!isset($this->pageImages[$sourceImagePath])){
-            throw new ExceptionCombo("The image path $sourceImagePath is not in the page image for the page {$this->getPage()} and can't be removed",$this->getCanonical());
+            return null;
         }
         $pageImage = $this->pageImages[$sourceImagePath];
         unset($this->pageImages[$sourceImagePath]);

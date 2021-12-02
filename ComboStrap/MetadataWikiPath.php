@@ -24,9 +24,9 @@ abstract class MetadataWikiPath extends MetadataText
         return $this;
     }
 
-    protected function getFileSystemValue()
+    protected function getStoreValue()
     {
-        $path = parent::getFileSystemValue();
+        $path = parent::getStoreValue();
         if ($path !== null) {
             DokuPath::addRootSeparatorIfNotPresent($path);
         }

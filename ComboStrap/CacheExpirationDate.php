@@ -21,14 +21,16 @@ class CacheExpirationDate extends MetadataDateTime
     public const META_CACHE_EXPIRATION_DATE_NAME = "date_cache_expiration";
 
 
-    public static function createForPage(Page $page): CacheExpirationDate
+    public static function createForPageWithDefaultStore(Page $page): CacheExpirationDate
     {
-        return new CacheExpirationDate($page);
+        return (new CacheExpirationDate())
+            ->setResource($page)
+            ->useDefaultStore();
     }
 
     public function getDefaultValue(): ?DateTime
     {
-        $file = $this->getPage()->getHtmlDocument()->getCacheFile();
+        $file = $this->getResource()->getHtmlDocument()->getCacheFile();
         if ($file->exists()) {
             $cacheIntervalInSecond = Site::getCacheTime();
             /**
@@ -52,7 +54,7 @@ class CacheExpirationDate extends MetadataDateTime
 
         $value = parent::getValue();
         if ($value === null) {
-            $cronExpression = $this->getPage()->getCacheExpirationFrequency();
+            $cronExpression = $this->getResource()->getCacheExpirationFrequency();
             if ($cronExpression !== null) {
                 try {
                     $value = Cron::getDate($cronExpression);

@@ -8,8 +8,10 @@ use ComboStrap\CacheMedia;
 use ComboStrap\CallStack;
 use ComboStrap\ColorUtility;
 use ComboStrap\Dimension;
+use ComboStrap\DokuPath;
 use ComboStrap\LinkUtility;
 use ComboStrap\MediaLink;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
 use ComboStrap\TagAttributes;
@@ -181,7 +183,7 @@ class syntax_plugin_combo_background extends DokuWiki_Syntax_Plugin
                              */
                             $backgroundImageAttribute = [
                                 MediaLink::MEDIA_DOKUWIKI_TYPE => MediaLink::INTERNAL_MEDIA_CALL_NAME,
-                                AnalyticsDocument::PATH => $imageAttribute[0],
+                                Path::PATH_ATTRIBUTE => $imageAttribute[0],
                                 Dimension::WIDTH_KEY => $imageAttribute[3],
                                 Dimension::HEIGHT_KEY => $imageAttribute[4],
                                 CacheMedia::CACHE_KEY => $imageAttribute[5]

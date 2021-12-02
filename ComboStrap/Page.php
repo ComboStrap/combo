@@ -6,14 +6,10 @@ namespace ComboStrap;
 use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
-use Cron\CronExpression;
 use DateTime;
-use dokuwiki\Cache\CacheInstructions;
-use dokuwiki\Cache\CacheRenderer;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
-use renderer_plugin_combo_analytics;
 use syntax_plugin_combo_disqus;
 use syntax_plugin_combo_frontmatter;
 
@@ -31,7 +27,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * This is just a wrapper around a file with the mime Dokuwiki
  * that has a doku path (ie with the `:` separator)
  */
-class Page extends DokuPath
+class Page implements Resource
 {
     const TITLE_META_PROPERTY = 'title';
 
@@ -102,7 +98,6 @@ class Page extends DokuPath
     const LAYOUT_PROPERTY = "layout";
     const PAGE_ID_ATTRIBUTE = "page_id";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
-    const DOKUWIKI_ID_ATTRIBUTE = "id";
     const KEYWORDS_ATTRIBUTE = "keywords";
 
     public const HOLY_LAYOUT_VALUE = "holy";
@@ -284,6 +279,8 @@ class Page extends DokuPath
      */
     private $instructionsDocument;
 
+    private $dokuPath;
+
     /**
      * Page constructor.
      * @param $absolutePath - the qualified path (may be not relative)
@@ -327,8 +324,7 @@ class Page extends DokuPath
         global $ID;
         $this->requestedId = $ID;
 
-
-        parent::__construct($absolutePath, DokuPath::PAGE_TYPE);
+        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath, DokuPath::PAGE_TYPE);
 
         /**
          * After the parent construction because we need the id
@@ -520,15 +516,15 @@ class Page extends DokuPath
             }
 
             if ($scopePath !== ":") {
-                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getDokuPathLastName();
+                return $scopePath . DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
             } else {
-                return DokuPath::PATH_SEPARATOR . $this->getDokuPathLastName();
+                return DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName()();
             }
 
 
         } else {
 
-            return $this->getAbsolutePath();
+            return $this->dokuPath->toAbsolutePath()->toString();
 
         }
 
@@ -566,7 +562,7 @@ class Page extends DokuPath
                 $barsName[] = TplUtility::getSideKickSlotPageName();
             }
         }
-        return in_array($this->getDokuPathLastName(), $barsName);
+        return in_array($this->getPath()->getLastName(), $barsName);
     }
 
     public
@@ -839,10 +835,10 @@ class Page extends DokuPath
     function getTextContent()
     {
         /**
-         * TODO: change with {@link DokuPath} ?
+         *
          * use {@link io_readWikiPage(wikiFN($id, $rev), $id, $rev)};
          */
-        return rawWiki($this->getDokuwikiId());
+        return rawWiki($this->getPath()->getDokuwikiId());
     }
 
 
@@ -851,7 +847,7 @@ class Page extends DokuPath
     {
         $Indexer = idx_get_indexer();
         $pages = $Indexer->getPages();
-        $return = array_search($this->getDokuwikiId(), $pages, true);
+        $return = array_search($this->getPath()->getDokuwikiId(), $pages, true);
         return $return !== false;
     }
 
@@ -859,14 +855,14 @@ class Page extends DokuPath
     public
     function upsertContent($content, $summary = "Default"): Page
     {
-        saveWikiText($this->getDokuwikiId(), $content, $summary);
+        saveWikiText($this->getPath()->getDokuwikiId(), $content, $summary);
         return $this;
     }
 
     public
     function addToIndex()
     {
-        idx_addPage($this->getDokuwikiId());
+        idx_addPage($this->getPath()->getDokuwikiId());
     }
 
     public
@@ -1135,7 +1131,7 @@ class Page extends DokuPath
          * Read/render the metadata from the file
          * with parsing
          */
-        $this->metadatas = p_render_metadata($this->getDokuwikiId(), $this->metadatas);
+        $this->metadatas = p_render_metadata($this->getPath()->getDokuwikiId(), $this->metadatas);
 
         $this->flushMeta();
 
@@ -1192,16 +1188,19 @@ class Page extends DokuPath
     {
         global $conf;
         $startPageName = $conf['start'];
-        if ($this->getDokuPathLastName() == $startPageName) {
+        if ($this->getPath()->getLastName() == $startPageName) {
             return true;
         } else {
-            $namespaceName = noNS(cleanID($this->getNamespacePath()));
-            if ($namespaceName == $this->getDokuPathLastName()) {
+            $namespace = $this->dokuPath->getParent();
+            if($namespace===null){
+                return false;
+            }
+            if ($namespace->getLastName() === $this->getPath()->getLastName()) {
                 /**
                  * page named like the NS inside the NS
                  * ie ns:ns
                  */
-                $startPage = Page::createPageFromId(DokuPath::toDokuwikiId($this->getNamespacePath()) . DokuPath::PATH_SEPARATOR . $startPageName);
+                $startPage = Page::createPageFromId($namespace->getDokuwikiId() . DokuPath::PATH_SEPARATOR . $startPageName);
                 if (!$startPage->exists()) {
                     return true;
                 }
@@ -1385,19 +1384,12 @@ class Page extends DokuPath
     /**
      * Without the `:` at the end
      * @return string
+     * @deprecated for {@link DokuPath::getParent()}
      */
     public
     function getNamespacePath(): string
     {
-        $ns = getNS($this->getDokuwikiId());
-        /**
-         * False means root namespace
-         */
-        if ($ns == false) {
-            return ":";
-        } else {
-            return ":$ns";
-        }
+        return $this->dokuPath->getParent()->toString();
     }
 
 
@@ -1408,8 +1400,8 @@ class Page extends DokuPath
          * during a run, we then read the metadata file
          * each time
          */
-        if (isset(p_read_metadata($this->getDokuwikiId())["persistent"][Page::SCOPE_KEY])) {
-            return p_read_metadata($this->getDokuwikiId())["persistent"][Page::SCOPE_KEY];
+        if (isset(p_read_metadata($this->getPath()->getDokuwikiId())["persistent"][Page::SCOPE_KEY])) {
+            return p_read_metadata($this->getPath()->getDokuwikiId())["persistent"][Page::SCOPE_KEY];
         } else {
             return null;
         }
@@ -1422,14 +1414,14 @@ class Page extends DokuPath
     public
     function getCacheHtmlId(): string
     {
-        return "cache-" . str_replace(":", "-", $this->getDokuwikiId());
+        return "cache-" . str_replace(":", "-", $this->getPath()->getDokuwikiId());
     }
 
     public
     function deleteMetadatasAndFlush(): Page
     {
         $meta = [Metadata::CURRENT_METADATA => [], Metadata::PERSISTENT_METADATA => []];
-        p_save_metadata($this->getDokuwikiId(), $meta);
+        p_save_metadata($this->getPath()->getDokuwikiId(), $meta);
         return $this;
     }
 
@@ -1452,11 +1444,11 @@ class Page extends DokuPath
     public
     function unsetMetadata($property)
     {
-        $meta = p_read_metadata($this->getDokuwikiId());
+        $meta = p_read_metadata($this->getPath()->getDokuwikiId());
         if (isset($meta['persistent'][$property])) {
             unset($meta['persistent'][$property]);
         }
-        p_save_metadata($this->getDokuwikiId(), $meta);
+        p_save_metadata($this->getPath()->getDokuwikiId(), $meta);
 
     }
 
@@ -1485,7 +1477,7 @@ class Page extends DokuPath
         $array[AnalyticsDocument::TITLE] = $title;
         $array[Page::PAGE_ID_ATTRIBUTE] = $this->getPageId();
         $array[Canonical::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
-        $array[AnalyticsDocument::PATH] = $this->getAbsolutePath();
+        $array[Path::PATH_ATTRIBUTE] = $this->getPath()->toAbsolutePath()->toString();
         $array[AnalyticsDocument::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
         $array["url"] = $this->getCanonicalUrl();
@@ -1515,7 +1507,7 @@ class Page extends DokuPath
     public
     function __toString()
     {
-        return $this->getDokuwikiId();
+        return $this->dokuPath->toUriString();
     }
 
     /**
@@ -1566,7 +1558,7 @@ class Page extends DokuPath
              * We persist therefore always
              */
             $persistent = true;
-            p_set_metadata($this->getDokuwikiId(),
+            p_set_metadata($this->dokuPath->getDokuwikiId(),
                 [
                     $key => $value
                 ],
@@ -2079,7 +2071,7 @@ class Page extends DokuPath
         if (!PluginUtility::getConfValue(PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             $firstImage = $this->getFirstImage();
             if ($firstImage != null) {
-                if ($firstImage->getDokuPath()->getScheme() == DokuPath::LOCAL_SCHEME) {
+                if ($firstImage->getDokuPath()->getScheme() == DokuFs::SCHEME) {
                     return PageImage::create($firstImage, $this);
                 }
             }
@@ -2089,12 +2081,12 @@ class Page extends DokuPath
 
     /**
      * @param $aliasPath
-     * @param $aliasType
+     * @param string $aliasType
      * @return Alias
      * @deprecated for {@link Aliases}
      */
     public
-    function addAndGetAlias($aliasPath, $aliasType): Alias
+    function addAndGetAlias($aliasPath, string $aliasType = Alias::REDIRECT): Alias
     {
 
         return $this->aliases->addAndGetAlias($aliasPath, $aliasType);
@@ -2349,13 +2341,13 @@ class Page extends DokuPath
          * Even if it does not exist, the metadata object should be instantiated
          * otherwise, there is a null exception
          */
-        $this->cacheExpirationDate = CacheExpirationDate::createForPage($this);
-        $this->aliases = Aliases::createFromPage($this);
-        $this->pageImages = PageImages::createFromPage($this);
-        $this->pageName = PageName::createFromPage($this);
-        $this->cacheExpirationFrequency = CacheExpirationFrequency::createFromPage($this);
-        $this->ldJson = LdJson::createFromPage($this);
-        $this->canonical = Canonical::createFromPage($this);
+        $this->cacheExpirationDate = CacheExpirationDate::createForPageWithDefaultStore($this);
+        $this->aliases = Aliases::createForPageWithDefaultStore($this);
+        $this->pageImages = PageImages::createForPageWithDefaultStore($this);
+        $this->pageName = PageName::createForPageWithDefaultStore($this);
+        $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPageWithDefaultStore($this);
+        $this->ldJson = LdJson::createForPageWithDefaultStore($this);
+        $this->canonical = Canonical::createForPageWithDefaultStore($this);
 
 
         /**
@@ -2372,7 +2364,7 @@ class Page extends DokuPath
          * Metadata may be created even if the file does not exist
          * (when the page is rendered for the first time for instance)
          */
-        $this->metadatas = p_read_metadata($this->getDokuwikiId());
+        $this->metadatas = p_read_metadata($this->getPath()->getDokuwikiId());
 
         $this->pageId = $this->getMetadata(self::PAGE_ID_ATTRIBUTE);
         [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
@@ -2443,7 +2435,7 @@ class Page extends DokuPath
     public
     function flushMeta(): Page
     {
-        p_save_metadata($this->getDokuwikiId(), $this->metadatas);
+        p_save_metadata($this->getPath()->getDokuwikiId(), $this->metadatas);
         return $this;
     }
 
@@ -2479,6 +2471,9 @@ class Page extends DokuPath
      *   - canonical path
      *   - permanent page path (page id)
      *   - page path
+     *
+     * This is not the URL of the page but of the generated HTML web page with all pages (slots)
+     * TODO: Move to {@link HtmlDocument} ?
      */
     public
     function getUrlPath(): string
@@ -3032,4 +3027,18 @@ class Page extends DokuPath
     }
 
 
+    public function getDefaultMetadataStore(): MetadataStore
+    {
+        return MetadataDokuWikiStore::create();
+    }
+
+    public function getPath(): Path
+    {
+        return $this->dokuPath;
+    }
+
+    public function exists(): bool
+    {
+        return FileSystems::exists($this->dokuPath);
+    }
 }

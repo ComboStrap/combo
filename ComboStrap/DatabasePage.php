@@ -28,7 +28,7 @@ class DatabasePage
     private const PAGE_BUILD_ATTRIBUTES =
         [
             self::ROWID,
-            Page::DOKUWIKI_ID_ATTRIBUTE,
+            Path::DOKUWIKI_ID_ATTRIBUTE,
             self::ANALYTICS_ATTRIBUTE,
             AnalyticsDocument::DESCRIPTION,
             Canonical::CANONICAL_PROPERTY,
@@ -462,7 +462,7 @@ class DatabasePage
         /**
          * Do we have a page attached to this ID
          */
-        $id = $page->getDokuwikiId();
+        $id = $page->getPath()->getDokuwikiId();
         return $this->getDatabaseRowFromDokuWikiId($id);
 
 
@@ -589,7 +589,7 @@ EOF;
         if ($this->sqlite === null) {
             return null;
         }
-        $res = $this->sqlite->query("select count(1) from PAGE_REFERENCES where TARGET_ID = ? ", $this->page->getDokuwikiId());
+        $res = $this->sqlite->query("select count(1) from PAGE_REFERENCES where TARGET_ID = ? ", $this->page->getPath()->getDokuwikiId());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the backlinks count select ({$this->page})");
         }
@@ -693,8 +693,8 @@ EOF;
         } else {
 
 
-            $values[PAGE::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getDokuwikiId();
-            $values[AnalyticsDocument::PATH] = $this->page->getPath();
+            $values[Path::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPath()->getDokuwikiId();
+            $values[Path::PATH_ATTRIBUTE] = $this->page->getPath()->toAbsolutePath()->toString();
             $this->addPageIdAttribute($values);
 
             /**
@@ -744,7 +744,7 @@ EOF;
         }
         $pageId = $this->page->getPageId();
         $attributes = [
-            Page::DOKUWIKI_ID_ATTRIBUTE => $targetId,
+            Path::DOKUWIKI_ID_ATTRIBUTE => $targetId,
             Page::PATH_ATTRIBUTE => ":${$targetId}",
             Page::PAGE_ID_ATTRIBUTE => $pageId
         ];
@@ -797,7 +797,7 @@ EOF;
     private function replicateAliases(): bool
     {
 
-        $fileSystemAliases = $this->page->getAliases();
+        $fileSystemAliases = Aliases::createForPageWithDefaultStore($this->page)->getAll();
         $dbAliases = $this->getAliases();
         foreach ($fileSystemAliases as $fileSystemAlias) {
 
@@ -819,10 +819,11 @@ EOF;
     }
 
     /**
-     * @return Alias[]
+     * @return Aliases
      */
-    public function getAliases(): array
+    public function getAliases()
     {
+        $aliases = Aliases::create();
         if ($this->sqlite === null) {
             return [];
         }
@@ -937,7 +938,7 @@ EOF;
                 case self::ANALYTICS_ATTRIBUTE:
                     $this->json = Json::createFromString($value);
                     continue 2;
-                case Page::DOKUWIKI_ID_ATTRIBUTE:
+                case Path::DOKUWIKI_ID_ATTRIBUTE:
                     if ($this->page === null) {
                         $this->page = Page::createPageFromId($value)
                             ->setDatabasePage($this);
@@ -990,7 +991,7 @@ EOF;
     {
         $metaRecord = array(
             Canonical::CANONICAL_PROPERTY => $this->page->getCanonicalOrDefault(),
-            Page::PATH_ATTRIBUTE => $this->page->getAbsolutePath(),
+            Path::PATH_ATTRIBUTE => $this->page->getPath()->toAbsolutePath()->toString(),
             PageName::NAME_PROPERTY => $this->page->getPageNameNotEmpty(),
             AnalyticsDocument::TITLE => $this->page->getTitleOrDefault(),
             AnalyticsDocument::H1 => $this->page->getH1OrDefault(),
@@ -1003,7 +1004,7 @@ EOF;
             Page::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
             Page::LANG_META_PROPERTY => $this->page->getLangOrDefault(),
             Page::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
-            Page::DOKUWIKI_ID_ATTRIBUTE => $this->page->getDokuwikiId(),
+            Path::DOKUWIKI_ID_ATTRIBUTE => $this->page->getPath()->getDokuwikiId(),
         );
 
         if ($this->page->getPageId() != null) {
@@ -1143,12 +1144,12 @@ EOF;
 
     private function getDatabaseRowFromPath(string $path): ?array
     {
-        return $this->getDatabaseRowFromAttribute(Page::PATH_ATTRIBUTE, $path);
+        return $this->getDatabaseRowFromAttribute(Path::PATH_ATTRIBUTE, $path);
     }
 
     private function getDatabaseRowFromDokuWikiId(string $id): ?array
     {
-        return $this->getDatabaseRowFromAttribute(Page::DOKUWIKI_ID_ATTRIBUTE, $id);
+        return $this->getDatabaseRowFromAttribute(Path::DOKUWIKI_ID_ATTRIBUTE, $id);
     }
 
     public function getDatabaseRowFromAttribute(string $attribute, string $value)

@@ -30,6 +30,7 @@ use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\Page;
 use ComboStrap\PageImages;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 
@@ -418,11 +419,11 @@ EOF;
                 if (isset($frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY])) {
                     $value = $frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY];
                     try {
-                        $pageImages = PageImages::createFromPage($page)
+                        $pageImages = PageImages::createForPageWithDefaultStore($page)
                             ->buildFromPersistentFormat($value);
                         foreach ($pageImages->getAll() as $imageValue) {
                             $imagePath = $imageValue->getImage()->getDokuPath()->getAbsolutePath();
-                            $attributes = [DokuPath::PATH_ATTRIBUTE => $imagePath];
+                            $attributes = [Path::PATH_ATTRIBUTE => $imagePath];
                             if (media_isexternal($imagePath)) {
                                 $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
                             } else {

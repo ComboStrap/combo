@@ -5,11 +5,13 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
+use ComboStrap\DokuPath;
 use ComboStrap\PageImages;
 use ComboStrap\PageName;
 use ComboStrap\PageSql;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 use ComboStrap\Sqlite;
@@ -46,7 +48,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
     const ATTRIBUTES_IN_PAGE_TABLE = [
         "id",
         Canonical::CANONICAL_PROPERTY,
-        AnalyticsDocument::PATH,
+        Path::PATH_ATTRIBUTE,
         AnalyticsDocument::DATE_MODIFIED,
         AnalyticsDocument::DATE_CREATED,
         Publication::DATE_PUBLISHED,

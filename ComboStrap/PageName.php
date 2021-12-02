@@ -10,9 +10,11 @@ class PageName extends MetadataText
 
     public const NAME_PROPERTY = "name";
 
-    public static function createFromPage($page): PageName
+    public static function createForPageWithDefaultStore($page): PageName
     {
-        return new PageName($page);
+        return (new PageName())
+            ->setResource($page)
+            ->useDefaultStore();
     }
 
     public function getTab(): string
@@ -22,7 +24,7 @@ class PageName extends MetadataText
 
     public function getDescription(): string
     {
-        return "The page name is the shortest page description. It should be at maximum a couple of words long. It's used mainly in navigational components.";
+        return "The name is the shortest description. It should be at maximum a couple of words long. It's used mainly in navigational components.";
     }
 
     public function getLabel(): string
@@ -47,13 +49,14 @@ class PageName extends MetadataText
 
     public function getDefaultValue(): string
     {
-        $pathName = $this->getPage()->getDokuPathLastName();
+        $pathName = $this->getResource()->getPath()->getLastName();
+
         /**
          * If this is a home page, the default
          * is the parent path name
          */
         if ($pathName === Site::getHomePageName()) {
-            $names = $this->getPage()->getDokuNames();
+            $names = $this->getResource()->getDokuNames();
             $namesCount = sizeof($names);
             if ($namesCount >= 2) {
                 $pathName = $names[$namesCount - 2];

@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\DatabasePage;
+use ComboStrap\FileSystems;
 use ComboStrap\Page;
 
 
@@ -37,15 +38,15 @@ class action_plugin_combo_metalang extends DokuWiki_Action_Plugin
          */
         $id = getID();
         $page = Page::createPageFromId($id);
-        if (!$page->exists()) {
+        if (!FileSystems::exists($page->getPath())) {
             // Is it a permanent link
-            $pageId = Page::decodePageId($page->getDokuPathLastName());
+            $pageId = Page::decodePageId($page->getPath()->getLastName());
             if ($pageId !== null) {
                 $page = DatabasePage::createFromPageIdAbbr($pageId)->getPage();
                 if ($page === null) {
                     return;
                 }
-                if (!$page->exists()) {
+                if (!FileSystems::exists($page->getPath())) {
                     return;
                 }
                 if ($id === $page->getUrlId()){
@@ -53,7 +54,7 @@ class action_plugin_combo_metalang extends DokuWiki_Action_Plugin
                      * hack as {@link getID()} reads the id from the input variable
                      */
                     global $INPUT;
-                    $INPUT->set("id",$page->getDokuwikiId());
+                    $INPUT->set("id",$page->getPath()->getDokuwikiId());
                 }
             }
         }

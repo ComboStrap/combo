@@ -21,9 +21,18 @@ class Aliases extends Metadata
      */
     private $wasBuild = false;
 
-    public static function createFromPage(Page $page): Aliases
+    public static function createForPageWithDefaultStore(Page $page): Aliases
     {
-        return new Aliases($page);
+
+        return (new Aliases())
+            ->setResource($page)
+            ->useDefaultStore();
+
+    }
+
+    public static function create()
+    {
+        return new Aliases();
     }
 
     /**
@@ -53,7 +62,7 @@ class Aliases extends Metadata
                  * We don't create via the {@link Aliases::addAlias()}
                  * to not persist for each each alias value
                  **/
-                $aliases[] = Alias::create($this->getPage(), $path)
+                $aliases[] = Alias::create($this->getResource(), $path)
                     ->setType($type);
             } else {
                 $path = $value;
@@ -64,7 +73,7 @@ class Aliases extends Metadata
                     $path = StringUtility::toString($path);
                     LogUtility::msg("The alias element ($path) is not a string", Alias::CANONICAL);
                 }
-                $aliases[] = Alias::create($this->getPage(), $path);
+                $aliases[] = Alias::create($this->getResource(), $path);
             }
         }
         return $aliases;
@@ -126,7 +135,7 @@ class Aliases extends Metadata
         $sqlite = Sqlite::getSqlite();
         if ($sqlite === null) return [];
 
-        $canonicalOrDefault = $this->getPage()->getCanonicalOrDefault();
+        $canonicalOrDefault = $this->getResource()->getCanonicalOrDefault();
         $res = $sqlite->query("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", $canonicalOrDefault);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the deprecated alias selection query", LogUtility::LVL_MSG_ERROR);
@@ -184,7 +193,7 @@ class Aliases extends Metadata
              * To validate the migration we set a value
              * (the array may be empty)
              */
-            $this->persistToFileSystem();
+            $this->persist();
         }
         return array_values($this->aliases);
     }
@@ -197,14 +206,14 @@ class Aliases extends Metadata
 
     public function addAndGetAlias($aliasPath, $aliasType = Alias::REDIRECT): Alias
     {
-        $alias = Alias::create($this->getPage(), $aliasPath);
+        $alias = Alias::create($this->getResource(), $aliasPath);
 
         if (!blank($aliasType)) {
             $alias->setType($aliasType);
         }
 
         $this->aliases[$aliasPath] = $alias;
-        $this->persistToFileSystem();
+        $this->persist();
         return $alias;
     }
 
@@ -212,9 +221,9 @@ class Aliases extends Metadata
     /**
      *
      */
-    public function buildFromFileSystem(): Aliases
+    public function buildFromStore(): Aliases
     {
-        $aliases = $this->getFileSystemValue();
+        $aliases = $this->getStoreValue();
         $this->aliases = self::toNativeAliasArray($aliases);
         return $this;
     }
@@ -231,7 +240,7 @@ class Aliases extends Metadata
     public function setFromPersistentFormat($value): Aliases
     {
         $this->aliases = $this->toNativeAliasArray($value);
-        $this->persistToFileSystem();
+        $this->persist();
         return $this;
     }
 
@@ -244,7 +253,7 @@ class Aliases extends Metadata
     private function buildCheck()
     {
         if (!$this->wasBuild && $this->aliases === null) {
-            $this->buildFromFileSystem();
+            $this->buildFromStore();
             $this->wasBuild = true;
         }
     }
@@ -316,13 +325,13 @@ class Aliases extends Metadata
             foreach ($pathData as $path) {
                 if ($path !== "" && $path !== null) {
                     $type = $typeData[$counter];
-                    $this->aliases[] = Alias::create($this->getPage(), $path)
+                    $this->aliases[] = Alias::create($this->getResource(), $path)
                         ->setType($type);
                 }
                 $counter++;
             }
         }
-        $this->persistToFileSystem();
+        $this->persist();
         return $this;
     }
 

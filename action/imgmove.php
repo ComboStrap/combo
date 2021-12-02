@@ -44,7 +44,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         $targetImageId = $event->data["dst_id"];
         foreach ($affectedPagesId as $affectedPageId) {
             $affectedPage = Page::createPageFromId($affectedPageId);
-            $pageImages = PageImages::createFromPage($affectedPage);
+            $pageImages = PageImages::createForPageWithDefaultStore($affectedPage);
             $removedPageImage = null;
 
             $removedPageImage = $pageImages->removeIfExists($sourceImageId);
@@ -138,9 +138,9 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                     $id = "fake_id_for_move";
                 }
                 $fakePage = Page::createPageFromId($id);
-                $oldPagesImages = PageImages::createFromPage($fakePage)
+                $oldPagesImages = PageImages::createForPageWithDefaultStore($fakePage)
                     ->buildFromPersistentFormat($images);
-                $newPagesImages = PageImages::createFromPage($fakePage);
+                $newPagesImages = PageImages::createForPageWithDefaultStore($fakePage);
 
                 foreach ($oldPagesImages->getAll() as $oldPageImage) {
                     $imagePath = $oldPageImage->getImage()->getDokuPath()->getAbsolutePath();

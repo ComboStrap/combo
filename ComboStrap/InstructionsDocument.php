@@ -19,8 +19,9 @@ class InstructionsDocument extends PageCompilerDocument
 
     /**
      * InstructionsDocument constructor.
+     * @var Page $page
      */
-    public function __construct($page)
+    public function __construct(Page $page)
     {
         parent::__construct($page);
 
@@ -36,7 +37,9 @@ class InstructionsDocument extends PageCompilerDocument
 
         } else {
 
-            $this->cache = new CacheInstructions($page->getDokuwikiId(), $page->getAbsoluteFileSystemPath());
+            $id = $page->getPath()->getDokuwikiId();
+            $fileAbsolutePath = $page->getPath()->toLocalPath()->toAbsolutePath()->toString();
+            $this->cache = new CacheInstructions($id, $fileAbsolutePath);
 
         }
         $this->file = File::createFromPath($this->cache->cache);
@@ -60,7 +63,7 @@ class InstructionsDocument extends PageCompilerDocument
          */
         global $ID;
         $oldId = $ID;
-        $ID = $this->getPage()->getDokuwikiId();
+        $ID = $this->getPage()->getPath()->getDokuwikiId();
 
         /**
          * Get the instructions

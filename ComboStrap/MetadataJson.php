@@ -53,7 +53,7 @@ abstract class MetadataJson extends MetadataScalar
             throw new ExceptionCombo("The json persistent value is not an array, nor a string");
         }
         $this->json = $value;
-        $this->persistToFileSystem();
+        $this->persist();
         return $this;
     }
 
@@ -74,9 +74,9 @@ abstract class MetadataJson extends MetadataScalar
     }
 
 
-    public function buildFromFileSystem()
+    public function buildFromStore()
     {
-        $this->json = $this->getFileSystemValue();
+        $this->json = $this->getStoreValue();
     }
 
 
@@ -90,7 +90,7 @@ abstract class MetadataJson extends MetadataScalar
     {
         if (!$this->wasBuild && $this->json === null) {
             $this->wasBuild = true;
-            $this->json = $this->getFileSystemValue();
+            $this->json = $this->getStoreValue();
         }
     }
 

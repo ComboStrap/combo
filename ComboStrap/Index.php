@@ -69,7 +69,7 @@ class Index
                 continue;
             }
             $page = DokuPath::createPagePathFromId($pageId);
-            if ($page->getDokuPathLastName() === $name) {
+            if ($page->getLastName() === $name) {
                 $matchesPages[] = $pageId;
             }
         }

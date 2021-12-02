@@ -32,6 +32,7 @@ use ComboStrap\Page;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PageName;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
 use ComboStrap\Site;
@@ -247,17 +248,17 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * New Metadata processing
          */
-        Aliases::createFromPage($page)
+        Aliases::createForPageWithDefaultStore($page)
             ->setFromFormData($post);
         try {
-            PageImages::createFromPage($page)
+            PageImages::createForPageWithDefaultStore($page)
                 ->setFromFormData($post);
         } catch (ExceptionCombo $e) {
             $processingMessages[] = Message::createErrorMessage($e->getMessage())
                 ->setCanonical($e->getCanonical());
         }
         try {
-            LdJson::createFromPage($page)
+            LdJson::createForPageWithDefaultStore($page)
                 ->setFromFormData($post);
         } catch (ExceptionCombo $e) {
             $processingMessages[] = Message::createErrorMessage($e->getMessage())
@@ -501,7 +502,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * The manager
          */
         // Name
-        $pageName = PageName::createFromPage($page);
+        $pageName = PageName::createForPageWithDefaultStore($page);
         $formMeta->addField($pageName->toFormField());
 
 
@@ -550,17 +551,17 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Path
-        $formMeta->addField(FormMetaField::create(AnalyticsDocument::PATH)
+        $formMeta->addField(FormMetaField::create(Path::PATH_ATTRIBUTE)
             ->addValue($page->getPath())
             ->setLabel("Page Path")
             ->setMutable(false)
-            ->setCanonical(AnalyticsDocument::PATH)
+            ->setCanonical(Path::PATH_ATTRIBUTE)
             ->setTab(self::TAB_REDIRECTION_VALUE)
             ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
         );
 
         // Canonical
-        $canonical = Canonical::createFromPage($page);
+        $canonical = Canonical::createForPageWithDefaultStore($page);
         $formMeta->addField(
             FormMetaField::create(Canonical::CANONICAL_PROPERTY)
                 ->addValue($page->getCanonical(), $page->getDefaultCanonical())
@@ -631,14 +632,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Page Image Properties
          */
-        $pageImages = PageImages::createFromPage($page);
+        $pageImages = PageImages::createForPageWithDefaultStore($page);
         $formMeta->addField($pageImages->toFormField());
 
 
         /**
          * Aliases
          */
-        $aliases = Aliases::createFromPage($page);
+        $aliases = Aliases::createForPageWithDefaultStore($page);
         $formMeta->addField($aliases->toFormField());
 
 
@@ -683,7 +684,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // ld-json
-        $ldJson = LdJson::createFromPage($page);
+        $ldJson = LdJson::createForPageWithDefaultStore($page);
         $formFieldLdJson = $ldJson->toFormField();
         $formMeta->addField($formFieldLdJson);
 
@@ -773,7 +774,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Cache expiration date
-        $cacheExpirationDate = CacheExpirationDate::createForPage($page);
+        $cacheExpirationDate = CacheExpirationDate::createForPageWithDefaultStore($page);
         $formMeta->addField($cacheExpirationDate->toFormField());
 
         /**

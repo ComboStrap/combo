@@ -2,9 +2,15 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
-class DokuPath extends File
+/**
+ * Class DokuPath
+ * @package ComboStrap
+ * A dokuwiki path
+ *
+ */
+class DokuPath implements Path
 {
     const MEDIA_TYPE = "media";
     const PAGE_TYPE = "page";
@@ -15,16 +21,23 @@ class DokuPath extends File
     const SEPARATOR_SLASH = "/";
 
     const SEPARATORS = [self::PATH_SEPARATOR, self::SEPARATOR_SLASH];
-    const LOCAL_SCHEME = 'local'; // knwon also as internal media
+
+    /**
+     * TODO: They should be in another {@link Path} (file system)
+     */
     const INTERWIKI_SCHEME = 'interwiki';
+    /**
+     * TODO: They should be in another {@link Path} (file system)
+     */
     const INTERNET_SCHEME = "internet";
-    const PATH_ATTRIBUTE = "path";
+
     /**
      * For whatever reason, dokuwiki uses also on windows
      * the linux separator
      */
     public const DIRECTORY_SEPARATOR = "/";
     public const SLUG_SEPARATOR = "-";
+
     /**
      * @var string[]
      */
@@ -59,20 +72,18 @@ class DokuPath extends File
     /**
      * @var string the path scheme one constant that starts with SCHEME
      * ie
-     * {@link DokuPath::LOCAL_SCHEME},
+     * {@link DokuFs::SCHEME},
      * {@link DokuPath::INTERNET_SCHEME},
      * {@link DokuPath::INTERWIKI_SCHEME}
      */
     private $scheme;
+    private $filePath;
 
 
     /**
      * DokuPath constructor.
      *
-     * An attempt to get all file system in one class
-     *
-     * protected and not private
-     * otherwise the cascading init will not work
+     * A path for the Dokuwiki File System
      *
      * @param string $absolutePath - the dokuwiki absolute path (may not be relative but may be a namespace)
      * @param string $type - the type (media, page)
@@ -122,7 +133,7 @@ class DokuPath extends File
                     LogUtility::msg("The path given ($absolutePath) has too much separator", LogUtility::LVL_MSG_ERROR);
                 }
             }
-            $this->scheme = self::LOCAL_SCHEME;
+            $this->scheme = DokuFs::SCHEME;
 
         }
 
@@ -150,7 +161,7 @@ class DokuPath extends File
          * File path
          */
         $filePath = $this->absolutePath;
-        if ($this->scheme == self::LOCAL_SCHEME) {
+        if ($this->scheme == DokuFs::SCHEME) {
 
             $this->id = DokuPath::toDokuwikiId($this->absolutePath);
             $isNamespacePath = false;
@@ -191,7 +202,7 @@ class DokuPath extends File
                 }
             }
         }
-        parent::__construct($filePath);
+        $this->filePath = $filePath;
     }
 
 
@@ -213,7 +224,7 @@ class DokuPath extends File
     public static function createUnknownFromIdOrPath($id): DokuPath
     {
         DokuPath::addRootSeparatorIfNotPresent($id);
-        return new DokuPath( $id, DokuPath::UNKNOWN_TYPE);
+        return new DokuPath($id, DokuPath::UNKNOWN_TYPE);
     }
 
     /**
@@ -297,7 +308,7 @@ class DokuPath extends File
 
     /**
      * If the path does not have a root separator,
-     * it's added
+     * it's added (ie to transform an id)
      * @param string $path
      */
     public static function addRootSeparatorIfNotPresent(string &$path)
@@ -338,27 +349,27 @@ class DokuPath extends File
      * (Not to confound with the {@link Page::getDokuPathLastName()
      */
     public
-    function getDokuPathLastName()
+    function getLastName()
     {
         /**
          * See also {@link noNSorNS}
          */
-        $names = $this->getDokuNames();
+        $names = $this->getNames();
         return $names[sizeOf($names) - 1];
     }
 
     public
-    function getDokuNames()
+    function getNames()
     {
 
-        $names = explode( self::PATH_SEPARATOR, $this->getDokuwikiId());
+        $names = explode(self::PATH_SEPARATOR, $this->getDokuwikiId());
 
-        if($names[0]===""){
+        if ($names[0] === "") {
             /**
              * Case of only one string without path separator
              * the first element returned is an empty string
              */
-            $names = array_splice($names,1);
+            $names = array_splice($names, 1);
         }
         return $names;
     }
@@ -399,18 +410,20 @@ class DokuPath extends File
     }
 
     /**
+     *
+     *
      * @return string - the id of dokuwiki is the absolute path
      * without the root separator (ie normalized)
      *
-     * The index stores and needs this value
+     * The index stores needs this value
      * And most of the function that are not links related
-     * use this format
+     * use this format (What fucked up is fucked up)
      */
     public
     function getDokuwikiId(): string
     {
 
-        if ($this->getScheme() == self::LOCAL_SCHEME) {
+        if ($this->getScheme() == DokuFs::SCHEME) {
             return $this->id;
         } else {
             // the url (it's stored as id in the metadata)
@@ -452,25 +465,11 @@ class DokuPath extends File
         return $this->rev;
     }
 
-    /**
-     * @return string|null - the parent id without trailing separator or null if it's the root
-     */
-    public function getParentId(): ?string
-    {
-        $names = $this->getDokuNames();
-        if (sizeof($names) === 1) {
-            return null;
-        } else {
-            $names = array_slice($names, 0, sizeof($names) - 1);
-            return implode(DokuPath::PATH_SEPARATOR, $names);
-        }
-    }
-
 
     /**
      * @return string
      *
-     * This is the absolute path WITH the root separator.
+     * This is the local absolute path WITH the root separator.
      * It's used in ref present in {@link LinkUtility link} or {@link MediaLink}
      * when creating test, otherwise the ref is considered as relative
      *
@@ -480,7 +479,7 @@ class DokuPath extends File
      *
      */
     public
-    function getAbsolutePath()
+    function getAbsolutePath(): string
     {
 
         return $this->absolutePath;
@@ -585,5 +584,44 @@ class DokuPath extends File
         return implode(" ", $wordsUc);
     }
 
+    public function toLocalPath(): LocalPath
+    {
+        return LocalPath::create($this->filePath);
+    }
 
+    function toString(): string
+    {
+        return $this->absolutePath;
+    }
+
+    function toUriString(): string{
+        $string = "{$this->scheme}://$this->finalType/$this->id";
+        if ($this->rev !== null) {
+            return "$string?rev={$this->rev}";
+        }
+        return $string;
+    }
+
+    function toAbsolutePath(): Path
+    {
+        return new DokuPath($this->absolutePath, $this->finalType, $this->rev);
+    }
+
+    function getParent(): ?Path
+    {
+
+        /**
+         * Same as {@link getNS()}
+         */
+        $names = $this->getNames();
+        if (sizeof($names) === 1) {
+            return null;
+        }
+        $names = array_slice($names, 0, sizeof($names) - 1);
+        $path = implode(DokuPath::PATH_SEPARATOR, $names);
+
+        return new DokuPath($path,$this->finalType,$this->rev);
+
+
+    }
 }

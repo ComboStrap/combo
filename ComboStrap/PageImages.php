@@ -27,9 +27,12 @@ class PageImages extends Metadata
      */
     private $wasBuild = false;
 
-    public static function createFromPage(Page $page): PageImages
+    public static function createForPageWithDefaultStore(Page $page): PageImages
     {
-        return new PageImages($page);
+        return (new PageImages())
+            ->setResource($page)
+            ->useDefaultStore();
+
     }
 
     /**
@@ -88,7 +91,7 @@ class PageImages extends Metadata
                     }
                 }
                 DokuPath::addRootSeparatorIfNotPresent($imagePath);
-                $pageImage = PageImage::create($imagePath, $this->getPage());
+                $pageImage = PageImage::create($imagePath, $this->getResource());
                 if ($usage !== null) {
                     $pageImage->setUsages($usage);
                 }
@@ -101,7 +104,7 @@ class PageImages extends Metadata
              * A single path image
              */
             DokuPath::addRootSeparatorIfNotPresent($persistentValue);
-            $images = [$persistentValue => PageImage::create($persistentValue, $this->getPage())];
+            $images = [$persistentValue => PageImage::create($persistentValue, $this->getResource())];
         }
 
 
@@ -109,10 +112,10 @@ class PageImages extends Metadata
 
     }
 
-    public function buildFromFileSystem(): PageImages
+    public function buildFromStore(): PageImages
     {
 
-        return $this->buildFromPersistentFormat($this->getFileSystemValue());
+        return $this->buildFromPersistentFormat($this->getStoreValue());
 
     }
 
@@ -133,7 +136,7 @@ class PageImages extends Metadata
         $this->pageImages = PageImages::toPageImageArray($value);
 
         $this->checkImageExistence();
-        $this->persistToFileSystem();
+        $this->persist();
         return $this;
     }
 
@@ -186,7 +189,7 @@ class PageImages extends Metadata
     public function addImage(string $imagePath, $usages = null): PageImages
     {
         DokuPath::addRootSeparatorIfNotPresent($imagePath);
-        $pageImage = PageImage::create($imagePath, $this->getPage());
+        $pageImage = PageImage::create($imagePath, $this->getResource());
         if (!$pageImage->getImage()->exists()) {
             throw new ExceptionCombo("The image ($imagePath) does not exists", $this->getCanonical());
         }
@@ -208,7 +211,7 @@ class PageImages extends Metadata
          * is only set when parsing to add page to the index
          * We just set a persistent default via the
          */
-        $this->persistToFileSystem();
+        $this->persist();
         return $this;
     }
 
@@ -216,7 +219,7 @@ class PageImages extends Metadata
     {
         if (!$this->wasBuild && $this->pageImages === null) {
             $this->wasBuild = true;
-            $this->buildFromFileSystem();
+            $this->buildFromStore();
         }
     }
 
@@ -268,7 +271,7 @@ class PageImages extends Metadata
             $pageImagePath->addValue(null);
             $pageImageUsage->addValue(null, PageImage::DEFAULT);
         } else {
-            $pageImageDefault = $this->getPage()->getDefaultPageImageObject()->getImage()->getDokuPath()->getAbsolutePath();
+            $pageImageDefault = $this->getResource()->getDefaultPageImageObject()->getImage()->getDokuPath()->getAbsolutePath();
             $pageImagePath->addValue(null, $pageImageDefault);
             $pageImageUsage->addValue(null, PageImage::DEFAULT);
         }
@@ -297,14 +300,14 @@ class PageImages extends Metadata
                 $usage = $usages[$counter];
                 $usages = explode(",", $usage);
                 if ($imagePath !== null && $imagePath !== "") {
-                    $this->pageImages[] = PageImage::create($imagePath, $this->getPage())
+                    $this->pageImages[] = PageImage::create($imagePath, $this->getResource())
                         ->setUsages($usages);
                 }
                 $counter++;
             }
         }
         $this->checkImageExistence();
-        $this->persistToFileSystem();
+        $this->persist();
         return $this;
     }
 
@@ -346,7 +349,7 @@ class PageImages extends Metadata
         }
         $pageImage = $this->pageImages[$sourceImagePath];
         unset($this->pageImages[$sourceImagePath]);
-        $this->persistToFileSystem();
+        $this->persist();
         return $pageImage;
     }
 }

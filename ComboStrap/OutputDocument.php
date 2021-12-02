@@ -21,9 +21,11 @@ abstract class OutputDocument extends PageCompilerDocument
     private $file;
 
     /**
+     *
      * OutputDocument constructor.
+     * @var Page $page
      */
-    public function __construct($page)
+    public function __construct(Page $page)
     {
         parent::__construct($page);
 
@@ -36,7 +38,10 @@ abstract class OutputDocument extends PageCompilerDocument
 
         } else {
 
-            $this->cache = new CacheRenderer($page->getDokuwikiId(), $this->getPage()->getAbsoluteFileSystemPath(), $this->getExtension());
+            $path = $page->getPath();
+            $localFile = $path->toLocalPath()->toAbsolutePath()->toString();
+            $id = $path->getDokuwikiId();
+            $this->cache = new CacheRenderer($id, $localFile, $this->getExtension());
 
         }
 
@@ -63,7 +68,7 @@ abstract class OutputDocument extends PageCompilerDocument
          */
         global $ID;
         $keep = $ID;
-        $ID = $this->getPage()->getDokuwikiId();
+        $ID = $this->getPage()->getPath()->getDokuwikiId();
 
         /**
          * The code below is adapted from {@link p_cached_output()}

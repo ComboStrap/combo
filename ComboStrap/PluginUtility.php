@@ -16,6 +16,10 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 require_once(__DIR__ . '/CachedDocument.php');
 require_once(__DIR__ . '/PageCompilerDocument.php');
 require_once(__DIR__ . '/OutputDocument.php');
+require_once(__DIR__ . '/FileSystem.php');
+require_once(__DIR__ . '/Path.php');
+require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/DokuFs.php');
 require_once(__DIR__ . '/DokuPath.php');
 require_once(__DIR__ . '/Media.php');
 require_once(__DIR__ . '/MediaLink.php');
@@ -25,6 +29,9 @@ require_once(__DIR__ . '/MetadataDateTime.php');
 require_once(__DIR__ . '/MetadataJson.php');
 require_once(__DIR__ . '/MetadataText.php');
 require_once(__DIR__ . '/MetadataWikiPath.php');
+require_once(__DIR__ . '/MetadataStore.php');
+require_once(__DIR__ . '/Resource.php');
+
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -71,7 +78,7 @@ require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/ExitException.php');
 require_once(__DIR__ . '/ExceptionCombo.php');
 require_once(__DIR__ . '/ExceptionComboRuntime.php');
-require_once(__DIR__ . '/File.php');
+require_once(__DIR__ . '/FileSystems.php');
 require_once(__DIR__ . '/FloatAttribute.php');
 require_once(__DIR__ . '/FormMeta.php');
 require_once(__DIR__ . '/FormMetaTab.php');
@@ -99,10 +106,12 @@ require_once(__DIR__ . '/JavascriptLibrary.php');
 require_once(__DIR__ . '/Lang.php');
 require_once(__DIR__ . '/LdJson.php');
 require_once(__DIR__ . '/LineSpacing.php');
+require_once(__DIR__ . '/LocalPath.php');
 require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
 require_once(__DIR__ . '/LowQualityPage.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
+require_once(__DIR__ . '/MetadataDokuWikiStore.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');
 require_once(__DIR__ . '/Mime.php');

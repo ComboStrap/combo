@@ -42,16 +42,16 @@ abstract class MetadataText extends MetadataScalar
             $value = null;
         }
         $this->value = $value;
-        $this->persistToFileSystem();
+        $this->persist();
         return $this;
     }
 
 
 
-    public function buildFromFileSystem(): MetadataText
+    public function buildFromStore(): MetadataText
     {
         try {
-            $this->setValue($this->getFileSystemValue());
+            $this->setValue($this->getStoreValue());
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Error while building the value:", $e->getCanonical());
         }
@@ -69,7 +69,7 @@ abstract class MetadataText extends MetadataScalar
     {
         if (!$this->wasBuild && $this->value === null) {
             $this->wasBuild = true;
-            $this->value = $this->getFileSystemValue();
+            $this->value = $this->getStoreValue();
         }
     }
 

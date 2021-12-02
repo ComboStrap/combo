@@ -17,9 +17,12 @@ class Canonical extends MetadataWikiPath
      */
     public const CONF_CANONICAL_LAST_NAMES_COUNT = 'MinimalNamesCountForAutomaticCanonical';
 
-    public static function createFromPage(Page $page): Canonical
+    public static function createForPageWithDefaultStore(Page $page): Canonical
     {
-        return new Canonical($page);
+        return (new Canonical())
+            ->setResource($page)
+            ->useDefaultStore();
+
     }
 
     public function getTab(): string
@@ -63,7 +66,7 @@ class Canonical extends MetadataWikiPath
             /**
              * Takes the last names part
              */
-            $namesOriginal = $this->getPage()->getDokuNames();
+            $namesOriginal = $this->getResource()->getDokuNames();
             /**
              * Delete the identical names at the end
              * To resolve this problem
@@ -92,7 +95,7 @@ class Canonical extends MetadataWikiPath
              * ie javascript:start will become javascript
              * (Not a home page)
              */
-            if ($this->getPage()->isStartPage()) {
+            if ($this->getResource()->isStartPage()) {
                 $names = array_slice($names, 0, $namesLength - 1);
             }
             $calculatedCanonical = implode(":", $names);

@@ -36,24 +36,26 @@ class PageUrlType extends MetadataText
 
     public static function getOrCreateForPage(Page $page): PageUrlType
     {
-        $path = $page->getPath();
+        $path = $page->getPath()->toString();
         $urlType = self::$urlTypeInstanceCache[$path];
         if($urlType===null){
-            $urlType = self::createForPage($page);
+            $urlType = self::createFromPageWithDefaultStore($page);
             self::$urlTypeInstanceCache[$path] = $urlType;
         }
         return $urlType;
 
     }
 
-    public static function createForPage(Page $page): PageUrlType
+    public static function createFromPageWithDefaultStore(Page $page): PageUrlType
     {
-        return new PageUrlType($page);
+        return (new PageUrlType())
+            ->setResource($page)
+            ->useDefaultStore();
     }
 
     public function getValue(): ?string
     {
-        if (!$this->getPage()->exists()) {
+        if (!$this->getResource()->exists()) {
             return PageUrlType::PAGE_PATH;
         }
         $confCanonicalType = $this->getName();
@@ -66,7 +68,7 @@ class PageUrlType extends MetadataText
 
         // Not yet sync with the database
         // No permanent canonical url
-        if ($this->getPage()->getPageIdAbbr() === null) {
+        if ($this->getResource()->getPageIdAbbr() === null) {
             if ($urlType === self::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH) {
                 $urlType = self::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH;
             } else {

@@ -56,7 +56,6 @@ class AnalyticsDocument extends OutputDocument
     const RULES = "rules";
     const DETAILS = 'details';
     const FAILED_MANDATORY_RULES = 'failed_mandatory_rules';
-    const PATH = "path";
     const DESCRIPTION = "description";
     const METADATA = 'metadata';
     const DATE_CREATED = 'date_created';

@@ -3,7 +3,13 @@
 
 namespace ComboStrap;
 
-
+/**
+ * Class Url
+ * @package ComboStrap
+ * There is no URL in php
+ * Only function
+ * https://www.php.net/manual/en/ref.url.php
+ */
 class Url
 {
     /**

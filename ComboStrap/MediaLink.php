@@ -187,12 +187,12 @@ abstract class MediaLink
          * Media id are not cleaned
          * They are always absolute ?
          */
-        if (!isset($attributes[DokuPath::PATH_ATTRIBUTE])) {
+        if (!isset($attributes[Path::PATH_ATTRIBUTE])) {
             $path = "notfound";
             LogUtility::msg("A path attribute is mandatory when creating a media link and was not found in the attributes " . print_r($attributes, true), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         } else {
-            $path = $attributes[DokuPath::PATH_ATTRIBUTE];
-            unset($attributes[DokuPath::PATH_ATTRIBUTE]);
+            $path = $attributes[Path::PATH_ATTRIBUTE];
+            unset($attributes[Path::PATH_ATTRIBUTE]);
         }
 
 
@@ -253,7 +253,7 @@ abstract class MediaLink
          * The combo attributes array
          */
         $parsedAttributes = DokuwikiUrl::createFromUrl($url)->toArray();
-        $path = $parsedAttributes[DokuPath::PATH_ATTRIBUTE];
+        $path = $parsedAttributes[Path::PATH_ATTRIBUTE];
         if (!isset($parsedAttributes[MediaLink::LINKING_KEY])) {
             $parsedAttributes[MediaLink::LINKING_KEY] = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
         }
@@ -447,7 +447,7 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            DokuPath::PATH_ATTRIBUTE => $this->getMedia()->getDokuPath()->getPath()
+            Path::PATH_ATTRIBUTE => $this->getMedia()->getDokuPath()->getPath()
         );
 
 

@@ -13,33 +13,56 @@ abstract class Metadata
     const CANONICAL_PROPERTY = "page:metadata";
 
     /**
-     * @var Page
+     * The metadata is for this resource
+     * @var Resource
      */
-    private $page;
+    private $resource;
 
     /**
-     * CacheExpirationFrequencyMeta constructor.
-     * @param $page
+     * @var MetadataStore
      */
-    public function __construct($page)
+    private $store;
+
+    /**
+     * The metadata may be just not stored
+     * CacheExpirationFrequencyMeta constructor.
+     * The page is just the scope
+     */
+    public function __construct()
     {
-        $this->page = $page;
+
+    }
+
+    public function setStore(MetadataStore $store): Metadata
+    {
+        $this->store = $store;
+        return $this;
+    }
+
+    public function useDefaultStore(): Metadata
+    {
+        return $this->setStore($this->resource->getDefaultMetadataStore());
     }
 
 
     public abstract function getTab();
 
-    protected function persistToFileSystem()
+    protected function persist()
     {
-        $name = $this->getName();
-        $persistentValue = $this->toPersistentValue();
-        $defaultValue = $this->toPersistentDefaultValue();
-        $type = $this->getPersistenceType();
-        $this->page->setMetadata($name, $persistentValue, $defaultValue, $type);
+        if($this->store===null){
+            throw new ExceptionComboRuntime("The metadata store is not set, you can't persist the metadata ($this)");
+        }
+        $this->store->set($this);
+
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
 
-    public abstract function buildFromFileSystem();
+    public abstract function buildFromStore();
 
     public abstract function setFromPersistentFormat($value);
 
@@ -57,17 +80,34 @@ abstract class Metadata
         return self::CANONICAL_PROPERTY;
     }
 
-    protected function getPage(): Page
+    /**
+     * @return Resource - The resource
+     */
+    public function getResource(): Resource
     {
-        return $this->page;
+        return $this->resource;
+    }
+
+    /**
+     * For which resources is the metadata for
+     * @param $resource
+     * @return $this
+     */
+    public function setResource($resource): Metadata
+    {
+        $this->resource = $resource;
+        return $this;
     }
 
     /**
      * @return string|array|null
      */
-    protected function getFileSystemValue()
+    protected function getStoreValue()
     {
-        return $this->page->getMetadata($this->getName());
+        if($this->store===null){
+            throw new ExceptionComboRuntime("The metadata store is not set, you can't get a value");
+        }
+        return $this->store->get($this);
     }
 
     /**
@@ -76,7 +116,7 @@ abstract class Metadata
     public abstract function getName(): string;
 
     /**
-     * @return string|array|null the value to be persisted on the file system
+     * @return string|array|null the value to be persisted in the store
      */
     public abstract function toPersistentValue();
 
@@ -127,25 +167,12 @@ abstract class Metadata
     public abstract function getPersistenceType(): string;
 
 
-    protected function toDateTime($value)
-    {
-        if ($value === null) {
-            return null;
-        }
-        try {
-            return Iso8601Date::createFromString($value)->getDateTime();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("The meta ({$this->getName()}) has a value ($value) that is not a valid date format", Iso8601Date::CANONICAL);
-            return null;
-        }
-    }
-
     /**
      * The user can't delete this metadata
      * in the persistent metadata
      */
     const NOT_MODIFIABLE_PERSISTENT_METADATA = [
-        AnalyticsDocument::PATH,
+        Path::PATH_ATTRIBUTE,
         AnalyticsDocument::DATE_CREATED,
         AnalyticsDocument::DATE_MODIFIED,
         Page::PAGE_ID_ATTRIBUTE,

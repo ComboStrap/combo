@@ -11,9 +11,11 @@ class LdJson extends MetadataJson
 
     public const JSON_LD_META_PROPERTY = "json-ld";
 
-    public static function createFromPage(Page $page): LdJson
+    public static function createForPageWithDefaultStore(Page $page): LdJson
     {
-        return new LdJson($page);
+        return (new LdJson())
+            ->setResource($page)
+            ->useDefaultStore();
     }
 
     public function getName(): string
@@ -62,9 +64,9 @@ class LdJson extends MetadataJson
     {
         $value = parent::getValue();
 
-        if ($value === null && $this->getPage()->getTypeNotEmpty() === "organization") {
+        if ($value === null && $this->getResource()->getTypeNotEmpty() === "organization") {
             // deprecated, old syntax
-            $metadata = $this->getPage()->getMetadata("organization");
+            $metadata = $this->getResource()->getMetadata("organization");
             if (!empty($metadata)) {
                 return ["organization" => $metadata];
             }

@@ -33,7 +33,7 @@ abstract class MetadataDateTime extends MetadataScalar
     public function setValue(DateTime $value): MetadataDateTime
     {
         $this->dateTimeValue = $value;
-        $this->persistToFileSystem();
+        $this->persist();
         return $this;
     }
 
@@ -59,9 +59,9 @@ abstract class MetadataDateTime extends MetadataScalar
     }
 
 
-    public function buildFromFileSystem()
+    public function buildFromStore()
     {
-        $value = $this->getFileSystemValue();
+        $value = $this->getStoreValue();
         try {
             $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
         } catch (ExceptionCombo $e) {
@@ -93,7 +93,7 @@ abstract class MetadataDateTime extends MetadataScalar
     {
         if (!$this->wasBuild && $this->dateTimeValue === null) {
             $this->wasBuild = true;
-            $value = $this->getFileSystemValue();
+            $value = $this->getStoreValue();
             try {
                 $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
             } catch (ExceptionCombo $e) {

@@ -46,6 +46,10 @@ class File
         return filesize($this->path);
     }
 
+    /**
+     * @return bool
+     * @deprecated uses {@link FileSystems::exists()} instead
+     */
     public function exists()
     {
         return file_exists($this->path);
@@ -69,6 +73,7 @@ class File
 
     /**
      * @return string the last part of the path without the extension
+     * @deprecated use {@link LocalPath::getLastName()} instead
      */
     public function getBaseNameWithoutExtension()
     {
@@ -130,6 +135,10 @@ class File
         unlink($this->getAbsoluteFileSystemPath());
     }
 
+    /**
+     * @return File|null
+     * @deprecated use {@link LocalPath::getParent()} instead
+     */
     public function getParent(): ?File
     {
         $absolutePath = pathinfo($this->path, PATHINFO_DIRNAME);

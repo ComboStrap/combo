@@ -3,11 +3,13 @@
 
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\CallStack;
+use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
 use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PageImages;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\ThirdPartyPlugins;
 
@@ -68,7 +70,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $renderer->stats[AnalyticsDocument::MEDIA_COUNT]++;
         $scheme = $media->getMedia()->getDokuPath()->getScheme();
         switch ($scheme) {
-            case DokuPath::LOCAL_SCHEME:
+            case DokuFs::SCHEME:
                 $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
                 if (!$media->getMedia()->exists()) {
                     $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
@@ -204,7 +206,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $mediaLink = MediaLink::createFromCallStackArray($attributes);
                 $media = $mediaLink->getMedia();
-                if ($media->getDokuPath()->getScheme() == DokuPath::LOCAL_SCHEME) {
+                if ($media->getDokuPath()->getScheme() == DokuFs::SCHEME) {
                     $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                     if ($media->isImage() || $media->getExtension() === "svg") {
                         try {
@@ -289,7 +291,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
         $src = $attributes['src'];
         if ($src == null) {
-            $src = $attributes[DokuPath::PATH_ATTRIBUTE];
+            $src = $attributes[Path::PATH_ATTRIBUTE];
         }
         $title = $attributes['title'];
         $align = $attributes['align'];

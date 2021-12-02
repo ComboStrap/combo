@@ -3016,5 +3016,13 @@ class Page extends DokuPath
 
     }
 
+    public function delete()
+    {
+
+        Index::getOrCreate()->deletePage($this);
+        saveWikiText($this->getDokuwikiId(),"","Delete");
+
+    }
+
 
 }

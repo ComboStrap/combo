@@ -76,4 +76,11 @@ class Index
         return $matchesPages;
 
     }
+
+    public function deletePage(Page $page)
+    {
+
+        $this->indexer->deletePage($page->getDokuwikiId());
+
+    }
 }

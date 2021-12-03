@@ -29,6 +29,7 @@ use ComboStrap\MetadataJson;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
+use ComboStrap\PageId;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PageName;
@@ -562,14 +563,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         // Canonical
         $canonical = Canonical::createForPageWithDefaultStore($page);
-        $formMeta->addField(
-            FormMetaField::create(Canonical::CANONICAL_PROPERTY)
-                ->addValue($page->getCanonical(), $page->getDefaultCanonical())
-                ->setTab(self::TAB_REDIRECTION_VALUE)
-                ->setCanonical(Canonical::CANONICAL_PROPERTY)
-                ->setLabel("Canonical Path")
-                ->setDescription("The canonical path is a short unique path for the page (used in named permalink)")
-        );
+        $formMeta->addField($canonical->toFormField());
 
         // Slug
         $defaultSlug = $page->getDefaultSlug();
@@ -753,15 +747,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Page Id
-        $pageId = $page->getPageId();
-        $formMeta->addField(FormMetaField::create(Page::PAGE_ID_ATTRIBUTE)
-            ->addValue($pageId)
-            ->setMutable(false)
-            ->setTab(self::TAB_INTEGRATION_VALUE)
-            ->setCanonical(Page::PAGE_ID_ATTRIBUTE)
-            ->setLabel("Page Id")
-            ->setDescription("An unique identifier for the page")
-        );
+        $pageId = PageId::createForPageWithDefaultStore($page);
+        $formMeta->addField($pageId->toFormField());
 
         // Cache cron expiration expression
         $formMeta->addField(FormMetaField::create(CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME)

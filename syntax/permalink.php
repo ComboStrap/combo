@@ -92,9 +92,15 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                 $fragment = $attributes->getValueAndRemoveIfPresent(self::FRAGMENT_ATTRIBUTE);
                 switch ($type) {
                     case self::GENERATED_TYPE:
-                        $permanentValue = Page::encodePageId($page->getPageId());
+                        $pageId = $page->getPageId();
+                        if ($pageId === null) {
+                            $errorMessage = "The page id has not yet been set";
+                            $returnArray[PluginUtility::PAYLOAD] = $errorMessage;
+                            return $returnArray;
+                        }
+                        $permanentValue = Page::encodePageId($pageId);
                         $url = Site::getBaseUrl() . "$permanentValue";
-                        if($fragment!=null){
+                        if ($fragment != null) {
                             $url .= "#$fragment";
                         }
                         $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $url);
@@ -108,7 +114,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $returnArray[PluginUtility::PAYLOAD] = $errorMessage;
                         } else {
                             $canonicalUrl = $page->getCanonicalUrl();
-                            if($fragment!=null){
+                            if ($fragment != null) {
                                 $canonicalUrl .= "#$fragment";
                             }
                             $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $canonicalUrl);

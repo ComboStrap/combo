@@ -120,6 +120,7 @@ require_once(__DIR__ . '/NavBarUtility.php');
 require_once(__DIR__ . '/Opacity.php');
 require_once(__DIR__ . '/Os.php');
 require_once(__DIR__ . '/Page.php');
+require_once(__DIR__ . '/PageId.php');
 require_once(__DIR__ . '/PageName.php');
 require_once(__DIR__ . '/PageImages.php');
 require_once(__DIR__ . '/PageImage.php');

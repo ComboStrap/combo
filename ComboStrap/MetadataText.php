@@ -38,12 +38,12 @@ abstract class MetadataText extends MetadataScalar
         }
         $value = trim($value);
         if ($value === "") {
-            // form don't return null
+            // form don't return null only empty string
             $value = null;
         }
         $this->value = $value;
-        $this->persist();
         return $this;
+
     }
 
 

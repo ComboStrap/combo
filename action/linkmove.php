@@ -3,19 +3,24 @@
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
+use ComboStrap\Aliases;
 use ComboStrap\DatabasePage;
 use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\File;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
+use ComboStrap\MetadataDbStore;
 use ComboStrap\Page;
+use ComboStrap\PageId;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 
 
 /**
  * Class action_plugin_combo_move
- * Handle the move of a page in order to update the link
+ * Handle the move of a page in order to update:
+ *   * the link
+ *   * the data in the database
  */
 class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 {
@@ -82,7 +87,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
     }
 
     /**
-     * Handle the rename of a page
+     * Handle the path modification of a page
      * @param Doku_Event $event - https://www.dokuwiki.org/plugin:move#for_plugin_authors
      * @param $params
      *
@@ -98,13 +103,22 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         if ($result === true) {
             $event->preventDefault();
             LogUtility::msg("The move lock file is present, the move was canceled.");
-            return;
         }
 
+    }
 
+    /**
+     * Handle the path modification of a page after
+     *
+     * The metadata file should also have been moved
+     *
+     * @param Doku_Event $event - https://www.dokuwiki.org/plugin:move#for_plugin_authors
+     * @param $params
+     *
+     */
+    function handle_rename_after(Doku_Event $event, $params)
+    {
         /**
-         * The move is done before otherwise the metadata have moved
-         * and the metadata uuid will then be null
          *
          * $event->data
          * src_id ⇒ string – the original ID of the page
@@ -113,16 +127,40 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
         $id = $event->data["src_id"];
         $targetId = $event->data["dst_id"];
         try {
-            $page = Page::createPageFromId($id);
-            $databasePage = $page->getDatabasePage();
+
+            /**
+             * Update the dokuwiki id and path
+             */
+            $databasePage = DatabasePage::createFromDokuWikiId($id);
             if (!$databasePage->exists()) {
                 return;
             }
-            $databasePage->moveTo($targetId);
-            $alias = $page->addAndGetAlias($page->getDokuwikiId(), Alias::REDIRECT);
-            $page->getDatabasePage()->addAlias($alias);
+            $databasePage->updatePathAndDokuwikiId($targetId);
+
+            /**
+             * Check page id
+             */
+            $page = Page::createPageFromId($targetId);
+            $pageIdDefaultStore = PageId::createForPageWithDefaultStore($page);
+
+            $pageIdDatabase = $databasePage->getPageId();
+            if($pageIdDatabase!==$pageIdDefaultStore->getValue()){
+                $pageIdDefaultStore->setValueForce($pageIdDefaultStore->getValue());
+            }
+
+            /**
+             * Add the alias
+             */
+            Aliases::createForPageWithDefaultStore($page)
+                ->addAlias($id)
+                ->persist()
+                ->setStore(MetadataDbStore::getOrCreate())
+                ->persist();
+
+
         } catch (Exception $exception) {
             // We catch the errors if any to not stop the move
+            // There is no transaction feature (it happens or not)
             $message = "An error occurred during the move replication to the database. Error message was: " . $exception->getMessage();
             if (PluginUtility::isDevOrTest()) {
                 throw new RuntimeException($exception);

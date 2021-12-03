@@ -138,6 +138,10 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                     $disqusIdentifier = $attributes[self::ATTRIBUTE_IDENTIFIER];
                     if (empty($disqusIdentifier)) {
                         $disqusIdentifier = $page->getPageId();
+                        if ($disqusIdentifier === null) {
+                            LogUtility::msg("The page id has not been yet set, therefore the disqus forum can not render", LogUtility::LVL_MSG_ERROR, self::TAG);
+                            return false;
+                        }
                     }
 
                 }

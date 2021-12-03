@@ -97,7 +97,7 @@ class MetadataDbStore implements MetadataStore
     {
 
         $row = array(
-            Page::PAGE_ID_ATTRIBUTE => $page->getPageId(),
+            PageId::PAGE_ID_ATTRIBUTE => $page->getPageId(),
             Alias::ALIAS_PATH_PROPERTY => $alias[Alias::ALIAS_PATH_PROPERTY],
             Alias::ALIAS_TYPE_PROPERTY => $alias[Alias::ALIAS_TYPE_PROPERTY]
         );
@@ -120,7 +120,7 @@ class MetadataDbStore implements MetadataStore
      */
     private function deleteAlias(array $dbAliasPath, $page): void
     {
-        $pageIdAttributes = Page::PAGE_ID_ATTRIBUTE;
+        $pageIdAttributes = PageId::PAGE_ID_ATTRIBUTE;
         $pathAttribute = Path::PATH_ATTRIBUTE;
         $aliasTables = self::ALIAS_TABLE_NAME;
         $delete = <<<EOF
@@ -168,7 +168,7 @@ EOF;
         }
         $aliases = Aliases::create()
             ->setResource($metadata->getResource());
-        $pageIdAttribute = strtoupper(Page::PAGE_ID_ATTRIBUTE);
+        $pageIdAttribute = strtoupper(PageId::PAGE_ID_ATTRIBUTE);
         $pathAttribute = strtoupper(Alias::ALIAS_PATH_PROPERTY);
         $typeAttribute = strtoupper(Alias::ALIAS_TYPE_PROPERTY);
         $tableAliases = self::ALIAS_TABLE_NAME;

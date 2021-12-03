@@ -51,7 +51,10 @@ abstract class Metadata
 
     public abstract function getTab();
 
-    public function persist()
+    /**
+     * @throws ExceptionCombo
+     */
+    public function persist(): Metadata
     {
         if ($this->store === null) {
             throw new ExceptionComboRuntime("The metadata store is not set, you can't persist the metadata ($this)");
@@ -179,7 +182,7 @@ abstract class Metadata
         Path::PATH_ATTRIBUTE,
         AnalyticsDocument::DATE_CREATED,
         AnalyticsDocument::DATE_MODIFIED,
-        Page::PAGE_ID_ATTRIBUTE,
+        PageId::PAGE_ID_ATTRIBUTE,
         "contributor",
         "creator",
         "date",
@@ -260,7 +263,7 @@ abstract class Metadata
      * @param $metadataArray - a metadata array
      * @return array - the metadata array without the managed metadata
      */
-    public static function deleteManagedMetadata($metadataArray): array
+    public static function deleteMutableMetadata($metadataArray): array
     {
         if (sizeof($metadataArray) === 0) {
             return $metadataArray;

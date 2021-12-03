@@ -96,7 +96,6 @@ class Page implements ResourceCombo
     const LANG_META_PROPERTY = "lang";
     public const SLUG_ATTRIBUTE = "slug";
     const LAYOUT_PROPERTY = "layout";
-    const PAGE_ID_ATTRIBUTE = "page_id";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
     const KEYWORDS_ATTRIBUTE = "keywords";
 
@@ -106,8 +105,7 @@ class Page implements ResourceCombo
     const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
 
     const OLD_REGION_PROPERTY = "country";
-    // Length to get the same probability than uuid v4
-    const PAGE_ID_LENGTH = 21;
+
     // The page id abbreviation is used in the url
     // to make them unique.
     //
@@ -122,8 +120,7 @@ class Page implements ResourceCombo
     // with the 36 alphabet
     // https://datacadamia.com/crypto/hash/collision
     const PAGE_ID_ABBREV_LENGTH = 7;
-    // No separator, no uppercase to be consistent on the whole url
-    const PAGE_ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
+
 
 
     /**
@@ -205,7 +202,7 @@ class Page implements ResourceCombo
     private $region;
     private $lang;
     /**
-     * @var string
+     * @var PageId
      */
     private $pageId;
 
@@ -400,14 +397,14 @@ class Page implements ResourceCombo
         $total = 0;
         for ($i = 0; $i < strlen($pageId); $i++) {
             $letter = $pageId[$i];
-            $pos = strpos(self::PAGE_ID_ALPHABET, $letter);
+            $pos = strpos(PageId::PAGE_ID_ALPHABET, $letter);
             if ($pos === false) {
                 return null;
             }
             $total += $pos;
         }
-        $checkSum = $total % strlen(self::PAGE_ID_ALPHABET);
-        return self::PAGE_ID_ALPHABET[$checkSum];
+        $checkSum = $total % strlen(PageId::PAGE_ID_ALPHABET);
+        return PageId::PAGE_ID_ALPHABET[$checkSum];
     }
 
     /**
@@ -461,15 +458,6 @@ class Page implements ResourceCombo
         }
     }
 
-    /**
-     * @param string $pageId
-     * @return Page|null - a page or null, if the page id does not exist in the database
-     */
-    public static function getPageFromPageId(string $pageId): ?Page
-    {
-        $databasePage = DatabasePage::createFromPageId($pageId);
-        return $databasePage->getPage();
-    }
 
 
     /**
@@ -1475,7 +1463,7 @@ class Page implements ResourceCombo
          */
         $title = str_replace('"', "'", $title);
         $array[AnalyticsDocument::TITLE] = $title;
-        $array[Page::PAGE_ID_ATTRIBUTE] = $this->getPageId();
+        $array[PageId::PAGE_ID_ATTRIBUTE] = $this->getPageId();
         $array[Canonical::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
         $array[Path::PATH_ATTRIBUTE] = $this->getPath()->toAbsolutePath()->toString();
         $array[AnalyticsDocument::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
@@ -1644,14 +1632,14 @@ class Page implements ResourceCombo
     }
 
     /**
-     * A page id or null if the page does not exists
+     * A page id or null if the page id does not exists
      * @return string|null
      */
     public
     function getPageId(): ?string
     {
 
-        return $this->pageId;
+        return $this->pageId->getValue();
 
     }
 
@@ -1744,15 +1732,8 @@ class Page implements ResourceCombo
                     case Aliases::ALIAS_ATTRIBUTE:
                         $this->aliases->setFromPersistentFormat($value);
                         continue 2;
-                    case Page::PAGE_ID_ATTRIBUTE:
-                        if ($this->getPageId() === null) {
-                            $this->setPageId($value);
-                        } else {
-                            if ($this->getPageId() !== $value) {
-                                $messages[] = Message::createErrorMessage("The page id is a managed id and cannot be changed, this page has the id ({$this->getPageId()}) that has not the same value than in the frontmatter ({$value})")
-                                    ->setCanonical(Page::PAGE_ID_ATTRIBUTE);
-                            }
-                        }
+                    case PageId::PAGE_ID_ATTRIBUTE:
+                        $this->pageId->setValue($value);
                         continue 2;
                     case Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
                         $this->setCanBeOfLowQuality(Boolean::toBoolean($value));
@@ -1825,16 +1806,13 @@ class Page implements ResourceCombo
      * Used when the page is moved to take the Page Id of the source
      * @param string|null $pageId
      * @return Page
+     * @throws ExceptionCombo
      */
     public
     function setPageId(?string $pageId): Page
     {
-        if ($pageId == null) {
-            LogUtility::msg("A page id can not null when setting it (Page: $this)", LogUtility::LVL_MSG_ERROR);
-            return $this;
-        }
-        $this->pageId = $pageId;
-        $this->setMetadata(Page::PAGE_ID_ATTRIBUTE, $pageId);
+
+        $this->pageId->setValue($pageId);
         return $this;
 
     }
@@ -2348,6 +2326,7 @@ class Page implements ResourceCombo
         $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPageWithDefaultStore($this);
         $this->ldJson = LdJson::createForPageWithDefaultStore($this);
         $this->canonical = Canonical::createForPageWithDefaultStore($this);
+        $this->pageId = PageId::createForPageWithDefaultStore($this);
 
 
         /**
@@ -2366,7 +2345,6 @@ class Page implements ResourceCombo
          */
         $this->metadatas = p_read_metadata($this->getPath()->getDokuwikiId());
 
-        $this->pageId = $this->getMetadata(self::PAGE_ID_ATTRIBUTE);
         [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
         $this->h1 = $this->getMetadata(AnalyticsDocument::H1);
         $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
@@ -2679,9 +2657,8 @@ class Page implements ResourceCombo
     public function getNonDefaultMetadatasValuesInStorageFormat(): array
     {
         $nonDefaultMetadatas = [];
-        $metaToPreserve = Metadata::MUTABLE_METADATA;
-        $metaToPreserve[] = Page::PAGE_ID_ATTRIBUTE;
-        foreach ($metaToPreserve as $metaKey) {
+
+        foreach (Metadata::MUTABLE_METADATA as $metaKey) {
             switch ($metaKey) {
                 case Canonical::CANONICAL_PROPERTY:
                     if (!in_array($this->getCanonical(), [$this->getDefaultCanonical(), null])) {
@@ -2766,9 +2743,6 @@ class Page implements ResourceCombo
                     if ($this->getEndDate() !== null) {
                         $nonDefaultMetadatas[AnalyticsDocument::DATE_END] = $this->getEndDateAsString();
                     }
-                    break;
-                case Page::PAGE_ID_ATTRIBUTE:
-                    $nonDefaultMetadatas[Page::PAGE_ID_ATTRIBUTE] = $this->getPageId();
                     break;
                 case action_plugin_combo_metadescription::DESCRIPTION_META_KEY:
                     if (!in_array($this->getDescription(), [$this->getDefaultDescription(), null])) {
@@ -3043,7 +3017,7 @@ class Page implements ResourceCombo
     }
 
     /**
-     * @deprecated uses {@link Page::getPath()} instead
+     * A shortcut for {@link Page::getPath()::getDokuwikiId()}
      */
     public function getDokuwikiId()
     {
@@ -3053,5 +3027,15 @@ class Page implements ResourceCombo
     public function getUid(): ?string
     {
         return $this->getPageId();
+    }
+
+    public function getPageIdOrGenerate(): string
+    {
+        return $this->pageId->getPageIdOrGenerate();
+    }
+
+    public function getAbsolutePath(): string
+    {
+        return DokuPath::PATH_SEPARATOR.$this->getDokuwikiId();
     }
 }

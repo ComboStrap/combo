@@ -213,7 +213,7 @@ class Aliases extends Metadata
     }
 
     public
-    function addAlias($aliasPath, $aliasType = Alias::REDIRECT): Aliases
+    function addAlias(string $aliasPath, $aliasType = Alias::REDIRECT): Aliases
     {
         $this->addAndGetAlias($aliasPath, $aliasType);
         return $this;

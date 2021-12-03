@@ -7,6 +7,9 @@ namespace ComboStrap;
  * Interface Path
  * @package ComboStrap
  * A generic path for a generic file system
+ *
+ * The string is just the path
+ * (no other URI parameters)
  */
 interface Path
 {

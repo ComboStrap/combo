@@ -29,6 +29,7 @@ use ComboStrap\MediaLink;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\Page;
+use ComboStrap\PageId;
 use ComboStrap\PageImages;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
@@ -138,9 +139,21 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 ->setStatus(self::UPDATE_EXIT_CODE_NOT_ENABLED);
         }
 
+        /**
+         * Page Id special
+         */
+        if (isset($originalFrontMatterMetadata[PageId::PAGE_ID_ATTRIBUTE])) {
+            if ($page->getPageId() !== null) {
+                $originalFrontMatterMetadata[PageId::PAGE_ID_ATTRIBUTE] = $page->getPageId();
+            }
+        }
 
-        $userDefinedMetadata = Metadata::deleteManagedMetadata($originalFrontMatterMetadata);
+        /**
+         * Update the mutable data
+         * (ie delete insert)
+         */
         $nonDefaultMetadatasValuesInStorageFormat = $page->getNonDefaultMetadatasValuesInStorageFormat();
+        $userDefinedMetadata = Metadata::deleteMutableMetadata($originalFrontMatterMetadata);
         $targetFrontMatterMetadata = array_merge($nonDefaultMetadatasValuesInStorageFormat, $userDefinedMetadata);
         ksort($targetFrontMatterMetadata);
 

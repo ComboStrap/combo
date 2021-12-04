@@ -15,7 +15,7 @@ abstract class PageCompilerDocument implements CachedDocument
      * @var Page
      */
     private $page;
-    
+
     /**
      * Document constructor.
      * @param Page $page
@@ -70,7 +70,7 @@ abstract class PageCompilerDocument implements CachedDocument
             ) {
                 $logicalId = $this->getPage()->getLogicalId();
                 $scope = $this->getPage()->getScope();
-                $content = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$this->getCacheFile()->getAbsoluteFileSystemPath()}\"></div>" . $content;
+                $content = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$this->getCachePath()->getAbsoluteFileSystemPath()}\"></div>" . $content;
             }
             return $content;
         }
@@ -85,16 +85,16 @@ abstract class PageCompilerDocument implements CachedDocument
      */
     public function getFileContent()
     {
-        if (!$this->getCacheFile()->exists()) {
+        if (!$this->getCachePath()->exists()) {
             return null;
         }
-        return $this->getCacheFile()->getTextContent();
+        return $this->getCachePath()->getTextContent();
     }
 
 
     public function deleteIfExists(): PageCompilerDocument
     {
-        $this->getCacheFile()->removeIfExists();
+        $this->getCachePath()->removeIfExists();
         return $this;
     }
 

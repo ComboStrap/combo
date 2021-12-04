@@ -53,8 +53,9 @@ class CacheInstructionsByLogicalKey extends CacheByLogicalKey
      *
      * @param array $instructions the instruction to be cached
      * @return  bool                  true on success, false otherwise
+     * @noinspection PhpParameterNameChangedDuringInheritanceInspection
      */
-    public function storeCache($instructions)
+    public function storeCache($instructions): bool
     {
         if ($this->_nocache) {
             return false;

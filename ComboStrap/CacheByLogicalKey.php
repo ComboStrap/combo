@@ -96,7 +96,11 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
         /**
          * The original file
          */
-        $files[] = $this->pageObject->getAbsoluteFileSystemPath();
+        $path = $this->pageObject->getPath();
+        if ($path instanceof DokuPath) {
+            $path = $path->toLocalPath();
+        }
+        $files[] = $path->toAbsolutePath()->toString();
 
         /**
          * Update the dependency
@@ -107,7 +111,7 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
 
     }
 
-    public function storeCache($data)
+    public function storeCache($data): bool
     {
 
         /**
@@ -128,22 +132,20 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
 
     }
 
-    private function getCacheKey()
+    private function getCacheKey(): string
     {
         return $this->pageObject->getLogicalId() . $_SERVER['HTTP_HOST'] . $_SERVER['SERVER_PORT'];
     }
 
-    protected function getCacheFile()
+    protected function getCacheFile(): string
     {
         return getCacheName($this->getCacheKey(), $this->getExt());
     }
 
-    private function getExt()
+    private function getExt(): string
     {
         return '.' . $this->mode;
     }
-
-
 
 
 }

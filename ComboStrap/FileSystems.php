@@ -10,10 +10,14 @@ class FileSystems
     static function exists(Path $path): bool
     {
         $scheme = $path->getScheme();
-        if ($scheme === DokuFs::SCHEME) {
-            return DokuFs::getOrCreate()->exists($path);
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                return LocalFs::getOrCreate()->exists($path);
+            case DokuFs::SCHEME:
+                return DokuFs::getOrCreate()->exists($path);
+            default:
+                throw new ExceptionComboRuntime("File system ($scheme) unknown");
         }
-        throw new ExceptionComboRuntime("File system ($scheme) unknown");
     }
 
     public static function getContent(Path $path)
@@ -37,6 +41,19 @@ class FileSystems
                 throw new ExceptionComboRuntime("File system ($scheme) unknown");
         }
 
+    }
+
+    public static function getCreationTime(Path $path)
+    {
+        $scheme = $path->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                return LocalFs::getOrCreate()->getCreationTime($path);
+            case DokuFs::SCHEME:
+                return DokuFs::getOrCreate()->getCreationTime($path);
+            default:
+                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+        }
     }
 
 }

@@ -9,7 +9,7 @@ use dokuwiki\Cache\CacheInstructions;
 class InstructionsDocument extends PageCompilerDocument
 {
 
-    private $file;
+    private $path;
 
     /**
      * @var CacheInstructionsByLogicalKey|CacheInstructions
@@ -37,12 +37,16 @@ class InstructionsDocument extends PageCompilerDocument
 
         } else {
 
-            $id = $page->getPath()->getDokuwikiId();
-            $fileAbsolutePath = $page->getPath()->toLocalPath()->toAbsolutePath()->toString();
+            $path = $page->getPath();
+            $id = $path->getDokuwikiId();
+            if($path instanceof DokuPath){
+                $path = $path->toLocalPath();
+            }
+            $fileAbsolutePath = $path->toAbsolutePath()->toString();
             $this->cache = new CacheInstructions($id, $fileAbsolutePath);
 
         }
-        $this->file = File::createFromPath($this->cache->cache);
+        $this->path = LocalPath::createFromPath($this->cache->cache);
     }
 
     function getExtension(): string
@@ -103,9 +107,9 @@ class InstructionsDocument extends PageCompilerDocument
         return "i";
     }
 
-    public function getCacheFile(): File
+    public function getCachePath(): Path
     {
-        return $this->file;
+        return $this->path;
     }
 
     public function shouldProcess(): bool

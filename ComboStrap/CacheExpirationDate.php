@@ -30,20 +30,29 @@ class CacheExpirationDate extends MetadataDateTime
 
     public function getDefaultValue(): ?DateTime
     {
-        $file = $this->getResource()->getHtmlDocument()->getCacheFile();
-        if ($file->exists()) {
-            $cacheIntervalInSecond = Site::getCacheTime();
-            /**
-             * Not the modified time (it's modified by a process when the cache is read
-             * for whatever reason)
-             */
-            $expirationTime = $file->getCreationTime();
-            if ($cacheIntervalInSecond !== null) {
-                $expirationTime->modify('+' . $cacheIntervalInSecond . ' seconds');
-            }
-        } else {
-            $expirationTime = null;
+        $resourceCombo = $this->getResource();
+        if (!($resourceCombo instanceof Page)) {
+            return null;
         }
+        $path = $resourceCombo->getHtmlDocument()->getCachePath();
+        if (!FileSystems::exists($path)) {
+            return null;
+        }
+
+        $cacheIntervalInSecond = Site::getCacheTime();
+        if($cacheIntervalInSecond===-1){
+            return null;
+        }
+
+        /**
+         * Not the modified time (it's modified by a process when the cache is read
+         * for whatever reason)
+         */
+        $expirationTime = FileSystems::getCreationTime($path);
+        if ($cacheIntervalInSecond !== null) {
+            $expirationTime->modify('+' . $cacheIntervalInSecond . ' seconds');
+        }
+
         return $expirationTime;
 
     }
@@ -67,7 +76,6 @@ class CacheExpirationDate extends MetadataDateTime
         return $value;
 
     }
-
 
 
     public function getName(): string

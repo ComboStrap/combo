@@ -300,7 +300,7 @@ class DatabasePage
         /**
          * When the file does not exist
          */
-        $modifiedTime = $this->page->getAnalyticsDocument()->getCacheFile()->getModifiedTime();
+        $modifiedTime = $this->page->getAnalyticsDocument()->getCachePath()->getModifiedTime();
         if ($modifiedTime === null) {
             return true;
         }
@@ -797,11 +797,20 @@ EOF;
             /**
              * Get back the id from the database if the metadata file was deleted
              */
-            if ($this->page->getPageId() === null && $this->getPageId() !== "") {
+            if ($this->page->getPageId() === null
+                && $this->getPageId() !== ""
+                && $this->getPageId() !== null
+            ) {
                 try {
                     $this->page->setPageId($this->getPageId());
                 } catch (ExceptionCombo $e) {
-                    LogUtility::msg("The page id of the page was null and we tried to update it with the page id of the database ($value) but we got an error: " . $e->getMessage());
+                    $message = "The page id of the page was null and we tried to update it with the page id of the database ({$this->getPageId()}) but we got an error: " . $e->getMessage();
+                    if (PluginUtility::isDevOrTest()) {
+
+                    } else {
+                        LogUtility::msg($message);
+                    }
+
                 }
             }
         }

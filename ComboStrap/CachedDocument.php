@@ -17,16 +17,16 @@ interface CachedDocument
      * Execute the transformation process
      *   * from one format to another
      *   * optimization
-     * And stores the output in the {@link PageCompilerDocument::getCacheFile() cache file}
+     * And stores the output in the {@link PageCompilerDocument::getCachePath() cache file}
      * if the cache is enabled
      * @return mixed
      */
     public function process();
 
     /**
-     * @return File - the file where the generated content is stored
+     * @return Path - the path where the generated content is stored
      */
-    public function getCacheFile(): File;
+    public function getCachePath(): Path;
 
     /**
      * @return bool true if the {@link CachedDocument::process() compilation} should occurs

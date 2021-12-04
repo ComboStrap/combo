@@ -67,7 +67,7 @@ class LocalPath extends PathAbs
     public function getParent(): ?Path
     {
         $absolutePath = pathinfo($this->path, PATHINFO_DIRNAME);
-        if(empty($absolutePath)){
+        if (empty($absolutePath)) {
             return null;
         }
         return new LocalPath($absolutePath);
@@ -75,6 +75,12 @@ class LocalPath extends PathAbs
 
     function toAbsolutePath(): Path
     {
-        return new LocalPath(realpath($this->path));
+        $path = realpath($this->path);
+        if ($path !== false) {
+            // Path return false when the file does not exist
+            return new LocalPath($path);
+        }
+        return $this;
+
     }
 }

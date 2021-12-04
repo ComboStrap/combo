@@ -1071,7 +1071,7 @@ class Page extends ResourceComboAbs
     {
         $modified = $this->getCurrentMetadata('date')['modified'];
         if (empty($modified)) {
-            return parent::getModifiedTime();
+            return FileSystems::getModifiedTime($this->getPath());
         } else {
             $datetime = new DateTime();
             $datetime->setTimestamp($modified);
@@ -1985,7 +1985,7 @@ class Page extends ResourceComboAbs
          * The indicator {@link Page::LOW_QUALITY_INDICATOR_CALCULATED} is new
          * but if the analytics was done, we can get it
          */
-        if ($this->getAnalyticsDocument()->getCacheFile()->exists()) {
+        if ($this->getAnalyticsDocument()->getCachePath()->exists()) {
             $value = $this->getAnalyticsDocument()->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
             if ($value !== null) return $value;
         }
@@ -3006,6 +3006,9 @@ class Page extends ResourceComboAbs
         return MetadataDokuWikiStore::create();
     }
 
+    /**
+     * @return Path
+     */
     public function getPath(): Path
     {
         return $this->dokuPath;

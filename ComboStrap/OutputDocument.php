@@ -16,9 +16,9 @@ abstract class OutputDocument extends PageCompilerDocument
     protected $cache;
 
     /**
-     * @var File Cache/Output file
+     * @var Path Cache/Output file
      */
-    private $file;
+    private $path;
 
     /**
      *
@@ -39,13 +39,16 @@ abstract class OutputDocument extends PageCompilerDocument
         } else {
 
             $path = $page->getPath();
-            $localFile = $path->toLocalPath()->toAbsolutePath()->toString();
             $id = $path->getDokuwikiId();
+            if ($path instanceof DokuPath) {
+                $path = $path->toLocalPath();
+            }
+            $localFile = $path->toAbsolutePath()->toString();
             $this->cache = new CacheRenderer($id, $localFile, $this->getExtension());
 
         }
 
-        $this->file = File::createFromPath($this->cache->cache);
+        $this->path = LocalPath::createFromPath($this->cache->cache);
 
     }
 
@@ -56,7 +59,11 @@ abstract class OutputDocument extends PageCompilerDocument
             return "";
         }
 
-        if (!$this->shouldProcess() && $this->getCacheFile()->exists() && PluginUtility::isDevOrTest()) {
+        if (
+            !$this->shouldProcess()
+            && FileSystems::exists($this->getCachePath())
+            && PluginUtility::isDevOrTest()
+        ) {
             LogUtility::msg("The file ({$this->getExtension()}) should not compile and exists, compilation is not needed", LogUtility::LVL_MSG_ERROR);
         }
 
@@ -74,9 +81,7 @@ abstract class OutputDocument extends PageCompilerDocument
          * The code below is adapted from {@link p_cached_output()}
          * $ret = p_cached_output($file, 'xhtml', $pageid);
          */
-
         $instructions = $this->getPage()->getInstructionsDocument()->getOrProcessContent();
-
 
         /**
          * Due to the instructions parsing, they may have been changed
@@ -103,7 +108,7 @@ abstract class OutputDocument extends PageCompilerDocument
                 (Site::debugIsOn() || PluginUtility::isDevOrTest())
                 && $this->getExtension() === HtmlDocument::extension
             ) {
-                $result = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$this->getCacheFile()->getAbsoluteFileSystemPath()}\"></div>" . $result;
+                $result = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$this->getCachePath()->getAbsoluteFileSystemPath()}\"></div>" . $result;
             }
         } else {
             $this->cache->removeCache(); // try to delete cachefile
@@ -119,19 +124,18 @@ abstract class OutputDocument extends PageCompilerDocument
 
     }
 
-    public function getCacheFile(): File
+    public function getCachePath(): Path
     {
-        return $this->file;
+        return $this->path;
     }
 
     public function shouldProcess(): bool
     {
-        if(!$this->getCacheFile()->exists()){
+        if (!FileSystems::exists($this->getCachePath())) {
             return true;
         }
         return $this->cache->useCache() === false;
     }
-
 
 
 }

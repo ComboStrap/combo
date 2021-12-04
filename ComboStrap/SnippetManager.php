@@ -502,7 +502,7 @@ class SnippetManager
      */
     public function attachJavascriptScriptForRequest(string $snippetId, string $relativeId)
     {
-        $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromRelativeId($relativeId);
+        $javascriptMedia = JavascriptLibrary::createJavascriptLibraryFromDokuwikiId($relativeId);
 
         $this->attachTagsForRequest($snippetId)->setTags(
             array("script" => [

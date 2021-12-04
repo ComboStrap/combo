@@ -28,4 +28,5 @@ interface ResourceCombo
      */
     public function getUid();
 
+    function getBuster(): string;
 }

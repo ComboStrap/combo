@@ -447,7 +447,7 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            Path::PATH_ATTRIBUTE => $this->getMedia()->getDokuPath()->getPath()
+            Path::PATH_ATTRIBUTE => $this->getMedia()->getPath()->getPath()
         );
 
 
@@ -469,7 +469,7 @@ abstract class MediaLink
     function __toString()
     {
         $media = $this->getMedia();
-        $dokuPath = $media->getDokuPath();
+        $dokuPath = $media->getPath();
         if ($dokuPath !== null) {
             return $dokuPath->getDokuwikiId();
         } else {
@@ -514,7 +514,7 @@ abstract class MediaLink
          * Do we add a link to the image ?
          */
         $media = $this->getMedia();
-        $dokuPath = $media->getDokuPath();
+        $dokuPath = $media->getPath();
         if($dokuPath===null){
             LogUtility::msg("Media Link are only supported on media from the internal library ($media)", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
             return "";

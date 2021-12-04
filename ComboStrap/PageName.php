@@ -56,7 +56,7 @@ class PageName extends MetadataText
          * is the parent path name
          */
         if ($pathName === Site::getHomePageName()) {
-            $names = $this->getResource()->getDokuNames();
+            $names = $this->getResource()->getPath()->getNames();
             $namesCount = sizeof($names);
             if ($namesCount >= 2) {
                 $pathName = $names[$namesCount - 2];

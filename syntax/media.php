@@ -68,7 +68,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
     {
         $media = MediaLink::createFromCallStackArray($attributes);
         $renderer->stats[AnalyticsDocument::MEDIA_COUNT]++;
-        $scheme = $media->getMedia()->getDokuPath()->getScheme();
+        $scheme = $media->getMedia()->getPath()->getScheme();
         switch ($scheme) {
             case DokuFs::SCHEME:
                 $renderer->stats[AnalyticsDocument::INTERNAL_MEDIA_COUNT]++;
@@ -206,14 +206,14 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $attributes = $data[PluginUtility::ATTRIBUTES];
                 $mediaLink = MediaLink::createFromCallStackArray($attributes);
                 $media = $mediaLink->getMedia();
-                if ($media->getDokuPath()->getScheme() == DokuFs::SCHEME) {
+                if ($media->getPath()->getScheme() == DokuFs::SCHEME) {
                     $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                     if ($media->isImage() || $media->getExtension() === "svg") {
                         try {
                             $renderer->doc .= $mediaLink->renderMediaTagWithLink();
                         } catch (RuntimeException $e) {
                             $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                            $message = "Media ({$media->getDokuPath()->getPath()}). Error while rendering: {$e->getMessage()}";
+                            $message = "Media ({$media->getPath()->getPath()}). Error while rendering: {$e->getMessage()}";
                             $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc(trim($message)) . "</span>";
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
                         }

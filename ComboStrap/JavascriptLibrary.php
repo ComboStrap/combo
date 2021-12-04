@@ -11,25 +11,17 @@ namespace ComboStrap;
 class JavascriptLibrary extends Media
 {
 
-    /**
-     * Dokuwiki know as file system starts at page and media
-     * This parameters permits to add another one
-     * that starts at the resource directory
-     */
-    const COMBO_MEDIA_FILE_SYSTEM = "combo-fs";
     const EXTENSION = "js";
-    const MIME = "text/javascript";
 
 
     /**
-     * @param $relativeDokuPath
+     * @param $dokuwikiId
      * @return JavascriptLibrary
      */
-    public static function createJavascriptLibraryFromRelativeId($relativeDokuPath): JavascriptLibrary
+    public static function createJavascriptLibraryFromDokuwikiId($dokuwikiId): JavascriptLibrary
     {
-        $relativeFsPath = DokuPath::toFileSystemSeparator($relativeDokuPath);
-        $absolutePath = Resources::getAbsoluteResourcesDirectory() . DIRECTORY_SEPARATOR . $relativeFsPath;
-        return new JavascriptLibrary($absolutePath);
+        $resource = DokuPath::createResource($dokuwikiId);
+        return new JavascriptLibrary($resource);
     }
 
 
@@ -50,26 +42,23 @@ class JavascriptLibrary extends Media
          */
         $ampersand = DokuwikiUrl::AMPERSAND_CHARACTER;
 
-        if (!$this->isResourceScript()) {
+        $path = $this->getPath();
+        if (!($path instanceof DokuPath)) {
+            LogUtility::msg("Only Javascript script from a wiki path can be served");
+            return "";
+        }
+        /**
+         * @var DokuPath $path
+         */
+        if ($path->getType() !== DokuPath::RESOURCE_TYPE) {
             LogUtility::msg("Only Javascript script in the resource directory can be served, blank url returned");
             return "";
         };
-        $relativePath = substr($this->getAbsoluteFileSystemPath(), strlen(Resources::getAbsoluteResourcesDirectory()));
-        $relativeDokuPath = DokuPath::toDokuWikiSeparator($relativePath);
         $direct = true;
         $att = [];
         $this->addCacheBusterToQueryParameters($att);
-        $att[self::COMBO_MEDIA_FILE_SYSTEM] = "resources";
-        return ml($relativeDokuPath, $att, $direct, $ampersand, true);
-    }
-
-    private function isResourceScript(): bool
-    {
-        $resourceDirectory = Resources::getAbsoluteResourcesDirectory();
-        if (!(strpos($this->getAbsoluteFileSystemPath(), $resourceDirectory) === 0)) {
-            return false;
-        }
-        return true;
+        $att[DokuPath::WIKI_FS_TYPE] = $path->getType();
+        return ml($path->getDokuwikiId(), $att, $direct, $ampersand, true);
     }
 
 

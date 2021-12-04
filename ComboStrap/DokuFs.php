@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use DateTime;
+
 class DokuFs implements FileSystem
 {
     public const SCHEME = 'doku';
@@ -31,4 +33,19 @@ class DokuFs implements FileSystem
         return file_exists($localAbsolutePath);
     }
 
+    /**
+     * @param DokuPath $path
+     */
+    function getContent(Path $path)
+    {
+        return FileSystems::getContent($path->toLocalPath());
+    }
+
+    /**
+     * @param DokuPath $path
+     */
+    function getModifiedTime(Path $path): ?DateTime
+    {
+        return FileSystems::getModifiedTime($path->toLocalPath());
+    }
 }

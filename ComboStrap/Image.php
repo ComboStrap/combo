@@ -22,16 +22,16 @@ abstract class Image extends Media
 
     /**
      * Image constructor.
-     * @param $absoluteFileSystemPath
+     * @param $absolutePath
      * @param TagAttributes|null $attributes - the attributes
      */
-    public function __construct($absoluteFileSystemPath, $attributes = null)
+    public function __construct($absolutePath, $attributes = null)
     {
         if ($attributes === null) {
             $this->attributes = TagAttributes::createEmpty(self::CANONICAL);
         }
 
-        parent::__construct($absoluteFileSystemPath, $attributes);
+        parent::__construct($absolutePath, $attributes);
     }
 
 
@@ -53,7 +53,7 @@ abstract class Image extends Media
         $dokuPath = DokuPath::createMediaPathFromAbsolutePath($dokuWikiAbsolutePathOrId, $rev);
         $mime = $dokuPath->getMime();
 
-        if (substr($mime, 0, 5) !== 'image') {
+        if (!$mime->isImage()) {
 
             LogUtility::msg("The file ($dokuWikiAbsolutePathOrId) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return null;
@@ -61,14 +61,13 @@ abstract class Image extends Media
         }
         if (substr($mime, 6) == "svg+xml") {
 
-            $image = new ImageSvg($dokuPath->getAbsoluteFileSystemPath(), $attributes);
+            $image = new ImageSvg($dokuPath, $attributes);
 
         } else {
 
-            $image = new ImageRaster($dokuPath->getAbsoluteFileSystemPath(), $attributes);
+            $image = new ImageRaster($dokuPath, $attributes);
 
         }
-        $image->setDokuPath($dokuPath);
         return $image;
 
 
@@ -245,7 +244,7 @@ abstract class Image extends Media
      */
     public function isRaster(): bool
     {
-        if ($this->getMime() === ImageSvg::MIME) {
+        if ($this->getMime() === Mime::SVG) {
             return false;
         } else {
             return true;
@@ -423,6 +422,7 @@ abstract class Image extends Media
     {
         return intval(round($param));
     }
+
 
 
 

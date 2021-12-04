@@ -43,7 +43,7 @@ class PageImages extends Metadata
     {
         $pageImagesMeta = [];
         foreach ($pageImages as $pageImage) {
-            $absolutePath = $pageImage->getImage()->getDokuPath()->getAbsolutePath();
+            $absolutePath = $pageImage->getImage()->getPath()->getAbsolutePath();
             $pageImagesMeta[$absolutePath] = [
                 PageImage::PATH_ATTRIBUTE => $absolutePath
             ];
@@ -263,7 +263,7 @@ class PageImages extends Metadata
         /** @noinspection PhpIfWithCommonPartsInspection */
         if ($this->pageImages !== null) {
             foreach ($this->pageImages as $pageImage) {
-                $pageImagePathValue = $pageImage->getImage()->getDokuPath()->getAbsolutePath();
+                $pageImagePathValue = $pageImage->getImage()->getPath()->getAbsolutePath();
                 $pageImagePathUsage = $pageImage->getUsages();
                 $pageImagePath->addValue($pageImagePathValue);
                 $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
@@ -271,7 +271,7 @@ class PageImages extends Metadata
             $pageImagePath->addValue(null);
             $pageImageUsage->addValue(null, PageImage::DEFAULT);
         } else {
-            $pageImageDefault = $this->getResource()->getDefaultPageImageObject()->getImage()->getDokuPath()->getAbsolutePath();
+            $pageImageDefault = $this->getResource()->getDefaultPageImageObject()->getImage()->getPath()->getAbsolutePath();
             $pageImagePath->addValue(null, $pageImageDefault);
             $pageImageUsage->addValue(null, PageImage::DEFAULT);
         }

@@ -35,7 +35,7 @@ class CacheMedia
     const CACHE_BUSTER_KEY = "tseed";
 
     /**
-     * @var File
+     * @var LocalPath
      */
     private $path;
     /**
@@ -48,7 +48,7 @@ class CacheMedia
     /**
      * Cache constructor.
      */
-    public function __construct(File $path, TagAttributes $tagAttributes)
+    public function __construct(LocalPath $path, TagAttributes $tagAttributes)
     {
 
         $this->path = $path;
@@ -56,7 +56,7 @@ class CacheMedia
         /**
          * Cache Key Construction
          */
-        $cacheKey = $this->path->getAbsoluteFileSystemPath();
+        $cacheKey = $this->path->toAbsolutePath()->toString();
         foreach ($tagAttributes->getComponentAttributes() as $name => $value) {
 
             /**
@@ -131,7 +131,7 @@ class CacheMedia
                 // svg generation depends on configuration
                 $files = getConfigFiles('main');
             }
-            $files[] = $this->path->getAbsoluteFileSystemPath();
+            $files[] = $this->path->toAbsolutePath()->toString();
             $files[] = Resources::getComboHome() . "/plugin.info.txt";
             $dependencies = array('files' => $files);
             if ($this->maxAge != null) {

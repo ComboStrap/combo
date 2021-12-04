@@ -27,7 +27,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * This is just a wrapper around a file with the mime Dokuwiki
  * that has a doku path (ie with the `:` separator)
  */
-class Page implements ResourceCombo
+class Page extends ResourceComboAbs
 {
     const TITLE_META_PROPERTY = 'title';
 
@@ -2049,7 +2049,7 @@ class Page implements ResourceCombo
         if (!PluginUtility::getConfValue(PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             $firstImage = $this->getFirstImage();
             if ($firstImage != null) {
-                if ($firstImage->getDokuPath()->getScheme() == DokuFs::SCHEME) {
+                if ($firstImage->getPath()->getScheme() == DokuFs::SCHEME) {
                     return PageImage::create($firstImage, $this);
                 }
             }
@@ -2110,7 +2110,7 @@ class Page implements ResourceCombo
     function getParentPage(): ?Page
     {
 
-        $names = $this->getDokuNames();
+        $names = $this->getPath()->getNames();
         if (sizeof($names) == 0) {
             return null;
         }
@@ -3011,10 +3011,7 @@ class Page implements ResourceCombo
         return $this->dokuPath;
     }
 
-    public function exists(): bool
-    {
-        return FileSystems::exists($this->dokuPath);
-    }
+
 
     /**
      * A shortcut for {@link Page::getPath()::getDokuwikiId()}

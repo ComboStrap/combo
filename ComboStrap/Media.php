@@ -14,7 +14,7 @@ namespace ComboStrap;
  * This is why there is a cache attribute - this is the cache of the generated file
  * if any
  */
-abstract class Media extends File
+abstract class Media extends ResourceComboAbs
 {
 
     /**
@@ -23,22 +23,22 @@ abstract class Media extends File
     protected $attributes;
 
     /**
-     * @var DokuPath
+     * @var Path
      */
-    private $dokuPath;
+    private $path;
 
     /**
      * Media constructor.
      * The file system path and the attributes (properties)
      */
-    public function __construct($fileSystemPath, $attributes = null)
+    public function __construct(Path $path, $attributes = null)
     {
         if ($attributes === null) {
             $attributes = TagAttributes::createEmpty();
         }
         $this->attributes = $attributes;
 
-        parent::__construct($fileSystemPath);
+        $this->path = $path;
 
     }
 
@@ -62,16 +62,10 @@ abstract class Media extends File
         return $this->attributes;
     }
 
-    public
-    function setDokuPath(DokuPath $dokuPath): Media
-    {
-        $this->dokuPath = $dokuPath;
-        return $this;
-    }
 
-    public function getDokuPath(): ?DokuPath
+    public function getPath(): Path
     {
-        return $this->dokuPath;
+        return $this->path;
     }
 
     /**
@@ -86,5 +80,14 @@ abstract class Media extends File
     public abstract function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED);
 
 
+    public function getDefaultMetadataStore(): MetadataStore
+    {
+        throw new ExceptionComboRuntime("To implement");
+    }
+
+    public function getUid()
+    {
+        throw new ExceptionComboRuntime("To implement");
+    }
 
 }

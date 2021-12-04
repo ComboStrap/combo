@@ -10,7 +10,7 @@ require_once(__DIR__ . '/PluginUtility.php');
  * A dokuwiki path
  *
  */
-class DokuPath implements Path
+class DokuPath extends PathAbs
 {
     const MEDIA_TYPE = "media";
     const PAGE_TYPE = "page";
@@ -37,6 +37,14 @@ class DokuPath implements Path
      */
     public const DIRECTORY_SEPARATOR = "/";
     public const SLUG_SEPARATOR = "-";
+
+    const RESOURCE_TYPE = "resource";
+    /**
+     * Dokuwiki know as file system starts at page and media
+     * This parameters permits to add another one
+     * that starts at the resource directory
+     */
+    public const WIKI_FS_TYPE = "wiki-fs-type";
 
     /**
      * @var string[]
@@ -98,9 +106,9 @@ class DokuPath implements Path
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
      */
-    protected function __construct($absolutePath, string $type, string $rev = null)
+    protected function __construct(string $absolutePath, string $type, string $rev = null)
     {
-
+        DokuPath::addRootSeparatorIfNotPresent($absolutePath);
         if (empty($absolutePath)) {
             LogUtility::msg("A null path was given", LogUtility::LVL_MSG_WARNING);
         }
@@ -173,18 +181,29 @@ class DokuPath implements Path
 
             if (!$isNamespacePath) {
 
-                if ($type == self::MEDIA_TYPE) {
-                    if (!empty($rev)) {
-                        $filePath = mediaFN($this->id, $rev);
-                    } else {
-                        $filePath = mediaFN($this->id);
-                    }
-                } else {
-                    if (!empty($rev)) {
-                        $filePath = wikiFN($this->id, $rev);
-                    } else {
-                        $filePath = wikiFN($this->id);
-                    }
+                switch ($type) {
+
+                    case self::MEDIA_TYPE:
+                        if (!empty($rev)) {
+                            $filePath = mediaFN($this->id, $rev);
+                        } else {
+                            $filePath = mediaFN($this->id);
+                        }
+                        break;
+                    case self::PAGE_TYPE:
+                        if (!empty($rev)) {
+                            $filePath = wikiFN($this->id, $rev);
+                        } else {
+                            $filePath = wikiFN($this->id);
+                        }
+                        break;
+                    case self::RESOURCE_TYPE:
+                        $relativeFsPath = DokuPath::toFileSystemSeparator($this->id);
+                        $filePath = Resources::getAbsoluteResourcesDirectory() . DIRECTORY_SEPARATOR . $relativeFsPath;
+                        break;
+                    default:
+                        LogUtility::msg("Wiki Path Type ($type) is unknown, the local file system path could not be found", LogUtility::LVL_MSG_ERROR);
+
                 }
             } else {
                 /**
@@ -343,10 +362,19 @@ class DokuPath implements Path
         return $path;
     }
 
+    public static function createResource($dokuwikiId): DokuPath
+    {
+        return new DokuPath($dokuwikiId, self::RESOURCE_TYPE);
+    }
+
+    public static function createDokuPath($mediaId, $type, $rev = ''): DokuPath
+    {
+        return new DokuPath($mediaId, $type, $rev);
+    }
+
 
     /**
      * The last part of the path
-     * (Not to confound with the {@link Page::getDokuPathLastName()
      */
     public
     function getLastName()
@@ -594,7 +622,8 @@ class DokuPath implements Path
         return $this->absolutePath;
     }
 
-    function toUriString(): string{
+    function toUriString(): string
+    {
         $string = "{$this->scheme}://$this->finalType/$this->id";
         if ($this->rev !== null) {
             return "$string?rev={$this->rev}";
@@ -620,8 +649,22 @@ class DokuPath implements Path
         $names = array_slice($names, 0, sizeof($names) - 1);
         $path = implode(DokuPath::PATH_SEPARATOR, $names);
 
-        return new DokuPath($path,$this->finalType,$this->rev);
+        return new DokuPath($path, $this->finalType, $this->rev);
 
 
+    }
+
+    function getMime(): Mime
+    {
+        if ($this->finalType === self::PAGE_TYPE) {
+            return new Mime(Mime::PLAIN_TEXT);
+        }
+        return parent::getMime();
+
+    }
+
+    public function getType(): string
+    {
+        return $this->finalType;
     }
 }

@@ -20,10 +20,17 @@ interface Path
     function getScheme();
 
     /**
-     * The last name of the path without the extension
+     * The last name of the path with or without the extension
+     *
+     * The Path class does not have a notion of "extension"
+     * because the file does not have one but we provide the
+     * {@link PathAbs::getExtension()} as utility
+     *
      * @return mixed
      */
     function getLastName();
+
+
 
     function getNames();
 
@@ -36,15 +43,12 @@ interface Path
      */
     function getDokuwikiId();
 
-    /**
-     * To the local file system path
-     *
-     * @return mixed
-     */
-    function toLocalPath(): LocalPath;
-
     function toString();
 
     function toAbsolutePath(): Path;
 
+    /**
+     * @return Mime the mime from the extension
+     */
+    function getMime(): Mime;
 }

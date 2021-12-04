@@ -35,7 +35,7 @@ class Index
 
     public function getPagesForMedia(Media $media): array
     {
-        $dokuwikiId = $media->getDokuPath()->getDokuwikiId();
+        $dokuwikiId = $media->getPath()->getDokuwikiId();
         return $this->indexer->lookupKey('relation_media', $dokuwikiId);
     }
 

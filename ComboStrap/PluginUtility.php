@@ -18,9 +18,12 @@ require_once(__DIR__ . '/PageCompilerDocument.php');
 require_once(__DIR__ . '/OutputDocument.php');
 require_once(__DIR__ . '/FileSystem.php');
 require_once(__DIR__ . '/Path.php');
+require_once(__DIR__ . '/PathAbs.php');
 require_once(__DIR__ . '/File.php');
 require_once(__DIR__ . '/DokuFs.php');
 require_once(__DIR__ . '/DokuPath.php');
+require_once(__DIR__ . '/ResourceCombo.php');
+require_once(__DIR__ . '/ResourceComboAbs.php');
 require_once(__DIR__ . '/Media.php');
 require_once(__DIR__ . '/MediaLink.php');
 require_once(__DIR__ . '/Metadata.php');
@@ -30,7 +33,6 @@ require_once(__DIR__ . '/MetadataJson.php');
 require_once(__DIR__ . '/MetadataText.php');
 require_once(__DIR__ . '/MetadataWikiPath.php');
 require_once(__DIR__ . '/MetadataStore.php');
-require_once(__DIR__ . '/ResourceCombo.php');
 
 
 /**
@@ -106,6 +108,7 @@ require_once(__DIR__ . '/JavascriptLibrary.php');
 require_once(__DIR__ . '/Lang.php');
 require_once(__DIR__ . '/LdJson.php');
 require_once(__DIR__ . '/LineSpacing.php');
+require_once(__DIR__ . '/LocalFs.php');
 require_once(__DIR__ . '/LocalPath.php');
 require_once(__DIR__ . '/LogException.php');
 require_once(__DIR__ . '/LogUtility.php');
@@ -688,7 +691,7 @@ class PluginUtility
              * TODO: when we have made a special fetch ajax with cache
              * for application resource, we can serve it statically
              */
-            $path = File::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
+            $path = LocalPath::createFromPath(Resources::getImagesDirectory() . "/logo.svg");
             $tagAttributes = TagAttributes::createEmpty(SvgImageLink::CANONICAL);
             $tagAttributes->addComponentAttributeValue(TagAttributes::TYPE_KEY, SvgDocument::ICON_TYPE);
             $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");

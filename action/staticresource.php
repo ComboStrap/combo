@@ -3,9 +3,12 @@
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
 use ComboStrap\File;
+use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
 use ComboStrap\JavascriptLibrary;
+use ComboStrap\LocalPath;
+use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use dokuwiki\Utf8\PhpString;
 
@@ -61,14 +64,21 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     function handleMediaStatus(Doku_Event $event, $params)
     {
 
-        if (!isset($_GET[JavascriptLibrary::COMBO_MEDIA_FILE_SYSTEM])) {
+        if (!isset($_GET[DokuPath::WIKI_FS_TYPE])) {
+            return;
+        }
+        $type = $_GET[DokuPath::WIKI_FS_TYPE];
+        if ($type !== DokuPath::RESOURCE_TYPE) {
+            // The other resources have ACL
+            // and this endpoint is normally only for
+            $event->data['status'] = HttpResponse::STATUS_NOT_AUTHORIZED;
             return;
         }
         $mediaId = $event->data['media'];
-        $mediaPath = JavascriptLibrary::createJavascriptLibraryFromRelativeId($mediaId);
-        $event->data['file'] = $mediaPath->getAbsoluteFileSystemPath();
-        if ($mediaPath->exists()) {
-            $event->data['status'] = 200;
+        $mediaPath = DokuPath::createDokuPath($mediaId, $type);
+        $event->data['file'] = $mediaPath->toAbsolutePath()->toString();
+        if (FileSystems::exists($mediaPath)) {
+            $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
             $event->data['statusmessage'] = '';
             $event->data['mime'] = $mediaPath->getMime();
         }
@@ -89,14 +99,14 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Combo Media
          * (Static file from the combo resources are always taken over)
          */
-        if (isset($_GET[JavascriptLibrary::COMBO_MEDIA_FILE_SYSTEM])) {
+        if (isset($_GET[DokuPath::WIKI_FS_TYPE])) {
 
-            $isStaticFileManaged = true;
+            $isStaticFileManaged = $_GET[DokuPath::WIKI_FS_TYPE] === DokuPath::RESOURCE_TYPE;
 
         }
 
         /**
-         * DokuWiki media
+         * DokuWiki Resource media
          */
         if (!$isStaticFileManaged) {
 
@@ -150,7 +160,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if (empty($physicalFile)) {
             $physicalFile = $originalFile;
         }
-        $mediaToSend = File::createFromPath($physicalFile);
+        $mediaToSend = LocalPath::createFromPath($physicalFile);
 
         /**
          * The mime
@@ -245,14 +255,14 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
     }
 
     /**
-     * @param File $mediaFile
+     * @param Path $mediaFile
      * @param Array $properties - the query properties
      * @return string
      */
     public
-    static function getEtagValue(File $mediaFile, array $properties): string
+    static function getEtagValue(Path $mediaFile, array $properties): string
     {
-        $etagString = $mediaFile->getModifiedTime()->format('r');
+        $etagString = FileSystems::getModifiedTime($mediaFile)->format('r');
         ksort($properties);
         foreach ($properties as $key => $value) {
             /**

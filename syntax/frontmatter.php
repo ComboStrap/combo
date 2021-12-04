@@ -435,7 +435,7 @@ EOF;
                         $pageImages = PageImages::createForPageWithDefaultStore($page)
                             ->buildFromPersistentFormat($value);
                         foreach ($pageImages->getAll() as $imageValue) {
-                            $imagePath = $imageValue->getImage()->getDokuPath()->getAbsolutePath();
+                            $imagePath = $imageValue->getImage()->getPath()->getAbsolutePath();
                             $attributes = [Path::PATH_ATTRIBUTE => $imagePath];
                             if (media_isexternal($imagePath)) {
                                 $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;

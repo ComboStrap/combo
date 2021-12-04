@@ -143,7 +143,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 $newPagesImages = PageImages::createForPageWithDefaultStore($fakePage);
 
                 foreach ($oldPagesImages->getAll() as $oldPageImage) {
-                    $imagePath = $oldPageImage->getImage()->getDokuPath()->getAbsolutePath();
+                    $imagePath = $oldPageImage->getImage()->getPath()->getAbsolutePath();
                     $this->moveImage($imagePath, $handler);
                     $newPagesImages->addImage($imagePath, $oldPageImage->getUsages());
                 }

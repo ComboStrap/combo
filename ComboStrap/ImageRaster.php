@@ -10,9 +10,9 @@ class ImageRaster extends Image
     const CANONICAL = "raster";
 
 
-    public function __construct($absoluteFileSystemPath, $attributes = null)
+    public function __construct($absolutePath, $attributes = null)
     {
-        parent::__construct($absoluteFileSystemPath, $attributes);
+        parent::__construct($absolutePath, $attributes);
         $this->getAttributes()->setLogicalTag(self::CANONICAL);
     }
 
@@ -192,11 +192,11 @@ class ImageRaster extends Image
 
         $direct = true;
 
-        if ($this->getDokuPath() === null) {
+        if ($this->getPath() === null) {
             LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
-        return ml($this->getDokuPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
+        return ml($this->getPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
 
 
     }

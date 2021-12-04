@@ -8,7 +8,7 @@ namespace ComboStrap;
  * @package ComboStrap
  * A local file system path
  */
-class LocalPath implements Path
+class LocalPath extends PathAbs
 {
 
     private $path;
@@ -28,10 +28,14 @@ class LocalPath implements Path
         return new LocalPath($filePath);
     }
 
+    public static function createFromPath(string $string): LocalPath
+    {
+        return new LocalPath($string);
+    }
+
     function getScheme(): string
     {
-        // same as java
-        return "file";
+        return LocalFs::SCHEME;
     }
 
     function getLastName()
@@ -54,10 +58,6 @@ class LocalPath implements Path
         throw new ExceptionComboRuntime("Not implemented");
     }
 
-    function toLocalPath(): LocalPath
-    {
-        return $this;
-    }
 
     function toString()
     {

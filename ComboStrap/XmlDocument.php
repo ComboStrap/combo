@@ -214,16 +214,16 @@ class XmlDocument
     }
 
     /**
-     * @param File $file
+     * @param File $path
      */
     public
-    static function createFromPath($file)
+    static function createFromPath($path)
     {
         $mime = XmlDocument::XML_TYPE;
-        if (in_array($file->getExtension(), ["html", "htm"])) {
+        if (in_array($path->getExtension(), ["html", "htm"])) {
             $mime = XmlDocument::HTML_TYPE;
         }
-        return new XmlDocument($file->getTextContent(), $mime);
+        return new XmlDocument($path->getTextContent(), $mime);
     }
 
     public

@@ -13,15 +13,14 @@ namespace ComboStrap;
 class ImageSvg extends Image
 {
 
-    const MIME = "image/svg+xml";
     const EXTENSION = "svg";
     const CANONICAL = "svg";
 
 
 
-    public function __construct($absoluteFileSystemPath, $tagAttributes = null)
+    public function __construct($absolutePath, $tagAttributes = null)
     {
-        parent::__construct($absoluteFileSystemPath, $tagAttributes);
+        parent::__construct($absolutePath, $tagAttributes);
     }
 
 
@@ -128,11 +127,11 @@ class ImageSvg extends Image
 
         $direct = true;
 
-        if ($this->getDokuPath() === null) {
+        if ($this->getPath() === null) {
             LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
-        return ml($this->getDokuPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
+        return ml($this->getPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
 
 
     }

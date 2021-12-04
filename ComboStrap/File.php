@@ -62,6 +62,7 @@ class File
 
     /**
      * @return null|DateTime - The date time
+     * @deprecated use {@link FileSystems::getModifiedTime()} instead
      */
     public function getModifiedTime(): ?DateTime
     {
@@ -81,46 +82,16 @@ class File
         return pathinfo($this->path, PATHINFO_FILENAME);
     }
 
-    public function getExtension()
-    {
-        return pathinfo($this->path, PATHINFO_EXTENSION);
-    }
 
 
-    /**
-     * @return array|string|string[] the last part of the path (ie name + extension)
-     */
-    public function getBaseName()
-    {
-        return pathinfo($this->path, PATHINFO_BASENAME);
-    }
+
 
     public function isImage(): bool
     {
         return substr($this->getMime(), 0, 5) == 'image';
     }
 
-    public function getMime()
-    {
-        switch ($this->getExtension()) {
-            case ImageSvg::EXTENSION:
-                /**
-                 * Svg is authorized when viewing but is not part
-                 * of the {@link File::getKnownMime()}
-                 */
-                return ImageSvg::MIME;
-            case JavascriptLibrary::EXTENSION:
-                return JavascriptLibrary::MIME;
-            default:
 
-                return mimetype($this->getBaseName(), false)[1];
-        }
-    }
-
-    public function getKnownMime()
-    {
-        return mimetype($this->getBaseName(), true)[1];
-    }
 
     /**
      * @return false|string

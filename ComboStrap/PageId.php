@@ -1,8 +1,12 @@
-<?php
+<?php /** @noinspection SpellCheckingInspection */
 
 
 namespace ComboStrap;
 
+
+use action_plugin_combo_metamanager;
+use Hidehalo\Nanoid\Client;
+use RuntimeException;
 
 class PageId extends MetadataText
 {
@@ -42,7 +46,7 @@ class PageId extends MetadataText
 
     public function getTab(): string
     {
-        return \action_plugin_combo_metamanager::TAB_INTEGRATION_VALUE;
+        return action_plugin_combo_metamanager::TAB_INTEGRATION_VALUE;
     }
 
     public function getDescription(): string
@@ -100,7 +104,7 @@ class PageId extends MetadataText
                 $this->setValue($actualValue)
                     ->persist();
             } catch (ExceptionCombo $e) {
-                throw new \RuntimeException($e);
+                throw new RuntimeException($e);
             }
         }
         return $actualValue;
@@ -134,7 +138,7 @@ class PageId extends MetadataText
          * creation of the {@link DatabasePage::getDatabaseRowFromPage() databasePage object}
          *
          */
-        $nanoIdClient = new \Hidehalo\Nanoid\Client();
+        $nanoIdClient = new Client();
         $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
         while (DatabasePage::createFromPageId($pageId)->exists()) {
             $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
@@ -170,10 +174,10 @@ class PageId extends MetadataText
 
         if ($force !== true) {
             if ($actualId !== null && $actualId !== $value) {
-                throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ({$actualId}) that has not the same value ({$value})", $this->getCanonical());
+                throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId}) that has not the same value ($value})", $this->getCanonical());
             }
             if ($actualId !== null) {
-                throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ({$actualId})", $this->getCanonical());
+                throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId})", $this->getCanonical());
             }
         } else {
             if(PluginUtility::isDevOrTest()){

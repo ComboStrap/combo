@@ -2899,25 +2899,6 @@ class Page extends ResourceComboAbs
         return $this->cacheExpirationFrequency->getValue();
     }
 
-    /**
-     * @throws ExceptionCombo
-     * @deprecated for {@link CacheExpirationFrequency}
-     */
-    public function setCacheExpirationFrequency(string $cronExpression): Page
-    {
-
-        $this->cacheExpirationFrequency->setValue($cronExpression);
-        return $this;
-    }
-
-    /**
-     * @return DateTime|null
-     * @deprecated for {@link CacheExpirationDate}
-     */
-    public function getExpirationDate(): ?DateTime
-    {
-        return $this->cacheExpirationDate->getValue();
-    }
 
 
     /**

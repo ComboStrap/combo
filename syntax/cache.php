@@ -85,8 +85,11 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
 
 
                 $requestPage = Page::createPageFromRequestedPage();
+
                 try {
-                    $requestPage->setCacheExpirationFrequency($value);
+                    CacheExpirationFrequency::createForPageWithDefaultStore($requestPage)
+                        ->setValue($value)
+                        ->persist();
                 } catch (ExceptionCombo $e) {
                     $status = self::PARSING_STATE_UNSUCCESSFUL;
                 }
@@ -132,7 +135,9 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                     $cronExpression = $data[PluginUtility::PAYLOAD];
                     $requestPage = Page::createPageFromRequestedPage();
                     try {
-                        $requestPage->setCacheExpirationFrequency($cronExpression);
+                        CacheExpirationFrequency::createForPageWithDefaultStore($requestPage)
+                            ->setValue($cronExpression)
+                            ->persist();
                     } catch (ExceptionCombo $e) {
                         // should not happen as we test for its validity
                     }

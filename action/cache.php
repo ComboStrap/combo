@@ -1,6 +1,7 @@
 <?php
 
 use ComboStrap\AnalyticsDocument;
+use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheManager;
 use ComboStrap\CacheMedia;
 use ComboStrap\Cron;
@@ -181,7 +182,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
             if ($cacheExpirationFrequency === null) {
                 return;
             }
-            $expirationDate = $page->getExpirationDate();
+
+            $expirationDate = CacheExpirationDate::createForPageWithDefaultStore($page)
+                ->getValue();
 
             if ($expirationDate === null) {
                 try {
@@ -232,7 +235,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $cacheSlotResults = $cacheManager->getCacheSlotResultsAsHtmlDataBlockArray();
         $cacheJson = \ComboStrap\Json::createFromArray($cacheSlotResults);
 
-        if(PluginUtility::isDevOrTest()){
+        if (PluginUtility::isDevOrTest()) {
             $result = $cacheJson->toPrettyJsonString();
         } else {
             $result = $cacheJson->toMinifiedJsonString();

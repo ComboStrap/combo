@@ -1,0 +1,73 @@
+<?php
+
+
+namespace ComboStrap;
+
+
+class PageTitle extends MetadataText
+{
+
+    public const TITLE_META_PROPERTY = 'title';
+    public const TITLE = 'title';
+
+    public static function createForPageWithDefaultStore($page): PageTitle
+    {
+        return (new PageTitle())
+            ->setResource($page)
+            ->useDefaultStore();
+    }
+
+    public function getTab(): string
+    {
+        return \action_plugin_combo_metamanager::TAB_PAGE_VALUE;
+    }
+
+    public function getDescription(): string
+    {
+        return "The page title is a description advertised to external application such as search engine and browser.";
+    }
+
+    public function getLabel(): string
+    {
+        return "Title";
+    }
+
+    public function getName(): string
+    {
+        return self::TITLE_META_PROPERTY;
+    }
+
+    public function getPersistenceType(): string
+    {
+        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+    }
+
+    public function getMutable(): bool
+    {
+        return true;
+    }
+
+    public function getDefaultValue(): ?string
+    {
+
+        $resource = $this->getResource();
+        if ($resource instanceof Page) {
+            if ($resource->isRootHomePage() && !empty(Site::getTagLine())) {
+                return Site::getTagLine();
+            }
+            if (!empty($resource->getH1OrDefault())) {
+                return $resource->getH1OrDefault();
+            }
+            return $resource->getPageNameNotEmpty();
+        }
+        return null;
+
+    }
+
+    public function getCanonical(): string
+    {
+        return self::TITLE;
+    }
+
+
+}

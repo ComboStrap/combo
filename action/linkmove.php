@@ -153,9 +153,9 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
              */
             Aliases::createForPageWithDefaultStore($page)
                 ->addAlias($id)
-                ->persist()
+                ->sendToStore()
                 ->setStore(MetadataDbStore::getOrCreate())
-                ->persist();
+                ->sendToStore();
 
 
         } catch (Exception $exception) {

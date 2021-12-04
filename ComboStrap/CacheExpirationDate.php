@@ -86,7 +86,7 @@ class CacheExpirationDate extends MetadataDateTime
 
     public function getPersistenceType(): string
     {
-        return Metadata::CURRENT_METADATA;
+        return MetadataDokuWikiStore::CURRENT_METADATA;
     }
 
 

@@ -5,6 +5,7 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\Canonical;
 use ComboStrap\LinkUtility;
 use ComboStrap\Page;
+use ComboStrap\PageTitle;
 use ComboStrap\StringUtility;
 use dokuwiki\ChangeLog\PageChangeLog;
 
@@ -243,10 +244,10 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * A title should be present
          */
         $titleScore = $this->getConf(self::CONF_QUALITY_SCORE_TITLE_PRESENT, 10);
-        if (empty($this->metadata[AnalyticsDocument::TITLE])) {
+        if (empty($this->metadata[PageTitle::TITLE])) {
             $ruleResults[self::RULE_TITLE_PRESENT] = self::FAILED;
             $ruleInfo[self::RULE_TITLE_PRESENT] = "Add a title in the frontmatter for {$titleScore} points";
-            $this->metadata[AnalyticsDocument::TITLE] = $dokuWikiMetadata[AnalyticsDocument::TITLE];
+            $this->metadata[PageTitle::TITLE] = $dokuWikiMetadata[PageTitle::TITLE];
             $qualityScores[self::RULE_TITLE_PRESENT] = 0;
         } else {
             $qualityScores[self::RULE_TITLE_PRESENT] = $titleScore;

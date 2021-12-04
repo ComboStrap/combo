@@ -66,7 +66,7 @@ class PageId extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return Metadata::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_METADATA;
     }
 
     public function getMutable(): bool
@@ -102,7 +102,7 @@ class PageId extends MetadataText
             try {
                 $actualValue = self::generateUniquePageId();
                 $this->setValue($actualValue)
-                    ->persist();
+                    ->sendToStore();
             } catch (ExceptionCombo $e) {
                 throw new RuntimeException($e);
             }

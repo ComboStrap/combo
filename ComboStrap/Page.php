@@ -29,7 +29,6 @@ require_once(__DIR__ . '/PluginUtility.php');
  */
 class Page extends ResourceComboAbs
 {
-    const TITLE_META_PROPERTY = 'title';
 
     const NOT_MODIFIABLE_METAS = [
         "date",
@@ -122,7 +121,6 @@ class Page extends ResourceComboAbs
     const PAGE_ID_ABBREV_LENGTH = 7;
 
 
-
     /**
      *
      * The page id is separated in the URL with a "-"
@@ -156,10 +154,7 @@ class Page extends ResourceComboAbs
     const DESCRIPTION_COMBO_ORIGIN = syntax_plugin_combo_frontmatter::CANONICAL;
 
 
-    /**
-     * @var array|array[]
-     */
-    private $metadatas;
+
     /**
      * @var string|null - the description (the origin is in the $descriptionOrigin)
      */
@@ -195,6 +190,9 @@ class Page extends ResourceComboAbs
      */
     private $pageName;
     private $type;
+    /**
+     * @var PageTitle $title
+     */
     private $title;
     private $author;
     private $authorId;
@@ -459,7 +457,6 @@ class Page extends ResourceComboAbs
     }
 
 
-
     /**
      * @var string the logical id is used with slots.
      *
@@ -527,6 +524,7 @@ class Page extends ResourceComboAbs
 
 
     /**
+     *
      * @throws ExceptionCombo
      */
     public function setCanonical($canonical): Page
@@ -589,17 +587,6 @@ class Page extends ResourceComboAbs
 
     }
 
-    /**
-     * Return the metadata stored in the file system
-     * @return array|array[]
-     */
-    public
-    function getMetadatas(): array
-    {
-
-        return $this->metadatas;
-
-    }
 
     /**
      * Rebuild the page
@@ -622,8 +609,8 @@ class Page extends ResourceComboAbs
     function getInternalReferencedPages(): array
     {
         $metadata = $this->getMetadatas();
-        if (key_exists(Metadata::CURRENT_METADATA, $metadata)) {
-            $current = $metadata[Metadata::CURRENT_METADATA];
+        if (key_exists(MetadataDokuWikiStore::CURRENT_METADATA, $metadata)) {
+            $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
             if (key_exists('relation', $current)) {
                 $relation = $current['relation'];
                 if (is_array($relation)) {
@@ -752,11 +739,9 @@ class Page extends ResourceComboAbs
      * Return the Title
      */
     public
-    function getTitle()
+    function getTitle(): ?string
     {
-
-        return $this->title;
-
+        return $this->title->getValue();
     }
 
     /**
@@ -773,15 +758,9 @@ class Page extends ResourceComboAbs
      * @return string the title, or h1 if empty or the id if empty
      */
     public
-    function getTitleOrDefault(): string
+    function getTitleOrDefault(): ?string
     {
-        $pageTitle = $this->getTitle();
-        if ($pageTitle === null) {
-            return $this->getDefaultTitle();
-        } else {
-            return $pageTitle;
-        }
-
+        return $this->title->getValueOrDefault();
     }
 
     public
@@ -987,30 +966,8 @@ class Page extends ResourceComboAbs
     }
 
 
-    /**
-     * @param $key
-     * @return mixed|null
-     */
-    public
-    function getPersistentMetadata($key)
-    {
-        $key = $this->getMetadatas()[Metadata::PERSISTENT_METADATA][$key];
-        /**
-         * Empty string return null
-         * because Dokuwiki does not allow to delete keys
-         * {@link p_set_metadata()}
-         */
-        if ($key === "") {
-            return null;
-        }
-        return $key;
-    }
 
-    public
-    function getPersistentMetadatas(): array
-    {
-        return $this->getMetadatas()['persistent'];
-    }
+
 
     /**
      * The modified date is the last modification date
@@ -1025,20 +982,6 @@ class Page extends ResourceComboAbs
 
     }
 
-    public
-    function getCurrentMetadata($key)
-    {
-        $key = $this->getMetadatas()[Metadata::CURRENT_METADATA][$key];
-        /**
-         * Empty string return null
-         * because Dokuwiki does not allow to delete keys
-         * {@link p_set_metadata()}
-         */
-        if ($key === "") {
-            return null;
-        }
-        return $key;
-    }
 
     /**
      * Get the create date of page
@@ -1116,14 +1059,12 @@ class Page extends ResourceComboAbs
         }
 
         /**
-         * Read/render the metadata from the file
-         * with parsing
+         * @var MetadataDokuWikiStore $metadataStore
          */
-        $this->metadatas = p_render_metadata($this->getPath()->getDokuwikiId(), $this->metadatas);
-
-        $this->flushMeta();
-
-        $this->buildPropertiesFromFileSystem();
+        $metadataStore = $this->getDefaultMetadataStore();
+        $metadataStore
+            ->renderForPage($this)
+            ->persist();
 
         /**
          * Return
@@ -1180,7 +1121,7 @@ class Page extends ResourceComboAbs
             return true;
         } else {
             $namespace = $this->dokuPath->getParent();
-            if($namespace===null){
+            if ($namespace === null) {
                 return false;
             }
             if ($namespace->getLastName() === $this->getPath()->getLastName()) {
@@ -1198,19 +1139,7 @@ class Page extends ResourceComboAbs
     }
 
 
-    public
-    function getMetadata($key, $default = null)
-    {
-        $persistentMetadata = $this->getPersistentMetadata($key);
-        if ($persistentMetadata === null) {
-            $persistentMetadata = $this->getCurrentMetadata($key);
-        }
-        if ($persistentMetadata === null) {
-            return $default;
-        } else {
-            return $persistentMetadata;
-        }
-    }
+
 
     public
     function getPublishedTime(): ?DateTime
@@ -1408,7 +1337,7 @@ class Page extends ResourceComboAbs
     public
     function deleteMetadatasAndFlush(): Page
     {
-        $meta = [Metadata::CURRENT_METADATA => [], Metadata::PERSISTENT_METADATA => []];
+        $meta = [MetadataDokuWikiStore::CURRENT_METADATA => [], MetadataDokuWikiStore::PERSISTENT_METADATA => []];
         p_save_metadata($this->getPath()->getDokuwikiId(), $meta);
         return $this;
     }
@@ -1462,7 +1391,7 @@ class Page extends ResourceComboAbs
          * @see {@link \syntax_plugin_combo_pipeline}
          */
         $title = str_replace('"', "'", $title);
-        $array[AnalyticsDocument::TITLE] = $title;
+        $array[PageTitle::TITLE] = $title;
         $array[PageId::PAGE_ID_ATTRIBUTE] = $this->getPageId();
         $array[Canonical::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
         $array[Path::PATH_ATTRIBUTE] = $this->getPath()->toAbsolutePath()->toString();
@@ -1508,7 +1437,7 @@ class Page extends ResourceComboAbs
      * @param string $type
      */
     public
-    function setMetadata($key, $value, $default = null, string $type = Metadata::PERSISTENT_METADATA)
+    function setMetadata($key, $value, $default = null, string $type = MetadataDokuWikiStore::PERSISTENT_METADATA)
     {
 
         $oldValue = $this->metadatas[$type][$key];
@@ -1711,8 +1640,8 @@ class Page extends ResourceComboAbs
                     case PageName::NAME_PROPERTY:
                         $this->pageName->setFromPersistentFormat($value);
                         continue 2;
-                    case Page::TITLE_META_PROPERTY:
-                        $this->setTitle($value);
+                    case PageTitle::TITLE_META_PROPERTY:
+                        $this->title->setFromPersistentFormat($value);
                         continue 2;
                     case AnalyticsDocument::H1:
                         $this->setH1($value);
@@ -1733,13 +1662,16 @@ class Page extends ResourceComboAbs
                         $this->aliases->setFromPersistentFormat($value);
                         continue 2;
                     case PageId::PAGE_ID_ATTRIBUTE:
-                        $this->pageId->setValue($value);
+                        $this->pageId
+                            ->setValue($value)
+                            ->sendToStore();
                         continue 2;
                     case Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
                         $this->setCanBeOfLowQuality(Boolean::toBoolean($value));
                         continue 2;
                     case PageImages::IMAGE_META_PROPERTY:
-                        $this->pageImages->setFromPersistentFormat($value);
+                        $this->pageImages
+                            ->setFromPersistentFormat($value);
                         continue 2;
                     case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
                         $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
@@ -1772,8 +1704,9 @@ class Page extends ResourceComboAbs
                 $messages[] = $message;
             }
 
-
         }
+        $this->persist();
+
 
         /**
          * Database update
@@ -1812,7 +1745,9 @@ class Page extends ResourceComboAbs
     function setPageId(?string $pageId): Page
     {
 
-        $this->pageId->setValue($pageId);
+        $this->pageId
+            ->setValue($pageId)
+            ->sendToStore();
         return $this;
 
     }
@@ -1854,14 +1789,7 @@ class Page extends ResourceComboAbs
     public
     function getDefaultTitle(): ?string
     {
-        if ($this->isRootHomePage() && !empty(Site::getTagLine())) {
-            return Site::getTagLine();
-        }
-        if (!empty($this->getH1OrDefault())) {
-            return $this->getH1OrDefault();
-        }
-        return $this->getPageNameNotEmpty();
-
+        return $this->title->getDefaultValue();
     }
 
     public
@@ -1924,7 +1852,7 @@ class Page extends ResourceComboAbs
         /**
          * It's a calculated metadata, we don't need it to be persistent
          */
-        $type = Metadata::CURRENT_METADATA;
+        $type = MetadataDokuWikiStore::CURRENT_METADATA;
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool, $type);
     }
 
@@ -1945,7 +1873,7 @@ class Page extends ResourceComboAbs
      * @return Page
      */
     private
-    function setQualityIndicatorAndDeleteCacheIfNeeded(string $lowQualityAttributeName, $value, string $type = Metadata::PERSISTENT_METADATA): Page
+    function setQualityIndicatorAndDeleteCacheIfNeeded(string $lowQualityAttributeName, $value, string $type = MetadataDokuWikiStore::PERSISTENT_METADATA): Page
     {
         $actualValue = $this->getMetadataAsBoolean($lowQualityAttributeName);
         if ($actualValue === null || $value !== $actualValue) {
@@ -2170,9 +2098,9 @@ class Page extends ResourceComboAbs
          * We have created therefore a description property below the description array
          * We delete it
          */
-        $descriptionArray = $this->metadatas[Metadata::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY];
+        $descriptionArray = $this->metadatas[MetadataDokuWikiStore::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY];
         if ($descriptionArray != null && array_key_exists(Page::DESCRIPTION_PROPERTY, $descriptionArray)) {
-            unset($this->metadatas[Metadata::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY][Page::DESCRIPTION_PROPERTY]);
+            unset($this->metadatas[MetadataDokuWikiStore::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY][Page::DESCRIPTION_PROPERTY]);
             $this->flushMeta();
         }
 
@@ -2220,15 +2148,24 @@ class Page extends ResourceComboAbs
     public
     function setPageName($value): Page
     {
-        $this->pageName->setValue($value);
+        $this->pageName
+            ->setValue($value);
         return $this;
     }
 
+    public function persist(): Page
+    {
+        $this->getDefaultMetadataStore()->persist();
+        return $this;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function setTitle($value): Page
     {
-        $this->title = $value;
-        $this->setMetadata(Page::TITLE_META_PROPERTY, $value);
+        $this->title->setValue($value);
         return $this;
     }
 
@@ -2335,8 +2272,6 @@ class Page extends ResourceComboAbs
          * Updating the metadata must happen first
          * All meta function depends on it
          *
-         * Read / not {@link p_get_metadata()}
-         * because it can trigger a rendering of the meta again)
          *
          * This is not a {@link Page::renderMetadataAndFlush()}
          *
@@ -2353,7 +2288,7 @@ class Page extends ResourceComboAbs
          * in current but not persistent
          * and hold the heading 1, see {@link p_get_first_heading}
          */
-        $this->title = $this->getPersistentMetadata(AnalyticsDocument::TITLE);
+        $this->title = $this->getPersistentMetadata(PageTitle::TITLE);
         $this->author = $this->getMetadata('creator');
         $this->authorId = $this->getMetadata('user');
 
@@ -2410,12 +2345,6 @@ class Page extends ResourceComboAbs
 
     }
 
-    public
-    function flushMeta(): Page
-    {
-        p_save_metadata($this->getPath()->getDokuwikiId(), $this->metadatas);
-        return $this;
-    }
 
 
     function getPageIdAbbr()
@@ -2615,7 +2544,7 @@ class Page extends ResourceComboAbs
      * TODO ? Put it in the {@link Page::setMetadata()} function
      * @throws ExceptionCombo
      */
-    private function setDateAttribute(string $name, &$dateValue, $value, $type = Metadata::PERSISTENT_METADATA)
+    private function setDateAttribute(string $name, &$dateValue, $value, $type = MetadataDokuWikiStore::PERSISTENT_METADATA)
     {
         if ($value === "") {
             $stringValue = null;
@@ -2698,9 +2627,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[Page::LANG_META_PROPERTY] = $this->getLang();
                     }
                     break;
-                case AnalyticsDocument::TITLE:
+                case PageTitle::TITLE:
                     if (!in_array($this->getTitle(), [$this->getDefaultTitle(), null])) {
-                        $nonDefaultMetadatas[AnalyticsDocument::TITLE] = $this->getTitle();
+                        $nonDefaultMetadatas[PageTitle::TITLE] = $this->getTitle();
                     }
                     break;
                 case syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER:
@@ -2805,7 +2734,7 @@ class Page extends ResourceComboAbs
      */
     public function setRuntimeMetadata(string $key, string $value): Page
     {
-        $this->setMetadata($key, $value, null, Metadata::CURRENT_METADATA);
+        $this->setMetadata($key, $value, null, MetadataDokuWikiStore::CURRENT_METADATA);
         return $this;
     }
 
@@ -2898,7 +2827,6 @@ class Page extends ResourceComboAbs
     {
         return $this->cacheExpirationFrequency->getValue();
     }
-
 
 
     /**
@@ -2996,7 +2924,6 @@ class Page extends ResourceComboAbs
     }
 
 
-
     /**
      * A shortcut for {@link Page::getPath()::getDokuwikiId()}
      */
@@ -3017,6 +2944,6 @@ class Page extends ResourceComboAbs
 
     public function getAbsolutePath(): string
     {
-        return DokuPath::PATH_SEPARATOR.$this->getDokuwikiId();
+        return DokuPath::PATH_SEPARATOR . $this->getDokuwikiId();
     }
 }

@@ -48,11 +48,14 @@ class CacheMedia
     /**
      * Cache constructor.
      */
-    public function __construct(LocalPath $path, TagAttributes $tagAttributes)
+    public function __construct(Path $path, TagAttributes $tagAttributes)
     {
 
         $this->path = $path;
 
+        if($path instanceof DokuPath){
+            $path = $path->toLocalPath();
+        }
         /**
          * Cache Key Construction
          */

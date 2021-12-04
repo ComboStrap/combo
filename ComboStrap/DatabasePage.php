@@ -33,7 +33,7 @@ class DatabasePage
             AnalyticsDocument::DESCRIPTION,
             Canonical::CANONICAL_PROPERTY,
             PageName::NAME_PROPERTY,
-            AnalyticsDocument::TITLE,
+            PageTitle::TITLE,
             AnalyticsDocument::H1,
             Publication::DATE_PUBLISHED,
             AnalyticsDocument::DATE_START,
@@ -176,7 +176,7 @@ class DatabasePage
             Aliases::createForPageWithDefaultStore($this->page)
                 ->buildFromStore()
                 ->setStore(MetadataDbStore::getOrCreate())
-                ->persist();
+                ->sendToStore();
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Error replicating the page aliases " . $e->getMessage(), self::REPLICATION_CANONICAL);
             return false;
@@ -847,7 +847,7 @@ EOF;
             Canonical::CANONICAL_PROPERTY => $this->page->getCanonicalOrDefault(),
             Path::PATH_ATTRIBUTE => $this->page->getPath()->toAbsolutePath()->toString(),
             PageName::NAME_PROPERTY => $this->page->getPageNameNotEmpty(),
-            AnalyticsDocument::TITLE => $this->page->getTitleOrDefault(),
+            PageTitle::TITLE => $this->page->getTitleOrDefault(),
             AnalyticsDocument::H1 => $this->page->getH1OrDefault(),
             AnalyticsDocument::DESCRIPTION => $this->page->getDescriptionOrElseDokuWiki(),
             AnalyticsDocument::DATE_CREATED => $this->page->getCreatedDateAsString(),
@@ -1108,7 +1108,7 @@ EOF;
         try {
             Aliases::createForPageWithDefaultStore($this->page)
                 ->addAlias($aliasPath)
-                ->persist();
+                ->sendToStore();
         } catch (ExceptionCombo $e) {
             // we don't throw while getting
             LogUtility::msg("Unable to add the alias ($aliasPath) for the page ($this->page)");

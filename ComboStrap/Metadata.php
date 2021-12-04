@@ -52,9 +52,18 @@ abstract class Metadata
     public abstract function getTab();
 
     /**
+     * This function is used to send the
+     * data to the store
+     * (ie a memory variable or a database)
+     *
+     * This function should be used at the end of each setter function
+     *
      * @throws ExceptionCombo
+     *
+     * To persist on disk, you use the {@link MetadataStore::persist()}
+     *
      */
-    public function persist(): Metadata
+    public function sendToStore(): Metadata
     {
         if ($this->store === null) {
             throw new ExceptionComboRuntime("The metadata store is not set, you can't persist the metadata ($this)");
@@ -157,14 +166,14 @@ abstract class Metadata
      *
      * Return if the metadata value should be backup up (derived value or not)
      *
-     * If the value is {@link Metadata::PERSISTENT_METADATA}, it's yes
-     * If the value is {@link Metadata::CURRENT_METADATA}, it's no
+     * If the value is {@link MetadataDokuWikiStore::PERSISTENT_METADATA}, it's yes
+     * If the value is {@link MetadataDokuWikiStore::CURRENT_METADATA}, it's no
      *
      * @return string
      *
      * We are making the difference between a metadata that is derived
-     * called {@link Metadata::CURRENT_METADATA} for Dokuwiki
-     * and that is not called {@link Metadata::PERSISTENT_METADATA} for Dokuwiki
+     * called {@link MetadataDokuWikiStore::CURRENT_METADATA} for Dokuwiki
+     * and that is not called {@link MetadataDokuWikiStore::PERSISTENT_METADATA} for Dokuwiki
      *
      * Unfortunately, Dokuwiki makes this distinction only in rendering
      * https://forum.dokuwiki.org/d/19764-how-to-test-a-current-metadata-setting
@@ -223,7 +232,7 @@ abstract class Metadata
         PageImages::IMAGE_META_PROPERTY,
         Page::REGION_META_PROPERTY,
         Page::LANG_META_PROPERTY,
-        AnalyticsDocument::TITLE,
+        PageTitle::TITLE,
         Publication::OLD_META_KEY,
         Publication::DATE_PUBLISHED,
         PageName::NAME_PROPERTY,
@@ -239,23 +248,6 @@ abstract class Metadata
         action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
         Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
     ];
-
-    /**
-     * Current metadata / runtime metadata / calculated metadata
-     * The data may be deleted
-     * https://www.dokuwiki.org/devel:metadata#metadata_persistence
-     */
-    public const CURRENT_METADATA = "current";
-    /**
-     * Persistent metadata (data that should be in a backup)
-     *
-     * They are used as the default of the current metadata
-     * and is never cleaned
-     *
-     * https://www.dokuwiki.org/devel:metadata#metadata_persistence
-     */
-    public const PERSISTENT_METADATA = "persistent";
-    const TYPES = [self::CURRENT_METADATA, self::PERSISTENT_METADATA];
 
 
     /**

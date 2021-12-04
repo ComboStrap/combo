@@ -35,6 +35,11 @@ class PageImages extends Metadata
 
     }
 
+    public static function create(): PageImages
+    {
+        return new PageImages();
+    }
+
     /**
      * @param PageImage[] $pageImages
      * @return array
@@ -65,6 +70,12 @@ class PageImages extends Metadata
         if ($persistentValue === null) {
             return [];
         }
+
+        /**
+         * @var Page $page;
+         */
+        $page = $this->getResource();
+
         if (is_array($persistentValue)) {
             $images = [];
             foreach ($persistentValue as $key => $value) {
@@ -91,7 +102,7 @@ class PageImages extends Metadata
                     }
                 }
                 DokuPath::addRootSeparatorIfNotPresent($imagePath);
-                $pageImage = PageImage::create($imagePath, $this->getResource());
+                $pageImage = PageImage::create($imagePath, $page);
                 if ($usage !== null) {
                     $pageImage->setUsages($usage);
                 }
@@ -104,7 +115,7 @@ class PageImages extends Metadata
              * A single path image
              */
             DokuPath::addRootSeparatorIfNotPresent($persistentValue);
-            $images = [$persistentValue => PageImage::create($persistentValue, $this->getResource())];
+            $images = [$persistentValue => PageImage::create($persistentValue, $page)];
         }
 
 
@@ -119,14 +130,6 @@ class PageImages extends Metadata
 
     }
 
-    /**
-     * @throws ExceptionCombo if the usage is not good
-     */
-    public function buildFromPersistentFormat($value): PageImages
-    {
-        $this->pageImages = $this->toPageImageArray($value);
-        return $this;
-    }
 
     /**
      * @throws ExceptionCombo
@@ -134,9 +137,7 @@ class PageImages extends Metadata
     public function setFromPersistentFormat($value): PageImages
     {
         $this->pageImages = PageImages::toPageImageArray($value);
-
         $this->checkImageExistence();
-        $this->persist();
         return $this;
     }
 
@@ -168,7 +169,7 @@ class PageImages extends Metadata
 
     public function getPersistenceType(): string
     {
-        return Metadata::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_METADATA;
     }
 
     /**
@@ -186,12 +187,12 @@ class PageImages extends Metadata
     /**
      * @throws ExceptionCombo
      */
-    public function addImage(string $imagePath, $usages = null): PageImages
+    public function addImage(string $wikiImagePath, $usages = null): PageImages
     {
-        DokuPath::addRootSeparatorIfNotPresent($imagePath);
-        $pageImage = PageImage::create($imagePath, $this->getResource());
+        DokuPath::addRootSeparatorIfNotPresent($wikiImagePath);
+        $pageImage = PageImage::create($wikiImagePath, $this->getResource());
         if (!$pageImage->getImage()->exists()) {
-            throw new ExceptionCombo("The image ($imagePath) does not exists", $this->getCanonical());
+            throw new ExceptionCombo("The image ($wikiImagePath) does not exists", $this->getCanonical());
         }
         if ($usages !== null) {
             if (is_string($usages)) {
@@ -200,7 +201,7 @@ class PageImages extends Metadata
             $pageImage->setUsages($usages);
         }
 
-        $this->pageImages[$imagePath] = $pageImage;
+        $this->pageImages[$wikiImagePath] = $pageImage;
 
         /**
          * What fucked up is fucked up
@@ -209,9 +210,7 @@ class PageImages extends Metadata
          * meta['relation']['media'][$src] = $exist
          * ```
          * is only set when parsing to add page to the index
-         * We just set a persistent default via the
          */
-        $this->persist();
         return $this;
     }
 
@@ -307,7 +306,7 @@ class PageImages extends Metadata
             }
         }
         $this->checkImageExistence();
-        $this->persist();
+        $this->sendToStore();
         return $this;
     }
 
@@ -349,7 +348,7 @@ class PageImages extends Metadata
         }
         $pageImage = $this->pageImages[$sourceImagePath];
         unset($this->pageImages[$sourceImagePath]);
-        $this->persist();
+        $this->sendToStore();
         return $pageImage;
     }
 }

@@ -25,6 +25,7 @@ use ComboStrap\LowQualityPage;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDateTime;
+use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataJson;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
@@ -33,6 +34,7 @@ use ComboStrap\PageId;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PageName;
+use ComboStrap\PageTitle;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
@@ -347,20 +349,20 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             return;
         }
         $metadata = $page->getMetadatas();
-        $persistent = $metadata[Metadata::PERSISTENT_METADATA];
+        $persistent = $metadata[MetadataDokuWikiStore::PERSISTENT_METADATA];
         ksort($persistent);
-        $current = $metadata[Metadata::CURRENT_METADATA];
+        $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
         ksort($current);
         $form = FormMeta::create("raw_metadata")
             ->addField(
-                FormMetaField::create(Metadata::PERSISTENT_METADATA)
+                FormMetaField::create(MetadataDokuWikiStore::PERSISTENT_METADATA)
                     ->setLabel("Persistent Metadata (User Metadata)")
                     ->setTab("persistent")
                     ->setDescription("The persistent metadata contains raw values. They contains the values set by the user and the fixed values such as page id.")
                     ->addValue(json_encode($persistent))
                     ->setType(DataType::JSON_TYPE_VALUE)
             )
-            ->addField(FormMetaField::create(Metadata::CURRENT_METADATA)
+            ->addField(FormMetaField::create(MetadataDokuWikiStore::CURRENT_METADATA)
                 ->setLabel("Current (Derived) Metadata")
                 ->setTab("current")
                 ->setDescription("The current metadata are the derived / calculated / runtime metadata values (extended with the persistent metadata).")
@@ -388,7 +390,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Only Persistent, current cannot be modified
          */
-        $persistentMetadataType = Metadata::PERSISTENT_METADATA;
+        $persistentMetadataType = MetadataDokuWikiStore::PERSISTENT_METADATA;
         $postMeta = json_decode($post[$persistentMetadataType], true);
         if ($postMeta === null) {
             HttpResponse::create(HttpResponse::STATUS_BAD_REQUEST)
@@ -508,14 +510,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
         // Title (title of a component is an heading)
-        $formMeta->addField(
-            FormMetaField::create(AnalyticsDocument::TITLE)
-                ->setLabel("Title")
-                ->setDescription("The page title is a description advertised to external application such as search engine and browser.")
-                ->addValue($page->getTitle(), $page->getDefaultTitle())
-                ->setCanonical(AnalyticsDocument::TITLE)
-                ->setTab(self::TAB_PAGE_VALUE)
-        );
+        $title = PageTitle::createForPageWithDefaultStore($page);
+        $formMeta->addField($title->toFormField());
 
         // H1
         $formMeta->addField(

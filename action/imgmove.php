@@ -5,6 +5,7 @@ use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PluginUtility;
 
@@ -124,28 +125,15 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             }
 
             try {
-                $images = $jsonArray[PageImages::IMAGE_META_PROPERTY];
+                $oldPagesImages = $jsonArray[PageImages::IMAGE_META_PROPERTY];
 
-                /**
-                 * The id of the page is private in the handler, why not ?
-                 * fuck
-                 * We try what we can
-                 */
-                global $ID;
-                $id = $ID;
-                if ($ID === null) {
 
-                    $id = "fake_id_for_move";
-                }
-                $fakePage = Page::createPageFromId($id);
-                $oldPagesImages = PageImages::createForPageWithDefaultStore($fakePage)
-                    ->buildFromPersistentFormat($images);
-                $newPagesImages = PageImages::createForPageWithDefaultStore($fakePage);
+                $newPagesImages = PageImages::create();
 
-                foreach ($oldPagesImages->getAll() as $oldPageImage) {
-                    $imagePath = $oldPageImage->getImage()->getPath()->getAbsolutePath();
+                foreach ($oldPagesImages as $oldPageImage) {
+                    $imagePath = $oldPageImage[PageImage::PATH_ATTRIBUTE];
                     $this->moveImage($imagePath, $handler);
-                    $newPagesImages->addImage($imagePath, $oldPageImage->getUsages());
+                    $newPagesImages->addImage($imagePath, $oldPageImage[PageImage::USAGE_ATTRIBUTE]);
                 }
                 $jsonArray[PageImages::IMAGE_META_PROPERTY] = $newPagesImages->toPersistentValue();
 
@@ -185,7 +173,7 @@ EOF;
      * @param helper_plugin_move_handler $handler
      * @throws ExceptionCombo on bad argument
      */
-    private function moveImage(&$value, $handler)
+    private function moveImage(&$value, helper_plugin_move_handler $handler)
     {
         try {
             $newId = $handler->resolveMoves($value, "media");

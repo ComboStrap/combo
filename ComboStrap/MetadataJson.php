@@ -53,7 +53,6 @@ abstract class MetadataJson extends MetadataScalar
             throw new ExceptionCombo("The json persistent value is not an array, nor a string");
         }
         $this->json = $value;
-        $this->persist();
         return $this;
     }
 

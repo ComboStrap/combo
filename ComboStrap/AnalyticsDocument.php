@@ -30,7 +30,6 @@ class AnalyticsDocument extends OutputDocument
     const INTERWIKI_LINK_COUNT = "interwiki_link_count";
     const EDITS_COUNT = 'edits_count';
     const INTERNAL_LINK_BROKEN_COUNT = 'internal_broken_link_count';
-    const TITLE = 'title';
     const INTERNAL_LINK_COUNT = 'internal_link_count';
     const LOCAL_LINK_COUNT = "local_link_count"; // ie fragment #hallo
     const EXTERNAL_MEDIA_COUNT = 'external_media_count';

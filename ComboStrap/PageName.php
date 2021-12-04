@@ -39,7 +39,7 @@ class PageName extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return Metadata::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_METADATA;
     }
 
     public function getMutable(): bool

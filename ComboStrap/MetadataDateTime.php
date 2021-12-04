@@ -33,7 +33,6 @@ abstract class MetadataDateTime extends MetadataScalar
     public function setValue(DateTime $value): MetadataDateTime
     {
         $this->dateTimeValue = $value;
-        $this->persist();
         return $this;
     }
 

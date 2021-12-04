@@ -118,7 +118,7 @@ class Aliases extends Metadata
 
     public function getPersistenceType(): string
     {
-        return Metadata::PERSISTENT_METADATA;
+        return MetadataDokuWikiStore::PERSISTENT_METADATA;
     }
 
     /**
@@ -203,7 +203,7 @@ class Aliases extends Metadata
              * To validate the migration we set a value
              * (the array may be empty)
              */
-            $this->persist();
+            $this->sendToStore();
         }
 
         if ($this->aliases === null) {

@@ -89,7 +89,8 @@ abstract class Metadata
         return $this->getName();
     }
 
-    public function buildFromStore(): Metadata
+    /** @noinspection PhpMissingReturnTypeInspection */
+    public function buildFromStore()
     {
         if ($this->store === null) {
             throw new ExceptionComboRuntime("The metadata store is not set, you can't get a value");
@@ -227,7 +228,7 @@ abstract class Metadata
      */
     const NOT_MODIFIABLE_PERSISTENT_METADATA = [
         Path::PATH_ATTRIBUTE,
-        AnalyticsDocument::DATE_CREATED,
+        PageCreationDate::DATE_CREATED,
         AnalyticsDocument::DATE_MODIFIED,
         PageId::PAGE_ID_ATTRIBUTE,
         "contributor",

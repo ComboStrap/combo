@@ -6,6 +6,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\DokuPath;
+use ComboStrap\PageCreationDate;
 use ComboStrap\PageImages;
 use ComboStrap\PageName;
 use ComboStrap\PageSql;
@@ -50,7 +51,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         Canonical::CANONICAL_PROPERTY,
         Path::PATH_ATTRIBUTE,
         AnalyticsDocument::DATE_MODIFIED,
-        AnalyticsDocument::DATE_CREATED,
+        PageCreationDate::DATE_CREATED,
         Publication::DATE_PUBLISHED,
         PageName::NAME_PROPERTY
     ];

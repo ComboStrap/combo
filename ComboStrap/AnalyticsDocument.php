@@ -55,7 +55,6 @@ class AnalyticsDocument extends OutputDocument
     const DETAILS = 'details';
     const FAILED_MANDATORY_RULES = 'failed_mandatory_rules';
     const METADATA = 'metadata';
-    const DATE_CREATED = 'date_created';
     const DATE_END = "date_end";
     const DATE_START = "date_start";
 

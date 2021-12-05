@@ -71,7 +71,7 @@ class PageImages extends Metadata
         }
 
         /**
-         * @var Page $page;
+         * @var Page $page ;
          */
         $page = $this->getResource();
 
@@ -342,12 +342,34 @@ class PageImages extends Metadata
     {
         $this->buildCheck();
         DokuPath::addRootSeparatorIfNotPresent($sourceImagePath);
-        if(!isset($this->pageImages[$sourceImagePath])){
+        if (!isset($this->pageImages[$sourceImagePath])) {
             return null;
         }
         $pageImage = $this->pageImages[$sourceImagePath];
         unset($this->pageImages[$sourceImagePath]);
         $this->sendToStore();
         return $pageImage;
+    }
+
+    public function getFirstImage()
+    {
+        $store = $this->getStore();
+        if (!($store instanceof MetadataDokuWikiStore)) {
+            return null;
+        }
+        $relation = $store->getFromResourceAndName($this->getResource(), 'relation');
+        if (!isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
+            return null;
+        }
+
+        $firstImageId = $relation[PageImages::FIRST_IMAGE_META_RELATION];
+        if (empty($firstImageId)) {
+            return null;
+        } else {
+            if (!media_isexternal($firstImageId)) {
+                return Image::createImageFromId($firstImageId);
+            }
+        }
+
     }
 }

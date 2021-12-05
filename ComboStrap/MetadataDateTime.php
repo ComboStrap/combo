@@ -60,7 +60,7 @@ abstract class MetadataDateTime extends MetadataScalar
 
     public function buildFromStore()
     {
-        $value = $this->getStoreValue();
+        $value = $this->getStore()->get($this);
         try {
             $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
         } catch (ExceptionCombo $e) {
@@ -117,6 +117,11 @@ abstract class MetadataDateTime extends MetadataScalar
         $this->buildCheck();
         return parent::toFormField()
             ->setValue($this->toStoreValue(),$this->toStoreDefaultValue());
+    }
+
+    public function getCanonical(): string
+    {
+        return ":date";
     }
 
 

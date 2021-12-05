@@ -30,6 +30,7 @@ use ComboStrap\MetadataJson;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
+use ComboStrap\PageCreationDate;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
 use ComboStrap\PageId;
@@ -595,15 +596,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Created Date
-        $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_CREATED)
-            ->addValue($page->getCreatedDateAsString())
-            ->setMutable(false)
-            ->setType(DataType::DATETIME_TYPE_VALUE)
-            ->setTab(self::TAB_PAGE_VALUE)
-            ->setCanonical(self::METADATA_CANONICAL)
-            ->setLabel("Creation Date")
-            ->setDescription("The creation date of the page")
-        );
+        $creationTime = PageCreationDate::createForPage($page);
+        $formMeta->addField($creationTime->toFormField());
+
 
 
         /**

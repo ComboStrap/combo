@@ -120,8 +120,6 @@ class Page extends ResourceComboAbs
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
 
 
-
-
     /**
      * @var bool Indicator to say if this is a sidebar (or sidekick bar)
      */
@@ -144,7 +142,7 @@ class Page extends ResourceComboAbs
     /**
      * @var PageH1
      */
-    private $h1 ;
+    private $h1;
     /**
      * @var PageName
      */
@@ -239,6 +237,10 @@ class Page extends ResourceComboAbs
      * @var PageDescription $description
      */
     private $description;
+    /**
+     * @var PageCreationDate
+     */
+    private $creationTime;
 
     /**
      * Page constructor.
@@ -796,24 +798,7 @@ class Page extends ResourceComboAbs
     public
     function getFirstImage()
     {
-
-        $relation = $this->getCurrentMetadata('relation');
-        if (isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
-            $firstImageId = $relation[PageImages::FIRST_IMAGE_META_RELATION];
-            if (empty($firstImageId)) {
-                return null;
-            } else {
-                // The  metadata store the Id or the url
-                // We transform them to a path id
-                $pathId = $firstImageId;
-                if (!media_isexternal($firstImageId)) {
-                    $pathId = DokuPath::PATH_SEPARATOR . $firstImageId;
-                }
-                return Image::createImageFromDokuwikiAbsolutePath($pathId);
-            }
-        }
-        return null;
-
+        return $this->pageImages->getFirstImage();
     }
 
     /**
@@ -825,12 +810,16 @@ class Page extends ResourceComboAbs
      *
      * {@link \Doku_Renderer_metadata::externalmedia()} does not save them
      */
-    public
-    function getMediasMetadata()
+    public function getMediasMetadata(): ?array
     {
 
+        $store = $this->getDefaultMetadataStore();
+        if (!($store instanceof MetadataDokuWikiStore)) {
+            return null;
+        }
         $medias = [];
-        $relation = $this->getCurrentMetadata('relation');
+
+        $relation = $store->getFromResourceAndName($this, 'relation');
         if (isset($relation['media'])) {
             /**
              * The relation is
@@ -844,7 +833,6 @@ class Page extends ResourceComboAbs
             }
         }
         return $medias;
-
     }
 
     /**
@@ -915,9 +903,6 @@ class Page extends ResourceComboAbs
     }
 
 
-
-
-
     /**
      * The modified date is the last modification date
      * the first time, this is the creation date
@@ -940,14 +925,7 @@ class Page extends ResourceComboAbs
     public
     function getCreatedTime(): ?DateTime
     {
-        $createdMeta = $this->getPersistentMetadata('date')['created'];
-        if (empty($createdMeta)) {
-            return null;
-        } else {
-            $datetime = new DateTime();
-            $datetime->setTimestamp($createdMeta);
-            return $datetime;
-        }
+        return $this->creationTime->getValue();
     }
 
     /**
@@ -1088,8 +1066,6 @@ class Page extends ResourceComboAbs
     }
 
 
-
-
     public
     function getPublishedTime(): ?DateTime
     {
@@ -1171,8 +1147,6 @@ class Page extends ResourceComboAbs
         }
         return $default;
     }
-
-
 
 
     public
@@ -1303,7 +1277,7 @@ class Page extends ResourceComboAbs
          *
          */
         if ($this->exists()) {
-            $array[AnalyticsDocument::DATE_CREATED] = $this->getCreatedDateAsString();
+            $array[PageCreationDate::DATE_CREATED] = $this->getCreatedDateAsString();
             $array[AnalyticsDocument::DATE_MODIFIED] = $this->getModifiedDateAsString();
         }
 
@@ -1637,7 +1611,6 @@ class Page extends ResourceComboAbs
     {
         return "holy";
     }
-
 
 
     public
@@ -2034,6 +2007,7 @@ class Page extends ResourceComboAbs
         $this->description = PageDescription::createForPage($this);
         $this->h1 = PageH1::createForPage($this);
         $this->type = PageType::createForPage($this);
+        $this->creationTime = PageCreationDate::createForPage($this);
 
         /**
          * Old system
@@ -2110,7 +2084,6 @@ class Page extends ResourceComboAbs
 
 
     }
-
 
 
     function getPageIdAbbr()

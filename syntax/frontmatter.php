@@ -33,7 +33,7 @@ use ComboStrap\PageId;
 use ComboStrap\PageImages;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\Publication;
+use ComboStrap\PagePublicationDate;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -320,9 +320,9 @@ EOF;
             /**
              * Published is an old alias for date published
              */
-            if (isset($jsonArray[Publication::OLD_META_KEY])) {
-                $jsonArray[Publication::DATE_PUBLISHED] = $jsonArray[Publication::OLD_META_KEY];
-                unset($jsonArray[Publication::OLD_META_KEY]);
+            if (isset($jsonArray[PagePublicationDate::OLD_META_KEY])) {
+                $jsonArray[PagePublicationDate::DATE_PUBLISHED] = $jsonArray[PagePublicationDate::OLD_META_KEY];
+                unset($jsonArray[PagePublicationDate::OLD_META_KEY]);
             }
 
             if (isset($jsonArray[Page::OLD_REGION_PROPERTY])) {

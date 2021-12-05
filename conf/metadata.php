@@ -20,7 +20,7 @@ use ComboStrap\Page;
 use ComboStrap\PageProtection;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
-use ComboStrap\Publication;
+use ComboStrap\PagePublicationDate;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
 use ComboStrap\SvgDocument;
@@ -183,8 +183,8 @@ $meta[Site::CONF_SITE_LANGUAGE_REGION] = array("string");
 /**
  * Late publication protection
  */
-$meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
-$meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = array('multichoice', '_choices' => array(
+$meta[PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = array('onoff');
+$meta[PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE] = array('multichoice', '_choices' => array(
     PageProtection::CONF_VALUE_ROBOT,
     PageProtection::CONF_VALUE_FEED,
     PageProtection::CONF_VALUE_ACL,

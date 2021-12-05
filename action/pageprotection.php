@@ -7,7 +7,7 @@ use ComboStrap\Identity;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Page;
 use ComboStrap\PageProtection;
-use ComboStrap\Publication;
+use ComboStrap\PagePublicationDate;
 
 
 
@@ -94,7 +94,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
             }
         }
         if ($page->isLatePublication()) {
-            if (Publication::getLatePublicationProtectionMode() == PageProtection::CONF_VALUE_HIDDEN) {
+            if (PagePublicationDate::getLatePublicationProtectionMode() == PageProtection::CONF_VALUE_HIDDEN) {
                 $event->data['hidden'] = true;
             }
 
@@ -152,8 +152,8 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
                 }
             }
             if ($page->isLatePublication()) {
-                if ($this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
-                    $securityConf = $this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
+                if ($this->getConf(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE, true)) {
+                    $securityConf = $this->getConf(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE, PageProtection::CONF_VALUE_ACL);
                     if ($securityConf == PageProtection::CONF_VALUE_ACL) {
                         $event->result = AUTH_NONE;
                         return;
@@ -178,7 +178,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
                 continue;
 
             }
-            if ($page->isLatePublication() && Publication::isLatePublicationProtectionEnabled()) {
+            if ($page->isLatePublication() && PagePublicationDate::isLatePublicationProtectionEnabled()) {
                 unset($event->data["items"][$key]);
             }
         }
@@ -218,7 +218,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
     function handleRssFeed(&$event, $param)
     {
         $isLowQualityProtectionEnabled = LowQualityPage::isProtectionEnabled();
-        $isLatePublicationProtectionEnabled = Publication::isLatePublicationProtectionEnabled();
+        $isLatePublicationProtectionEnabled = PagePublicationDate::isLatePublicationProtectionEnabled();
         if (!$isLatePublicationProtectionEnabled && !$isLowQualityProtectionEnabled) {
             return;
         }
@@ -239,7 +239,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
                 }
 
                 if ($page->isLatePublication() && $isLatePublicationProtectionEnabled) {
-                    $protectionMode = Publication::getLatePublicationProtectionMode();
+                    $protectionMode = PagePublicationDate::getLatePublicationProtectionMode();
                     if ($protectionMode != PageProtection::CONF_VALUE_ROBOT) {
                         unset($pagesToBeAdded[$key]);
                     }
@@ -277,7 +277,7 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
                     }
                 }
                 if ($page->isLatePublication()) {
-                    $securityConf = $this->getConf(Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE);
+                    $securityConf = $this->getConf(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE);
                     if (in_array($securityConf, [PageProtection::CONF_VALUE_ACL, PageProtection::CONF_VALUE_HIDDEN])) {
                         unset($event->result[$idx]);
                         return;
@@ -324,9 +324,9 @@ class action_plugin_combo_pageprotection extends DokuWiki_Action_Plugin
                 $follow = "follow";
             }
         }
-        if ($page->isLatePublication() && Publication::isLatePublicationProtectionEnabled()) {
+        if ($page->isLatePublication() && PagePublicationDate::isLatePublicationProtectionEnabled()) {
             $protected = true;
-            if (Publication::getLatePublicationProtectionMode() == PageProtection::CONF_VALUE_ACL) {
+            if (PagePublicationDate::getLatePublicationProtectionMode() == PageProtection::CONF_VALUE_ACL) {
                 $follow = "nofollow";
             } else {
                 $follow = "follow";

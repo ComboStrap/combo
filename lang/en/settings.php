@@ -16,7 +16,7 @@ use ComboStrap\PageImages;
 use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
-use ComboStrap\Publication;
+use ComboStrap\PagePublicationDate;
 use ComboStrap\RasterImageLink;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
@@ -154,8 +154,8 @@ $lang[Site::CONF_SITE_LANGUAGE_REGION] = PluginUtility::getDocumentationHyperLin
 /**
  * Late publication
  */
-$lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::getDocumentationHyperLink(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM, "Late Publication") . " - Page with a published date in the future will be protected from search engine and the public";
-$lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = PluginUtility::getDocumentationHyperLink(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM, "Late Publication") . " - The mode of protection for a late published page";
+$lang[PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE] = PluginUtility::getDocumentationHyperLink(PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM, "Late Publication") . " - Page with a published date in the future will be protected from search engine and the public";
+$lang[PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_MODE] = PluginUtility::getDocumentationHyperLink(PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM, "Late Publication") . " - The mode of protection for a late published page";
 
 /**
  * Default page type

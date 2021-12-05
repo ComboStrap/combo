@@ -9,7 +9,7 @@ use DateTime;
 /**
  * Class CacheExpirationFrequencyMeta
  * @package ComboStrap
- * Represents the creation date of the page resource
+ * Represents the creation date of a resource
  */
 class PageCreationDate extends MetadataDateTime
 {
@@ -22,6 +22,11 @@ class PageCreationDate extends MetadataDateTime
     {
         return (new CacheExpirationDate())
             ->setResource($page);
+    }
+
+    public static function create(): PageCreationDate
+    {
+        return new PageCreationDate();
     }
 
     public function getDefaultValue(): ?DateTime

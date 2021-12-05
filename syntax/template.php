@@ -14,7 +14,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\Publication;
+use ComboStrap\PagePublicationDate;
 use ComboStrap\Sqlite;
 use ComboStrap\Template;
 use ComboStrap\TemplateUtility;
@@ -52,7 +52,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         Path::PATH_ATTRIBUTE,
         AnalyticsDocument::DATE_MODIFIED,
         PageCreationDate::DATE_CREATED,
-        Publication::DATE_PUBLISHED,
+        PagePublicationDate::DATE_PUBLISHED,
         PageName::NAME_PROPERTY
     ];
 

@@ -530,10 +530,10 @@ EOF;
                         /**
                          * Add a class to style it differently if needed
                          */
-                        $this->attributes->addClassName(Publication::LATE_PUBLICATION_CLASS_NAME . "-combo");
-                        if (Publication::isLatePublicationProtectionEnabled()) {
-                            $acronym = Publication::LATE_PUBLICATION_PROTECTION_ACRONYM;
-                            $lowerCaseLatePublicationAcronym = strtolower(Publication::LATE_PUBLICATION_PROTECTION_ACRONYM);
+                        $this->attributes->addClassName(PagePublicationDate::LATE_PUBLICATION_CLASS_NAME . "-combo");
+                        if (PagePublicationDate::isLatePublicationProtectionEnabled()) {
+                            $acronym = PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM;
+                            $lowerCaseLatePublicationAcronym = strtolower(PagePublicationDate::LATE_PUBLICATION_PROTECTION_ACRONYM);
                             $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-link", PageProtection::PAGE_PROTECTION_LINK_LOGIN);
                             $this->attributes->addHtmlAttributeValue("data-$pageProtectionAcronym-source", $lowerCaseLatePublicationAcronym);
                             PageProtection::addPageProtectionSnippet();
@@ -1021,7 +1021,7 @@ EOF;
             }
 
             if ($protectedLink === false) {
-                $latePublicationProtectionEnabled = PluginUtility::getConfValue(Publication::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
+                $latePublicationProtectionEnabled = PluginUtility::getConfValue(PagePublicationDate::CONF_LATE_PUBLICATION_PROTECTION_ENABLE);
                 if ($latePublicationProtectionEnabled == 1
                     && $this->getInternalPage()->isLatePublication()) {
                     $protectedLink = true;

@@ -43,7 +43,7 @@ use ComboStrap\PageTitle;
 use ComboStrap\PageType;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\Publication;
+use ComboStrap\PagePublicationDate;
 use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) die();
@@ -607,13 +607,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($pageType->toFormField());
 
         // Published Date
-        $formMeta->addField(FormMetaField::create(Publication::DATE_PUBLISHED)
-            ->addValue($page->getPublishedTimeAsString(), $page->getCreatedDateAsString())
-            ->setType(DataType::DATETIME_TYPE_VALUE)
-            ->setTab(self::TAB_TYPE_VALUE)
-            ->setLabel("Publication Date")
-            ->setDescription("The publication date")
-        );
+        $publicationDate = PagePublicationDate::createFromPage($page);
+        $formMeta->addField($publicationDate->toFormField());
 
         // Start Date
         $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_START)

@@ -154,8 +154,7 @@ class Page extends ResourceComboAbs
      * @var PageTitle $title
      */
     private $title;
-    private $author;
-    private $authorId;
+
     private $canBeOfLowQuality;
     private $region;
     private $lang;
@@ -193,7 +192,7 @@ class Page extends ResourceComboAbs
      */
     private $buildAliasPath;
     /**
-     * @var DateTime|null
+     * @var PagePublicationDate
      */
     private $publishedDate;
     /**
@@ -890,7 +889,12 @@ class Page extends ResourceComboAbs
      */
     public function getAuthor(): ?string
     {
-        return $this->author;
+        $store= $this->getDefaultMetadataStore();
+        if(!($store instanceof MetadataDokuWikiStore)){
+            return null;
+        }
+
+        return $store->getFromResourceAndName($this,'creator');
     }
 
     /**
@@ -901,7 +905,13 @@ class Page extends ResourceComboAbs
     public function getAuthorID(): ?string
     {
 
-        return $this->authorId;
+        $store= $this->getDefaultMetadataStore();
+        if(!($store instanceof MetadataDokuWikiStore)){
+            return null;
+        }
+
+        return $store->getFromResourceAndName($this,'user');
+
     }
 
 
@@ -1283,7 +1293,7 @@ class Page extends ResourceComboAbs
             $array[AnalyticsDocument::DATE_MODIFIED] = $this->getModifiedDateAsString();
         }
 
-        $array[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
+        $array[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
         $array[AnalyticsDocument::DATE_START] = $this->getStartDateAsString();
         $array[AnalyticsDocument::DATE_END] = $this->getStartDateAsString();
         $array[Page::LAYOUT_PROPERTY] = $this->getMetadata(Page::LAYOUT_PROPERTY);
@@ -1435,7 +1445,7 @@ class Page extends ResourceComboAbs
                     case AnalyticsDocument::DATE_START:
                         $this->setStartDate($value);
                         continue 2;
-                    case Publication::DATE_PUBLISHED:
+                    case PagePublicationDate::DATE_PUBLISHED:
                         $this->setPublishedDate($value);
                         continue 2;
                     case PageDescription::DESCRIPTION_PROPERTY:
@@ -1880,7 +1890,7 @@ class Page extends ResourceComboAbs
     public
     function setPublishedDate($value)
     {
-        $this->setDateAttribute(Publication::DATE_PUBLISHED, $this->publishedDate, $value);
+        $this->setDateAttribute(PagePublicationDate::DATE_PUBLISHED, $this->publishedDate, $value);
     }
 
     /**
@@ -2007,6 +2017,9 @@ class Page extends ResourceComboAbs
         $this->creationTime = PageCreationDate::createForPage($this);
         $this->title = PageTitle::createForPage($this);
         $this->keywords = PageKeywords::createForPage($this);
+        $this->startDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_START);
+        $this->endDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_END);
+        $this->publishedDate = PagePublicationDate::createFromPage($this);
 
         /**
          * Old system
@@ -2022,8 +2035,7 @@ class Page extends ResourceComboAbs
          */
 
 
-        $this->author = $this->getMetadata('creator');
-        $this->authorId = $this->getMetadata('user');
+
 
         $this->region = $this->getMetadata(self::REGION_META_PROPERTY);
         $this->lang = $this->getMetadata(self::LANG_META_PROPERTY);
@@ -2050,25 +2062,10 @@ class Page extends ResourceComboAbs
                 action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
             ));
 
-        $publishedString = $this->getMetadata(Publication::DATE_PUBLISHED);
-        if ($publishedString === null) {
-            /**
-             * Old metadata key
-             */
-            $publishedString = $this->getPersistentMetadata(Publication::OLD_META_KEY);
-        }
-        if ($publishedString !== null) {
-            try {
-                $this->publishedDate = Iso8601Date::createFromString($publishedString)->getDateTime();
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("The published date property of the page ($this) has a value  ($publishedString) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            }
-        } else {
-            $this->publishedDate = null;
-        }
 
-        $this->startDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_START);
-        $this->endDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_END);
+
+
+
 
 
     }
@@ -2368,10 +2365,10 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER] = $disqus;
                     }
                     break;
-                case Publication::OLD_META_KEY:
-                case Publication::DATE_PUBLISHED:
+                case PagePublicationDate::OLD_META_KEY:
+                case PagePublicationDate::DATE_PUBLISHED:
                     if ($this->getPublishedTime() !== null) {
-                        $nonDefaultMetadatas[Publication::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
+                        $nonDefaultMetadatas[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
                     }
                     break;
                 case PageName::NAME_PROPERTY:

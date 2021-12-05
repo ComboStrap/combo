@@ -251,17 +251,17 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * New Metadata processing
          */
-        Aliases::createForPageWithDefaultStore($page)
+        Aliases::createForPage($page)
             ->setFromFormData($post);
         try {
-            PageImages::createForPageWithDefaultStore($page)
+            PageImages::createForPage($page)
                 ->setFromFormData($post);
         } catch (ExceptionCombo $e) {
             $processingMessages[] = Message::createErrorMessage($e->getMessage())
                 ->setCanonical($e->getCanonical());
         }
         try {
-            LdJson::createForPageWithDefaultStore($page)
+            LdJson::createForPage($page)
                 ->setFromFormData($post);
         } catch (ExceptionCombo $e) {
             $processingMessages[] = Message::createErrorMessage($e->getMessage())
@@ -505,12 +505,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * The manager
          */
         // Name
-        $pageName = PageName::createForPageWithDefaultStore($page);
+        $pageName = PageName::createForPage($page);
         $formMeta->addField($pageName->toFormField());
 
 
         // Title (title of a component is an heading)
-        $title = PageTitle::createForPageWithDefaultStore($page);
+        $title = PageTitle::createForPage($page);
         $formMeta->addField($title->toFormField());
 
         // H1
@@ -558,7 +558,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Canonical
-        $canonical = Canonical::createForPageWithDefaultStore($page);
+        $canonical = Canonical::createForPage($page);
         $formMeta->addField($canonical->toFormField());
 
         // Slug
@@ -622,14 +622,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Page Image Properties
          */
-        $pageImages = PageImages::createForPageWithDefaultStore($page);
+        $pageImages = PageImages::createForPage($page);
         $formMeta->addField($pageImages->toFormField());
 
 
         /**
          * Aliases
          */
-        $aliases = Aliases::createForPageWithDefaultStore($page);
+        $aliases = Aliases::createForPage($page);
         $formMeta->addField($aliases->toFormField());
 
 
@@ -674,7 +674,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // ld-json
-        $ldJson = LdJson::createForPageWithDefaultStore($page);
+        $ldJson = LdJson::createForPage($page);
         $formFieldLdJson = $ldJson->toFormField();
         $formMeta->addField($formFieldLdJson);
 
@@ -743,7 +743,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Page Id
-        $pageId = PageId::createForPageWithDefaultStore($page);
+        $pageId = PageId::createForPage($page);
         $formMeta->addField($pageId->toFormField());
 
         // Cache cron expiration expression
@@ -757,7 +757,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Cache expiration date
-        $cacheExpirationDate = CacheExpirationDate::createForPageWithDefaultStore($page);
+        $cacheExpirationDate = CacheExpirationDate::createForPage($page);
         $formMeta->addField($cacheExpirationDate->toFormField());
 
         /**

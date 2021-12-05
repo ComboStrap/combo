@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Extension\Event;
+
 /**
  * Class MetadataFileSystemStore
  * @package ComboStrap
@@ -50,7 +52,6 @@ class MetadataDokuWikiStore implements MetadataStore
         $name = $metadata->getName();
         $persistentValue = $metadata->toPersistentValue();
         $defaultValue = $metadata->toPersistentDefaultValue();
-        $type = $metadata->getPersistenceType();
         $resource = $metadata->getResource();
         if ($resource === null) {
             throw new ExceptionComboRuntime("A resource is mandatory", self::CANONICAL);
@@ -58,7 +59,8 @@ class MetadataDokuWikiStore implements MetadataStore
         if (!($resource instanceof Page)) {
             throw new ExceptionComboRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        $resource->setMetadata($name, $persistentValue, $defaultValue, $type);
+        $dokuwikiId = $resource->getDokuwikiId();
+        $this->setFromWikiId($dokuwikiId, $persistentValue, $defaultValue);
     }
 
     /**
@@ -89,6 +91,11 @@ class MetadataDokuWikiStore implements MetadataStore
         }
 
 
+    }
+
+    public function getFromWikiId(string $wikiId, string $metadataName)
+    {
+        return $this->metadatas[$wikiId][$metadataName];
     }
 
 
@@ -134,10 +141,7 @@ class MetadataDokuWikiStore implements MetadataStore
     private function getMetadatas(Metadata $metadata)
     {
         $dokuwikiId = $metadata->getResource()->getPath()->getDokuwikiId();
-        if (isset($this->metadatas[$dokuwikiId])) {
-            return $this->metadatas[$dokuwikiId];
-        }
-        $this->metadatas[$dokuwikiId] = p_read_metadata($dokuwikiId);
+        return $this->getMetadatasFromWikiId($dokuwikiId);
     }
 
     public
@@ -167,8 +171,10 @@ class MetadataDokuWikiStore implements MetadataStore
 
     /**
      * @param Page $page
+     * @return MetadataDokuWikiStore
      */
-    public function renderForPage(Page $page){
+    public function renderForPage(Page $page): MetadataDokuWikiStore
+    {
         /**
          * Read/render the metadata from the file
          * with parsing
@@ -178,4 +184,83 @@ class MetadataDokuWikiStore implements MetadataStore
         $this->metadatas[$dokuwikiId] = p_render_metadata($dokuwikiId, $actualMeta);
         return $this;
     }
+
+    private function &getMetadatasFromWikiId($dokuwikiId)
+    {
+        if (isset($this->metadatas[$dokuwikiId])) {
+            return $this->metadatas[$dokuwikiId];
+        }
+        $this->metadatas[$dokuwikiId] = p_read_metadata($dokuwikiId);
+        return $this->metadatas[$dokuwikiId];
+    }
+
+    /**
+     * Change a meta on file
+     * and triggers the {@link Page::PAGE_METADATA_MUTATION_EVENT} event
+     *
+     * @param $wikiId
+     * @param $key
+     * @param $value
+     * @param null $default - use in case of boolean
+     */
+    private function setFromWikiId($wikiId, $key, $value, $default = null)
+    {
+        $metadata = &$this->getMetadatasFromWikiId($wikiId);
+        $type = self::PERSISTENT_METADATA;
+        $oldValue = $metadata[$type][$key];
+        if (is_bool($value)) {
+            if ($oldValue === null) {
+                $oldValue = $default;
+            } else {
+                $oldValue = Boolean::toBoolean($oldValue);
+            }
+        }
+        if ($oldValue !== $value) {
+
+            if ($value !== null) {
+                $metadata[$type][$key] = $value;
+            } else {
+                unset($metadata[$type][$key]);
+            }
+            /**
+             * Metadata in Dokuwiki is fucked up.
+             *
+             * You can't remove a metadata,
+             * You need to know if this is a rendering or not
+             *
+             * See just how fucked {@link p_set_metadata()} is
+             *
+             * Also don't change the type of the value to a string
+             * otherwise dokuwiki will not see a change
+             * between true and a string and will not persist the value
+             *
+             * A metadata is also not immediately flushed on disk
+             * in a test when rendering
+             * They are going into the global $METADATA_RENDERERS
+             *
+             * A current metadata is never stored if not set in the rendering process
+             * We persist therefore always
+             */
+            $persistent = true;
+            p_set_metadata($wikiId,
+                [
+                    $key => $value
+                ],
+                false,
+                $persistent
+            );
+            /**
+             * Event
+             */
+            $data = [
+                "name" => $key,
+                "new_value" => $value,
+                "old_value" => $oldValue
+            ];
+            Event::createAndTrigger(Page::PAGE_METADATA_MUTATION_EVENT, $data);
+        }
+
+    }
+
+
 }

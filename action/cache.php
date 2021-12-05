@@ -11,6 +11,7 @@ use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageDescription;
 use ComboStrap\PageName;
 use ComboStrap\PageTitle;
 use ComboStrap\PluginUtility;
@@ -184,7 +185,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
                 return;
             }
 
-            $expirationDate = CacheExpirationDate::createForPageWithDefaultStore($page)
+            $expirationDate = CacheExpirationDate::createForPage($page)
                 ->getValue();
 
             if ($expirationDate === null) {
@@ -297,7 +298,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * The side slot cache is deleted only when the
          * below property are updated
          */
-        $descriptionProperties = [PageTitle::TITLE_META_PROPERTY, PageName::NAME_PROPERTY, AnalyticsDocument::H1, Page::DESCRIPTION_PROPERTY];
+        $descriptionProperties = [PageTitle::TITLE_META_PROPERTY, PageName::NAME_PROPERTY, AnalyticsDocument::H1, PageDescription::DESCRIPTION_PROPERTY];
         if (!in_array($data["name"], $descriptionProperties)) return;
 
         self::removeSideSlotCache();

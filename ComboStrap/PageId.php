@@ -23,11 +23,10 @@ class PageId extends MetadataText
      */
     public const PAGE_ID_LENGTH = 21;
 
-    public static function createForPageWithDefaultStore(Page $page): PageId
+    public static function createForPage(Page $page): PageId
     {
         return (new PageId())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
     }
 
 

@@ -10,11 +10,10 @@ class PageTitle extends MetadataText
     public const TITLE_META_PROPERTY = 'title';
     public const TITLE = 'title';
 
-    public static function createForPageWithDefaultStore($page): PageTitle
+    public static function createForPage($page): PageTitle
     {
         return (new PageTitle())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
     }
 
     public function getTab(): string

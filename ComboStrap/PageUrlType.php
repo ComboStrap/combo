@@ -39,18 +39,17 @@ class PageUrlType extends MetadataText
         $path = $page->getPath()->toString();
         $urlType = self::$urlTypeInstanceCache[$path];
         if($urlType===null){
-            $urlType = self::createFromPageWithDefaultStore($page);
+            $urlType = self::createFromPage($page);
             self::$urlTypeInstanceCache[$path] = $urlType;
         }
         return $urlType;
 
     }
 
-    public static function createFromPageWithDefaultStore(Page $page): PageUrlType
+    public static function createFromPage(Page $page): PageUrlType
     {
         return (new PageUrlType())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
     }
 
     public function getValue(): ?string

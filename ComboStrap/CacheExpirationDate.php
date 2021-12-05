@@ -21,11 +21,10 @@ class CacheExpirationDate extends MetadataDateTime
     public const META_CACHE_EXPIRATION_DATE_NAME = "date_cache_expiration";
 
 
-    public static function createForPageWithDefaultStore(Page $page): CacheExpirationDate
+    public static function createForPage(Page $page): CacheExpirationDate
     {
         return (new CacheExpirationDate())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
     }
 
     public function getDefaultValue(): ?DateTime

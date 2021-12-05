@@ -22,12 +22,10 @@ class Aliases extends Metadata
      */
     private $wasBuild = false;
 
-    public static function createForPageWithDefaultStore(Page $page): Aliases
+    public static function createForPage(Page $page): Aliases
     {
 
-        return (new Aliases())
-            ->setResource($page)
-            ->useDefaultStore();
+        return (new Aliases())->setResource($page);
 
     }
 
@@ -87,7 +85,7 @@ class Aliases extends Metadata
      */
     public static function toMetadataArray(?array $aliases): ?array
     {
-        if($aliases === null){
+        if ($aliases === null) {
             return null;
         }
         $array = [];

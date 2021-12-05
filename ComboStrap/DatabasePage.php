@@ -173,7 +173,7 @@ class DatabasePage
         }
 
         try {
-            Aliases::createForPageWithDefaultStore($this->page)
+            Aliases::createForPage($this->page)
                 ->buildFromStore()
                 ->setStore(MetadataDbStore::getOrCreate())
                 ->sendToStore();
@@ -710,7 +710,7 @@ EOF;
 
     public function getDescription()
     {
-        return $this->getFromRow(Page::DESCRIPTION_PROPERTY);
+        return $this->getFromRow(PageDescription::DESCRIPTION_PROPERTY);
     }
 
 
@@ -1106,7 +1106,7 @@ EOF;
 
         $aliasPath = $pageAlias->getPath()->toString();
         try {
-            Aliases::createForPageWithDefaultStore($this->page)
+            Aliases::createForPage($this->page)
                 ->addAlias($aliasPath)
                 ->sendToStore();
         } catch (ExceptionCombo $e) {

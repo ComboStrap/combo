@@ -11,11 +11,10 @@ class LdJson extends MetadataJson
 
     public const JSON_LD_META_PROPERTY = "json-ld";
 
-    public static function createForPageWithDefaultStore(Page $page): LdJson
+    public static function createForPage(Page $page): LdJson
     {
         return (new LdJson())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
     }
 
     public function getName(): string

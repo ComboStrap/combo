@@ -64,7 +64,6 @@ class Page extends ResourceComboAbs
     const WEB_PAGE_TYPE = "webpage";
     const OTHER_TYPE = "other";
 
-    const DESCRIPTION_PROPERTY = "description";
     /**
      * Default page type configuration
      */
@@ -141,28 +140,7 @@ class Page extends ResourceComboAbs
      */
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
 
-    /**
-     * To indicate from where the description comes
-     * This is when it's the original dokuwiki description
-     */
-    const DESCRIPTION_DOKUWIKI_ORIGIN = "dokuwiki";
-    /**
-     * The origin of the description was set to frontmatter
-     * due to historic reason to say to it comes from combo
-     * (You may set it via the metadata manager and get this origin)
-     */
-    const DESCRIPTION_COMBO_ORIGIN = syntax_plugin_combo_frontmatter::CANONICAL;
 
-
-
-    /**
-     * @var string|null - the description (the origin is in the $descriptionOrigin)
-     */
-    private $description;
-    /**
-     * @var string - the dokuwiki
-     */
-    private $descriptionOrigin;
 
 
     /**
@@ -275,6 +253,10 @@ class Page extends ResourceComboAbs
     private $instructionsDocument;
 
     private $dokuPath;
+    /**
+     * @var PageDescription $description
+     */
+    private $description;
 
     /**
      * Page constructor.
@@ -1223,61 +1205,7 @@ class Page extends ResourceComboAbs
         return $default;
     }
 
-    /**
-     * @return array|null[] - a tuple of value for the description and description default
-     */
-    private function buildGetDescriptionAndDefault(): array
-    {
 
-
-        $this->descriptionOrigin = null;
-        $this->description = null;
-
-        $descriptionArray = $this->getMetadata(Page::DESCRIPTION_PROPERTY);
-        if (empty($descriptionArray)) {
-            return [null, null];
-        }
-        if (!array_key_exists('abstract', $descriptionArray)) {
-            return [null, null];
-        }
-
-        $description = $descriptionArray['abstract'];
-        $this->descriptionOrigin = self::DESCRIPTION_DOKUWIKI_ORIGIN;
-        if (array_key_exists('origin', $descriptionArray)) {
-            $this->descriptionOrigin = $descriptionArray['origin'];
-            if ($this->descriptionOrigin !== self::DESCRIPTION_DOKUWIKI_ORIGIN) {
-                return [$description, ""];
-            }
-        }
-
-        /**
-         * Description Plugin integration
-         * https://github.com/lupo49/plugin-description/blob/master/syntax.php#L42
-         */
-        $pluginDescriptionMeta = 'plugin_description';
-        $descriptionPlugin = $this->getMetadata($pluginDescriptionMeta);
-        if ($descriptionPlugin !== null && isset($descriptionPlugin["keywords"])) {
-            $description = $descriptionPlugin["keywords"];
-            $this->descriptionOrigin = $pluginDescriptionMeta;
-            return [$description, ""];
-        }
-
-        /**
-         * Dokuwiki description
-         * With some trick
-         */
-        // suppress the carriage return
-        $description = str_replace("\n", " ", $descriptionArray['abstract']);
-        // suppress the h1
-        $description = str_replace($this->getH1OrDefault(), "", $description);
-        // Suppress the star, the tab, About
-        $description = preg_replace('/(\*|\t|About)/im', "", $description);
-        // Suppress all double space and trim
-        $description = trim(preg_replace('/  /m', " ", $description));
-        return [null, $description];
-
-
-    }
 
 
     public
@@ -1427,73 +1355,6 @@ class Page extends ResourceComboAbs
         return $this->dokuPath->toUriString();
     }
 
-    /**
-     * Change a meta on file
-     * and triggers the {@link Page::PAGE_METADATA_MUTATION_EVENT} event
-     *
-     * @param $key
-     * @param $value
-     * @param null $default - use in case of boolean
-     * @param string $type
-     */
-    public
-    function setMetadata($key, $value, $default = null, string $type = MetadataDokuWikiStore::PERSISTENT_METADATA)
-    {
-
-        $oldValue = $this->metadatas[$type][$key];
-        if (is_bool($value)) {
-            if ($oldValue === null) {
-                $oldValue = $default;
-            } else {
-                $oldValue = Boolean::toBoolean($oldValue);
-            }
-        }
-        if ($oldValue !== $value) {
-
-            if ($value !== null) {
-                $this->metadatas[$type][$key] = $value;
-            } else {
-                unset($this->metadatas[$type][$key]);
-            }
-            /**
-             * Metadata in Dokuwiki is fucked up.
-             *
-             * You can't remove a metadata,
-             * You need to know if this is a rendering or not
-             *
-             * See just how fucked {@link p_set_metadata()} is
-             *
-             * Also don't change the type of the value to a string
-             * otherwise dokuwiki will not see a change
-             * between true and a string and will not persist the value
-             *
-             * A metadata is also not immediately flushed on disk
-             * in a test when rendering
-             * They are going into the global $METADATA_RENDERERS
-             *
-             * A current metadata is never stored if not set in the rendering process
-             * We persist therefore always
-             */
-            $persistent = true;
-            p_set_metadata($this->dokuPath->getDokuwikiId(),
-                [
-                    $key => $value
-                ],
-                false,
-                $persistent
-            );
-            /**
-             * Event
-             */
-            $data = [
-                "name" => $key,
-                "new_value" => $value,
-                "old_value" => $oldValue
-            ];
-            Event::createAndTrigger(Page::PAGE_METADATA_MUTATION_EVENT, $data);
-        }
-
-    }
 
     public
     function getPublishedTimeAsString(): ?string
@@ -1634,7 +1495,7 @@ class Page extends ResourceComboAbs
                     case Publication::DATE_PUBLISHED:
                         $this->setPublishedDate($value);
                         continue 2;
-                    case Page::DESCRIPTION_PROPERTY:
+                    case PageDescription::DESCRIPTION_PROPERTY:
                         $this->setDescription($value);
                         continue 2;
                     case PageName::NAME_PROPERTY:
@@ -2076,40 +1937,7 @@ class Page extends ResourceComboAbs
     function setDescription($description): Page
     {
 
-        if ($description === "" || $description === null) {
-            if ($this->descriptionOrigin === self::DESCRIPTION_COMBO_ORIGIN) {
-                throw new ExceptionCombo("The description cannot be empty", Page::DESCRIPTION_PROPERTY);
-            } else {
-                // The original description is from Dokuwiki, we don't send an error
-                // otherwise all page without a first description would get an error
-                // (What fucked up is fucked up)
-                return $this;
-            }
-        }
-
-        /**
-         * Dokuwiki has already a description
-         * We use it to be conform
-         */
-        $this->description = $description;
-
-        /**
-         * Bug: We have passed an array and not the key
-         * We have created therefore a description property below the description array
-         * We delete it
-         */
-        $descriptionArray = $this->metadatas[MetadataDokuWikiStore::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY];
-        if ($descriptionArray != null && array_key_exists(Page::DESCRIPTION_PROPERTY, $descriptionArray)) {
-            unset($this->metadatas[MetadataDokuWikiStore::PERSISTENT_METADATA][Page::DESCRIPTION_PROPERTY][Page::DESCRIPTION_PROPERTY]);
-            $this->flushMeta();
-        }
-
-        $this->setMetadata(Page::DESCRIPTION_PROPERTY,
-            array(
-                "abstract" => $description,
-                "origin" => self::DESCRIPTION_COMBO_ORIGIN
-            ));
-
+        $this->description->setValue($description);
         return $this;
     }
 
@@ -2256,14 +2084,14 @@ class Page extends ResourceComboAbs
          * Even if it does not exist, the metadata object should be instantiated
          * otherwise, there is a null exception
          */
-        $this->cacheExpirationDate = CacheExpirationDate::createForPageWithDefaultStore($this);
-        $this->aliases = Aliases::createForPageWithDefaultStore($this);
-        $this->pageImages = PageImages::createForPageWithDefaultStore($this);
-        $this->pageName = PageName::createForPageWithDefaultStore($this);
-        $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPageWithDefaultStore($this);
-        $this->ldJson = LdJson::createForPageWithDefaultStore($this);
-        $this->canonical = Canonical::createForPageWithDefaultStore($this);
-        $this->pageId = PageId::createForPageWithDefaultStore($this);
+        $this->cacheExpirationDate = CacheExpirationDate::createForPage($this);
+        $this->aliases = Aliases::createForPage($this);
+        $this->pageImages = PageImages::createForPage($this);
+        $this->pageName = PageName::createForPage($this);
+        $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPage($this);
+        $this->ldJson = LdJson::createForPage($this);
+        $this->canonical = Canonical::createForPage($this);
+        $this->pageId = PageId::createForPage($this);
 
 
         /**

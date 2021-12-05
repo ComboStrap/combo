@@ -432,7 +432,7 @@ EOF;
                 if (isset($frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY])) {
                     $value = $frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY];
                     try {
-                        $pageImages = PageImages::createForPageWithDefaultStore($page)
+                        $pageImages = PageImages::createForPage($page)
                             ->buildFromPersistentFormat($value);
                         foreach ($pageImages->getAll() as $imageValue) {
                             $imagePath = $imageValue->getImage()->getPath()->getAbsolutePath();

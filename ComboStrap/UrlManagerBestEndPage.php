@@ -86,7 +86,7 @@ class UrlManagerBestEndPage
             $redirectType = action_plugin_combo_router::REDIRECT_NOTFOUND_METHOD;
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
                 $page = Page::createPageFromId($bestPageId);
-                Aliases::createForPageWithDefaultStore($page)
+                Aliases::createForPage($page)
                     ->addAlias($missingPageId, Alias::REDIRECT)
                     ->sendToStore()
                     ->setStore(MetadataDbStore::getOrCreate())

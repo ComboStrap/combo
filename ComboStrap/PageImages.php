@@ -27,11 +27,10 @@ class PageImages extends Metadata
      */
     private $wasBuild = false;
 
-    public static function createForPageWithDefaultStore(Page $page): PageImages
+    public static function createForPage(Page $page): PageImages
     {
         return (new PageImages())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
 
     }
 

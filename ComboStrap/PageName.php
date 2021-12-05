@@ -10,11 +10,10 @@ class PageName extends MetadataText
 
     public const NAME_PROPERTY = "name";
 
-    public static function createForPageWithDefaultStore($page): PageName
+    public static function createForPage($page): PageName
     {
         return (new PageName())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
     }
 
     public function getTab(): string

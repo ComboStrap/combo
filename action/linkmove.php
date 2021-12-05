@@ -141,7 +141,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
              * Check page id
              */
             $page = Page::createPageFromId($targetId);
-            $pageIdDefaultStore = PageId::createForPageWithDefaultStore($page);
+            $pageIdDefaultStore = PageId::createForPage($page);
 
             $pageIdDatabase = $databasePage->getPageId();
             if($pageIdDatabase!==$pageIdDefaultStore->getValue()){
@@ -151,7 +151,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             /**
              * Add the alias
              */
-            Aliases::createForPageWithDefaultStore($page)
+            Aliases::createForPage($page)
                 ->addAlias($id)
                 ->sendToStore()
                 ->setStore(MetadataDbStore::getOrCreate())

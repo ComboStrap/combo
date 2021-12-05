@@ -45,7 +45,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         $targetImageId = $event->data["dst_id"];
         foreach ($affectedPagesId as $affectedPageId) {
             $affectedPage = Page::createPageFromId($affectedPageId);
-            $pageImages = PageImages::createForPageWithDefaultStore($affectedPage);
+            $pageImages = PageImages::createForPage($affectedPage);
             $removedPageImage = null;
 
             $removedPageImage = $pageImages->removeIfExists($sourceImageId);

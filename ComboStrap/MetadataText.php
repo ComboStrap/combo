@@ -15,7 +15,7 @@ abstract class MetadataText extends MetadataScalar
      * @var string|null
      */
     protected $value;
-    private $wasBuild;
+    protected $wasBuild = false;
 
     public function getDataType(): string
     {
@@ -66,11 +66,11 @@ abstract class MetadataText extends MetadataScalar
             ->setValue($this->getValue(), $this->getDefaultValue());
     }
 
-    private function buildCheck()
+    protected function buildCheck()
     {
         if (!$this->wasBuild && $this->value === null) {
             $this->wasBuild = true;
-            $this->value = $this->getStoreValue();
+            $this->buildFromStore();
         }
     }
 

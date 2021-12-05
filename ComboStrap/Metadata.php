@@ -11,6 +11,7 @@ use action_plugin_combo_qualitymessage;
 abstract class Metadata
 {
     const CANONICAL_PROPERTY = "page:metadata";
+    const MUTABLE = "mutable";
 
     /**
      * The metadata is for this resource
@@ -39,13 +40,12 @@ abstract class Metadata
         return $this;
     }
 
-    public function useDefaultStore(): Metadata
-    {
-        return $this->setStore($this->resource->getDefaultMetadataStore());
-    }
 
-    protected function getStore(): ?MetadataStore
+    public function getStore(): ?MetadataStore
     {
+        if ($this->store === null) {
+            return $this->getResource()->getDefaultMetadataStore();
+        }
         return $this->store;
     }
 

@@ -17,11 +17,10 @@ class Canonical extends MetadataWikiPath
      */
     public const CONF_CANONICAL_LAST_NAMES_COUNT = 'MinimalNamesCountForAutomaticCanonical';
 
-    public static function createForPageWithDefaultStore(Page $page): Canonical
+    public static function createForPage(Page $page): Canonical
     {
         return (new Canonical())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
 
     }
 

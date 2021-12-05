@@ -13,11 +13,10 @@ class CacheExpirationFrequency extends MetadataText
     public const META_CACHE_EXPIRATION_FREQUENCY_NAME = "cache_expiration_frequency";
     public const CANONICAL_PROPERTY = "page-cache-expiration-frequency";
 
-    public static function createForPageWithDefaultStore(Page $page): CacheExpirationFrequency
+    public static function createForPage(Page $page): CacheExpirationFrequency
     {
         return (new CacheExpirationFrequency())
-            ->setResource($page)
-            ->useDefaultStore();
+            ->setResource($page);
     }
 
     public function getTab(): string
@@ -37,7 +36,7 @@ class CacheExpirationFrequency extends MetadataText
 
         try {
             $cacheExpirationCalculatedDate = Cron::getDate($cronExpression);
-            $cacheExpirationDate = CacheExpirationDate::createForPageWithDefaultStore($this->getResource());
+            $cacheExpirationDate = CacheExpirationDate::createForPage($this->getResource());
             $cacheExpirationDate->setValue($cacheExpirationCalculatedDate);
             parent::setValue($cronExpression);
             return $this;

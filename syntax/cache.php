@@ -87,7 +87,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                 $requestPage = Page::createPageFromRequestedPage();
 
                 try {
-                    CacheExpirationFrequency::createForPageWithDefaultStore($requestPage)
+                    CacheExpirationFrequency::createForPage($requestPage)
                         ->setValue($value)
                         ->sendToStore();
                 } catch (ExceptionCombo $e) {
@@ -135,7 +135,7 @@ class syntax_plugin_combo_cache extends DokuWiki_Syntax_Plugin
                     $cronExpression = $data[PluginUtility::PAYLOAD];
                     $requestPage = Page::createPageFromRequestedPage();
                     try {
-                        CacheExpirationFrequency::createForPageWithDefaultStore($requestPage)
+                        CacheExpirationFrequency::createForPage($requestPage)
                             ->setValue($cronExpression)
                             ->sendToStore();
                     } catch (ExceptionCombo $e) {

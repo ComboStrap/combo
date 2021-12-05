@@ -5,6 +5,7 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\Bootstrap;
 use ComboStrap\CallStack;
 use ComboStrap\LogUtility;
+use ComboStrap\PageH1;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 
@@ -108,7 +109,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
             global $ID;
             p_set_metadata(
                 $ID,
-                array(AnalyticsDocument::H1_PARSED => trim($text)),
+                array(PageH1::H1_PARSED => trim($text)),
                 false,
                 false // runtime meta
             );

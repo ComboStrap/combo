@@ -50,17 +50,14 @@ class AnalyticsDocument extends OutputDocument
      * An array of info for errors mostly
      */
     const INFO = "info";
-    const H1 = "h1";
     const LOW = "low";
     const RULES = "rules";
     const DETAILS = 'details';
     const FAILED_MANDATORY_RULES = 'failed_mandatory_rules';
-    const DESCRIPTION = "description";
     const METADATA = 'metadata';
     const DATE_CREATED = 'date_created';
     const DATE_END = "date_end";
     const DATE_START = "date_start";
-    const H1_PARSED = "h1_parsed";
 
     public function getOrProcessJson(): Json
     {

@@ -48,6 +48,7 @@ class PageName extends MetadataText
 
     public function getDefaultValue(): string
     {
+
         $pathName = $this->getResource()->getPath()->getLastName();
 
         /**
@@ -68,4 +69,11 @@ class PageName extends MetadataText
         }
         return implode(" ", $wordsUc);
     }
+
+    public function getCanonical(): string
+    {
+        return $this->getName();
+    }
+
+
 }

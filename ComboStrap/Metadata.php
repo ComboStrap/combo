@@ -212,7 +212,7 @@ abstract class Metadata
         "internal", // toc, cache, ...
         "relation",
         DatabasePage::DATE_REPLICATION,
-        AnalyticsDocument::H1_PARSED,
+        PageH1::H1_PARSED,
         Page::LOW_QUALITY_INDICATOR_CALCULATED
     ];
 
@@ -227,7 +227,7 @@ abstract class Metadata
     const MUTABLE_METADATA = [
         Canonical::CANONICAL_PROPERTY,
         Page::TYPE_META_PROPERTY,
-        AnalyticsDocument::H1,
+        PageH1::H1_PROPERTY,
         Aliases::ALIAS_ATTRIBUTE,
         PageImages::IMAGE_META_PROPERTY,
         Page::REGION_META_PROPERTY,

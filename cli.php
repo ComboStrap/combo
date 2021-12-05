@@ -16,6 +16,7 @@ use ComboStrap\DatabasePage;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageH1;
 use ComboStrap\Sqlite;
 use splitbrain\phpcli\Options;
 
@@ -292,7 +293,7 @@ EOF;
                     'chars' => $statistics[AnalyticsDocument::CHAR_COUNT],
                     'external_links' => $statistics[AnalyticsDocument::EXTERNAL_LINK_COUNT],
                     'external_medias' => $statistics[AnalyticsDocument::EXTERNAL_MEDIA_COUNT],
-                    AnalyticsDocument::H1 => $statistics[AnalyticsDocument::HEADING_COUNT][AnalyticsDocument::H1],
+                    PageH1::H1_PROPERTY => $statistics[AnalyticsDocument::HEADING_COUNT][PageH1::H1_PROPERTY],
                     'h2' => $statistics[AnalyticsDocument::HEADING_COUNT]['h2'],
                     'h3' => $statistics[AnalyticsDocument::HEADING_COUNT]['h3'],
                     'h4' => $statistics[AnalyticsDocument::HEADING_COUNT]['h4'],

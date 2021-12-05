@@ -13,6 +13,7 @@ class PageDescription extends MetadataText
      * that has the description text
      */
     const ABSTRACT_KEY = "abstract";
+    public const DESCRIPTION = "description";
 
 
     /**
@@ -47,7 +48,7 @@ class PageDescription extends MetadataText
 
     public function getDescription(): string
     {
-        return "The name is the shortest description. It should be at maximum a couple of words long. It's used mainly in navigational components.";
+        return "The description is a paragraph that describe your page. It's advertised to external application and used in templating.";
     }
 
     public function getLabel(): string
@@ -64,6 +65,12 @@ class PageDescription extends MetadataText
     {
         return MetadataDokuWikiStore::PERSISTENT_METADATA;
     }
+
+    public function getDataType(): string
+    {
+        return DataType::PARAGRAPH_TYPE_VALUE;
+    }
+
 
     public function getMutable(): bool
     {
@@ -146,8 +153,7 @@ class PageDescription extends MetadataText
          * https://github.com/lupo49/plugin-description/blob/master/syntax.php#L42
          */
         $pluginDescription = 'plugin_description';
-        $wikiId = $this->getResource()->getPath()->getDokuwikiId();
-        $description = $metaDataStore->getFromWikiId($wikiId, $pluginDescription);
+        $description = $metaDataStore->getFromResourceAndName($this->getResource(), $pluginDescription);
         if ($description !== null && isset($description["keywords"])) {
             $description = $description["keywords"];
             $this->descriptionOrigin = $pluginDescription;
@@ -229,6 +235,11 @@ class PageDescription extends MetadataText
             self::ABSTRACT_KEY => $this->getValue(),
             "origin" => PageDescription::DESCRIPTION_COMBO_ORIGIN
         );
+    }
+
+    public function getCanonical(): string
+    {
+        return $this->getName();
     }
 
 

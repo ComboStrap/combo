@@ -93,8 +93,19 @@ class MetadataDokuWikiStore implements MetadataStore
 
     }
 
-    public function getFromWikiId(string $wikiId, string $metadataName)
+    /**
+     * Getting a metadata for a resource via its name
+     * when we don't want to create a class
+     *
+     * This function is used primarily by derived / process metadata
+     *
+     * @param ResourceCombo $resource
+     * @param string $metadataName
+     * @return mixed
+     */
+    public function getFromResourceAndName(ResourceCombo $resource, string $metadataName)
     {
+        $wikiId = $resource->getPath()->getDokuwikiId();
         return $this->metadatas[$wikiId][$metadataName];
     }
 

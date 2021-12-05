@@ -162,7 +162,10 @@ class Page extends ResourceComboAbs
      * @var Canonical
      */
     private $canonical;
-    private $h1;
+    /**
+     * @var PageH1
+     */
+    private $h1 ;
     /**
      * @var PageName
      */
@@ -195,10 +198,7 @@ class Page extends ResourceComboAbs
      * @var string a slug path
      */
     private $slug;
-    /**
-     * @var string the generated description from the content
-     */
-    private $descriptionDefault;
+
 
     /**
      * The scope of the page
@@ -704,16 +704,10 @@ class Page extends ResourceComboAbs
     }
 
 
-    public
-    function getH1()
+    public function getH1(): ?string
     {
 
-        $heading = $this->h1;
-        if (!blank($heading)) {
-            return $heading;
-        } else {
-            return null;
-        }
+        return $this->h1->getValue();
 
     }
 
@@ -749,11 +743,7 @@ class Page extends ResourceComboAbs
     function getH1OrDefault()
     {
 
-        $h1Title = $this->getH1();
-        if ($h1Title == null) {
-            return $this->getDefaultH1();
-        }
-        return $h1Title;
+        return $this->h1->getValueOrDefault();
 
 
     }
@@ -1312,7 +1302,7 @@ class Page extends ResourceComboAbs
          * and therefore will be not visible
          * We render at least the id
          */
-        $array[AnalyticsDocument::H1] = $this->getH1OrDefault();
+        $array[PageH1::H1_PROPERTY] = $this->getH1OrDefault();
         $title = $this->getTitleOrDefault();
         /**
          * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
@@ -1323,7 +1313,7 @@ class Page extends ResourceComboAbs
         $array[PageId::PAGE_ID_ATTRIBUTE] = $this->getPageId();
         $array[Canonical::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
         $array[Path::PATH_ATTRIBUTE] = $this->getPath()->toAbsolutePath()->toString();
-        $array[AnalyticsDocument::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
+        $array[PageDescription::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
         $array["url"] = $this->getCanonicalUrl();
         $array[self::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
@@ -1504,7 +1494,7 @@ class Page extends ResourceComboAbs
                     case PageTitle::TITLE_META_PROPERTY:
                         $this->title->setFromPersistentFormat($value);
                         continue 2;
-                    case AnalyticsDocument::H1:
+                    case PageH1::H1_PROPERTY:
                         $this->setH1($value);
                         continue 2;
                     case LdJson::JSON_LD_META_PROPERTY:
@@ -1656,16 +1646,7 @@ class Page extends ResourceComboAbs
     public
     function getDefaultH1()
     {
-        $h1Parsed = $this->getMetadata(AnalyticsDocument::H1_PARSED);
-        if (!empty($h1Parsed)) {
-            return $h1Parsed;
-        }
-
-        if (!empty($this->getTitle())) {
-            return $this->getTitle();
-        } else {
-            return $this->getPageNameNotEmpty();
-        }
+        return $this->h1->getValueOrDefault();
     }
 
     public
@@ -1997,14 +1978,13 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function setH1($value): Page
     {
-        if ($value === "") {
-            $value = null;
-        }
-        $this->h1 = $value;
-        $this->setMetadata(AnalyticsDocument::H1, $value);
+        $this->h1->setValue($value);
         return $this;
     }
 
@@ -2092,7 +2072,8 @@ class Page extends ResourceComboAbs
         $this->ldJson = LdJson::createForPage($this);
         $this->canonical = Canonical::createForPage($this);
         $this->pageId = PageId::createForPage($this);
-
+        $this->description = PageDescription::createForPage($this);
+        $this->h1 = PageH1::createForPage($this);
 
         /**
          * Old system
@@ -2106,10 +2087,7 @@ class Page extends ResourceComboAbs
          * Metadata may be created even if the file does not exist
          * (when the page is rendered for the first time for instance)
          */
-        $this->metadatas = p_read_metadata($this->getPath()->getDokuwikiId());
 
-        [$this->description, $this->descriptionDefault] = $this->buildGetDescriptionAndDefault();
-        $this->h1 = $this->getMetadata(AnalyticsDocument::H1);
         $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
         /**
          * `title` is created by DokuWiki
@@ -2428,9 +2406,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[Page::TYPE_META_PROPERTY] = $this->getType();
                     }
                     break;
-                case AnalyticsDocument::H1:
+                case PageH1::H1_PROPERTY:
                     if (!in_array($this->getH1(), [$this->getDefaultH1(), null])) {
-                        $nonDefaultMetadatas[AnalyticsDocument::H1] = $this->getH1();
+                        $nonDefaultMetadatas[PageH1::H1_PROPERTY] = $this->getH1();
                     }
                     break;
                 case Aliases::ALIAS_ATTRIBUTE:

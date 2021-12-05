@@ -30,6 +30,8 @@ use ComboStrap\MetadataJson;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
+use ComboStrap\PageDescription;
+use ComboStrap\PageH1;
 use ComboStrap\PageId;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
@@ -514,27 +516,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($title->toFormField());
 
         // H1
-        $formMeta->addField(
-            FormMetaField::create(AnalyticsDocument::H1)
-                ->addValue($page->getH1(), $page->getDefaultH1())
-                ->setTab(self::TAB_PAGE_VALUE)
-                ->setCanonical(AnalyticsDocument::H1)
-                ->setDescription("The heading 1 (or H1) is the first heading of your page. It may be used in template to make a difference with the title.")
-        );
+        $h1 = PageH1::createForPage($page);
+        $formMeta->addField($h1->toFormField());
 
         // Description
-        $formMeta->addField(
-            FormMetaField::create(AnalyticsDocument::DESCRIPTION)
-                ->addValue($page->getDescription(), $page->getDescriptionOrElseDokuWiki())
-                ->setType(DataType::PARAGRAPH_TYPE_VALUE)
-                ->setTab(self::TAB_PAGE_VALUE)
-                ->setCanonical(AnalyticsDocument::DESCRIPTION)
-                ->setDescription("The description is a paragraph that describe your page. It's advertised to external application and used in templating.")
-        );
+        $description = PageDescription::createForPage($page);
+        $formMeta->addField($description->toFormField());
 
         // Keywords
-
-
         $formMeta->addField(FormMetaField::create(Page::KEYWORDS_ATTRIBUTE)
             ->addValue(
                 action_plugin_combo_metakeywords::toFormValue($page->getKeywords()),

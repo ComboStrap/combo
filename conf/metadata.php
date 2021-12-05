@@ -13,6 +13,7 @@ use ComboStrap\Identity;
 use ComboStrap\MediaLink;
 use ComboStrap\LazyLoad;
 use ComboStrap\PageImages;
+use ComboStrap\PageType;
 use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
 use ComboStrap\Page;
@@ -193,7 +194,7 @@ $meta[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = array('multichoice',
 /**
  * Default Page Type
  */
-$meta[Page::CONF_DEFAULT_PAGE_TYPE] = array("string");
+$meta[PageType::CONF_DEFAULT_PAGE_TYPE] = array("string");
 
 /**
  * Default Shadow level

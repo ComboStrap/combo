@@ -63,7 +63,7 @@ class MetadataDbStore implements MetadataStore
     private function setAliases(Metadata $metadata)
     {
 
-        $aliasesToStore = $metadata->toPersistentValue();
+        $aliasesToStore = $metadata->toStoreValue();
         $dbAliases = $this->getAliasesInPersistentValue($metadata);
         $dbAliasMap = [];
         if ($dbAliases !== null) {
@@ -182,7 +182,7 @@ EOF;
         foreach ($rowAliases as $row) {
             $aliases->addAlias($row[$pathAttribute], $row[$typeAttribute]);
         }
-        return $aliases->toPersistentValue();
+        return $aliases->toStoreValue();
 
     }
 

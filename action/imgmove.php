@@ -135,7 +135,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                     $this->moveImage($imagePath, $handler);
                     $newPagesImages->addImage($imagePath, $oldPageImage[PageImage::USAGE_ATTRIBUTE]);
                 }
-                $jsonArray[PageImages::IMAGE_META_PROPERTY] = $newPagesImages->toPersistentValue();
+                $jsonArray[PageImages::IMAGE_META_PROPERTY] = $newPagesImages->toStoreValue();
 
 
             } catch (ExceptionCombo $e) {

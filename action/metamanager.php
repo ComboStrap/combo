@@ -37,6 +37,7 @@ use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PageName;
 use ComboStrap\PageTitle;
+use ComboStrap\PageType;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Publication;
@@ -75,10 +76,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
      * The canonical for the metadata page
      */
     const METADATA_CANONICAL = "metadata";
-    /**
-     * The canonical for page type
-     */
-    const PAGE_TYPE_CANONICAL = "page:type";
+
     const SUCCESS_MESSAGE = "The data were updated without errors.";
 
 
@@ -623,21 +621,14 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
         // Page Type
-        $formMeta->addField(FormMetaField::create(Page::TYPE_META_PROPERTY)
-            ->addValue($page->getType(), $page->getDefaultType())
-            ->setDomainValues($page->getTypeValues())
-            ->setTab(self::TAB_TYPE_VALUE)
-            ->setCanonical(self::PAGE_TYPE_CANONICAL)
-            ->setLabel("Page Type")
-            ->setDescription("The type of page")
-        );
+        $pageType = PageType::createForPage($page);
+        $formMeta->addField($pageType->toFormField());
 
         // Published Date
         $formMeta->addField(FormMetaField::create(Publication::DATE_PUBLISHED)
             ->addValue($page->getPublishedTimeAsString(), $page->getCreatedDateAsString())
             ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
-            ->setCanonical(self::PAGE_TYPE_CANONICAL)
             ->setLabel("Publication Date")
             ->setDescription("The publication date")
         );
@@ -647,7 +638,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->addValue($page->getStartDateAsString())
             ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
-            ->setCanonical(Page::EVENT_TYPE)
+            ->setCanonical(PageType::EVENT_TYPE)
             ->setLabel("Start Date")
             ->setDescription("The start date of an event")
         );
@@ -657,7 +648,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->addValue($page->getEndDateAsString())
             ->setType(DataType::DATETIME_TYPE_VALUE)
             ->setTab(self::TAB_TYPE_VALUE)
-            ->setCanonical(Page::EVENT_TYPE)
+            ->setCanonical(PageType::EVENT_TYPE)
             ->setLabel("End Date")
             ->setDescription("The end date of an event")
         );

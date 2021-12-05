@@ -22,7 +22,7 @@ abstract class MetadataDateTime extends MetadataScalar
      * Helper function for date metadata
      * @return string|null
      */
-    public function toPersistentValue(): ?string
+    public function toStoreValue(): ?string
     {
         $this->buildCheck();
         $value = $this->dateTimeValue;
@@ -39,13 +39,13 @@ abstract class MetadataDateTime extends MetadataScalar
     /**
      * @throws ExceptionCombo
      */
-    public function setFromPersistentFormat($value): MetadataDateTime
+    public function setFromStoreValue($value): MetadataDateTime
     {
         $this->setValue($this->fromPersistentDateTimeUtility($value));
         return $this;
     }
 
-    public function toPersistentDefaultValue(): ?string
+    public function toStoreDefaultValue(): ?string
     {
 
         return $this->toPersistentDateTimeUtility($this->getDefaultValue());
@@ -116,7 +116,7 @@ abstract class MetadataDateTime extends MetadataScalar
     {
         $this->buildCheck();
         return parent::toFormField()
-            ->setValue($this->toPersistentValue(),$this->toPersistentDefaultValue());
+            ->setValue($this->toStoreValue(),$this->toStoreDefaultValue());
     }
 
 

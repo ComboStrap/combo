@@ -23,6 +23,7 @@
 use ComboStrap\Canonical;
 use ComboStrap\Icon;
 use ComboStrap\PageImages;
+use ComboStrap\PageType;
 use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
 
@@ -209,7 +210,7 @@ $conf["latePublicationProtectionMode"] = "acl";
 
 /**
  * Default page type
- * {@link Page::CONF_DEFAULT_PAGE_TYPE}
+ * {@link PageType::CONF_DEFAULT_PAGE_TYPE}
  */
 $conf["defaultPageType"] = "article";
 

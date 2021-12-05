@@ -23,5 +23,14 @@ abstract class ResourceComboAbs implements ResourceCombo
         return strval($time->getTimestamp());
     }
 
-
+    /**
+     * An utility function that {@link MetadataStore::persist() persists} the value
+     * into the default {@link ResourceCombo::getDefaultMetadataStore()}
+     * @return $this
+     */
+    public function persist(): ResourceComboAbs
+    {
+        $this->getDefaultMetadataStore()->persist();
+        return $this;
+    }
 }

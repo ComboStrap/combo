@@ -21,7 +21,7 @@ abstract class MetadataJson extends MetadataScalar
      * Helper function for date metadata
      * @return array|null
      */
-    public function toPersistentValue(): ?array
+    public function toStoreValue(): ?array
     {
 
         $this->buildCheck();
@@ -59,13 +59,13 @@ abstract class MetadataJson extends MetadataScalar
     /**
      * @throws ExceptionCombo
      */
-    public function setFromPersistentFormat($value): MetadataJson
+    public function setFromStoreValue($value): MetadataJson
     {
         $this->setValue($value);
         return $this;
     }
 
-    public function toPersistentDefaultValue(): ?string
+    public function toStoreDefaultValue(): ?string
     {
 
         return null;
@@ -117,7 +117,7 @@ abstract class MetadataJson extends MetadataScalar
     {
         // From the form data, we receive a string
         $value = $formData[$this->getName()];
-        $this->setFromPersistentFormat($value);
+        $this->setFromStoreValue($value);
         return $this;
 
     }

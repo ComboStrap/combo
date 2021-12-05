@@ -133,7 +133,7 @@ class PageImages extends Metadata
     /**
      * @throws ExceptionCombo
      */
-    public function setFromPersistentFormat($value): PageImages
+    public function setFromStoreValue($value): PageImages
     {
         $this->pageImages = PageImages::toPageImageArray($value);
         $this->checkImageExistence();
@@ -154,14 +154,14 @@ class PageImages extends Metadata
     /**
      * @throws ExceptionCombo
      */
-    public function toPersistentValue()
+    public function toStoreValue()
     {
         $this->buildCheck();
         $this->checkImageExistence();
         return $this->toMetadataArray($this->pageImages);
     }
 
-    public function toPersistentDefaultValue()
+    public function toStoreDefaultValue()
     {
         return null;
     }

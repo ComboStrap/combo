@@ -222,11 +222,11 @@ class PageDescription extends MetadataText
      * @return string|array
      * @noinspection PhpReturnDocTypeMismatchInspection
      */
-    public function toPersistentValue()
+    public function toStoreValue()
     {
         $metaDataStore = $this->getStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
-            parent::toPersistentValue();
+            parent::toStoreValue();
         }
         /**
          * For dokuwiki, this is an array

@@ -4,6 +4,7 @@ use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageImage;
+use ComboStrap\PageType;
 use ComboStrap\Site;
 
 if (!defined('DOKU_INC')) die();
@@ -140,7 +141,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
         $type = $page->getTypeNotEmpty();
         switch (strtolower($type)) {
-            case Page::WEBSITE_TYPE:
+            case PageType::WEBSITE_TYPE:
 
                 /**
                  * https://schema.org/WebSite
@@ -174,7 +175,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
                 break;
 
-            case Page::ORGANIZATION_TYPE:
+            case PageType::ORGANIZATION_TYPE:
 
                 /**
                  * Organization + Logo
@@ -189,29 +190,29 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
 
                 break;
 
-            case Page::ARTICLE_TYPE:
-            case Page::NEWS_TYPE:
-            case Page::BLOG_TYPE:
+            case PageType::ARTICLE_TYPE:
+            case PageType::NEWS_TYPE:
+            case PageType::BLOG_TYPE:
             case self::NEWSARTICLE_SCHEMA_ORG_LOWERCASE:
             case self::BLOGPOSTING_SCHEMA_ORG_LOWERCASE:
-            case PAGE::HOME_TYPE:
-            case PAGE::WEB_PAGE_TYPE:
+            case PageType::HOME_TYPE:
+            case PageType::WEB_PAGE_TYPE:
 
                 switch (strtolower($type)) {
-                    case Page::NEWS_TYPE:
+                    case PageType::NEWS_TYPE:
                     case self::NEWSARTICLE_SCHEMA_ORG_LOWERCASE:
                         $schemaType = "NewsArticle";
                         break;
-                    case Page::BLOG_TYPE:
+                    case PageType::BLOG_TYPE:
                     case self::BLOGPOSTING_SCHEMA_ORG_LOWERCASE:
                         $schemaType = "BlogPosting";
                         break;
-                    case PAGE::HOME_TYPE:
-                    case PAGE::WEB_PAGE_TYPE:
+                    case PageType::HOME_TYPE:
+                    case PageType::WEB_PAGE_TYPE:
                         // https://schema.org/WebPage
                         $schemaType = "WebPage";
                         break;
-                    case PAGE::ARTICLE_TYPE:
+                    case PageType::ARTICLE_TYPE:
                     default:
                         $schemaType = "Article";
                         break;
@@ -262,7 +263,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
                 self::addImage($ldJson, $page);
                 break;
 
-            case PAGE::EVENT_TYPE:
+            case PageType::EVENT_TYPE:
                 // https://developers.google.com/search/docs/advanced/structured-data/event
                 $ldJson = array(
                     "@context" => "https://schema.org",

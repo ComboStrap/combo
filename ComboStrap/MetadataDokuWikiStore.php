@@ -50,8 +50,8 @@ class MetadataDokuWikiStore implements MetadataStore
     public function set(Metadata $metadata)
     {
         $name = $metadata->getName();
-        $persistentValue = $metadata->toPersistentValue();
-        $defaultValue = $metadata->toPersistentDefaultValue();
+        $persistentValue = $metadata->toStoreValue();
+        $defaultValue = $metadata->toStoreDefaultValue();
         $resource = $metadata->getResource();
         if ($resource === null) {
             throw new ExceptionComboRuntime("A resource is mandatory", self::CANONICAL);

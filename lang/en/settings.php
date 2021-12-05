@@ -13,6 +13,7 @@ use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
 use ComboStrap\PageImages;
+use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\Publication;
@@ -159,7 +160,7 @@ $lang[Publication::CONF_LATE_PUBLICATION_PROTECTION_MODE] = PluginUtility::getDo
 /**
  * Default page type
  */
-$lang[Page::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getDocumentationHyperLink("type", "The default page type for all pages (expected the home page)");
+$lang[PageType::CONF_DEFAULT_PAGE_TYPE] = PluginUtility::getDocumentationHyperLink("type", "The default page type for all pages (expected the home page)");
 
 /**
  * Default Shadow level

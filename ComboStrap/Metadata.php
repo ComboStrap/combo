@@ -41,6 +41,13 @@ abstract class Metadata
     }
 
 
+    /**
+     * Return the store for this metadata
+     * By default, this is the {@link ResourceCombo::getDefaultMetadataStore() default resource metadata store}
+     *
+     * (ie a memory variable or a database)
+     * @return MetadataStore|null
+     */
     public function getStore(): ?MetadataStore
     {
         if ($this->store === null) {
@@ -52,15 +59,15 @@ abstract class Metadata
     public abstract function getTab();
 
     /**
-     * This function is used to send the
-     * data to the store
-     * (ie a memory variable or a database)
+     * This function sends the object value to the {@link Metadata::getStore() store}
      *
      * This function should be used at the end of each setter function
      *
      * @throws ExceptionCombo
      *
-     * To persist on disk, you use the {@link MetadataStore::persist()}
+     * To persist or commit on disk, you use the {@link MetadataStore::persist()}
+     * Because the metaadta is stored by resource, the persist function is
+     * also made available on the resource level
      *
      */
     public function sendToStore(): Metadata
@@ -72,20 +79,50 @@ abstract class Metadata
         return $this;
     }
 
+    /**
+     * @return string - the name to lookup the value
+     * This is the column name in a database or the property name in a key value store
+     * It should be unique over all metadata
+     */
     public function __toString()
     {
         return $this->getName();
     }
 
+    public function buildFromStore(): Metadata
+    {
+        if ($this->store === null) {
+            throw new ExceptionComboRuntime("The metadata store is not set, you can't get a value");
+        }
+        $this->setFromStoreValue($this->store->get($this));
+        return $this;
+    }
 
-    public abstract function buildFromStore();
+    /**
+     * The function used by {@link Metadata::buildFromStore()}
+     * to build the value from the {@link MetadataStore::get()}
+     * function.
+     *
+     * The inverse function is {@link Metadata::toStoreValue()}
+     * @param $value
+     * @return mixed
+     */
+    public abstract function setFromStoreValue($value);
 
-    public abstract function setFromPersistentFormat($value);
-
+    /**
+     * @return string - the data type
+     * used to select the type of input in a HTML form
+     */
     public abstract function getDataType(): string;
 
+    /**
+     * @return string - the description (used in tooltip)
+     */
     public abstract function getDescription(): string;
 
+    /**
+     * @return string - the label used in a form or log
+     */
     public abstract function getLabel(): string;
 
     public function getCanonical(): string
@@ -115,16 +152,6 @@ abstract class Metadata
         return $this;
     }
 
-    /**
-     * @return string|array|null
-     */
-    protected function getStoreValue()
-    {
-        if ($this->store === null) {
-            throw new ExceptionComboRuntime("The metadata store is not set, you can't get a value");
-        }
-        return $this->store->get($this);
-    }
 
     /**
      * @return string the name of the metadata (property)
@@ -132,22 +159,29 @@ abstract class Metadata
     public abstract function getName(): string;
 
     /**
-     * @return string|array|null the value to be persisted in the store
+     * @return string|array|null the value to be persisted by the store
+     * the reverse action is {@link Metadata::setFromStoreValue()}
      */
-    public abstract function toPersistentValue();
+    public abstract function toStoreValue();
 
     /**
      * @return FormMetaField the field for this metadata
      */
     public function toFormField(): FormMetaField
     {
-        return FormMetaField::create($this->getName())
+        $field = FormMetaField::create($this->getName())
             ->setType($this->getDataType())
             ->setTab($this->getTab())
             ->setCanonical($this->getCanonical())
             ->setLabel($this->getLabel())
             ->setDescription($this->getDescription())
             ->setMutable($this->getMutable());
+        $possibleValues = $this->getPossibleValues();
+        if ($possibleValues !== null) {
+            $field->setDomainValues($possibleValues);
+        }
+        return $field;
+
     }
 
     /**
@@ -160,24 +194,28 @@ abstract class Metadata
     /**
      * @return mixed
      */
-    public abstract function toPersistentDefaultValue();
+    public abstract function toStoreDefaultValue();
+
+    public const PERSISTENT_METADATA = "persistent";
+    public const DERIVED_METADATA = "derived";
 
     /**
      *
      * Return if the metadata value should be backup up (derived value or not)
      *
-     * If the value is {@link MetadataDokuWikiStore::PERSISTENT_METADATA}, it's yes
-     * If the value is {@link MetadataDokuWikiStore::CURRENT_METADATA}, it's no
+     * If the value is {@link self::PERSISTENT_METADATA}, it's yes
+     * If the value is {@link self::DERIVED_METADATA}, it's no
      *
      * @return string
-     *
-     * We are making the difference between a metadata that is derived
-     * called {@link MetadataDokuWikiStore::CURRENT_METADATA} for Dokuwiki
-     * and that is not called {@link MetadataDokuWikiStore::PERSISTENT_METADATA} for Dokuwiki
      *
      * Unfortunately, Dokuwiki makes this distinction only in rendering
      * https://forum.dokuwiki.org/d/19764-how-to-test-a-current-metadata-setting
      * Therefore all metadata are persistent
+     *
+     * Ie a {@link MetadataDokuWikiStore::CURRENT_METADATA} is only derived
+     * in a rendering context. A {@link MetadataDokuWikiStore::PERSISTENT_METADATA} is always stored.
+     *
+     *
      *
      */
     public abstract function getPersistenceType(): string;
@@ -226,7 +264,7 @@ abstract class Metadata
      */
     const MUTABLE_METADATA = [
         Canonical::CANONICAL_PROPERTY,
-        Page::TYPE_META_PROPERTY,
+        PageType::TYPE_META_PROPERTY,
         PageH1::H1_PROPERTY,
         Aliases::ALIAS_ATTRIBUTE,
         PageImages::IMAGE_META_PROPERTY,
@@ -314,8 +352,17 @@ abstract class Metadata
 
     /**
      * @return bool can the user change the value
+     * In a form, the field will be disabled
      */
     public abstract function getMutable(): bool;
 
 
+    /**
+     * @return array|null The possible values that can take this metadata
+     * If null, all, no constraints
+     */
+    public function getPossibleValues(): ?array
+    {
+        return null;
+    }
 }

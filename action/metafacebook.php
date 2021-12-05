@@ -7,6 +7,7 @@ use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageImage;
+use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\StringUtility;
@@ -99,7 +100,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
          */
         $pageType = $page->getTypeNotEmpty();
         switch ($pageType) {
-            case Page::ARTICLE_TYPE:
+            case PageType::ARTICLE_TYPE:
                 // https://ogp.me/#type_article
                 $facebookMeta["article:published_time"] = $page->getPublishedElseCreationTime()->format(DATE_ISO8601);
                 $modifiedTime = $page->getModifiedTime();
@@ -110,7 +111,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                 break;
             default:
                 // The default facebook value
-                $facebookMeta["og:type"] = Page::WEBSITE_TYPE;
+                $facebookMeta["og:type"] = PageType::WEBSITE_TYPE;
                 break;
         }
 

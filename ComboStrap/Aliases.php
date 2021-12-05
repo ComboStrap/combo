@@ -103,13 +103,13 @@ class Aliases extends Metadata
         return self::ALIAS_ATTRIBUTE;
     }
 
-    public function toPersistentValue()
+    public function toStoreValue()
     {
         $this->buildCheck();
         return self::toMetadataArray($this->aliases);
     }
 
-    public function toPersistentDefaultValue()
+    public function toStoreDefaultValue()
     {
         return null;
     }
@@ -255,7 +255,7 @@ class Aliases extends Metadata
     }
 
     public
-    function setFromPersistentFormat($value): Aliases
+    function setFromStoreValue($value): Aliases
     {
         $this->aliases = $this->toNativeAliasArray($value);
         return $this;

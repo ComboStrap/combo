@@ -40,7 +40,7 @@ class DatabasePage
             AnalyticsDocument::DATE_END,
             Page::REGION_META_PROPERTY,
             Page::LANG_META_PROPERTY,
-            Page::TYPE_META_PROPERTY
+            PageType::TYPE_META_PROPERTY
         ];
     const ANALYTICS_ATTRIBUTE = "ANALYTICS";
 
@@ -857,7 +857,7 @@ EOF;
             AnalyticsDocument::DATE_END => $this->page->getStartDateAsString(),
             Page::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
             Page::LANG_META_PROPERTY => $this->page->getLangOrDefault(),
-            Page::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
+            PageType::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
             Path::DOKUWIKI_ID_ATTRIBUTE => $this->page->getPath()->getDokuwikiId(),
         );
 

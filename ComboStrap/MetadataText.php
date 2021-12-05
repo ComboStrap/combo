@@ -41,12 +41,17 @@ abstract class MetadataText extends MetadataScalar
             // form don't return null only empty string
             $value = null;
         }
+        $possibleValues = $this->getPossibleValues();
+        if ($possibleValues !== null) {
+            if (!in_array($value, $possibleValues)) {
+                throw new ExceptionCombo("The value ($value) for the metadata ({$this->getName()}) is not one of the possible following values: " . implode(", ", $possibleValues) . ".");
+            }
+        }
         $this->value = $value;
         $this->sendToStore();
         return $this;
 
     }
-
 
 
     public function buildFromStore(): MetadataText

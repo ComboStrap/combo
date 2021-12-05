@@ -50,27 +50,6 @@ class Page extends ResourceComboAbs
     const CAN_BE_LOW_QUALITY_PAGE_DEFAULT = true;
 
     /**
-     * @link https://ogp.me/#types Facebook ogp
-     * @link https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#http://purl.org/dc/elements/1.1/type Dublin Core
-     */
-    const TYPE_META_PROPERTY = "type";
-    const WEBSITE_TYPE = "website";
-    const ARTICLE_TYPE = "article";
-    const EVENT_TYPE = "event";
-    const ORGANIZATION_TYPE = "organization";
-    const NEWS_TYPE = "news";
-    const BLOG_TYPE = "blog";
-    const HOME_TYPE = "home";
-    const WEB_PAGE_TYPE = "webpage";
-    const OTHER_TYPE = "other";
-
-    /**
-     * Default page type configuration
-     */
-    const CONF_DEFAULT_PAGE_TYPE = "defaultPageType";
-    const CONF_DEFAULT_PAGE_TYPE_DEFAULT = self::ARTICLE_TYPE;
-
-    /**
      * The scope is the namespace used to store the cache
      *
      * It can be set by a component via the {@link p_set_metadata()}
@@ -170,6 +149,9 @@ class Page extends ResourceComboAbs
      * @var PageName
      */
     private $pageName;
+    /**
+     * @var PageType
+     */
     private $type;
     /**
      * @var PageTitle $title
@@ -807,12 +789,7 @@ class Page extends ResourceComboAbs
     public
     function getTypeNotEmpty()
     {
-        $type = $this->getPersistentMetadata(self::TYPE_META_PROPERTY);
-        if (isset($type)) {
-            return $type;
-        } else {
-            return $this->getDefaultType();
-        }
+        return $this->type->getValueOrDefault();
     }
 
 
@@ -1316,7 +1293,7 @@ class Page extends ResourceComboAbs
         $array[PageDescription::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
         $array["url"] = $this->getCanonicalUrl();
-        $array[self::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
+        $array[PageType::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
         $array[Page::SLUG_ATTRIBUTE] = $this->getSlugOrDefault();
 
         /**
@@ -1476,7 +1453,7 @@ class Page extends ResourceComboAbs
                     case AnalyticsDocument::DATE_END:
                         $this->setEndDate($value);
                         continue 2;
-                    case Page::TYPE_META_PROPERTY:
+                    case PageType::TYPE_META_PROPERTY:
                         $this->setPageType($value);
                         continue 2;
                     case AnalyticsDocument::DATE_START:
@@ -1489,16 +1466,16 @@ class Page extends ResourceComboAbs
                         $this->setDescription($value);
                         continue 2;
                     case PageName::NAME_PROPERTY:
-                        $this->pageName->setFromPersistentFormat($value);
+                        $this->pageName->setFromStoreValue($value);
                         continue 2;
                     case PageTitle::TITLE_META_PROPERTY:
-                        $this->title->setFromPersistentFormat($value);
+                        $this->title->setFromStoreValue($value);
                         continue 2;
                     case PageH1::H1_PROPERTY:
                         $this->setH1($value);
                         continue 2;
                     case LdJson::JSON_LD_META_PROPERTY:
-                        $this->ldJson->setFromPersistentFormat($value);
+                        $this->ldJson->setFromStoreValue($value);
                         continue 2;
                     case Page::REGION_META_PROPERTY:
                         $this->setRegion($value);
@@ -1510,7 +1487,7 @@ class Page extends ResourceComboAbs
                         $this->setLayout($value);
                         continue 2;
                     case Aliases::ALIAS_ATTRIBUTE:
-                        $this->aliases->setFromPersistentFormat($value);
+                        $this->aliases->setFromStoreValue($value);
                         continue 2;
                     case PageId::PAGE_ID_ATTRIBUTE:
                         $this->pageId
@@ -1522,7 +1499,7 @@ class Page extends ResourceComboAbs
                         continue 2;
                     case PageImages::IMAGE_META_PROPERTY:
                         $this->pageImages
-                            ->setFromPersistentFormat($value);
+                            ->setFromStoreValue($value);
                         continue 2;
                     case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
                         $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
@@ -1534,7 +1511,7 @@ class Page extends ResourceComboAbs
                         $this->setSlug($value);
                         continue 2;
                     case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:
-                        $this->cacheExpirationFrequency->setFromPersistentFormat($value);
+                        $this->cacheExpirationFrequency->setFromStoreValue($value);
                         continue 2;
                     default:
                         if (!$persistOnlyKnownAttributes) {
@@ -1606,7 +1583,7 @@ class Page extends ResourceComboAbs
     public
     function getType()
     {
-        return $this->type;
+        return $this->type->getValue();
     }
 
     public function getCanonical(): ?string
@@ -1650,20 +1627,9 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function getDefaultType()
+    function getDefaultType(): string
     {
-        if ($this->isRootHomePage()) {
-            return self::WEBSITE_TYPE;
-        } else if ($this->isHomePage()) {
-            return self::HOME_TYPE;
-        } else {
-            $defaultPageTypeConf = PluginUtility::getConfValue(self::CONF_DEFAULT_PAGE_TYPE, self::CONF_DEFAULT_PAGE_TYPE_DEFAULT);
-            if (!empty($defaultPageTypeConf)) {
-                return $defaultPageTypeConf;
-            } else {
-                return null;
-            }
-        }
+        return $this->type->getDefaultValue();
     }
 
     public
@@ -1672,13 +1638,7 @@ class Page extends ResourceComboAbs
         return "holy";
     }
 
-    public
-    function getTypeValues(): array
-    {
-        $types = [Page::ORGANIZATION_TYPE, Page::ARTICLE_TYPE, Page::NEWS_TYPE, Page::BLOG_TYPE, Page::WEBSITE_TYPE, Page::EVENT_TYPE, Page::HOME_TYPE, Page::WEB_PAGE_TYPE, Page::OTHER_TYPE];
-        sort($types);
-        return $types;
-    }
+
 
     public
     function getLayoutValues(): array
@@ -1802,14 +1762,13 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function setPageType(string $value): Page
     {
-        if ($value === "") {
-            $value = null;
-        }
-        $this->type = $value;
-        $this->setMetadata(Page::TYPE_META_PROPERTY, $value);
+        $this->type->setValue($value);
         return $this;
     }
 
@@ -2074,6 +2033,7 @@ class Page extends ResourceComboAbs
         $this->pageId = PageId::createForPage($this);
         $this->description = PageDescription::createForPage($this);
         $this->h1 = PageH1::createForPage($this);
+        $this->type = PageType::createForPage($this);
 
         /**
          * Old system
@@ -2088,7 +2048,7 @@ class Page extends ResourceComboAbs
          * (when the page is rendered for the first time for instance)
          */
 
-        $this->type = $this->getMetadata(self::TYPE_META_PROPERTY);
+
         /**
          * `title` is created by DokuWiki
          * in current but not persistent
@@ -2401,9 +2361,9 @@ class Page extends ResourceComboAbs
                     }
                     break;
                 case
-                Page::TYPE_META_PROPERTY:
+                PageType::TYPE_META_PROPERTY:
                     if (!in_array($this->getType(), [$this->getDefaultType(), null])) {
-                        $nonDefaultMetadatas[Page::TYPE_META_PROPERTY] = $this->getType();
+                        $nonDefaultMetadatas[PageType::TYPE_META_PROPERTY] = $this->getType();
                     }
                     break;
                 case PageH1::H1_PROPERTY:
@@ -2414,13 +2374,13 @@ class Page extends ResourceComboAbs
                 case Aliases::ALIAS_ATTRIBUTE:
 
                     if ($this->aliases->getSize() !== 0) {
-                        $nonDefaultMetadatas[Aliases::ALIAS_ATTRIBUTE] = $this->aliases->toPersistentValue();
+                        $nonDefaultMetadatas[Aliases::ALIAS_ATTRIBUTE] = $this->aliases->toStoreValue();
                     }
                     break;
                 case PageImages::IMAGE_META_PROPERTY:
                     $images = $this->getPageImages();
                     if (sizeof($images) !== 0) {
-                        $nonDefaultMetadatas[PageImages::IMAGE_META_PROPERTY] = $this->pageImages->toPersistentValue();
+                        $nonDefaultMetadatas[PageImages::IMAGE_META_PROPERTY] = $this->pageImages->toStoreValue();
                     }
                     break;
                 case Page::REGION_META_PROPERTY:

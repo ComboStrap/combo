@@ -284,7 +284,7 @@ abstract class Metadata
         LdJson::JSON_LD_META_PROPERTY,
         Page::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,
-        AnalyticsDocument::DATE_START,
+        StartDate::DATE_START,
         AnalyticsDocument::DATE_END,
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
         Page::SLUG_ATTRIBUTE,

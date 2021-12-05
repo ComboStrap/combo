@@ -196,7 +196,7 @@ class Page extends ResourceComboAbs
      */
     private $publishedDate;
     /**
-     * @var DateTime|null
+     * @var StartDate
      */
     private $startDate;
     /**
@@ -889,12 +889,12 @@ class Page extends ResourceComboAbs
      */
     public function getAuthor(): ?string
     {
-        $store= $this->getDefaultMetadataStore();
-        if(!($store instanceof MetadataDokuWikiStore)){
+        $store = $this->getDefaultMetadataStore();
+        if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
 
-        return $store->getFromResourceAndName($this,'creator');
+        return $store->getFromResourceAndName($this, 'creator');
     }
 
     /**
@@ -905,12 +905,12 @@ class Page extends ResourceComboAbs
     public function getAuthorID(): ?string
     {
 
-        $store= $this->getDefaultMetadataStore();
-        if(!($store instanceof MetadataDokuWikiStore)){
+        $store = $this->getDefaultMetadataStore();
+        if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
 
-        return $store->getFromResourceAndName($this,'user');
+        return $store->getFromResourceAndName($this, 'user');
 
     }
 
@@ -1091,18 +1091,16 @@ class Page extends ResourceComboAbs
     public
     function getPublishedElseCreationTime(): ?DateTime
     {
-        $publishedDate = $this->getPublishedTime();
-        if ($publishedDate === null) {
-            $publishedDate = $this->getCreatedTime();
-        }
-        return $publishedDate;
+
+        return $this->publishedDate->getValueOrDefault();
     }
 
 
     public
-    function isLatePublication()
+    function isLatePublication(): bool
     {
-        return $this->getPublishedElseCreationTime() > new DateTime('now');
+        $dateTime = $this->getPublishedElseCreationTime();
+        return $dateTime > new DateTime('now');
     }
 
     /**
@@ -1294,7 +1292,7 @@ class Page extends ResourceComboAbs
         }
 
         $array[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
-        $array[AnalyticsDocument::DATE_START] = $this->getStartDateAsString();
+        $array[StartDate::DATE_START] = $this->getStartDateAsString();
         $array[AnalyticsDocument::DATE_END] = $this->getStartDateAsString();
         $array[Page::LAYOUT_PROPERTY] = $this->getMetadata(Page::LAYOUT_PROPERTY);
 
@@ -1354,7 +1352,7 @@ class Page extends ResourceComboAbs
     public
     function getStartDate(): ?DateTime
     {
-        $dateStartProperty = AnalyticsDocument::DATE_START;
+        $dateStartProperty = StartDate::DATE_START;
         $persistentMetadata = $this->getPersistentMetadata($dateStartProperty);
         if (empty($persistentMetadata)) {
             return null;
@@ -1442,7 +1440,7 @@ class Page extends ResourceComboAbs
                     case PageType::TYPE_META_PROPERTY:
                         $this->setPageType($value);
                         continue 2;
-                    case AnalyticsDocument::DATE_START:
+                    case StartDate::DATE_START:
                         $this->setStartDate($value);
                         continue 2;
                     case PagePublicationDate::DATE_PUBLISHED:
@@ -1879,18 +1877,19 @@ class Page extends ResourceComboAbs
      * @throws ExceptionCombo
      */
     public
-    function setStartDate($value)
+    function setStartDate($value): Page
     {
-        $this->setDateAttribute(AnalyticsDocument::DATE_START, $this->startDate, $value);
+        $this->startDate->setFromStoreValue($value);
+        return $this;
     }
 
     /**
      * @throws ExceptionCombo
      */
-    public
-    function setPublishedDate($value)
+    public function setPublishedDate($value): Page
     {
-        $this->setDateAttribute(PagePublicationDate::DATE_PUBLISHED, $this->publishedDate, $value);
+        $this->publishedDate->setFromStoreValue($value);
+        return $this;
     }
 
     /**
@@ -2017,9 +2016,9 @@ class Page extends ResourceComboAbs
         $this->creationTime = PageCreationDate::createForPage($this);
         $this->title = PageTitle::createForPage($this);
         $this->keywords = PageKeywords::createForPage($this);
-        $this->startDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_START);
-        $this->endDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_END);
         $this->publishedDate = PagePublicationDate::createFromPage($this);
+        $this->startDate = StartDate::createFromPage($this);
+        $this->endDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_END);
 
         /**
          * Old system
@@ -2033,8 +2032,6 @@ class Page extends ResourceComboAbs
          * Metadata may be created even if the file does not exist
          * (when the page is rendered for the first time for instance)
          */
-
-
 
 
         $this->region = $this->getMetadata(self::REGION_META_PROPERTY);
@@ -2061,11 +2058,6 @@ class Page extends ResourceComboAbs
                 action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
                 action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
             ));
-
-
-
-
-
 
 
     }
@@ -2387,9 +2379,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[Page::LAYOUT_PROPERTY] = $this->getLayout();
                     }
                     break;
-                case AnalyticsDocument::DATE_START:
+                case StartDate::DATE_START:
                     if ($this->getStartDate() !== null) {
-                        $nonDefaultMetadatas[AnalyticsDocument::DATE_START] = $this->getStartDateAsString();
+                        $nonDefaultMetadatas[StartDate::DATE_START] = $this->getStartDateAsString();
                     }
                     break;
                 case AnalyticsDocument::DATE_END:

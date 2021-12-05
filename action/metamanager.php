@@ -45,6 +45,7 @@ use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\Site;
+use ComboStrap\StartDate;
 
 if (!defined('DOKU_INC')) die();
 
@@ -611,14 +612,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($publicationDate->toFormField());
 
         // Start Date
-        $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_START)
-            ->addValue($page->getStartDateAsString())
-            ->setType(DataType::DATETIME_TYPE_VALUE)
-            ->setTab(self::TAB_TYPE_VALUE)
-            ->setCanonical(PageType::EVENT_TYPE)
-            ->setLabel("Start Date")
-            ->setDescription("The start date of an event")
-        );
+        $startDate = StartDate::createFromPage($page);
+        $formMeta->addField($startDate->toFormField());
 
         // End Date
         $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_END)

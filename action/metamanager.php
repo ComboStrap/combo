@@ -37,6 +37,7 @@ use ComboStrap\PageId;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PageName;
+use ComboStrap\PagePath;
 use ComboStrap\PageTitle;
 use ComboStrap\PageType;
 use ComboStrap\Path;
@@ -536,14 +537,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Path
-        $formMeta->addField(FormMetaField::create(Path::PATH_ATTRIBUTE)
-            ->addValue($page->getPath())
-            ->setLabel("Page Path")
-            ->setMutable(false)
-            ->setCanonical(Path::PATH_ATTRIBUTE)
-            ->setTab(self::TAB_REDIRECTION_VALUE)
-            ->setDescription("The path of the page on the file system (in wiki format with the colon `:` as path separator)")
-        );
+        $path = PagePath::createForPage($page);
+        $formMeta->addField($path->toFormField());
 
         // Canonical
         $canonical = Canonical::createForPage($page);

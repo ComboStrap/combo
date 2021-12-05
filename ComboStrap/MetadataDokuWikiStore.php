@@ -60,7 +60,7 @@ class MetadataDokuWikiStore implements MetadataStore
             throw new ExceptionComboRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
         $dokuwikiId = $resource->getDokuwikiId();
-        $this->setFromWikiId($dokuwikiId, $persistentValue, $defaultValue);
+        $this->setFromWikiId($dokuwikiId, $name, $persistentValue, $defaultValue);
     }
 
     /**

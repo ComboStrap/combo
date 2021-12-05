@@ -74,7 +74,6 @@ class Page extends ResourceComboAbs
     public const SLUG_ATTRIBUTE = "slug";
     const LAYOUT_PROPERTY = "layout";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
-    const KEYWORDS_ATTRIBUTE = "keywords";
 
     public const HOLY_LAYOUT_VALUE = "holy";
     public const LANDING_LAYOUT_VALUE = "landing";
@@ -209,6 +208,9 @@ class Page extends ResourceComboAbs
      * @var PageImages
      */
     private $pageImages;
+    /**
+     * @var PageKeywords
+     */
     private $keywords;
     /**
      * @var CacheExpirationFrequency
@@ -1478,7 +1480,7 @@ class Page extends ResourceComboAbs
                     case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
                         $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
                         continue 2;
-                    case PAGE::KEYWORDS_ATTRIBUTE:
+                    case PageKeywords::KEYWORDS_ATTRIBUTE:
                         $this->setKeywords($value);
                         continue 2;
                     case PAGE::SLUG_ATTRIBUTE:
@@ -1894,11 +1896,6 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
-    public function persist(): Page
-    {
-        $this->getDefaultMetadataStore()->persist();
-        return $this;
-    }
 
     /**
      * @throws ExceptionCombo
@@ -2008,6 +2005,8 @@ class Page extends ResourceComboAbs
         $this->h1 = PageH1::createForPage($this);
         $this->type = PageType::createForPage($this);
         $this->creationTime = PageCreationDate::createForPage($this);
+        $this->title = PageTitle::createForPage($this);
+        $this->keywords = PageKeywords::createForPage($this);
 
         /**
          * Old system
@@ -2023,12 +2022,6 @@ class Page extends ResourceComboAbs
          */
 
 
-        /**
-         * `title` is created by DokuWiki
-         * in current but not persistent
-         * and hold the heading 1, see {@link p_get_first_heading}
-         */
-        $this->title = $this->getPersistentMetadata(PageTitle::TITLE);
         $this->author = $this->getMetadata('creator');
         $this->authorId = $this->getMetadata('user');
 
@@ -2074,13 +2067,8 @@ class Page extends ResourceComboAbs
             $this->publishedDate = null;
         }
 
-
         $this->startDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_START);
         $this->endDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_END);
-        $keywordsString = $this->getMetadata(Page::KEYWORDS_ATTRIBUTE);
-        if ($keywordsString !== null) {
-            $this->keywords = explode(",", $keywordsString);
-        }
 
 
     }
@@ -2437,9 +2425,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME] = $this->getCacheExpirationFrequency();
                     }
                     break;
-                case Page::KEYWORDS_ATTRIBUTE:
+                case PageKeywords::KEYWORDS_ATTRIBUTE:
                     if ($this->getKeywords() !== null && sizeof($this->getKeywords()) !== 0) {
-                        $nonDefaultMetadatas[Page::KEYWORDS_ATTRIBUTE] = implode(",", $this->getKeywords());
+                        $nonDefaultMetadatas[PageKeywords::KEYWORDS_ATTRIBUTE] = implode(",", $this->getKeywords());
                     }
                     break;
                 default:
@@ -2493,23 +2481,11 @@ class Page extends ResourceComboAbs
 
     /**
      * The default of dokuwiki is the parts of the {@link Page::getDokuwikiId() dokuwiki id}
-     * @return false|string[]
+     * @return null|string[]
      */
-    public function getDefaultKeywords()
+    public function getDefaultKeywords(): ?array
     {
-        $keyWords = explode(" ", $this->getPageNameNotEmpty());
-        $actualPage = $this;
-        while (($parentPage = $actualPage->getParentPage()) !== null) {
-            if (!$parentPage->isRootHomePage()) {
-                $parentKeyWords = explode(" ", $parentPage->getPageNameNotEmpty());
-                $keyWords = array_merge($keyWords, $parentKeyWords);
-            }
-            $actualPage = $parentPage;
-        }
-        $keyWords = array_map(function ($element) {
-            return strtolower($element);
-        }, $keyWords);
-        return array_unique($keyWords);
+        return $this->keywords->getDefaultValues();
 
     }
 
@@ -2519,25 +2495,7 @@ class Page extends ResourceComboAbs
     public function setKeywords($value): Page
     {
 
-        $persistentKeyWordsString = null;
-        if (is_array($value)) {
-            $this->keywords = $value;
-            $persistentKeyWordsString = implode(",", $value);
-        }
-
-        if (is_string($value)) {
-            if ($value !== "") {
-                $this->keywords = explode(",", $value);
-            }
-            $persistentKeyWordsString = $value;
-        }
-
-        if ($persistentKeyWordsString !== null) {
-            $this->setMetadata(Page::KEYWORDS_ATTRIBUTE, $persistentKeyWordsString);
-            return $this;
-        } else {
-            throw new ExceptionCombo("The keywords value is not an array or a string (value: $value)");
-        }
+        $this->keywords->setFromStoreValue($value);
     }
 
     /**

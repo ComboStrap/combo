@@ -36,6 +36,7 @@ use ComboStrap\PageH1;
 use ComboStrap\PageId;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
+use ComboStrap\PageKeywords;
 use ComboStrap\PageName;
 use ComboStrap\PagePath;
 use ComboStrap\PageTitle;
@@ -524,17 +525,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($description->toFormField());
 
         // Keywords
-        $formMeta->addField(FormMetaField::create(Page::KEYWORDS_ATTRIBUTE)
-            ->addValue(
-                action_plugin_combo_metakeywords::toFormValue($page->getKeywords()),
-                action_plugin_combo_metakeywords::toFormValue($page->getDefaultKeywords())
-            )
-            ->setLabel("Keywords")
-            ->setMutable(true)
-            ->setCanonical(Page::KEYWORDS_ATTRIBUTE)
-            ->setTab(self::TAB_PAGE_VALUE)
-            ->setDescription("The keywords added to your page (separated by a comma)")
-        );
+        $keywords = PageKeywords::createForPage($page);
+        $formMeta->addField($keywords->toFormField());
 
         // Path
         $path = PagePath::createForPage($page);

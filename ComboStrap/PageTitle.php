@@ -46,6 +46,11 @@ class PageTitle extends MetadataText
         return true;
     }
 
+    /**
+     * `title` is created by DokuWiki
+     * in current but not persistent
+     * and hold the heading 1, see {@link p_get_first_heading}
+     */
     public function getDefaultValue(): ?string
     {
 

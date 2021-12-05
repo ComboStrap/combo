@@ -167,6 +167,7 @@ abstract class Metadata
 
     /**
      * @return FormMetaField the field for this metadata
+     * TODO: see a HTML form as a datastore where you send a retrieve data ?
      */
     public function toFormField(): FormMetaField
     {
@@ -188,12 +189,17 @@ abstract class Metadata
     /**
      * @param $formData - the data received from the form
      * @return mixed
+     * TODO: migrate the HTML form to a store
      */
     public abstract function setFromFormData($formData);
 
 
     /**
      * @return mixed
+     * The store default value is used to
+     * see if the value is the same than the default
+     * It this is the case, the data is not stored
+     *
      */
     public abstract function toStoreDefaultValue();
 
@@ -282,7 +288,7 @@ abstract class Metadata
         AnalyticsDocument::DATE_END,
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
         Page::SLUG_ATTRIBUTE,
-        Page::KEYWORDS_ATTRIBUTE,
+        PageKeywords::KEYWORDS_ATTRIBUTE,
         CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME,
         action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
         Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,

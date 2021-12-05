@@ -3,6 +3,7 @@
 use ComboStrap\LogUtility;
 use ComboStrap\Metadata;
 use ComboStrap\Page;
+use ComboStrap\PageKeywords;
 
 
 /**
@@ -14,13 +15,6 @@ class action_plugin_combo_metakeywords extends DokuWiki_Action_Plugin
 
 
 
-    public static function toFormValue($getKeywords): ?string
-    {
-        if ($getKeywords !== null) {
-            return implode(",", $getKeywords);
-        }
-        return null;
-    }
 
 
     public function register(Doku_Event_Handler $controller)
@@ -53,7 +47,7 @@ class action_plugin_combo_metakeywords extends DokuWiki_Action_Plugin
             $event->data['meta'],
             "name",
             [
-                "name" => PAGE::KEYWORDS_ATTRIBUTE,
+                "name" => PageKeywords::KEYWORDS_ATTRIBUTE,
                 "content" => implode(",", $keywords)
             ]
         );

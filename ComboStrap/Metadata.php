@@ -7,6 +7,7 @@ namespace ComboStrap;
 use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
+use ModificationDate;
 use ReplicationDate;
 use Slug;
 
@@ -251,7 +252,7 @@ abstract class Metadata
     const NOT_MODIFIABLE_PERSISTENT_METADATA = [
         Path::PATH_ATTRIBUTE,
         PageCreationDate::DATE_CREATED,
-        AnalyticsDocument::DATE_MODIFIED,
+        ModificationDate::DATE_MODIFIED,
         PageId::PAGE_ID_ATTRIBUTE,
         "contributor",
         "creator",

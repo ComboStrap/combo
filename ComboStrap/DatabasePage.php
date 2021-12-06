@@ -3,6 +3,7 @@
 
 namespace ComboStrap;
 
+use ModificationDate;
 use ReplicationDate;
 
 /**
@@ -840,7 +841,7 @@ EOF;
             PageH1::H1_PROPERTY => $this->page->getH1OrDefault(),
             PageDescription::DESCRIPTION => $this->page->getDescriptionOrElseDokuWiki(),
             PageCreationDate::DATE_CREATED => $this->page->getCreatedDateAsString(),
-            AnalyticsDocument::DATE_MODIFIED => $this->page->getModifiedDateAsString(),
+            ModificationDate::DATE_MODIFIED => $this->page->getModifiedDateAsString(),
             PagePublicationDate::DATE_PUBLISHED => $this->page->getPublishedTimeAsString(),
             StartDate::DATE_START => $this->page->getEndDateAsString(),
             EndDate::DATE_END => $this->page->getStartDateAsString(),

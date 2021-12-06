@@ -29,27 +29,6 @@ class PagePath extends MetadataWikiPath
         return null;
     }
 
-    public function buildFromStore()
-    {
-
-        $store = $this->getStore();
-
-        if (!($store instanceof MetadataDokuWikiStore)) {
-            return parent::buildFromStore();
-        }
-
-        $createdMeta = $store->getFromResourceAndName($this->getResource(), 'date')['created'];
-        if (empty($createdMeta)) {
-            return $this;
-        }
-        // the data in dokuwiki is saved as timestamp
-        $datetime = new DateTime();
-        $datetime->setTimestamp($createdMeta);
-        $this->setValue($datetime);
-        return $this;
-    }
-
-
     public function getValue(): ?string
     {
         return $this->getResource()->getPath()->toString();

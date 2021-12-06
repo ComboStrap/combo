@@ -22,7 +22,7 @@ abstract class MetadataScalar extends Metadata
     /**
      * @var bool
      */
-    private $wasBuild = false;
+    protected $wasBuild = false;
 
     public function toFormField(): FormMetaField
     {

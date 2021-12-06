@@ -16,9 +16,9 @@ abstract class MetadataDateTime extends MetadataScalar
 
     /**
      * Helper function for date metadata
-     * @return string|null
+     * @return array|string|null
      */
-    public function toStoreValue(): ?string
+    public function toStoreValue()
     {
         $this->buildCheck();
         $value = $this->dateTimeValue;

@@ -13,7 +13,7 @@ class CacheExpirationFrequency extends MetadataText
     public const META_CACHE_EXPIRATION_FREQUENCY_NAME = "cache_expiration_frequency";
     public const CANONICAL_PROPERTY = "page-cache-expiration-frequency";
 
-    public static function createForPage(Page $page): CacheExpirationFrequency
+    public static function createForPage(ResourceCombo $page): CacheExpirationFrequency
     {
         return (new CacheExpirationFrequency())
             ->setResource($page);

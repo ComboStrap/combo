@@ -10,6 +10,7 @@ use DateTime;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
+use ModificationDate;
 use Slug;
 use syntax_plugin_combo_disqus;
 use syntax_plugin_combo_frontmatter;
@@ -245,6 +246,10 @@ class Page extends ResourceComboAbs
      * @var Locale
      */
     private $locale;
+    /**
+     * @var ModificationDate
+     */
+    private $modifiedTime;
 
     /**
      * Page constructor.
@@ -740,7 +745,7 @@ class Page extends ResourceComboAbs
     function getDescription(): ?string
     {
 
-        return $this->description;
+        return $this->description->getValue();
 
     }
 
@@ -751,10 +756,7 @@ class Page extends ResourceComboAbs
     public
     function getDescriptionOrElseDokuWiki(): ?string
     {
-        if ($this->description == null) {
-            return $this->getDefaultDescription();
-        }
-        return $this->description;
+        return $this->description->getValueOrDefault();
     }
 
 
@@ -919,20 +921,6 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * The modified date is the last modification date
-     * the first time, this is the creation date
-     * @return string|null
-     */
-    public
-    function getModifiedDateAsString()
-    {
-        $modified = $this->getModifiedTime();
-        return $modified != null ? $modified->format(Iso8601Date::getFormat()) : null;
-
-    }
-
-
-    /**
      * Get the create date of page
      *
      * @return DateTime
@@ -940,42 +928,19 @@ class Page extends ResourceComboAbs
     public
     function getCreatedTime(): ?DateTime
     {
-        return $this->creationTime->getValue();
+        return $this->creationTime->getValueOrDefault();
     }
 
     /**
-     * Get the modified date of page
-     *
-     * The modified date is the last modification date
-     * the first time, this is the creation date
      *
      * @return DateTime
      */
     public
     function getModifiedTime(): \DateTime
     {
-        $modified = $this->getCurrentMetadata('date')['modified'];
-        if (empty($modified)) {
-            return FileSystems::getModifiedTime($this->getPath());
-        } else {
-            $datetime = new DateTime();
-            $datetime->setTimestamp($modified);
-            return $datetime;
-        }
+        return $this->modifiedTime->getValueOrDefault();
     }
 
-    /**
-     * Creation date can not be null
-     * @return null|string
-     */
-    public
-    function getCreatedDateAsString()
-    {
-
-        $created = $this->getCreatedTime();
-        return $created != null ? $created->format(Iso8601Date::getFormat()) : null;
-
-    }
 
     /**
      * Refresh the metadata (used only in test)
@@ -1278,7 +1243,7 @@ class Page extends ResourceComboAbs
          */
         if ($this->exists()) {
             $array[PageCreationDate::DATE_CREATED] = $this->getCreatedDateAsString();
-            $array[AnalyticsDocument::DATE_MODIFIED] = $this->getModifiedDateAsString();
+            $array[ModificationDate::DATE_MODIFIED] = $this->getModifiedDateAsString();
         }
 
         $array[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
@@ -1971,6 +1936,7 @@ class Page extends ResourceComboAbs
         $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);
         $this->lowQualityIndicatorCalculated = LowQualityCalculatedIndicator::createFromPage($this);
         $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
+        $this->modifiedTime =  ModificationDate::createForPage($this);
 
         /**
          * Old system

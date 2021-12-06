@@ -50,7 +50,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         "id",
         Canonical::CANONICAL_PROPERTY,
         Path::PATH_ATTRIBUTE,
-        AnalyticsDocument::DATE_MODIFIED,
+        ModificationDate::DATE_MODIFIED,
         PageCreationDate::DATE_CREATED,
         PagePublicationDate::DATE_PUBLISHED,
         PageName::NAME_PROPERTY

@@ -19,7 +19,6 @@ class AnalyticsDocument extends OutputDocument
 {
 
 
-    const DATE_MODIFIED = 'date_modified';
     /**
      * Constant in Key or value
      */

@@ -16,9 +16,11 @@ class PageCreationDate extends MetadataDateTime
 
 
     public const DATE_CREATED = 'date_created';
+    const DOKUWIKI_MAIN_KEY = 'date';
+    const DOKUWIKI_SUB_KEY = 'created';
 
 
-    public static function createForPage(Page $page): CacheExpirationDate
+    public static function createForPage(ResourceCombo $page): CacheExpirationDate
     {
         return (new CacheExpirationDate())
             ->setResource($page);
@@ -31,7 +33,7 @@ class PageCreationDate extends MetadataDateTime
 
     public function getDefaultValue(): ?DateTime
     {
-        return null;
+        return FileSystems::getCreationTime($this->getResource()->getPath());
     }
 
     public function buildFromStore()
@@ -43,7 +45,7 @@ class PageCreationDate extends MetadataDateTime
             return parent::buildFromStore();
         }
 
-        $createdMeta = $store->getFromResourceAndName($this->getResource(), 'date')['created'];
+        $createdMeta = $store->getFromResourceAndName($this->getResource(), self::DOKUWIKI_MAIN_KEY)[self::DOKUWIKI_SUB_KEY];
         if (empty($createdMeta)) {
             return $this;
         }
@@ -54,24 +56,19 @@ class PageCreationDate extends MetadataDateTime
         return $this;
     }
 
-
-    public function getValue(): ?DateTime
+    public function toStoreValue()
     {
-
-        $value = parent::getValue();
-        if ($value === null) {
-            $cronExpression = $this->getResource()->getCacheExpirationFrequency();
-            if ($cronExpression !== null) {
-                try {
-                    $value = Cron::getDate($cronExpression);
-                    parent::setValue($value);
-                } catch (ExceptionCombo $e) {
-                    // nothing, the cron expression is tested when set
-                }
-            }
+        $store = $this->getStore();
+        if (!($store instanceof MetadataDokuWikiStore)) {
+            return parent::toStoreValue();
         }
-        return $value;
-
+        $value = $this->getValue();
+        if ($value === null) {
+            return null;
+        }
+        return array(
+            self::DOKUWIKI_MAIN_KEY => [self::DOKUWIKI_SUB_KEY => $value->getTimestamp()]
+        );
     }
 
 
@@ -115,6 +112,10 @@ class PageCreationDate extends MetadataDateTime
 
     public function getMutable(): bool
     {
+        /**
+         * Not sure, It should not be really mutable by the user
+         * but the date should be found in the frontmatter for instance
+         */
         return false;
     }
 }

@@ -562,21 +562,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->addValue($page->getLayout(), $page->getDefaultLayout())
                 ->setDomainValues($page->getLayoutValues())
                 ->setCanonical(Page::LAYOUT_PROPERTY)
-                ->setTab(self::TAB_PAGE_VALUE)
                 ->setDescription("A layout chooses the layout of your page (such as the slots and placement of the main content)")
         );
 
 
         // Modified Date
-        $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_MODIFIED)
-            ->addValue($page->getModifiedDateAsString())
-            ->setMutable(false)
-            ->setType(DataType::DATETIME_TYPE_VALUE)
-            ->setTab(self::TAB_PAGE_VALUE)
-            ->setLabel("Modification Date")
-            ->setDescription("The last modification date of the page")
-            ->setCanonical(self::METADATA_CANONICAL)
-        );
+        $formMeta->addField(ModificationDate::createForPage($page)->toFormField());
 
         // Created Date
         $creationTime = PageCreationDate::createForPage($page);

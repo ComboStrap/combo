@@ -47,7 +47,7 @@ abstract class MetadataBoolean extends MetadataScalar
     {
         $store = $this->getStore();
         $value = $this->getValue();
-        if ($store->isFileSystem()) {
+        if ($store->isTextBased()) {
             $value = Boolean::toString($value);
         }
         return $value;

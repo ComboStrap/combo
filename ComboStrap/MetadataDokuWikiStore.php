@@ -9,6 +9,8 @@ use dokuwiki\Extension\Event;
  * Class MetadataFileSystemStore
  * @package ComboStrap
  * The meta file system store
+ *
+ * Dokuwiki allows the creation of metadata via rendering {@link Page::renderMetadataAndFlush()}
  */
 class MetadataDokuWikiStore implements MetadataStore
 {
@@ -273,5 +275,20 @@ class MetadataDokuWikiStore implements MetadataStore
 
     }
 
+
+    public function isTextBased(): bool
+    {
+        return true;
+    }
+
+    /**
+     *
+     * @return string - the full path to the meta file
+     */
+    public
+    function getMetaFile($dokuwikiId)
+    {
+        return metaFN($dokuwikiId, '.meta');
+    }
 
 }

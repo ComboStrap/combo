@@ -7,6 +7,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageScope;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
 use ComboStrap\TemplateUtility;
@@ -192,7 +193,7 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                         case self::LIST_TYPE:
                             $requestedPage = Page::createPageFromRequestedPage();
                             $namespacePath = $requestedPage->getNamespacePath();
-                            $scope = Page::SCOPE_CURRENT_VALUE;
+                            $scope = PageScope::SCOPE_CURRENT_VALUE;
                             break;
                         case self::TYPE_TREE:
                             $namespacePath = $renderedPage->getNamespacePath();

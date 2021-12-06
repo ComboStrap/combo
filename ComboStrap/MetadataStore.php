@@ -3,7 +3,13 @@
 
 namespace ComboStrap;
 
-
+/**
+ * Where to store a metadata
+ *
+ * Not that a metadata may be created even if the file does not exist
+ * (when the page is rendered for the first time for instance)
+ *
+ */
 interface MetadataStore
 {
 
@@ -35,9 +41,10 @@ interface MetadataStore
     public function persist();
 
     /**
-     * @return bool - true if this is a file system store (ie text based)
+     * @return bool - true if the data is stored in a text format
+     * Used to send the string `false` and not the false value for instance
      */
-    public function isFileSystem(): bool;
+    public function isTextBased(): bool;
 
 
 }

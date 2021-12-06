@@ -40,25 +40,6 @@ class Page extends ResourceComboAbs
         "contributor"
     ];
 
-    /**
-     * The scope is the namespace used to store the cache
-     *
-     * It can be set by a component via the {@link p_set_metadata()}
-     * in a {@link SyntaxPlugin::handle()} function
-     *
-     * This is mostly used on side slots to
-     * have several output of a list {@link \syntax_plugin_combo_pageexplorer navigation pane}
-     * for different namespace (ie there is one cache by namespace)
-     *
-     * The special value current means the namespace of the requested page
-     */
-    const SCOPE_KEY = "scope";
-    /**
-     * The special scope value current means the namespace of the requested page
-     * The real scope value is then calculated before retrieving the cache
-     */
-    const SCOPE_CURRENT_VALUE = "current";
-
 
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
 
@@ -159,10 +140,7 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * The scope of the page
-     * (used mostly in side slot, to see if the content
-     * is for the current requested namespace or not)
-     * @var string|null
+     * @var PageScope
      */
     private $scope;
     /**
@@ -411,7 +389,7 @@ class Page extends ResourceComboAbs
         $scopePath = $this->getScope();
         if ($scopePath !== null) {
 
-            if ($scopePath == Page::SCOPE_CURRENT_VALUE) {
+            if ($scopePath == PageScope::SCOPE_CURRENT_VALUE) {
                 $requestPage = Page::createPageFromRequestedPage();
                 $scopePath = $requestPage->getNamespacePath();
             }
@@ -519,28 +497,26 @@ class Page extends ResourceComboAbs
 
     /**
      *
-     * @return Page[] the internal links or null
+     * @return Page[]|null the internal links or null
      */
     public
-    function getInternalReferencedPages(): array
+    function getForwardLinks(): ?array
     {
-        $metadata = $this->getMetadatas();
-        if (key_exists(MetadataDokuWikiStore::CURRENT_METADATA, $metadata)) {
-            $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
-            if (key_exists('relation', $current)) {
-                $relation = $current['relation'];
-                if (is_array($relation)) {
-                    if (key_exists('references', $relation)) {
-                        $pages = [];
-                        foreach (array_keys($relation['references']) as $referencePageId) {
-                            $pages[$referencePageId] = Page::createPageFromId($referencePageId);
-                        }
-                        return $pages;
-                    }
-                }
-            }
+        $store = $this->getDefaultMetadataStore();
+        if (!($store instanceof MetadataDokuWikiStore)) {
+            return null;
         }
-        return [];
+        $metadata = $store->getFromResourceAndName($this, 'relation');
+        if (!key_exists('references', $metadata)) {
+            return [];
+        }
+
+        $pages = [];
+        foreach (array_keys($metadata['references']) as $referencePageId) {
+            $pages[$referencePageId] = Page::createPageFromId($referencePageId);
+        }
+        return $pages;
+
     }
 
 
@@ -564,17 +540,6 @@ class Page extends ResourceComboAbs
         }
         return $this->htmlDocument;
 
-    }
-
-
-    /**
-     *
-     * @return string - the full path to the meta file
-     */
-    public
-    function getMetaFile()
-    {
-        return metaFN($this->getDokuwikiId(), '.meta');
     }
 
     /**
@@ -702,7 +667,7 @@ class Page extends ResourceComboAbs
 
 
     public
-    function getTextContent()
+    function getTextContent(): string
     {
         /**
          *
@@ -1092,8 +1057,8 @@ class Page extends ResourceComboAbs
          * during a run, we then read the metadata file
          * each time
          */
-        if (isset(p_read_metadata($this->getPath()->getDokuwikiId())["persistent"][Page::SCOPE_KEY])) {
-            return p_read_metadata($this->getPath()->getDokuwikiId())["persistent"][Page::SCOPE_KEY];
+        if (isset(p_read_metadata($this->getPath()->getDokuwikiId())["persistent"][PageScope::SCOPE_KEY])) {
+            return p_read_metadata($this->getPath()->getDokuwikiId())["persistent"][PageScope::SCOPE_KEY];
         } else {
             return null;
         }
@@ -1878,24 +1843,10 @@ class Page extends ResourceComboAbs
         $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);
         $this->lowQualityIndicatorCalculated = LowQualityCalculatedIndicator::createFromPage($this);
         $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
-        $this->modifiedTime =  ModificationDate::createForPage($this);
+        $this->modifiedTime = ModificationDate::createForPage($this);
         $this->pageUrlPath = PageUrlPath::createForPage($this);
-
-        /**
-         * Old system
-         *
-         * Updating the metadata must happen first
-         * All meta function depends on it
-         *
-         *
-         * This is not a {@link Page::renderMetadataAndFlush()}
-         *
-         * Metadata may be created even if the file does not exist
-         * (when the page is rendered for the first time for instance)
-         */
         $this->layout = PageLayout::createFromPage($this);
-        $this->scope = $this->getMetadata(self::SCOPE_KEY);
-
+        $this->scope = PageScope::createFromPage($this);
 
     }
 
@@ -1944,7 +1895,6 @@ class Page extends ResourceComboAbs
     }
 
 
-
     /**
      * @return string|null
      *
@@ -1966,7 +1916,6 @@ class Page extends ResourceComboAbs
     }
 
 
-
     public
     function getUrlId()
     {
@@ -1980,13 +1929,13 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @param string $scope {@link Page::SCOPE_CURRENT_VALUE} or a namespace...
+     * @param string $scope {@link PageScope::SCOPE_CURRENT_VALUE} or a namespace...
+     * @throws ExceptionCombo
      */
     public
     function setScope(string $scope): Page
     {
-        $this->scope = $scope;
-        $this->setMetadata(Page::SCOPE_KEY, $scope);
+        $this->scope->setFromStoreValue($scope);
         return $this;
     }
 

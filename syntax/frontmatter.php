@@ -34,6 +34,7 @@ use ComboStrap\PageImages;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\Region;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -326,7 +327,7 @@ EOF;
             }
 
             if (isset($jsonArray[Page::OLD_REGION_PROPERTY])) {
-                $jsonArray[Page::REGION_META_PROPERTY] = $jsonArray[Page::OLD_REGION_PROPERTY];
+                $jsonArray[Region::REGION_META_PROPERTY] = $jsonArray[Page::OLD_REGION_PROPERTY];
                 unset($jsonArray[Page::OLD_REGION_PROPERTY]);
             }
 

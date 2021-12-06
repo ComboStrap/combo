@@ -38,7 +38,7 @@ class DatabasePage
             PagePublicationDate::DATE_PUBLISHED,
             StartDate::DATE_START,
             EndDate::DATE_END,
-            Page::REGION_META_PROPERTY,
+            Region::REGION_META_PROPERTY,
             Lang::LANG_ATTRIBUTES,
             PageType::TYPE_META_PROPERTY
         ];
@@ -855,7 +855,7 @@ EOF;
             PagePublicationDate::DATE_PUBLISHED => $this->page->getPublishedTimeAsString(),
             StartDate::DATE_START => $this->page->getEndDateAsString(),
             EndDate::DATE_END => $this->page->getStartDateAsString(),
-            Page::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
+            Region::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
             Lang::LANG_ATTRIBUTES => $this->page->getLangOrDefault(),
             PageType::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
             Path::DOKUWIKI_ID_ATTRIBUTE => $this->page->getPath()->getDokuwikiId(),

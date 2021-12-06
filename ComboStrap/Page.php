@@ -69,7 +69,6 @@ class Page extends ResourceComboAbs
     const SCOPE_CURRENT_VALUE = "current";
 
 
-    const REGION_META_PROPERTY = "region";
     public const SLUG_ATTRIBUTE = "slug";
     const LAYOUT_PROPERTY = "layout";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
@@ -155,6 +154,9 @@ class Page extends ResourceComboAbs
     private $title;
 
     private $canBeOfLowQuality;
+    /**
+     * @var Region
+     */
     private $region;
     /**
      * @var Lang
@@ -1018,22 +1020,16 @@ class Page extends ResourceComboAbs
 
     }
 
-    public
-    function getLocaleRegion()
+    public function getLocaleRegion(): ?string
     {
-        return $this->region;
+        return $this->region->getValue();
     }
 
     public
     function getRegionOrDefault()
     {
 
-        $region = $this->getLocaleRegion();
-        if (!empty($region)) {
-            return $region;
-        } else {
-            return $this->getDefaultRegion();
-        }
+        return $this->region->getValueOrDefault();
 
     }
 
@@ -1151,7 +1147,7 @@ class Page extends ResourceComboAbs
     function getLocale($default = null): ?string
     {
         $value = $this->locale->getValue();
-        if($value===null){
+        if ($value === null) {
             return $default;
         }
         return $value;
@@ -1460,7 +1456,7 @@ class Page extends ResourceComboAbs
                     case LdJson::JSON_LD_META_PROPERTY:
                         $this->ldJson->setFromStoreValue($value);
                         continue 2;
-                    case Page::REGION_META_PROPERTY:
+                    case Region::REGION_META_PROPERTY:
                         $this->setRegion($value);
                         continue 2;
                     case Lang::LANG_ATTRIBUTES:
@@ -1934,15 +1930,7 @@ class Page extends ResourceComboAbs
     public
     function setRegion($value): Page
     {
-        if ($value === "") {
-            $value = null;
-        } else {
-            if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
-                throw new ExceptionCombo("The region value ($value) for the page ($this) does not have two letters (ISO 3166 alpha-2 region code)", "region");
-            }
-        }
-        $this->region = $value;
-        $this->setMetadata(Page::REGION_META_PROPERTY, $value);
+        $this->region->setFromStoreValue($value);
         return $this;
     }
 
@@ -2016,8 +2004,7 @@ class Page extends ResourceComboAbs
         $this->endDate = EndDate::createFromPage($this);
         $this->locale = Locale::createForPage($this);
         $this->lang = Lang::createFroPage($this);
-        $this->region = $this->getMetadata(self::REGION_META_PROPERTY);
-
+        $this->region = Region::createFroPage($this);
 
         /**
          * Old system
@@ -2031,8 +2018,6 @@ class Page extends ResourceComboAbs
          * Metadata may be created even if the file does not exist
          * (when the page is rendered for the first time for instance)
          */
-
-
 
 
         $this->canBeOfLowQuality = Boolean::toBoolean(
@@ -2331,9 +2316,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[PageImages::IMAGE_META_PROPERTY] = $this->pageImages->toStoreValue();
                     }
                     break;
-                case Page::REGION_META_PROPERTY:
+                case Region::REGION_META_PROPERTY:
                     if (!in_array($this->getLocaleRegion(), [$this->getDefaultRegion(), null])) {
-                        $nonDefaultMetadatas[Page::REGION_META_PROPERTY] = $this->getLocaleRegion();
+                        $nonDefaultMetadatas[Region::REGION_META_PROPERTY] = $this->getLocaleRegion();
                     }
                     break;
                 case Lang::LANG_ATTRIBUTES:

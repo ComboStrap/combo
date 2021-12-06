@@ -275,7 +275,7 @@ abstract class Metadata
         PageH1::H1_PROPERTY,
         Aliases::ALIAS_ATTRIBUTE,
         PageImages::IMAGE_META_PROPERTY,
-        Page::REGION_META_PROPERTY,
+        Region::REGION_META_PROPERTY,
         Lang::LANG_ATTRIBUTES,
         PageTitle::TITLE,
         PagePublicationDate::OLD_META_KEY,

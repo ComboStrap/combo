@@ -46,6 +46,7 @@ use ComboStrap\PageType;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\Region;
 use ComboStrap\Site;
 use ComboStrap\StartDate;
 
@@ -656,12 +657,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($lang->toFormField());
 
         // Country
-        $formMeta->addField(FormMetaField::create(Page::REGION_META_PROPERTY)
-            ->addValue($page->getLocaleRegion(), Site::getLanguageRegion())
-            ->setTab(self::TAB_LANGUAGE_VALUE)
-            ->setLabel("Region")
-            ->setDescription("The region of the language")
-        );
+        $region = Region::createFroPage($page);
+        $formMeta->addField($region->toFormField());
 
         // database replication Date
         $replicationDate = $page->getDatabasePage()->getReplicationDate();

@@ -24,6 +24,7 @@ use ComboStrap\Json;
 use ComboStrap\Lang;
 use ComboStrap\LdJson;
 use ComboStrap\LowQualityPage;
+use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDateTime;
@@ -248,7 +249,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * are not send back
          */
         $defaultBoolean = [
-            Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR => Page::CAN_BE_LOW_QUALITY_PAGE_DEFAULT,
+            LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR => LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_DEFAULT,
             action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR => action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
         ];
         $post = array_merge($defaultBoolean, $post);
@@ -615,16 +616,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
 
         // Is low quality page
-        $formMeta->addField(FormMetaField::create(Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR)
-            // the inverse of the default value is returned if checked - you don't modify a default
-            // by default the page can be a low quality
-            ->addValue($page->getCanBeOfLowQuality(), false)
-            ->setType(DataType::BOOLEAN_TYPE_VALUE)
-            ->setTab(self::TAB_QUALITY_VALUE)
-            ->setCanonical(LowQualityPage::LOW_QUALITY_PAGE_CANONICAL)
-            ->setLabel("Prevent this page to become a low quality page")
-            ->setDescription("If checked, this page will never be a low quality page")
-        );
+        $lowQualityOverwrite = LowQualityPageOverwrite::createForPage($page);
+        $formMeta->addField($lowQualityOverwrite->toFormField());
 
         // Quality Monitoring
         $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR)

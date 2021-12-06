@@ -11,10 +11,7 @@ abstract class MetadataJson extends MetadataScalar
      * @var array|null
      */
     private $json;
-    /**
-     * @var bool
-     */
-    private $wasBuild = false;
+
 
 
     /**
@@ -73,10 +70,6 @@ abstract class MetadataJson extends MetadataScalar
     }
 
 
-    public function buildFromStore()
-    {
-        $this->json = $this->getStoreValue();
-    }
 
 
     public function getValue(): ?array
@@ -85,13 +78,6 @@ abstract class MetadataJson extends MetadataScalar
         return $this->json;
     }
 
-    private function buildCheck()
-    {
-        if (!$this->wasBuild && $this->json === null) {
-            $this->wasBuild = true;
-            $this->json = $this->getStoreValue();
-        }
-    }
 
     public function getDataType(): string
     {

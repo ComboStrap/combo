@@ -12,10 +12,6 @@ abstract class MetadataDateTime extends MetadataScalar
      * @var DateTime
      */
     private $dateTimeValue;
-    /**
-     * @var bool
-     */
-    private $wasBuild = false;
 
 
     /**
@@ -88,18 +84,6 @@ abstract class MetadataDateTime extends MetadataScalar
         return $this->dateTimeValue;
     }
 
-    private function buildCheck()
-    {
-        if (!$this->wasBuild && $this->dateTimeValue === null) {
-            $this->wasBuild = true;
-            $value = $this->getStoreValue();
-            try {
-                $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("An error has occurred. The value ($value) cannot be read as a date time. Message: " . $e->getMessage());
-            }
-        }
-    }
 
     private function toPersistentDateTimeUtility($value): ?string
     {
@@ -116,7 +100,7 @@ abstract class MetadataDateTime extends MetadataScalar
     {
         $this->buildCheck();
         return parent::toFormField()
-            ->setValue($this->toStoreValue(),$this->toStoreDefaultValue());
+            ->setValue($this->toStoreValue(), $this->toStoreDefaultValue());
     }
 
     public function getCanonical(): string

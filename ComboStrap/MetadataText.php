@@ -15,7 +15,7 @@ abstract class MetadataText extends MetadataScalar
      * @var string|null
      */
     protected $value;
-    protected $wasBuild = false;
+
 
     public function getDataType(): string
     {
@@ -53,30 +53,12 @@ abstract class MetadataText extends MetadataScalar
 
     }
 
-
-    public function buildFromStore(): MetadataText
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setFromStoreValue($value)
     {
-        try {
-            $this->setValue($this->getStoreValue());
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error while building the value:", $e->getCanonical());
-        }
-        return $this;
-    }
-
-    public function toFormField(): FormMetaField
-    {
-        $this->buildCheck();
-        return parent::toFormField()
-            ->setValue($this->getValue(), $this->getDefaultValue());
-    }
-
-    protected function buildCheck()
-    {
-        if (!$this->wasBuild && $this->value === null) {
-            $this->wasBuild = true;
-            $this->buildFromStore();
-        }
+        return $this->setValue($value);
     }
 
 

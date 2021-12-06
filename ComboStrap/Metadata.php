@@ -307,7 +307,7 @@ abstract class Metadata
         PageKeywords::KEYWORDS_ATTRIBUTE,
         CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME,
         action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
-        Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
+        LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
     ];
 
 

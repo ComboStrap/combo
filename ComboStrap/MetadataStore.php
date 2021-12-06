@@ -34,5 +34,10 @@ interface MetadataStore
      */
     public function persist();
 
+    /**
+     * @return bool - true if this is a file system store (ie text based)
+     */
+    public function isFileSystem(): bool;
+
 
 }

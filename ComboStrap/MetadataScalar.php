@@ -7,19 +7,29 @@ namespace ComboStrap;
 /**
  * Class MetadataScalar
  * @package ComboStrap
+ *
  * A metadata that holds only one value
+ * ie:
+ *   Yes: text, boolean, numeric, ...
+ *   No: array, collection
+ *
+ * The children needs to implements the {@link MetadataScalar::getValue()}
+ * and {@link MetadataScalar::getDefaultValue()} function
  */
 abstract class MetadataScalar extends Metadata
 {
 
+    /**
+     * @var bool
+     */
+    private $wasBuild = false;
+
     public function toFormField(): FormMetaField
     {
-
+        $this->buildCheck();
         $formField = parent::toFormField();
-        $persistentValue = $this->toStoreValue();
-        if ($persistentValue !== null) {
-            $formField->setValue($persistentValue, $this->toStoreDefaultValue());
-        }
+        $formField->setValue($this->toStoreValue(), $this->toStoreDefaultValue());
+
         return $formField;
 
     }
@@ -60,13 +70,21 @@ abstract class MetadataScalar extends Metadata
     }
 
 
-    public
-    function setFromStoreValue($value)
+    public function setFromStoreValue($value)
     {
-
         return $this->setValue($value);
-
     }
 
+    /**
+     * If the {@link MetadataScalar::getValue()} is null and if the object was not already build
+     * this function will call the function {@link Metadata::buildFromStore()}
+     */
+    protected function buildCheck()
+    {
+        if (!$this->wasBuild && $this->getValue() === null) {
+            $this->wasBuild = true;
+            $this->buildFromStore();
+        }
+    }
 
 }

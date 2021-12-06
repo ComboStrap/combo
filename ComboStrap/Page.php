@@ -40,17 +40,6 @@ class Page extends ResourceComboAbs
     ];
 
     /**
-     * An indicator in the meta
-     * that set a boolean to true or false
-     * to categorize a page as low quality
-     * It can be set manually via the {@link \syntax_plugin_combo_frontmatter front matter}
-     * otherwise the {@link \renderer_plugin_combo_analytics}
-     * will do it
-     */
-    const CAN_BE_LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
-    const CAN_BE_LOW_QUALITY_PAGE_DEFAULT = true;
-
-    /**
      * The scope is the namespace used to store the cache
      *
      * It can be set by a component via the {@link p_set_metadata()}
@@ -153,6 +142,9 @@ class Page extends ResourceComboAbs
      */
     private $title;
 
+    /**
+     * @var LowQualityPageOverwrite
+     */
     private $canBeOfLowQuality;
     /**
      * @var Region
@@ -639,12 +631,12 @@ class Page extends ResourceComboAbs
     /**
      * Set the page quality
      * @param boolean $value true if this is a low quality page rank false otherwise
+     * @throws ExceptionCombo
      */
     public
     function setCanBeOfLowQuality(bool $value): Page
     {
-        $this->canBeOfLowQuality = $value;
-        return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::CAN_BE_LOW_QUALITY_PAGE_INDICATOR, $value);
+        return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->canBeOfLowQuality, $value);
     }
 
     /**
@@ -692,7 +684,7 @@ class Page extends ResourceComboAbs
     public function getCanBeOfLowQuality(): ?bool
     {
 
-        return $this->canBeOfLowQuality;
+        return $this->canBeOfLowQuality->getValue();
 
     }
 
@@ -1473,7 +1465,7 @@ class Page extends ResourceComboAbs
                             ->setValue($value)
                             ->sendToStore();
                         continue 2;
-                    case Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
+                    case LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
                         $this->setCanBeOfLowQuality(Boolean::toBoolean($value));
                         continue 2;
                     case PageImages::IMAGE_META_PROPERTY:
@@ -1637,28 +1629,22 @@ class Page extends ResourceComboAbs
     }
 
 
-    public
-    function getMetadataAsBoolean(string $key): ?bool
-    {
-        return Boolean::toBoolean($this->getMetadata($key));
-    }
-
     /**
      * Change the quality indicator
      * and if the quality level has become low
      * and that the protection is on, delete the cache
-     * @param string $lowQualityAttributeName
-     * @param $value
-     * @param string $type
+     * @param MetadataBoolean $lowQualityAttributeName
+     * @param bool $value
      * @return Page
+     * @throws ExceptionCombo
      */
     private
-    function setQualityIndicatorAndDeleteCacheIfNeeded(string $lowQualityAttributeName, $value, string $type = MetadataDokuWikiStore::PERSISTENT_METADATA): Page
+    function setQualityIndicatorAndDeleteCacheIfNeeded(MetadataBoolean $lowQualityAttributeName, bool $value): Page
     {
-        $actualValue = $this->getMetadataAsBoolean($lowQualityAttributeName);
+        $actualValue = $lowQualityAttributeName->getValue();
         if ($actualValue === null || $value !== $actualValue) {
             $beforeLowQualityPage = $this->isLowQualityPage();
-            $this->setMetadata($lowQualityAttributeName, $value, null, $type);
+            $lowQualityAttributeName->setValue($value);
             $afterLowQualityPage = $this->isLowQualityPage();
             if ($beforeLowQualityPage !== $afterLowQualityPage) {
                 /**
@@ -2006,6 +1992,7 @@ class Page extends ResourceComboAbs
         $this->lang = Lang::createForPage($this);
         $this->region = Region::createForPage($this);
         $this->slug = Slug::createForPage($this);
+        $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);
 
         /**
          * Old system
@@ -2021,11 +2008,7 @@ class Page extends ResourceComboAbs
          */
 
 
-        $this->canBeOfLowQuality = Boolean::toBoolean(
-            $this->getMetadata(self::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
-                self::CAN_BE_LOW_QUALITY_PAGE_DEFAULT
-            )
-        );
+
         $this->lowQualityIndicatorCalculated = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_INDICATOR_CALCULATED));
 
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
@@ -2148,7 +2131,6 @@ class Page extends ResourceComboAbs
     {
         return $this->slug->getValue();
     }
-
 
 
     public
@@ -2379,9 +2361,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR] = $this->getQualityMonitoringIndicator();
                     }
                     break;
-                case Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
+                case LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
                     if (!in_array($this->getCanBeOfLowQuality(), [true, null])) {
-                        $nonDefaultMetadatas[Page::CAN_BE_LOW_QUALITY_PAGE_INDICATOR] = $this->getCanBeOfLowQuality();
+                        $nonDefaultMetadatas[LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR] = $this->getCanBeOfLowQuality();
                     }
                     break;
                 case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:

@@ -65,7 +65,6 @@ class Page extends ResourceComboAbs
     public const HOLY_LAYOUT_VALUE = "holy";
     public const LANDING_LAYOUT_VALUE = "landing";
     public const MEDIAN_LAYOUT_VALUE = "median";
-    const LOW_QUALITY_INDICATOR_CALCULATED = "low_quality_indicator_calculated";
 
     const OLD_REGION_PROPERTY = "country";
 
@@ -160,9 +159,10 @@ class Page extends ResourceComboAbs
     private $pageId;
 
     /**
-     * @var boolean|null
+     * @var LowQualityCalculatedIndicator
      */
     private $lowQualityIndicatorCalculated;
+
     private $layout;
     /**
      * @var Aliases
@@ -1620,12 +1620,7 @@ class Page extends ResourceComboAbs
     function setLowQualityIndicatorCalculation($bool): Page
     {
 
-        $this->lowQualityIndicatorCalculated = $bool;
-        /**
-         * It's a calculated metadata, we don't need it to be persistent
-         */
-        $type = MetadataDokuWikiStore::CURRENT_METADATA;
-        return $this->setQualityIndicatorAndDeleteCacheIfNeeded(self::LOW_QUALITY_INDICATOR_CALCULATED, $bool, $type);
+        return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->lowQualityIndicatorCalculated, $bool);
     }
 
 
@@ -1665,30 +1660,8 @@ class Page extends ResourceComboAbs
     public
     function getLowQualityIndicatorCalculated()
     {
-        /**
-         * By default, if a file has not been through
-         * a {@link \renderer_plugin_combo_analytics}
-         * analysis, this is a low page with protection enable
-         * or not if not
-         */
-        $value = $this->getMetadataAsBoolean(self::LOW_QUALITY_INDICATOR_CALCULATED);
-        if ($value !== null) return $value;
 
-        /**
-         * Migration code
-         * The indicator {@link Page::LOW_QUALITY_INDICATOR_CALCULATED} is new
-         * but if the analytics was done, we can get it
-         */
-        if ($this->getAnalyticsDocument()->getCachePath()->exists()) {
-            $value = $this->getAnalyticsDocument()->getJson()->toArray()[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
-            if ($value !== null) return $value;
-        }
-
-        if (!Site::isLowQualityProtectionEnable()) {
-            return false;
-        } else {
-            return true;
-        }
+        return $this->lowQualityIndicatorCalculated->getValueOrDefault();
 
     }
 
@@ -1993,6 +1966,7 @@ class Page extends ResourceComboAbs
         $this->region = Region::createForPage($this);
         $this->slug = Slug::createForPage($this);
         $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);
+        $this->lowQualityIndicatorCalculated = LowQualityCalculatedIndicator::createFromPage($this);
 
         /**
          * Old system
@@ -2006,11 +1980,6 @@ class Page extends ResourceComboAbs
          * Metadata may be created even if the file does not exist
          * (when the page is rendered for the first time for instance)
          */
-
-
-
-        $this->lowQualityIndicatorCalculated = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_INDICATOR_CALCULATED));
-
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
         /**

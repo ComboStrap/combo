@@ -274,7 +274,7 @@ abstract class Metadata
         "relation",
         ReplicationDate::DATE_REPLICATION,
         PageH1::H1_PARSED,
-        Page::LOW_QUALITY_INDICATOR_CALCULATED
+        LowQualityCalculatedIndicator::LOW_QUALITY_INDICATOR_CALCULATED
     ];
 
 

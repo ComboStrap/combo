@@ -299,7 +299,7 @@ abstract class Metadata
         PagePublicationDate::DATE_PUBLISHED,
         PageName::NAME_PROPERTY,
         LdJson::JSON_LD_META_PROPERTY,
-        Page::LAYOUT_PROPERTY,
+        PageLayout::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,
         StartDate::DATE_START,
         EndDate::DATE_END,

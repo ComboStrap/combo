@@ -40,6 +40,7 @@ use ComboStrap\PageId;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PageKeywords;
+use ComboStrap\PageLayout;
 use ComboStrap\PageName;
 use ComboStrap\PagePath;
 use ComboStrap\PageTitle;
@@ -550,14 +551,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField(PageUrlPath::createForPage($page)->toFormField());
 
         // Layout
-        $formMeta->addField(
-            FormMetaField::create(Page::LAYOUT_PROPERTY)
-                ->addValue($page->getLayout(), $page->getDefaultLayout())
-                ->setDomainValues($page->getLayoutValues())
-                ->setCanonical(Page::LAYOUT_PROPERTY)
-                ->setDescription("A layout chooses the layout of your page (such as the slots and placement of the main content)")
-        );
-
+        $formMeta->addField(PageLayout::createFromPage($page)->toFormField());
 
         // Modified Date
         $formMeta->addField(ModificationDate::createForPage($page)->toFormField());

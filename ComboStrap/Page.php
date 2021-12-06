@@ -60,12 +60,7 @@ class Page extends ResourceComboAbs
     const SCOPE_CURRENT_VALUE = "current";
 
 
-    const LAYOUT_PROPERTY = "layout";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
-
-    public const HOLY_LAYOUT_VALUE = "holy";
-    public const LANDING_LAYOUT_VALUE = "landing";
-    public const MEDIAN_LAYOUT_VALUE = "median";
 
     const OLD_REGION_PROPERTY = "country";
 
@@ -149,6 +144,9 @@ class Page extends ResourceComboAbs
      */
     private $lowQualityIndicatorCalculated;
 
+    /**
+     * @var PageLayout
+     */
     private $layout;
     /**
      * @var Aliases
@@ -1192,7 +1190,7 @@ class Page extends ResourceComboAbs
         $array[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
         $array[StartDate::DATE_START] = $this->getStartDateAsString();
         $array[EndDate::DATE_END] = $this->getStartDateAsString();
-        $array[Page::LAYOUT_PROPERTY] = $this->getMetadata(Page::LAYOUT_PROPERTY);
+        $array[PageLayout::LAYOUT_PROPERTY] = $this->getMetadata(PageLayout::LAYOUT_PROPERTY);
 
         return $array;
 
@@ -1365,7 +1363,7 @@ class Page extends ResourceComboAbs
                     case Lang::LANG_ATTRIBUTES:
                         $this->setLang($value);
                         continue 2;
-                    case Page::LAYOUT_PROPERTY:
+                    case PageLayout::LAYOUT_PROPERTY:
                         $this->setLayout($value);
                         continue 2;
                     case Aliases::ALIAS_ATTRIBUTE:
@@ -1487,7 +1485,7 @@ class Page extends ResourceComboAbs
     public
     function getLayout()
     {
-        return $this->getMetadata(Page::LAYOUT_PROPERTY);
+        return $this->getMetadata(PageLayout::LAYOUT_PROPERTY);
     }
 
     public
@@ -1517,18 +1515,20 @@ class Page extends ResourceComboAbs
     public
     function getDefaultLayout(): string
     {
-        return "holy";
+        return $this->layout->getDefaultValue();
     }
 
 
     public
     function getLayoutValues(): array
     {
-        return [Page::HOLY_LAYOUT_VALUE, Page::MEDIAN_LAYOUT_VALUE, Page::LANDING_LAYOUT_VALUE];
+        return $this->layout->getPossibleValues();
     }
 
-    public
-    function setLowQualityIndicatorCalculation($bool): Page
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setLowQualityIndicatorCalculation($bool): Page
     {
 
         return $this->setQualityIndicatorAndDeleteCacheIfNeeded($this->lowQualityIndicatorCalculated, $bool);
@@ -1815,14 +1815,13 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function setLayout($value): Page
     {
-        if ($value === "") {
-            $value = null;
-        }
-        $this->layout = $value;
-        $this->setMetadata(Page::LAYOUT_PROPERTY, $value);
+        $this->layout->setValue($value);
         return $this;
     }
 
@@ -1894,7 +1893,7 @@ class Page extends ResourceComboAbs
          * Metadata may be created even if the file does not exist
          * (when the page is rendered for the first time for instance)
          */
-        $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
+        $this->layout = PageLayout::createFromPage($this);
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
 
 
@@ -2155,9 +2154,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[LdJson::JSON_LD_META_PROPERTY] = $this->getLdJson();
                     }
                     break;
-                case Page::LAYOUT_PROPERTY:
+                case PageLayout::LAYOUT_PROPERTY:
                     if (!in_array($this->getLayout(), [$this->getDefaultLayout(), null])) {
-                        $nonDefaultMetadatas[Page::LAYOUT_PROPERTY] = $this->getLayout();
+                        $nonDefaultMetadatas[PageLayout::LAYOUT_PROPERTY] = $this->getLayout();
                     }
                     break;
                 case StartDate::DATE_START:

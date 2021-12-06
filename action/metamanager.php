@@ -47,6 +47,7 @@ use ComboStrap\PageType;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\QualityDynamicMonitoringOverwrite;
 use ComboStrap\Region;
 use ComboStrap\Site;
 use ComboStrap\StartDate;
@@ -250,7 +251,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          */
         $defaultBoolean = [
             LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR => LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_DEFAULT,
-            action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR => action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
+            QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR => QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
         ];
         $post = array_merge($defaultBoolean, $post);
 
@@ -620,15 +621,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($lowQualityOverwrite->toFormField());
 
         // Quality Monitoring
-        $formMeta->addField(FormMetaField::create(action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR)
-            // the inverse of the default value is returned if checked - you don't modify a default
-            // by default, the page is monitored
-            ->addValue($page->getQualityMonitoringIndicator(), false)
-            ->setType(DataType::BOOLEAN_TYPE_VALUE)
-            ->setTab(self::TAB_QUALITY_VALUE)
-            ->setCanonical(action_plugin_combo_qualitymessage::CANONICAL)
-            ->setLabel("Disable the quality message of this page")
-            ->setDescription("If checked, the quality message will not be shown for the page.")
+        $formMeta->addField(
+            QualityDynamicMonitoringOverwrite::createFromPage($page)
+                ->toFormField()
         );
 
         // Locale

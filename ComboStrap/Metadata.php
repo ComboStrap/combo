@@ -306,7 +306,7 @@ abstract class Metadata
         Slug::SLUG_ATTRIBUTE,
         PageKeywords::KEYWORDS_ATTRIBUTE,
         CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME,
-        action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
+        QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
         LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
     ];
 

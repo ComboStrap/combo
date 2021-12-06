@@ -181,6 +181,9 @@ class Page extends ResourceComboAbs
      * @var string|null
      */
     private $scope;
+    /**
+     * @var QualityDynamicMonitoringOverwrite
+     */
     private $qualityMonitoringIndicator;
 
     /**
@@ -712,7 +715,7 @@ class Page extends ResourceComboAbs
     public
     function getQualityMonitoringIndicator(): ?bool
     {
-        return $this->qualityMonitoringIndicator;
+        return $this->qualityMonitoringIndicator->getValue();
     }
 
     /**
@@ -1472,7 +1475,7 @@ class Page extends ResourceComboAbs
                         $this->pageImages
                             ->setFromStoreValue($value);
                         continue 2;
-                    case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
+                    case QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
                         $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
                         continue 2;
                     case PageKeywords::KEYWORDS_ATTRIBUTE:
@@ -1967,6 +1970,7 @@ class Page extends ResourceComboAbs
         $this->slug = Slug::createForPage($this);
         $this->canBeOfLowQuality = LowQualityPageOverwrite::createForPage($this);
         $this->lowQualityIndicatorCalculated = LowQualityCalculatedIndicator::createFromPage($this);
+        $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
 
         /**
          * Old system
@@ -1982,14 +1986,8 @@ class Page extends ResourceComboAbs
          */
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
-        /**
-         * A boolean is never null
-         */
-        $this->qualityMonitoringIndicator = Boolean::toBoolean(
-            $this->getMetadata(
-                action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
-                action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
-            ));
+
+
 
 
     }
@@ -2138,10 +2136,12 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function setQualityMonitoringIndicator($boolean): Page
     {
-        $this->qualityMonitoringIndicator = $boolean;
-        $this->setMetadata(action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR, $boolean, action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT);
+        $this->qualityMonitoringIndicator->setFromStoreValue($boolean);
         return $this;
     }
 
@@ -2325,9 +2325,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[Slug::SLUG_ATTRIBUTE] = $this->getSlug();
                     }
                     break;
-                case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
+                case QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
                     if (!in_array($this->getQualityMonitoringIndicator(), [$this->getDefaultQualityMonitoring(), null])) {
-                        $nonDefaultMetadatas[action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR] = $this->getQualityMonitoringIndicator();
+                        $nonDefaultMetadatas[QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR] = $this->getQualityMonitoringIndicator();
                     }
                     break;
                 case LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:

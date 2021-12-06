@@ -35,11 +35,6 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
      */
     const CONF_DISABLE_QUALITY_MONITORING = "disableDynamicQualityMonitoring";
 
-    /**
-     * Key in the frontmatter that disable the message
-     */
-    const EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR = "dynamic_quality_monitoring";
-    const EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT = true;
     const CANONICAL = "quality:dynamic_monitoring";
 
 

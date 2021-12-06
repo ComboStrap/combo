@@ -65,7 +65,7 @@ class PageId extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return MetadataDokuWikiStore::PERSISTENT_METADATA;
+        return Metadata::PERSISTENT_METADATA;
     }
 
     public function getMutable(): bool
@@ -166,7 +166,7 @@ class PageId extends MetadataText
         if ($value === null) {
             throw new ExceptionCombo("A page id can not be set with a null value (Page: {$this->getResource()})", $this->getCanonical());
         }
-        if (!is_string($value) || !preg_match("/[".self::PAGE_ID_ALPHABET."]/", $value)) {
+        if (!is_string($value) || !preg_match("/[" . self::PAGE_ID_ALPHABET . "]/", $value)) {
             throw new ExceptionCombo("The page id value to set ($value) is not an alphanumeric string (Page: {$this->getResource()})", $this->getCanonical());
         }
         $actualId = $this->getValue();
@@ -179,11 +179,23 @@ class PageId extends MetadataText
                 throw new ExceptionCombo("The page id cannot be changed, the page ({$this->getResource()}) has already an id ($actualId})", $this->getCanonical());
             }
         } else {
-            if(PluginUtility::isDevOrTest()){
+            if (PluginUtility::isDevOrTest()) {
                 throw new ExceptionComboRuntime("Forcing of the page id should not happen", $this->getCanonical());
             }
         }
         return parent::setValue($value);
+    }
+
+    public function sendToStore(): Metadata
+    {
+        $actualStoreValue = $this->getStore()->get($this);
+        $value = $this->getValue();
+        if ($actualStoreValue !== null && $actualStoreValue !== $value) {
+            throw new ExceptionComboRuntime("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
+        }
+        parent::sendToStore();
+        return $this;
+
     }
 
 

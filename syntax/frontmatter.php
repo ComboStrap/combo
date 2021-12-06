@@ -28,6 +28,8 @@ use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
+use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Page;
 use ComboStrap\PageId;
 use ComboStrap\PageImages;
@@ -331,10 +333,41 @@ EOF;
                 unset($jsonArray[Page::OLD_REGION_PROPERTY]);
             }
 
-            /**
-             * Upsert the meta
-             */
-            $messages = $page->upsertMetadataFromAssociativeArray($jsonArray);
+            $frontMatterStore = MetadataFrontmatterStore::getOrCreate()
+                ->load($page, $jsonArray);
+            $dokuwikiStore = MetadataDokuWikiStore::create();
+            $messages = [];
+            foreach ($jsonArray as $name => $value) {
+                $metadata = Metadata::getForName($name);
+                if ($metadata === null) {
+                    if (in_array(strtolower($name), Metadata::NOT_MODIFIABLE_METAS)) {
+                        $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
+                            ->setCanonical(Metadata::CANONICAL_PROPERTY);
+                        continue;
+                    }
+                    $dokuwikiStore->setFromWikiId($page->getDokuwikiId(), $name, $value);
+                    continue;
+                }
+                if ($metadata->getPersistenceType() !== Metadata::PERSISTENT_METADATA) {
+                    $messages[] = Message::createWarningMessage("The metadata ($name) is not persistent and cannot be modified")
+                        ->setCanonical($metadata->getCanonical());
+                    continue;
+                }
+                try {
+                    $metadata
+                        ->setResource($page)
+                        ->setStore($frontMatterStore)
+                        ->buildFromStore()
+                        ->setStore($dokuwikiStore)
+                        ->sendToStore();
+                } catch (ExceptionCombo $e) {
+                    $messages[] = Message::createErrorMessage("Error while replicating the meta ($metadata) from the store ($frontMatterStore) to the store ($dokuwikiStore). Message: ".$e->getMessage())
+                        ->setCanonical($metadata->getCanonical());
+                }
+            }
+            $dokuwikiStore->persist();
+
+
             foreach ($messages as $message) {
                 $message->sendLogMsg();
             }

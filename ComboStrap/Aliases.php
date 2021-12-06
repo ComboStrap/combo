@@ -207,6 +207,9 @@ class Aliases extends Metadata
         return array_values($this->aliases);
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function addAlias(string $aliasPath, $aliasType = Alias::REDIRECT): Aliases
     {
@@ -214,6 +217,9 @@ class Aliases extends Metadata
         return $this;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function addAndGetAlias($aliasPath, $aliasType = Alias::REDIRECT): Alias
     {
@@ -225,25 +231,15 @@ class Aliases extends Metadata
         }
 
         $this->aliases[$aliasPath] = $alias;
+        $this->sendToStore();
         return $alias;
     }
 
 
-    /**
-     *
-     */
-    public
-    function buildFromStore(): Aliases
-    {
-        $this->wasBuild = true;
-        $aliases = $this->getStoreValue();
-        $this->aliases = self::toNativeAliasArray($aliases);
-        return $this;
-    }
-
     public
     function getSize(): int
     {
+        $this->buildCheck();
         $aliases = $this->aliases;
         if ($this->aliases === null) {
             return 0;
@@ -369,4 +365,6 @@ class Aliases extends Metadata
     {
         return $this->aliases !== null;
     }
+
+
 }

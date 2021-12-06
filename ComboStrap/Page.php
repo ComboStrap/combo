@@ -32,14 +32,6 @@ require_once(__DIR__ . '/PluginUtility.php');
 class Page extends ResourceComboAbs
 {
 
-    const NOT_MODIFIABLE_METAS = [
-        "date",
-        "user",
-        "last_change",
-        "creator",
-        "contributor"
-    ];
-
 
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
 
@@ -1284,7 +1276,7 @@ class Page extends ResourceComboAbs
         foreach ($attributes as $key => $value) {
 
             $lowerKey = trim(strtolower($key));
-            if (in_array($lowerKey, self::NOT_MODIFIABLE_METAS)) {
+            if (in_array($lowerKey, Metadata::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified")
                     ->setCanonical(Metadata::CANONICAL_PROPERTY);
                 continue;
@@ -1334,9 +1326,7 @@ class Page extends ResourceComboAbs
                         $this->aliases->setFromStoreValue($value);
                         continue 2;
                     case PageId::PAGE_ID_ATTRIBUTE:
-                        $this->pageId
-                            ->setValue($value)
-                            ->sendToStore();
+                        $this->pageId->setValue($value);
                         continue 2;
                     case LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
                         $this->setCanBeOfLowQuality(Boolean::toBoolean($value));

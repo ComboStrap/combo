@@ -19,10 +19,7 @@ namespace ComboStrap;
 abstract class MetadataScalar extends Metadata
 {
 
-    /**
-     * @var bool
-     */
-    protected $wasBuild = false;
+
 
     public function toFormField(): FormMetaField
     {

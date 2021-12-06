@@ -37,9 +37,9 @@ class MetadataDokuWikiStore implements MetadataStore
 
 
     /**
-     * @var array|array[]
+     * @var array[]
      */
-    private $metadatas;
+    private $metadatas = [];
 
     const CANONICAL = Metadata::CANONICAL_PROPERTY;
 
@@ -216,7 +216,7 @@ class MetadataDokuWikiStore implements MetadataStore
      * @param $value
      * @param null $default - use in case of boolean
      */
-    private function setFromWikiId($wikiId, $key, $value, $default = null)
+    public function setFromWikiId($wikiId, $key, $value, $default = null)
     {
         $metadata = &$this->getMetadatasFromWikiId($wikiId);
         $type = self::PERSISTENT_METADATA;
@@ -290,5 +290,11 @@ class MetadataDokuWikiStore implements MetadataStore
     {
         return metaFN($dokuwikiId, '.meta');
     }
+
+    public function __toString()
+    {
+        return "DokuMeta";
+    }
+
 
 }

@@ -24,7 +24,7 @@ abstract class MetadataArray extends Metadata
     public function setValue(?array $array): MetadataArray
     {
         $this->array = $array;
-        $this->getStore()->set($this);
+        $this->sendToStore();
         return $this;
     }
 

@@ -82,7 +82,7 @@ class Alias
 
 
     public
-    static function create(Page $page, $alias): Alias
+    static function create(ResourceCombo $page, $alias): Alias
     {
         return new Alias($page, $alias);
     }

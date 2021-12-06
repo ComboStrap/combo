@@ -6,7 +6,6 @@ namespace ComboStrap;
 
 use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
-use action_plugin_combo_qualitymessage;
 use ModificationDate;
 use ReplicationDate;
 use Slug;
@@ -15,7 +14,23 @@ abstract class Metadata
 {
     const CANONICAL_PROPERTY = "page:metadata";
     const MUTABLE = "mutable";
+    public const NOT_MODIFIABLE_METAS = [
+        "date",
+        "user",
+        "last_change",
+        "creator",
+        "contributor"
+    ];
 
+    /**
+     * @var
+     */
+    private static $metadata;
+
+    /**
+     * @var bool
+     */
+    protected $wasBuild = false;
 
     /**
      * The metadata is for this resource
@@ -38,6 +53,63 @@ abstract class Metadata
 
     }
 
+    public static function getForName(int $name): ?Metadata
+    {
+
+        /**
+         * TODO: this array could be build automatically by creating an object for each metadata
+         */
+        switch ($name) {
+            case Canonical::CANONICAL_PROPERTY:
+                return new Canonical();
+            case PageType::TYPE_META_PROPERTY:
+                return new PageType();
+            case PageH1::H1_PROPERTY:
+                return new PageH1();
+            case Aliases::ALIAS_ATTRIBUTE:
+                return new Aliases();
+            case PageImages::IMAGE_META_PROPERTY:
+                return new PageImages();
+            case Region::REGION_META_PROPERTY:
+                return new Region();
+            case Lang::LANG_ATTRIBUTES:
+                return new Lang();
+            case PageTitle::TITLE:
+                return new PageTitle();
+            case PagePublicationDate::OLD_META_KEY:
+            case PagePublicationDate::DATE_PUBLISHED:
+                return new PagePublicationDate();
+            case PageName::NAME_PROPERTY:
+                return new PageName();
+            case action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY:
+            case LdJson::JSON_LD_META_PROPERTY:
+                return new LdJson();
+            case PageLayout::LAYOUT_PROPERTY:
+                return new PageLayout();
+            case StartDate::DATE_START:
+                return new StartDate();
+            case EndDate::DATE_END:
+                return new EndDate();
+            case PageDescription::DESCRIPTION_PROPERTY:
+                return new PageDescription();
+            case Slug::SLUG_ATTRIBUTE:
+                return new Slug();
+            case PageKeywords::KEYWORDS_ATTRIBUTE:
+                return new PageKeywords();
+            case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:
+                return new CacheExpirationFrequency();
+            case QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
+                return new QualityDynamicMonitoringOverwrite();
+            case LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
+                return new LowQualityPageOverwrite();
+            case PageId::PAGE_ID_ATTRIBUTE:
+                return new PageId();
+        }
+        return null;
+
+    }
+
+
     public function setStore(MetadataStore $store): Metadata
     {
         $this->store = $store;
@@ -50,7 +122,7 @@ abstract class Metadata
      * If the value is null, the {@link Metadata::buildFromStore()} will be performed
      * otherwise, it will not
      */
-    public abstract function valueIsNotNull():bool;
+    public abstract function valueIsNotNull(): bool;
 
     /**
      * If the {@link MetadataScalar::getValue()} is null and if the object was not already build
@@ -58,7 +130,7 @@ abstract class Metadata
      */
     protected function buildCheck()
     {
-        if (!$this->wasBuild && $this->valueIsNotNull()) {
+        if (!$this->wasBuild && !$this->valueIsNotNull()) {
             $this->wasBuild = true;
             $this->buildFromStore();
         }
@@ -84,21 +156,18 @@ abstract class Metadata
     /**
      * This function sends the object value to the {@link Metadata::getStore() store}
      *
-     * This function should be used at the end of each setter function
+     * This function should be used at the end of each setter/adder function
      *
      * @throws ExceptionCombo
      *
      * To persist or commit on disk, you use the {@link MetadataStore::persist()}
-     * Because the metaadta is stored by resource, the persist function is
+     * Because the metadata is stored by resource, the persist function is
      * also made available on the resource level
      *
      */
     public function sendToStore(): Metadata
     {
-        if ($this->store === null) {
-            throw new ExceptionComboRuntime("The metadata store is not set, you can't persist the metadata ($this)");
-        }
-        $this->store->set($this);
+        $this->getStore()->set($this);
         return $this;
     }
 
@@ -115,10 +184,7 @@ abstract class Metadata
     /** @noinspection PhpMissingReturnTypeInspection */
     public function buildFromStore()
     {
-        if ($this->store === null) {
-            throw new ExceptionComboRuntime("The metadata store is not set, you can't get a value");
-        }
-        $this->setFromStoreValue($this->store->get($this));
+        $this->setFromStoreValue($this->getStore()->get($this));
         return $this;
     }
 
@@ -407,5 +473,11 @@ abstract class Metadata
     public function getPossibleValues(): ?array
     {
         return null;
+    }
+
+    public function persist(): Metadata
+    {
+        $this->getStore()->persist();
+        return $this;
     }
 }

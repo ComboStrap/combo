@@ -70,7 +70,6 @@ class Page extends ResourceComboAbs
 
 
     const REGION_META_PROPERTY = "region";
-    const LANG_META_PROPERTY = "lang";
     public const SLUG_ATTRIBUTE = "slug";
     const LAYOUT_PROPERTY = "layout";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
@@ -157,6 +156,9 @@ class Page extends ResourceComboAbs
 
     private $canBeOfLowQuality;
     private $region;
+    /**
+     * @var Lang
+     */
     private $lang;
     /**
      * @var PageId
@@ -200,7 +202,7 @@ class Page extends ResourceComboAbs
      */
     private $startDate;
     /**
-     * @var DateTime|null
+     * @var EndDate
      */
     private $endDate;
     /**
@@ -242,6 +244,10 @@ class Page extends ResourceComboAbs
      * @var PageCreationDate
      */
     private $creationTime;
+    /**
+     * @var Locale
+     */
+    private $locale;
 
     /**
      * Page constructor.
@@ -1032,19 +1038,16 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function getLang()
+    function getLang(): ?string
     {
-        return $this->lang;
+        return $this->lang->getValue();
     }
 
     public
     function getLangOrDefault()
     {
-        $lang = $this->getLang();
-        if (empty($lang)) {
-            return $this->getDefaultLang();
-        }
-        return $lang;
+
+        return $this->lang->getValueOrDefault();
     }
 
     /**
@@ -1142,20 +1145,16 @@ class Page extends ResourceComboAbs
     /**
      *
      * @return string|null - the locale facebook way
+     * @deprecated for {@link Locale}
      */
     public
     function getLocale($default = null): ?string
     {
-        $lang = $this->getLangOrDefault();
-        if (!empty($lang)) {
-
-            $country = $this->getRegionOrDefault();
-            if (empty($country)) {
-                $country = $lang;
-            }
-            return $lang . "_" . strtoupper($country);
+        $value = $this->locale->getValue();
+        if($value===null){
+            return $default;
         }
-        return $default;
+        return $value;
     }
 
 
@@ -1293,7 +1292,7 @@ class Page extends ResourceComboAbs
 
         $array[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
         $array[StartDate::DATE_START] = $this->getStartDateAsString();
-        $array[AnalyticsDocument::DATE_END] = $this->getStartDateAsString();
+        $array[EndDate::DATE_END] = $this->getStartDateAsString();
         $array[Page::LAYOUT_PROPERTY] = $this->getMetadata(Page::LAYOUT_PROPERTY);
 
         return $array;
@@ -1322,7 +1321,7 @@ class Page extends ResourceComboAbs
     public
     function getEndDate(): ?DateTime
     {
-        $dateEndProperty = AnalyticsDocument::DATE_END;
+        $dateEndProperty = EndDate::DATE_END;
         $persistentMetadata = $this->getPersistentMetadata($dateEndProperty);
         if (empty($persistentMetadata)) {
             return null;
@@ -1434,7 +1433,7 @@ class Page extends ResourceComboAbs
                     case Canonical::CANONICAL_PROPERTY:
                         $this->setCanonical($value);
                         continue 2;
-                    case AnalyticsDocument::DATE_END:
+                    case EndDate::DATE_END:
                         $this->setEndDate($value);
                         continue 2;
                     case PageType::TYPE_META_PROPERTY:
@@ -1464,7 +1463,7 @@ class Page extends ResourceComboAbs
                     case Page::REGION_META_PROPERTY:
                         $this->setRegion($value);
                         continue 2;
-                    case Page::LANG_META_PROPERTY:
+                    case Lang::LANG_ATTRIBUTES:
                         $this->setLang($value);
                         continue 2;
                     case Page::LAYOUT_PROPERTY:
@@ -1866,15 +1865,18 @@ class Page extends ResourceComboAbs
 
     /**
      * @throws ExceptionCombo
+     * @deprecated uses {@link EndDate} instead
      */
     public
-    function setEndDate($value)
+    function setEndDate($value): Page
     {
-        $this->setDateAttribute(AnalyticsDocument::DATE_END, $this->endDate, $value);
+        $this->endDate->setFromStoreValue($value);
+        return $this;
     }
 
     /**
      * @throws ExceptionCombo
+     * @deprecated uses {@link StartDate} instead
      */
     public
     function setStartDate($value): Page
@@ -1950,15 +1952,8 @@ class Page extends ResourceComboAbs
     public
     function setLang($value): Page
     {
-        if ($value === "") {
-            $value = null;
-        } else {
-            if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
-                throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters", "lang");
-            }
-        }
-        $this->lang = $value;
-        $this->setMetadata(Page::LANG_META_PROPERTY, $value);
+
+        $this->lang->setFromStoreValue($value);
         return $this;
     }
 
@@ -2018,7 +2013,11 @@ class Page extends ResourceComboAbs
         $this->keywords = PageKeywords::createForPage($this);
         $this->publishedDate = PagePublicationDate::createFromPage($this);
         $this->startDate = StartDate::createFromPage($this);
-        $this->endDate = $this->getMetadataAsDate(AnalyticsDocument::DATE_END);
+        $this->endDate = EndDate::createFromPage($this);
+        $this->locale = Locale::createForPage($this);
+        $this->lang = Lang::createFroPage($this);
+        $this->region = $this->getMetadata(self::REGION_META_PROPERTY);
+
 
         /**
          * Old system
@@ -2034,8 +2033,7 @@ class Page extends ResourceComboAbs
          */
 
 
-        $this->region = $this->getMetadata(self::REGION_META_PROPERTY);
-        $this->lang = $this->getMetadata(self::LANG_META_PROPERTY);
+
 
         $this->canBeOfLowQuality = Boolean::toBoolean(
             $this->getMetadata(self::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
@@ -2338,9 +2336,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[Page::REGION_META_PROPERTY] = $this->getLocaleRegion();
                     }
                     break;
-                case Page::LANG_META_PROPERTY:
+                case Lang::LANG_ATTRIBUTES:
                     if (!in_array($this->getLang(), [$this->getDefaultLang(), null])) {
-                        $nonDefaultMetadatas[Page::LANG_META_PROPERTY] = $this->getLang();
+                        $nonDefaultMetadatas[Lang::LANG_ATTRIBUTES] = $this->getLang();
                     }
                     break;
                 case PageTitle::TITLE:
@@ -2384,9 +2382,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[StartDate::DATE_START] = $this->getStartDateAsString();
                     }
                     break;
-                case AnalyticsDocument::DATE_END:
+                case EndDate::DATE_END:
                     if ($this->getEndDate() !== null) {
-                        $nonDefaultMetadatas[AnalyticsDocument::DATE_END] = $this->getEndDateAsString();
+                        $nonDefaultMetadatas[EndDate::DATE_END] = $this->getEndDateAsString();
                     }
                     break;
                 case action_plugin_combo_metadescription::DESCRIPTION_META_KEY:

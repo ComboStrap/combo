@@ -6,11 +6,12 @@ namespace ComboStrap;
 
 use dokuwiki\Cache\Cache;
 
-class Lang
+class Lang extends MetadataText
 {
 
     const CANONICAL = "lang";
-    const LANG_ATTRIBUTES = "lang";
+    public const LANG_ATTRIBUTES = "lang";
+
 
     /**
      * Process the lang attribute
@@ -69,7 +70,7 @@ class Lang
             if ($cacheDataUsable) {
                 $jsonAsArray = true;
                 $languageData = json_decode(file_get_contents($languageDataCache->cache), $jsonAsArray);
-                if($languageData==null){
+                if ($languageData == null) {
                     LogUtility::msg("We could not read the data from the language ($langValue). No direction was set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return;
                 }
@@ -87,4 +88,75 @@ class Lang
 
     }
 
+    public static function createFroPage(Page $page)
+    {
+        return (new Lang())
+            ->setResource($page);
+    }
+
+    public function getTab()
+    {
+        return \action_plugin_combo_metamanager::TAB_LANGUAGE_VALUE;
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setFromStoreValue($value)
+    {
+
+        $this->validityCheck($value);
+        return parent::setFromStoreValue($value);
+
+    }
+
+    public function setValue(?string $value): MetadataText
+    {
+        $this->validityCheck($value);
+        return parent::setValue($value);
+    }
+
+
+    public function getDescription(): string
+    {
+        return "The language of the page";
+    }
+
+    public function getLabel(): string
+    {
+        return "Language";
+    }
+
+    public function getName(): string
+    {
+        return self::LANG_ATTRIBUTES;
+    }
+
+    public function getPersistenceType(): string
+    {
+        return Metadata::DERIVED_METADATA;
+    }
+
+    public function getMutable(): bool
+    {
+        return true;
+    }
+
+    public function getDefaultValue()
+    {
+        return Site::getLang();
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private function validityCheck($value)
+    {
+        if ($value === "" || $value === null) {
+            return;
+        }
+        if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
+            throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters", "lang");
+        }
+    }
 }

@@ -12,6 +12,7 @@ use ComboStrap\Canonical;
 use ComboStrap\DatabasePage;
 use ComboStrap\DataType;
 use ComboStrap\DokuPath;
+use ComboStrap\EndDate;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FormMeta;
 use ComboStrap\FormMetaField;
@@ -20,6 +21,7 @@ use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\Iso8601Date;
 use ComboStrap\Json;
+use ComboStrap\Lang;
 use ComboStrap\LdJson;
 use ComboStrap\LowQualityPage;
 use ComboStrap\Message;
@@ -587,21 +589,17 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $creationTime = PageCreationDate::createForPage($page);
         $formMeta->addField($creationTime->toFormField());
 
-
-
         /**
          * Page Image Properties
          */
         $pageImages = PageImages::createForPage($page);
         $formMeta->addField($pageImages->toFormField());
 
-
         /**
          * Aliases
          */
         $aliases = Aliases::createForPage($page);
         $formMeta->addField($aliases->toFormField());
-
 
         // Page Type
         $pageType = PageType::createForPage($page);
@@ -616,14 +614,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($startDate->toFormField());
 
         // End Date
-        $formMeta->addField(FormMetaField::create(AnalyticsDocument::DATE_END)
-            ->addValue($page->getEndDateAsString())
-            ->setType(DataType::DATETIME_TYPE_VALUE)
-            ->setTab(self::TAB_TYPE_VALUE)
-            ->setCanonical(PageType::EVENT_TYPE)
-            ->setLabel("End Date")
-            ->setDescription("The end date of an event")
-        );
+        $endDate = EndDate::createFromPage($page);
+        $formMeta->addField($endDate->toFormField());
 
         // ld-json
         $ldJson = LdJson::createForPage($page);
@@ -656,23 +648,12 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         );
 
         // Locale
-        $formMeta->addField(FormMetaField::create("locale")
-            ->addValue($page->getLocale(), Site::getLocale())
-            ->setMutable(false)
-            ->setTab(self::TAB_LANGUAGE_VALUE)
-            ->setCanonical("locale")
-            ->setLabel("Locale")
-            ->setDescription("The locale define the language and the formatting of numbers and time for the page. It's generated from the language and region metadata.")
-        );
+        $locale = \ComboStrap\Locale::createForPage($page);
+        $formMeta->addField($locale->toFormField());
 
         // Lang
-        $formMeta->addField(FormMetaField::create(Page::LANG_META_PROPERTY)
-            ->addValue($page->getLang(), Site::getLang())
-            ->setTab(self::TAB_LANGUAGE_VALUE)
-            ->setCanonical(Page::LANG_META_PROPERTY)
-            ->setLabel("Language")
-            ->setDescription("The language of the page")
-        );
+        $lang = Lang::createFroPage($page);
+        $formMeta->addField($lang->toFormField());
 
         // Country
         $formMeta->addField(FormMetaField::create(Page::REGION_META_PROPERTY)

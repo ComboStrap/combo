@@ -37,9 +37,9 @@ class DatabasePage
             PageH1::H1_PROPERTY,
             PagePublicationDate::DATE_PUBLISHED,
             StartDate::DATE_START,
-            AnalyticsDocument::DATE_END,
+            EndDate::DATE_END,
             Page::REGION_META_PROPERTY,
-            Page::LANG_META_PROPERTY,
+            Lang::LANG_ATTRIBUTES,
             PageType::TYPE_META_PROPERTY
         ];
     const ANALYTICS_ATTRIBUTE = "ANALYTICS";
@@ -854,9 +854,9 @@ EOF;
             AnalyticsDocument::DATE_MODIFIED => $this->page->getModifiedDateAsString(),
             PagePublicationDate::DATE_PUBLISHED => $this->page->getPublishedTimeAsString(),
             StartDate::DATE_START => $this->page->getEndDateAsString(),
-            AnalyticsDocument::DATE_END => $this->page->getStartDateAsString(),
+            EndDate::DATE_END => $this->page->getStartDateAsString(),
             Page::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
-            Page::LANG_META_PROPERTY => $this->page->getLangOrDefault(),
+            Lang::LANG_ATTRIBUTES => $this->page->getLangOrDefault(),
             PageType::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
             Path::DOKUWIKI_ID_ATTRIBUTE => $this->page->getPath()->getDokuwikiId(),
         );

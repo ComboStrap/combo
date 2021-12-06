@@ -55,7 +55,6 @@ class AnalyticsDocument extends OutputDocument
     const DETAILS = 'details';
     const FAILED_MANDATORY_RULES = 'failed_mandatory_rules';
     const METADATA = 'metadata';
-    const DATE_END = "date_end";
 
     public function getOrProcessJson(): Json
     {

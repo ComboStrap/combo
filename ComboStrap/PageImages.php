@@ -4,9 +4,6 @@
 namespace ComboStrap;
 
 
-use Exception;
-
-
 class PageImages extends Metadata
 {
 
@@ -22,10 +19,7 @@ class PageImages extends Metadata
      * @var PageImage[]
      */
     private $pageImages;
-    /**
-     * @var bool
-     */
-    private $wasBuild = false;
+
 
     public static function createForPage(Page $page): PageImages
     {
@@ -122,13 +116,6 @@ class PageImages extends Metadata
 
     }
 
-    public function buildFromStore(): PageImages
-    {
-
-        return $this->buildFromPersistentFormat($this->getStoreValue());
-
-    }
-
 
     /**
      * @throws ExceptionCombo
@@ -213,13 +200,6 @@ class PageImages extends Metadata
         return $this;
     }
 
-    private function buildCheck()
-    {
-        if (!$this->wasBuild && $this->pageImages === null) {
-            $this->wasBuild = true;
-            $this->buildFromStore();
-        }
-    }
 
     public function getTab(): string
     {
@@ -337,6 +317,7 @@ class PageImages extends Metadata
     /**
      * @param $sourceImagePath
      * @return PageImage|null - the removed page image or null
+     * @throws ExceptionCombo
      */
     public function removeIfExists($sourceImagePath): ?PageImage
     {
@@ -365,11 +346,19 @@ class PageImages extends Metadata
         $firstImageId = $relation[PageImages::FIRST_IMAGE_META_RELATION];
         if (empty($firstImageId)) {
             return null;
-        } else {
-            if (!media_isexternal($firstImageId)) {
-                return Image::createImageFromId($firstImageId);
-            }
         }
+        if (media_isexternal($firstImageId)) {
+            return null;
+        }
+        return Image::createImageFromId($firstImageId);
+
 
     }
+
+
+    public function valueIsNotNull(): bool
+    {
+        return $this->pageImages !== null;
+    }
+
 }

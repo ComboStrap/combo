@@ -87,7 +87,12 @@ class PageKeywords extends MetadataArray
     }
 
 
-    public function getDefaultValues()
+    /**
+     * The default of dokuwiki is the recursive parts of all {@link PageName page name}
+     * in the hierarchy.
+     * @return string[]|null
+     */
+    public function getDefaultValues(): ?array
     {
 
         $resource = $this->getResource();
@@ -117,5 +122,10 @@ class PageKeywords extends MetadataArray
     public function getMutable(): bool
     {
         return true;
+    }
+
+    public function getValueOrDefault()
+    {
+
     }
 }

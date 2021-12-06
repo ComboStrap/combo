@@ -43,6 +43,8 @@ abstract class MetadataScalar extends Metadata
 
     public abstract function getValue();
 
+
+
     public abstract function getDefaultValue();
 
     public function getValueOrDefault()
@@ -75,16 +77,7 @@ abstract class MetadataScalar extends Metadata
         return $this->setValue($value);
     }
 
-    /**
-     * If the {@link MetadataScalar::getValue()} is null and if the object was not already build
-     * this function will call the function {@link Metadata::buildFromStore()}
-     */
-    protected function buildCheck()
-    {
-        if (!$this->wasBuild && $this->getValue() === null) {
-            $this->wasBuild = true;
-            $this->buildFromStore();
-        }
-    }
+
+
 
 }

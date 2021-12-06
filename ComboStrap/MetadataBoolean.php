@@ -27,9 +27,6 @@ abstract class MetadataBoolean extends MetadataScalar
     }
 
 
-
-
-
     /**
      * @throws ExceptionCombo
      */
@@ -81,4 +78,8 @@ abstract class MetadataBoolean extends MetadataScalar
     }
 
 
+    public function valueIsNotNull(): bool
+    {
+        return $this->value !== null;
+    }
 }

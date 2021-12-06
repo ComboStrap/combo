@@ -17,10 +17,7 @@ class Aliases extends Metadata
      * @var Alias[]
      */
     private $aliases;
-    /**
-     * @var bool
-     */
-    private $wasBuild = false;
+
 
     public static function createForPage(Page $page): Aliases
     {
@@ -268,20 +265,6 @@ class Aliases extends Metadata
         return Alias::CANONICAL;
     }
 
-    private
-    function buildCheck()
-    {
-        if (
-            !$this->wasBuild
-            && $this->aliases === null
-            && $this->getStore() !== null
-        ) {
-            $this->buildFromStore();
-            $this->wasBuild = true;
-        }
-    }
-
-
     public
     function getTab(): string
     {
@@ -382,4 +365,8 @@ class Aliases extends Metadata
     }
 
 
+    public function valueIsNotNull(): bool
+    {
+        return $this->aliases !== null;
+    }
 }

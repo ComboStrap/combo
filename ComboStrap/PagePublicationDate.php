@@ -118,6 +118,6 @@ class PagePublicationDate extends MetadataDateTime
     {
         return PageCreationDate::create()
             ->setResource($this->getResource())
-            ->getValue();
+            ->getValueOrDefault();
     }
 }

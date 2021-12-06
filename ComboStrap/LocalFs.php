@@ -52,7 +52,12 @@ class LocalFs implements FileSystem
 
     public function getCreationTime(Path $path)
     {
-        return Iso8601Date::createFromTimestamp(filectime($path->toAbsolutePath()->toString()))->getDateTime();
+        if(!$this->exists($path)){
+            return null;
+        }
+        $filePath = $path->toAbsolutePath()->toString();
+        $timestamp = filectime($filePath);
+        return Iso8601Date::createFromTimestamp($timestamp)->getDateTime();
     }
 
 

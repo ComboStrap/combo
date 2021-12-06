@@ -956,7 +956,6 @@ class Page extends ResourceComboAbs
     public
     function getPublishedElseCreationTime(): ?DateTime
     {
-
         return $this->publishedDate->getValueOrDefault();
     }
 
@@ -2183,37 +2182,24 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
-    public function getKeywords()
+    public function getKeywords(): PageKeywords
     {
         return $this->keywords;
     }
 
-    public function getKeywordsOrDefault()
+    public function getKeywordsOrDefault(): array
     {
-        $keyWords = $this->getKeywords();
-        if ($keyWords === null) {
-            return $this->getDefaultKeywords();
-        }
-        return $keyWords;
+        return $this->keywords->getValueOrDefaults();
     }
 
-    /**
-     * The default of dokuwiki is the parts of the {@link Page::getDokuwikiId() dokuwiki id}
-     * @return null|string[]
-     */
-    public function getDefaultKeywords(): ?array
-    {
-        return $this->keywords->getDefaultValues();
-
-    }
 
     /**
      * @throws ExceptionCombo
      */
     public function setKeywords($value): Page
     {
-
         $this->keywords->setFromStoreValue($value);
+        return $this;
     }
 
     /**

@@ -28,6 +28,12 @@ abstract class MetadataText extends MetadataScalar
         return $this->value;
     }
 
+    public function valueIsNotNull(): bool
+    {
+        return $this->value !== null;
+    }
+
+
     /**
      * @throws ExceptionCombo
      */

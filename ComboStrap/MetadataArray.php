@@ -15,20 +15,8 @@ abstract class MetadataArray extends Metadata
      * @var array|null
      */
     private $array;
-    /**
-     * @var bool
-     */
-    private $wasBuild;
 
-    public function buildFromStore(): MetadataArray
-    {
-        try {
-            $this->setValue($this->getStoreValue());
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error while building the value:", $e->getCanonical());
-        }
-        return $this;
-    }
+
 
     /**
      * @throws ExceptionCombo
@@ -45,20 +33,26 @@ abstract class MetadataArray extends Metadata
         return DataType::TABULAR_TYPE_VALUE;
     }
 
-    public function getValue(): array
+    public function getValue(): ?array
     {
         $this->buildCheck();
         return $this->array;
     }
 
-    private function buildCheck()
+    abstract function getDefaultValues();
+
+    public function getValueOrDefaults(): array
     {
-        if(
-            $this->array===null
-            && $this->wasBuild===false
-        ){
-            $this->wasBuild = true;
-            $this->buildFromStore();
+        $value = $this->getValue();
+        if($value !==null){
+            return $value;
         }
+        return $this->getDefaultValues();
+    }
+
+
+    public function valueIsNotNull(): bool
+    {
+        return $this->array!==null;
     }
 }

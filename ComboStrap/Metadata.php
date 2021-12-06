@@ -44,6 +44,25 @@ abstract class Metadata
         return $this;
     }
 
+    /**
+     * @return bool
+     * used in the {@link Metadata::buildCheck()} function
+     * If the value is null, the {@link Metadata::buildFromStore()} will be performed
+     * otherwise, it will not
+     */
+    public abstract function valueIsNotNull():bool;
+
+    /**
+     * If the {@link MetadataScalar::getValue()} is null and if the object was not already build
+     * this function will call the function {@link Metadata::buildFromStore()}
+     */
+    protected function buildCheck()
+    {
+        if (!$this->wasBuild && $this->valueIsNotNull()) {
+            $this->wasBuild = true;
+            $this->buildFromStore();
+        }
+    }
 
     /**
      * Return the store for this metadata

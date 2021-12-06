@@ -19,8 +19,7 @@ use dokuwiki\Extension\PluginTrait;
 use dokuwiki\Utf8\Conversion;
 use syntax_plugin_combo_tooltip;
 
-require_once(__DIR__ . '/TemplateUtility.php');
-require_once(__DIR__ . '/Publication.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
 /**
  * Class LinkUtility

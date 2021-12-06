@@ -49,6 +49,10 @@ class DokuFs implements FileSystem
         return FileSystems::getModifiedTime($path->toLocalPath());
     }
 
+    /**
+     * @param DokuPath $path
+     * @return DateTime|false|mixed|null
+     */
     public function getCreationTime(Path $path)
     {
         return FileSystems::getCreationTime($path->toLocalPath());

@@ -13,7 +13,6 @@ abstract class MetadataJson extends MetadataScalar
     private $json;
 
 
-
     /**
      * Helper function for date metadata
      * @return array|null
@@ -70,8 +69,6 @@ abstract class MetadataJson extends MetadataScalar
     }
 
 
-
-
     public function getValue(): ?array
     {
         $this->buildCheck();
@@ -108,5 +105,9 @@ abstract class MetadataJson extends MetadataScalar
 
     }
 
+    public function valueIsNotNull(): bool
+    {
+        return $this->json !== null;
+    }
 
 }

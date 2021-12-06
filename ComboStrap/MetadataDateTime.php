@@ -108,5 +108,10 @@ abstract class MetadataDateTime extends MetadataScalar
         return ":date";
     }
 
+    public function valueIsNotNull(): bool
+    {
+        return $this->dateTimeValue !== null;
+    }
+
 
 }

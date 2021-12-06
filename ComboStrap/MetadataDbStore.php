@@ -186,4 +186,13 @@ EOF;
 
     }
 
+    public function persist()
+    {
+        // there is no notion of commit in the sqlite plugin
+    }
+
+    public function isTextBased(): bool
+    {
+        return false;
+    }
 }

@@ -563,32 +563,7 @@ class DokuPath extends PathAbs
     }
 
 
-    public static function toSlugPath($string): string
-    {
-        if (empty($string)) return ":";
-        // Reserved word to space
-        $slugWithoutReservedWord = str_replace(DokuPath::getReservedWord(), " ", $string);
-        // Doubles spaces to space
-        $slugWithoutDoubleSpace = preg_replace("/\s{2,}/", " ", $slugWithoutReservedWord);
-        // Trim space
-        $slugTrimmed = trim($slugWithoutDoubleSpace);
-        // No Space around the path part
-        $slugParts = explode(DokuPath::PATH_SEPARATOR, $slugTrimmed);
-        $slugParts = array_map(function ($e) {
-            return trim($e);
-        }, $slugParts);
-        $slugWithoutSpaceAroundParts = implode(DokuPath::PATH_SEPARATOR, $slugParts);
-        // Space to separator
-        $slugWithoutSpace = str_replace(" ", self::SLUG_SEPARATOR, $slugWithoutSpaceAroundParts);
-        // No double separator
-        $slugWithoutDoubleSeparator = preg_replace("/" . self::SLUG_SEPARATOR . "{2,}/", self::SLUG_SEPARATOR, $slugWithoutSpace);
-        // Root
-        DokuPath::addRootSeparatorIfNotPresent($slugWithoutDoubleSeparator);
-        // Lower case
-        return strtolower($slugWithoutDoubleSeparator);
-    }
-
-    private static function getReservedWord(): array
+    public static function getReservedWords(): array
     {
         if (self::$reservedWords == null) {
             self::$reservedWords = array_filter(Url::RESERVED_WORDS, function ($e) {

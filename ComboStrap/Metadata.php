@@ -8,6 +8,7 @@ use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use ReplicationDate;
+use Slug;
 
 abstract class Metadata
 {
@@ -302,7 +303,7 @@ abstract class Metadata
         StartDate::DATE_START,
         EndDate::DATE_END,
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
-        Page::SLUG_ATTRIBUTE,
+        Slug::SLUG_ATTRIBUTE,
         PageKeywords::KEYWORDS_ATTRIBUTE,
         CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME,
         action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,

@@ -10,6 +10,7 @@ use DateTime;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
+use Slug;
 use syntax_plugin_combo_disqus;
 use syntax_plugin_combo_frontmatter;
 
@@ -69,7 +70,6 @@ class Page extends ResourceComboAbs
     const SCOPE_CURRENT_VALUE = "current";
 
 
-    public const SLUG_ATTRIBUTE = "slug";
     const LAYOUT_PROPERTY = "layout";
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
 
@@ -177,7 +177,7 @@ class Page extends ResourceComboAbs
      */
     private $aliases;
     /**
-     * @var string a slug path
+     * @var Slug a slug path
      */
     private $slug;
 
@@ -1273,7 +1273,7 @@ class Page extends ResourceComboAbs
         $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
         $array["url"] = $this->getCanonicalUrl();
         $array[PageType::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
-        $array[Page::SLUG_ATTRIBUTE] = $this->getSlugOrDefault();
+        $array[Slug::SLUG_ATTRIBUTE] = $this->getSlugOrDefault();
 
         /**
          * When creating a page, the file
@@ -1486,7 +1486,7 @@ class Page extends ResourceComboAbs
                     case PageKeywords::KEYWORDS_ATTRIBUTE:
                         $this->setKeywords($value);
                         continue 2;
-                    case PAGE::SLUG_ATTRIBUTE:
+                    case Slug::SLUG_ATTRIBUTE:
                         $this->setSlug($value);
                         continue 2;
                     case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:
@@ -1810,7 +1810,7 @@ class Page extends ResourceComboAbs
      */
     public function getDefaultSlug(): ?string
     {
-        return DokuPath::toSlugPath($this->getTitleOrDefault());
+        return $this->slug->getDefaultValue();
     }
 
     public
@@ -2005,6 +2005,7 @@ class Page extends ResourceComboAbs
         $this->locale = Locale::createForPage($this);
         $this->lang = Lang::createForPage($this);
         $this->region = Region::createForPage($this);
+        $this->slug = Slug::createForPage($this);
 
         /**
          * Old system
@@ -2028,10 +2029,6 @@ class Page extends ResourceComboAbs
         $this->lowQualityIndicatorCalculated = Boolean::toBoolean($this->getMetadata(self::LOW_QUALITY_INDICATOR_CALCULATED));
 
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
-
-
-        $this->slug = $this->getMetadata(self::SLUG_ATTRIBUTE);
-
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
         /**
          * A boolean is never null
@@ -2110,14 +2107,14 @@ class Page extends ResourceComboAbs
             case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG:
                 $path = $this->getSlugOrDefault();
                 while (($parent = $this->getParentPage()) != null) {
-                    $path = DokuPath::toSlugPath($parent->getPageNameNotEmpty()) . $path;
+                    $path = Slug::toSlugPath($parent->getPageNameNotEmpty()) . $path;
                 }
                 $path = $this->toPermanentUrlPath($path);
                 break;
             case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG:
                 $path = $this->getSlugOrDefault();
                 if (($parent = $this->getParentPage()) != null) {
-                    $path = DokuPath::toSlugPath($parent->getPageNameNotEmpty()) . $path;
+                    $path = Slug::toSlugPath($parent->getPageNameNotEmpty()) . $path;
                 }
                 $path = $this->toPermanentUrlPath($path);
                 break;
@@ -2149,20 +2146,15 @@ class Page extends ResourceComboAbs
      */
     public function getSlug(): ?string
     {
-        return $this->slug;
+        return $this->slug->getValue();
     }
+
 
 
     public
     function setSlug($slug): Page
     {
-        if ($slug === "") {
-            $slug = null;
-        } else {
-            $slug = DokuPath::toSlugPath($slug);
-        }
-        $this->slug = $slug;
-        $this->setMetadata(Page::SLUG_ATTRIBUTE, $slug);
+        $this->slug->setFromStoreValue($slug);
         return $this;
     }
 
@@ -2377,9 +2369,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[action_plugin_combo_metadescription::DESCRIPTION_META_KEY] = $this->getDescription();
                     }
                     break;
-                case Page::SLUG_ATTRIBUTE:
+                case Slug::SLUG_ATTRIBUTE:
                     if (!in_array($this->getSlug(), [$this->getDefaultSlug(), null])) {
-                        $nonDefaultMetadatas[Page::SLUG_ATTRIBUTE] = $this->getSlug();
+                        $nonDefaultMetadatas[Slug::SLUG_ATTRIBUTE] = $this->getSlug();
                     }
                     break;
                 case action_plugin_combo_qualitymessage::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:

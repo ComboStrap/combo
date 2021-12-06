@@ -541,18 +541,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($canonical->toFormField());
 
         // Slug
-        $defaultSlug = $page->getDefaultSlug();
-        if (!empty($defaultSlug)) {
-            $defaultSlug = DokuPath::toSlugPath($defaultSlug);
-        }
-        $formMeta->addField(
-            FormMetaField::create(Page::SLUG_ATTRIBUTE)
-                ->addValue($page->getSlug(), $defaultSlug)
-                ->setLabel("Slug Path")
-                ->setTab(self::TAB_REDIRECTION_VALUE)
-                ->setCanonical(Page::SLUG_ATTRIBUTE)
-                ->setDescription("The slug is used in the url of the page (if chosen)")
-        );
+        $slug = Slug::createForPage($page);
+        $formMeta->addField($slug->toFormField());
 
         $formMeta->addField(
             FormMetaField::create("url-path")

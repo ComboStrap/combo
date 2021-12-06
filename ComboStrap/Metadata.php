@@ -7,11 +7,13 @@ namespace ComboStrap;
 use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
+use ReplicationDate;
 
 abstract class Metadata
 {
     const CANONICAL_PROPERTY = "page:metadata";
     const MUTABLE = "mutable";
+
 
     /**
      * The metadata is for this resource
@@ -203,15 +205,28 @@ abstract class Metadata
      */
     public abstract function toStoreDefaultValue();
 
+    /**
+     * Data that should persist (this data should be in a backup)
+     */
     public const PERSISTENT_METADATA = "persistent";
+    /**
+     * Data that are derived from other
+     */
     public const DERIVED_METADATA = "derived";
+    /**
+     * A runtime metadata is created for the purpose of a process
+     * Example {@link ReplicationDate}
+     */
+    const RUNTIME_METADATA = "runtime";
 
     /**
      *
-     * Return if the metadata value should be backup up (derived value or not)
+     * Return the type of metadata.
+     *   * {@link Metadata::PERSISTENT_METADATA}
+     *   * {@link Metadata::DERIVED_METADATA}
+     *   * {@link Metadata::RUNTIME_METADATA}
      *
-     * If the value is {@link self::PERSISTENT_METADATA}, it's yes
-     * If the value is {@link self::DERIVED_METADATA}, it's no
+     * Backup: Only the {@link Metadata::PERSISTENT_METADATA} got a backup
      *
      * @return string
      *
@@ -256,7 +271,7 @@ abstract class Metadata
         "format",
         "internal", // toc, cache, ...
         "relation",
-        DatabasePage::DATE_REPLICATION,
+        ReplicationDate::DATE_REPLICATION,
         PageH1::H1_PARSED,
         Page::LOW_QUALITY_INDICATOR_CALCULATED
     ];

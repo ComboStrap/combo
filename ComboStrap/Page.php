@@ -2003,8 +2003,8 @@ class Page extends ResourceComboAbs
         $this->startDate = StartDate::createFromPage($this);
         $this->endDate = EndDate::createFromPage($this);
         $this->locale = Locale::createForPage($this);
-        $this->lang = Lang::createFroPage($this);
-        $this->region = Region::createFroPage($this);
+        $this->lang = Lang::createForPage($this);
+        $this->region = Region::createForPage($this);
 
         /**
          * Old system

@@ -653,24 +653,16 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($locale->toFormField());
 
         // Lang
-        $lang = Lang::createFroPage($page);
+        $lang = Lang::createForPage($page);
         $formMeta->addField($lang->toFormField());
 
         // Country
-        $region = Region::createFroPage($page);
+        $region = Region::createForPage($page);
         $formMeta->addField($region->toFormField());
 
         // database replication Date
-        $replicationDate = $page->getDatabasePage()->getReplicationDate();
-        $formMeta->addField(FormMetaField::create(DatabasePage::DATE_REPLICATION)
-            ->addValue($replicationDate != null ? $replicationDate->format(Iso8601Date::getFormat()) : null)
-            ->setMutable(false)
-            ->setType(DataType::DATETIME_TYPE_VALUE)
-            ->setTab(self::TAB_INTEGRATION_VALUE)
-            ->setCanonical(DatabasePage::REPLICATION_CANONICAL)
-            ->setLabel("Database Replication Date")
-            ->setDescription("The last date of database replication")
-        );
+        $replicationDate = ReplicationDate::createFromPage($page);
+        $formMeta->addField($replicationDate->toFormField());
 
         // Page Id
         $pageId = PageId::createForPage($page);

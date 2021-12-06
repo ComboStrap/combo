@@ -10,7 +10,7 @@ class Region extends MetadataText
 
     public const REGION_META_PROPERTY = "region";
 
-    public static function createFroPage(Page $page)
+    public static function createForPage(Page $page)
     {
         return (new Region())
             ->setResource($page);

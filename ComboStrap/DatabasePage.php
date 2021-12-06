@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use ReplicationDate;
+
 /**
  * The class that manage the replication
  * Class Replicate
@@ -13,10 +15,6 @@ namespace ComboStrap;
  */
 class DatabasePage
 {
-    /**
-     * The attribute in the metadata and in the database
-     */
-    public const DATE_REPLICATION = "date_replication";
 
 
     /**
@@ -48,7 +46,6 @@ class DatabasePage
      * For whatever reason, the row id is lowercase
      */
     const ROWID = "rowid";
-    const REPLICATION_CANONICAL = "replication";
 
     /**
      * @var Page
@@ -178,14 +175,14 @@ class DatabasePage
                 ->setStore(MetadataDbStore::getOrCreate())
                 ->sendToStore();
         } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error replicating the page aliases " . $e->getMessage(), self::REPLICATION_CANONICAL);
+            LogUtility::msg("Error replicating the page aliases " . $e->getMessage(), ReplicationDate::REPLICATION_CANONICAL);
             return false;
         }
 
         /**
          * Set the replication date
          */
-        $this->page->setRuntimeMetadata(self::DATE_REPLICATION, $replicationDate);
+        $this->page->setRuntimeMetadata(ReplicationDate::DATE_REPLICATION, $replicationDate);
         return true;
 
     }
@@ -450,19 +447,11 @@ class DatabasePage
 
     }
 
-    public function getReplicationDate()
+    public function getReplicationDate(): ?\DateTime
     {
-        $stringReplicationDate = $this->page->getMetadata(DatabasePage::DATE_REPLICATION);
-        if (empty($stringReplicationDate)) {
-            return null;
-        } else {
-            try {
-                return Iso8601Date::createFromString($stringReplicationDate)->getDateTime();
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("The date value should be good when inserting. " . $e->getMessage());
-                return null;
-            }
-        }
+        return ReplicationDate::createFromPage($this->page)
+            ->getValue();
+
     }
 
     /**
@@ -498,7 +487,7 @@ class DatabasePage
         $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
         $record['BACKLINK_COUNT'] = $this->getBacklinkCount();
         $record['IS_HOME'] = ($page->isHomePage() === true ? 1 : 0);
-        $record[self::DATE_REPLICATION] = $replicationDate;
+        $record[ReplicationDate::DATE_REPLICATION] = $replicationDate;
 
 
         return $this->upsertAttributes($record);
@@ -673,7 +662,7 @@ EOF;
             }
             $countChanges = $this->sqlite->countChanges($res);
             if ($countChanges !== 1) {
-                LogUtility::msg("The database replication has not updated exactly 1 record but ($countChanges) record", LogUtility::LVL_MSG_ERROR, self::REPLICATION_CANONICAL);
+                LogUtility::msg("The database replication has not updated exactly 1 record but ($countChanges) record", LogUtility::LVL_MSG_ERROR, ReplicationDate::REPLICATION_CANONICAL);
             }
             $this->sqlite->res_close($res);
 

@@ -44,6 +44,7 @@ use ComboStrap\PageName;
 use ComboStrap\PagePath;
 use ComboStrap\PageTitle;
 use ComboStrap\PageType;
+use ComboStrap\PageUrlPath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\PagePublicationDate;
@@ -546,15 +547,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $slug = Slug::createForPage($page);
         $formMeta->addField($slug->toFormField());
 
-        $formMeta->addField(
-            FormMetaField::create("url-path")
-                ->addValue($page->getUrlPath())
-                ->setTab(self::TAB_REDIRECTION_VALUE)
-                ->setMutable(false)
-                ->setCanonical("page:url")
-                ->setLabel("Url Path")
-                ->setDescription("The path used in the page url")
-        );
+        $formMeta->addField(PageUrlPath::createForPage($page)->toFormField());
 
         // Layout
         $formMeta->addField(

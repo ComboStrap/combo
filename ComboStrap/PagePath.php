@@ -18,7 +18,7 @@ class PagePath extends MetadataWikiPath
     public const DATE_CREATED = 'date_created';
 
 
-    public static function createForPage(Page $page): CacheExpirationDate
+    public static function createForPage(ResourceCombo $page): CacheExpirationDate
     {
         return (new CacheExpirationDate())
             ->setResource($page);

@@ -86,21 +86,6 @@ class Page extends ResourceComboAbs
 
 
     /**
-     *
-     * The page id is separated in the URL with a "-"
-     * and not the standard "/"
-     * because in the devtool or any other tool, they takes
-     * the last part of the path as name.
-     *
-     * The name would be the short page id `22h2s2j4`
-     * and would have therefore no signification
-     *
-     * Instead the name is `metadata-manager-22h2s2j4`
-     * we can see then a page description, even order on it
-     */
-    const PAGE_ID_URL_SEPARATOR = "-";
-
-    /**
      * When the value of a metadata has changed
      */
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
@@ -250,6 +235,10 @@ class Page extends ResourceComboAbs
      * @var ModificationDate
      */
     private $modifiedTime;
+    /**
+     * @var PageUrlPath
+     */
+    private $pageUrlPath;
 
     /**
      * Page constructor.
@@ -339,7 +328,7 @@ class Page extends ResourceComboAbs
 
     public static function getShortEncodedPageIdFromUrlId($lastPartName)
     {
-        $lastPosition = strrpos($lastPartName, Page::PAGE_ID_URL_SEPARATOR);
+        $lastPosition = strrpos($lastPartName, PageUrlPath::PAGE_ID_URL_SEPARATOR);
         if ($lastPosition === false) {
             return null;
         }
@@ -358,52 +347,6 @@ class Page extends ResourceComboAbs
             LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
             return Page::createPageFromId("unknown-requested-page");
         }
-    }
-
-
-    /**
-     * @param string $pageId
-     * @return string|null - the checksum letter or null if this is not a page id
-     */
-    public static function getPageIdChecksumCharacter(string $pageId): ?string
-    {
-        $total = 0;
-        for ($i = 0; $i < strlen($pageId); $i++) {
-            $letter = $pageId[$i];
-            $pos = strpos(PageId::PAGE_ID_ALPHABET, $letter);
-            if ($pos === false) {
-                return null;
-            }
-            $total += $pos;
-        }
-        $checkSum = $total % strlen(PageId::PAGE_ID_ALPHABET);
-        return PageId::PAGE_ID_ALPHABET[$checkSum];
-    }
-
-    /**
-     * Add a checksum character to the page id
-     * to check if it's a page id that we get in the url
-     * @param string $pageId
-     * @return string
-     */
-    public static function encodePageId(string $pageId): string
-    {
-        return self::getPageIdChecksumCharacter($pageId) . $pageId;
-    }
-
-    /**
-     * @param string $encodedPageId
-     * @return string|null return the decoded page id or null if it's not an encoded page id
-     */
-    public static function decodePageId(string $encodedPageId): ?string
-    {
-        if (empty($encodedPageId)) return null;
-        $checkSum = $encodedPageId[0];
-        $extractedEncodedPageId = substr($encodedPageId, 1);
-        $calculatedCheckSum = self::getPageIdChecksumCharacter($extractedEncodedPageId);
-        if ($calculatedCheckSum == null) return null;
-        if ($calculatedCheckSum != $checkSum) return null;
-        return $extractedEncodedPageId;
     }
 
 
@@ -1937,6 +1880,7 @@ class Page extends ResourceComboAbs
         $this->lowQualityIndicatorCalculated = LowQualityCalculatedIndicator::createFromPage($this);
         $this->qualityMonitoringIndicator = QualityDynamicMonitoringOverwrite::createFromPage($this);
         $this->modifiedTime =  ModificationDate::createForPage($this);
+        $this->pageUrlPath = PageUrlPath::createForPage($this);
 
         /**
          * Old system
@@ -1952,8 +1896,6 @@ class Page extends ResourceComboAbs
          */
         $this->layout = $this->getMetadata(self::LAYOUT_PROPERTY);
         $this->scope = $this->getMetadata(self::SCOPE_KEY);
-
-
 
 
     }
@@ -1998,63 +1940,11 @@ class Page extends ResourceComboAbs
     function getUrlPath(): string
     {
 
-        /**
-         * Type of Url
-         */
-        $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
-
-        $path = $this->getPath();
-        switch ($urlType) {
-            case PageUrlType::PAGE_PATH:
-                $path = $this->getPath();
-                break;
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH:
-                $path = $this->toPermanentUrlPath($this->getPath());
-                break;
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH:
-                $path = $this->getCanonicalOrDefault();
-                break;
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH:
-                $path = $this->toPermanentUrlPath($this->getCanonicalOrDefault());
-                break;
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_SLUG:
-                $path = $this->toPermanentUrlPath($this->getSlugOrDefault());
-                break;
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG:
-                $path = $this->getSlugOrDefault();
-                while (($parent = $this->getParentPage()) != null) {
-                    $path = Slug::toSlugPath($parent->getPageNameNotEmpty()) . $path;
-                }
-                $path = $this->toPermanentUrlPath($path);
-                break;
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG:
-                $path = $this->getSlugOrDefault();
-                if (($parent = $this->getParentPage()) != null) {
-                    $path = Slug::toSlugPath($parent->getPageNameNotEmpty()) . $path;
-                }
-                $path = $this->toPermanentUrlPath($path);
-                break;
-            default:
-                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, PageUrlType::CANONICAL_PROPERTY);
-
-        }
-        return $path;
+        return $this->pageUrlPath->getValueOrDefault();
 
     }
 
-    /**
-     * Add a one letter checksum
-     * to verify that this is a page id abbr
-     * ( and not to hit the index for nothing )
-     * @return string
-     */
-    public
-    function getPageIdAbbrUrlEncoded(): ?string
-    {
-        if ($this->getPageIdAbbr() == null) return null;
-        $abbr = $this->getPageIdAbbr();
-        return self::encodePageId($abbr);
-    }
+
 
     /**
      * @return string|null
@@ -2066,6 +1956,9 @@ class Page extends ResourceComboAbs
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     function setSlug($slug): Page
     {
@@ -2073,11 +1966,7 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
-    private
-    function toPermanentUrlPath(string $id): string
-    {
-        return $id . self::PAGE_ID_URL_SEPARATOR . $this->getPageIdAbbrUrlEncoded();
-    }
+
 
     public
     function getUrlId()
@@ -2088,7 +1977,7 @@ class Page extends ResourceComboAbs
     private
     function getDefaultDescription(): ?string
     {
-        return $this->descriptionDefault;
+        return $this->description->getDefaultValue();
     }
 
     /**

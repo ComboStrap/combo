@@ -631,14 +631,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta->addField($pageId->toFormField());
 
         // Cache cron expiration expression
-        $formMeta->addField(FormMetaField::create(CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME)
-            ->addValue($page->getCacheExpirationFrequency())
-            ->setMutable(true)
-            ->setTab(self::TAB_CACHE_VALUE)
-            ->setCanonical(CacheExpirationFrequency::CANONICAL_PROPERTY)
-            ->setLabel("Cache Expiration Frequency")
-            ->setDescription("A page expiration frequency expressed as a cron expression")
-        );
+        $formMeta->addField(CacheExpirationFrequency::createForPage($page)->toFormField());
 
         // Cache expiration date
         $cacheExpirationDate = CacheExpirationDate::createForPage($page);

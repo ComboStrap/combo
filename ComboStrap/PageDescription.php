@@ -35,9 +35,9 @@ class PageDescription extends MetadataText
      */
     public const DESCRIPTION_COMBO_ORIGIN = syntax_plugin_combo_frontmatter::CANONICAL;
 
-    public static function createForPage($page): PageName
+    public static function createForPage($page): PageDescription
     {
-        return (new PageName())
+        return (new PageDescription())
             ->setResource($page);
     }
 
@@ -115,79 +115,34 @@ class PageDescription extends MetadataText
         return trim(preg_replace('/  /m', " ", $description));
     }
 
-    public function getValue(): ?string
+
+    public function buildFromStoreValue($value)
     {
-        $this->buildCheck();
         $metaDataStore = $this->getStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
-            return parent::getValue();
+            parent::buildFromStoreValue($value);
+            return;
         }
 
-        $descriptionArray = $metaDataStore->get($this);
+
+        $descriptionArray = $value;
         if (empty($descriptionArray)) {
-            return null;
+            return;
         }
         if (!array_key_exists(self::ABSTRACT_KEY, $descriptionArray)) {
-            return null;
+            return;
         }
-
-        $description = $descriptionArray[self::ABSTRACT_KEY];
-        $this->descriptionOrigin = self::DESCRIPTION_DOKUWIKI_ORIGIN;
-        if (array_key_exists('origin', $descriptionArray)) {
-            $this->descriptionOrigin = $descriptionArray['origin'];
-            if ($this->descriptionOrigin !== self::DESCRIPTION_DOKUWIKI_ORIGIN) {
-                return $description;
-            }
-        }
-
 
         /**
-         * Description Plugin integration
-         * https://github.com/lupo49/plugin-description/blob/master/syntax.php#L42
+         * If there is an origin, it means that it was set
+         * and therefore not derived from the content
          */
-        $pluginDescription = 'plugin_description';
-        $description = $metaDataStore->getFromResourceAndName($this->getResource(), $pluginDescription);
-        if ($description !== null && isset($description["keywords"])) {
-            $description = $description["keywords"];
-            $this->descriptionOrigin = $pluginDescription;
-            return $description;
+        if (array_key_exists('origin', $descriptionArray)) {
+            $this->descriptionOrigin = $descriptionArray['origin'];
         }
 
-        return null;
+        parent::buildFromStoreValue($descriptionArray[self::ABSTRACT_KEY]);
 
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public function buildFromStore(): MetadataText
-    {
-        $metaDataStore = $this->getStore();
-        if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
-            return parent::buildFromStore();
-        }
-
-        if (!$this->wasBuild) {
-            $this->wasBuild = true;
-            $descriptionArray = $metaDataStore->get($this);
-            if (empty($descriptionArray)) {
-                return $this;
-            }
-            if (!array_key_exists(self::ABSTRACT_KEY, $descriptionArray)) {
-                return $this;
-            }
-
-            /**
-             * If there is an origin, it means that it was set
-             * and therefore not derived from the content
-             */
-            if (array_key_exists('origin', $descriptionArray)) {
-                $this->descriptionOrigin = $descriptionArray['origin'];
-            }
-
-            parent::setValue($descriptionArray[self::ABSTRACT_KEY]);
-        }
-        return $this;
     }
 
 

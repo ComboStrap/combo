@@ -466,8 +466,14 @@ abstract class Metadata
         return null;
     }
 
+    /**
+     * An utility function to {@link Metadata::sendToStore()}
+     * and {@link MetadataStore::persist()} at the same time
+     * @throws ExceptionCombo
+     */
     public function persist(): Metadata
     {
+        $this->sendToStore();
         $this->getStore()->persist();
         return $this;
     }

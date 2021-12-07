@@ -51,7 +51,7 @@ class MetadataDokuWikiStore implements MetadataStore
 
     public static function getOrCreate(): MetadataDokuWikiStore
     {
-        if(self::$store === null){
+        if (self::$store === null) {
             self::$store = new MetadataDokuWikiStore();
         }
         return self::$store;
@@ -89,16 +89,7 @@ class MetadataDokuWikiStore implements MetadataStore
         if (!($resource instanceof Page)) {
             throw new ExceptionComboRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-
-        $persistentMetadata = $this->getPersistentMetadata($metadata);
-        if ($persistentMetadata === null) {
-            $persistentMetadata = $this->getCurrentMetadata($metadata);
-        }
-        if ($persistentMetadata === null) {
-            return $default;
-        } else {
-            return $persistentMetadata;
-        }
+        return $this->getMetadataFromWikiId($resource->getDokuwikiId(), $metadata->getName(), $default);
 
 
     }
@@ -116,7 +107,7 @@ class MetadataDokuWikiStore implements MetadataStore
     public function getFromResourceAndName(ResourceCombo $resource, string $metadataName)
     {
         $wikiId = $resource->getPath()->getDokuwikiId();
-        return $this->metadatas[$wikiId][$metadataName];
+        return $this->getMetadataFromWikiId($wikiId, $metadataName);
     }
 
 
@@ -135,10 +126,10 @@ class MetadataDokuWikiStore implements MetadataStore
 
     }
 
-    private function getPersistentMetadata(Metadata $metadata)
+    private function getPersistentMetadata($dokuwikiId, $name)
     {
 
-        $key = $this->getMetadatas($metadata)[self::PERSISTENT_METADATA][$metadata->getName()];
+        $key = $this->getMetadatasFromWikiId($dokuwikiId)[self::PERSISTENT_METADATA][$name];
         /**
          * Empty string return null
          * because Dokuwiki does not allow to delete keys
@@ -151,34 +142,16 @@ class MetadataDokuWikiStore implements MetadataStore
 
     }
 
-    /**
-     * @param Metadata $metadata
-     * @return array|mixed
-     *
-     * We don't use {@link p_get_metadata()}
-     * because it can trigger a rendering of the meta again
-     * and it has a fucking cache
-     */
-    private function getMetadatas(Metadata $metadata)
-    {
-        $dokuwikiId = $metadata->getResource()->getPath()->getDokuwikiId();
-        return $this->getMetadatasFromWikiId($dokuwikiId);
-    }
-
-    public
-    function getPersistentMetadatas($metadata): array
-    {
-        return $this->getMetadatas($metadata)[self::PERSISTENT_METADATA];
-    }
 
     /**
-     * @param Metadata $metadata
+     * @param $dokuWikiId
+     * @param $name
      * @return mixed|null
      */
     public
-    function getCurrentMetadata(Metadata $metadata)
+    function getCurrentMetadata($dokuWikiId, $name)
     {
-        $key = $this->getMetadatas($metadata)[self::CURRENT_METADATA][$metadata->getName()];
+        $key = $this->getMetadatasFromWikiId($dokuWikiId)[self::CURRENT_METADATA][$name];
         /**
          * Empty string return null
          * because Dokuwiki does not allow to delete keys
@@ -206,11 +179,16 @@ class MetadataDokuWikiStore implements MetadataStore
         return $this;
     }
 
-    private function &getMetadatasFromWikiId($dokuwikiId)
+    private function &getMetadatasFromWikiId($dokuwikiId): array
     {
         if (isset($this->metadatas[$dokuwikiId])) {
             return $this->metadatas[$dokuwikiId];
         }
+        /**
+         * We don't use {@link p_get_metadata()}
+         * because it can trigger a rendering of the meta again
+         * and it has a fucking cache
+         */
         $this->metadatas[$dokuwikiId] = p_read_metadata($dokuwikiId);
         return $this->metadatas[$dokuwikiId];
     }
@@ -302,6 +280,27 @@ class MetadataDokuWikiStore implements MetadataStore
     public function __toString()
     {
         return "DokuMeta";
+    }
+
+    /**
+     * Delete the memory data
+     */
+    public function reset()
+    {
+        $this->metadatas = [];
+    }
+
+    private function getMetadataFromWikiId($dokuwikiId, string $name, $default = null)
+    {
+        $persistentMetadata = $this->getPersistentMetadata($dokuwikiId, $name);
+        if ($persistentMetadata === null) {
+            $persistentMetadata = $this->getCurrentMetadata($dokuwikiId, $name);
+        }
+        if ($persistentMetadata === null) {
+            return $default;
+        } else {
+            return $persistentMetadata;
+        }
     }
 
 

@@ -28,7 +28,7 @@ class DatabasePage
     private const PAGE_BUILD_ATTRIBUTES =
         [
             self::ROWID,
-            Path::DOKUWIKI_ID_ATTRIBUTE,
+            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
             self::ANALYTICS_ATTRIBUTE,
             PageDescription::DESCRIPTION,
             Canonical::CANONICAL,
@@ -629,6 +629,9 @@ EOF;
         $values = [];
         $columnClauses = [];
         foreach ($attributes as $key => $value) {
+            if (is_array($value)) {
+                throw new ExceptionComboRuntime("The attribute ($key) has value that is an array (" . implode(", ", $value) . ")");
+            }
             $columnClauses[] = "$key = ?";
             $values[$key] = $value;
         }
@@ -671,7 +674,7 @@ EOF;
         } else {
 
 
-            $values[Path::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPath()->getDokuwikiId();
+            $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPath()->getDokuwikiId();
             $values[PagePath::PATH_ATTRIBUTE] = $this->page->getPath()->toAbsolutePath()->toString();
             $this->addPageIdAttribute($values);
 
@@ -728,7 +731,7 @@ EOF;
         $path = $targetId;
         DokuPath::addRootSeparatorIfNotPresent($path);
         $attributes = [
-            Path::DOKUWIKI_ID_ATTRIBUTE => $targetId,
+            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE => $targetId,
             PagePath::PATH_ATTRIBUTE => $path
         ];
 
@@ -849,12 +852,12 @@ EOF;
             Region::REGION_META_PROPERTY,
             Lang::LANG_ATTRIBUTES,
             PageType::TYPE_META_PROPERTY,
-            Path::DOKUWIKI_ID_ATTRIBUTE,
+            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
         );
         $metaRecord = [];
         foreach ($record as $name) {
             $metadata = Metadata::getForName($name);
-            if($metadata===null){
+            if ($metadata === null) {
                 throw new ExceptionComboRuntime("The metadata ($name) is unknown");
             }
             $metaRecord[$name] = $metadata
@@ -1007,7 +1010,7 @@ EOF;
 
     private function getDatabaseRowFromDokuWikiId(string $id): ?array
     {
-        return $this->getDatabaseRowFromAttribute(Path::DOKUWIKI_ID_ATTRIBUTE, $id);
+        return $this->getDatabaseRowFromAttribute(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
     }
 
     public function getDatabaseRowFromAttribute(string $attribute, string $value)

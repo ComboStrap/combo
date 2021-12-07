@@ -14,8 +14,6 @@ namespace ComboStrap;
 interface Path
 {
 
-    public const DOKUWIKI_ID_ATTRIBUTE = "id";
-
     function getScheme();
 
     /**

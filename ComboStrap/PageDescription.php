@@ -179,13 +179,12 @@ class PageDescription extends MetadataText
 
     /**
      * @return string|array
-     * @noinspection PhpReturnDocTypeMismatchInspection
      */
     public function toStoreValue()
     {
         $metaDataStore = $this->getStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
-            parent::toStoreValue();
+            return parent::toStoreValue();
         }
         /**
          * For dokuwiki, this is an array

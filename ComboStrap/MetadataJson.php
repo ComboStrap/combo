@@ -32,23 +32,7 @@ abstract class MetadataJson extends MetadataScalar
      */
     public function setValue($value): MetadataJson
     {
-        if ($value === null || $value === "") {
-            // html form return empty string
-            $this->json = null;
-            return $this;
-        }
-        if (is_string($value)) {
-            $json = json_decode($value, true);
-            if ($json === null) {
-                throw new ExceptionCombo("The string given is not a valid json $value");
-            }
-            $this->json = $json;
-            return $this;
-        }
-        if (!is_array($value)) {
-            throw new ExceptionCombo("The json persistent value is not an array, nor a string");
-        }
-        $this->json = $value;
+        $this->json = $this->toInternalValue($value);
         $this->sendToStore();
         return $this;
     }
@@ -110,5 +94,37 @@ abstract class MetadataJson extends MetadataScalar
     {
         return $this->json !== null;
     }
+
+    public function buildFromStoreValue($value)
+    {
+        try {
+            $this->json = $this->toInternalValue($value);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Value in the store is not a valid json. Message:".$e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+        }
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private function toInternalValue($value)
+    {
+        if ($value === null || $value === "") {
+            // html form return empty string
+            return null;
+        }
+        if (is_string($value)) {
+            $json = json_decode($value, true);
+            if ($json === null) {
+                throw new ExceptionCombo("The string given is not a valid json $value");
+            }
+            return $json;
+        }
+        if (!is_array($value)) {
+            throw new ExceptionCombo("The json persistent value is not an array, nor a string");
+        }
+        return $value;
+    }
+
 
 }

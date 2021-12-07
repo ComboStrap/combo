@@ -117,5 +117,14 @@ abstract class MetadataDateTime extends MetadataScalar
         return $this->dateTimeValue !== null;
     }
 
+    public function buildFromStoreValue($value)
+    {
+        try {
+            $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+        }
+    }
+
 
 }

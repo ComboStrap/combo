@@ -117,14 +117,7 @@ class PageDescription extends MetadataText
 
     public function getValue(): ?string
     {
-
-        try {
-            $this->buildFromStore();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Unable to build the description. " . $e->getMessage());
-            return null;
-        }
-
+        $this->buildCheck();
         $metaDataStore = $this->getStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
             return parent::getValue();
@@ -201,17 +194,28 @@ class PageDescription extends MetadataText
     public function setValue(?string $value): MetadataText
     {
 
-        // we need to know the origin of the actual description
-        $this->buildCheck();
+
         if ($value === "" || $value === null) {
-            if ($this->descriptionOrigin === PageDescription::DESCRIPTION_COMBO_ORIGIN) {
-                throw new ExceptionCombo("The description cannot be empty", PageDescription::DESCRIPTION_PROPERTY);
-            } else {
-                // The original description is from Dokuwiki, we don't send an error
-                // otherwise all page without a first description would get an error
-                // (What fucked up is fucked up)
-                return $this;
+
+            if ($this->getStore() instanceof MetadataDokuWikiStore) {
+                // we need to know the origin of the actual description
+                if ($this->descriptionOrigin === null) {
+                    /**
+                     * we don't do {@link Metadata::buildCheck() build check} otherwise we get a loop
+                     * because it will use back this method {@link MetadataScalar::setValue()}
+                     */
+                    $this->buildFromStore();
+                }
+                if ($this->descriptionOrigin === PageDescription::DESCRIPTION_COMBO_ORIGIN) {
+                    throw new ExceptionCombo("The description cannot be empty", PageDescription::DESCRIPTION_PROPERTY);
+                } else {
+                    // The original description is from Dokuwiki, we don't send an error
+                    // otherwise all page without a first description would get an error
+                    // (What fucked up is fucked up)
+                    return $this;
+                }
             }
+
         }
 
         parent::setValue($value);

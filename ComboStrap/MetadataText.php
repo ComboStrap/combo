@@ -67,5 +67,10 @@ abstract class MetadataText extends MetadataScalar
         return $this->setValue($value);
     }
 
+    public function buildFromStoreValue($value)
+    {
+        $this->value = $value;
+    }
+
 
 }

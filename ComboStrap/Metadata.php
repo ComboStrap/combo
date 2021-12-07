@@ -53,7 +53,7 @@ abstract class Metadata
 
     }
 
-    public static function getForName(int $name): ?Metadata
+    public static function getForName(string $name): ?Metadata
     {
 
         /**
@@ -185,20 +185,10 @@ abstract class Metadata
     /** @noinspection PhpMissingReturnTypeInspection */
     public function buildFromStore()
     {
-        $this->setFromStoreValue($this->getStore()->get($this));
+        $this->buildFromStoreValue($this->getStore()->get($this));
         return $this;
     }
 
-    /**
-     * The function used by {@link Metadata::buildFromStore()}
-     * to build the value from the {@link MetadataStore::get()}
-     * function.
-     *
-     * The inverse function is {@link Metadata::toStoreValue()}
-     * @param $value
-     * @return mixed
-     */
-    public abstract function setFromStoreValue($value);
 
     /**
      * @return string - the data type
@@ -481,4 +471,23 @@ abstract class Metadata
         $this->getStore()->persist();
         return $this;
     }
+
+    /**
+     * Build the object from the store value
+     *
+     * The inverse function is {@link Metadata::toStoreValue()}
+     *
+     * The function used by {@link Metadata::buildFromStore()}
+     * to build the value from the {@link MetadataStore::get()}
+     * function.
+     *
+     * The difference between the {@link Metadata::setFromStoreValue()}
+     * is that this function should not make any validity check
+     * or throw any exception
+     *
+     * @param $value
+     * @return mixed
+     */
+    public abstract function buildFromStoreValue($value);
+
 }

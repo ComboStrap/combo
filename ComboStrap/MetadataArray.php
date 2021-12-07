@@ -14,7 +14,7 @@ abstract class MetadataArray extends Metadata
     /**
      * @var array|null
      */
-    private $array;
+    protected $array;
 
 
 

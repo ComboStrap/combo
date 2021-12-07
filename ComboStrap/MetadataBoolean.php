@@ -56,7 +56,7 @@ abstract class MetadataBoolean extends MetadataScalar
      */
     public function setFromStoreValue($value)
     {
-        $value = Boolean::toBoolean($value);
+        $value = $this->toBoolean($value);
         return $this->setValue($value);
     }
 
@@ -82,4 +82,21 @@ abstract class MetadataBoolean extends MetadataScalar
     {
         return $this->value !== null;
     }
+
+    public function buildFromStoreValue($value)
+    {
+        $this->value = $this->toBoolean($value);
+    }
+
+    private function toBoolean($value): bool
+    {
+        /**
+         * TODO: There is no validation
+         * If the value is not a boolean, the return value is false ...
+         */
+        return Boolean::toBoolean($value);
+
+    }
+
+
 }

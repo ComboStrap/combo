@@ -198,7 +198,11 @@ class Aliases extends Metadata
              * To validate the migration we set a value
              * (the array may be empty)
              */
-            $this->sendToStore();
+            try {
+                $this->sendToStore();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while persisting the new data");
+            }
         }
 
         if ($this->aliases === null) {
@@ -250,7 +254,7 @@ class Aliases extends Metadata
     public
     function setFromStoreValue($value): Aliases
     {
-        $this->aliases = $this->toNativeAliasArray($value);
+        $this->buildFromStoreValue($value);
         return $this;
     }
 
@@ -366,5 +370,10 @@ class Aliases extends Metadata
         return $this->aliases !== null;
     }
 
+
+    public function buildFromStoreValue($value)
+    {
+        $this->aliases = $this->toNativeAliasArray($value);
+    }
 
 }

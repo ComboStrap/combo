@@ -111,7 +111,6 @@ class PageImages extends Metadata
             $images = [$persistentValue => PageImage::create($persistentValue, $page)];
         }
 
-
         return $images;
 
     }
@@ -122,7 +121,7 @@ class PageImages extends Metadata
      */
     public function setFromStoreValue($value): PageImages
     {
-        $this->pageImages = PageImages::toPageImageArray($value);
+        $this->pageImages = $this->toPageImageArray($value);
         $this->checkImageExistence();
         return $this;
     }
@@ -355,10 +354,17 @@ class PageImages extends Metadata
 
     }
 
-
     public function valueIsNotNull(): bool
     {
         return $this->pageImages !== null;
     }
 
+    public function buildFromStoreValue($value)
+    {
+        try {
+            $this->pageImages = $this->toPageImageArray($value);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+        }
+    }
 }

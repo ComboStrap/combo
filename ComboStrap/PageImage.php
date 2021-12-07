@@ -41,7 +41,7 @@ class PageImage
      * @param Page $page
      * @return PageImage
      */
-    public static function create($image, Page $page): PageImage
+    public static function create($image, ResourceCombo $page): PageImage
     {
         if (!($image instanceof Image)) {
             $image = Image::createImageFromDokuwikiAbsolutePath($image);

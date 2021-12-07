@@ -24,26 +24,18 @@ class PageKeywords extends MetadataArray
     /**
      * @throws ExceptionCombo
      */
-    public function setFromStoreValue($value)
+    public function setFromStoreValue($value): PageKeywords
     {
-
-        if ($value === null || $value === "") {
-            $this->setValue(null);
-            return;
-        }
-
-        if (is_array($value)) {
-            $this->setValue($value);
-        }
-
-        if (is_string($value)) {
-            $this->setValue(explode(self::SEPARATOR, $value));
-        }
-
-        throw new ExceptionCombo("The keywords value is not an array or a string (value: $value)");
-
-
+        $this->setValue($this->toArray($value));
+        return $this;
     }
+
+    public function getDataType(): string
+    {
+        // in a form, we send a list of words
+        return DataType::TEXT_TYPE_VALUE;
+    }
+
 
     public function getDescription(): string
     {
@@ -124,8 +116,33 @@ class PageKeywords extends MetadataArray
         return true;
     }
 
-    public function getValueOrDefault()
-    {
 
+    public function buildFromStoreValue($value)
+    {
+        try {
+            $this->array = $this->toArray($value);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getMessage());
+        }
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    private function toArray($value)
+    {
+        if ($value === null || $value === "") {
+            return null;
+        }
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            return explode(self::SEPARATOR, $value);
+        }
+
+        throw new ExceptionCombo("The keywords value is not an array or a string (value: $value)");
     }
 }

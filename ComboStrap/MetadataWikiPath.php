@@ -25,14 +25,13 @@ abstract class MetadataWikiPath extends MetadataText
     }
 
     /**
-     * @throws ExceptionCombo
      */
-    public function buildFromStore(): MetadataWikiPath
+    public function buildFromStoreValue($value)
     {
-        $value = $this->getStore()->get($this);
-        DokuPath::addRootSeparatorIfNotPresent($value);
-        $this->setFromStoreValue($value);
-        return $this;
+        if($value!==null) {
+            DokuPath::addRootSeparatorIfNotPresent($value);
+        }
+        parent::buildFromStoreValue($value);
     }
 
 

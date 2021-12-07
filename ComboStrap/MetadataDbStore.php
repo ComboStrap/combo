@@ -13,6 +13,8 @@ class MetadataDbStore implements MetadataStore
 
     const ALIAS_TABLE_NAME = "PAGE_ALIASES";
 
+    const CANONICAL = "database";
+
     private static $metaBdStore;
 
     /**
@@ -51,10 +53,22 @@ class MetadataDbStore implements MetadataStore
 
     public function get(Metadata $metadata, $default = null)
     {
+        $resource = $metadata->getResource();
+        if (!($resource instanceof Page)) {
+            throw new ExceptionComboRuntime("The resource type ({$resource->getType()}) is not yet supported for the database metadata store", self::CANONICAL);
+        }
+
+        $database = DatabasePage::createFromPageObject($resource);
+
         switch ($metadata->getName()) {
+            case PageDescription::DESCRIPTION:
+                return $database->getDescription();
+            case Canonical::CANONICAL_PROPERTY:
+                return $database->getCanonical();
+            case PageId::PAGE_ID_ATTRIBUTE:
+                return $database->getPageId();
             case Aliases::ALIAS_ATTRIBUTE:
-                $this->getAliasesInPersistentValue($metadata);
-                return;
+                return $this->getAliasesInPersistentValue($metadata);
             default:
                 throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported");
         }
@@ -93,7 +107,7 @@ class MetadataDbStore implements MetadataStore
      * @param Page $page
      * @return void
      */
-    private function addAlias(array $alias, $page): void
+    private function addAlias(array $alias, ResourceCombo $page): void
     {
 
         $row = array(
@@ -162,7 +176,7 @@ EOF;
             return null;
         }
 
-        if ($metadata->getResource()->getUid() === null) {
+        if ($metadata->getResource()->getUid()->getValue() === null) {
             LogUtility::msg("The page id is null. We can't retrieve the aliases");
             return null;
         }
@@ -172,7 +186,7 @@ EOF;
         $pathAttribute = strtoupper(Alias::ALIAS_PATH_PROPERTY);
         $typeAttribute = strtoupper(Alias::ALIAS_TYPE_PROPERTY);
         $tableAliases = self::ALIAS_TABLE_NAME;
-        $pageId = $metadata->getResource()->getUid();
+        $pageId = $metadata->getResource()->getUid()->getValue();
         $res = $this->sqlite->query("select $pathAttribute, $typeAttribute from $tableAliases where $pageIdAttribute = ? ", $pageId);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$metadata->getResource()}) selection query");

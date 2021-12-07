@@ -55,6 +55,7 @@ class Page extends ResourceComboAbs
      * When the value of a metadata has changed
      */
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
+    const RESOURCE_TYPE = "page";
 
 
     /**
@@ -1423,7 +1424,7 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function getType()
+    function getType(): string
     {
         return $this->type->getValue();
     }
@@ -2340,9 +2341,9 @@ class Page extends ResourceComboAbs
         return $this->getPath()->getDokuwikiId();
     }
 
-    public function getUid(): ?string
+    public function getUid(): Metadata
     {
-        return $this->getPageId();
+        return $this->pageId;
     }
 
     public function getPageIdOrGenerate(): string

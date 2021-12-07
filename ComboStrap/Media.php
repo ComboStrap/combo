@@ -43,7 +43,6 @@ abstract class Media extends ResourceComboAbs
     }
 
 
-
     /**
      * @return string $cache - one of {@link CacheMedia::CACHE_KEY} or null if not set
      */
@@ -58,7 +57,8 @@ abstract class Media extends ResourceComboAbs
         return $this->attributes->getValue(TagAttributes::TITLE_KEY);
     }
 
-    public function &getAttributes(){
+    public function &getAttributes()
+    {
         return $this->attributes;
     }
 
@@ -85,7 +85,13 @@ abstract class Media extends ResourceComboAbs
         throw new ExceptionComboRuntime("To implement");
     }
 
-    public function getUid()
+    function getType(): string
+    {
+        return "media";
+    }
+
+
+    public function getUid(): Metadata
     {
         throw new ExceptionComboRuntime("To implement");
     }

@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\FileSystems;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
@@ -41,7 +42,7 @@ class action_plugin_combo_metapageimage
              * {@link Doku_Renderer_metadata::_recordMediaUsage()}
              */
             $dokuPath = $pageImage->getImage()->getPath();
-            $event->data[MetadataDokuWikiStore::CURRENT_METADATA]['relation']['media'][$dokuPath->getDokuwikiId()] = $dokuPath->exists();
+            $event->data[MetadataDokuWikiStore::CURRENT_METADATA]['relation']['media'][$dokuPath->getDokuwikiId()] = FileSystems::exists($dokuPath);
         }
 
 

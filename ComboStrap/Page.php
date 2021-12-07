@@ -269,6 +269,9 @@ class Page extends ResourceComboAbs
     public static function createPageFromGlobalDokuwikiId(): Page
     {
         global $ID;
+        if($ID===null){
+            LogUtility::msg("The global wiki ID is null, unable to instantiate a page");
+        }
         return self::createPageFromId($ID);
     }
 

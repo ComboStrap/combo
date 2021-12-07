@@ -36,6 +36,9 @@ class DatabasePage
             PageTitle::TITLE,
             PageH1::H1_PROPERTY,
             PagePublicationDate::DATE_PUBLISHED,
+            ModificationDate::DATE_MODIFIED_PROPERTY,
+            PageCreationDate::DATE_CREATED_PROPERTY,
+            PagePath::PATH_ATTRIBUTE,
             StartDate::DATE_START,
             EndDate::DATE_END,
             Region::REGION_META_PROPERTY,
@@ -1005,6 +1008,7 @@ EOF;
 
     private function getDatabaseRowFromPath(string $path): ?array
     {
+        DokuPath::addRootSeparatorIfNotPresent($path);
         return $this->getDatabaseRowFromAttribute(PagePath::PATH_ATTRIBUTE, $path);
     }
 

@@ -444,7 +444,7 @@ EOF;
                 if ($data[self::STATUS] === self::PARSING_STATE_ERROR) {
                     if (PluginUtility::isDevOrTest()) {
                         // fail if test
-                        throw new ExceptionComboRuntime("Front Matter: The json object for the page ($ID) is not valid. ", LogUtility::LVL_MSG_ERROR);
+                        throw new ExceptionComboRuntime("Front Matter: The json object for the page ($ID) is not valid.", LogUtility::LVL_MSG_ERROR);
                     }
                     return false;
                 }
@@ -458,7 +458,7 @@ EOF;
                     $value = $frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY];
                     try {
                         $pageImages = PageImages::createForPage($page)
-                            ->buildFromPersistentFormat($value);
+                            ->setFromStoreValue($value);
                         foreach ($pageImages->getAll() as $imageValue) {
                             $imagePath = $imageValue->getImage()->getPath()->getAbsolutePath();
                             $attributes = [PagePath::PATH_ATTRIBUTE => $imagePath];

@@ -47,7 +47,7 @@ class MetadataDbStore implements MetadataStore
                 $this->setAliases($metadata);
                 return;
             default:
-                throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on set");
+                throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on set", self::CANONICAL);
         }
     }
 
@@ -70,7 +70,11 @@ class MetadataDbStore implements MetadataStore
             default:
                 $value = $database->getFromRow($metadata->getName());
                 if($value===null){
-                    throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on get");
+                    /**
+                     * An attribute should be added to {@link DatabasePage::PAGE_BUILD_ATTRIBUTES}
+                     * or in the table
+                     */
+                    throw new ExceptionComboRuntime("The metadata ($metadata) was not found in the returned database row.",self::CANONICAL);
                 }
                 return $value;
 

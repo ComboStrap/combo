@@ -29,7 +29,7 @@ abstract class MetadataDateTime extends MetadataScalar
     /**
      * @throws ExceptionCombo
      */
-    public function setValue(DateTime $value): MetadataDateTime
+    public function setValue(?DateTime $value): MetadataDateTime
     {
         $this->dateTimeValue = $value;
         $this->sendToStore();
@@ -58,7 +58,7 @@ abstract class MetadataDateTime extends MetadataScalar
     }
 
 
-    public function buildFromStore()
+    public function buildFromStore(): MetadataDateTime
     {
         $value = $this->getStore()->get($this);
         try {
@@ -66,6 +66,7 @@ abstract class MetadataDateTime extends MetadataScalar
         } catch (ExceptionCombo $e) {
             LogUtility::msg($e->getMessage(), $this->getCanonical());
         }
+        return $this;
     }
 
     /**

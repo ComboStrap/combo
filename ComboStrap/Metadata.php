@@ -12,7 +12,7 @@ use Slug;
 
 abstract class Metadata
 {
-    const CANONICAL_PROPERTY = "page:metadata";
+    const CANONICAL = "page:metadata";
     const MUTABLE = "mutable";
     public const NOT_MODIFIABLE_METAS = [
         "date",
@@ -60,7 +60,7 @@ abstract class Metadata
          * TODO: this array could be build automatically by creating an object for each metadata
          */
         switch ($name) {
-            case Canonical::CANONICAL_PROPERTY:
+            case Canonical::CANONICAL:
                 return new Canonical();
             case PageType::TYPE_META_PROPERTY:
                 return new PageType();
@@ -105,6 +105,19 @@ abstract class Metadata
                 return new LowQualityPageOverwrite();
             case PageId::PAGE_ID_ATTRIBUTE:
                 return new PageId();
+            case PagePath::PATH_ATTRIBUTE:
+                return new PagePath();
+            case PageCreationDate::DATE_CREATED_PROPERTY:
+                return new PageCreationDate();
+            case ModificationDate::DATE_MODIFIED_PROPERTY:
+                return new ModificationDate();
+            default:
+                $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
+                if(PluginUtility::isDevOrTest()){
+                    throw new ExceptionComboRuntime($msg,self::CANONICAL);
+                } else {
+                    LogUtility::msg($msg,LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+                }
         }
         return null;
 
@@ -220,7 +233,7 @@ abstract class Metadata
         /**
          * The canonical to page metadata
          */
-        return self::CANONICAL_PROPERTY;
+        return self::CANONICAL;
     }
 
     /**
@@ -335,9 +348,9 @@ abstract class Metadata
      * in the persistent metadata
      */
     const NOT_MODIFIABLE_PERSISTENT_METADATA = [
-        Path::PATH_ATTRIBUTE,
-        PageCreationDate::DATE_CREATED,
-        ModificationDate::DATE_MODIFIED,
+        PagePath::PATH_ATTRIBUTE,
+        PageCreationDate::DATE_CREATED_PROPERTY,
+        ModificationDate::DATE_MODIFIED_PROPERTY,
         PageId::PAGE_ID_ATTRIBUTE,
         "contributor",
         "creator",
@@ -372,7 +385,7 @@ abstract class Metadata
      *   * or in the database
      */
     const MUTABLE_METADATA = [
-        Canonical::CANONICAL_PROPERTY,
+        Canonical::CANONICAL,
         PageType::TYPE_META_PROPERTY,
         PageH1::H1_PROPERTY,
         Aliases::ALIAS_ATTRIBUTE,

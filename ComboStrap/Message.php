@@ -202,13 +202,13 @@ EOF;
 
     public function addPlainTextContent($text): Message
     {
-        return $this->addContent($text,Mime::PLAIN_TEXT);
+        return $this->addContent($text, Mime::PLAIN_TEXT);
     }
 
     public function sendLogMsg()
     {
         $content = $this->getContent(Mime::PLAIN_TEXT);
-        switch ($this->type){
+        switch ($this->type) {
             case self::TYPE_WARNING:
                 $type = LogUtility::LVL_MSG_WARNING;
                 break;
@@ -221,15 +221,15 @@ EOF;
             default:
                 $type = LogUtility::LVL_MSG_ERROR;
         }
-        LogUtility::msg($content,$type,$this->canonical);
+        LogUtility::msg($content, $type, $this->canonical);
     }
 
     public function getDocumentationHyperLink(): ?string
     {
-        if($this->canonical!==null) {
+        if ($this->canonical !== null) {
             $canonicalPath = DokuPath::createUnknownFromIdOrPath($this->canonical);
             $label = $canonicalPath->toLabel();
-            return PluginUtility::getDocumentationHyperLink($this->canonical,  $label, false);
+            return PluginUtility::getDocumentationHyperLink($this->canonical, $label, false);
         } else {
             return null;
         }

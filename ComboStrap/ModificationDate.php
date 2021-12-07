@@ -11,7 +11,7 @@ use ComboStrap\PageCreationDate;
 class ModificationDate extends MetadataDateTime
 {
 
-    public const DATE_MODIFIED = 'date_modified';
+    public const DATE_MODIFIED_PROPERTY = 'date_modified';
 
     public static function createForPage(Page $page)
     {
@@ -24,7 +24,7 @@ class ModificationDate extends MetadataDateTime
         return action_plugin_combo_metamanager::TAB_PAGE_VALUE;
     }
 
-    public function buildFromStore()
+    public function buildFromStore(): MetadataDateTime
     {
         $store = $this->getStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
@@ -54,7 +54,7 @@ class ModificationDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return self::DATE_MODIFIED;
+        return self::DATE_MODIFIED_PROPERTY;
     }
 
     public function getPersistenceType(): string

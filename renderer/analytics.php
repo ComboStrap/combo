@@ -272,7 +272,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * A canonical should be present
          */
         $canonicalScore = $this->getConf(self::CONF_QUALITY_SCORE_CANONICAL_PRESENT, 5);
-        if (empty($this->metadata[Canonical::CANONICAL_PROPERTY])) {
+        if (empty($this->metadata[Canonical::CANONICAL])) {
             global $conf;
             $root = $conf['start'];
             if ($ID != $root) {

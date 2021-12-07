@@ -9,6 +9,7 @@ use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PageImages;
+use ComboStrap\PagePath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\ThirdPartyPlugins;
@@ -291,7 +292,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
         $src = $attributes['src'];
         if ($src == null) {
-            $src = $attributes[Path::PATH_ATTRIBUTE];
+            $src = $attributes[PagePath::PATH_ATTRIBUTE];
         }
         $title = $attributes['title'];
         $align = $attributes['align'];

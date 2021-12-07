@@ -1133,8 +1133,8 @@ class Page extends ResourceComboAbs
         $title = str_replace('"', "'", $title);
         $array[PageTitle::TITLE] = $title;
         $array[PageId::PAGE_ID_ATTRIBUTE] = $this->getPageId();
-        $array[Canonical::CANONICAL_PROPERTY] = $this->getCanonicalOrDefault();
-        $array[Path::PATH_ATTRIBUTE] = $this->getPath()->toAbsolutePath()->toString();
+        $array[Canonical::CANONICAL] = $this->getCanonicalOrDefault();
+        $array[PagePath::PATH_ATTRIBUTE] = $this->getPath()->toAbsolutePath()->toString();
         $array[PageDescription::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
         $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
         $array["url"] = $this->getCanonicalUrl();
@@ -1148,8 +1148,8 @@ class Page extends ResourceComboAbs
          *
          */
         if ($this->exists()) {
-            $array[PageCreationDate::DATE_CREATED] = $this->getCreatedDateAsString();
-            $array[ModificationDate::DATE_MODIFIED] = $this->getModifiedDateAsString();
+            $array[PageCreationDate::DATE_CREATED_PROPERTY] = $this->getCreatedDateAsString();
+            $array[ModificationDate::DATE_MODIFIED_PROPERTY] = $this->getModifiedDateAsString();
         }
 
         $array[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
@@ -1287,12 +1287,12 @@ class Page extends ResourceComboAbs
             $lowerKey = trim(strtolower($key));
             if (in_array($lowerKey, Metadata::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified")
-                    ->setCanonical(Metadata::CANONICAL_PROPERTY);
+                    ->setCanonical(Metadata::CANONICAL);
                 continue;
             }
             try {
                 switch ($lowerKey) {
-                    case Canonical::CANONICAL_PROPERTY:
+                    case Canonical::CANONICAL:
                         $this->setCanonical($value);
                         continue 2;
                     case EndDate::DATE_END:
@@ -1359,11 +1359,11 @@ class Page extends ResourceComboAbs
                     default:
                         if (!$persistOnlyKnownAttributes) {
                             $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
-                                ->setCanonical(Metadata::CANONICAL_PROPERTY);
+                                ->setCanonical(Metadata::CANONICAL);
                             $this->setMetadata($key, $value);
                         } else {
                             $messages[] = Message::createErrorMessage("The metadata ($lowerKey) is unknown and was not saved")
-                                ->setCanonical(Metadata::CANONICAL_PROPERTY);
+                                ->setCanonical(Metadata::CANONICAL);
                         }
                         continue 2;
                 }
@@ -2038,9 +2038,9 @@ class Page extends ResourceComboAbs
 
         foreach (Metadata::MUTABLE_METADATA as $metaKey) {
             switch ($metaKey) {
-                case Canonical::CANONICAL_PROPERTY:
+                case Canonical::CANONICAL:
                     if (!in_array($this->getCanonical(), [$this->getDefaultCanonical(), null])) {
-                        $nonDefaultMetadatas[Canonical::CANONICAL_PROPERTY] = $this->getCanonical();
+                        $nonDefaultMetadatas[Canonical::CANONICAL] = $this->getCanonical();
                     }
                     break;
                 case
@@ -2341,7 +2341,7 @@ class Page extends ResourceComboAbs
         return $this->getPath()->getDokuwikiId();
     }
 
-    public function getUid(): Metadata
+    public function getUid(): MetadataScalar
     {
         return $this->pageId;
     }

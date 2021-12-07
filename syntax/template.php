@@ -9,6 +9,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\PageCreationDate;
 use ComboStrap\PageImages;
 use ComboStrap\PageName;
+use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -48,10 +49,10 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     const ATTRIBUTES_IN_PAGE_TABLE = [
         "id",
-        Canonical::CANONICAL_PROPERTY,
-        Path::PATH_ATTRIBUTE,
-        ModificationDate::DATE_MODIFIED,
-        PageCreationDate::DATE_CREATED,
+        Canonical::CANONICAL,
+        PagePath::PATH_ATTRIBUTE,
+        ModificationDate::DATE_MODIFIED_PROPERTY,
+        PageCreationDate::DATE_CREATED_PROPERTY,
         PagePublicationDate::DATE_PUBLISHED,
         PageName::NAME_PROPERTY
     ];

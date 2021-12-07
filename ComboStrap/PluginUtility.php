@@ -138,6 +138,7 @@ require_once(__DIR__ . '/PageKeywords.php');
 require_once(__DIR__ . '/PageImages.php');
 require_once(__DIR__ . '/PageImage.php');
 require_once(__DIR__ . '/PageLayout.php');
+require_once(__DIR__ . '/PagePath.php');
 require_once(__DIR__ . '/PageProtection.php');
 require_once(__DIR__ . '/PageRules.php');
 require_once(__DIR__ . '/PageScope.php');

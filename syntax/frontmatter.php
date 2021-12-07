@@ -33,6 +33,7 @@ use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Page;
 use ComboStrap\PageId;
 use ComboStrap\PageImages;
+use ComboStrap\PagePath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\PagePublicationDate;
@@ -304,7 +305,7 @@ EOF;
                  */
                 if (in_array(strtolower($name), Metadata::NOT_MODIFIABLE_METAS)) {
                     $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
-                        ->setCanonical(Metadata::CANONICAL_PROPERTY);
+                        ->setCanonical(Metadata::CANONICAL);
                     continue;
                 }
 
@@ -460,7 +461,7 @@ EOF;
                             ->buildFromPersistentFormat($value);
                         foreach ($pageImages->getAll() as $imageValue) {
                             $imagePath = $imageValue->getImage()->getPath()->getAbsolutePath();
-                            $attributes = [Path::PATH_ATTRIBUTE => $imagePath];
+                            $attributes = [PagePath::PATH_ATTRIBUTE => $imagePath];
                             if (media_isexternal($imagePath)) {
                                 $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
                             } else {

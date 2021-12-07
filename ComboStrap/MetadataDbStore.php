@@ -47,7 +47,7 @@ class MetadataDbStore implements MetadataStore
                 $this->setAliases($metadata);
                 return;
             default:
-                throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported");
+                throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on set");
         }
     }
 
@@ -59,18 +59,21 @@ class MetadataDbStore implements MetadataStore
         }
 
         $database = DatabasePage::createFromPageObject($resource);
+        if(!$database->exists()){
+            return null;
+        }
 
         switch ($metadata->getName()) {
-            case PageDescription::DESCRIPTION:
-                return $database->getDescription();
-            case Canonical::CANONICAL_PROPERTY:
-                return $database->getCanonical();
-            case PageId::PAGE_ID_ATTRIBUTE:
-                return $database->getPageId();
+
             case Aliases::ALIAS_ATTRIBUTE:
                 return $this->getAliasesInPersistentValue($metadata);
             default:
-                throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported");
+                $value = $database->getFromRow($metadata->getName());
+                if($value===null){
+                    throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on get");
+                }
+                return $value;
+
         }
     }
 
@@ -135,7 +138,7 @@ class MetadataDbStore implements MetadataStore
     private function deleteAlias(array $dbAliasPath, $page): void
     {
         $pageIdAttributes = PageId::PAGE_ID_ATTRIBUTE;
-        $pathAttribute = Path::PATH_ATTRIBUTE;
+        $pathAttribute = PagePath::PATH_ATTRIBUTE;
         $aliasTables = self::ALIAS_TABLE_NAME;
         $delete = <<<EOF
 delete from $aliasTables where $pageIdAttributes = ? and $pathAttribute = ?

@@ -16,6 +16,7 @@ class PagePath extends MetadataWikiPath
 
 
     public const DATE_CREATED = 'date_created';
+    public const PATH_ATTRIBUTE = "path";
 
 
     public static function createForPage(ResourceCombo $page): CacheExpirationDate
@@ -37,7 +38,7 @@ class PagePath extends MetadataWikiPath
 
     public function getName(): string
     {
-        return Path::PATH_ATTRIBUTE;
+        return self::PATH_ATTRIBUTE;
     }
 
 

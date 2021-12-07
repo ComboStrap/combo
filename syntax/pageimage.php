@@ -9,6 +9,7 @@ use ComboStrap\Image;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\Page;
+use ComboStrap\PagePath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\TagAttributes;
@@ -150,13 +151,13 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                if (!$tagAttributes->hasAttribute(Path::PATH_ATTRIBUTE)) {
+                if (!$tagAttributes->hasAttribute(PagePath::PATH_ATTRIBUTE)) {
 
                     LogUtility::msg("The path is mandatory and was not found", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return false;
                 }
 
-                $path = $tagAttributes->getValueAndRemove(Path::PATH_ATTRIBUTE);
+                $path = $tagAttributes->getValueAndRemove(PagePath::PATH_ATTRIBUTE);
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
                 $page = Page::createPageFromQualifiedPath($path);

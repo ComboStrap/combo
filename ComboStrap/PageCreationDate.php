@@ -15,7 +15,7 @@ class PageCreationDate extends MetadataDateTime
 {
 
 
-    public const DATE_CREATED = 'date_created';
+    public const DATE_CREATED_PROPERTY = 'date_created';
     const DOKUWIKI_MAIN_KEY = 'date';
     const DOKUWIKI_SUB_KEY = 'created';
 
@@ -37,7 +37,10 @@ class PageCreationDate extends MetadataDateTime
         return FileSystems::getCreationTime($path);
     }
 
-    public function buildFromStore()
+    /**
+     * @throws ExceptionCombo
+     */
+    public function buildFromStore(): MetadataDateTime
     {
 
         $store = $this->getStore();
@@ -75,7 +78,7 @@ class PageCreationDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return PageCreationDate::DATE_CREATED;
+        return PageCreationDate::DATE_CREATED_PROPERTY;
     }
 
 

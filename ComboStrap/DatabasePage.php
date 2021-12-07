@@ -3,6 +3,7 @@
 
 namespace ComboStrap;
 
+use http\Exception\RuntimeException;
 use ModificationDate;
 use ReplicationDate;
 
@@ -30,7 +31,7 @@ class DatabasePage
             Path::DOKUWIKI_ID_ATTRIBUTE,
             self::ANALYTICS_ATTRIBUTE,
             PageDescription::DESCRIPTION,
-            Canonical::CANONICAL_PROPERTY,
+            Canonical::CANONICAL,
             PageName::NAME_PROPERTY,
             PageTitle::TITLE,
             PageH1::H1_PROPERTY,
@@ -235,7 +236,7 @@ class DatabasePage
 
         DokuPath::addRootSeparatorIfNotPresent($canonical);
         $databasePage = new DatabasePage();
-        $row = $databasePage->getDatabaseRowFromAttribute(Canonical::CANONICAL_PROPERTY, $canonical);
+        $row = $databasePage->getDatabaseRowFromAttribute(Canonical::CANONICAL, $canonical);
         if ($row != null) {
             $databasePage->buildDatabaseObjectFields($row);
         }
@@ -671,13 +672,13 @@ EOF;
 
 
             $values[Path::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPath()->getDokuwikiId();
-            $values[Path::PATH_ATTRIBUTE] = $this->page->getPath()->toAbsolutePath()->toString();
+            $values[PagePath::PATH_ATTRIBUTE] = $this->page->getPath()->toAbsolutePath()->toString();
             $this->addPageIdAttribute($values);
 
             /**
              * Default implements the auto-canonical feature
              */
-            $values[Canonical::CANONICAL_PROPERTY] = $this->page->getCanonicalOrDefault();
+            $values[Canonical::CANONICAL] = $this->page->getCanonicalOrDefault();
             $res = $this->sqlite->storeEntry('PAGES', $values);
             $this->sqlite->res_close($res);
             if ($res === false) {
@@ -728,7 +729,7 @@ EOF;
         DokuPath::addRootSeparatorIfNotPresent($path);
         $attributes = [
             Path::DOKUWIKI_ID_ATTRIBUTE => $targetId,
-            Path::PATH_ATTRIBUTE => $path
+            PagePath::PATH_ATTRIBUTE => $path
         ];
 
         $this->upsertAttributes($attributes);
@@ -760,7 +761,7 @@ EOF;
 
     public function getCanonical()
     {
-        return $this->getFromRow(Canonical::CANONICAL_PROPERTY);
+        return $this->getFromRow(Canonical::CANONICAL);
     }
 
     /**
@@ -834,14 +835,14 @@ EOF;
     private function getMetaRecord(): array
     {
         $record = array(
-            Canonical::CANONICAL_PROPERTY,
-            Path::PATH_ATTRIBUTE,
+            Canonical::CANONICAL,
+            PagePath::PATH_ATTRIBUTE,
             PageName::NAME_PROPERTY,
             PageTitle::TITLE,
             PageH1::H1_PROPERTY,
             PageDescription::DESCRIPTION,
-            PageCreationDate::DATE_CREATED,
-            ModificationDate::DATE_MODIFIED,
+            PageCreationDate::DATE_CREATED_PROPERTY,
+            ModificationDate::DATE_MODIFIED_PROPERTY,
             PagePublicationDate::DATE_PUBLISHED,
             StartDate::DATE_START,
             EndDate::DATE_END,
@@ -852,7 +853,11 @@ EOF;
         );
         $metaRecord = [];
         foreach ($record as $name) {
-            $metaRecord[$name] = Metadata::getForName($name)
+            $metadata = Metadata::getForName($name);
+            if($metadata===null){
+                throw new ExceptionComboRuntime("The metadata ($name) is unknown");
+            }
+            $metaRecord[$name] = $metadata
                 ->setResource($this->page)
                 ->setStore(MetadataDokuWikiStore::getOrCreate())
                 ->buildFromStore()
@@ -938,7 +943,7 @@ EOF;
 
     private function getDatabaseRowFromCanonical($canonical)
     {
-        $query = $this->getParametrizedLookupQuery(Canonical::CANONICAL_PROPERTY);
+        $query = $this->getParametrizedLookupQuery(Canonical::CANONICAL);
         $res = $this->sqlite->query($query, $canonical);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from CANONICAL");
@@ -978,8 +983,8 @@ EOF;
                          */
                         $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
                         if ($canonicalLastNamesCount > 0) {
-                            $this->page->unsetMetadata(Canonical::CANONICAL_PROPERTY);
-                            $duplicatePage->unsetMetadata(Canonical::CANONICAL_PROPERTY);
+                            $this->page->unsetMetadata(Canonical::CANONICAL);
+                            $duplicatePage->unsetMetadata(Canonical::CANONICAL);
                         }
 
                         $existingPages[] = $row;
@@ -997,7 +1002,7 @@ EOF;
 
     private function getDatabaseRowFromPath(string $path): ?array
     {
-        return $this->getDatabaseRowFromAttribute(Path::PATH_ATTRIBUTE, $path);
+        return $this->getDatabaseRowFromAttribute(PagePath::PATH_ATTRIBUTE, $path);
     }
 
     private function getDatabaseRowFromDokuWikiId(string $id): ?array
@@ -1122,7 +1127,7 @@ EOF;
         $values[Page::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 
-    private function getFromRow(string $attribute)
+    public function getFromRow(string $attribute)
     {
         // don't know why but the sqlite plugin returns them uppercase
         $name = strtoupper($attribute);

@@ -276,12 +276,12 @@ EOF;
              * Empty string
              * Rare case, we delete all mutable meta if present
              */
-            $jsonArray = $frontMatterStore->getMetadataArrayForPage($page);
-            if (sizeof($jsonArray) === 0) {
+            $frontmatterData = $frontMatterStore->getMetadataArrayForPage($page);
+            if (sizeof($frontmatterData) === 0) {
                 global $ID;
                 $meta = p_read_metadata($ID);
                 foreach (Metadata::MUTABLE_METADATA as $metaKey) {
-                    if (!array_key_exists($metaKey, $jsonArray)) {
+                    if (!array_key_exists($metaKey, $frontmatterData)) {
                         if (isset($meta['persistent'][$metaKey])) {
                             unset($meta['persistent'][$metaKey]);
                         }
@@ -292,24 +292,44 @@ EOF;
             }
 
 
+            /**
+             * Sync
+             */
             $targetStore = MetadataDokuWikiStore::getOrCreate();
             $messages = [];
-            foreach ($jsonArray as $name => $value) {
+            foreach ($frontmatterData as $name => $value) {
+
+                /**
+                 * Not modifiable meta check
+                 */
+                if (in_array(strtolower($name), Metadata::NOT_MODIFIABLE_METAS)) {
+                    $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
+                        ->setCanonical(Metadata::CANONICAL_PROPERTY);
+                    continue;
+                }
+
                 $metadata = Metadata::getForName($name);
+
+                /**
+                 * Unknown meta
+                 */
                 if ($metadata === null) {
-                    if (in_array(strtolower($name), Metadata::NOT_MODIFIABLE_METAS)) {
-                        $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
-                            ->setCanonical(Metadata::CANONICAL_PROPERTY);
-                        continue;
-                    }
                     $targetStore->setFromWikiId($page->getDokuwikiId(), $name, $value);
                     continue;
                 }
+
+                /**
+                 * Persistent ?
+                 */
                 if ($metadata->getPersistenceType() !== Metadata::PERSISTENT_METADATA) {
                     $messages[] = Message::createWarningMessage("The metadata ($name) is not persistent and cannot be modified")
                         ->setCanonical($metadata->getCanonical());
                     continue;
                 }
+
+                /**
+                 * Sync
+                 */
                 try {
                     $metadata
                         ->setResource($page)
@@ -330,9 +350,9 @@ EOF;
             }
 
             /**
-             * Return them
+             * Return them for metadata rendering
              */
-            $result[PluginUtility::ATTRIBUTES] = $jsonArray;
+            $result[PluginUtility::ATTRIBUTES] = $frontmatterData;
 
         }
 

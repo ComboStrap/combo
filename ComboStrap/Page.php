@@ -831,6 +831,12 @@ class Page extends ResourceComboAbs
         return $this->creationTime->getValueOrDefault();
     }
 
+    public
+    function getCreatedTimeObject(): PageCreationDate
+    {
+        return $this->creationTime;
+    }
+
     /**
      *
      * @return DateTime

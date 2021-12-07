@@ -344,6 +344,19 @@ EOF;
             }
             $targetStore->persist();
 
+            /**
+             * Database update
+             */
+            try {
+                $page->getDatabasePage()->replicateMetaAttributes();
+            } catch (Exception $e) {
+                $message = Message::createErrorMessage($e->getMessage());
+                if ($e instanceof ExceptionCombo) {
+                    $message->setCanonical($e->getCanonical());
+                }
+                $messages[] = $message;
+            }
+
 
             foreach ($messages as $message) {
                 $message->sendLogMsg();

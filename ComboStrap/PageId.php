@@ -189,6 +189,11 @@ class PageId extends MetadataText
 
     public function sendToStore(): Metadata
     {
+        /**
+         * If the data was built with one store
+         * and send to another store
+         * We prevent the overwriting of a page id
+         */
         $actualStoreValue = $this->getStore()->get($this);
         $value = $this->getValue();
         if ($actualStoreValue !== null && $actualStoreValue !== $value) {

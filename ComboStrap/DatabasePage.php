@@ -833,23 +833,32 @@ EOF;
      */
     private function getMetaRecord(): array
     {
-        $metaRecord = array(
-            Canonical::CANONICAL_PROPERTY => $this->page->getCanonicalOrDefault(),
-            Path::PATH_ATTRIBUTE => $this->page->getPath()->toAbsolutePath()->toString(),
-            PageName::NAME_PROPERTY => $this->page->getPageNameNotEmpty(),
-            PageTitle::TITLE => $this->page->getTitleOrDefault(),
-            PageH1::H1_PROPERTY => $this->page->getH1OrDefault(),
-            PageDescription::DESCRIPTION => $this->page->getDescriptionOrElseDokuWiki(),
-            PageCreationDate::DATE_CREATED => $this->page->getCreatedDateAsString(),
-            ModificationDate::DATE_MODIFIED => $this->page->getModifiedDateAsString(),
-            PagePublicationDate::DATE_PUBLISHED => $this->page->getPublishedTimeAsString(),
-            StartDate::DATE_START => $this->page->getEndDateAsString(),
-            EndDate::DATE_END => $this->page->getStartDateAsString(),
-            Region::REGION_META_PROPERTY => $this->page->getRegionOrDefault(),
-            Lang::LANG_ATTRIBUTES => $this->page->getLangOrDefault(),
-            PageType::TYPE_META_PROPERTY => $this->page->getTypeNotEmpty(),
-            Path::DOKUWIKI_ID_ATTRIBUTE => $this->page->getPath()->getDokuwikiId(),
+        $record = array(
+            Canonical::CANONICAL_PROPERTY,
+            Path::PATH_ATTRIBUTE,
+            PageName::NAME_PROPERTY,
+            PageTitle::TITLE,
+            PageH1::H1_PROPERTY,
+            PageDescription::DESCRIPTION,
+            PageCreationDate::DATE_CREATED,
+            ModificationDate::DATE_MODIFIED,
+            PagePublicationDate::DATE_PUBLISHED,
+            StartDate::DATE_START,
+            EndDate::DATE_END,
+            Region::REGION_META_PROPERTY,
+            Lang::LANG_ATTRIBUTES,
+            PageType::TYPE_META_PROPERTY,
+            Path::DOKUWIKI_ID_ATTRIBUTE,
         );
+        $metaRecord = [];
+        foreach ($record as $name) {
+            $metaRecord[$name] = Metadata::getForName($name)
+                ->setResource($this->page)
+                ->setStore(MetadataDokuWikiStore::getOrCreate())
+                ->buildFromStore()
+                ->setStore(MetadataDbStore::getOrCreate())
+                ->toStoreValueOrDefault();
+        }
 
         if ($this->page->getPageId() !== null) {
             $this->addPageIdMeta($metaRecord);

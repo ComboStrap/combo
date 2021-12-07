@@ -110,6 +110,15 @@ abstract class Metadata
 
     }
 
+    public function toStoreValueOrDefault()
+    {
+        $value = $this->toStoreValue();
+        if($value!==null){
+            return $value;
+        }
+        return $this->toStoreDefaultValue();
+    }
+
 
     public function setStore(MetadataStore $store): Metadata
     {
@@ -217,7 +226,7 @@ abstract class Metadata
     /**
      * @return ResourceCombo - The resource
      */
-    public function getResource(): ResourceCombo
+    public function getResource(): ?ResourceCombo
     {
         return $this->resource;
     }

@@ -35,8 +35,6 @@ class Page extends ResourceComboAbs
 
     const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
 
-    const OLD_REGION_PROPERTY = "country";
-
     // The page id abbreviation is used in the url
     // to make them unique.
     //
@@ -207,6 +205,10 @@ class Page extends ResourceComboAbs
      * @var PageUrlPath
      */
     private $pageUrlPath;
+    /**
+     * @var MetadataStore
+     */
+    private $store;
 
     /**
      * Page constructor.
@@ -1973,6 +1975,12 @@ class Page extends ResourceComboAbs
         }
     }
 
+    public function setStore(MetadataStore $store): Page
+    {
+        $this->store = $store;
+        return $this;
+    }
+
 
     /**
      * TODO ? Put it in the {@link Page::setMetadata()} function
@@ -2303,7 +2311,10 @@ class Page extends ResourceComboAbs
 
     public function getDefaultMetadataStore(): MetadataStore
     {
-        return MetadataDokuWikiStore::create();
+        if ($this->store === null) {
+            return MetadataDokuWikiStore::getOrCreate();
+        }
+        return $this->store;
     }
 
     /**

@@ -121,6 +121,7 @@ require_once(__DIR__ . '/LowQualityPageOverwrite.php');
 require_once(__DIR__ . '/LowQualityCalculatedIndicator.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
 require_once(__DIR__ . '/MetadataDokuWikiStore.php');
+require_once(__DIR__ . '/MetadataFrontmatterStore.php');
 require_once(__DIR__ . '/MetadataDbStore.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');

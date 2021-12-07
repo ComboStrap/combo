@@ -56,125 +56,18 @@ class Json
     /**
      * This formatting make the object on one line for a list of object
      * making the frontmatter compacter (one line, one meta)
+     * @deprecated You should use the {@link MetadataFrontmatterStore::toFrontmatterJsonString()} instead
      * @return string
      */
     public function toFrontMatterFormat(): string
     {
+
         $jsonArray = $this->getJsonArray();
-        if (sizeof($jsonArray) === 0) {
-            return "{}";
-        }
-        $jsonString = "";
-        $this->flatRecursiveEncoding($jsonArray, $jsonString);
-
-        /**
-         * Double Guard (frontmatter should be quick enough)
-         * to support this overhead
-         */
-        $decoding = json_decode($jsonString);
-        if ($decoding === null) {
-            throw new ExceptionComboRuntime("The generated frontmatter json is no a valid json");
-        }
-        return $jsonString;
+        return MetadataFrontmatterStore::toFrontmatterJsonString($jsonArray);
 
     }
 
-    private function flatRecursiveEncoding(array $jsonProperty, &$jsonString, $level = 0, $endOfFieldCharacter = DOKU_LF, $type = self::TYPE_OBJECT, $parentType = self::TYPE_OBJECT)
-    {
-        /**
-         * Open the root object
-         */
-        if ($type === self::TYPE_OBJECT) {
-            $jsonString .= "{";
-        } else {
-            $jsonString .= "[";
-        }
 
-        /**
-         * Level indentation
-         */
-        $levelSpaceIndentation = str_repeat(" ", ($level + 1) * self::TAB_SPACES_COUNTER);
-
-        /**
-         * Loop
-         */
-        $elementCounter = 0;
-        foreach ($jsonProperty as $key => $value) {
-
-            $elementCounter++;
-
-            /**
-             * Close the previous property
-             */
-            $isFirstProperty = $elementCounter === 1;
-            if ($isFirstProperty && $parentType !== self::PARENT_TYPE_ARRAY) {
-                // go the line if this is not a list of object
-                $jsonString .= DOKU_LF;
-            }
-            if (!$isFirstProperty) {
-                $jsonString .= ",$endOfFieldCharacter";
-            }
-            if ($endOfFieldCharacter === DOKU_LF) {
-                $tab = $levelSpaceIndentation;
-            } else {
-                $tab = " ";
-            }
-            $jsonString .= $tab;
-
-            /**
-             * Recurse
-             */
-            $jsonEncodedKey = json_encode($key);
-            if (is_array($value)) {
-                $childLevel = $level + 1;
-                if (is_numeric($key)) {
-                    /**
-                     * List of object
-                     */
-                    $childType = self::TYPE_OBJECT;
-                    $childEndOField = "";
-                } else {
-                    /**
-                     * Array
-                     */
-                    $jsonString .= "$jsonEncodedKey: ";
-                    $childType = self::TYPE_OBJECT;
-                    if ($value[0] !== null) {
-                        $childType = self::PARENT_TYPE_ARRAY;
-                    }
-                    $childEndOField = $endOfFieldCharacter;
-                }
-                $this->flatRecursiveEncoding($value, $jsonString, $childLevel, $childEndOField, $childType, $type);
-
-            } else {
-                /**
-                 * Single property
-                 */
-                $jsonEncodedValue = json_encode($value);
-                $jsonString .= "$jsonEncodedKey: $jsonEncodedValue";
-
-            }
-
-        }
-
-        /**
-         * Close the object or array
-         */
-        $closingLevelSpaceIndentation = str_repeat(" ", $level * self::TAB_SPACES_COUNTER);
-        if ($type === self::TYPE_OBJECT) {
-            if ($parentType !== self::PARENT_TYPE_ARRAY) {
-                $jsonString .= DOKU_LF . $closingLevelSpaceIndentation;
-            } else {
-                $jsonString .= " ";
-            }
-            $jsonString .= "}";
-        } else {
-            /**
-             * The array is not going one level back
-             */
-            $jsonString .= DOKU_LF . $closingLevelSpaceIndentation . "]";
-        }
-    }
 
     public
     static function createFromString($jsonString): Json

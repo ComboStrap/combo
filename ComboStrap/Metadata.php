@@ -70,6 +70,7 @@ abstract class Metadata
                 return new Aliases();
             case PageImages::IMAGE_META_PROPERTY:
                 return new PageImages();
+            case Region::OLD_REGION_PROPERTY:
             case Region::REGION_META_PROPERTY:
                 return new Region();
             case Lang::LANG_ATTRIBUTES:

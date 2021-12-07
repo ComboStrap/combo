@@ -4,6 +4,7 @@ use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
+use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Page;
 use ComboStrap\PageImage;
 use ComboStrap\PageImages;
@@ -115,7 +116,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * is {@link helper_plugin_move_handler::media()}
          *
          */
-        $jsonArray = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($match);
+        $jsonArray = MetadataFrontmatterStore::frontMatterMatchToAssociativeArray($match);
         if ($jsonArray === null) {
             return $match;
         } else {

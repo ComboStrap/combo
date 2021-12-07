@@ -35,6 +35,11 @@ class MetadataDokuWikiStore implements MetadataStore
      */
     public const PERSISTENT_METADATA = "persistent";
 
+    /**
+     * @var MetadataDokuWikiStore
+     */
+    private static $store;
+
 
     /**
      * @var array[]
@@ -44,9 +49,12 @@ class MetadataDokuWikiStore implements MetadataStore
     const CANONICAL = Metadata::CANONICAL_PROPERTY;
 
 
-    public static function create(): MetadataDokuWikiStore
+    public static function getOrCreate(): MetadataDokuWikiStore
     {
-        return new MetadataDokuWikiStore();
+        if(self::$store === null){
+            self::$store = new MetadataDokuWikiStore();
+        }
+        return self::$store;
     }
 
     public function set(Metadata $metadata)

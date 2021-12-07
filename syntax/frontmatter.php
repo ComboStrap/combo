@@ -121,7 +121,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             }
 
             $frontMatterMatch = array_shift($split);
-            $originalFrontMatterMetadata = syntax_plugin_combo_frontmatter::frontMatterMatchToAssociativeArray($frontMatterMatch);
+            $originalFrontMatterMetadata = MetadataFrontmatterStore::frontMatterMatchToAssociativeArray($frontMatterMatch);
             if ($originalFrontMatterMetadata === null) {
                 return Message::createErrorMessage("The existing frontmatter is not a valid json.");
             }
@@ -188,32 +188,6 @@ EOF;
 
     }
 
-
-    private static function stripFrontmatterTag($match)
-    {
-        // strip
-        //   from start `---json` + eol = 8
-        //   from end   `---` + eol = 4
-        return substr($match, 7, -3);
-    }
-
-    /**
-     * @param $match
-     * @return array|null - null if decodage problem, empty array if no json or an associative array
-     */
-    public static function frontMatterMatchToAssociativeArray($match): ?array
-    {
-        $jsonString = self::stripFrontmatterTag($match);
-
-        // Empty front matter
-        if (trim($jsonString) == "") {
-            return [];
-        }
-
-        // Otherwise you get an object ie $arrayFormat-> syntax
-        $arrayFormat = true;
-        return json_decode($jsonString, $arrayFormat);
-    }
 
     /**
      * Syntax Type.
@@ -285,24 +259,25 @@ EOF;
 
         if ($state == DOKU_LEXER_SPECIAL) {
 
-
-            $jsonArray = self::frontMatterMatchToAssociativeArray($match);
-
-
             $result = [];
-            // Decode problem
-            if ($jsonArray === null) {
-
+            $page = Page::createPageFromGlobalDokuwikiId();
+            $frontMatterStore = MetadataFrontmatterStore::getOrCreate();
+            try {
+                $frontMatterStore->loadAsString($page, $match);
+                $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
+            } catch (ExceptionCombo $e) {
+                // Decode problem
                 $result[self::STATUS] = self::PARSING_STATE_ERROR;
                 $result[PluginUtility::PAYLOAD] = $match;
                 return $result;
             }
 
+            /**
+             * Empty string
+             * Rare case, we delete all mutable meta if present
+             */
+            $jsonArray = $frontMatterStore->getMetadataArrayForPage($page);
             if (sizeof($jsonArray) === 0) {
-                /**
-                 * Empty string
-                 * Rare case, we delete all mutable meta if present
-                 */
                 global $ID;
                 $meta = p_read_metadata($ID);
                 foreach (Metadata::MUTABLE_METADATA as $metaKey) {
@@ -316,26 +291,8 @@ EOF;
                 return array(self::STATUS => self::PARSING_STATE_EMPTY);
             }
 
-            $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
 
-            $page = Page::createPageFromGlobalDokuwikiId();
-
-            /**
-             * Published is an old alias for date published
-             */
-            if (isset($jsonArray[PagePublicationDate::OLD_META_KEY])) {
-                $jsonArray[PagePublicationDate::DATE_PUBLISHED] = $jsonArray[PagePublicationDate::OLD_META_KEY];
-                unset($jsonArray[PagePublicationDate::OLD_META_KEY]);
-            }
-
-            if (isset($jsonArray[Page::OLD_REGION_PROPERTY])) {
-                $jsonArray[Region::REGION_META_PROPERTY] = $jsonArray[Page::OLD_REGION_PROPERTY];
-                unset($jsonArray[Page::OLD_REGION_PROPERTY]);
-            }
-
-            $frontMatterStore = MetadataFrontmatterStore::getOrCreate()
-                ->load($page, $jsonArray);
-            $dokuwikiStore = MetadataDokuWikiStore::create();
+            $targetStore = MetadataDokuWikiStore::getOrCreate();
             $messages = [];
             foreach ($jsonArray as $name => $value) {
                 $metadata = Metadata::getForName($name);
@@ -345,7 +302,7 @@ EOF;
                             ->setCanonical(Metadata::CANONICAL_PROPERTY);
                         continue;
                     }
-                    $dokuwikiStore->setFromWikiId($page->getDokuwikiId(), $name, $value);
+                    $targetStore->setFromWikiId($page->getDokuwikiId(), $name, $value);
                     continue;
                 }
                 if ($metadata->getPersistenceType() !== Metadata::PERSISTENT_METADATA) {
@@ -358,14 +315,14 @@ EOF;
                         ->setResource($page)
                         ->setStore($frontMatterStore)
                         ->buildFromStore()
-                        ->setStore($dokuwikiStore)
+                        ->setStore($targetStore)
                         ->sendToStore();
                 } catch (ExceptionCombo $e) {
-                    $messages[] = Message::createErrorMessage("Error while replicating the meta ($metadata) from the store ($frontMatterStore) to the store ($dokuwikiStore). Message: ".$e->getMessage())
+                    $messages[] = Message::createErrorMessage("Error while replicating the meta ($metadata) from the store ($frontMatterStore) to the store ($targetStore). Message: " . $e->getMessage())
                         ->setCanonical($metadata->getCanonical());
                 }
             }
-            $dokuwikiStore->persist();
+            $targetStore->persist();
 
 
             foreach ($messages as $message) {
@@ -411,7 +368,7 @@ EOF;
 
                 $state = $data[self::STATUS];
                 if ($state == self::PARSING_STATE_ERROR) {
-                    $json = self::stripFrontmatterTag($data[PluginUtility::PAYLOAD]);
+                    $json = MetadataFrontmatterStore::stripFrontmatterTag($data[PluginUtility::PAYLOAD]);
                     LogUtility::msg("Front Matter: The json object for the page ($ID) is not valid. " . \ComboStrap\Json::getValidationLink($json), LogUtility::LVL_MSG_ERROR);
                 }
 

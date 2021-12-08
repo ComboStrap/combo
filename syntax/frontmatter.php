@@ -20,8 +20,6 @@
  *
  */
 
-use ComboStrap\ArrayUtility;
-use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\LogUtility;
@@ -34,10 +32,7 @@ use ComboStrap\Page;
 use ComboStrap\PageId;
 use ComboStrap\PageImages;
 use ComboStrap\PagePath;
-use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\PagePublicationDate;
-use ComboStrap\Region;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -298,6 +293,13 @@ EOF;
              */
             $targetStore = MetadataDokuWikiStore::getOrCreate();
             $messages = [];
+            /**
+             * We build a new frontmatter because the
+             * old key should be replace by the new one
+             * (ie {@link \ComboStrap\PagePublicationDate::OLD_META_KEY}
+             * by {@link \ComboStrap\PagePublicationDate::DATE_PUBLISHED}
+             */
+            $dataForRenderer = [];
             foreach ($frontmatterData as $name => $value) {
 
                 /**
@@ -315,9 +317,11 @@ EOF;
                  * Unknown meta
                  */
                 if ($metadata === null) {
+                    $dataForRenderer[$name] = $value;
                     $targetStore->setFromWikiId($page->getDokuwikiId(), $name, $value);
                     continue;
                 }
+                $dataForRenderer[$metadata->getName()] = $value;
 
                 /**
                  * Persistent ?
@@ -366,7 +370,7 @@ EOF;
             /**
              * Return them for metadata rendering
              */
-            $result[PluginUtility::ATTRIBUTES] = $frontmatterData;
+            $result[PluginUtility::ATTRIBUTES] = $dataForRenderer;
 
         }
 

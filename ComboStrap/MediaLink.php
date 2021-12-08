@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 use dokuwiki\Extension\SyntaxPlugin;
+use dokuwiki\Parsing\ParserMode\Internallink;
 use syntax_plugin_combo_media;
 
 require_once(__DIR__ . '/PluginUtility.php');
@@ -139,13 +140,15 @@ abstract class MediaLink
 
 
     /**
-     * Create an image from dokuwiki internal call media attributes
+     * Create an image from dokuwiki {@link Internallink internal call media attributes}
+     *
+     * Dokuwiki extracts already the width, height and align property
      * @param array $callAttributes
      * @return MediaLink
      */
     public static function createFromIndexAttributes(array $callAttributes)
     {
-        $id = $callAttributes[0]; // path
+        $src = $callAttributes[0];
         $title = $callAttributes[1];
         $align = $callAttributes[2];
         $width = $callAttributes[3];
@@ -161,7 +164,7 @@ abstract class MediaLink
         $tagAttributes->addComponentAttributeValue(CacheMedia::CACHE_KEY, $cache);
         $tagAttributes->addComponentAttributeValue(self::LINKING_KEY, $linking);
 
-        return self::createMediaLinkFromNonQualifiedPath($id, $tagAttributes);
+        return self::createMediaLinkFromId($src, $tagAttributes);
 
     }
 
@@ -172,9 +175,9 @@ abstract class MediaLink
      *
      * @param $attributes - the attributes created by the function {@link MediaLink::getParseAttributes()}
      * @param $rev - the mtime
-     * @return MediaLink|RasterImageLink|SvgImageLink
+     * @return null|MediaLink
      */
-    public static function createFromCallStackArray($attributes, $rev = null)
+    public static function createFromCallStackArray($attributes, $rev = null): ?MediaLink
     {
 
         if (!is_array($attributes)) {
@@ -187,19 +190,38 @@ abstract class MediaLink
          * Media id are not cleaned
          * They are always absolute ?
          */
-        if (!isset($attributes[PagePath::PATH_ATTRIBUTE])) {
-            $path = "notfound";
-            LogUtility::msg("A path attribute is mandatory when creating a media link and was not found in the attributes " . print_r($attributes, true), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-        } else {
-            $path = $attributes[PagePath::PATH_ATTRIBUTE];
+        if (isset($attributes[PagePath::PATH_ATTRIBUTE])) {
+            // not sure why ?
             unset($attributes[PagePath::PATH_ATTRIBUTE]);
         }
 
 
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
+        $src = $attributes[self::DOKUWIKI_SRC];
+        $dokuUrl = DokuwikiUrl::createFromUrl($src);
+        $scheme = $dokuUrl->getScheme();
+        switch ($scheme) {
+            case DokuFs::SCHEME:
+                $id = $dokuUrl->getPath();
+                // the id is always absolute, except in a link
+                // It may be relative, transform it as absolute
+                global $ID;
+                resolve_mediaid(getNS($ID), $id, $exists);
+                $path = DokuPath::createMediaPathFromId($id, $rev);
+                return self::createMediaLinkFromPath($path, $tagAttributes);
+            case InterWikiPath::scheme:
+                $path = InterWikiPath::create($dokuUrl->getPath());
+                return self::createMediaLinkFromPath($path, $tagAttributes);
+            case InternetPath::scheme:
+                $path = InternetPath::create($dokuUrl->getPath());
+                return self::createMediaLinkFromPath($path, $tagAttributes);
+            default:
+                LogUtility::msg("The media with the scheme ($scheme) are not yet supported. Media Source: $src");
+                return null;
 
-        return self::createMediaLinkFromNonQualifiedPath($path, $rev, $tagAttributes);
+        }
+
 
     }
 
@@ -252,19 +274,23 @@ abstract class MediaLink
         /**
          * The combo attributes array
          */
-        $parsedAttributes = DokuwikiUrl::createFromUrl($url)->toArray();
-        $path = $parsedAttributes[PagePath::PATH_ATTRIBUTE];
-        if (!isset($parsedAttributes[MediaLink::LINKING_KEY])) {
-            $parsedAttributes[MediaLink::LINKING_KEY] = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
+        $dokuwikiUrl = DokuwikiUrl::createFromUrl($url);
+        $parsedAttributes = $dokuwikiUrl->toArray();
+        $path = $dokuwikiUrl->getPath();
+        $linkingKey = $dokuwikiUrl->getQueryParameter(MediaLink::LINKING_KEY);
+        if ($linkingKey === null) {
+            $linkingKey = PluginUtility::getConfValue(self::CONF_DEFAULT_LINKING, self::LINKING_DIRECT_VALUE);
         }
+        $parsedAttributes[MediaLink::LINKING_KEY] = $linkingKey;
 
         /**
          * Media Type
          */
-        if (media_isexternal($path) || link_isinterwiki($path)) {
-            $mediaType = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
-        } else {
+        $scheme = $dokuwikiUrl->getScheme();
+        if ($scheme === DokuFs::SCHEME) {
             $mediaType = MediaLink::INTERNAL_MEDIA_CALL_NAME;
+        } else {
+            $mediaType = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
         }
 
 
@@ -342,18 +368,16 @@ abstract class MediaLink
 
 
     /**
-     * Create a media link from a unknown type path (ie relative or absolute)
+     * Create a media link from a wiki id
      *
-     * This function transforms the path to absolute against the actual namespace of the requested page ID if the
-     * path is relative.
      *
-     * @param $nonQualifiedPath
-     * @param TagAttributes $tagAttributes
+     * @param $wikiId - dokuwiki id
+     * @param TagAttributes|null $tagAttributes
      * @param string|null $rev
      * @return MediaLink
      */
     public
-    static function createMediaLinkFromNonQualifiedPath($nonQualifiedPath, ?string $rev = '', $tagAttributes = null)
+    static function createMediaLinkFromId($wikiId, ?string $rev = '', TagAttributes $tagAttributes = null)
     {
         if (is_object($rev)) {
             LogUtility::msg("rev should not be an object", LogUtility::LVL_MSG_ERROR, "support");
@@ -366,19 +390,9 @@ abstract class MediaLink
             }
         }
 
-        /**
-         * Resolution
-         */
-        $qualifiedPath = $nonQualifiedPath;
-        if (!media_isexternal($qualifiedPath)) {
-            global $ID;
-            $qualifiedId = $nonQualifiedPath;
-            resolve_mediaid(getNS($ID), $qualifiedId, $exists);
-            $qualifiedPath = DokuPath::PATH_SEPARATOR . $qualifiedId;
-        }
+        $dokuPath = DokuPath::createMediaPathFromId($wikiId, $rev);
+        return self::createMediaLinkFromPath($dokuPath, $tagAttributes);
 
-
-        return self::createMediaLinkFromPath($qualifiedPath, $rev, $tagAttributes);
     }
 
     /**
@@ -451,7 +465,7 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            PagePath::PATH_ATTRIBUTE => $this->getMedia()->getPath()->getPath()
+            PagePath::PATH_ATTRIBUTE => $this->getMedia()->getPath()->toString()
         );
 
 

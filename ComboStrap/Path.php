@@ -6,10 +6,14 @@ namespace ComboStrap;
 /**
  * Interface Path
  * @package ComboStrap
- * A generic path for a generic file system
  *
- * The string is just the path
- * (no other URI parameters)
+ * An interface that implements path operation
+ *
+ * The {@link Path::toString()} function is just the path part (no other URI query parameters)
+ *
+ * TODO: because a path should be able to go to an URI format, it should also allow query parameters
+ *  We could then add a `toPath` function to {@link DokuwikiUrl} and delete the tag attributes
+ *  as parameter of all {@link MediaLink::createMediaLinkFromPath()} creator function
  */
 interface Path
 {
@@ -31,18 +35,9 @@ interface Path
      */
     function getLastName();
 
-
-
     function getNames();
 
     function getParent(): ?Path;
-
-    /**
-     * The absolute path without root separator
-     * Heavily used inside Dokuwiki
-     * @return mixed
-     */
-    function getDokuwikiId();
 
     function toString();
 

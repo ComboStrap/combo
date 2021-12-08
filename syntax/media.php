@@ -6,6 +6,7 @@ use ComboStrap\CallStack;
 use ComboStrap\DokuFs;
 use ComboStrap\DokuPath;
 use ComboStrap\Image;
+use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PageImages;
@@ -77,7 +78,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                     $renderer->stats[AnalyticsDocument::INTERNAL_BROKEN_MEDIA_COUNT]++;
                 }
                 break;
-            case DokuPath::INTERNET_SCHEME:
+            case InternetPath::scheme:
                 $renderer->stats[AnalyticsDocument::EXTERNAL_MEDIA_COUNT]++;
                 break;
         }

@@ -548,7 +548,7 @@ EOF;
                         /**
                          * If this is not a link into the same page
                          */
-                        if (!empty($this->getDokuwikiUrl()->getPathOrId())) {
+                        if (!empty($this->getDokuwikiUrl()->getPath())) {
                             $description = $linkedPage->getDescriptionOrElseDokuWiki();
                             if (empty($description)) {
                                 // Rare case
@@ -606,7 +606,7 @@ EOF;
          *
          */
         if ($this->getType() == self::TYPE_EMAIL) {
-            $emailAddress = $this->obfuscateEmail($this->dokuwikiUrl->getPathOrId());
+            $emailAddress = $this->obfuscateEmail($this->dokuwikiUrl->getPath());
             $this->attributes->addHtmlAttributeValue("title", $emailAddress);
         }
 
@@ -771,7 +771,7 @@ EOF;
         if ($this->linkedPage == null) {
             if ($this->getType() == self::TYPE_INTERNAL) {
                 // if there is no path, this is the actual page
-                $pathOrId = $this->dokuwikiUrl->getPathOrId();
+                $pathOrId = $this->dokuwikiUrl->getPath();
 
                 $this->linkedPage = Page::createPageFromNonQualifiedPath($pathOrId);
 
@@ -804,7 +804,7 @@ EOF;
                      * because there is an enter and exit state
                      * TODO: create a function to render on DOKU_LEXER_UNMATCHED ?
                      */
-                    $name = TemplateUtility::renderStringTemplateForPageId($name, $this->dokuwikiUrl->getPathOrId());
+                    $name = TemplateUtility::renderStringTemplateForPageId($name, $this->dokuwikiUrl->getPath());
                 }
                 if (empty($name)) {
                     $name = $this->getInternalPage()->getPageNameNotEmpty();
@@ -830,7 +830,7 @@ EOF;
             case self::TYPE_EMAIL:
                 if (empty($name)) {
                     global $conf;
-                    $email = $this->dokuwikiUrl->getPathOrId();
+                    $email = $this->dokuwikiUrl->getPath();
                     switch ($conf['mailguard']) {
                         case 'none' :
                             $name = $email;
@@ -845,7 +845,7 @@ EOF;
                 break;
             case self::TYPE_INTERWIKI:
                 if (empty($name)) {
-                    $name = $this->dokuwikiUrl->getPathOrId();
+                    $name = $this->dokuwikiUrl->getPath();
                 }
                 break;
             case self::TYPE_LOCAL:
@@ -931,7 +931,7 @@ EOF;
                 break;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
-                $extendedPath = $this->dokuwikiUrl->getPathOrId();
+                $extendedPath = $this->dokuwikiUrl->getPath();
                 if($this->dokuwikiUrl->getFragment()!==null){
                     $extendedPath.="#{$this->dokuwikiUrl->getFragment()}";
                 }
@@ -963,7 +963,7 @@ EOF;
                  * {@link PluginTrait::email()
                  */
                 // common.php#obfsucate implements the $conf['mailguard']
-                $uri = $this->getDokuwikiUrl()->getPathOrId();
+                $uri = $this->getDokuwikiUrl()->getPath();
                 $uri = $this->obfuscateEmail($uri);
                 $uri = urlencode($uri);
                 $queryParameters = $this->getDokuwikiUrl()->getQueryParameters();

@@ -23,8 +23,11 @@ class FileSystems
     public static function getContent(Path $path)
     {
         $scheme = $path->getScheme();
-        if ($scheme === LocalFs::SCHEME) {
-            return LocalFs::getOrCreate()->getContent($path);
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                return LocalFs::getOrCreate()->getContent($path);
+            case DokuFs::SCHEME:
+                return DokuFs::getOrCreate()->getContent($path);
         }
         throw new ExceptionComboRuntime("File system ($scheme) unknown");
     }

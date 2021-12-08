@@ -23,15 +23,6 @@ class DokuPath extends PathAbs
     const SEPARATORS = [self::PATH_SEPARATOR, self::SEPARATOR_SLASH];
 
     /**
-     * TODO: They should be in another {@link Path} (file system)
-     */
-    const INTERWIKI_SCHEME = 'interwiki';
-    /**
-     * TODO: They should be in another {@link Path} (file system)
-     */
-    const INTERNET_SCHEME = "internet";
-
-    /**
      * For whatever reason, dokuwiki uses also on windows
      * the linux separator
      */
@@ -81,8 +72,8 @@ class DokuPath extends PathAbs
      * @var string the path scheme one constant that starts with SCHEME
      * ie
      * {@link DokuFs::SCHEME},
-     * {@link DokuPath::INTERNET_SCHEME},
-     * {@link DokuPath::INTERWIKI_SCHEME}
+     * {@link InternetPath::scheme},
+     * {@link InterWikiPath::scheme}
      */
     private $scheme;
     private $filePath;
@@ -102,7 +93,7 @@ class DokuPath extends PathAbs
      * and not to a namespace. The qualification occurs in the transformation
      * from ref to page.
      *   For a page: in {@link LinkUtility::getInternalPage()}
-     *   For a media: in the {@link MediaLink::createMediaLinkFromNonQualifiedPath()}
+     *   For a media: in the {@link MediaLink::createMediaLinkFromId()}
      * Because this class is mostly the file representation, it should be able to
      * represents also a namespace
      */
@@ -118,11 +109,11 @@ class DokuPath extends PathAbs
         // Check whether this is a local or remote image or interwiki
         if (media_isexternal($absolutePath)) {
 
-            $this->scheme = self::INTERNET_SCHEME;
+            $this->scheme = InternetPath::scheme;
 
         } else if (link_isinterwiki($absolutePath)) {
 
-            $this->scheme = self::INTERWIKI_SCHEME;
+            $this->scheme = InterWikiPath::scheme;
 
         } else {
 
@@ -230,12 +221,12 @@ class DokuPath extends PathAbs
      * @param $absolutePath
      * @return DokuPath
      */
-    public static function createPagePathFromPath($absolutePath)
+    public static function createPagePathFromPath($absolutePath): DokuPath
     {
         return new DokuPath($absolutePath, DokuPath::PAGE_TYPE);
     }
 
-    public static function createMediaPathFromAbsolutePath($absolutePath, $rev = '')
+    public static function createMediaPathFromAbsolutePath($absolutePath, $rev = ''): DokuPath
     {
         return new DokuPath($absolutePath, DokuPath::MEDIA_TYPE, $rev);
     }
@@ -316,7 +307,8 @@ class DokuPath extends PathAbs
 
     public static function createMediaPathFromId($id, $rev = ''): DokuPath
     {
-        return self::createMediaPathFromAbsolutePath(DokuPath::PATH_SEPARATOR . $id, $rev);
+        DokuPath::addRootSeparatorIfNotPresent($id);
+        return self::createMediaPathFromAbsolutePath( $id, $rev);
     }
 
 
@@ -446,6 +438,9 @@ class DokuPath extends PathAbs
      * The index stores needs this value
      * And most of the function that are not links related
      * use this format (What fucked up is fucked up)
+     * /**
+     * The absolute path without root separator
+     * Heavily used inside Dokuwiki
      */
     public
     function getDokuwikiId(): string

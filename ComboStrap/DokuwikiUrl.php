@@ -308,7 +308,7 @@ class DokuwikiUrl
      * In Dokuwiki, a path may also be in the form of an id (ie without root separator)
      * @return false|string
      */
-    public function getPathOrId()
+    public function getPath()
     {
         return $this->pathOrId;
     }
@@ -322,4 +322,18 @@ class DokuwikiUrl
         }
 
     }
+
+    public function getScheme(): string
+    {
+        if(link_isinterwiki($this->pathOrId)){
+            return InterWikiPath::scheme;
+        }
+        if(media_isexternal($this->pathOrId)){
+            return InternetPath::scheme;
+        }
+        return DokuFs::SCHEME;
+
+    }
+
+
 }

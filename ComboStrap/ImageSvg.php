@@ -42,7 +42,7 @@ class ImageSvg extends Image
     public function getSvgDocument(): SvgDocument
     {
         if ($this->svgDocument == null) {
-            $this->svgDocument = SvgDocument::createFromPath($this);
+            $this->svgDocument = SvgDocument::createFromPath($this->getPath());
         }
         return $this->svgDocument;
     }
@@ -151,7 +151,7 @@ class ImageSvg extends Image
     public function getSvgFile(): File
     {
 
-        $cache = new CacheMedia($this, $this->getAttributes());
+        $cache = new CacheMedia($this->getPath(), $this->getAttributes());
         if (!$cache->isCacheUsable()) {
             $content = $this->getSvgDocument()->getXmlText($this->getAttributes());
             $cache->storeCache($content);

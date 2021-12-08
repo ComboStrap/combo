@@ -18,19 +18,22 @@ class Mime
      */
     private static $knownTypes;
 
+    /**
+     * @var string
+     */
     private $mime;
 
     /**
      * Mime constructor.
      */
-    public function __construct($mime)
+    public function __construct(string $mime)
     {
         $this->mime = $mime;
     }
 
     public function __toString()
     {
-        return $this->mime;
+        return $this->mime ;
     }
 
     public function isKnown(): bool

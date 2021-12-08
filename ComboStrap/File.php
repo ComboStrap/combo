@@ -101,6 +101,9 @@ class File
         return file_get_contents($this->getAbsoluteFileSystemPath());
     }
 
+    /**
+     * @deprecated use {@link FileSystems::delete()} instead
+     */
     public function remove()
     {
         unlink($this->getAbsoluteFileSystemPath());
@@ -150,6 +153,9 @@ class File
         return Iso8601Date::createFromTimestamp(filectime($this->path))->getDateTime();
     }
 
+    /**
+     * @deprecated use {@link FileSystems::deleteIfExists()} instead
+     */
     public function removeIfExists(): File
     {
         if($this->exists()){

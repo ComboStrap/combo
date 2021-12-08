@@ -31,6 +31,8 @@ abstract class PathAbs implements Path
                 return new Mime(Mime::SVG);
             case JavascriptLibrary::EXTENSION:
                 return new Mime(Mime::JAVASCRIPT);
+            case Json::EXTENSION:
+                return new Mime(Mime::JSON);
             default:
                 return new Mime(mimetype($this->getLastName(), false)[1]);
         }
@@ -39,6 +41,11 @@ abstract class PathAbs implements Path
     public function getLastNameWithoutExtension()
     {
         return pathinfo($this->getLastName(), PATHINFO_FILENAME);
+    }
+
+    public function __toString()
+    {
+        return $this->toString();
     }
 
 

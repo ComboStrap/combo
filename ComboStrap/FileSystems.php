@@ -56,4 +56,26 @@ class FileSystems
         }
     }
 
+    public static function deleteIfExists(Path $path)
+    {
+        if(FileSystems::exists($path)){
+            FileSystems::delete($path);
+        }
+    }
+
+    public static function delete(Path $path)
+    {
+        $scheme = $path->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                LocalFs::getOrCreate()->delete($path);
+                return;
+            case DokuFs::SCHEME:
+                DokuFs::getOrCreate()->delete($path);
+                return;
+            default:
+                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+        }
+    }
+
 }

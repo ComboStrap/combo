@@ -39,7 +39,7 @@ class LocalFs implements FileSystem
         if ($mime->isTextBased()) {
             return file_get_contents($path->toAbsolutePath()->toString());
         }
-        throw new ExceptionComboRuntime("This mime content ($mime) can not yet be retrieved");
+        throw new ExceptionComboRuntime("This mime content ($mime) can not yet be retrieved for the path ($path)");
     }
 
     public function getModifiedTime($path): ?DateTime
@@ -58,6 +58,11 @@ class LocalFs implements FileSystem
         $filePath = $path->toAbsolutePath()->toString();
         $timestamp = filectime($filePath);
         return Iso8601Date::createFromTimestamp($timestamp)->getDateTime();
+    }
+
+    public function delete(Path $path)
+    {
+        unlink($path->toAbsolutePath()->toString());
     }
 
 

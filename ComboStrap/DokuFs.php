@@ -57,4 +57,12 @@ class DokuFs implements FileSystem
     {
         return FileSystems::getCreationTime($path->toLocalPath());
     }
+
+    /**
+     * @param DokuPath $path
+     */
+    public function delete(Path $path)
+    {
+        return FileSystems::delete($path->toLocalPath());
+    }
 }

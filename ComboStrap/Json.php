@@ -11,6 +11,7 @@ class Json
     const TYPE_OBJECT = "{";
     const PARENT_TYPE_ARRAY = "[";
     const TAB_SPACES_COUNTER = 4;
+    const EXTENSION = "json";
     private $jsonString;
     /**
      * @var array

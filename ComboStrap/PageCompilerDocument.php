@@ -85,16 +85,16 @@ abstract class PageCompilerDocument implements CachedDocument
      */
     public function getFileContent()
     {
-        if (!$this->getCachePath()->exists()) {
+        if (!FileSystems::exists($this->getCachePath())) {
             return null;
         }
-        return $this->getCachePath()->getTextContent();
+        return FileSystems::getContent($this->getCachePath());
     }
 
 
     public function deleteIfExists(): PageCompilerDocument
     {
-        $this->getCachePath()->removeIfExists();
+        FileSystems::deleteIfExists($this->getCachePath());
         return $this;
     }
 

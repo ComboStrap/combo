@@ -87,7 +87,7 @@ class AnalyticsDocument extends OutputDocument
 
     function getExtension(): string
     {
-        return renderer_plugin_combo_analytics::RENDERER_FORMAT;
+        return renderer_plugin_combo_analytics::RENDERER_FORMAT.".json";
     }
 
     function getRendererName(): string

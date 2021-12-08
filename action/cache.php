@@ -13,7 +13,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
-use ComboStrap\PageName;
+use ComboStrap\ResourceName;
 use ComboStrap\PageTitle;
 use ComboStrap\PluginUtility;
 use ComboStrap\TplUtility;
@@ -299,7 +299,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * The side slot cache is deleted only when the
          * below property are updated
          */
-        $descriptionProperties = [PageTitle::TITLE_META_PROPERTY, PageName::NAME_PROPERTY, PageH1::H1_PROPERTY, PageDescription::DESCRIPTION_PROPERTY];
+        $descriptionProperties = [PageTitle::TITLE_META_PROPERTY, ResourceName::NAME_PROPERTY, PageH1::H1_PROPERTY, PageDescription::DESCRIPTION_PROPERTY];
         if (!in_array($data["name"], $descriptionProperties)) return;
 
         self::removeSideSlotCache();

@@ -11,9 +11,9 @@ class PageH1 extends MetadataText
     public const H1_PARSED = "h1_parsed";
     public const H1_PROPERTY = "h1";
 
-    public static function createForPage($page): PageName
+    public static function createForPage($page): ResourceName
     {
-        return (new PageName())
+        return (new ResourceName())
             ->setResource($page);
     }
 
@@ -62,7 +62,7 @@ class PageH1 extends MetadataText
             return $title;
         }
 
-        return PageName::createForPage($this->getResource())
+        return ResourceName::createForResource($this->getResource())
             ->getValueOrDefault();
 
     }

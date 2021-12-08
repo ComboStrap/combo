@@ -4,15 +4,15 @@
 namespace ComboStrap;
 
 
-class PageName extends MetadataText
+class ResourceName extends MetadataText
 {
 
 
     public const NAME_PROPERTY = "name";
 
-    public static function createForPage($page): PageName
+    public static function createForResource($page): ResourceName
     {
-        return (new PageName())
+        return (new ResourceName())
             ->setResource($page);
     }
 
@@ -49,19 +49,27 @@ class PageName extends MetadataText
     public function getDefaultValue(): string
     {
 
-        $pathName = $this->getResource()->getPath()->getLastName();
+        $resourceCombo = $this->getResource();
 
-        /**
-         * If this is a home page, the default
-         * is the parent path name
-         */
-        if ($pathName === Site::getHomePageName()) {
-            $names = $this->getResource()->getPath()->getNames();
-            $namesCount = sizeof($names);
-            if ($namesCount >= 2) {
-                $pathName = $names[$namesCount - 2];
-            }
+        $pathName = $resourceCombo->getPath()->getLastNameWithoutExtension();
+        switch ($resourceCombo->getResourceType()) {
+
+            case Page::RESOURCE_TYPE:
+                /**
+                 * If this is a home page, the default
+                 * is the parent path name
+                 */
+                if ($pathName === Site::getHomePageName()) {
+                    $names = $resourceCombo->getPath()->getNames();
+                    $namesCount = sizeof($names);
+                    if ($namesCount >= 2) {
+                        $pathName = $names[$namesCount - 2];
+                    }
+                }
+                break;
+
         }
+
         $words = preg_split("/\s/", preg_replace("/-|_/", " ", $pathName));
         $wordsUc = [];
         foreach ($words as $word) {

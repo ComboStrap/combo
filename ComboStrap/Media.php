@@ -16,6 +16,7 @@ namespace ComboStrap;
  */
 abstract class Media extends ResourceComboAbs
 {
+    const RESOURCE_TYPE = "media";
 
     /**
      * @var TagAttributes
@@ -68,6 +69,12 @@ abstract class Media extends ResourceComboAbs
         return $this->path;
     }
 
+    public function getName()
+    {
+        return ResourceName::createForResource($this)
+            ->getValueOrDefault();
+    }
+
     /**
      * The URL will change if the file change
      * @param $queryParameters
@@ -85,9 +92,9 @@ abstract class Media extends ResourceComboAbs
         throw new ExceptionComboRuntime("To implement");
     }
 
-    function getName(): string
+    function getResourceType(): string
     {
-        return "media";
+        return self::RESOURCE_TYPE;
     }
 
 
@@ -95,5 +102,11 @@ abstract class Media extends ResourceComboAbs
     {
         throw new ExceptionComboRuntime("To implement");
     }
+
+    public function __toString()
+    {
+        return $this->getPath()->toString();
+    }
+
 
 }

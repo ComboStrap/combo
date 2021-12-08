@@ -44,6 +44,6 @@ interface ResourceCombo
      * Used to locate the data in a datastore
      * The table name for instance
      */
-    function getName(): string;
+    function getResourceType(): string;
 
 }

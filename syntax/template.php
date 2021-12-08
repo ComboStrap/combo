@@ -8,7 +8,7 @@ use ComboStrap\Canonical;
 use ComboStrap\DokuPath;
 use ComboStrap\PageCreationDate;
 use ComboStrap\PageImages;
-use ComboStrap\PageName;
+use ComboStrap\ResourceName;
 use ComboStrap\PagePath;
 use ComboStrap\PageSql;
 use ComboStrap\LogUtility;
@@ -54,7 +54,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
         ModificationDate::DATE_MODIFIED_PROPERTY,
         PageCreationDate::DATE_CREATED_PROPERTY,
         PagePublicationDate::DATE_PUBLISHED,
-        PageName::NAME_PROPERTY
+        ResourceName::NAME_PROPERTY
     ];
 
     const CANONICAL = "template";

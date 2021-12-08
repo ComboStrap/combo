@@ -41,7 +41,7 @@ use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PageKeywords;
 use ComboStrap\PageLayout;
-use ComboStrap\PageName;
+use ComboStrap\ResourceName;
 use ComboStrap\PagePath;
 use ComboStrap\PageTitle;
 use ComboStrap\PageType;
@@ -516,7 +516,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * The manager
          */
         // Name
-        $pageName = PageName::createForPage($page);
+        $pageName = ResourceName::createForResource($page);
         $formMeta->addField($pageName->toFormField());
 
 

@@ -32,7 +32,7 @@ class DatabasePage
             self::ANALYTICS_ATTRIBUTE,
             PageDescription::DESCRIPTION,
             Canonical::CANONICAL_PROPERTY,
-            PageName::NAME_PROPERTY,
+            ResourceName::NAME_PROPERTY,
             PageTitle::TITLE,
             PageH1::H1_PROPERTY,
             PagePublicationDate::DATE_PUBLISHED,
@@ -724,7 +724,7 @@ EOF;
 
     public function getPageName()
     {
-        return $this->getFromRow(PageName::NAME_PROPERTY);
+        return $this->getFromRow(ResourceName::NAME_PROPERTY);
     }
 
     public function exists(): bool
@@ -854,7 +854,7 @@ EOF;
         $record = array(
             Canonical::CANONICAL_PROPERTY,
             PagePath::PATH_ATTRIBUTE,
-            PageName::NAME_PROPERTY,
+            ResourceName::NAME_PROPERTY,
             PageTitle::TITLE,
             PageH1::H1_PROPERTY,
             PageDescription::DESCRIPTION,

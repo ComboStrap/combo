@@ -80,8 +80,8 @@ abstract class Metadata
             case PagePublicationDate::OLD_META_KEY:
             case PagePublicationDate::DATE_PUBLISHED:
                 return new PagePublicationDate();
-            case PageName::NAME_PROPERTY:
-                return new PageName();
+            case ResourceName::NAME_PROPERTY:
+                return new ResourceName();
             case action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY:
             case LdJson::JSON_LD_META_PROPERTY:
                 return new LdJson();
@@ -401,7 +401,7 @@ abstract class Metadata
         PageTitle::TITLE,
         PagePublicationDate::OLD_META_KEY,
         PagePublicationDate::DATE_PUBLISHED,
-        PageName::NAME_PROPERTY,
+        ResourceName::NAME_PROPERTY,
         LdJson::JSON_LD_META_PROPERTY,
         PageLayout::LAYOUT_PROPERTY,
         action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY,

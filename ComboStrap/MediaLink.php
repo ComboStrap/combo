@@ -533,7 +533,7 @@ abstract class MediaLink
          */
         $media = $this->getMedia();
         $dokuPath = $media->getPath();
-        if ($dokuPath === null) {
+        if (!($dokuPath instanceof DokuPath)) {
             LogUtility::msg("Media Link are only supported on media from the internal library ($media)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
@@ -551,7 +551,7 @@ abstract class MediaLink
                 $mediaLink->addHtmlAttributeValue("href", $src);
                 $title = $media->getTitle();
                 if (empty($title)) {
-                    $title = $media->getBaseName();
+                    $title = $media->getName();
                 }
                 return $mediaLink->toHtmlEnterTag("a") . $title . "</a>";
             case self::LINKING_NOLINK_VALUE:
@@ -569,9 +569,7 @@ abstract class MediaLink
                     true
                 );
                 $mediaLink->addHtmlAttributeValue("href", $src);
-                return $mediaLink->toHtmlEnterTag("a") .
-                    $this->renderMediaTag() .
-                    "</a>";
+                return $mediaLink->toHtmlEnterTag("a") . $this->renderMediaTag() . "</a>";
 
             case self::LINKING_DETAILS_VALUE:
                 //go to the details media viewer

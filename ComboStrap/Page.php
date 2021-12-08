@@ -82,7 +82,7 @@ class Page extends ResourceComboAbs
      */
     private $h1;
     /**
-     * @var PageName
+     * @var ResourceName
      */
     private $pageName;
     /**
@@ -1124,7 +1124,7 @@ class Page extends ResourceComboAbs
             Canonical::CANONICAL_PROPERTY,
             PagePath::PATH_ATTRIBUTE,
             PageDescription::DESCRIPTION,
-            PageName::NAME_PROPERTY,
+            ResourceName::NAME_PROPERTY,
             PageType::TYPE_META_PROPERTY,
             Slug::SLUG_ATTRIBUTE,
             PageCreationDate::DATE_CREATED_PROPERTY,
@@ -1318,7 +1318,7 @@ class Page extends ResourceComboAbs
                     case PageDescription::DESCRIPTION_PROPERTY:
                         $this->setDescription($value);
                         continue 2;
-                    case PageName::NAME_PROPERTY:
+                    case ResourceName::NAME_PROPERTY:
                         $this->pageName->setFromStoreValue($value);
                         continue 2;
                     case PageTitle::TITLE_META_PROPERTY:
@@ -1730,7 +1730,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * Utility to {@link PageName::setValue()}
+     * Utility to {@link ResourceName::setValue()}
      * Used mostly to create page in test
      * @throws ExceptionCombo
      */
@@ -1826,7 +1826,7 @@ class Page extends ResourceComboAbs
         $this->cacheExpirationDate = CacheExpirationDate::createForPage($this);
         $this->aliases = Aliases::createForPage($this);
         $this->pageImages = PageImages::createForPage($this);
-        $this->pageName = PageName::createForPage($this);
+        $this->pageName = ResourceName::createForResource($this);
         $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPage($this);
         $this->ldJson = LdJson::createForPage($this);
         $this->canonical = Canonical::createForPage($this);
@@ -2102,9 +2102,9 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
                     }
                     break;
-                case PageName::NAME_PROPERTY:
+                case ResourceName::NAME_PROPERTY:
                     if (!in_array($this->getPageName(), [$this->getDefaultPageName(), null])) {
-                        $nonDefaultMetadatas[PageName::NAME_PROPERTY] = $this->getPageName();
+                        $nonDefaultMetadatas[ResourceName::NAME_PROPERTY] = $this->getPageName();
                     }
                     break;
                 case action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY:
@@ -2327,9 +2327,9 @@ class Page extends ResourceComboAbs
         return DokuPath::PATH_SEPARATOR . $this->getDokuwikiId();
     }
 
-    function getName(): string
+    function getResourceType(): string
     {
-        return "page";
+        return self::RESOURCE_TYPE;
     }
 
 }

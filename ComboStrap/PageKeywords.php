@@ -80,7 +80,7 @@ class PageKeywords extends MetadataArray
 
 
     /**
-     * The default of dokuwiki is the recursive parts of all {@link PageName page name}
+     * The default of dokuwiki is the recursive parts of all {@link ResourceName page name}
      * in the hierarchy.
      * @return string[]|null
      */

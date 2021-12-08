@@ -88,7 +88,7 @@ abstract class MetadataBoolean extends MetadataScalar
         $this->value = $this->toBoolean($value);
     }
 
-    private function toBoolean($value): bool
+    private function toBoolean($value): ?bool
     {
         /**
          * TODO: There is no validation

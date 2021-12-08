@@ -29,7 +29,7 @@ abstract class MetadataWikiPath extends MetadataText
     public function buildFromStoreValue($value)
     {
         if($value!==null) {
-            DokuPath::addRootSeparatorIfNotPresent($value);
+            $value = DokuPath::toValidAbsolutePath($value);
         }
         parent::buildFromStoreValue($value);
     }

@@ -269,7 +269,7 @@ class Page extends ResourceComboAbs
     public static function createPageFromGlobalDokuwikiId(): Page
     {
         global $ID;
-        if($ID===null){
+        if ($ID === null) {
             LogUtility::msg("The global wiki ID is null, unable to instantiate a page");
         }
         return self::createPageFromId($ID);
@@ -461,7 +461,7 @@ class Page extends ResourceComboAbs
     function isStartPage(): bool
     {
         $startPageName = Site::getHomePageName();
-        return $this->getDokuPathLastName() === $startPageName;
+        return $this->getPath()->getLastName() === $startPageName;
     }
 
     /**
@@ -505,8 +505,14 @@ class Page extends ResourceComboAbs
             return null;
         }
         $metadata = $store->getFromResourceAndName($this, 'relation');
+        if ($metadata === null) {
+            /**
+             * Happens when no rendering has been made
+             */
+            return null;
+        }
         if (!key_exists('references', $metadata)) {
-            return [];
+            return null;
         }
 
         $pages = [];
@@ -1120,46 +1126,54 @@ class Page extends ResourceComboAbs
     function getMetadataForRendering(): array
     {
 
+        $metadataNames = [
+            PageH1::H1_PROPERTY,
+            PageTitle::TITLE,
+            PageId::PAGE_ID_ATTRIBUTE,
+            Canonical::CANONICAL,
+            PagePath::PATH_ATTRIBUTE,
+            PageDescription::DESCRIPTION,
+            PageName::NAME_PROPERTY,
+            PageType::TYPE_META_PROPERTY,
+            Slug::SLUG_ATTRIBUTE,
+            PageCreationDate::DATE_CREATED_PROPERTY,
+            ModificationDate::DATE_MODIFIED_PROPERTY,
+            PagePublicationDate::DATE_PUBLISHED,
+            StartDate::DATE_START,
+            EndDate::DATE_END,
+            PageLayout::LAYOUT_PROPERTY
+        ];
 
-        /**
-         * The title/h1 should never be null
-         * otherwise a template link such as [[$path|$title]] will return a link without an description
-         * and therefore will be not visible
-         * We render at least the id
-         */
-        $array[PageH1::H1_PROPERTY] = $this->getH1OrDefault();
-        $title = $this->getTitleOrDefault();
-        /**
-         * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
-         * @see {@link \syntax_plugin_combo_pipeline}
-         */
-        $title = str_replace('"', "'", $title);
-        $array[PageTitle::TITLE] = $title;
-        $array[PageId::PAGE_ID_ATTRIBUTE] = $this->getPageId();
-        $array[Canonical::CANONICAL] = $this->getCanonicalOrDefault();
-        $array[PagePath::PATH_ATTRIBUTE] = $this->getPath()->toAbsolutePath()->toString();
-        $array[PageDescription::DESCRIPTION] = $this->getDescriptionOrElseDokuWiki();
-        $array[PageName::NAME_PROPERTY] = $this->getPageNameNotEmpty();
-        $array["url"] = $this->getCanonicalUrl();
-        $array[PageType::TYPE_META_PROPERTY] = $this->getTypeNotEmpty() !== null ? $this->getTypeNotEmpty() : "";
-        $array[Slug::SLUG_ATTRIBUTE] = $this->getSlugOrDefault();
+        foreach ($metadataNames as $metadataName) {
+            $metadata = Metadata::getForName($metadataName);
+            if ($metadata === null) {
+                LogUtility::msg("The metadata ($metadata) should be defined");
+                continue;
+            }
+            /**
+             * The Value or Default is returned
+             *
+             * Because the title/h1 should never be null
+             * otherwise a template link such as [[$path|$title]] will return a link without an description
+             * and therefore will be not visible
+             *
+             * ToStoreValue to get the string format of date/boolean in the {@link PipelineUtility}
+             * If we want the native value, we need to change the pipeline
+             */
+            $value = $metadata
+                ->setResource($this)
+                ->toStoreValueOrDefault();
+            if ($metadata->getDataType() === DataType::TEXT_TYPE_VALUE) {
 
-        /**
-         * When creating a page, the file
-         * may not be saved, causing a
-         * filemtime(): stat failed for pages/test.txt in lib\plugins\combo\ComboStrap\File.php on line 62
-         *
-         */
-        if ($this->exists()) {
-            $array[PageCreationDate::DATE_CREATED_PROPERTY] = $this->getCreatedDateAsString();
-            $array[ModificationDate::DATE_MODIFIED_PROPERTY] = $this->getModifiedDateAsString();
+                /**
+                 * Hack: Replace every " by a ' to be able to detect/parse the title/h1 on a pipeline
+                 * @see {@link \syntax_plugin_combo_pipeline}
+                 */
+                $value = str_replace('"', "'", $value);
+            }
+            $array[$metadataName] = $value;
         }
-
-        $array[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
-        $array[StartDate::DATE_START] = $this->getStartDateAsString();
-        $array[EndDate::DATE_END] = $this->getStartDateAsString();
-        $array[PageLayout::LAYOUT_PROPERTY] = $this->getMetadata(PageLayout::LAYOUT_PROPERTY);
-
+        $array["url"] = $this->getCanonicalUrl();
         return $array;
 
     }

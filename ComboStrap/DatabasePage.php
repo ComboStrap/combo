@@ -163,8 +163,13 @@ class DatabasePage
         /**
          * Replication Date
          */
-        $replicationDate = Iso8601Date::createFromNow()->toString();
-        $res = $this->replicatePage($replicationDate);
+        try {
+            $replicationMeta = ReplicationDate::createFromPage($this->page)
+                ->setValue(new \DateTime());
+        } catch (ExceptionCombo $e) {
+            return false;
+        }
+        $res = $this->replicatePage($replicationMeta);
         if ($res === false) {
             return false;
         }
@@ -178,7 +183,7 @@ class DatabasePage
             Aliases::createForPage($this->page)
                 ->buildFromStore()
                 ->setStore(MetadataDbStore::getOrCreate())
-                ->sendToStore();
+                ->persist();
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Error replicating the page aliases " . $e->getMessage(), ReplicationDate::REPLICATION_CANONICAL);
             return false;
@@ -187,7 +192,13 @@ class DatabasePage
         /**
          * Set the replication date
          */
-        $this->page->setRuntimeMetadata(ReplicationDate::DATE_REPLICATION, $replicationDate);
+        try {
+            $replicationMeta
+                ->persist();
+        } catch (ExceptionCombo $e) {
+            return false;
+        }
+
         return true;
 
     }
@@ -460,10 +471,10 @@ class DatabasePage
     }
 
     /**
-     * @param string $replicationDate
+     * @param ReplicationDate $replicationDate
      * @return bool
      */
-    public function replicatePage(string $replicationDate): bool
+    public function replicatePage(ReplicationDate $replicationDate): bool
     {
 
         if (!$this->page->exists()) {
@@ -492,7 +503,7 @@ class DatabasePage
         $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
         $record['BACKLINK_COUNT'] = $this->getBacklinkCount();
         $record['IS_HOME'] = ($page->isHomePage() === true ? 1 : 0);
-        $record[ReplicationDate::DATE_REPLICATION] = $replicationDate;
+        $record[ReplicationDate::DATE_REPLICATION] = $replicationDate->toStoreValue();
 
 
         return $this->upsertAttributes($record);
@@ -803,7 +814,7 @@ EOF;
                 } catch (ExceptionCombo $e) {
                     $message = "The page id of the page was null and we tried to update it with the page id of the database ({$this->getPageId()}) but we got an error: " . $e->getMessage();
                     if (PluginUtility::isDevOrTest()) {
-
+                        throw new ExceptionComboRuntime($message);
                     } else {
                         LogUtility::msg($message);
                     }

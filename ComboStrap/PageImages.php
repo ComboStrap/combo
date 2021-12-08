@@ -306,9 +306,11 @@ class PageImages extends Metadata
      */
     private function checkImageExistence()
     {
-        foreach ($this->pageImages as $pageImage) {
-            if (!$pageImage->getImage()->exists()) {
-                throw new ExceptionCombo("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
+        if($this->pageImages!==null) {
+            foreach ($this->pageImages as $pageImage) {
+                if (!$pageImage->getImage()->exists()) {
+                    throw new ExceptionCombo("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
+                }
             }
         }
     }

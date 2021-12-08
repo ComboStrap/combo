@@ -1,7 +1,9 @@
 <?php
 
 
+use ComboStrap\ExceptionCombo;
 use ComboStrap\FileSystems;
+use ComboStrap\LogUtility;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDateTime;
 use ComboStrap\MetadataDokuWikiStore;
@@ -37,7 +39,11 @@ class ModificationDate extends MetadataDateTime
         // the data in dokuwiki is saved as timestamp
         $datetime = new DateTime();
         $datetime->setTimestamp($createdMeta);
-        $this->setValue($datetime);
+        try {
+            $this->setValue($datetime);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error when setting the time from the store. Message".$e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+        }
         return $this;
     }
 

@@ -20,9 +20,9 @@ class PageCreationDate extends MetadataDateTime
     const DOKUWIKI_SUB_KEY = 'created';
 
 
-    public static function createForPage(ResourceCombo $page): CacheExpirationDate
+    public static function createForPage(ResourceCombo $page): PageCreationDate
     {
-        return (new CacheExpirationDate())
+        return (new PageCreationDate())
             ->setResource($page);
     }
 

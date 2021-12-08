@@ -60,7 +60,7 @@ class Canonical extends MetadataWikiPath
          * The last part of the id as canonical
          */
         // How many last parts are taken into account in the canonical processing (2 by default)
-        $canonicalLastNamesCount = PluginUtility::getConfValue(self::CONF_CANONICAL_LAST_NAMES_COUNT);
+        $canonicalLastNamesCount = PluginUtility::getConfValue(self::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
         if ($canonicalLastNamesCount > 0) {
             /**
              * Takes the last names part

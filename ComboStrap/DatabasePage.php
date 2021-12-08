@@ -164,12 +164,12 @@ class DatabasePage
          * Replication Date
          */
         try {
-            $replicationMeta = ReplicationDate::createFromPage($this->page)
+            $replicationDateMeta = ReplicationDate::createFromPage($this->page)
                 ->setValue(new \DateTime());
         } catch (ExceptionCombo $e) {
             return false;
         }
-        $res = $this->replicatePage($replicationMeta);
+        $res = $this->replicatePage($replicationDateMeta);
         if ($res === false) {
             return false;
         }
@@ -193,7 +193,7 @@ class DatabasePage
          * Set the replication date
          */
         try {
-            $replicationMeta
+            $replicationDateMeta
                 ->persist();
         } catch (ExceptionCombo $e) {
             return false;

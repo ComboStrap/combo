@@ -11,7 +11,7 @@ namespace ComboStrap;
 class LocalPath extends PathAbs
 {
 
-    private const DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
+    private const FILE_SYSTEM_DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
 
     private $path;
 
@@ -98,9 +98,9 @@ class LocalPath extends PathAbs
      */
     private function getDirectorySeparator(): string
     {
-        $directorySeparator = self::DIRECTORY_SEPARATOR;
+        $directorySeparator = self::FILE_SYSTEM_DIRECTORY_SEPARATOR;
         if (
-            $directorySeparator === "\""
+            $directorySeparator === '\\'
             &&
             strpos($this->path, "/") !== false
         ) {

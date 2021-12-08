@@ -87,11 +87,9 @@ class FileSystems
         $scheme = $path->getScheme();
         switch ($scheme) {
             case LocalFs::SCHEME:
-                LocalFs::getOrCreate()->getSize($path);
-                return;
+                return LocalFs::getOrCreate()->getSize($path);
             case DokuFs::SCHEME:
-                DokuFs::getOrCreate()->getSize($path);
-                return;
+                return DokuFs::getOrCreate()->getSize($path);
             default:
                 throw new ExceptionComboRuntime("File system ($scheme) unknown");
         }

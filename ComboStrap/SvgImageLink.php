@@ -205,8 +205,9 @@ class SvgImageLink extends ImageLink
              */
             $attributes->removeComponentAttributeIfPresent(PageTitle::TITLE_META_PROPERTY);
 
+            $imageSize = FileSystems::getSize($image->getPath());
             if (
-                $image->getSize() > $this->getMaxInlineSize()
+                $imageSize > $this->getMaxInlineSize()
             ) {
 
                 /**

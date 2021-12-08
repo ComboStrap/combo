@@ -18,7 +18,7 @@ class DokuFs implements FileSystem
 
     public static function getOrCreate(): DokuFs
     {
-        if (self::$dokuFS ===null){
+        if (self::$dokuFS === null) {
             self::$dokuFS = new DokuFs();
         }
         return self::$dokuFS;
@@ -71,6 +71,6 @@ class DokuFs implements FileSystem
      */
     public function getSize(Path $path)
     {
-        FileSystems::getSize($path->toLocalPath());
+        return FileSystems::getSize($path->toLocalPath());
     }
 }

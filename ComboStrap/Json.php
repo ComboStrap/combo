@@ -6,8 +6,7 @@ namespace ComboStrap;
 
 class Json
 {
-    const FIELD_SEPARATOR = ",";
-    const START_JSON = self::TYPE_OBJECT . DOKU_LF;
+
     const TYPE_OBJECT = "{";
     const PARENT_TYPE_ARRAY = "[";
     const TAB_SPACES_COUNTER = 4;
@@ -51,14 +50,21 @@ class Json
      */
     public function toNormalizedJsonString()
     {
-        return json_encode($this->getJsonArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $jsonArray = $this->getJsonArray();
+        if ($jsonArray === null) {
+            /**
+             * Edge case empty string
+             */
+            return "";
+        }
+        return json_encode($jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     /**
      * This formatting make the object on one line for a list of object
      * making the frontmatter compacter (one line, one meta)
-     * @deprecated You should use the {@link MetadataFrontmatterStore::toFrontmatterJsonString()} instead
      * @return string
+     * @deprecated You should use the {@link MetadataFrontmatterStore::toFrontmatterJsonString()} instead
      */
     public function toFrontMatterFormat(): string
     {
@@ -67,7 +73,6 @@ class Json
         return MetadataFrontmatterStore::toFrontmatterJsonString($jsonArray);
 
     }
-
 
 
     public

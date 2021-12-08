@@ -38,6 +38,12 @@ interface ResourceCombo
      */
     function getBuster(): string;
 
-    function getType(): string;
+    /**
+     * @return string - the resource type/name
+     * Example for page: page
+     * Used to locate the data in a datastore
+     * The table name for instance
+     */
+    function getName(): string;
 
 }

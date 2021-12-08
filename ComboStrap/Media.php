@@ -85,7 +85,7 @@ abstract class Media extends ResourceComboAbs
         throw new ExceptionComboRuntime("To implement");
     }
 
-    function getType(): string
+    function getName(): string
     {
         return "media";
     }

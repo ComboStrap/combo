@@ -1432,7 +1432,7 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function getType(): string
+    function getPageType(): ?string
     {
         return $this->type->getValue();
     }
@@ -2053,8 +2053,8 @@ class Page extends ResourceComboAbs
                     break;
                 case
                 PageType::TYPE_META_PROPERTY:
-                    if (!in_array($this->getType(), [$this->getDefaultType(), null])) {
-                        $nonDefaultMetadatas[PageType::TYPE_META_PROPERTY] = $this->getType();
+                    if (!in_array($this->getPageType(), [$this->getDefaultType(), null])) {
+                        $nonDefaultMetadatas[PageType::TYPE_META_PROPERTY] = $this->getPageType();
                     }
                     break;
                 case PageH1::H1_PROPERTY:
@@ -2178,22 +2178,7 @@ class Page extends ResourceComboAbs
         return Site::getLang();
     }
 
-    public function getDescriptionOrigin(): string
-    {
-        return $this->descriptionOrigin;
-    }
 
-    /**
-     * @param string $key
-     * @param string $value
-     * @return Page
-     * Works only in the render function of the syntax plugin
-     */
-    public function setRuntimeMetadata(string $key, string $value): Page
-    {
-        $this->setMetadata($key, $value, null, MetadataDokuWikiStore::CURRENT_METADATA);
-        return $this;
-    }
 
     public function getKeywords(): PageKeywords
     {
@@ -2244,28 +2229,9 @@ class Page extends ResourceComboAbs
 
 
     /**
-     * @param string $metaName
-     * @return DateTime|false|mixed|null
-     * @deprecated for a metadata that extends {@link MetadataDateTime}
-     */
-    public function getMetadataAsDate(string $metaName)
-    {
-        $date = $this->getMetadata($metaName);
-        if ($date === null) {
-            return null;
-        }
-        try {
-            $dateTime = Iso8601Date::createFromString($date)->getDateTime();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("The meta ($metaName) has a value ($date) that is not a valid date format", Iso8601Date::CANONICAL);
-            return null;
-        }
-        return $dateTime;
-    }
-
-    /**
      * @param DateTime $cacheExpirationDate
      * @return $this
+     * @throws ExceptionCombo
      * @deprecated for {@link CacheExpirationDate}
      */
     public function setCacheExpirationDate(DateTime $cacheExpirationDate): Page
@@ -2363,4 +2329,10 @@ class Page extends ResourceComboAbs
     {
         return DokuPath::PATH_SEPARATOR . $this->getDokuwikiId();
     }
+
+    function getName(): string
+    {
+        return "page";
+    }
+
 }

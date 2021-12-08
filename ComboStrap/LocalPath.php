@@ -58,14 +58,7 @@ class LocalPath extends PathAbs
 
     function getNames()
     {
-        $directorySeparator = self::DIRECTORY_SEPARATOR;
-        if (
-            $directorySeparator === "\""
-            &&
-            strpos($this->path, "/") !== false
-        ) {
-            $directorySeparator = "/";
-        }
+        $directorySeparator = $this->getDirectorySeparator();
         return explode($directorySeparator, $this->path);
     }
 
@@ -98,6 +91,22 @@ class LocalPath extends PathAbs
         }
         return $this;
 
+    }
+
+    /**
+     * @return string
+     */
+    private function getDirectorySeparator(): string
+    {
+        $directorySeparator = self::DIRECTORY_SEPARATOR;
+        if (
+            $directorySeparator === "\""
+            &&
+            strpos($this->path, "/") !== false
+        ) {
+            $directorySeparator = "/";
+        }
+        return $directorySeparator;
     }
 
 

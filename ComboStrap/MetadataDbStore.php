@@ -55,7 +55,7 @@ class MetadataDbStore implements MetadataStore
     {
         $resource = $metadata->getResource();
         if (!($resource instanceof Page)) {
-            throw new ExceptionComboRuntime("The resource type ({$resource->getType()}) is not yet supported for the database metadata store", self::CANONICAL);
+            throw new ExceptionComboRuntime("The resource type ({$resource->getPageType()}) is not yet supported for the database metadata store", self::CANONICAL);
         }
 
         $database = DatabasePage::createFromPageObject($resource);

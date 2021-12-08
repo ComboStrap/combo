@@ -63,6 +63,14 @@ class DokuFs implements FileSystem
      */
     public function delete(Path $path)
     {
-        return FileSystems::delete($path->toLocalPath());
+        FileSystems::delete($path->toLocalPath());
+    }
+
+    /**
+     * @param DokuPath $path
+     */
+    public function getSize(Path $path)
+    {
+        FileSystems::getSize($path->toLocalPath());
     }
 }

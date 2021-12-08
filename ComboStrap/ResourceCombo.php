@@ -28,6 +28,14 @@ interface ResourceCombo
      */
     public function getUid(): MetadataScalar;
 
+    /**
+     * A buster value used in URL
+     * to avoid cache (cache bursting)
+     *
+     * It should be unique for each version of the resource
+     *
+     * @return string
+     */
     function getBuster(): string;
 
     function getType(): string;

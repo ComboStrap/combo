@@ -58,7 +58,7 @@ class FileSystems
 
     public static function deleteIfExists(Path $path)
     {
-        if(FileSystems::exists($path)){
+        if (FileSystems::exists($path)) {
             FileSystems::delete($path);
         }
     }
@@ -78,4 +78,19 @@ class FileSystems
         }
     }
 
+    public static function getSize(Path $path)
+    {
+
+        $scheme = $path->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                LocalFs::getOrCreate()->getSize($path);
+                return;
+            case DokuFs::SCHEME:
+                DokuFs::getOrCreate()->getSize($path);
+                return;
+            default:
+                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+        }
+    }
 }

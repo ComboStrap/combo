@@ -15,6 +15,11 @@ namespace ComboStrap;
 
 use DateTime;
 
+/**
+ * Class File
+ * @package ComboStrap
+ * @deprecated for {@link LocalPath} and {@link FileSystems}
+ */
 class File
 {
 
@@ -31,6 +36,7 @@ class File
     }
 
     /**
+     * @deprecated uses {@link Path::toAbsolutePath()} instead
      * @return mixed
      */
     public function getAbsoluteFileSystemPath()
@@ -39,6 +45,7 @@ class File
     }
 
     /**
+     * @deprecated use {@link FileSystems::getSize()} instead
      * @return false|int
      */
     public function getSize()
@@ -72,28 +79,11 @@ class File
         return Iso8601Date::createFromTimestamp(filemtime($this->path))->getDateTime();
     }
 
-    /**
-     * @return string the last part of the path without the extension
-     * @deprecated use {@link LocalPath::getLastName()} instead
-     */
-    public function getBaseNameWithoutExtension()
-    {
-
-        return pathinfo($this->path, PATHINFO_FILENAME);
-    }
-
-
-
-
-
-    public function isImage(): bool
-    {
-        return substr($this->getMime(), 0, 5) == 'image';
-    }
 
 
 
     /**
+     * @deprecated use {@link FileSystems::getContent()} instead
      * @return false|string
      */
     public function getTextContent()
@@ -134,13 +124,8 @@ class File
 
     }
 
-
     /**
-     * A buster value used in URL
-     * to avoid cache (cache bursting)
-     *
-     * It is unique for each version of the path
-     *
+     * @deprecated for {@link ResourceCombo::getBuster()}
      * @return string
      */
     public function getBuster(): string
@@ -148,6 +133,10 @@ class File
         return strval($this->getModifiedTime()->getTimestamp());
     }
 
+    /**
+     * @deprecated uses {@link FileSystems::getCreationTime()} instead
+     * @return DateTime|false|mixed
+     */
     public function getCreationTime()
     {
         return Iso8601Date::createFromTimestamp(filectime($this->path))->getDateTime();

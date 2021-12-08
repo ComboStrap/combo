@@ -65,5 +65,12 @@ class LocalFs implements FileSystem
         unlink($path->toAbsolutePath()->toString());
     }
 
+    /**
+     * @return false|int
+     */
+    public function getSize($path)
+    {
+        return filesize($path->toAbsolutePath()->toString());
+    }
 
 }

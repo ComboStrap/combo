@@ -11,6 +11,8 @@ namespace ComboStrap;
 class LocalPath extends PathAbs
 {
 
+    private const DIRECTORY_SEPARATOR = DIRECTORY_SEPARATOR;
+
     private $path;
 
     /**
@@ -40,7 +42,13 @@ class LocalPath extends PathAbs
 
     function getLastName()
     {
-        return pathinfo($this->path, PATHINFO_FILENAME);
+        $names = $this->getNames();
+        $sizeof = sizeof($names);
+        if ($sizeof === 0) {
+            return null;
+        }
+        return $names[$sizeof - 1];
+
     }
 
     public function getExtension()
@@ -50,7 +58,15 @@ class LocalPath extends PathAbs
 
     function getNames()
     {
-        throw new ExceptionComboRuntime("Not implemented");
+        $directorySeparator = self::DIRECTORY_SEPARATOR;
+        if (
+            $directorySeparator === "\""
+            &&
+            strpos($this->path, "/") !== false
+        ) {
+            $directorySeparator = "/";
+        }
+        return explode($directorySeparator, $this->path);
     }
 
     function getDokuwikiId()
@@ -83,4 +99,6 @@ class LocalPath extends PathAbs
         return $this;
 
     }
+
+
 }

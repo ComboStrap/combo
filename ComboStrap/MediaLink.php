@@ -396,7 +396,7 @@ abstract class MediaLink
              */
             $mime = "image/svg+xml";
         } else {
-            $mime = $dokuPath->getKnownMime();
+            $mime = $dokuPath->getMime();
         }
 
         if (substr($mime, 0, 5) === 'image') {
@@ -409,13 +409,11 @@ abstract class MediaLink
         } else {
             if ($mime == false) {
                 LogUtility::msg("The mime type of the media ($qualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-                $media = new ImageRaster($dokuPath->getAbsoluteFileSystemPath(), $tagAttributes);
-                $media->setDokuPath($dokuPath);
+                $media = new ImageRaster($dokuPath, $tagAttributes);
                 $internalMediaLink = new RasterImageLink($media);
             } else {
                 LogUtility::msg("The type ($mime) of media ($qualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                $media = new ThirdMedia($dokuPath->getAbsoluteFileSystemPath(), $tagAttributes);
-                $media->setDokuPath($dokuPath);
+                $media = new ThirdMedia($dokuPath, $tagAttributes);
                 $internalMediaLink = new ThirdMediaLink($media);
             }
         }

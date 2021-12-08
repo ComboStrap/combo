@@ -69,7 +69,11 @@ class ImageRaster extends Image
                  * $dimensions = media_image_preview_size($this->id, '', false);
                  */
                 $imageInfo = array();
-                $imageSize = getimagesize($this->getAbsoluteFileSystemPath(), $imageInfo);
+                $path = $this->getPath();
+                if ($path instanceof DokuPath) {
+                    $path = $path->toLocalPath();
+                }
+                $imageSize = getimagesize($path->toAbsolutePath()->toString(), $imageInfo);
                 if ($imageSize === false) {
                     $this->analyzable = false;
                     LogUtility::msg("We couldn't retrieve the type and dimensions of the image ($this). The image format seems to be not supported.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
@@ -103,7 +107,8 @@ class ImageRaster extends Image
 
     }
 
-    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED){
+    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED)
+    {
         return $this->getUrlAtBreakpoint($ampersand);
     }
 
@@ -121,12 +126,13 @@ class ImageRaster extends Image
      * @param $breakpoint
      * @return false|string|null
      */
-    public function getUrlForSrcSetAtBreakpoint($breakpoint){
-        if(PluginUtility::isTest()){
+    public function getUrlForSrcSetAtBreakpoint($breakpoint)
+    {
+        if (PluginUtility::isTest()) {
             // The test library does not support ampersand character
-            return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_URL_ENCODED,$breakpoint);
+            return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_URL_ENCODED, $breakpoint);
         }
-        return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_CHARACTER,$breakpoint);
+        return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_CHARACTER, $breakpoint);
     }
 
     /**
@@ -264,8 +270,6 @@ class ImageRaster extends Image
 
         return parent::getTargetHeight();
     }
-
-
 
 
 }

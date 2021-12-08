@@ -8,9 +8,6 @@ abstract class PathAbs implements Path
 {
 
 
-
-
-
     public function getExtension()
     {
         return pathinfo($this->getLastName(), PATHINFO_EXTENSION);

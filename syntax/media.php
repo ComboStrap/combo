@@ -209,7 +209,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
                 $media = $mediaLink->getMedia();
                 if ($media->getPath()->getScheme() == DokuFs::SCHEME) {
                     $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
-                    if ($media->isImage() || $media->getExtension() === "svg") {
+                    if ($media->getPath()->getMime()->isImage() || $media->getPath()->getExtension() === "svg") {
                         try {
                             $renderer->doc .= $mediaLink->renderMediaTagWithLink();
                         } catch (RuntimeException $e) {

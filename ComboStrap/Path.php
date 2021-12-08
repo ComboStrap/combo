@@ -14,6 +14,10 @@ namespace ComboStrap;
 interface Path
 {
 
+    function getExtension();
+
+    function getLastNameWithoutExtension();
+
     function getScheme();
 
     /**

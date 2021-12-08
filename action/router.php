@@ -13,6 +13,7 @@ use ComboStrap\Mime;
 use ComboStrap\Page;
 use ComboStrap\PageId;
 use ComboStrap\PageRules;
+use ComboStrap\PageUrlPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\Sqlite;
@@ -325,7 +326,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Page Id Website / root Permalink ?
          */
-        $shortPageId = Page::getShortEncodedPageIdFromUrlId($targetPage->getDokuPathLastName());
+        $shortPageId = PageUrlPath::getShortEncodedPageIdFromUrlId($targetPage->getDokuPathLastName());
         if ($shortPageId !== null) {
             $pageId = Page::decodePageId($shortPageId);
             if ($targetPage->getParentPage() === null && $pageId !== null) {

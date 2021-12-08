@@ -323,7 +323,7 @@ $meta[action_plugin_combo_linkwizard::CONF_ENABLE_ENHANCED_LINK_WIZARD] = array(
 /**
  * Canonical Url Type
  */
-$meta[PageUrlType::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' => PageUrlType::CONF_CANONICAL_URL_TYPE_VALUES);
+$meta[PageUrlType::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' => PageUrlType::CONF_VALUES);
 
 /**
  * Frontmatter on sumbit

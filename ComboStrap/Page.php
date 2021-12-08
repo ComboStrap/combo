@@ -300,15 +300,6 @@ class Page extends ResourceComboAbs
 
     }
 
-    public static function getShortEncodedPageIdFromUrlId($lastPartName)
-    {
-        $lastPosition = strrpos($lastPartName, PageUrlPath::PAGE_ID_URL_SEPARATOR);
-        if ($lastPosition === false) {
-            return null;
-        }
-        return substr($lastPartName, $lastPosition + 1);
-    }
-
     /**
      * @return Page - the requested page
      */
@@ -993,7 +984,7 @@ class Page extends ResourceComboAbs
          * Conf
          */
         $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
-        if ($urlType === PageUrlType::PAGE_PATH) {
+        if ($urlType === PageUrlType::CONF_VALUE_PAGE_PATH) {
             $absolutePath = Site::getCanonicalConfForRelativeVsAsboluteUrl();
             if ($absolutePath === 1) {
                 $absoluteUrl = true;

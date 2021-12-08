@@ -34,6 +34,15 @@ class PageUrlPath extends MetadataWikiPath
             ->setResource($page);
     }
 
+    public static function getShortEncodedPageIdFromUrlId($lastPartName)
+    {
+        $lastPosition = strrpos($lastPartName, PageUrlPath::PAGE_ID_URL_SEPARATOR);
+        if ($lastPosition === false) {
+            return null;
+        }
+        return substr($lastPartName, $lastPosition + 1);
+    }
+
     public function getTab(): string
     {
         return \action_plugin_combo_metamanager::TAB_REDIRECTION_VALUE;
@@ -54,24 +63,24 @@ class PageUrlPath extends MetadataWikiPath
         $urlType = PageUrlType::getOrCreateForPage($page)->getValueOrDefault();
         $pagePath = $page->getPath()->toString();
         switch ($urlType) {
-            case PageUrlType::PAGE_PATH:
+            case PageUrlType::CONF_VALUE_PAGE_PATH:
                 // the default
                 return $pagePath;
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_PAGE_PATH:
+            case PageUrlType::CONF_VALUE_PERMANENT_PAGE_PATH:
                 return $this->toPermanentUrlPath($pagePath);
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_CANONICAL_PATH:
+            case PageUrlType::CONF_VALUE_CANONICAL_PATH:
                 return $page->getCanonicalOrDefault();
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_PERMANENT_CANONICAL_PATH:
+            case PageUrlType::CONF_VALUE_PERMANENT_CANONICAL_PATH:
                 return $this->toPermanentUrlPath($page->getCanonicalOrDefault());
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_SLUG:
+            case PageUrlType::CONF_VALUE_SLUG:
                 return $this->toPermanentUrlPath($page->getSlugOrDefault());
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_HIERARCHICAL_SLUG:
+            case PageUrlType::CONF_VALUE_HIERARCHICAL_SLUG:
                 $urlPath = $page->getSlugOrDefault();
                 while (($parent = $page->getParentPage()) != null) {
                     $urlPath = Slug::toSlugPath($parent->getPageNameNotEmpty()) . $urlPath;
                 }
                 return $this->toPermanentUrlPath($urlPath);
-            case PageUrlType::CONF_CANONICAL_URL_TYPE_VALUE_HOMED_SLUG:
+            case PageUrlType::CONF_VALUE_HOMED_SLUG:
                 $urlPath = $page->getSlugOrDefault();
                 if (($parent = $page->getParentPage()) != null) {
                     $urlPath = Slug::toSlugPath($parent->getPageNameNotEmpty()) . $urlPath;

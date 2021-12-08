@@ -150,7 +150,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         if (empty($twitterImages)) {
             $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {
-                $twitterImage = Image::createImageFromDokuwikiAbsolutePath($defaultImageIdConf);
+                $twitterImage = Image::createImageFromId($defaultImageIdConf);
                 if ($twitterImage->exists()) {
                     $twitterImages[] = $twitterImage;
                 } else {

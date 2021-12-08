@@ -10,9 +10,9 @@ class ImageRaster extends Image
     const CANONICAL = "raster";
 
 
-    public function __construct($absolutePath, $attributes = null)
+    public function __construct($path, $attributes = null)
     {
-        parent::__construct($absolutePath, $attributes);
+        parent::__construct($path, $attributes);
         $this->getAttributes()->setLogicalTag(self::CANONICAL);
     }
 

@@ -18,9 +18,9 @@ class ImageSvg extends Image
 
 
 
-    public function __construct($absolutePath, $tagAttributes = null)
+    public function __construct($path, $tagAttributes = null)
     {
-        parent::__construct($absolutePath, $tagAttributes);
+        parent::__construct($path, $tagAttributes);
     }
 
 

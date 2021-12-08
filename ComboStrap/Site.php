@@ -44,7 +44,7 @@ class Site
         $logoIds = self::getLogoIds();
         foreach ($logoIds as $logoId) {
             if ($logoId->exists()) {
-                $mediaLink = MediaLink::createMediaLinkFromAbsolutePath($logoId->getPath()->getAbsolutePath(), null, $tagAttributes);
+                $mediaLink = MediaLink::createMediaLinkFromPath($logoId->getPath()->getAbsolutePath(), null, $tagAttributes);
                 $mediaLink->setLazyLoad(false);
                 return $mediaLink->renderMediaTag();
             }
@@ -60,7 +60,8 @@ class Site
         $logosPaths = PluginUtility::mergeAttributes(self::PNG_LOGO_IDS, self::SVG_LOGO_IDS);
         $logos = [];
         foreach ($logosPaths as $logoPath) {
-            $logos[] = Image::createImageFromDokuwikiAbsolutePath($logoPath);
+            $dokuPath = DokuPath::createMediaPathFromId($logoPath);
+            $logos[] = Image::createImageFromPath($dokuPath);
         }
         return $logos;
     }

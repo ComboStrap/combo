@@ -218,7 +218,7 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
                     $tagAttributes->addStyleDeclaration("max-height", "unset");
                 }
 
-                $mediaLink = MediaLink::createMediaLinkFromAbsolutePath(
+                $mediaLink = MediaLink::createMediaLinkFromPath(
                     $selectedPageImage->getPath()->getAbsolutePath(),
                     null,
                     $tagAttributes

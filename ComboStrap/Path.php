@@ -51,5 +51,5 @@ interface Path
     /**
      * @return Mime the mime from the extension
      */
-    function getMime(): Mime;
+    function getMime(): ?Mime;
 }

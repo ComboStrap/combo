@@ -378,47 +378,52 @@ abstract class MediaLink
         }
 
 
-        return self::createMediaLinkFromAbsolutePath($qualifiedPath, $rev, $tagAttributes);
+        return self::createMediaLinkFromPath($qualifiedPath, $rev, $tagAttributes);
     }
 
-    public static function createMediaLinkFromAbsolutePath($qualifiedPath, $rev = null, $tagAttributes = null)
+    /**
+     * @param Path $path
+     * @param null $tagAttributes
+     * @return RasterImageLink|SvgImageLink|ThirdMediaLink
+     */
+    public static function createMediaLinkFromPath(Path $path, $tagAttributes = null)
     {
+
         /**
          * Processing
          */
-        $dokuPath = DokuPath::createMediaPathFromAbsolutePath($qualifiedPath, $rev);
-        if ($dokuPath->getExtension() === "svg") {
+        $mime = $path->getMime();
+        if ($path->getExtension() === "svg") {
             /**
              * The mime type is set when uploading, not when
              * viewing.
              * Because they are internal image, the svg was already uploaded
              * Therefore, no authorization scheme here
              */
-            $mime = "image/svg+xml";
-        } else {
-            $mime = $dokuPath->getMime();
+            $mime = Mime::create(Mime::SVG);
         }
 
-        if (substr($mime, 0, 5) === 'image') {
-            $image = Image::createImageFromDokuwikiAbsolutePath($qualifiedPath, $rev, $tagAttributes);
-            if (substr($mime, 6) == "svg+xml") {
-                $internalMediaLink = new SvgImageLink($image);
-            } else {
-                $internalMediaLink = new RasterImageLink($image);
-            }
-        } else {
-            if ($mime == false) {
-                LogUtility::msg("The mime type of the media ($qualifiedPath) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
-                $media = new ImageRaster($dokuPath, $tagAttributes);
-                $internalMediaLink = new RasterImageLink($media);
-            } else {
-                LogUtility::msg("The type ($mime) of media ($qualifiedPath) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
-                $media = new ThirdMedia($dokuPath, $tagAttributes);
-                $internalMediaLink = new ThirdMediaLink($media);
-            }
+        if ($mime === null) {
+            LogUtility::msg("The mime type of the media ($path) is <a href=\"https://www.dokuwiki.org/mime\">unknown (not in the configuration file)</a>", LogUtility::LVL_MSG_ERROR);
+            $media = new ImageRaster($path, $tagAttributes);
+            return new RasterImageLink($media);
         }
 
-        return $internalMediaLink;
+        if (!$mime->isImage()) {
+            LogUtility::msg("The type ($mime) of media ($path) is not an image", LogUtility::LVL_MSG_DEBUG, "image");
+            $media = new ThirdMedia($path, $tagAttributes);
+            return new ThirdMediaLink($media);
+        }
+
+        if ($mime->toString() === Mime::SVG) {
+            $media = new ImageSvg($path, $tagAttributes);
+            return new SvgImageLink($media);
+        }
+
+        $media = new ImageRaster($path, $tagAttributes);
+        return new RasterImageLink($media);
+
+
     }
 
 
@@ -436,7 +441,8 @@ abstract class MediaLink
      *
      * @return array of key string and value
      */
-    public function toCallStackArray(): array
+    public
+    function toCallStackArray(): array
     {
         /**
          * Trying to stay inline with the dokuwiki key
@@ -513,8 +519,8 @@ abstract class MediaLink
          */
         $media = $this->getMedia();
         $dokuPath = $media->getPath();
-        if($dokuPath===null){
-            LogUtility::msg("Media Link are only supported on media from the internal library ($media)", LogUtility::LVL_MSG_ERROR,self::CANONICAL);
+        if ($dokuPath === null) {
+            LogUtility::msg("Media Link are only supported on media from the internal library ($media)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
         $linking = $this->getLinking();
@@ -578,7 +584,9 @@ abstract class MediaLink
     /**
      * @return string - the HTML of the image
      */
-    public abstract function renderMediaTag(): string;
+    public
+
+    abstract function renderMediaTag(): string;
 
 
     /**

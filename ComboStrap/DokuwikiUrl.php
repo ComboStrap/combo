@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 /**
- * Parse a internal dokuwiki URL
+ * Parse a wiki URL that you can found in the first part of a link
  *
  * This class takes care of the
  * fact that a color can have a #
@@ -276,7 +276,7 @@ class DokuwikiUrl
      * All URL token in an array
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         $attributes = [];
         $attributes[self::ANCHOR_ATTRIBUTES] = $this->fragment;
@@ -289,7 +289,7 @@ class DokuwikiUrl
         return $this->queryString;
     }
 
-    public function hasQueryParameter($propertyKey)
+    public function hasQueryParameter($propertyKey): bool
     {
         return isset($this->queryParameters[$propertyKey]);
     }

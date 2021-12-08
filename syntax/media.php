@@ -205,16 +205,15 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
                 /** @var Doku_Renderer_xhtml $renderer */
                 $attributes = $data[PluginUtility::ATTRIBUTES];
-                $mediaLink = MediaLink::createFromCallStackArray($attributes);
+                $mediaLink = MediaLink::createFromCallStackArray($attributes,$renderer->date_at);
                 $media = $mediaLink->getMedia();
                 if ($media->getPath()->getScheme() == DokuFs::SCHEME) {
-                    $mediaLink = MediaLink::createFromCallStackArray($attributes, $renderer->date_at);
                     if ($media->getPath()->getMime()->isImage() || $media->getPath()->getExtension() === "svg") {
                         try {
                             $renderer->doc .= $mediaLink->renderMediaTagWithLink();
                         } catch (RuntimeException $e) {
                             $errorClass = self::SVG_RENDERING_ERROR_CLASS;
-                            $message = "Media ({$media->getPath()->getPath()}). Error while rendering: {$e->getMessage()}";
+                            $message = "Media ({$media->getPath()}). Error while rendering: {$e->getMessage()}";
                             $renderer->doc .= "<span class=\"text-alert $errorClass\">" . hsc(trim($message)) . "</span>";
                             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, MediaLink::CANONICAL);
                         }

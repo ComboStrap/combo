@@ -22,50 +22,42 @@ abstract class Image extends Media
 
     /**
      * Image constructor.
-     * @param $absolutePath
+     * @param Path $path
      * @param TagAttributes|null $attributes - the attributes
      */
-    public function __construct($absolutePath, $attributes = null)
+    public function __construct(Path $path, $attributes = null)
     {
         if ($attributes === null) {
             $this->attributes = TagAttributes::createEmpty(self::CANONICAL);
         }
 
-        parent::__construct($absolutePath, $attributes);
+        parent::__construct($path, $attributes);
     }
 
 
     /**
-     * @param $dokuWikiAbsolutePathOrId
-     * @param null $rev
+     * @param Path $path
      * @param null $attributes
      * @return ImageRaster|ImageSvg|null
      */
-    public static function createImageFromDokuwikiAbsolutePath($dokuWikiAbsolutePathOrId, $rev = null, $attributes = null)
+    public static function createImageFromPath(Path $path, $attributes = null)
     {
 
-        if (!media_isexternal($dokuWikiAbsolutePathOrId)) {
-            DokuPath::addRootSeparatorIfNotPresent($dokuWikiAbsolutePathOrId);
-        }
-        /**
-         * Processing
-         */
-        $dokuPath = DokuPath::createMediaPathFromAbsolutePath($dokuWikiAbsolutePathOrId, $rev);
-        $mime = $dokuPath->getMime();
+        $mime = $path->getMime();
 
         if (!$mime->isImage()) {
 
-            LogUtility::msg("The file ($dokuWikiAbsolutePathOrId) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("The file ($path) has not been detected as being an image, media returned", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return null;
 
         }
         if (substr($mime, 6) == "svg+xml") {
 
-            $image = new ImageSvg($dokuPath, $attributes);
+            $image = new ImageSvg($path, $attributes);
 
         } else {
 
-            $image = new ImageRaster($dokuPath, $attributes);
+            $image = new ImageRaster($path, $attributes);
 
         }
         return $image;
@@ -73,10 +65,10 @@ abstract class Image extends Media
 
     }
 
-    public static function createImageFromId(string $imageId,$rev = '',$attributes = null)
+    public static function createImageFromId(string $imageId, $rev = '', $attributes = null)
     {
-        DokuPath::addRootSeparatorIfNotPresent($imageId);
-        return self::createImageFromDokuwikiAbsolutePath($imageId, $rev,$attributes);
+        $dokuPath = DokuPath::createMediaPathFromId($imageId, $rev);
+        return self::createImageFromPath($dokuPath, $attributes);
     }
 
     /**
@@ -422,8 +414,6 @@ abstract class Image extends Media
     {
         return intval(round($param));
     }
-
-
 
 
 }

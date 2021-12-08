@@ -31,6 +31,11 @@ class Mime
         $this->mime = $mime;
     }
 
+    public static function create(string $mime): Mime
+    {
+        return new Mime($mime);
+    }
+
     public function __toString()
     {
         return $this->mime ;
@@ -65,6 +70,11 @@ class Mime
     public function isImage(): bool
     {
         return substr($this->mime, 0, 5) === 'image';
+    }
+
+    public function toString(): string
+    {
+        return $this->__toString();
     }
 
 

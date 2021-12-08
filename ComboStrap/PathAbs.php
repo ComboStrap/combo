@@ -17,7 +17,7 @@ abstract class PathAbs implements Path
      *
      * @return Mime based on the {@link PathAbs::getExtension()}
      */
-    public function getMime(): Mime
+    public function getMime(): ?Mime
     {
         switch ($this->getExtension()) {
             case ImageSvg::EXTENSION:
@@ -31,7 +31,11 @@ abstract class PathAbs implements Path
             case Json::EXTENSION:
                 return new Mime(Mime::JSON);
             default:
-                return new Mime(mimetype($this->getLastName(), false)[1]);
+                $mime = mimetype($this->getLastName(), true)[1];
+                if ($mime === null) {
+                    return null;
+                }
+                return new Mime($mime);
         }
     }
 

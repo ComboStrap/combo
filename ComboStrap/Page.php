@@ -2299,7 +2299,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * @return Path
+     * @return DokuPath
      */
     public function getPath(): Path
     {

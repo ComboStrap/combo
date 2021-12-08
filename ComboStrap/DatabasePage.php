@@ -998,7 +998,7 @@ EOF;
                          * Check if the error may come from the auto-canonical
                          * (Never ever save generated data)
                          */
-                        $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
+                        $canonicalLastNamesCount = PluginUtility::getConfValue(Canonical::CONF_CANONICAL_LAST_NAMES_COUNT,0);
                         if ($canonicalLastNamesCount > 0) {
                             $this->page->unsetMetadata(Canonical::CANONICAL_PROPERTY);
                             $duplicatePage->unsetMetadata(Canonical::CANONICAL_PROPERTY);

@@ -1424,9 +1424,7 @@ class Page extends ResourceComboAbs
     function setPageId(?string $pageId): Page
     {
 
-        $this->pageId
-            ->setValue($pageId)
-            ->sendToStore();
+        $this->pageId->setValue($pageId);
         return $this;
 
     }
@@ -2177,7 +2175,6 @@ class Page extends ResourceComboAbs
     {
         return Site::getLang();
     }
-
 
 
     public function getKeywords(): PageKeywords

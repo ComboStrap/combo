@@ -12,16 +12,16 @@
 
 namespace ComboStrap;
 
-require_once(__DIR__ . '/LogUtility.php');
+require_once(__DIR__ . '/PluginUtility.php');
 
 use helper_plugin_sqlite;
-use helper_plugin_sqlite_adapter_pdosqlite;
+use RuntimeException;
 
 class Sqlite
 {
 
     /** @var helper_plugin_sqlite $sqlite */
-    protected static $sqlite;
+    private static $sqlite;
 
     /**
      *
@@ -29,102 +29,65 @@ class Sqlite
      */
     public static function getSqlite()
     {
+        $init = self::createNewInstance();
+        if (!$init) {
+            return Sqlite::$sqlite;
+        }
+
         /**
-         * sqlite is stored in a static variable
-         * because when we run the {@link cli_plugin_combo},
-         * we will run in the error:
-         * ``
-         * failed to open stream: Too many open files
-         * ``
-         * There is by default a limit of 1024 open files
-         * which means that if there is more than 1024 pages, you fail.
-         *
-         * In test, we are running in different context (ie different root
-         * directory for DokuWiki and therefore different $conf
-         * and therefore different metadir where sqlite is stored)
-         * Because a sql file may be deleted, we may get:
-         * ```
-         * RuntimeException: HY000 8 attempt to write a readonly database:
-         * ```
-         * To avoid this error, we check that we are still in the same metadir
-         * where the sqlite database is stored. If not, we create a new instance
-         *
+         * Init
          */
+        Sqlite::$sqlite = plugin_load('helper', 'sqlite');
+        /**
+         * Not enabled / loaded
+         */
+        if (Sqlite::$sqlite === null) {
+
+            $sqliteMandatoryMessage = "The Sqlite Plugin is mandatory. Some functionalities of the ComboStrap Plugin may not work.";
+            LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
+            return null;
+        }
+
+        $adapter = Sqlite::$sqlite->getAdapter();
+        if ($adapter == null) {
+            self::sendMessageAsNotAvailable();
+            return null;
+        }
+
+        $adapter->setUseNativeAlter(true);
+
+        // The name of the database (on windows, it should be
+        $dbname = strtolower(PluginUtility::PLUGIN_BASE_NAME);
         global $conf;
-        $metaDir = $conf['metadir'];
-        $init = true;
-        if (self::$sqlite != null) {
-            $adapter = self::$sqlite->getAdapter();
-            /**
-             * Adapter may be null
-             * when the SQLite & PDO SQLite
-             * are not installed
-             * ie: SQLite & PDO SQLite support missing
-             */
-            if ($adapter != null) {
-                $dbFile = $adapter->getDbFile();
-                if (file_exists($dbFile)) {
-                    if (strpos($dbFile, $metaDir) === 0) {
-                        $init = false;
-                    } else {
-                        self::$sqlite->getAdapter()->closedb();
-                        self::$sqlite = null;
-                    }
+
+        $oldDbName = '404manager';
+        $oldDbFile = $conf['metadir'] . "/{$oldDbName}.sqlite";
+        $oldDbFileSqlite3 = $conf['metadir'] . "/{$oldDbName}.sqlite3";
+        if (file_exists($oldDbFile) || file_exists($oldDbFileSqlite3)) {
+            $dbname = $oldDbName;
+        }
+
+        $init = Sqlite::$sqlite->init($dbname, DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . '/db/');
+        if (!$init) {
+            # TODO: Message 'SqliteUnableToInitialize'
+            $message = "Unable to initialize Sqlite";
+            LogUtility::msg($message, MSG_MANAGERS_ONLY);
+            return null;
+        }
+        // regexp implementation
+        // https://stackoverflow.com/questions/5071601/how-do-i-use-regex-in-a-sqlite-query/18484596#18484596
+        $adapter = Sqlite::$sqlite->getAdapter();
+        $adapter->create_function('regexp',
+            function ($pattern, $data, $delimiter = '~', $modifiers = 'isuS') {
+                if (isset($pattern, $data) === true) {
+                    return (preg_match(sprintf('%1$s%2$s%1$s%3$s', $delimiter, $pattern, $modifiers), $data) > 0);
                 }
-            }
-        }
-        if ($init) {
-
-            /**
-             * Init
-             */
-            self::$sqlite = plugin_load('helper', 'sqlite');
-            if (self::$sqlite == null) {
-                # TODO: Man we cannot get the message anymore ['SqliteMandatory'];
-                $sqliteMandatoryMessage = "The Sqlite Plugin is mandatory. Some functionalities of the ComboStrap Plugin may not work.";
-                LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
                 return null;
-            }
-            $adapter = self::$sqlite->getAdapter();
-            if ($adapter == null) {
-                self::sendMessageAsNotAvailable();
-                return null;
-            }
+            },
+            4
+        );
 
-            $adapter->setUseNativeAlter(true);
-
-            // The name of the database (on windows, it should be
-            $dbname = strtolower(PluginUtility::PLUGIN_BASE_NAME);
-            global $conf;
-
-            $oldDbName = '404manager';
-            $oldDbFile = $conf['metadir'] . "/{$oldDbName}.sqlite";
-            $oldDbFileSqlite3 = $conf['metadir'] . "/{$oldDbName}.sqlite3";
-            if (file_exists($oldDbFile) || file_exists($oldDbFileSqlite3)) {
-                $dbname = $oldDbName;
-            }
-
-            $init = self::$sqlite->init($dbname, DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . '/db/');
-            if (!$init) {
-                # TODO: Message 'SqliteUnableToInitialize'
-                $message = "Unable to initialize Sqlite";
-                LogUtility::msg($message, MSG_MANAGERS_ONLY);
-            } else {
-                // regexp implementation
-                // https://stackoverflow.com/questions/5071601/how-do-i-use-regex-in-a-sqlite-query/18484596#18484596
-                $adapter = self::$sqlite->getAdapter();
-                $adapter->create_function('regexp',
-                    function ($pattern, $data, $delimiter = '~', $modifiers = 'isuS') {
-                        if (isset($pattern, $data) === true) {
-                            return (preg_match(sprintf('%1$s%2$s%1$s%3$s', $delimiter, $pattern, $modifiers), $data) > 0);
-                        }
-                        return null;
-                    },
-                    4
-                );
-            }
-        }
-        return self::$sqlite;
+        return Sqlite::$sqlite;
 
     }
 
@@ -134,7 +97,8 @@ class Sqlite
      * https://phpunit.readthedocs.io/en/latest/writing-tests-for-phpunit.html#error-output
      * @param helper_plugin_sqlite $sqlite
      */
-    public static function printDbInfoAtConsole(helper_plugin_sqlite $sqlite)
+    public
+    static function printDbInfoAtConsole(helper_plugin_sqlite $sqlite)
     {
         $dbFile = $sqlite->getAdapter()->getDbFile();
         fwrite(STDERR, "Stderr DbFile: " . $dbFile . "\n");
@@ -160,7 +124,8 @@ class Sqlite
     /**
      * Json support
      */
-    public static function supportJson(): bool
+    public
+    static function supportJson(): bool
     {
 
         $sqlite = self::getSqlite();
@@ -187,16 +152,119 @@ class Sqlite
      * @param array $parameters
      * @return bool|\PDOStatement|\SQLiteResult
      */
-    public static function queryWithParameters(helper_plugin_sqlite $sqlite, string $executableSql, array $parameters)
+    public
+    static function queryWithParameters(helper_plugin_sqlite $sqlite, string $executableSql, array $parameters)
     {
         $args = [$executableSql];
         $args = array_merge($args, $parameters);
         return $sqlite->getAdapter()->query($args);
     }
 
-    public static function sendMessageAsNotAvailable(): void
+    public
+    static function sendMessageAsNotAvailable(): void
     {
         $sqliteMandatoryMessage = "The Sqlite Php Extension is mandatory. It seems that it's not available on this installation.";
         LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
+    }
+
+    /**
+     * sqlite is stored in a static variable
+     * because when we run the {@link cli_plugin_combo},
+     * we will run in the error:
+     * ``
+     * failed to open stream: Too many open files
+     * ``
+     * There is by default a limit of 1024 open files
+     * which means that if there is more than 1024 pages, you fail.
+     *
+     *
+     */
+    private
+    static function createNewInstance(): bool
+    {
+
+        global $conf;
+        $metaDir = $conf['metadir'];
+
+        if (self::$sqlite === null) {
+            return true;
+        }
+
+        /**
+         * Adapter may be null
+         * when the SQLite & PDO SQLite
+         * are not installed
+         * ie: SQLite & PDO SQLite support missing
+         */
+        $adapter = self::$sqlite->getAdapter();
+        if ($adapter === null) {
+            return true;
+        }
+
+        /**
+         * When the database is {@link \helper_plugin_sqlite_adapter::closedb()}
+         */
+        if ($adapter->getDb() === null) {
+            /**
+             * We may also open it again
+             * {@link \helper_plugin_sqlite_adapter::opendb()}
+             * for now, reinit
+             */
+            return true;
+        }
+        /**
+         * In test, we are running in different context (ie different root
+         * directory for DokuWiki and therefore different $conf
+         * and therefore different metadir where sqlite is stored)
+         * Because a sql file may be deleted, we may get:
+         * ```
+         * RuntimeException: HY000 8 attempt to write a readonly database:
+         * ```
+         * To avoid this error, we check that we are still in the same metadir
+         * where the sqlite database is stored. If not, we create a new instance
+         */
+        $dbFile = $adapter->getDbFile();
+        if (!file_exists($dbFile)) {
+            self::close();
+            return true;
+        }
+        // the file is in the meta directory
+        if (strpos($dbFile, $metaDir) === 0) {
+            // we are still in a class run
+            return false;
+        }
+        self::close();
+        return true;
+    }
+
+    public
+    static function close()
+    {
+        if (Sqlite::$sqlite !== null) {
+            $adapter = Sqlite::$sqlite->getAdapter();
+            if ($adapter !== null) {
+                /**
+                 * https://www.php.net/manual/en/pdo.connections.php#114822
+                 * You put the connection on null
+                 * CloseDb do that
+                 */
+                $adapter->closedb();
+
+                /**
+                 * Delete the file If we can't delete the file
+                 * there is a resource still open
+                 */
+                $sqliteFile = $adapter->getDbFile();
+                $result = unlink($sqliteFile);
+                if ($result === false){
+                    throw new RuntimeException("Unable to delete the file ($sqliteFile). Did you close all resources ?");
+                }
+
+                /**
+                 * Set it to null
+                 */
+                Sqlite::$sqlite = null;
+            }
+        }
     }
 }

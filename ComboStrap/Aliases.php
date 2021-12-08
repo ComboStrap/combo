@@ -235,7 +235,6 @@ class Aliases extends Metadata
         }
 
         $this->aliases[$aliasPath] = $alias;
-        $this->sendToStore();
         return $alias;
     }
 

@@ -14,6 +14,7 @@ class PageDescription extends MetadataText
      */
     const ABSTRACT_KEY = "abstract";
     public const DESCRIPTION = "description";
+    const DESCRIPTION_ORIGIN = "origin";
 
 
     /**
@@ -191,7 +192,7 @@ class PageDescription extends MetadataText
          */
         return array(
             self::ABSTRACT_KEY => $this->getValue(),
-            "origin" => PageDescription::DESCRIPTION_COMBO_ORIGIN
+            self::DESCRIPTION_ORIGIN => PageDescription::DESCRIPTION_COMBO_ORIGIN
         );
     }
 

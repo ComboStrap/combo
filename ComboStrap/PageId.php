@@ -23,10 +23,10 @@ class PageId extends MetadataText
      */
     public const PAGE_ID_LENGTH = 21;
 
-    public static function createForPage(Page $page): PageId
+    public static function createForPage(ResourceCombo $resource): PageId
     {
         return (new PageId())
-            ->setResource($page);
+            ->setResource($resource);
     }
 
 
@@ -41,7 +41,6 @@ class PageId extends MetadataText
     {
         return $this->setValueWithOrWithoutForce($value);
     }
-
 
 
     public function getTab(): string
@@ -99,13 +98,9 @@ class PageId extends MetadataText
     {
         $actualValue = $this->getValue();
         if ($actualValue === null) {
-            try {
-                $actualValue = self::generateUniquePageId();
-                $this->setValue($actualValue)
-                    ->sendToStore();
-            } catch (ExceptionCombo $e) {
-                throw new RuntimeException($e);
-            }
+            $actualValue = $this
+                ->generate()
+                ->getValue();
         }
         return $actualValue;
     }
@@ -200,6 +195,39 @@ class PageId extends MetadataText
             throw new ExceptionComboRuntime("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
         }
         parent::sendToStore();
+        return $this;
+
+    }
+
+    private function generate(): PageId
+    {
+        try {
+
+            $actualValue = self::generateUniquePageId();
+
+            /**
+             * If the store is not the file system store
+             * check that it does not exist already on the file system
+             * and save it
+             */
+            $metadataStore = $this->getStore();
+            if (!($metadataStore instanceof MetadataDokuWikiStore)) {
+                $fsPageId = PageId::createForPage($this->getResource())
+                    ->setStore(MetadataDokuWikiStore::getOrCreate());
+                $value = $fsPageId->getValue();
+                if($value!==null){
+                    throw new ExceptionComboRuntime("The file system metadata store has already the page id ($value) for the page ({$this->getResource()}");
+                }
+                $fsPageId->setValue($value)
+                    ->persist();
+            }
+
+            $this->setValue($actualValue)
+                ->persist();
+
+        } catch (ExceptionCombo $e) {
+            throw new RuntimeException($e);
+        }
         return $this;
 
     }

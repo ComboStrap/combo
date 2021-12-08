@@ -35,7 +35,7 @@ class PagePublicationDate extends MetadataDateTime
     const CONF_LATE_PUBLICATION_PROTECTION_MODE = "latePublicationProtectionMode";
     const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
     const LATE_PUBLICATION_CLASS_NAME = "late-publication";
-    const CANONICAL = "published";
+    const CANONICAL_PROPERTY = "published";
 
 
 

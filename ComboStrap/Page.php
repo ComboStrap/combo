@@ -1121,7 +1121,7 @@ class Page extends ResourceComboAbs
             PageH1::H1_PROPERTY,
             PageTitle::TITLE,
             PageId::PAGE_ID_ATTRIBUTE,
-            Canonical::CANONICAL,
+            Canonical::CANONICAL_PROPERTY,
             PagePath::PATH_ATTRIBUTE,
             PageDescription::DESCRIPTION,
             PageName::NAME_PROPERTY,
@@ -1295,12 +1295,12 @@ class Page extends ResourceComboAbs
             $lowerKey = trim(strtolower($key));
             if (in_array($lowerKey, Metadata::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($lowerKey) is a protected metadata and cannot be modified")
-                    ->setCanonical(Metadata::CANONICAL);
+                    ->setCanonical(Metadata::CANONICAL_PROPERTY);
                 continue;
             }
             try {
                 switch ($lowerKey) {
-                    case Canonical::CANONICAL:
+                    case Canonical::CANONICAL_PROPERTY:
                         $this->setCanonical($value);
                         continue 2;
                     case EndDate::DATE_END:
@@ -1367,11 +1367,11 @@ class Page extends ResourceComboAbs
                     default:
                         if (!$persistOnlyKnownAttributes) {
                             $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
-                                ->setCanonical(Metadata::CANONICAL);
+                                ->setCanonical(Metadata::CANONICAL_PROPERTY);
                             $this->setMetadata($key, $value);
                         } else {
                             $messages[] = Message::createErrorMessage("The metadata ($lowerKey) is unknown and was not saved")
-                                ->setCanonical(Metadata::CANONICAL);
+                                ->setCanonical(Metadata::CANONICAL_PROPERTY);
                         }
                         continue 2;
                 }
@@ -2046,9 +2046,9 @@ class Page extends ResourceComboAbs
 
         foreach (Metadata::MUTABLE_METADATA as $metaKey) {
             switch ($metaKey) {
-                case Canonical::CANONICAL:
+                case Canonical::CANONICAL_PROPERTY:
                     if (!in_array($this->getCanonical(), [$this->getDefaultCanonical(), null])) {
-                        $nonDefaultMetadatas[Canonical::CANONICAL] = $this->getCanonical();
+                        $nonDefaultMetadatas[Canonical::CANONICAL_PROPERTY] = $this->getCanonical();
                     }
                     break;
                 case

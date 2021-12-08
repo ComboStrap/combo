@@ -9,7 +9,7 @@ use dokuwiki\Cache\Cache;
 class Lang extends MetadataText
 {
 
-    const CANONICAL = "lang";
+    const CANONICAL_PROPERTY = "lang";
     public const LANG_ATTRIBUTES = "lang";
 
 
@@ -54,15 +54,15 @@ class Lang extends MetadataText
 
                     $numberOfByte = @file_put_contents($languageDataCache->cache, $filePointer);
                     if ($numberOfByte != false) {
-                        LogUtility::msg("The new language data ($langValue) was downloaded", LogUtility::LVL_MSG_INFO, self::CANONICAL);
+                        LogUtility::msg("The new language data ($langValue) was downloaded", LogUtility::LVL_MSG_INFO, self::CANONICAL_PROPERTY);
                         $cacheDataUsable = true;
                     } else {
-                        LogUtility::msg("Internal error: The language data ($langValue) could no be written to ($languageDataCache->cache)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                        LogUtility::msg("Internal error: The language data ($langValue) could no be written to ($languageDataCache->cache)", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
                     }
 
                 } else {
 
-                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
 
                 }
             }
@@ -71,7 +71,7 @@ class Lang extends MetadataText
                 $jsonAsArray = true;
                 $languageData = json_decode(file_get_contents($languageDataCache->cache), $jsonAsArray);
                 if ($languageData == null) {
-                    LogUtility::msg("We could not read the data from the language ($langValue). No direction was set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::msg("We could not read the data from the language ($langValue). No direction was set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
                     return;
                 }
                 $characterOrder = $languageData["main"][$langValue]["layout"]["orientation"]["characterOrder"];
@@ -81,7 +81,7 @@ class Lang extends MetadataText
                     $attributes->addHtmlAttributeValue("dir", "ltr");
                 }
             } else {
-                LogUtility::msg("The language direction cannot be set because no language data was found for the language ($langValue)", LogUtility::LVL_MSG_WARNING, self::CANONICAL);
+                LogUtility::msg("The language direction cannot be set because no language data was found for the language ($langValue)", LogUtility::LVL_MSG_WARNING, self::CANONICAL_PROPERTY);
             }
 
         }

@@ -49,7 +49,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     const ATTRIBUTES_IN_PAGE_TABLE = [
         "id",
-        Canonical::CANONICAL,
+        Canonical::CANONICAL_PROPERTY,
         PagePath::PATH_ATTRIBUTE,
         ModificationDate::DATE_MODIFIED_PROPERTY,
         PageCreationDate::DATE_CREATED_PROPERTY,

@@ -63,7 +63,7 @@ class PageUrlType extends MetadataText
         $urlType = PluginUtility::getConfValue($confCanonicalType, $confDefaultValue);
         if (!in_array($urlType, self::CONF_VALUES)) {
             $urlType = $confDefaultValue;
-            LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, PageUrlPath::CANONICAL);
+            LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, PageUrlPath::CANONICAL_PROPERTY);
         }
 
         // Not yet sync with the database

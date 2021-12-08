@@ -109,7 +109,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                     case self::NAMED_TYPE:
                         $canonical = $page->getCanonical();
                         if ($canonical === null) {
-                            $documentationUrlForCanonical = PluginUtility::getDocumentationHyperLink(Canonical::CANONICAL, "canonical value");
+                            $documentationUrlForCanonical = PluginUtility::getDocumentationHyperLink(Canonical::CANONICAL_PROPERTY, "canonical value");
                             $errorMessage = "The page ($page) does not have a $documentationUrlForCanonical. We can't create a named permalink";
                             $returnArray[PluginUtility::PAYLOAD] = $errorMessage;
                         } else {

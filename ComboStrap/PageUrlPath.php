@@ -26,7 +26,7 @@ class PageUrlPath extends MetadataWikiPath
     /**
      * The canonical page for the page url
      */
-    public const CANONICAL = "page:url";
+    public const CANONICAL_PROPERTY = "page:url";
 
     public static function createForPage(Page $page)
     {
@@ -87,7 +87,7 @@ class PageUrlPath extends MetadataWikiPath
                 }
                 return $this->toPermanentUrlPath($urlPath);
             default:
-                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
                 return null;
         }
 
@@ -126,7 +126,7 @@ class PageUrlPath extends MetadataWikiPath
 
     public function getCanonical(): string
     {
-        return self::CANONICAL;
+        return self::CANONICAL_PROPERTY;
     }
 
 

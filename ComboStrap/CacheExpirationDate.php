@@ -91,7 +91,7 @@ class CacheExpirationDate extends MetadataDateTime
 
     public function getCanonical(): string
     {
-        return CacheExpirationFrequency::CANONICAL;
+        return CacheExpirationFrequency::CANONICAL_PROPERTY;
     }
 
     public function getTab(): string

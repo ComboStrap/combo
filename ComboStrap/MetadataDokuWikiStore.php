@@ -46,7 +46,7 @@ class MetadataDokuWikiStore implements MetadataStore
      */
     private $metadatas = [];
 
-    const CANONICAL = Metadata::CANONICAL;
+    const CANONICAL = Metadata::CANONICAL_PROPERTY;
 
 
     public static function getOrCreate(): MetadataDokuWikiStore
@@ -174,7 +174,7 @@ class MetadataDokuWikiStore implements MetadataStore
          * with parsing
          */
         $dokuwikiId = $page->getPath()->getDokuwikiId();
-        $actualMeta = $this->metadatas[$dokuwikiId];
+        $actualMeta = $this->getMetadatasFromWikiId($dokuwikiId);
         $this->metadatas[$dokuwikiId] = p_render_metadata($dokuwikiId, $actualMeta);
         return $this;
     }

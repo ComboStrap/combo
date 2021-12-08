@@ -31,7 +31,7 @@ class DatabasePage
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
             self::ANALYTICS_ATTRIBUTE,
             PageDescription::DESCRIPTION,
-            Canonical::CANONICAL,
+            Canonical::CANONICAL_PROPERTY,
             PageName::NAME_PROPERTY,
             PageTitle::TITLE,
             PageH1::H1_PROPERTY,
@@ -250,7 +250,7 @@ class DatabasePage
 
         DokuPath::addRootSeparatorIfNotPresent($canonical);
         $databasePage = new DatabasePage();
-        $row = $databasePage->getDatabaseRowFromAttribute(Canonical::CANONICAL, $canonical);
+        $row = $databasePage->getDatabaseRowFromAttribute(Canonical::CANONICAL_PROPERTY, $canonical);
         if ($row != null) {
             $databasePage->buildDatabaseObjectFields($row);
         }
@@ -695,7 +695,7 @@ EOF;
             /**
              * Default implements the auto-canonical feature
              */
-            $values[Canonical::CANONICAL] = $this->page->getCanonicalOrDefault();
+            $values[Canonical::CANONICAL_PROPERTY] = $this->page->getCanonicalOrDefault();
             $res = $this->sqlite->storeEntry('PAGES', $values);
             $this->sqlite->res_close($res);
             if ($res === false) {
@@ -778,7 +778,7 @@ EOF;
 
     public function getCanonical()
     {
-        return $this->getFromRow(Canonical::CANONICAL);
+        return $this->getFromRow(Canonical::CANONICAL_PROPERTY);
     }
 
     /**
@@ -852,7 +852,7 @@ EOF;
     private function getMetaRecord(): array
     {
         $record = array(
-            Canonical::CANONICAL,
+            Canonical::CANONICAL_PROPERTY,
             PagePath::PATH_ATTRIBUTE,
             PageName::NAME_PROPERTY,
             PageTitle::TITLE,
@@ -960,7 +960,7 @@ EOF;
 
     private function getDatabaseRowFromCanonical($canonical)
     {
-        $query = $this->getParametrizedLookupQuery(Canonical::CANONICAL);
+        $query = $this->getParametrizedLookupQuery(Canonical::CANONICAL_PROPERTY);
         $res = $this->sqlite->query($query, $canonical);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from CANONICAL");
@@ -1000,8 +1000,8 @@ EOF;
                          */
                         $canonicalLastNamesCount = PluginUtility::getConfValue(\action_plugin_combo_metacanonical::CANONICAL_LAST_NAMES_COUNT_CONF);
                         if ($canonicalLastNamesCount > 0) {
-                            $this->page->unsetMetadata(Canonical::CANONICAL);
-                            $duplicatePage->unsetMetadata(Canonical::CANONICAL);
+                            $this->page->unsetMetadata(Canonical::CANONICAL_PROPERTY);
+                            $duplicatePage->unsetMetadata(Canonical::CANONICAL_PROPERTY);
                         }
 
                         $existingPages[] = $row;

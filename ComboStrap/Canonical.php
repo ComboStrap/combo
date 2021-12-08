@@ -7,7 +7,7 @@ namespace ComboStrap;
 class Canonical extends MetadataWikiPath
 {
 
-    public const CANONICAL = "canonical";
+    public const CANONICAL_PROPERTY = "canonical";
 
     /**
      * The auto-canonical feature does not create any canonical value on the file system
@@ -41,7 +41,7 @@ class Canonical extends MetadataWikiPath
 
     public function getName(): string
     {
-        return self::CANONICAL;
+        return self::CANONICAL_PROPERTY;
     }
 
     public function getPersistenceType(): string
@@ -106,7 +106,7 @@ class Canonical extends MetadataWikiPath
 
     public function getCanonical(): string
     {
-        return self::CANONICAL;
+        return self::CANONICAL_PROPERTY;
     }
 
 

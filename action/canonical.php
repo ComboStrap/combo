@@ -15,7 +15,7 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
 {
 
     const CONF_CANONICAL_FOR_GA_PAGE_VIEW = "useCanonicalValueForGoogleAnalyticsPageView";
-    const CANONICAL = Canonical::CANONICAL;
+    const CANONICAL = Canonical::CANONICAL_PROPERTY;
 
 
     function __construct()
@@ -49,7 +49,7 @@ class action_plugin_combo_canonical extends DokuWiki_Action_Plugin
         global $JSINFO;
         $page = Page::createPageFromRequestedPage();
         if ($page->getCanonical() != null) {
-            $JSINFO[Canonical::CANONICAL] = $page->getCanonical();
+            $JSINFO[Canonical::CANONICAL_PROPERTY] = $page->getCanonical();
             if (isset($JSINFO["ga"]) && PluginUtility::getConfValue(self::CONF_CANONICAL_FOR_GA_PAGE_VIEW, 1)) {
                 //
                 // The path portion of a URL. This value should start with a slash (/) character.

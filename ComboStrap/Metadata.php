@@ -12,7 +12,7 @@ use Slug;
 
 abstract class Metadata
 {
-    const CANONICAL = "page:metadata";
+    const CANONICAL_PROPERTY = "page:metadata";
     const MUTABLE = "mutable";
     public const NOT_MODIFIABLE_METAS = [
         "date",
@@ -60,7 +60,7 @@ abstract class Metadata
          * TODO: this array could be build automatically by creating an object for each metadata
          */
         switch ($name) {
-            case Canonical::CANONICAL:
+            case Canonical::CANONICAL_PROPERTY:
                 return new Canonical();
             case PageType::TYPE_META_PROPERTY:
                 return new PageType();
@@ -116,9 +116,9 @@ abstract class Metadata
             default:
                 $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
                 if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionComboRuntime($msg, self::CANONICAL);
+                    throw new ExceptionComboRuntime($msg, self::CANONICAL_PROPERTY);
                 } else {
-                    LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                    LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
                 }
         }
         return null;
@@ -239,7 +239,7 @@ abstract class Metadata
         /**
          * The canonical to page metadata
          */
-        return self::CANONICAL;
+        return self::CANONICAL_PROPERTY;
     }
 
     /**
@@ -391,7 +391,7 @@ abstract class Metadata
      *   * or in the database
      */
     const MUTABLE_METADATA = [
-        Canonical::CANONICAL,
+        Canonical::CANONICAL_PROPERTY,
         PageType::TYPE_META_PROPERTY,
         PageH1::H1_PROPERTY,
         Aliases::ALIAS_ATTRIBUTE,

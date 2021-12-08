@@ -305,7 +305,7 @@ EOF;
                  */
                 if (in_array(strtolower($name), Metadata::NOT_MODIFIABLE_METAS)) {
                     $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
-                        ->setCanonical(Metadata::CANONICAL);
+                        ->setCanonical(Metadata::CANONICAL_PROPERTY);
                     continue;
                 }
 

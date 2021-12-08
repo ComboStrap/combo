@@ -7,7 +7,7 @@ namespace ComboStrap;
 class PageImages extends Metadata
 {
 
-    const CANONICAL = "page:image";
+    const CANONICAL_PROPERTY = "page:image";
     public const IMAGE_META_PROPERTY = 'image';
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
     public const FIRST_IMAGE_META_RELATION = "firstimage";
@@ -129,7 +129,7 @@ class PageImages extends Metadata
 
     public function getCanonical(): string
     {
-        return self::CANONICAL;
+        return self::CANONICAL_PROPERTY;
     }
 
     public function getName(): string

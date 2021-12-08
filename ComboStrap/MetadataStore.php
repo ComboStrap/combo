@@ -46,5 +46,10 @@ interface MetadataStore
      */
     public function isTextBased(): bool;
 
+    /**
+     * Reset
+     */
+    public function reset();
+
 
 }

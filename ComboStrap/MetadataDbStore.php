@@ -216,4 +216,9 @@ EOF;
     {
         return false;
     }
+
+    public function reset()
+    {
+        throw new ExceptionComboRuntime("To implement");
+    }
 }

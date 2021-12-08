@@ -54,7 +54,6 @@ abstract class MetadataText extends MetadataScalar
             }
         }
         $this->value = $value;
-        $this->sendToStore();
         return $this;
 
     }

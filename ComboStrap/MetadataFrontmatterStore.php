@@ -4,8 +4,6 @@
 namespace ComboStrap;
 
 
-use syntax_plugin_combo_frontmatter;
-
 class MetadataFrontmatterStore implements MetadataStore
 {
 
@@ -251,4 +249,8 @@ class MetadataFrontmatterStore implements MetadataStore
     }
 
 
+    public function reset()
+    {
+        $this->data = [];
+    }
 }

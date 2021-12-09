@@ -463,8 +463,8 @@ EOF;
                     try {
                         $pageImages = PageImages::createForPage($page)
                             ->setFromStoreValue($value);
-                        foreach ($pageImages->getAll() as $imageValue) {
-                            $imagePath = $imageValue->getImage()->getPath()->getAbsolutePath();
+                        foreach ($pageImages->getValues() as $imageValue) {
+                            $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
                             $attributes = [PagePath::PATH_ATTRIBUTE => $imagePath];
                             if (media_isexternal($imagePath)) {
                                 $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;

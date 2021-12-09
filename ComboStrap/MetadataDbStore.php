@@ -142,7 +142,7 @@ EOF;
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query($delete, $row);
         if ($res === false) {
-            $message = $this->getErrorMessage();
+            $message = Sqlite::getErrorMessage();
             LogUtility::msg("There was a problem during the alias delete. $message");
             return;
         }
@@ -186,7 +186,7 @@ EOF;
         $query = "select $pathAttribute, $typeAttribute from $tableAliases where $pageIdAttribute = ? ";
         $res = $sqlite->query($query, $pageId);
         if (!$res) {
-            $message = $this->getErrorMessage();
+            $message = Sqlite::getErrorMessage();
             LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$metadata->getResource()}) selection query. Message: $message, Query: ($query");
         }
         $rowAliases = $sqlite->res2arr($res);
@@ -217,25 +217,4 @@ EOF;
         throw new ExceptionComboRuntime("To implement");
     }
 
-    private function getErrorMessage(): string
-    {
-        $adapter = Sqlite::getSqlite()->getAdapter();
-        if ($adapter === null) {
-            LogUtility::msg("The database adapter is null, no error info can be retrieved");
-            return "";
-        }
-        $do = $adapter->getDb();
-        if ($do === null) {
-            LogUtility::msg("The database object is null, it seems that the database connection has been closed");
-            return "";
-        }
-        $errorInfo = $do->errorInfo();
-        $message = "";
-        $errorCode = $errorInfo[0];
-        if ($errorCode === '0000') {
-            $message = ("No rows were deleted");
-        }
-        $errorInfoAsString = var_export($errorInfo, true);
-        return "$message. : {$errorInfoAsString}";
-    }
 }

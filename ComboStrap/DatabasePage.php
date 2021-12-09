@@ -148,58 +148,39 @@ class DatabasePage
      *   * from the db use {@link self::getAnalyticsFromDb()}
      *
      *
+     * @throws ExceptionCombo
      */
-    public function replicate(): bool
+    public function replicate()
     {
         if ($this->sqlite === null) {
-            return false;
+            throw new ExceptionCombo("Sqlite is mandatory for database replication");
         }
 
         if (!$this->page->exists()) {
-            LogUtility::msg("You can't replicate the non-existing page ($this->page) on the file system");
-            return false;
+            throw new ExceptionCombo("You can't replicate the non-existing page ($this->page) on the file system");
         }
 
         /**
          * Replication Date
          */
-        try {
-            $replicationDateMeta = ReplicationDate::createFromPage($this->page)
-                ->setValue(new \DateTime());
-        } catch (ExceptionCombo $e) {
-            return false;
-        }
-        $res = $this->replicatePage($replicationDateMeta);
-        if ($res === false) {
-            return false;
-        }
+        $replicationDateMeta = ReplicationDate::createFromPage($this->page)
+            ->setValue(new \DateTime());
 
-        $res = $this->replicateBacklinkPages();
-        if ($res === false) {
-            return false;
-        }
+        $this->replicatePage($replicationDateMeta);
 
-        try {
-            Aliases::createForPage($this->page)
-                ->buildFromStore()
-                ->setStore(MetadataDbStore::getOrCreate())
-                ->persist();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error replicating the page aliases " . $e->getMessage(), ReplicationDate::REPLICATION_CANONICAL);
-            return false;
-        }
+        $this->replicateBacklinkPages();
+
+        Aliases::createForPage($this->page)
+            ->buildFromStore()
+            ->setStore(MetadataDbStore::getOrCreate())
+            ->persist();
 
         /**
          * Set the replication date
          */
-        try {
-            $replicationDateMeta
-                ->persist();
-        } catch (ExceptionCombo $e) {
-            return false;
-        }
+        $replicationDateMeta
+            ->persist();
 
-        return true;
 
     }
 
@@ -473,13 +454,13 @@ class DatabasePage
     /**
      * @param ReplicationDate $replicationDate
      * @return bool
+     * @throws ExceptionCombo
      */
     public function replicatePage(ReplicationDate $replicationDate): bool
     {
 
         if (!$this->page->exists()) {
-            LogUtility::msg("You can't replicate the page ($this->page) because it does not exists.");
-            return false;
+            throw new ExceptionCombo("You can't replicate the page ($this->page) because it does not exists.");
         }
 
         /**
@@ -510,11 +491,14 @@ class DatabasePage
 
     }
 
-    private function replicateBacklinkPages(): bool
+    /**
+     * @throws ExceptionCombo
+     */
+    private function replicateBacklinkPages(): void
     {
         $referencedPagesIndex = $this->page->getForwardLinks();
         if ($referencedPagesIndex == null) {
-            return true;
+            return;
         }
         $referencedPagesDb = $this->getInternalReferencedPages();
         foreach ($referencedPagesIndex as $internalPageReference) {
@@ -530,10 +514,8 @@ class DatabasePage
                 ];
                 $res = $this->sqlite->storeEntry('PAGE_REFERENCES', $record);
                 if ($res === false) {
-                    $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
-                    $errorInfoAsString = var_export($errorInfo, true);
-                    LogUtility::msg("There was a problem during the page references insert : {$errorInfoAsString}");
-                    return $res;
+                    $errorMessage = Sqlite::getErrorMessage();
+                    throw new ExceptionCombo("There was a problem during the page references insert : {$errorMessage}");
                 }
                 $reason = "The page ($this->page) has added a backlink to the page {$internalPageReference}";
                 $internalPageReference->getDatabasePage()->createReplicationRequest($reason);
@@ -551,22 +533,13 @@ EOF;
             $res = $this->sqlite->query($delete, $row);
 
             if ($res === false) {
-                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
-                $message = "";
-                $errorCode = $errorInfo[0];
-                if ($errorCode === '0000') {
-                    $message = ("No rows were deleted");
-                }
-                $errorInfoAsString = var_export($errorInfo, true);
-                LogUtility::msg("There was a problem during the reference delete. $message. : {$errorInfoAsString}");
-                return false;
+                $message = Sqlite::getErrorMessage();
+                throw new ExceptionCombo("There was a problem during the reference delete. Message: $message");
             }
 
             $reason = "The page ($this->page) has deleted a a backlink to the page {$internalPageReference}";
             $internalPageReference->getDatabasePage()->createReplicationRequest($reason);
         }
-
-        return true;
 
     }
 
@@ -998,7 +971,7 @@ EOF;
                          * Check if the error may come from the auto-canonical
                          * (Never ever save generated data)
                          */
-                        $canonicalLastNamesCount = PluginUtility::getConfValue(Canonical::CONF_CANONICAL_LAST_NAMES_COUNT,0);
+                        $canonicalLastNamesCount = PluginUtility::getConfValue(Canonical::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
                         if ($canonicalLastNamesCount > 0) {
                             $this->page->unsetMetadata(Canonical::CANONICAL_PROPERTY);
                             $duplicatePage->unsetMetadata(Canonical::CANONICAL_PROPERTY);

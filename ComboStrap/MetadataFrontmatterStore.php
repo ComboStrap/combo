@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use syntax_plugin_combo_frontmatter;
+
 class MetadataFrontmatterStore implements MetadataStore
 {
 
@@ -229,7 +231,7 @@ class MetadataFrontmatterStore implements MetadataStore
     }
 
     /**
-     * @throws ExceptionCombo
+     * @throws ExceptionCombo if the string is not a valid frontmatter
      */
     public function loadAsString(Page $page, $jsonString)
     {
@@ -252,5 +254,28 @@ class MetadataFrontmatterStore implements MetadataStore
     public function reset()
     {
         $this->data = [];
+    }
+
+    public function toFrontmatterString(Page $page): string
+    {
+        $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
+        $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
+        $array = $this->getMetadataArrayForPage($page);
+        $jsonEncode = self::toFrontmatterJsonString($array);
+
+        return <<<EOF
+$frontmatterStartTag
+$jsonEncode
+$frontmatterEndTag
+EOF;
+
+
+    }
+
+    public function unloadForPage(Page $page): MetadataFrontmatterStore
+    {
+        $path = $this->getArrayKey($page);
+        unset($this->data[$path]);
+        return $this;
     }
 }

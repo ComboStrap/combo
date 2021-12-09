@@ -1560,7 +1560,7 @@ class Page extends ResourceComboAbs
     public
     function getPageImages(): array
     {
-        return $this->pageImages->getAll();
+        return $this->pageImages->getValues();
     }
 
 

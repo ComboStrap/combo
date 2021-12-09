@@ -157,14 +157,15 @@ class PageImages extends Metadata
         return MetadataDokuWikiStore::PERSISTENT_METADATA;
     }
 
+
     /**
      * @return PageImage[]
      */
-    public function getAll(): array
+    public function getValues(): ?array
     {
         $this->buildCheck();
         if ($this->pageImages === null) {
-            return [];
+            return null;
         }
         return array_values($this->pageImages);
     }
@@ -318,7 +319,6 @@ class PageImages extends Metadata
     /**
      * @param $sourceImagePath
      * @return PageImage|null - the removed page image or null
-     * @throws ExceptionCombo
      */
     public function removeIfExists($sourceImagePath): ?PageImage
     {
@@ -329,7 +329,6 @@ class PageImages extends Metadata
         }
         $pageImage = $this->pageImages[$sourceImagePath];
         unset($this->pageImages[$sourceImagePath]);
-        $this->sendToStore();
         return $pageImage;
     }
 

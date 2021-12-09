@@ -2,17 +2,15 @@
 
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
-use ComboStrap\LinkUtility;
+use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\LogUtility;
+use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Page;
-use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PluginUtility;
 
-if (!defined('DOKU_INC')) die();
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
-require_once(__DIR__ . '/../ComboStrap/LinkUtility.php');
 
 /**
  * Handle the move of a image
@@ -45,7 +43,8 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         $sourceImageId = $event->data["src_id"];
         $targetImageId = $event->data["dst_id"];
         foreach ($affectedPagesId as $affectedPageId) {
-            $affectedPage = Page::createPageFromId($affectedPageId);
+            $affectedPage = Page::createPageFromId($affectedPageId)
+                ->setStore(MetadataDokuWikiStore::getOrCreate());
             $pageImages = PageImages::createForPage($affectedPage);
             $removedPageImage = null;
 
@@ -55,10 +54,13 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 continue;
             }
             try {
-                $pageImages->addImage($targetImageId, $removedPageImage->getUsages());
+                $pageImages
+                    ->addImage($targetImageId, $removedPageImage->getUsages())
+                    ->persist();
             } catch (ExceptionCombo $e) {
                 LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             }
+
 
         }
 
@@ -114,57 +116,59 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         /**
          * The original move method
          * is {@link helper_plugin_move_handler::media()}
-         *
          */
-        $jsonArray = MetadataFrontmatterStore::frontMatterMatchToAssociativeArray($match);
-        if ($jsonArray === null) {
+        $metadataFrontmatterStore = MetadataFrontmatterStore::getOrCreate();
+        $page = Page::createPageFromId("move-fake-id")
+            ->setStore($metadataFrontmatterStore);
+        try {
+            $metadataFrontmatterStore->loadAsString($page, $match);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("The frontmatter could not be loaded. " . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return $match;
-        } else {
-
-            if (!isset($jsonArray[PageImages::IMAGE_META_PROPERTY])) {
-                return $match;
-            }
-
-            try {
-                $oldPagesImages = $jsonArray[PageImages::IMAGE_META_PROPERTY];
-
-
-                $newPagesImages = PageImages::create();
-
-                foreach ($oldPagesImages as $oldPageImage) {
-                    $imagePath = $oldPageImage[PageImage::PATH_ATTRIBUTE];
-                    $this->moveImage($imagePath, $handler);
-                    $newPagesImages->addImage($imagePath, $oldPageImage[PageImage::USAGE_ATTRIBUTE]);
-                }
-                $jsonArray[PageImages::IMAGE_META_PROPERTY] = $newPagesImages->toStoreValue();
-
-
-            } catch (ExceptionCombo $e) {
-                // Could not resolve the image, image does not exist, ... return the data without modification
-                LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
-                return $match;
-            }
-
-            $jsonEncode = \ComboStrap\Json::createFromArray($jsonArray)->toFrontMatterFormat();
-            $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
-            $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-
-            /**
-             * All good,
-             * We don't modify the metadata for the page
-             * because the handler does not give it unfortunately
-             */
-
-            /**
-             * Return the match modified
-             */
-            return <<<EOF
-$frontmatterStartTag
-$jsonEncode
-$frontmatterEndTag
-EOF;
-
         }
+        $pageImagesObject = PageImages::createForPage($page);
+        $images = $pageImagesObject->getValues();
+        if ($images === null) {
+            return $match;
+        }
+
+        try {
+
+            foreach ($images as $image) {
+                $path = $image->getImage()->getPath();
+                if (!($path instanceof DokuPath)) {
+                    continue;
+                }
+                $imageId = $path->getDokuWikiId();
+                $before = $imageId;
+                $this->moveImage($imageId, $handler);
+                if ($before != $imageId) {
+                    $pageImagesObject->removeIfExists($before);
+                    $pageImagesObject->addImage($imageId, $image->getUsages());
+                }
+            }
+
+            $pageImagesObject->persist();
+
+        } catch (ExceptionCombo $e) {
+            // Could not resolve the image, image does not exist, ... return the data without modification
+            if(PluginUtility::isDevOrTest()){
+                throw new ExceptionComboRuntime($e->getMessage(),$e->getCanonical(),0,$e);
+            } else {
+                LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+            }
+            return $match;
+        }
+
+        /**
+         * All good,
+         * We don't modify the file system metadata for the page
+         * because the handler does not give it unfortunately
+         */
+
+        $frontmatter = $metadataFrontmatterStore->toFrontmatterString($page);
+        $metadataFrontmatterStore->unloadForPage($page);
+        return $frontmatter;
 
     }
 

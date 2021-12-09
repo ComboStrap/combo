@@ -37,7 +37,7 @@ class action_plugin_combo_metapageimage
         $dokuwikiId = $event->data["page"];
         $page = Page::createPageFromId($dokuwikiId);
         $pageImages = PageImages::createForPage($page);
-        foreach ($pageImages->getAll() as $pageImage){
+        foreach ($pageImages->getValues() as $pageImage){
             /**
              * {@link Doku_Renderer_metadata::_recordMediaUsage()}
              */

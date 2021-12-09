@@ -118,7 +118,7 @@ class MetadataDokuWikiStore implements MetadataStore
         }
         /**
          * Metadata can be changed by other part of the dokuwiki
-         * framework
+         * framework, even cached in a global variable in {@link p_get_metadata()}
          * We set, we persist, we read again
          * We don't check for each get that the metadata sill fresh is
          */
@@ -188,8 +188,16 @@ class MetadataDokuWikiStore implements MetadataStore
          * We don't use {@link p_get_metadata()}
          * because it can trigger a rendering of the meta again
          * and it has a fucking cache
+         *
+         * Due to the cache in {@link p_get_metadata()} we can't use {@link p_read_metadata}
+         * when testing a {@link \action_plugin_combo_imgmove move} otherwise the move meta is not seen and the tests are failing.
+         * We can use p_get_metadata with an empty key to get all metadata
          */
-        $this->metadatas[$dokuwikiId] = p_read_metadata($dokuwikiId);
+        $metadatas = p_get_metadata($dokuwikiId, '', METADATA_DONT_RENDER);
+        if($metadatas==null){
+            $metadatas = p_read_metadata($dokuwikiId);
+        }
+        $this->metadatas[$dokuwikiId] = $metadatas;
         return $this->metadatas[$dokuwikiId];
     }
 

@@ -163,7 +163,7 @@ abstract class Metadata
 
     /**
      * Return the store for this metadata
-     * By default, this is the {@link ResourceCombo::getDefaultMetadataStore() default resource metadata store}
+     * By default, this is the {@link ResourceCombo::getStoreOrDefault() default resource metadata store}
      *
      * (ie a memory variable or a database)
      * @return MetadataStore|null
@@ -171,7 +171,7 @@ abstract class Metadata
     public function getStore(): ?MetadataStore
     {
         if ($this->store === null) {
-            return $this->getResource()->getDefaultMetadataStore();
+            return $this->getResource()->getStoreOrDefault();
         }
         return $this->store;
     }

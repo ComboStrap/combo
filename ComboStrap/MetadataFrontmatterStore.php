@@ -78,7 +78,7 @@ class MetadataFrontmatterStore implements MetadataStore
 
     public function persist()
     {
-        throw new ExceptionComboRuntime("Not yet implemented", self::NAME);
+        throw new ExceptionComboRuntime("Not yet implemented, use sendToStore", self::NAME);
     }
 
     public function isTextBased(): bool

@@ -139,7 +139,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 if (!($path instanceof DokuPath)) {
                     continue;
                 }
-                $imageId = $path->getDokuWikiId();
+                $imageId = $path->toAbsolutePath()->toString();
                 $before = $imageId;
                 $this->moveImage($imageId, $handler);
                 if ($before != $imageId) {
@@ -148,7 +148,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 }
             }
 
-            $pageImagesObject->persist();
+            $pageImagesObject->sendToStore();
 
         } catch (ExceptionCombo $e) {
             // Could not resolve the image, image does not exist, ... return the data without modification
@@ -165,7 +165,6 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * We don't modify the file system metadata for the page
          * because the handler does not give it unfortunately
          */
-
         $frontmatter = $metadataFrontmatterStore->toFrontmatterString($page);
         $metadataFrontmatterStore->unloadForPage($page);
         return $frontmatter;
@@ -174,17 +173,17 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
 
     /**
      * Move a single image and update the JSon
-     * @param $value
+     * @param $relativeOrAbsoluteWikiId
      * @param helper_plugin_move_handler $handler
      * @throws ExceptionCombo on bad argument
      */
-    private function moveImage(&$value, helper_plugin_move_handler $handler)
+    private function moveImage(&$relativeOrAbsoluteWikiId, helper_plugin_move_handler $handler)
     {
         try {
-            $newId = $handler->resolveMoves($value, "media");
-            $value = DokuPath::IdToAbsolutePath($newId);
+            $newId = $handler->resolveMoves($relativeOrAbsoluteWikiId, "media");
+            $relativeOrAbsoluteWikiId = DokuPath::IdToAbsolutePath($newId);
         } catch (Exception $e) {
-            throw new ExceptionCombo("A move error has occurred while trying to move the image ($value). The target resolution function send the following error message: " . $e->getMessage(), self::CANONICAL);
+            throw new ExceptionCombo("A move error has occurred while trying to move the image ($relativeOrAbsoluteWikiId). The target resolution function send the following error message: " . $e->getMessage(), self::CANONICAL);
         }
     }
 

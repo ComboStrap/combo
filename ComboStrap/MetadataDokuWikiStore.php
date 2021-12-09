@@ -41,11 +41,6 @@ class MetadataDokuWikiStore implements MetadataStore
     private static $store;
 
 
-    /**
-     * @var array[]
-     */
-    private $metadatas = [];
-
     const CANONICAL = Metadata::CANONICAL_PROPERTY;
 
 
@@ -89,7 +84,7 @@ class MetadataDokuWikiStore implements MetadataStore
         if (!($resource instanceof Page)) {
             throw new ExceptionComboRuntime("The DokuWiki metadata store is only for page resource", self::CANONICAL);
         }
-        return $this->getMetadataFromWikiId($resource->getDokuwikiId(), $metadata->getName(), $default);
+        return $this->getFromWikiId($resource->getDokuwikiId(), $metadata->getName(), $default);
 
 
     }
@@ -107,38 +102,46 @@ class MetadataDokuWikiStore implements MetadataStore
     public function getFromResourceAndName(ResourceCombo $resource, string $metadataName)
     {
         $wikiId = $resource->getPath()->getDokuwikiId();
-        return $this->getMetadataFromWikiId($wikiId, $metadataName);
+        return $this->getFromWikiId($wikiId, $metadataName);
     }
 
 
     public function persist()
     {
-        foreach ($this->metadatas as $wikiId => $metadata) {
-            p_save_metadata($wikiId, $metadata);
-        }
+
         /**
          * Metadata can be changed by other part of the dokuwiki
          * framework, even cached in a global variable in {@link p_get_metadata()}
-         * We set, we persist, we read again
-         * We don't check for each get that the metadata sill fresh is
+         * We don't use a memory store then
+         * only the function of dokuwiki
          */
-        $this->metadatas = [];
 
     }
 
+    public function setFromResourceAndName(Page $wikiPage, string $name, string $value)
+    {
+        $this->setFromWikiId($wikiPage->getDokuwikiId(), $name, $value);
+    }
+
+    /**
+     * @param $dokuwikiId
+     * @param $name
+     * @return mixed|null
+     * @deprecated we use the {@link p_get_metadata()} directly
+     */
     private function getPersistentMetadata($dokuwikiId, $name)
     {
 
-        $key = $this->getMetadatasFromWikiId($dokuwikiId)[self::PERSISTENT_METADATA][$name];
+        $value = $this->getRawMetadatasFromWikiId($dokuwikiId)[self::PERSISTENT_METADATA][$name];
         /**
          * Empty string return null
          * because Dokuwiki does not allow to delete keys
          * {@link p_set_metadata()}
          */
-        if ($key === "") {
+        if ($value === "") {
             return null;
         }
-        return $key;
+        return $value;
 
     }
 
@@ -147,58 +150,43 @@ class MetadataDokuWikiStore implements MetadataStore
      * @param $dokuWikiId
      * @param $name
      * @return mixed|null
+     * @deprecated we use now the {@link p_get_metadata()} function to {@link MetadataDokuWikiStore::getRawMetadatasFromWikiId()} retrieve the meta that {@link MetadataDokuWikiStore::getFlatMetadata()} the array
      */
     public
     function getCurrentMetadata($dokuWikiId, $name)
     {
-        $key = $this->getMetadatasFromWikiId($dokuWikiId)[self::CURRENT_METADATA][$name];
+        $value = $this->getRawMetadatasFromWikiId($dokuWikiId)[self::CURRENT_METADATA][$name];
         /**
          * Empty string return null
          * because Dokuwiki does not allow to delete keys
          * {@link p_set_metadata()}
          */
-        if ($key === "") {
+        if ($value === "") {
             return null;
         }
-        return $key;
+        return $value;
     }
 
     /**
      * @param Page $page
      * @return MetadataDokuWikiStore
      */
-    public function renderForPage(Page $page): MetadataDokuWikiStore
+    public function renderAndPersistForPage(Page $page): MetadataDokuWikiStore
     {
         /**
          * Read/render the metadata from the file
          * with parsing
          */
         $dokuwikiId = $page->getPath()->getDokuwikiId();
-        $actualMeta = $this->getMetadatasFromWikiId($dokuwikiId);
-        $this->metadatas[$dokuwikiId] = p_render_metadata($dokuwikiId, $actualMeta);
+        $actualMeta = $this->getRawMetadatasFromWikiId($dokuwikiId);
+        $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
+        p_save_metadata($dokuwikiId, $newMetadata);
         return $this;
     }
 
-    private function &getMetadatasFromWikiId($dokuwikiId): array
+    private function getRawMetadatasFromWikiId($dokuwikiId): array
     {
-        if (isset($this->metadatas[$dokuwikiId])) {
-            return $this->metadatas[$dokuwikiId];
-        }
-        /**
-         * We don't use {@link p_get_metadata()}
-         * because it can trigger a rendering of the meta again
-         * and it has a fucking cache
-         *
-         * Due to the cache in {@link p_get_metadata()} we can't use {@link p_read_metadata}
-         * when testing a {@link \action_plugin_combo_imgmove move} otherwise the move meta is not seen and the tests are failing.
-         * We can use p_get_metadata with an empty key to get all metadata
-         */
-        $metadatas = p_get_metadata($dokuwikiId, '', METADATA_DONT_RENDER);
-        if($metadatas==null){
-            $metadatas = p_read_metadata($dokuwikiId);
-        }
-        $this->metadatas[$dokuwikiId] = $metadatas;
-        return $this->metadatas[$dokuwikiId];
+        return p_read_metadata($dokuwikiId);
     }
 
     /**
@@ -210,11 +198,10 @@ class MetadataDokuWikiStore implements MetadataStore
      * @param $value
      * @param null $default - use in case of boolean
      */
-    public function setFromWikiId($wikiId, $key, $value, $default = null)
+    private function setFromWikiId($wikiId, $key, $value, $default = null)
     {
-        $metadata = &$this->getMetadatasFromWikiId($wikiId);
-        $type = self::PERSISTENT_METADATA;
-        $oldValue = $metadata[$type][$key];
+
+        $oldValue = $this->getFromWikiId($wikiId, $key);
         if (is_bool($value)) {
             if ($oldValue === null) {
                 $oldValue = $default;
@@ -224,11 +211,6 @@ class MetadataDokuWikiStore implements MetadataStore
         }
         if ($oldValue !== $value) {
 
-            if ($value !== null) {
-                $metadata[$type][$key] = $value;
-            } else {
-                unset($metadata[$type][$key]);
-            }
             /**
              * Metadata in Dokuwiki is fucked up.
              *
@@ -298,17 +280,35 @@ class MetadataDokuWikiStore implements MetadataStore
         $this->metadatas = [];
     }
 
-    private function getMetadataFromWikiId($dokuwikiId, string $name, $default = null)
+    private function getFromWikiId($dokuwikiId, string $name, $default = null)
     {
-        $persistentMetadata = $this->getPersistentMetadata($dokuwikiId, $name);
-        if ($persistentMetadata === null) {
-            $persistentMetadata = $this->getCurrentMetadata($dokuwikiId, $name);
+        /**
+         * Note that {@link p_get_metadata()} can trigger a rendering of the meta again
+         * and it has a fucking cache
+         *
+         * Due to the cache in {@link p_get_metadata()} we can't use {@link p_read_metadata}
+         * when testing a {@link \action_plugin_combo_imgmove move} otherwise
+         * the move meta is not seen and the tests are failing.
+         */
+        $value = p_get_metadata($dokuwikiId, $name);
+        /**
+         * Empty string return the default (null)
+         * because Dokuwiki does not allow to delete keys
+         * {@link p_set_metadata()}
+         */
+        if ($value !== null && $value !== "") {
+            return $value;
         }
-        if ($persistentMetadata === null) {
-            return $default;
-        } else {
-            return $persistentMetadata;
-        }
+        return $default;
+    }
+
+    /**
+     * @param $dokuwikiId
+     * @return null|array
+     */
+    private function getFlatMetadatas($dokuwikiId): ?array
+    {
+        return p_get_metadata($dokuwikiId, '', METADATA_DONT_RENDER);
     }
 
 

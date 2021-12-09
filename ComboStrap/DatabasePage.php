@@ -205,7 +205,7 @@ class DatabasePage
 
         $databasePage = new DatabasePage();
         $row = $databasePage->getDatabaseRowFromPage($page);
-        if ($row != null) {
+        if ($row !== null) {
             $databasePage->buildDatabaseObjectFields($row);
         }
         return $databasePage;
@@ -824,6 +824,9 @@ EOF;
      */
     private function getMetaRecord(): array
     {
+        $sourceStore = MetadataDokuWikiStore::getOrCreate();
+        $targetStore = MetadataDbStore::getOrCreate();
+
         $record = array(
             Canonical::CANONICAL_PROPERTY,
             PagePath::PATH_ATTRIBUTE,
@@ -849,9 +852,9 @@ EOF;
             }
             $metaRecord[$name] = $metadata
                 ->setResource($this->page)
-                ->setStore(MetadataDokuWikiStore::getOrCreate())
+                ->setStore($sourceStore)
                 ->buildFromStore()
-                ->setStore(MetadataDbStore::getOrCreate())
+                ->setStore($targetStore)
                 ->toStoreValueOrDefault();
         }
 

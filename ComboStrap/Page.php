@@ -493,7 +493,7 @@ class Page extends ResourceComboAbs
     public
     function getForwardLinks(): ?array
     {
-        $store = $this->getDefaultMetadataStore();
+        $store = $this->getStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
@@ -722,7 +722,7 @@ class Page extends ResourceComboAbs
     public function getMediasMetadata(): ?array
     {
 
-        $store = $this->getDefaultMetadataStore();
+        $store = $this->getStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
@@ -797,7 +797,7 @@ class Page extends ResourceComboAbs
      */
     public function getAuthor(): ?string
     {
-        $store = $this->getDefaultMetadataStore();
+        $store = $this->getStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
@@ -813,7 +813,7 @@ class Page extends ResourceComboAbs
     public function getAuthorID(): ?string
     {
 
-        $store = $this->getDefaultMetadataStore();
+        $store = $this->getStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
@@ -877,9 +877,9 @@ class Page extends ResourceComboAbs
         /**
          * @var MetadataDokuWikiStore $metadataStore
          */
-        $metadataStore = $this->getDefaultMetadataStore();
+        $metadataStore = $this->getStoreOrDefault();
         $metadataStore
-            ->renderForPage($this)
+            ->renderAndPersistForPage($this)
             ->persist();
 
         /**
@@ -2303,7 +2303,7 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getDefaultMetadataStore(): MetadataStore
+    public function getStoreOrDefault(): MetadataStore
     {
         if ($this->store === null) {
             return MetadataDokuWikiStore::getOrCreate();

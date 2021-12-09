@@ -87,7 +87,7 @@ abstract class Media extends ResourceComboAbs
     public abstract function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED);
 
 
-    public function getDefaultMetadataStore(): MetadataStore
+    public function getStoreOrDefault(): MetadataStore
     {
         throw new ExceptionComboRuntime("To implement");
     }

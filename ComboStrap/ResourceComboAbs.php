@@ -25,12 +25,12 @@ abstract class ResourceComboAbs implements ResourceCombo
 
     /**
      * An utility function that {@link MetadataStore::persist() persists} the value
-     * into the default {@link ResourceCombo::getDefaultMetadataStore()}
+     * into the default {@link ResourceCombo::getStoreOrDefault()}
      * @return $this
      */
     public function persist(): ResourceComboAbs
     {
-        $this->getDefaultMetadataStore()->persist();
+        $this->getStoreOrDefault()->persist();
         return $this;
     }
 }

@@ -318,7 +318,7 @@ EOF;
                  */
                 if ($metadata === null) {
                     $dataForRenderer[$name] = $value;
-                    $targetStore->setFromWikiId($page->getDokuwikiId(), $name, $value);
+                    $targetStore->setFromResourceAndName($page, $name, $value);
                     continue;
                 }
                 $dataForRenderer[$metadata->getName()] = $value;

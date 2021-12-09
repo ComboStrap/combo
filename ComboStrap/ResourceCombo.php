@@ -15,7 +15,7 @@ namespace ComboStrap;
 interface ResourceCombo
 {
 
-    public function getDefaultMetadataStore(): MetadataStore;
+    public function getStoreOrDefault(): MetadataStore;
 
     /**
      * @return Path - a generic path system where the content raw resource is stored

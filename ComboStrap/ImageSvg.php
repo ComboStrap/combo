@@ -42,7 +42,7 @@ class ImageSvg extends Image
     public function getSvgDocument(): SvgDocument
     {
         if ($this->svgDocument == null) {
-            $this->svgDocument = SvgDocument::createFromPath($this->getPath());
+            $this->svgDocument = SvgDocument::createSvgDocumentFromPath($this->getPath());
         }
         return $this->svgDocument;
     }

@@ -129,7 +129,7 @@ class SvgDocument extends XmlDocument
      * @param Path $path
      * @return SvgDocument
      */
-    public static function createFromPath($path): SvgDocument
+    public static function createSvgDocumentFromPath(Path $path): SvgDocument
     {
         $text = FileSystems::getContent($path);
         $svg = new SvgDocument($text);
@@ -137,7 +137,7 @@ class SvgDocument extends XmlDocument
         return $svg;
     }
 
-    public static function createFromMarkup($markup)
+    public static function createSvgDocumentFromMarkup($markup): SvgDocument
     {
         return new SvgDocument($markup);
     }

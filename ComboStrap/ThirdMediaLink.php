@@ -15,7 +15,7 @@ class ThirdMediaLink extends MediaLink
 
     public function renderMediaTag(): string
     {
-        $msg = "The media with the mime (" . $this->getMedia()->getMime() . ") is not yet implemented";
+        $msg = "The media with the mime (" . $this->getMedia()->getPath()->getMime() . ") is not yet implemented";
         LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR);
         return $msg;
     }

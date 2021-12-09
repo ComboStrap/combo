@@ -53,8 +53,8 @@ class CacheMedia
 
         $this->path = $path;
 
-        if($path instanceof DokuPath){
-            $path = $path->toLocalPath();
+        if ($path instanceof DokuPath) {
+            $this->path = $path->toLocalPath();
         }
         /**
          * Cache Key Construction
@@ -107,16 +107,16 @@ class CacheMedia
         $this->setMaxAgeInSec($cacheParameter);
 
 
-        $this->fileCache = new Cache($cacheKey, $this->path->getExtension());
+        $this->fileCache = new Cache($cacheKey, ".{$this->path->getExtension()}");
 
     }
 
-    public static function createFromPath(File $file, $tagAttributes = null)
+    public static function createFromPath(Path $path, $tagAttributes = null): CacheMedia
     {
         if ($tagAttributes == null) {
             $tagAttributes = TagAttributes::createEmpty();
         }
-        return new CacheMedia($file, $tagAttributes);
+        return new CacheMedia($path, $tagAttributes);
     }
 
 
@@ -172,7 +172,6 @@ class CacheMedia
     {
         return File::createFromPath($this->fileCache->cache);
     }
-
 
 
 }

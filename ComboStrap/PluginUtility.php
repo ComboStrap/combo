@@ -723,7 +723,7 @@ class PluginUtility
             $tagAttributes->addComponentAttributeValue(Dimension::WIDTH_KEY, "20");
             $cache = new CacheMedia($path, $tagAttributes);
             if (!$cache->isCacheUsable()) {
-                $xhtmlIcon = SvgDocument::createFromPath($path)
+                $xhtmlIcon = SvgDocument::createSvgDocumentFromPath($path)
                     ->setShouldBeOptimized(true)
                     ->getXmlText($tagAttributes);
                 $cache->storeCache($xhtmlIcon);

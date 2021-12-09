@@ -1111,7 +1111,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @return array - return the standard / generated metadata
-     * used in templating
+     * used in templating with the value or default
      */
     public
     function getMetadataForRendering(): array
@@ -1132,7 +1132,9 @@ class Page extends ResourceComboAbs
             PagePublicationDate::DATE_PUBLISHED,
             StartDate::DATE_START,
             EndDate::DATE_END,
-            PageLayout::LAYOUT_PROPERTY
+            PageLayout::LAYOUT_PROPERTY,
+            // Dokuwiki id is deprecated for path, no more advertised
+            DokuwikiId::DOKUWIKI_ID_ATTRIBUTE
         ];
 
         foreach ($metadataNames as $metadataName) {

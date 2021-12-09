@@ -214,20 +214,23 @@ class XmlDocument
     }
 
     /**
-     * @param File $path
+     * To not have a collusion with {@link SvgDocument::createSvgDocumentFromPath()}
+     * @param Path $path
+     * @return XmlDocument
      */
     public
-    static function createFromPath($path)
+    static function createXmlDocFromPath(Path $path): XmlDocument
     {
         $mime = XmlDocument::XML_TYPE;
         if (in_array($path->getExtension(), ["html", "htm"])) {
             $mime = XmlDocument::HTML_TYPE;
         }
-        return new XmlDocument($path->getTextContent(), $mime);
+        $content = FileSystems::getContent($path);
+        return new XmlDocument($content, $mime);
     }
 
     public
-    static function createFromString($string)
+    static function createXmlDocFromMarkup($string): XmlDocument
     {
         $mime = XmlDocument::XML_TYPE;
         return new XmlDocument($string, $mime);

@@ -16,7 +16,7 @@ class PageImages extends Metadata
 
 
     /**
-     * @var PageImage[]
+     * @var PageImage[] with path as key
      */
     private $pageImages;
 
@@ -34,14 +34,14 @@ class PageImages extends Metadata
     }
 
     /**
-     * @param PageImage[] $pageImages
      * @return array
      */
-    private function toMetadataArray(array $pageImages): array
+    private function toMetadataArray(): array
     {
         $pageImagesMeta = [];
-        foreach ($pageImages as $pageImage) {
-            $absolutePath = $pageImage->getImage()->getPath()->getAbsolutePath();
+        ksort($this->pageImages);
+        foreach ($this->pageImages as $pageImage) {
+            $absolutePath = $pageImage->getImage()->getPath()->toAbsolutePath()->toString();
             $pageImagesMeta[$absolutePath] = [
                 PageImage::PATH_ATTRIBUTE => $absolutePath
             ];
@@ -144,7 +144,7 @@ class PageImages extends Metadata
     {
         $this->buildCheck();
         $this->checkImageExistence();
-        return $this->toMetadataArray($this->pageImages);
+        return $this->toMetadataArray();
     }
 
     public function toStoreDefaultValue()

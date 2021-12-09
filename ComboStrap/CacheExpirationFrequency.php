@@ -37,7 +37,9 @@ class CacheExpirationFrequency extends MetadataText
         try {
             $cacheExpirationCalculatedDate = Cron::getDate($cronExpression);
             $cacheExpirationDate = CacheExpirationDate::createForPage($this->getResource());
-            $cacheExpirationDate->setValue($cacheExpirationCalculatedDate);
+            $cacheExpirationDate
+                ->setValue($cacheExpirationCalculatedDate)
+                ->persist();
             parent::setValue($cronExpression);
             return $this;
         } catch (ExceptionCombo $e) {

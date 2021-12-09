@@ -43,7 +43,8 @@ class DatabasePage
             EndDate::DATE_END,
             Region::REGION_META_PROPERTY,
             Lang::LANG_ATTRIBUTES,
-            PageType::TYPE_META_PROPERTY
+            PageType::TYPE_META_PROPERTY,
+            PageId::PAGE_ID_ATTRIBUTE
         ];
     const ANALYTICS_ATTRIBUTE = "ANALYTICS";
 
@@ -150,7 +151,7 @@ class DatabasePage
      *
      * @throws ExceptionCombo
      */
-    public function replicate()
+    public function replicate(): DatabasePage
     {
         if ($this->sqlite === null) {
             throw new ExceptionCombo("Sqlite is mandatory for database replication");
@@ -181,6 +182,7 @@ class DatabasePage
         $replicationDateMeta
             ->persist();
 
+        return $this;
 
     }
 
@@ -630,7 +632,7 @@ EOF;
          * If the primary key is null, no record was found
          */
         $rowId = $this->getRowId();
-        if ($rowId != null) {
+        if ($rowId !== null) {
             /**
              * We just add the primary key
              * otherwise as this is a associative
@@ -805,7 +807,7 @@ EOF;
 
     }
 
-    public function refresh(): DatabasePage
+    public function rebuild(): DatabasePage
     {
 
         if ($this->page != null) {
@@ -874,7 +876,7 @@ EOF;
 
     public function getRowId()
     {
-        return $this->rowId;
+        return $this->getFromRow(self::ROWID);
     }
 
     private function getDatabaseRowFromPageId(string $pageId)

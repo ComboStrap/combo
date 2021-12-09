@@ -834,11 +834,6 @@ class Page extends ResourceComboAbs
         return $this->creationTime->getValueOrDefault();
     }
 
-    public
-    function getCreatedTimeObject(): PageCreationDate
-    {
-        return $this->creationTime;
-    }
 
     /**
      *
@@ -847,7 +842,7 @@ class Page extends ResourceComboAbs
     public
     function getModifiedTime(): \DateTime
     {
-        return $this->modifiedTime->getValueOrDefault();
+        return $this->modifiedTime->getValueFromStore();
     }
 
 
@@ -889,30 +884,34 @@ class Page extends ResourceComboAbs
 
     }
 
+    /**
+     * @return string|null
+     * @deprecated for {@link Region}
+     */
     public function getLocaleRegion(): ?string
     {
-        return $this->region->getValue();
+        return $this->region->getValueFromStore();
     }
 
     public
     function getRegionOrDefault()
     {
 
-        return $this->region->getValueOrDefault();
+        return $this->region->getValueFromStoreOrDefault();
 
     }
 
     public
     function getLang(): ?string
     {
-        return $this->lang->getValue();
+        return $this->lang->getValueFromStore();
     }
 
     public
     function getLangOrDefault()
     {
 
-        return $this->lang->getValueOrDefault();
+        return $this->lang->getValueFromStoreOrDefault();
     }
 
     /**
@@ -949,7 +948,7 @@ class Page extends ResourceComboAbs
     public
     function getPublishedTime(): ?DateTime
     {
-        return $this->publishedDate;
+        return $this->publishedDate->getValueFromStore();
     }
 
 
@@ -959,7 +958,7 @@ class Page extends ResourceComboAbs
     public
     function getPublishedElseCreationTime(): ?DateTime
     {
-        return $this->publishedDate->getValueOrDefault();
+        return $this->publishedDate->getValueFromStoreOrDefault();
     }
 
 
@@ -1014,7 +1013,7 @@ class Page extends ResourceComboAbs
     public
     function getLocale($default = null): ?string
     {
-        $value = $this->locale->getValue();
+        $value = $this->locale->getValueFromStore();
         if ($value === null) {
             return $default;
         }
@@ -1087,14 +1086,14 @@ class Page extends ResourceComboAbs
     public function getPageName(): ?string
     {
 
-        return $this->pageName->getValue();
+        return $this->pageName->getValueFromStore();
 
     }
 
     public
-    function getPageNameNotEmpty(): string
+    function getPageNameOrDefault(): string
     {
-        return $this->pageName->getValueOrDefault();
+        return $this->pageName->getValueFromStoreOrDefault();
     }
 
     /**
@@ -1439,12 +1438,12 @@ class Page extends ResourceComboAbs
     public
     function getPageType(): ?string
     {
-        return $this->type->getValue();
+        return $this->type->getValueFromStore();
     }
 
     public function getCanonical(): ?string
     {
-        return $this->canonical->getValue();
+        return $this->canonical->getValueFromStore();
     }
 
     /**
@@ -1461,7 +1460,7 @@ class Page extends ResourceComboAbs
     public
     function getLayout()
     {
-        return $this->getMetadata(PageLayout::LAYOUT_PROPERTY);
+        return $this->layout->getValueFromStore();
     }
 
     public
@@ -1495,11 +1494,6 @@ class Page extends ResourceComboAbs
     }
 
 
-    public
-    function getLayoutValues(): array
-    {
-        return $this->layout->getPossibleValues();
-    }
 
     /**
      * @throws ExceptionCombo

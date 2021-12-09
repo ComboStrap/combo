@@ -277,7 +277,7 @@ class MetadataDokuWikiStore implements MetadataStore
      */
     public function reset()
     {
-        $this->metadatas = [];
+
     }
 
     private function getFromWikiId($dokuwikiId, string $name, $default = null)
@@ -289,8 +289,17 @@ class MetadataDokuWikiStore implements MetadataStore
          * Due to the cache in {@link p_get_metadata()} we can't use {@link p_read_metadata}
          * when testing a {@link \action_plugin_combo_imgmove move} otherwise
          * the move meta is not seen and the tests are failing.
+         *
+         * $METADATA_RENDERERS: A global cache variable where the persistent data is set
+         * with {@link p_set_metadata()} and that you can't retrieve with {@link p_get_metadata()}
          */
+        global $METADATA_RENDERERS;
+        $value = $METADATA_RENDERERS[$dokuwikiId][MetadataDokuWikiStore::PERSISTENT_METADATA][$name];
+        if ($value !== null) {
+            return $value;
+        }
         $value = p_get_metadata($dokuwikiId, $name);
+
         /**
          * Empty string return the default (null)
          * because Dokuwiki does not allow to delete keys

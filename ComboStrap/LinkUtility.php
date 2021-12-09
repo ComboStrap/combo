@@ -472,7 +472,7 @@ class LinkUtility
                     if ($preview) {
                         syntax_plugin_combo_tooltip::addToolTipSnippetIfNeeded();
                         $tooltipHtml = <<<EOF
-<h3>{$linkedPage->getPageNameNotEmpty()}</h3>
+<h3>{$linkedPage->getPageNameOrDefault()}</h3>
 <p>{$linkedPage->getDescriptionOrElseDokuWiki()}</p>
 EOF;
                         $dataAttributeNamespace = Bootstrap::getDataNamespace();
@@ -807,7 +807,7 @@ EOF;
                     $name = TemplateUtility::renderStringTemplateForPageId($name, $this->dokuwikiUrl->getPath());
                 }
                 if (empty($name)) {
-                    $name = $this->getInternalPage()->getPageNameNotEmpty();
+                    $name = $this->getInternalPage()->getPageNameOrDefault();
                     if (useHeading('content')) {
                         $page = $this->getInternalPage();
                         $h1 = $page->getH1();

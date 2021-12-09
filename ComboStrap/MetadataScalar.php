@@ -40,6 +40,17 @@ abstract class MetadataScalar extends Metadata
 
     public abstract function getValue();
 
+    public function getValueFromStore()
+    {
+        $this->buildFromStoreValue($this->getStore()->get($this));
+        return $this->getValue();
+    }
+
+    public function getValueFromStoreOrDefault()
+    {
+        $this->buildFromStoreValue($this->getStore()->get($this));
+        return $this->getValueOrDefault();
+    }
 
 
     public abstract function getDefaultValue();

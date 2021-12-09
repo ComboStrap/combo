@@ -353,7 +353,8 @@ EOF;
              * Database update
              */
             try {
-                $page->getDatabasePage()->replicateMetaAttributes();
+                $databasePage = $page->getDatabasePage();
+                $databasePage->replicateMetaAttributes();
             } catch (Exception $e) {
                 $message = Message::createErrorMessage($e->getMessage());
                 if ($e instanceof ExceptionCombo) {

@@ -50,7 +50,7 @@ class BreadcrumbHierarchical
         $htmlOutput .= '<li class="breadcrumb-item">' . PHP_EOL;
         $page = $conf['start'];
         $link = LinkUtility::createFromPageId($page);
-        $pageNameNotEmpty = $link->getInternalPage()->getPageNameNotEmpty();
+        $pageNameNotEmpty = $link->getInternalPage()->getPageNameOrDefault();
         $htmlOutput .= $link->renderOpenTag(). $pageNameNotEmpty .$link->renderClosingTag();
         $htmlOutput .= '</li>' . PHP_EOL;
 
@@ -83,7 +83,7 @@ class BreadcrumbHierarchical
                 // html_wikilink because the page has the form pagename: and not pagename:pagename
                 if ($exist) {
                     $link = LinkUtility::createFromPageId($page);
-                    $htmlOutput .= $link->renderOpenTag().$link->getInternalPage()->getPageNameNotEmpty().$link->renderClosingTag();
+                    $htmlOutput .= $link->renderOpenTag().$link->getInternalPage()->getPageNameOrDefault().$link->renderClosingTag();
                 } else {
                     $htmlOutput .= ucfirst($currentPart);
                 }

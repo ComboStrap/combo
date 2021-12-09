@@ -7,13 +7,10 @@ use action_plugin_combo_metadescription;
 use action_plugin_combo_metagoogle;
 use action_plugin_combo_qualitymessage;
 use DateTime;
-use dokuwiki\Extension\Event;
-use dokuwiki\Extension\SyntaxPlugin;
 use Exception;
 use ModificationDate;
 use Slug;
 use syntax_plugin_combo_disqus;
-use syntax_plugin_combo_frontmatter;
 
 
 /**
@@ -400,7 +397,7 @@ class Page extends ResourceComboAbs
     }
 
 
-    static function createPageFromQualifiedPath($qualifiedPath)
+    static function createPageFromQualifiedPath($qualifiedPath): Page
     {
         return new Page($qualifiedPath);
     }
@@ -463,12 +460,11 @@ class Page extends ResourceComboAbs
      * by taking the last two parts
      *
      * @return string
+     * @deprecated for {@link Canonical::getValueOrDefault()}
      */
-    public
-    function getCanonicalOrDefault(): ?string
+    public function getCanonicalOrDefault(): ?string
     {
-
-        return $this->canonical->getValueOrDefault();
+        return $this->canonical->getValueFromStoreOrDefault();
 
     }
 
@@ -603,17 +599,17 @@ class Page extends ResourceComboAbs
     public function getH1(): ?string
     {
 
-        return $this->h1->getValue();
+        return $this->h1->getValueFromStore();
 
     }
 
     /**
      * Return the Title
+     * @deprecated for {@link PageTitle::getValue()}
      */
-    public
-    function getTitle(): ?string
+    public function getTitle(): ?string
     {
-        return $this->title->getValue();
+        return $this->title->getValueFromStore();
     }
 
     /**
@@ -623,32 +619,41 @@ class Page extends ResourceComboAbs
     public
     function getQualityMonitoringIndicator(): ?bool
     {
-        return $this->qualityMonitoringIndicator->getValue();
+        return $this->qualityMonitoringIndicator->getValueFromStore();
     }
 
     /**
      * @return string the title, or h1 if empty or the id if empty
+     * @deprecated for {@link PageTitle::getValueOrDefault()}
      */
     public
     function getTitleOrDefault(): ?string
     {
-        return $this->title->getValueOrDefault();
+        return $this->title->getValueFromStoreOrDefault();
     }
 
+    /**
+     * @return mixed
+     * @deprecated for {@link PageH1::getValueOrDefault()}
+     */
     public
     function getH1OrDefault()
     {
 
-        return $this->h1->getValueOrDefault();
+        return $this->h1->getValueFromStoreOrDefault();
 
 
     }
 
+    /**
+     * @return mixed
+     * @deprecated for {@link PageDescription::getValueOrDefault()}
+     */
     public
     function getDescription(): ?string
     {
 
-        return $this->description->getValue();
+        return $this->description->getValueFromStore();
 
     }
 
@@ -659,10 +664,14 @@ class Page extends ResourceComboAbs
     public
     function getDescriptionOrElseDokuWiki(): ?string
     {
-        return $this->description->getValueOrDefault();
+        return $this->description->getValueFromStoreOrDefault();
     }
 
 
+    /**
+     * @return string
+     * @deprecated for {@link FileSystems::getContent()} with {@link DokuPath}
+     */
     public
     function getTextContent(): string
     {
@@ -697,10 +706,13 @@ class Page extends ResourceComboAbs
         idx_addPage($this->getPath()->getDokuwikiId());
     }
 
-    public
-    function getTypeNotEmpty()
+    /**
+     * @return mixed
+     * @deprecated for {@link PageType::getValueOrDefault()}
+     */
+    public function getTypeNotEmpty()
     {
-        return $this->type->getValueOrDefault();
+        return $this->type->getValueFromStoreOrDefault();
     }
 
 
@@ -831,7 +843,7 @@ class Page extends ResourceComboAbs
     public
     function getCreatedTime(): ?DateTime
     {
-        return $this->creationTime->getValueOrDefault();
+        return $this->creationTime->getValueFromStore();
     }
 
 
@@ -1054,15 +1066,12 @@ class Page extends ResourceComboAbs
     public function getScope()
     {
         /**
-         * The scope may change
-         * during a run, we then read the metadata file
+         * Note that the scope may change
+         * during a run, we then re-read the metadata
          * each time
          */
-        if (isset(p_read_metadata($this->getPath()->getDokuwikiId())["persistent"][PageScope::SCOPE_KEY])) {
-            return p_read_metadata($this->getPath()->getDokuwikiId())["persistent"][PageScope::SCOPE_KEY];
-        } else {
-            return null;
-        }
+        return $this->scope->getValueFromStore();
+
     }
 
     /**
@@ -1075,8 +1084,10 @@ class Page extends ResourceComboAbs
         return "cache-" . str_replace(":", "-", $this->getPath()->getDokuwikiId());
     }
 
-    public
-    function deleteMetadatasAndFlush(): Page
+    /**
+     * @return $this
+     */
+    public function deleteMetadatasAndFlush(): Page
     {
         $meta = [MetadataDokuWikiStore::CURRENT_METADATA => [], MetadataDokuWikiStore::PERSISTENT_METADATA => []];
         p_save_metadata($this->getPath()->getDokuwikiId(), $meta);
@@ -1113,6 +1124,7 @@ class Page extends ResourceComboAbs
     /**
      * @return array - return the standard / generated metadata
      * used in templating with the value or default
+     * TODO: should move in the templating class
      */
     public
     function getMetadataForRendering(): array
@@ -1492,7 +1504,6 @@ class Page extends ResourceComboAbs
     {
         return $this->layout->getDefaultValue();
     }
-
 
 
     /**

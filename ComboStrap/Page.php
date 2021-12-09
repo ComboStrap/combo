@@ -647,14 +647,11 @@ class Page extends ResourceComboAbs
 
     /**
      * @return mixed
-     * @deprecated for {@link PageDescription::getValueOrDefault()}
      */
     public
     function getDescription(): ?string
     {
-
         return $this->description->getValueFromStore();
-
     }
 
 

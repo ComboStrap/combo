@@ -118,7 +118,12 @@ class MetadataDokuWikiStore implements MetadataStore
 
     }
 
-    public function setFromResourceAndName(Page $wikiPage, string $name, string $value)
+    /**
+     * @param Page $wikiPage
+     * @param string $name
+     * @param string|array $value
+     */
+    public function setFromResourceAndName(Page $wikiPage, string $name, $value)
     {
         $this->setFromWikiId($wikiPage->getDokuwikiId(), $name, $value);
     }

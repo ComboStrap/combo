@@ -56,6 +56,7 @@ abstract class Metadata
     public static function getForName(string $name): ?Metadata
     {
 
+        $name = strtolower(trim($name));
         /**
          * TODO: this array could be build automatically by creating an object for each metadata
          */

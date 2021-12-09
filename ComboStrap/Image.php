@@ -236,7 +236,7 @@ abstract class Image extends Media
      */
     public function isRaster(): bool
     {
-        if ($this->getMime() === Mime::SVG) {
+        if ($this->getPath()->getMime()->toString() === Mime::SVG) {
             return false;
         } else {
             return true;

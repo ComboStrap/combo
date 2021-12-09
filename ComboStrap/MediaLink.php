@@ -355,9 +355,10 @@ abstract class MediaLink
 
 
     public
-    function setLazyLoad($false)
+    function setLazyLoad($false): MediaLink
     {
         $this->lazyLoad = $false;
+        return $this;
     }
 
     public

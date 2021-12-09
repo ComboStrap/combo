@@ -13,6 +13,9 @@ class Mime
     const HEADER_CONTENT_TYPE = "Content-Type";
     public const SVG = "image/svg+xml";
     public const JAVASCRIPT = "text/javascript";
+    const PNG = "image/png";
+    const GIF = "image/gif";
+    const JPEG = "image/jpeg";
     /**
      * @var array|null
      */
@@ -38,7 +41,7 @@ class Mime
 
     public function __toString()
     {
-        return $this->mime ;
+        return $this->mime;
     }
 
     public function isKnown(): bool
@@ -53,10 +56,10 @@ class Mime
 
     public function isTextBased(): bool
     {
-        if($this->getFirstPart()==="text"){
+        if ($this->getFirstPart() === "text") {
             return true;
         }
-        if(in_array($this->mime,[self::SVG,self::JSON])){
+        if (in_array($this->mime, [self::SVG, self::JSON])) {
             return true;
         }
         return false;
@@ -64,7 +67,7 @@ class Mime
 
     private function getFirstPart()
     {
-        return explode("/",$this->mime)[0];
+        return explode("/", $this->mime)[0];
     }
 
     public function isImage(): bool

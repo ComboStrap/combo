@@ -26,6 +26,7 @@ use ComboStrap\PageImages;
 use ComboStrap\PageType;
 use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
+use ComboStrap\Region;
 
 
 /**
@@ -196,7 +197,7 @@ $conf['defaultFacebookImage'] = ":logo-facebook.png";
 
 /**
  * Country
- * {@link Site::CONF_SITE_LANGUAGE_REGION}
+ * {@link Region::CONF_SITE_LANGUAGE_REGION}
  */
 $conf['siteLanguageRegion'] = "";
 

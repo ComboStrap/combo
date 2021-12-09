@@ -18,6 +18,7 @@ use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
 use ComboStrap\PagePublicationDate;
 use ComboStrap\RasterImageLink;
+use ComboStrap\Region;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
 use ComboStrap\SvgDocument;
@@ -149,7 +150,7 @@ $lang[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = PluginUti
 /**
  * Country
  */
-$lang[Site::CONF_SITE_LANGUAGE_REGION] = PluginUtility::getDocumentationHyperLink("region", "Language Region") . " - The default region language.";
+$lang[Region::CONF_SITE_LANGUAGE_REGION] = PluginUtility::getDocumentationHyperLink("region", "Language Region") . " - The default region language.";
 
 /**
  * Late publication

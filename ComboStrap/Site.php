@@ -18,7 +18,6 @@ use RuntimeException;
 class Site
 {
 
-    const CONF_SITE_LANGUAGE_REGION = "siteLanguageRegion";
     const STRAP_TEMPLATE_NAME = "strap";
 
     const SVG_LOGO_IDS = array(
@@ -44,8 +43,8 @@ class Site
         $logoIds = self::getLogoIds();
         foreach ($logoIds as $logoId) {
             if ($logoId->exists()) {
-                $mediaLink = MediaLink::createMediaLinkFromPath($logoId->getPath()->getAbsolutePath(), null, $tagAttributes);
-                $mediaLink->setLazyLoad(false);
+                $mediaLink = MediaLink::createMediaLinkFromPath($logoId->getPath(), $tagAttributes)
+                    ->setLazyLoad(false);
                 return $mediaLink->renderMediaTag();
             }
         }
@@ -142,7 +141,7 @@ class Site
      */
     public static function getLanguageRegion()
     {
-        $region = PluginUtility::getConfValue(self::CONF_SITE_LANGUAGE_REGION);
+        $region = PluginUtility::getConfValue(Region::CONF_SITE_LANGUAGE_REGION);
         if (!empty($region)) {
             return $region;
         } else {

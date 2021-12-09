@@ -15,6 +15,7 @@ class PageDescription extends MetadataText
     const ABSTRACT_KEY = "abstract";
     public const DESCRIPTION = "description";
     const DESCRIPTION_ORIGIN = "origin";
+    const PLUGIN_DESCRIPTION_META = "plugin_description";
 
 
     /**
@@ -133,16 +134,35 @@ class PageDescription extends MetadataText
         if (!array_key_exists(self::ABSTRACT_KEY, $descriptionArray)) {
             return;
         }
+        $value = $descriptionArray[self::ABSTRACT_KEY];
 
         /**
          * If there is an origin, it means that it was set
-         * and therefore not derived from the content
+         * and therefore not the default description derived from the content
          */
         if (array_key_exists('origin', $descriptionArray)) {
             $this->descriptionOrigin = $descriptionArray['origin'];
+            parent::buildFromStoreValue($value);
+            return;
         }
 
-        parent::buildFromStoreValue($descriptionArray[self::ABSTRACT_KEY]);
+        /**
+         * Plugin Plugin Description Integration
+         */
+        $value = $metaDataStore->getFromResourceAndName($this->getResource(), self::PLUGIN_DESCRIPTION_META);
+        if ($value !== null) {
+            $keywords = $value["keywords"];
+            if ($keywords !== null) {
+                parent::buildFromStoreValue($keywords);
+                $this->descriptionOrigin = self::PLUGIN_DESCRIPTION_META;
+                return;
+            }
+        }
+
+        /**
+         * No description set, null
+         */
+        parent::buildFromStoreValue(null);
 
     }
 
@@ -199,6 +219,11 @@ class PageDescription extends MetadataText
     public function getCanonical(): string
     {
         return $this->getName();
+    }
+
+    public function getDescriptionOrigin(): string
+    {
+        return $this->descriptionOrigin;
     }
 
 

@@ -21,6 +21,7 @@ use ComboStrap\PageProtection;
 use ComboStrap\Prism;
 use ComboStrap\LowQualityPage;
 use ComboStrap\PagePublicationDate;
+use ComboStrap\Region;
 use ComboStrap\Shadow;
 use ComboStrap\Site;
 use ComboStrap\SvgDocument;
@@ -178,7 +179,7 @@ $meta[action_plugin_combo_metafacebook::CONF_DEFAULT_FACEBOOK_IMAGE] = array('st
 /**
  * Language region
  */
-$meta[Site::CONF_SITE_LANGUAGE_REGION] = array("string");
+$meta[Region::CONF_SITE_LANGUAGE_REGION] = array("string");
 
 /**
  * Late publication protection

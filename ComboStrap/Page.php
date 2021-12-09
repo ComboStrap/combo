@@ -254,7 +254,7 @@ class Page extends ResourceComboAbs
         global $ID;
         $this->requestedId = $ID;
 
-        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath, DokuPath::PAGE_TYPE);
+        $this->dokuPath = DokuPath::createPagePathFromPath($absolutePath);
 
         /**
          * After the parent construction because we need the id
@@ -306,7 +306,7 @@ class Page extends ResourceComboAbs
     public static function createPageFromRequestedPage(): Page
     {
         $pageId = PluginUtility::getMainPageDokuwikiId();
-        if ($pageId != null) {
+        if ($pageId !== null) {
             return Page::createPageFromId($pageId);
         } else {
             LogUtility::msg("We were unable to determine the page from the variables environment", LogUtility::LVL_MSG_ERROR);
@@ -412,7 +412,9 @@ class Page extends ResourceComboAbs
      */
     public function setCanonical($canonical): Page
     {
-        $this->canonical->setValue($canonical);
+        $this->canonical
+            ->setValue($canonical)
+            ->sendToStore();
         return $this;
     }
 
@@ -1426,7 +1428,10 @@ class Page extends ResourceComboAbs
     function setPageId(?string $pageId): Page
     {
 
-        $this->pageId->setValue($pageId);
+        $this->pageId
+            ->setValue($pageId)
+            ->sendToStore();
+
         return $this;
 
     }
@@ -1521,7 +1526,9 @@ class Page extends ResourceComboAbs
         $actualValue = $lowQualityAttributeName->getValue();
         if ($actualValue === null || $value !== $actualValue) {
             $beforeLowQualityPage = $this->isLowQualityPage();
-            $lowQualityAttributeName->setValue($value);
+            $lowQualityAttributeName
+                ->setValue($value)
+                ->sendToStore();
             $afterLowQualityPage = $this->isLowQualityPage();
             if ($beforeLowQualityPage !== $afterLowQualityPage) {
                 /**
@@ -1587,7 +1594,9 @@ class Page extends ResourceComboAbs
     public
     function setPageType(string $value): Page
     {
-        $this->type->setValue($value);
+        $this->type
+            ->setValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1696,7 +1705,9 @@ class Page extends ResourceComboAbs
     function setDescription($description): Page
     {
 
-        $this->description->setValue($description);
+        $this->description
+            ->setValue($description)
+            ->sendToStore();
         return $this;
     }
 
@@ -1707,7 +1718,9 @@ class Page extends ResourceComboAbs
     public
     function setEndDate($value): Page
     {
-        $this->endDate->setFromStoreValue($value);
+        $this->endDate
+            ->setFromStoreValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1718,7 +1731,9 @@ class Page extends ResourceComboAbs
     public
     function setStartDate($value): Page
     {
-        $this->startDate->setFromStoreValue($value);
+        $this->startDate
+            ->setFromStoreValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1727,7 +1742,9 @@ class Page extends ResourceComboAbs
      */
     public function setPublishedDate($value): Page
     {
-        $this->publishedDate->setFromStoreValue($value);
+        $this->publishedDate
+            ->setFromStoreValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1740,7 +1757,8 @@ class Page extends ResourceComboAbs
     function setPageName($value): Page
     {
         $this->pageName
-            ->setValue($value);
+            ->setValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1751,7 +1769,9 @@ class Page extends ResourceComboAbs
     public
     function setTitle($value): Page
     {
-        $this->title->setValue($value);
+        $this->title
+            ->setValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1761,7 +1781,9 @@ class Page extends ResourceComboAbs
     public
     function setH1($value): Page
     {
-        $this->h1->setValue($value);
+        $this->h1
+            ->setValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1771,7 +1793,9 @@ class Page extends ResourceComboAbs
     public
     function setRegion($value): Page
     {
-        $this->region->setFromStoreValue($value);
+        $this->region
+            ->setFromStoreValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1782,7 +1806,9 @@ class Page extends ResourceComboAbs
     function setLang($value): Page
     {
 
-        $this->lang->setFromStoreValue($value);
+        $this->lang
+            ->setFromStoreValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1792,7 +1818,9 @@ class Page extends ResourceComboAbs
     public
     function setLayout($value): Page
     {
-        $this->layout->setValue($value);
+        $this->layout
+            ->setValue($value)
+            ->sendToStore();
         return $this;
     }
 
@@ -1917,7 +1945,9 @@ class Page extends ResourceComboAbs
     public
     function setSlug($slug): Page
     {
-        $this->slug->setFromStoreValue($slug);
+        $this->slug
+            ->setFromStoreValue($slug)
+            ->sendToStore();
         return $this;
     }
 
@@ -1941,7 +1971,9 @@ class Page extends ResourceComboAbs
     public
     function setScope(string $scope): Page
     {
-        $this->scope->setFromStoreValue($scope);
+        $this->scope
+            ->setFromStoreValue($scope)
+            ->sendToStore();
         return $this;
     }
 
@@ -1950,12 +1982,15 @@ class Page extends ResourceComboAbs
      */
     public function setQualityMonitoringIndicator($boolean): Page
     {
-        $this->qualityMonitoringIndicator->setFromStoreValue($boolean);
+        $this->qualityMonitoringIndicator
+            ->setFromStoreValue($boolean)
+            ->sendToStore();
         return $this;
     }
 
     /**
-     * @param $aliasPath - the alias used to build this page
+     *
+     * @param $aliasPath - third information - the alias used to build this page
      */
     public function setBuildAliasPath($aliasPath)
     {
@@ -1996,29 +2031,6 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
-
-    /**
-     * TODO ? Put it in the {@link Page::setMetadata()} function
-     * @throws ExceptionCombo
-     */
-    private function setDateAttribute(string $name, &$dateValue, $value, $type = MetadataDokuWikiStore::PERSISTENT_METADATA)
-    {
-        if ($value === "") {
-            $stringValue = null;
-            $dateValue = null;
-        } else {
-            if (!is_string($value)) {
-                throw new ExceptionCombo("The $name value ($value) should be in a string format.", Iso8601Date::CANONICAL);
-            }
-            $stringValue = $value;
-            try {
-                $dateValue = Iso8601Date::createFromString($value)->getDateTime();
-            } catch (ExceptionCombo $e) {
-                throw new ExceptionCombo("The $name value ($value) is not a valid date.", Iso8601Date::CANONICAL);
-            }
-        }
-        $this->setMetadata($name, $stringValue, null, $type);
-    }
 
     /**
      * @param array $usages
@@ -2195,7 +2207,9 @@ class Page extends ResourceComboAbs
      */
     public function setKeywords($value): Page
     {
-        $this->keywords->setFromStoreValue($value);
+        $this->keywords
+            ->setFromStoreValue($value)
+            ->sendToStore();
         return $this;
     }
 

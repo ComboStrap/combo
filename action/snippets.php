@@ -5,6 +5,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
 use ComboStrap\Site;
+use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;
 
 if (!defined('DOKU_INC')) die();
@@ -146,7 +147,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
              * the parser cache use event in order to log/report the cache usage
              * At {@link action_plugin_combo_cache::logCacheUsage()}
              */
-            $cache = new CacheRenderer($slotId, $slotLocalFilePath, "snippet.json");
+            $cache = new CacheParser($slotId, $slotLocalFilePath, "snippet.json");
             $cache->setEvent('PARSER_CACHE_USE');
             $dependencies = array(
                 "files" => [
@@ -166,6 +167,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                     $snippetManager->addSnippetsFromCacheForBar($slotId, $snippets);
 
                 }
+
             } else {
                 $snippets = $snippetManager->getSnippetsForBar($slotId);
                 if ($snippets !== null) {

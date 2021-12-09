@@ -26,13 +26,10 @@ abstract class MetadataDateTime extends MetadataScalar
 
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
+
     public function setValue(?DateTime $value): MetadataDateTime
     {
         $this->dateTimeValue = $value;
-        $this->sendToStore();
         return $this;
     }
 

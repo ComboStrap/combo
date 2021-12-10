@@ -140,9 +140,71 @@ class LdJson extends MetadataJson
     public function getDefaultValue(): ?string
     {
 
+        $ldJson = $this->mergeWithDefaultValueAndGet();
+        if ($ldJson === null) {
+            return null;
+        }
+
+        /**
+         * Return
+         */
+        return Json::createFromArray($ldJson)->toPrettyJsonString();
+
+    }
+
+    public function buildFromStoreValue($value)
+    {
+
+        if ($value === null) {
+            $resourceCombo = $this->getResource();
+            if (($resourceCombo instanceof Page)) {
+                // Deprecated, old organization syntax
+                if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
+                    $store = $this->getStore();
+                    $metadata = $store->getFromResourceAndName($this->getResource(), self::OLD_ORGANIZATION_PROPERTY);
+                    if ($metadata !== null) {
+                        $organization = array(
+                            "organization" => $metadata
+                        );
+                        $ldJsonOrganization = $this->mergeWithDefaultValueAndGet($organization);
+                        $value = Json::createFromArray($ldJsonOrganization)->toPrettyJsonString();
+                    }
+
+                }
+            }
+        }
+        return parent::buildFromStoreValue($value);
+
+
+    }
+
+    /**
+     * The ldJson value
+     * @return false|string|null
+     */
+    public function getLdJsonMergedWithDefault()
+    {
+
+        $value = $this->getValue();
+        $actualValueAsArray = null;
+        if ($value !== null) {
+            try {
+                $actualValueAsArray = Json::createFromString($value)->toArray();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("The string value is not a valid Json. Value: $value");
+                return $value;
+            }
+        }
+        $actualValueAsArray = $this->mergeWithDefaultValueAndGet($actualValueAsArray);
+        return Json::createFromArray($actualValueAsArray)->toPrettyJsonString();
+    }
+
+
+    private function mergeWithDefaultValueAndGet($actualValue = null): ?array
+    {
         $page = $this->getResource();
         if (!($page instanceof Page)) {
-            return null;
+            return $actualValue;
         }
 
         $type = $page->getTypeOrDefault();
@@ -153,7 +215,6 @@ class LdJson extends MetadataJson
                  * https://schema.org/WebSite
                  * https://developers.google.com/search/docs/data-types/sitelinks-searchbox
                  */
-
                 $ldJson = array(
                     '@context' => 'https://schema.org',
                     '@type' => 'WebSite',
@@ -338,39 +399,12 @@ class LdJson extends MetadataJson
         );
 
         /**
-         * Return
+         * merge with the extra
          */
-        return Json::createFromArray($ldJson)->toPrettyJsonString();
-
-    }
-
-    public function buildFromStoreValue($value)
-    {
-
-        if ($value === null) {
-            $resourceCombo = $this->getResource();
-            if (($resourceCombo instanceof Page)) {
-                // Deprecated, old organization syntax
-                if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
-                    $store = $this->getStore();
-                    $metadata = $store->getFromResourceAndName($this->getResource(), self::OLD_ORGANIZATION_PROPERTY);
-                    if ($metadata !== null) {
-                        $organization = array(
-                            "@context" => "https://schema.org",
-                            "@type" => "Organization",
-                            "url" => Site::getBaseUrl(),
-                            "logo" => Site::getLogoUrlAsPng(),
-                            "organization" => $metadata
-                        );
-                        $value = Json::createFromArray($organization)->toPrettyJsonString();
-                    }
-
-                }
-            }
+        if ($actualValue !== null) {
+            return array_merge($ldJson, $actualValue);
         }
-        return parent::buildFromStoreValue($value);
-
-
+        return $ldJson;
     }
 
 

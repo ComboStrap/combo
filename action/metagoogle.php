@@ -53,7 +53,7 @@ class action_plugin_combo_metagoogle extends DokuWiki_Action_Plugin
         }
 
         $ldJson = LdJson::createForPage($page)
-            ->getValueOrDefault();
+            ->getLdJsonMergedWithDefault();
 
 
         /**

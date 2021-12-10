@@ -1202,25 +1202,7 @@ class Page extends ResourceComboAbs
     public
     function getEndDate(): ?DateTime
     {
-        $dateEndProperty = EndDate::DATE_END;
-        $persistentMetadata = $this->getPersistentMetadata($dateEndProperty);
-        if (empty($persistentMetadata)) {
-            return null;
-        }
-
-        // Ms level parsing
-        // Ms level parsing
-        try {
-            $dateTime = Iso8601Date::createFromString($persistentMetadata)->getDateTime();
-        } catch (\Exception $e) {
-            /**
-             * Should not happen as the data is validate in entry
-             * at the {@link \syntax_plugin_combo_frontmatter}
-             */
-            LogUtility::msg("The property $dateEndProperty of the page ($this) has a value ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            return null;
-        }
-        return $dateTime;
+        return $this->endDate->getValueFromStore();
     }
 
     public
@@ -1232,24 +1214,7 @@ class Page extends ResourceComboAbs
     public
     function getStartDate(): ?DateTime
     {
-        $dateStartProperty = StartDate::DATE_START;
-        $persistentMetadata = $this->getPersistentMetadata($dateStartProperty);
-        if (empty($persistentMetadata)) {
-            return null;
-        }
-
-        // Ms level parsing
-        try {
-            $dateTime = Iso8601Date::createFromString($persistentMetadata)->getDateTime();
-        } catch (\Exception $e) {
-            /**
-             * Should not happen as the data is validate in entry
-             * at the {@link \syntax_plugin_combo_frontmatter}
-             */
-            LogUtility::msg("The start date property $dateStartProperty of the page ($this) has a value ($persistentMetadata) that is not valid.", LogUtility::LVL_MSG_ERROR, Iso8601Date::CANONICAL);
-            return null;
-        }
-        return $dateTime;
+        return $this->startDate->getValueFromStore();
     }
 
     /**
@@ -1585,7 +1550,9 @@ class Page extends ResourceComboAbs
     public
     function setJsonLd($jsonLd): Page
     {
-        $this->ldJson->setValue($jsonLd);
+        $this->ldJson
+            ->setValue($jsonLd)
+            ->sendToStore();
         return $this;
     }
 

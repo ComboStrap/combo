@@ -524,6 +524,6 @@ abstract class Metadata
      * @param $value
      * @return mixed
      */
-    public abstract function buildFromStoreValue($value);
+    public abstract function buildFromStoreValue($value): Metadata;
 
 }

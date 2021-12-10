@@ -21,7 +21,7 @@ class Json
      * Json constructor.
      * @param array|null $jsonValue
      */
-    public function __construct(?array $jsonValue)
+    public function __construct(?array $jsonValue = null)
     {
         $this->jsonArray = $jsonValue;
 
@@ -79,9 +79,12 @@ class Json
     public
     static function createFromString($jsonString): Json
     {
+        if($jsonString===null || $jsonString === "" ){
+            return new Json();
+        }
         $jsonArray = json_decode($jsonString, true);
         if ($jsonArray === null) {
-            throw new ExceptionCombo("The string is not a valid json");
+            throw new ExceptionCombo("The string is not a valid json. Value: ($jsonString)");
         }
         return new Json($jsonArray);
     }

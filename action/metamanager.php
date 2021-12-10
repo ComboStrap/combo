@@ -262,18 +262,26 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * New Metadata processing
          */
-        Aliases::createForPage($page)
-            ->setFromFormData($post);
+        try {
+            Aliases::createForPage($page)
+                ->setFromFormData($post)
+                ->persist();
+        } catch (ExceptionCombo $e) {
+            $processingMessages[] = Message::createErrorMessage($e->getMessage())
+                ->setCanonical($e->getCanonical());
+        }
         try {
             PageImages::createForPage($page)
-                ->setFromFormData($post);
+                ->setFromFormData($post)
+                ->persist();
         } catch (ExceptionCombo $e) {
             $processingMessages[] = Message::createErrorMessage($e->getMessage())
                 ->setCanonical($e->getCanonical());
         }
         try {
             LdJson::createForPage($page)
-                ->setFromFormData($post);
+                ->setFromFormData($post)
+                ->persist();
         } catch (ExceptionCombo $e) {
             $processingMessages[] = Message::createErrorMessage($e->getMessage())
                 ->setCanonical($e->getCanonical());
@@ -493,6 +501,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     /**
      * @param Page $page
      * @return FormMeta
+     * @throws ExceptionCombo
      */
     static function getFormMetadataForPage(Page $page): FormMeta
     {

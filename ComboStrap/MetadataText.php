@@ -48,7 +48,7 @@ abstract class MetadataText extends MetadataScalar
             $value = null;
         }
         $possibleValues = $this->getPossibleValues();
-        if ($possibleValues !== null) {
+        if ($possibleValues !== null && $value !== null && $value !== "") {
             if (!in_array($value, $possibleValues)) {
                 throw new ExceptionCombo("The value ($value) for the metadata ({$this->getName()}) is not one of the possible following values: " . implode(", ", $possibleValues) . ".");
             }

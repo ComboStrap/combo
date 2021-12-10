@@ -14,6 +14,7 @@ abstract class MetadataJson extends MetadataText
 
     /**
      * Helper function for date metadata
+     * @throws ExceptionCombo
      */
     public function toStoreValue()
     {
@@ -33,6 +34,9 @@ abstract class MetadataJson extends MetadataText
         return DataType::JSON_TYPE_VALUE;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function toFormField(): FormMetaField
     {
         $this->buildCheck();

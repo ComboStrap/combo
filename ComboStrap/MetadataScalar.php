@@ -23,10 +23,10 @@ abstract class MetadataScalar extends Metadata
 
     public function toFormField(): FormMetaField
     {
+
         $this->buildCheck();
         $formField = parent::toFormField();
         $formField->setValue($this->toStoreValue(), $this->toStoreDefaultValue());
-
         return $formField;
 
     }

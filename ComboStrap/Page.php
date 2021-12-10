@@ -1256,6 +1256,7 @@ class Page extends ResourceComboAbs
      * @param $attributes
      * @param boolean|false $persistOnlyKnownAttributes - if strict, unknown parameter will not be added and return an error message
      * @return Message[] array - all messages (error, info, ..)
+     * A lot of similitude with {@link \syntax_plugin_combo_frontmatter::handle()}
      */
     public function upsertMetadataFromAssociativeArray($attributes, bool $persistOnlyKnownAttributes = false): array
     {
@@ -1265,6 +1266,8 @@ class Page extends ResourceComboAbs
          * The set function modify the value to be valid
          * or does not store them at all
          */
+        $metadataStore = $this->getStoreOrDefault();
+
         $messages = [];
         foreach ($attributes as $key => $value) {
 
@@ -1274,83 +1277,22 @@ class Page extends ResourceComboAbs
                     ->setCanonical(Metadata::CANONICAL_PROPERTY);
                 continue;
             }
-            try {
-                switch ($lowerKey) {
-                    case Canonical::CANONICAL_PROPERTY:
-                        $this->setCanonical($value);
-                        continue 2;
-                    case EndDate::DATE_END:
-                        $this->setEndDate($value);
-                        continue 2;
-                    case PageType::TYPE_META_PROPERTY:
-                        $this->setPageType($value);
-                        continue 2;
-                    case StartDate::DATE_START:
-                        $this->setStartDate($value);
-                        continue 2;
-                    case PagePublicationDate::DATE_PUBLISHED:
-                        $this->setPublishedDate($value);
-                        continue 2;
-                    case PageDescription::DESCRIPTION_PROPERTY:
-                        $this->setDescription($value);
-                        continue 2;
-                    case ResourceName::NAME_PROPERTY:
-                        $this->pageName->setFromStoreValue($value);
-                        continue 2;
-                    case PageTitle::TITLE_META_PROPERTY:
-                        $this->title->setFromStoreValue($value);
-                        continue 2;
-                    case PageH1::H1_PROPERTY:
-                        $this->setH1($value);
-                        continue 2;
-                    case LdJson::JSON_LD_META_PROPERTY:
-                        $this->ldJson->setFromStoreValue($value);
-                        continue 2;
-                    case Region::REGION_META_PROPERTY:
-                        $this->setRegion($value);
-                        continue 2;
-                    case Lang::LANG_ATTRIBUTES:
-                        $this->setLang($value);
-                        continue 2;
-                    case PageLayout::LAYOUT_PROPERTY:
-                        $this->setLayout($value);
-                        continue 2;
-                    case Aliases::ALIAS_ATTRIBUTE:
-                        $this->aliases->setFromStoreValue($value);
-                        continue 2;
-                    case PageId::PAGE_ID_ATTRIBUTE:
-                        $this->pageId->setValue($value);
-                        continue 2;
-                    case LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
-                        $this->setCanBeOfLowQuality(Boolean::toBoolean($value));
-                        continue 2;
-                    case PageImages::IMAGE_META_PROPERTY:
-                        $this->pageImages
-                            ->setFromStoreValue($value);
-                        continue 2;
-                    case QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
-                        $this->setQualityMonitoringIndicator(Boolean::toBoolean($value));
-                        continue 2;
-                    case PageKeywords::KEYWORDS_ATTRIBUTE:
-                        $this->setKeywords($value);
-                        continue 2;
-                    case Slug::SLUG_ATTRIBUTE:
-                        $this->setSlug($value);
-                        continue 2;
-                    case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:
-                        $this->cacheExpirationFrequency->setFromStoreValue($value);
-                        continue 2;
-                    default:
-                        if (!$persistOnlyKnownAttributes) {
-                            $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
-                                ->setCanonical(Metadata::CANONICAL_PROPERTY);
-                            $this->setMetadata($key, $value);
-                        } else {
-                            $messages[] = Message::createErrorMessage("The metadata ($lowerKey) is unknown and was not saved")
-                                ->setCanonical(Metadata::CANONICAL_PROPERTY);
-                        }
-                        continue 2;
+            $metadata = Metadata::getForName($key);
+            if ($metadata == null) {
+                if (!$persistOnlyKnownAttributes) {
+                    $messages[] = Message::createInfoMessage("The metadata ($lowerKey) is unknown but was saved with the value ($value)")
+                        ->setCanonical(Metadata::CANONICAL_PROPERTY);
+
+                    $metadataStore->setFromResourceAndName($this, $key, $value);
+                } else {
+                    $messages[] = Message::createErrorMessage("The metadata ($lowerKey) is unknown and was not saved")
+                        ->setCanonical(Metadata::CANONICAL_PROPERTY);
                 }
+                continue;
+            }
+            try {
+                $metadata->buildFromStoreValue($value);
+                $metadataStore->set($metadata);
             } catch (Exception $e) {
                 $message = Message::createErrorMessage($e->getMessage());
                 if ($e instanceof ExceptionCombo) {
@@ -1360,7 +1302,7 @@ class Page extends ResourceComboAbs
             }
 
         }
-        $this->persist();
+        $metadataStore->persist();
 
 
         /**
@@ -2159,9 +2101,9 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getKeywords(): PageKeywords
+    public function getKeywords(): ?array
     {
-        return $this->keywords;
+        return $this->keywords->getValue();
     }
 
     public function getKeywordsOrDefault(): array

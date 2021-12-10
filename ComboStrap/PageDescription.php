@@ -167,6 +167,16 @@ class PageDescription extends MetadataText
     }
 
 
+    public function toFormField(): FormMetaField
+    {
+
+        $this->buildCheck();
+        $formField = parent::toFormField();
+        $formField->setValue($this->getValue(), $this->getDefaultValue());
+        return $formField;
+
+    }
+
     public function setValue(?string $value): MetadataText
     {
 

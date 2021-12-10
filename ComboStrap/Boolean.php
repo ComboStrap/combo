@@ -13,7 +13,7 @@ class Boolean
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
-    public static function toString(bool $value): ?string
+    public static function toString(?bool $value): ?string
     {
         if ($value === null) {
             return null;

@@ -31,8 +31,8 @@ require_once(__DIR__ . '/MetadataScalar.php');
 require_once(__DIR__ . '/MetadataArray.php');
 require_once(__DIR__ . '/MetadataBoolean.php');
 require_once(__DIR__ . '/MetadataDateTime.php');
-require_once(__DIR__ . '/MetadataJson.php');
 require_once(__DIR__ . '/MetadataText.php');
+require_once(__DIR__ . '/MetadataJson.php');
 require_once(__DIR__ . '/MetadataWikiPath.php');
 require_once(__DIR__ . '/MetadataStore.php');
 

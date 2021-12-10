@@ -137,7 +137,7 @@ class LdJson extends MetadataJson
         return true;
     }
 
-    public function getDefaultValue()
+    public function getDefaultValue(): ?string
     {
 
         $page = $this->getResource();
@@ -279,25 +279,25 @@ class LdJson extends MetadataJson
                     $ldJson["name"] = $eventName;
                 } else {
                     LogUtility::msg("The name metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return;
+                    return null;
                 }
                 $eventDescription = $page->getDescription();
                 if (blank($eventDescription)) {
                     LogUtility::msg("The description metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return;
+                    return null;
                 }
                 $ldJson["description"] = $eventDescription;
                 $startDate = $page->getStartDateAsString();
                 if ($startDate === null) {
                     LogUtility::msg("The date_start metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return;
+                    return null;
                 }
                 $ldJson["startDate"] = $page->getStartDateAsString();
 
                 $endDate = $page->getEndDateAsString();
                 if ($endDate === null) {
                     LogUtility::msg("The date_end metadata is mandatory for a event page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                    return;
+                    return null;
                 }
                 $ldJson["endDate"] = $page->getEndDateAsString();
 
@@ -351,21 +351,20 @@ class LdJson extends MetadataJson
             $resourceCombo = $this->getResource();
             if (($resourceCombo instanceof Page)) {
                 // Deprecated, old organization syntax
-                if ($resourceCombo->getTypeOrDefault() !== PageType::ORGANIZATION_TYPE) {
+                if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
                     $store = $this->getStore();
-                    if ($store instanceof MetadataDokuWikiStore) {
-                        $metadata = $store->getFromResourceAndName($this->getResource(), self::OLD_ORGANIZATION_PROPERTY);
-                        if (!empty($metadata)) {
-                            $organization = array(
-                                "@context" => "https://schema.org",
-                                "@type" => "Organization",
-                                "url" => Site::getBaseUrl(),
-                                "logo" => Site::getLogoUrlAsPng(),
-                                "organization" => $metadata
-                            );
-                            $value = Json::createFromArray($organization)->toPrettyJsonString();
-                        }
+                    $metadata = $store->getFromResourceAndName($this->getResource(), self::OLD_ORGANIZATION_PROPERTY);
+                    if ($metadata !== null) {
+                        $organization = array(
+                            "@context" => "https://schema.org",
+                            "@type" => "Organization",
+                            "url" => Site::getBaseUrl(),
+                            "logo" => Site::getLogoUrlAsPng(),
+                            "organization" => $metadata
+                        );
+                        $value = Json::createFromArray($organization)->toPrettyJsonString();
                     }
+
                 }
             }
         }

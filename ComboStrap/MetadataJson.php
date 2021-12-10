@@ -3,61 +3,28 @@
 
 namespace ComboStrap;
 
-
-abstract class MetadataJson extends MetadataScalar
+/**
+ * Class MetadataJson
+ * @package ComboStrap
+ * A text that can be saved as array
+ */
+abstract class MetadataJson extends MetadataText
 {
-
-    /**
-     * @var array|null
-     */
-    private $json;
 
 
     /**
      * Helper function for date metadata
-     * @return array|null
      */
-    public function toStoreValue(): ?array
+    public function toStoreValue()
     {
+        $value = parent::toStoreValue();
 
-        $this->buildCheck();
-        return $this->json;
+        if ($this->getStore()->isHierarchicalTextBased()) {
+            return Json::createFromString($value)->toArray();
+        }
 
-    }
+        return $value;
 
-    /**
-     * @param array|string|null $value
-     * @return $this
-     * @throws ExceptionCombo
-     */
-    public function setValue($value): MetadataJson
-    {
-        $this->json = $this->toInternalValue($value);
-        $this->sendToStore();
-        return $this;
-    }
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public function setFromStoreValue($value): MetadataJson
-    {
-        $this->setValue($value);
-        return $this;
-    }
-
-    public function toStoreDefaultValue(): ?string
-    {
-
-        return null;
-
-    }
-
-
-    public function getValue(): ?array
-    {
-        $this->buildCheck();
-        return $this->json;
     }
 
 
@@ -70,8 +37,9 @@ abstract class MetadataJson extends MetadataScalar
     {
         $this->buildCheck();
         $formField = parent::toFormField();
-        if ($this->json !== null && $this->json !== "") {
-            $value = json_encode($this->json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $value = $this->getValue();
+        if ($value !== null && $value !== "") {
+            $value = Json::createFromString($value)->toPrettyJsonString();
             $formField->setValue($value);
         }
         return $formField;
@@ -85,22 +53,20 @@ abstract class MetadataJson extends MetadataScalar
     {
         // From the form data, we receive a string
         $value = $formData[$this->getName()];
-        $this->setFromStoreValue($value);
+        // validate that this a json by normalizing it
+        $value = Json::createFromString($value)->toPrettyJsonString();
+        $this->setValue($value);
         return $this;
 
     }
 
-    public function valueIsNotNull(): bool
-    {
-        return $this->json !== null;
-    }
 
     public function buildFromStoreValue($value)
     {
         try {
-            $this->json = $this->toInternalValue($value);
+            parent::buildFromStoreValue($this->toInternalValue($value));
         } catch (ExceptionCombo $e) {
-            LogUtility::msg("Value in the store is not a valid json. Message:".$e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+            LogUtility::msg("Value in the store is not a valid json. Message:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
     }
 
@@ -109,20 +75,17 @@ abstract class MetadataJson extends MetadataScalar
      */
     private function toInternalValue($value)
     {
-        if ($value === null || $value === "") {
+        if ($value === null) {
             // html form return empty string
             return null;
         }
-        if (is_string($value)) {
-            $json = json_decode($value, true);
-            if ($json === null) {
-                throw new ExceptionCombo("The string given is not a valid json $value");
-            }
-            return $json;
+        if (is_array($value)) {
+            return Json::createFromArray($value)->toPrettyJsonString();
         }
-        if (!is_array($value)) {
+        if (!is_string($value)) {
             throw new ExceptionCombo("The json persistent value is not an array, nor a string");
         }
+        // the json is normalized when setting to verify
         return $value;
     }
 

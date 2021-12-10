@@ -213,6 +213,7 @@ abstract class Metadata
         $metadataStore = $this->getStore();
         if($metadataStore===null){
             LogUtility::msg("The metadata store is unknown. You need to define a resource or a store to build from it");
+            return $this;
         }
         $this->buildFromStoreValue($metadataStore->get($this));
         return $this;

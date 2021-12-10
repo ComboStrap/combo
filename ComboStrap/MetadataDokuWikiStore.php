@@ -96,13 +96,14 @@ class MetadataDokuWikiStore implements MetadataStore
      * This function is used primarily by derived / process metadata
      *
      * @param ResourceCombo $resource
-     * @param string $metadataName
+     * @param string $name
+     * @param null $default
      * @return mixed
      */
-    public function getFromResourceAndName(ResourceCombo $resource, string $metadataName)
+    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null)
     {
         $wikiId = $resource->getPath()->getDokuwikiId();
-        return $this->getFromWikiId($wikiId, $metadataName);
+        return $this->getFromWikiId($wikiId, $name, $default);
     }
 
 
@@ -119,13 +120,13 @@ class MetadataDokuWikiStore implements MetadataStore
     }
 
     /**
-     * @param Page $wikiPage
+     * @param Page $resource
      * @param string $name
      * @param string|array $value
      */
-    public function setFromResourceAndName(Page $wikiPage, string $name, $value)
+    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value)
     {
-        $this->setFromWikiId($wikiPage->getDokuwikiId(), $name, $value);
+        $this->setFromWikiId($resource->getDokuwikiId(), $name, $value);
     }
 
     /**
@@ -257,7 +258,7 @@ class MetadataDokuWikiStore implements MetadataStore
     }
 
 
-    public function isTextBased(): bool
+    public function isHierarchicalTextBased(): bool
     {
         return true;
     }

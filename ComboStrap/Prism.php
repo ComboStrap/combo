@@ -331,7 +331,7 @@ EOD;
                 $language = "apacheconf";
                 break;
             case "babel":
-                $language = "javascript";
+                $language = "jsx";
                 break;
             case "antlr":
                 $language = "g4";

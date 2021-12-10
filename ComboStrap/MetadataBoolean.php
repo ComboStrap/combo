@@ -44,7 +44,7 @@ abstract class MetadataBoolean extends MetadataScalar
     {
         $store = $this->getStore();
         $value = $this->getValue();
-        if ($store->isTextBased()) {
+        if ($store->isHierarchicalTextBased()) {
             $value = Boolean::toString($value);
         }
         return $value;

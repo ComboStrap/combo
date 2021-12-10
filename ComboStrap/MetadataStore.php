@@ -14,13 +14,38 @@ interface MetadataStore
 {
 
     /**
+     * Set the {@link Metadata::getValue()} for a {@link Metadata::getResource()}
+     * with the name {@link Metadata::getName()}
      * @param Metadata $metadata
-     * @return mixed
      * @throws ExceptionCombo
      */
     public function set(Metadata $metadata);
 
+    /**
+     * Return the {@link Metadata::getValue()} for a {@link Metadata::getResource()}
+     * and the name {@link Metadata::getName()}
+     * @param Metadata $metadata
+     * @param null $default - the default value to return if no data is found
+     */
     public function get(Metadata $metadata, $default = null);
+
+    /**
+     * This function permits to get a metadata value without creating a {@link Metadata} class
+     *
+     * @param ResourceCombo $resource - the metadata is for this resource
+     * @param string $name -  the {@link Metadata::getName()} of the metadata
+     * @param null $default - the default value to return if no data is found
+     * @return null|string|array|boolean
+     */
+    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null);
+
+    /**
+     * This function permits to set a metadata value without creating a {@link Metadata} class
+     * @param ResourceCombo $resource - the metadata is for this resource
+     * @param string $name - the {@link Metadata::getName()} of the metadata
+     * @param null|string|array|boolean - $value
+     */
+    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value);
 
     /**
      *
@@ -41,13 +66,15 @@ interface MetadataStore
     public function persist();
 
     /**
-     * @return bool - true if the data is stored in a text format
-     * Used to send the string `false` and not the false value for instance
+     * @return bool - true if the data is stored in a array text based format
+     * Used to send
+     *   * the string `false` and not the false value for instance
+     *   * and json in a array format
      */
-    public function isTextBased(): bool;
+    public function isHierarchicalTextBased(): bool;
 
     /**
-     * Reset
+     * Reset (Delete all data in memory)
      */
     public function reset();
 

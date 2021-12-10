@@ -81,7 +81,7 @@ class MetadataFrontmatterStore implements MetadataStore
         throw new ExceptionComboRuntime("Not yet implemented, use sendToStore", self::NAME);
     }
 
-    public function isTextBased(): bool
+    public function isHierarchicalTextBased(): bool
     {
         return true;
     }
@@ -277,5 +277,26 @@ EOF;
         $path = $this->getArrayKey($page);
         unset($this->data[$path]);
         return $this;
+    }
+
+    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null)
+    {
+        $path = $this->getArrayKey($resource);
+        $value = $this->data[$path][$name];
+        if ($value !== null) {
+            return $value;
+        }
+        return $default;
+    }
+
+    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value)
+    {
+        $path = $this->getArrayKey($resource);
+        if ($value === null || $value === "") {
+            unset($this->data[$path][$name]);
+            return;
+        }
+        $this->data[$path][$name] = $value;
+
     }
 }

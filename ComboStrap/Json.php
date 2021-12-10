@@ -11,7 +11,7 @@ class Json
     const PARENT_TYPE_ARRAY = "[";
     const TAB_SPACES_COUNTER = 4;
     const EXTENSION = "json";
-    private $jsonString;
+
     /**
      * @var array
      */
@@ -19,19 +19,17 @@ class Json
 
     /**
      * Json constructor.
+     * @param array|null $jsonValue
      */
-    public function __construct($jsonValue)
+    public function __construct(?array $jsonValue)
     {
-        if (is_array($jsonValue)) {
-            $this->jsonArray = $jsonValue;
-        } else {
-            $this->jsonString = $jsonValue;
-        }
+        $this->jsonArray = $jsonValue;
+
     }
 
     public static function createEmpty(): Json
     {
-        return new Json("");
+        return new Json([]);
     }
 
     public static function createFromArray(array $actual): Json
@@ -75,10 +73,17 @@ class Json
     }
 
 
+    /**
+     * @throws ExceptionCombo
+     */
     public
     static function createFromString($jsonString): Json
     {
-        return new Json($jsonString);
+        $jsonArray = json_decode($jsonString, true);
+        if ($jsonArray === null) {
+            throw new ExceptionCombo("The string is not a valid json");
+        }
+        return new Json($jsonArray);
     }
 
     /**
@@ -93,7 +98,7 @@ class Json
     }
 
     public
-    function toArray()
+    function toArray(): ?array
     {
         return $this->getJsonArray();
 
@@ -108,28 +113,22 @@ class Json
     private
     function getJsonString()
     {
-        if ($this->jsonString === null && $this->jsonArray !== null) {
-            $this->jsonString = json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        }
-        return $this->jsonString;
+        return  json_encode($this->jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
+    /**
+     * @return array|null
+     */
     private
-    function getJsonArray()
+    function getJsonArray(): ?array
     {
-        if ($this->jsonArray === null && $this->jsonString !== null) {
-            $this->jsonArray = json_decode($this->jsonString, true);
-        }
         return $this->jsonArray;
     }
 
     public
     function toMinifiedJsonString()
     {
-        if ($this->jsonString === null && $this->jsonArray !== null) {
-            $this->jsonString = json_encode($this->jsonArray);
-        }
-        return $this->jsonString;
+        return json_encode($this->jsonArray);
     }
 
 

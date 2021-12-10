@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use http\Exception\RuntimeException;
+
 /**
  * Class MetadataDbStore
  * @package ComboStrap
@@ -207,7 +209,7 @@ EOF;
         // there is no notion of commit in the sqlite plugin
     }
 
-    public function isTextBased(): bool
+    public function isHierarchicalTextBased(): bool
     {
         return false;
     }
@@ -217,4 +219,13 @@ EOF;
         throw new ExceptionComboRuntime("To implement");
     }
 
+    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null)
+    {
+        throw new RuntimeException("Not implemented");
+    }
+
+    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value)
+    {
+        throw new RuntimeException("Not implemented");
+    }
 }

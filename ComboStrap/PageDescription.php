@@ -118,21 +118,21 @@ class PageDescription extends MetadataText
     }
 
 
-    public function buildFromStoreValue($value)
+    public function buildFromStoreValue($value): Metadata
     {
         $metaDataStore = $this->getStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
             parent::buildFromStoreValue($value);
-            return;
+            return $this;
         }
 
 
         $descriptionArray = $value;
         if (empty($descriptionArray)) {
-            return;
+            return $this;
         }
         if (!array_key_exists(self::ABSTRACT_KEY, $descriptionArray)) {
-            return;
+            return $this;
         }
         $value = $descriptionArray[self::ABSTRACT_KEY];
 
@@ -143,7 +143,7 @@ class PageDescription extends MetadataText
         if (array_key_exists('origin', $descriptionArray)) {
             $this->descriptionOrigin = $descriptionArray['origin'];
             parent::buildFromStoreValue($value);
-            return;
+            return $this;
         }
 
         /**
@@ -155,7 +155,7 @@ class PageDescription extends MetadataText
             if ($keywords !== null) {
                 parent::buildFromStoreValue($keywords);
                 $this->descriptionOrigin = self::PLUGIN_DESCRIPTION_META;
-                return;
+                return $this;
             }
         }
 
@@ -163,7 +163,7 @@ class PageDescription extends MetadataText
          * No description set, null
          */
         parent::buildFromStoreValue(null);
-
+        return $this;
     }
 
 

@@ -58,7 +58,7 @@ class Region extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return Metadata::DERIVED_METADATA;
+        return Metadata::PERSISTENT_METADATA;
     }
 
     public function getMutable(): bool

@@ -83,9 +83,10 @@ abstract class MetadataBoolean extends MetadataScalar
         return $this->value !== null;
     }
 
-    public function buildFromStoreValue($value)
+    public function buildFromStoreValue($value): Metadata
     {
         $this->value = $this->toBoolean($value);
+        return $this;
     }
 
     private function toBoolean($value): ?bool

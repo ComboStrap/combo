@@ -117,16 +117,15 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * The original move method
          * is {@link helper_plugin_move_handler::media()}
          */
-        $metadataFrontmatterStore = MetadataFrontmatterStore::getOrCreate();
-        $page = Page::createPageFromId("move-fake-id")
-            ->setStore($metadataFrontmatterStore);
+        $page = Page::createPageFromId("move-fake-id");
         try {
-            $metadataFrontmatterStore->loadAsString($page, $match);
+            $metadataFrontmatterStore = MetadataFrontmatterStore::createFromFrontmatter($page, $match);
         } catch (ExceptionCombo $e) {
             LogUtility::msg("The frontmatter could not be loaded. " . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return $match;
         }
-        $pageImagesObject = PageImages::createForPage($page);
+        $pageImagesObject = PageImages::createForPage($page)
+            ->setStore($metadataFrontmatterStore);
         $images = $pageImagesObject->getValues();
         if ($images === null) {
             return $match;
@@ -152,8 +151,8 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
 
         } catch (ExceptionCombo $e) {
             // Could not resolve the image, image does not exist, ... return the data without modification
-            if(PluginUtility::isDevOrTest()){
-                throw new ExceptionComboRuntime($e->getMessage(),$e->getCanonical(),0,$e);
+            if (PluginUtility::isDevOrTest()) {
+                throw new ExceptionComboRuntime($e->getMessage(), $e->getCanonical(), 0, $e);
             } else {
                 LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             }
@@ -165,9 +164,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * We don't modify the file system metadata for the page
          * because the handler does not give it unfortunately
          */
-        $frontmatter = $metadataFrontmatterStore->toFrontmatterString($page);
-        $metadataFrontmatterStore->unloadForPage($page);
-        return $frontmatter;
+        return $metadataFrontmatterStore->toFrontmatterString($page);
 
     }
 

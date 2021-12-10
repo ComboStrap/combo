@@ -28,6 +28,7 @@ use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
+use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\Page;
 use ComboStrap\PageId;
 use ComboStrap\PageImages;
@@ -257,9 +258,8 @@ EOF;
 
             $result = [];
             $page = Page::createPageFromGlobalDokuwikiId();
-            $frontMatterStore = MetadataFrontmatterStore::getOrCreate();
             try {
-                $frontMatterStore->loadAsString($page, $match);
+                $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatter($page, $match);
                 $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
             } catch (ExceptionCombo $e) {
                 // Decode problem
@@ -272,7 +272,7 @@ EOF;
              * Empty string
              * Rare case, we delete all mutable meta if present
              */
-            $frontmatterData = $frontMatterStore->getMetadataArrayForPage($page);
+            $frontmatterData = $frontMatterStore->getData();
             if (sizeof($frontmatterData) === 0) {
                 global $ID;
                 $meta = p_read_metadata($ID);
@@ -292,62 +292,14 @@ EOF;
              * Sync
              */
             $targetStore = MetadataDokuWikiStore::getOrCreate();
-            $messages = [];
-            /**
-             * We build a new frontmatter because the
-             * old key should be replace by the new one
-             * (ie {@link \ComboStrap\PagePublicationDate::OLD_META_KEY}
-             * by {@link \ComboStrap\PagePublicationDate::DATE_PUBLISHED}
-             */
-            $dataForRenderer = [];
-            foreach ($frontmatterData as $name => $value) {
+            $transfer = MetadataStoreTransfer::createForPage($page)
+                ->fromStore($frontMatterStore)
+                ->toStore($targetStore)
+                ->process($frontmatterData);
 
-                /**
-                 * Not modifiable meta check
-                 */
-                if (in_array(strtolower($name), Metadata::NOT_MODIFIABLE_METAS)) {
-                    $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
-                        ->setCanonical(Metadata::CANONICAL_PROPERTY);
-                    continue;
-                }
+            $messages = $transfer->getMessages();
+            $dataForRenderer = $transfer->getNormalizedDataArray();
 
-                $metadata = Metadata::getForName($name);
-
-                /**
-                 * Unknown meta
-                 */
-                if ($metadata === null) {
-                    $dataForRenderer[$name] = $value;
-                    $targetStore->setFromResourceAndName($page, $name, $value);
-                    continue;
-                }
-                $dataForRenderer[$metadata->getName()] = $value;
-
-                /**
-                 * Persistent ?
-                 */
-                if ($metadata->getPersistenceType() !== Metadata::PERSISTENT_METADATA) {
-                    $messages[] = Message::createWarningMessage("The metadata ($name) is not persistent and cannot be modified")
-                        ->setCanonical($metadata->getCanonical());
-                    continue;
-                }
-
-                /**
-                 * Sync
-                 */
-                try {
-                    $metadata
-                        ->setResource($page)
-                        ->setStore($frontMatterStore)
-                        ->buildFromStore()
-                        ->setStore($targetStore)
-                        ->sendToStore();
-                } catch (ExceptionCombo $e) {
-                    $messages[] = Message::createErrorMessage("Error while replicating the meta ($metadata) from the store ($frontMatterStore) to the store ($targetStore). Message: " . $e->getMessage())
-                        ->setCanonical($metadata->getCanonical());
-                }
-            }
-            $targetStore->persist();
 
             /**
              * Database update

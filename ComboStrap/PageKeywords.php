@@ -117,13 +117,14 @@ class PageKeywords extends MetadataArray
     }
 
 
-    public function buildFromStoreValue($value)
+    public function buildFromStoreValue($value): Metadata
     {
         try {
             $this->array = $this->toArray($value);
         } catch (ExceptionCombo $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getMessage());
         }
+        return $this;
     }
 
     /**

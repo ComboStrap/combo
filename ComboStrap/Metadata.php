@@ -299,7 +299,8 @@ abstract class Metadata
     /**
      * @param $formData - the data received from the form
      * @return mixed
-     * TODO: migrate the HTML form to a store
+     * TODO: migrate to {@link buildFromStore}
+     *   with the store {@link MetadataFormDataStore}
      */
     public abstract function setFromFormData($formData);
 

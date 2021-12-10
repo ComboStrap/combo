@@ -35,7 +35,7 @@ require_once(__DIR__ . '/MetadataText.php');
 require_once(__DIR__ . '/MetadataJson.php');
 require_once(__DIR__ . '/MetadataWikiPath.php');
 require_once(__DIR__ . '/MetadataStore.php');
-
+require_once(__DIR__ . '/MetadataSingleArrayStore.php');
 
 /**
  * Plugin Utility is added in all Dokuwiki extension
@@ -124,8 +124,10 @@ require_once(__DIR__ . '/LowQualityPageOverwrite.php');
 require_once(__DIR__ . '/LowQualityCalculatedIndicator.php');
 require_once(__DIR__ . '/MetaManagerMenuItem.php');
 require_once(__DIR__ . '/MetadataDokuWikiStore.php');
+require_once(__DIR__ . '/MetadataFormDataStore.php');
 require_once(__DIR__ . '/MetadataFrontmatterStore.php');
 require_once(__DIR__ . '/MetadataDbStore.php');
+require_once(__DIR__ . '/MetadataStoreTransfer.php');
 require_once(__DIR__ . '/Message.php');
 require_once(__DIR__ . '/Mermaid.php');
 require_once(__DIR__ . '/Mime.php');

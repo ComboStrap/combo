@@ -6,17 +6,22 @@ namespace ComboStrap;
 
 use syntax_plugin_combo_frontmatter;
 
-class MetadataFrontmatterStore implements MetadataStore
+class MetadataFrontmatterStore extends MetadataSingleArrayStore
 {
 
     const NAME = "frontmatter";
+    const CANONICAL = self::NAME;
 
 
     /**
-     * @var MetadataFrontmatterStore
+     * MetadataFrontmatterStore constructor.
+     * @param ResourceCombo $page
+     * @param array $data
      */
-    private static $store;
-    private $data;
+    public function __construct(ResourceCombo $page, array $data)
+    {
+        parent::__construct($page,$data);
+    }
 
     /**
      * @param $match
@@ -45,65 +50,40 @@ class MetadataFrontmatterStore implements MetadataStore
         return substr($match, 7, -3);
     }
 
-    public function loadAsArray(ResourceCombo $page, array $jsonArray): MetadataFrontmatterStore
+
+    public function createFromArray(ResourceCombo $page, array $jsonArray): MetadataFrontmatterStore
     {
-        $path = $this->getArrayKey($page);
-        $this->data[$path] = $jsonArray;
-        return $this;
+        return new MetadataFrontmatterStore($page, $jsonArray);
     }
 
-    public static function getOrCreate(): MetadataFrontmatterStore
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createFromFrontmatter($page, $frontmatter = null): MetadataFrontmatterStore
     {
-        if (self::$store === null) {
-            self::$store = new MetadataFrontmatterStore();
+        if($frontmatter===null){
+            return new MetadataFrontmatterStore($page, []);
         }
-        return self::$store;
-    }
-
-    public function set(Metadata $metadata)
-    {
-        $key = $this->getArrayKey($metadata->getResource());
-        $this->data[$key][$metadata->getName()] = $metadata->toStoreValue();
-    }
-
-    public function get(Metadata $metadata, $default = null)
-    {
-        $key = $this->getArrayKey($metadata->getResource());
-        $value = $this->data[$key][$metadata->getName()];
-        if ($value !== null) {
-            return $value;
+        $jsonArray = self::frontMatterMatchToAssociativeArray($frontmatter);
+        if ($jsonArray === null) {
+            throw new ExceptionCombo("The frontmatter is not valid");
         }
-        return $default;
+        return new MetadataFrontmatterStore($page, $jsonArray);
     }
 
-    public function persist()
-    {
-        throw new ExceptionComboRuntime("Not yet implemented, use sendToStore", self::NAME);
-    }
 
-    public function isHierarchicalTextBased(): bool
-    {
-        return true;
-    }
+
 
     public function __toString()
     {
         return self::NAME;
     }
 
-    /**
-     * @param ResourceCombo $page
-     * @return string the key of the storage array
-     */
-    private function getArrayKey(ResourceCombo $page): string
-    {
-        return $page->getPath()->toString();
-    }
 
-    public function getJsonString(ResourceCombo $page): string
+    public function getJsonString(): string
     {
 
-        return self::toFrontmatterJsonString($this->getMetadataArrayForPage($page));
+        return self::toFrontmatterJsonString($this->getData());
 
     }
 
@@ -230,38 +210,14 @@ class MetadataFrontmatterStore implements MetadataStore
         }
     }
 
-    /**
-     * @throws ExceptionCombo if the string is not a valid frontmatter
-     */
-    public function loadAsString(Page $page, $jsonString)
-    {
-        $jsonArray = self::frontMatterMatchToAssociativeArray($jsonString);
-        if ($jsonArray === null) {
-            throw new ExceptionCombo("The frontmatter is not valid");
-        }
-        $this->loadAsArray($page, $jsonArray);
-    }
-
-    public function getMetadataArrayForPage(Page $page): array
-    {
-
-        $key = $this->getArrayKey($page);
-        return $this->data[$key];
-
-    }
 
 
-    public function reset()
-    {
-        $this->data = [];
-    }
 
-    public function toFrontmatterString(Page $page): string
+    public function toFrontmatterString(): string
     {
         $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
         $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-        $array = $this->getMetadataArrayForPage($page);
-        $jsonEncode = self::toFrontmatterJsonString($array);
+        $jsonEncode = self::toFrontmatterJsonString($this->getData());
 
         return <<<EOF
 $frontmatterStartTag
@@ -272,31 +228,5 @@ EOF;
 
     }
 
-    public function unloadForPage(Page $page): MetadataFrontmatterStore
-    {
-        $path = $this->getArrayKey($page);
-        unset($this->data[$path]);
-        return $this;
-    }
 
-    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null)
-    {
-        $path = $this->getArrayKey($resource);
-        $value = $this->data[$path][$name];
-        if ($value !== null) {
-            return $value;
-        }
-        return $default;
-    }
-
-    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value)
-    {
-        $path = $this->getArrayKey($resource);
-        if ($value === null || $value === "") {
-            unset($this->data[$path][$name]);
-            return;
-        }
-        $this->data[$path][$name] = $value;
-
-    }
 }

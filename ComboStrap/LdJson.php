@@ -152,7 +152,7 @@ class LdJson extends MetadataJson
 
     }
 
-    public function buildFromStoreValue($value)
+    public function buildFromStoreValue($value): Metadata
     {
 
         if ($value === null) {
@@ -173,7 +173,8 @@ class LdJson extends MetadataJson
                 }
             }
         }
-        return parent::buildFromStoreValue($value);
+        parent::buildFromStoreValue($value);
+        return $this;
 
 
     }

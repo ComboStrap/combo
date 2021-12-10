@@ -29,7 +29,9 @@ use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDateTime;
 use ComboStrap\MetadataDokuWikiStore;
+use ComboStrap\MetadataFormDataStore;
 use ComboStrap\MetadataJson;
+use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -260,7 +262,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $processingMessages = [];
 
         /**
-         * New Metadata processing
+         * Metadata processing of metadata with more than
+         * one key name
+         * Should be deleted when their {@link Metadata::buildFromStore()}
+         * takes the {@link \ComboStrap\MetadataFormDataStore} into account
          */
         try {
             Aliases::createForPage($page)
@@ -278,15 +283,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             $processingMessages[] = Message::createErrorMessage($e->getMessage())
                 ->setCanonical($e->getCanonical());
         }
-        try {
-            LdJson::createForPage($page)
-                ->setFromFormData($post)
-                ->persist();
-        } catch (ExceptionCombo $e) {
-            $processingMessages[] = Message::createErrorMessage($e->getMessage())
-                ->setCanonical($e->getCanonical());
-        }
-
 
         /**
          * When the migration to the new metadata system is done,
@@ -296,15 +292,18 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         unset($post[Aliases::ALIAS_PATH]);
         unset($post[PageImages::IMAGE_PATH]);
         unset($post[PageImages::IMAGE_USAGE]);
-        unset($post[LdJson::JSON_LD_META_PROPERTY]);
 
         /**
-         * Old metadata system
-         * We upsert as if the data comes from
-         * the file system/frontmatter
-         * This is the case for all scalar value
+         * Metadata with only one key
          */
-        $upsertMessages = $page->upsertMetadataFromAssociativeArray($post, true);
+        $formStore = MetadataFormDataStore::createForPage($page, $post);
+        $transfer = MetadataStoreTransfer::createForPage($page)
+            ->fromStore($formStore)
+            ->toStore(MetadataDokuWikiStore::getOrCreate())
+            ->process($post);
+        $upsertMessages = $transfer->getMessages();
+
+
         $processingMessages = array_merge($upsertMessages, $processingMessages);
 
         $responseMessages = [];

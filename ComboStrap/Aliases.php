@@ -325,8 +325,7 @@ class Aliases extends Metadata
 
     }
 
-    public
-    function setFromFormData($formData): Aliases
+    public function setFromFormData($formData): Aliases
     {
         $pathData = $formData[self::ALIAS_PATH];
         if ($pathData !== null && $pathData !== "") {
@@ -370,9 +369,10 @@ class Aliases extends Metadata
     }
 
 
-    public function buildFromStoreValue($value)
+    public function buildFromStoreValue($value): Metadata
     {
         $this->aliases = $this->toNativeAliasArray($value);
+        return $this;
     }
 
 }

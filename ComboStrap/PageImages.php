@@ -360,12 +360,13 @@ class PageImages extends Metadata
         return $this->pageImages !== null;
     }
 
-    public function buildFromStoreValue($value)
+    public function buildFromStoreValue($value): Metadata
     {
         try {
             $this->pageImages = $this->toPageImageArray($value);
         } catch (ExceptionCombo $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
+        return $this;
     }
 }

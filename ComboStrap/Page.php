@@ -705,9 +705,8 @@ class Page extends ResourceComboAbs
 
     /**
      * @return mixed
-     * @deprecated for {@link PageType::getValueOrDefault()}
      */
-    public function getTypeNotEmpty()
+    public function getTypeOrDefault()
     {
         return $this->type->getValueFromStoreOrDefault();
     }
@@ -1422,7 +1421,7 @@ class Page extends ResourceComboAbs
     {
         global $conf;
         $startPageName = $conf['start'];
-        return $this->getPath() === ":$startPageName";
+        return $this->getPath()->toString() === ":$startPageName";
 
     }
 
@@ -2123,7 +2122,7 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[ResourceName::NAME_PROPERTY] = $this->getPageName();
                     }
                     break;
-                case action_plugin_combo_metagoogle::OLD_ORGANIZATION_PROPERTY:
+                case LdJson::OLD_ORGANIZATION_PROPERTY:
                 case LdJson::JSON_LD_META_PROPERTY:
                     if ($this->getLdJson() !== null) {
                         $nonDefaultMetadatas[LdJson::JSON_LD_META_PROPERTY] = $this->getLdJson();

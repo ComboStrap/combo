@@ -52,9 +52,6 @@ abstract class MetadataScalar extends Metadata
         return $this->getValueOrDefault();
     }
 
-
-    public abstract function getDefaultValue();
-
     public function getValueOrDefault()
     {
 
@@ -65,6 +62,10 @@ abstract class MetadataScalar extends Metadata
         return $value;
 
     }
+
+
+    public abstract function getDefaultValue();
+
 
 
     public

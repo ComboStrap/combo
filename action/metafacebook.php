@@ -99,7 +99,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
         /**
          * Type of page
          */
-        $pageType = $page->getTypeNotEmpty();
+        $pageType = $page->getTypeOrDefault();
         switch ($pageType) {
             case PageType::ARTICLE_TYPE:
                 // https://ogp.me/#type_article
@@ -188,7 +188,7 @@ class action_plugin_combo_metafacebook extends DokuWiki_Action_Plugin
                      * We may don't known the dimensions
                      */
                     if (!$toSmall) {
-                        $mime = $facebookImage->getMime();
+                        $mime = $facebookImage->getPath()->getMime()->toString();
                         if (!empty($mime)) {
                             $facebookMeta["og:image:type"] = $mime;
                         }

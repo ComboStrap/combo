@@ -16,6 +16,8 @@ class Mime
     const PNG = "image/png";
     const GIF = "image/gif";
     const JPEG = "image/jpeg";
+    const BMP = "image/bmp";
+    const WEBP = "image/webp";
     /**
      * @var array|null
      */

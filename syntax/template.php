@@ -7,7 +7,7 @@ use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\DokuPath;
 use ComboStrap\PageCreationDate;
-use ComboStrap\PageImages;
+use ComboStrap\Metadata;
 use ComboStrap\ResourceName;
 use ComboStrap\PagePath;
 use ComboStrap\PageSql;
@@ -361,7 +361,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                             $targetRow = [];
                             foreach ($variableNames as $variableName) {
 
-                                if ($variableName === PageImages::PROPERTY_NAME) {
+                                if ($variableName === Metadata::PROPERTY_NAME) {
                                     LogUtility::msg("To add an image, you must use the page image component, not the image metadata", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
                                     continue;
                                 }

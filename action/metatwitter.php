@@ -5,6 +5,7 @@ use ComboStrap\MediaLink;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
 use ComboStrap\PageImage;
+use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
 use ComboStrap\StringUtility;
 use ComboStrap\TagAttributes;
@@ -146,7 +147,7 @@ class action_plugin_combo_metatwitter extends DokuWiki_Action_Plugin
         /**
          * Card image
          */
-        $twitterImages = $page->getImagesOrDefaultForTheFollowingUsages([PageImage::TWITTER,PageImage::ALL,PageImage::SOCIAL]);
+        $twitterImages = $page->getImagesOrDefaultForTheFollowingUsages([PageImageUsage::TWITTER, PageImageUsage::ALL, PageImageUsage::SOCIAL]);
         if (empty($twitterImages)) {
             $defaultImageIdConf = PluginUtility::getConfValue(self::CONF_DEFAULT_TWITTER_IMAGE);
             if (!empty($defaultImageIdConf)) {

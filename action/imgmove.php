@@ -7,7 +7,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Page;
-use ComboStrap\PageImages;
+use ComboStrap\Metadata;
 use ComboStrap\PluginUtility;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -45,7 +45,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         foreach ($affectedPagesId as $affectedPageId) {
             $affectedPage = Page::createPageFromId($affectedPageId)
                 ->setStore(MetadataDokuWikiStore::getOrCreate());
-            $pageImages = PageImages::createForPage($affectedPage);
+            $pageImages = Metadata::createForPage($affectedPage);
             $removedPageImage = null;
 
             $removedPageImage = $pageImages->removeIfExists($sourceImageId);
@@ -124,7 +124,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             LogUtility::msg("The frontmatter could not be loaded. " . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return $match;
         }
-        $pageImagesObject = PageImages::createForPage($page)
+        $pageImagesObject = Metadata::createForPage($page)
             ->setStore($metadataFrontmatterStore);
         $images = $pageImagesObject->getValues();
         if ($images === null) {

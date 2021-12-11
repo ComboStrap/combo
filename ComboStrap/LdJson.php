@@ -71,7 +71,7 @@ class LdJson extends MetadataJson
             Mime::WEBP,
             Mime::SVG,
         ];
-        $imagesSet = $page->getImagesOrDefaultForTheFollowingUsages([PageImage::ALL, PageImage::SOCIAL, PageImage::GOOGLE]);
+        $imagesSet = $page->getImagesOrDefaultForTheFollowingUsages([PageImageUsage::ALL, PageImageUsage::SOCIAL, PageImageUsage::GOOGLE]);
         $schemaImages = array();
         foreach ($imagesSet as $image) {
 

@@ -6,7 +6,7 @@ namespace ComboStrap;
 /**
  * Class MetadataArray
  * @package ComboStrap
- * An array metadata
+ * An array, ie list of value metadata
  */
 abstract class MetadataArray extends Metadata
 {
@@ -15,7 +15,6 @@ abstract class MetadataArray extends Metadata
      * @var array|null
      */
     protected $array;
-
 
 
     /**
@@ -30,10 +29,10 @@ abstract class MetadataArray extends Metadata
 
     public function getDataType(): string
     {
-        return DataType::TABULAR_TYPE_VALUE;
+        return DataType::ARRAY_TYPE_VALUE;
     }
 
-    public function getValue(): ?array
+    public function getValues(): ?array
     {
         $this->buildCheck();
         return $this->array;
@@ -43,8 +42,8 @@ abstract class MetadataArray extends Metadata
 
     public function getValueOrDefaults(): array
     {
-        $value = $this->getValue();
-        if($value !==null){
+        $value = $this->getValues();
+        if ($value !== null) {
             return $value;
         }
         return $this->getDefaultValues();
@@ -53,6 +52,45 @@ abstract class MetadataArray extends Metadata
 
     public function valueIsNotNull(): bool
     {
-        return $this->array!==null;
+        return $this->array !== null;
+    }
+
+    public function toStoreValue()
+    {
+        $this->buildCheck();
+        return $this->array;
+    }
+
+    public function toStoreDefaultValue()
+    {
+        return $this->getDefaultValues();
+    }
+
+    abstract function getStringSeparator();
+
+    public function buildFromStoreValue($value): Metadata
+    {
+        /**
+         * Array
+         */
+        if (is_array($value)) {
+            $this->array = $value;
+            return $this;
+        }
+
+        /**
+         * String
+         */
+        if (!is_string($value)) {
+            LogUtility::msg("The value is not an array, nor a string");
+        }
+        $stringSeparator = $this->getStringSeparator();
+        if ($stringSeparator === null) {
+            LogUtility::msg("This array value is a string but has no separator defined. Value: $value");
+        }
+        $this->array = explode($stringSeparator, $value);
+
+        return $this;
+
     }
 }

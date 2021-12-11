@@ -22,7 +22,7 @@
 
 use ComboStrap\Canonical;
 use ComboStrap\Icon;
-use ComboStrap\PageImages;
+use ComboStrap\Metadata;
 use ComboStrap\PageType;
 use ComboStrap\Prism;
 use ComboStrap\PageUrlType;
@@ -185,7 +185,7 @@ $conf['twitter:widgets:theme'] = "light";
 $conf['twitter:widgets:border-color'] = "#55acee";
 
 /**
- * Page Image {@link PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
+ * Page Image {@link Metadata::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE}
  */
 $conf['disableFirstImageAsPageImage'] = 0;
 

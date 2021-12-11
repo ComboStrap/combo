@@ -7,15 +7,8 @@ namespace ComboStrap;
 class PageImage
 {
     const PAGE_IMAGE = "page-image";
-    const ICON = "icon"; // next release ?
-    const SOCIAL = "social";
-    const FACEBOOK = "facebook";
-    const GOOGLE = "google";
-    const TWITTER = "twitter";
-    const ALL = "all";
-    const DEFAULT = self::ALL;
-    const USAGE_ATTRIBUTE = "usage";
-    const PATH_ATTRIBUTE = "path";
+
+    // next release ?
 
     /**
      * @var Image
@@ -62,7 +55,7 @@ class PageImage
             if ($value === "") {
                 continue;
             }
-            if (!in_array($value, self::getUsageValues())) {
+            if (!in_array($value, PageImageUsage::getUsageValues())) {
                 throw new ExceptionCombo("The page image usage value ($value) is not valid.");
             }
             $this->usages[$value] = $value;
@@ -85,21 +78,7 @@ class PageImage
 
     public function getDefaultUsage(): array
     {
-        return [self::DEFAULT];
-    }
-
-    public static function getUsageValues(): array
-    {
-        return [
-            self::ALL,
-            self::ICON,
-            self::GOOGLE,
-            self::FACEBOOK,
-            self::PAGE_IMAGE,
-            self::SOCIAL,
-            self::TWITTER,
-        ];
-
+        return [PageImageUsage::DEFAULT];
     }
 
 

@@ -109,7 +109,7 @@ class FormMetaField
         $associative = [
             ResourceName::PROPERTY_NAME => $this->name,
             self::LABEL_ATTRIBUTE => $this->label,
-            DataType::DATA_TYPE_ATTRIBUTE => $this->type
+            DataType::PROPERTY_NAME => $this->type
         ];
         if ($this->getUrl() != null) {
             $associative[self::URL_ATTRIBUTE] = $this->getUrl();

@@ -30,7 +30,7 @@ use ComboStrap\PageCreationDate;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
 use ComboStrap\PageId;
-use ComboStrap\PageImages;
+use ComboStrap\Metadata;
 use ComboStrap\PageKeywords;
 use ComboStrap\PageLayout;
 use ComboStrap\PagePath;
@@ -488,7 +488,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             PageLayout::PROPERTY_NAME,
             ModificationDate::PROPERTY_NAME,
             PageCreationDate::PROPERTY_NAME,
-            PageImages::PROPERTY_NAME,
+            Metadata::PROPERTY_NAME,
             Aliases::PROPERTY_NAME,
             PageType::PROPERTY_NAME,
             PagePublicationDate::PROPERTY_NAME,

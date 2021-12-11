@@ -9,7 +9,7 @@ use ComboStrap\Image;
 use ComboStrap\InternetPath;
 use ComboStrap\LogUtility;
 use ComboStrap\MediaLink;
-use ComboStrap\PageImages;
+use ComboStrap\Metadata;
 use ComboStrap\PagePath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
@@ -282,7 +282,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
 
     /**
      * Update the index for the move plugin
-     * and {@link PageImages::FIRST_IMAGE_META_RELATION}
+     * and {@link Metadata::FIRST_IMAGE_META_RELATION}
      *
      * @param array $attributes
      * @param Doku_Renderer_metadata $renderer

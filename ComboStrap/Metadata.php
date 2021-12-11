@@ -21,10 +21,6 @@ abstract class Metadata
         "contributor"
     ];
 
-    /**
-     * @var
-     */
-    private static $metadata;
 
     /**
      * @var bool
@@ -41,15 +37,28 @@ abstract class Metadata
      * @var MetadataStore
      */
     private $store;
+    /**
+     * @var Metadata|null
+     */
+    private $parent;
 
     /**
      * The metadata may be just not stored
-     * CacheExpirationFrequencyMeta constructor.
      * The page is just the scope
      */
-    public function __construct()
+    public function __construct(Metadata $parent = null)
     {
+        $this->parent = $parent;
+    }
 
+    public function getParent(): ?Metadata
+    {
+        return $this->parent;
+    }
+
+    public function getChildren()
+    {
+        return null;
     }
 
     public static function getForName(string $name): ?Metadata
@@ -176,7 +185,10 @@ abstract class Metadata
         return $this->store;
     }
 
-    public abstract function getTab();
+    public function getTab(): string
+    {
+        return $this->getName();
+    }
 
     /**
      * This function sends the object value to the {@link Metadata::getStore() store}
@@ -210,7 +222,7 @@ abstract class Metadata
     public function buildFromStore()
     {
         $metadataStore = $this->getStore();
-        if($metadataStore===null){
+        if ($metadataStore === null) {
             LogUtility::msg("The metadata store is unknown. You need to define a resource or a store to build from it");
             return $this;
         }
@@ -221,7 +233,9 @@ abstract class Metadata
 
     /**
      * @return string - the data type
-     * used to select the type of input in a HTML form
+     * used:
+     *   * to store the data in the database
+     *   * to select the type of input in a HTML form
      */
     public abstract function getDataType(): string;
 
@@ -248,7 +262,13 @@ abstract class Metadata
      */
     public function getResource(): ?ResourceCombo
     {
-        return $this->resource;
+        if ($this->resource !== null) {
+            return $this->resource;
+        }
+        if ($this->parent !== null) {
+            return $this->parent->getResource();
+        }
+        return null;
     }
 
     /**
@@ -269,6 +289,17 @@ abstract class Metadata
      * Alphanumeric
      */
     public abstract function getName(): string;
+
+    /**
+     * @return string - the name use in the store
+     * For instance, a {@link PageImagePath} has a unique name of `page-image-path`
+     * but when we store it hierarchically, the prefix `page-image` is not needed
+     * and becomes simple `path`
+     */
+    public function getStorageName(): string
+    {
+        return $this->getName();
+    }
 
     /**
      * @return string|array|null the value to be persisted by the store
@@ -369,7 +400,7 @@ abstract class Metadata
         PageType::PROPERTY_NAME,
         PageH1::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,
-        PageImages::PROPERTY_NAME,
+        Metadata::PROPERTY_NAME,
         Region::PROPERTY_NAME,
         Lang::PROPERTY_NAME,
         PageTitle::TITLE,
@@ -498,4 +529,19 @@ abstract class Metadata
      */
     public abstract function buildFromStoreValue($value): Metadata;
 
+
+    /**
+     * The id of an entity metadata (ie if the metadata has children / is a {@link Metadata::$parent}
+     *
+     * One id value = one row = one entity
+     *
+     * @return Metadata|null
+     */
+    public function getUid(): ?Metadata
+    {
+        if($this->getChildren()!==null){
+            LogUtility::msg("An entity metadata should define a metadata that store the unique value");
+        }
+        return null;
+    }
 }

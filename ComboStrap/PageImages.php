@@ -4,35 +4,52 @@
 namespace ComboStrap;
 
 
-
-
 use RuntimeException;
 
-class PageImages extends Metadata
+class PageImages extends MetadataTabular
 {
+
 
     const CANONICAL = "page:image";
     public const PROPERTY_NAME = 'image';
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
     public const FIRST_IMAGE_META_RELATION = "firstimage";
     public const IMAGE_PATH = "image-path";
-    public const IMAGE_USAGE = "image-usage";
 
 
     /**
      * @var PageImage[] with path as key
      */
     private $pageImages;
+    /**
+     * @var PageImageUsage
+     */
+    private $pageImageUsages;
+    /**
+     * @var PageImagePath
+     */
+    private $pageImagePath;
+
+    /**
+     * PageImages constructor.
+     */
+    public function __construct()
+    {
+        $this->pageImagePath = PageImagePath::createFromParent($this);
+        $this->pageImageUsages = PageImageUsage::createFromParent($this);;
+
+        parent::__construct();
+    }
 
 
-    public static function createForPage(Page $page): PageImages
+    public static function createForPage(Page $page): Metadata
     {
         return (new PageImages())
             ->setResource($page);
 
     }
 
-    public static function create(): PageImages
+    public static function create(): Metadata
     {
         return new PageImages();
     }
@@ -47,10 +64,10 @@ class PageImages extends Metadata
         foreach ($this->pageImages as $pageImage) {
             $absolutePath = $pageImage->getImage()->getPath()->toAbsolutePath()->toString();
             $pageImagesMeta[$absolutePath] = [
-                PageImage::PATH_ATTRIBUTE => $absolutePath
+                PageImagePath::STORAGE_PROPERTY_NAME => $absolutePath
             ];
             if ($pageImage->getUsages() !== null && $pageImage->getUsages() !== $pageImage->getDefaultUsage()) {
-                $pageImagesMeta[$absolutePath][PageImage::USAGE_ATTRIBUTE] = implode(", ", $pageImage->getUsages());
+                $pageImagesMeta[$absolutePath][PageImageUsage::PROPERTY_NAME] = implode(", ", $pageImage->getUsages());
             }
         };
         return array_values($pageImagesMeta);
@@ -79,20 +96,20 @@ class PageImages extends Metadata
                 $usage = null;
                 if (is_numeric($key)) {
                     if (is_array($value)) {
-                        if (isset($value[PageImage::USAGE_ATTRIBUTE])) {
-                            $usage = $value[PageImage::USAGE_ATTRIBUTE];
+                        if (isset($value[PageImageUsage::PROPERTY_NAME])) {
+                            $usage = $value[PageImageUsage::PROPERTY_NAME];
                             if (is_string($usage)) {
                                 $usage = explode(",", $usage);
                             }
                         }
-                        $imagePath = $value[PageImage::PATH_ATTRIBUTE];
+                        $imagePath = $value[PageImagePath::STORAGE_PROPERTY_NAME];
                     } else {
                         $imagePath = $value;
                     }
                 } else {
                     $imagePath = $key;
-                    if (is_array($value) && isset($value[PageImage::USAGE_ATTRIBUTE])) {
-                        $usage = $value[PageImage::USAGE_ATTRIBUTE];
+                    if (is_array($value) && isset($value[PageImageUsage::PROPERTY_NAME])) {
+                        $usage = $value[PageImageUsage::PROPERTY_NAME];
                         if (!is_array($usage)) {
                             $usage = explode(",", $usage);;
                         }
@@ -123,7 +140,7 @@ class PageImages extends Metadata
     /**
      * @throws ExceptionCombo
      */
-    public function setFromStoreValue($value): PageImages
+    public function setFromStoreValue($value): Metadata
     {
         $this->pageImages = $this->toPageImageArray($value);
         $this->checkImageExistence();
@@ -157,10 +174,10 @@ class PageImages extends Metadata
                 ->setCanonical($this->getCanonical())
                 ->setDescription("The path of the image")
                 ->setWidth(8);
-            $pageImageUsage = FormMetaField::create(self::IMAGE_USAGE)
+            $pageImageUsage = FormMetaField::create(PageImageUsage::IMAGE_USAGE)
                 ->setLabel("Usages")
                 ->setCanonical($this->getCanonical())
-                ->setDomainValues(PageImage::getUsageValues())
+                ->setDomainValues(PageImageUsage::getUsageValues())
                 ->setWidth(4)
                 ->setMultiple(true)
                 ->setDescription("The possible usages of the image");
@@ -172,14 +189,14 @@ class PageImages extends Metadata
                     $pageImagePathValue = $pageImage->getImage()->getPath()->getAbsolutePath();
                     $pageImagePathUsage = $pageImage->getUsages();
                     $pageImagePath->addValue($pageImagePathValue);
-                    $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
+                    $pageImageUsage->addValue($pageImagePathUsage, PageImageUsage::DEFAULT);
                 }
                 $pageImagePath->addValue(null);
-                $pageImageUsage->addValue(null, PageImage::DEFAULT);
+                $pageImageUsage->addValue(null, PageImageUsage::DEFAULT);
             } else {
                 $pageImageDefault = $this->getResource()->getDefaultPageImageObject()->getImage()->getPath()->getAbsolutePath();
                 $pageImagePath->addValue(null, $pageImageDefault);
-                $pageImageUsage->addValue(null, PageImage::DEFAULT);
+                $pageImageUsage->addValue(null, PageImageUsage::DEFAULT);
             }
 
 
@@ -218,7 +235,7 @@ class PageImages extends Metadata
     /**
      * @throws ExceptionCombo
      */
-    public function addImage(string $wikiImagePath, $usages = null): PageImages
+    public function addImage(string $wikiImagePath, $usages = null): Metadata
     {
         DokuPath::addRootSeparatorIfNotPresent($wikiImagePath);
         $pageImage = PageImage::create($wikiImagePath, $this->getResource());
@@ -348,7 +365,7 @@ class PageImages extends Metadata
             $formData = $store->getData();
             $imagePaths = $formData[self::IMAGE_PATH];
             if ($imagePaths !== null && $imagePaths !== "") {
-                $usages = $formData[self::IMAGE_USAGE];
+                $usages = $formData[PageImageUsage::IMAGE_USAGE];
                 $this->pageImages = [];
                 $counter = 0;
                 foreach ($imagePaths as $imagePath) {
@@ -369,4 +386,16 @@ class PageImages extends Metadata
         $this->pageImages = $this->toPageImageArray($value);
         return $this;
     }
+
+    function getChildren(): array
+    {
+        return [$this->pageImagePath, $this->pageImageUsages];
+    }
+
+    public function getUid(): ?Metadata
+    {
+        return $this->pageImagePath;
+    }
+
+
 }

@@ -12,7 +12,7 @@ use ComboStrap\Icon;
 use ComboStrap\Identity;
 use ComboStrap\MediaLink;
 use ComboStrap\LazyLoad;
-use ComboStrap\PageImages;
+use ComboStrap\Metadata;
 use ComboStrap\PageType;
 use ComboStrap\RasterImageLink;
 use ComboStrap\LinkUtility;
@@ -169,7 +169,7 @@ $meta[syntax_plugin_combo_blockquote::CONF_TWEET_WIDGETS_BORDER] = array('string
 /**
  * Page Image
  */
-$meta[PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
+$meta[Metadata::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE] = array('onoff');
 
 /**
  * Facebook

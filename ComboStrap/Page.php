@@ -153,7 +153,7 @@ class Page extends ResourceComboAbs
      */
     private $endDate;
     /**
-     * @var PageImages
+     * @var Metadata
      */
     private $pageImages;
     /**
@@ -1442,7 +1442,7 @@ class Page extends ResourceComboAbs
     public
     function getDefaultPageImageObject(): ?PageImage
     {
-        if (!PluginUtility::getConfValue(PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+        if (!PluginUtility::getConfValue(Metadata::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             $firstImage = $this->getFirstImage();
             if ($firstImage != null) {
                 if ($firstImage->getPath()->getScheme() == DokuFs::SCHEME) {
@@ -1694,7 +1694,7 @@ class Page extends ResourceComboAbs
          */
         $this->cacheExpirationDate = CacheExpirationDate::createForPage($this);
         $this->aliases = Aliases::createForPage($this);
-        $this->pageImages = PageImages::createForPage($this);
+        $this->pageImages = Metadata::createForPage($this);
         $this->pageName = ResourceName::createForResource($this);
         $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPage($this);
         $this->ldJson = LdJson::createForPage($this);
@@ -1877,7 +1877,7 @@ class Page extends ResourceComboAbs
      */
     public function getImagesOrDefaultForTheFollowingUsages(array $usages): array
     {
-        $usages = array_merge($usages, [PageImage::ALL]);
+        $usages = array_merge($usages, [PageImageUsage::ALL]);
         $images = [];
         foreach ($this->getPageImagesOrDefault() as $pageImage) {
             foreach ($usages as $usage) {
@@ -1919,10 +1919,10 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[Aliases::PROPERTY_NAME] = $this->aliases->toStoreValue();
                     }
                     break;
-                case PageImages::PROPERTY_NAME:
+                case Metadata::PROPERTY_NAME:
                     $images = $this->getPageImages();
                     if (sizeof($images) !== 0) {
-                        $nonDefaultMetadatas[PageImages::PROPERTY_NAME] = $this->pageImages->toStoreValue();
+                        $nonDefaultMetadatas[Metadata::PROPERTY_NAME] = $this->pageImages->toStoreValue();
                     }
                     break;
                 case Region::PROPERTY_NAME:
@@ -2032,7 +2032,7 @@ class Page extends ResourceComboAbs
 
     public function getKeywords(): ?array
     {
-        return $this->keywords->getValue();
+        return $this->keywords->getValues();
     }
 
     public function getKeywordsOrDefault(): array

@@ -54,10 +54,10 @@ class PageKeywords extends MetadataArray
 
     public function toStoreValue()
     {
-        if ($this->getValue() === null) {
+        if ($this->getValues() === null) {
             return null;
         }
-        return implode(self::SEPARATOR, $this->getValue());
+        return implode(self::SEPARATOR, $this->getValues());
 
     }
 

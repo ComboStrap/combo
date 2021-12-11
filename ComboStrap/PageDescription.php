@@ -13,7 +13,7 @@ class PageDescription extends MetadataText
      * that has the description text
      */
     const ABSTRACT_KEY = "abstract";
-    public const DESCRIPTION = "description";
+    public const PROPERTY_NAME = "description";
     const DESCRIPTION_ORIGIN = "origin";
     const PLUGIN_DESCRIPTION_META = "plugin_description";
 

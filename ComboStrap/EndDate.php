@@ -8,7 +8,7 @@ class EndDate extends MetadataDateTime
 {
 
 
-    public const DATE_END = "date_end";
+    public const PROPERTY_NAME = "date_end";
 
     public static function createFromPage(Page $page)
     {
@@ -33,7 +33,7 @@ class EndDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return self::DATE_END;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

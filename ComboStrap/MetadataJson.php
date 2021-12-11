@@ -34,21 +34,6 @@ abstract class MetadataJson extends MetadataText
         return DataType::JSON_TYPE_VALUE;
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    public function toFormField(): FormMetaField
-    {
-        $this->buildCheck();
-        $formField = parent::toFormField();
-        $value = $this->getValue();
-        if ($value !== null && $value !== "") {
-            $value = Json::createFromString($value)->toPrettyJsonString();
-            $formField->setValue($value);
-        }
-        return $formField;
-
-    }
 
     /**
      * @throws ExceptionCombo

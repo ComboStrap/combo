@@ -9,7 +9,7 @@ class PageH1 extends MetadataText
 
 
     public const H1_PARSED = "h1_parsed";
-    public const H1_PROPERTY = "h1";
+    public const PROPERTY_NAME = "h1";
 
     public static function createForPage($page): ResourceName
     {
@@ -34,7 +34,7 @@ class PageH1 extends MetadataText
 
     public function getName(): string
     {
-        return self::H1_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

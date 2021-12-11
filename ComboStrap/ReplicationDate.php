@@ -11,7 +11,7 @@ class ReplicationDate extends MetadataDateTime
     /**
      * The attribute in the metadata and in the database
      */
-    public const DATE_REPLICATION = "date_replication";
+    public const PROPERTY_NAME = "date_replication";
     public const REPLICATION_CANONICAL = "replication";
 
     public static function createFromPage(Page $page)
@@ -42,7 +42,7 @@ class ReplicationDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return self::DATE_REPLICATION;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

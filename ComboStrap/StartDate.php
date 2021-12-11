@@ -7,7 +7,7 @@ namespace ComboStrap;
 class StartDate extends MetadataDateTime
 {
 
-    public const DATE_START = "date_start";
+    public const PROPERTY_NAME = "date_start";
 
     public static function createFromPage(Page $page)
     {
@@ -32,7 +32,7 @@ class StartDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return self::DATE_START;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

@@ -47,7 +47,7 @@ class action_plugin_combo_metakeywords extends DokuWiki_Action_Plugin
             $event->data['meta'],
             "name",
             [
-                "name" => PageKeywords::KEYWORDS_ATTRIBUTE,
+                "name" => PageKeywords::PROPERTY_NAME,
                 "content" => implode(",", $keywords)
             ]
         );

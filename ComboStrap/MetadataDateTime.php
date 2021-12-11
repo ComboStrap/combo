@@ -5,6 +5,7 @@ namespace ComboStrap;
 
 
 use DateTime;
+use http\Exception\RuntimeException;
 
 abstract class MetadataDateTime extends MetadataScalar
 {
@@ -20,8 +21,16 @@ abstract class MetadataDateTime extends MetadataScalar
      */
     public function toStoreValue()
     {
+
         $this->buildCheck();
-        $value = $this->dateTimeValue;
+        $value = $this->getValue();
+        $defaultValue = $this->getDefaultValue();
+
+        $store = $this->getStore();
+        if($store instanceof MetadataFormDataStore){
+            throw new RuntimeException("To do");
+        }
+
         return $this->toPersistentDateTimeUtility($value);
 
     }
@@ -96,13 +105,6 @@ abstract class MetadataDateTime extends MetadataScalar
             throw new ExceptionComboRuntime("This is not a date time");
         }
         return Iso8601Date::createFromDateTime($value)->toString();
-    }
-
-    public function toFormField(): FormMetaField
-    {
-        $this->buildCheck();
-        return parent::toFormField()
-            ->setValue($this->toStoreValue(), $this->toStoreDefaultValue());
     }
 
     public function getCanonical(): string

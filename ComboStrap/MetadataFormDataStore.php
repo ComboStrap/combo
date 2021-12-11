@@ -13,8 +13,9 @@ class MetadataFormDataStore extends MetadataSingleArrayStore
 {
 
 
-    public static function createForPage(Page $page, array $formData): MetadataFormDataStore
+    public static function createForPage(Page $page, array $formData = []): MetadataFormDataStore
     {
         return new MetadataFormDataStore($page,$formData);
     }
+
 }

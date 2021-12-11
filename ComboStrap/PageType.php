@@ -8,12 +8,11 @@ class PageType extends MetadataText
 {
 
 
-    public const NAME_PROPERTY = "name";
     /**
      * @link https://ogp.me/#types Facebook ogp
      * @link https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#http://purl.org/dc/elements/1.1/type Dublin Core
      */
-    public const TYPE_META_PROPERTY = "type";
+    public const PROPERTY_NAME = "type";
     public const BLOG_TYPE = "blog";
     public const WEB_PAGE_TYPE = "webpage";
     public const ARTICLE_TYPE = "article";
@@ -52,7 +51,7 @@ class PageType extends MetadataText
 
     public function getName(): string
     {
-        return self::TYPE_META_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

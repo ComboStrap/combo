@@ -7,7 +7,7 @@ namespace ComboStrap;
 class PageTitle extends MetadataText
 {
 
-    public const TITLE_META_PROPERTY = 'title';
+    public const PROPERTY_NAME = 'title';
     public const TITLE = 'title';
 
     public static function createForPage($page): PageTitle
@@ -33,7 +33,7 @@ class PageTitle extends MetadataText
 
     public function getName(): string
     {
-        return self::TITLE_META_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

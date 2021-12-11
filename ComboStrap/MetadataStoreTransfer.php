@@ -24,6 +24,7 @@ class MetadataStoreTransfer
      * @var array - the normalized data after processing
      * Name of metadata may be deprecated
      * After processing, this array will have the new keys
+     * Use in a frontmatter to send correct data to the rendering metadata phase
      */
     private $normalizedData;
     /**
@@ -48,54 +49,79 @@ class MetadataStoreTransfer
 
     public function fromStore(MetadataStore $sourceStore): MetadataStoreTransfer
     {
-        $this->sourceStore =  $sourceStore;
+        $this->sourceStore = $sourceStore;
         return $this;
     }
 
     public function toStore(MetadataStore $targetStore): MetadataStoreTransfer
     {
-        $this->targetStore =  $targetStore;
+        $this->targetStore = $targetStore;
         return $this;
     }
 
+    /**
+     * @param $data
+     * @return $this
+     */
     public function process(array $data): MetadataStoreTransfer
     {
         $messages = [];
+
         /**
-         * We build a new frontmatter because the
-         * old key should be replace by the new one
-         * (ie {@link \ComboStrap\PagePublicationDate::OLD_META_KEY}
-         * by {@link \ComboStrap\PagePublicationDate::DATE_PUBLISHED}
+         * Pre-procesing
+         * Check/ validity and list of metadata building
          */
-        $dataForRenderer = [];
+        $metadatas = [];
         foreach ($data as $name => $value) {
+
+
+            $metadata = Metadata::getForName($name);
+
+            /**
+             * Take old name or renaming into account
+             *
+             * ie The old key should be replace by the new one
+             * (ie {@link \ComboStrap\PagePublicationDate::OLD_META_KEY}
+             * by {@link \ComboStrap\PagePublicationDate::PROPERTY_NAME}
+             */
+            $normalizedName = $name;
+            if ($metadata !== null) {
+                $normalizedName = $metadata->getName();
+            }
+            $this->normalizedData[$normalizedName] = $value;
 
             /**
              * Not modifiable meta check
              */
-            if (in_array(strtolower($name), Metadata::NOT_MODIFIABLE_METAS)) {
+            if (in_array($normalizedName, Metadata::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
-                    ->setCanonical(Metadata::CANONICAL_PROPERTY);
+                    ->setCanonical(Metadata::PROPERTY_NAME);
                 continue;
             }
-
-            $metadata = Metadata::getForName($name);
 
             /**
              * Unknown meta
              */
             if ($metadata === null) {
-                $dataForRenderer[$name] = $value;
                 $this->targetStore->setFromResourceAndName($this->page, $name, $value);
-                continue;
+                $this->normalizedData[$name] = $value;
             }
-            $dataForRenderer[$metadata->getName()] = $value;
+            /**
+             * Valid meta to proceed in the next phase
+             */
+            $metadatas[$metadata->getName()] = $metadata;
+
+        }
+
+
+        foreach ($metadatas as $metadata) {
+
 
             /**
              * Persistent ?
              */
             if ($metadata->getPersistenceType() !== Metadata::PERSISTENT_METADATA) {
-                $messages[] = Message::createWarningMessage("The metadata ($name) is not persistent and cannot be modified")
+                $messages[] = Message::createWarningMessage("The metadata ({$metadata->getName()}) is not persistent and cannot be modified")
                     ->setCanonical($metadata->getCanonical());
                 continue;
             }
@@ -117,7 +143,6 @@ class MetadataStoreTransfer
         }
         $this->targetStore->persist();
 
-        $this->normalizedData = $dataForRenderer;
         $this->messages = $messages;
         return $this;
     }

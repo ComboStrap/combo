@@ -1127,21 +1127,21 @@ class Page extends ResourceComboAbs
     {
 
         $metadataNames = [
-            PageH1::H1_PROPERTY,
+            PageH1::PROPERTY_NAME,
             PageTitle::TITLE,
-            PageId::PAGE_ID_ATTRIBUTE,
-            Canonical::CANONICAL_PROPERTY,
-            PagePath::PATH_ATTRIBUTE,
-            PageDescription::DESCRIPTION,
-            ResourceName::NAME_PROPERTY,
-            PageType::TYPE_META_PROPERTY,
-            Slug::SLUG_ATTRIBUTE,
-            PageCreationDate::DATE_CREATED_PROPERTY,
-            ModificationDate::DATE_MODIFIED_PROPERTY,
-            PagePublicationDate::DATE_PUBLISHED,
-            StartDate::DATE_START,
-            EndDate::DATE_END,
-            PageLayout::LAYOUT_PROPERTY,
+            PageId::PROPERTY_NAME,
+            Canonical::PROPERTY_NAME,
+            PagePath::PROPERTY_NAME,
+            PageDescription::PROPERTY_NAME,
+            ResourceName::PROPERTY_NAME,
+            PageType::PROPERTY_NAME,
+            Slug::PROPERTY_NAME,
+            PageCreationDate::PROPERTY_NAME,
+            ModificationDate::PROPERTY_NAME,
+            PagePublicationDate::PROPERTY_NAME,
+            StartDate::PROPERTY_NAME,
+            EndDate::PROPERTY_NAME,
+            PageLayout::PROPERTY_NAME,
             // Dokuwiki id is deprecated for path, no more advertised
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE
         ];
@@ -1897,42 +1897,42 @@ class Page extends ResourceComboAbs
 
         foreach (Metadata::MUTABLE_METADATA as $metaKey) {
             switch ($metaKey) {
-                case Canonical::CANONICAL_PROPERTY:
+                case Canonical::PROPERTY_NAME:
                     if (!in_array($this->getCanonical(), [$this->getDefaultCanonical(), null])) {
-                        $nonDefaultMetadatas[Canonical::CANONICAL_PROPERTY] = $this->getCanonical();
+                        $nonDefaultMetadatas[Canonical::PROPERTY_NAME] = $this->getCanonical();
                     }
                     break;
                 case
-                PageType::TYPE_META_PROPERTY:
+                PageType::PROPERTY_NAME:
                     if (!in_array($this->getPageType(), [$this->getDefaultType(), null])) {
-                        $nonDefaultMetadatas[PageType::TYPE_META_PROPERTY] = $this->getPageType();
+                        $nonDefaultMetadatas[PageType::PROPERTY_NAME] = $this->getPageType();
                     }
                     break;
-                case PageH1::H1_PROPERTY:
+                case PageH1::PROPERTY_NAME:
                     if (!in_array($this->getH1(), [$this->getDefaultH1(), null])) {
-                        $nonDefaultMetadatas[PageH1::H1_PROPERTY] = $this->getH1();
+                        $nonDefaultMetadatas[PageH1::PROPERTY_NAME] = $this->getH1();
                     }
                     break;
-                case Aliases::ALIAS_ATTRIBUTE:
+                case Aliases::PROPERTY_NAME:
 
                     if ($this->aliases->getSize() !== 0) {
-                        $nonDefaultMetadatas[Aliases::ALIAS_ATTRIBUTE] = $this->aliases->toStoreValue();
+                        $nonDefaultMetadatas[Aliases::PROPERTY_NAME] = $this->aliases->toStoreValue();
                     }
                     break;
-                case PageImages::IMAGE_META_PROPERTY:
+                case PageImages::PROPERTY_NAME:
                     $images = $this->getPageImages();
                     if (sizeof($images) !== 0) {
-                        $nonDefaultMetadatas[PageImages::IMAGE_META_PROPERTY] = $this->pageImages->toStoreValue();
+                        $nonDefaultMetadatas[PageImages::PROPERTY_NAME] = $this->pageImages->toStoreValue();
                     }
                     break;
-                case Region::REGION_META_PROPERTY:
+                case Region::PROPERTY_NAME:
                     if (!in_array($this->getLocaleRegion(), [$this->getDefaultRegion(), null])) {
-                        $nonDefaultMetadatas[Region::REGION_META_PROPERTY] = $this->getLocaleRegion();
+                        $nonDefaultMetadatas[Region::PROPERTY_NAME] = $this->getLocaleRegion();
                     }
                     break;
-                case Lang::LANG_ATTRIBUTES:
+                case Lang::PROPERTY_NAME:
                     if (!in_array($this->getLang(), [$this->getDefaultLang(), null])) {
-                        $nonDefaultMetadatas[Lang::LANG_ATTRIBUTES] = $this->getLang();
+                        $nonDefaultMetadatas[Lang::PROPERTY_NAME] = $this->getLang();
                     }
                     break;
                 case PageTitle::TITLE:
@@ -1950,35 +1950,35 @@ class Page extends ResourceComboAbs
                     }
                     break;
                 case PagePublicationDate::OLD_META_KEY:
-                case PagePublicationDate::DATE_PUBLISHED:
+                case PagePublicationDate::PROPERTY_NAME:
                     if ($this->getPublishedTime() !== null) {
-                        $nonDefaultMetadatas[PagePublicationDate::DATE_PUBLISHED] = $this->getPublishedTimeAsString();
+                        $nonDefaultMetadatas[PagePublicationDate::PROPERTY_NAME] = $this->getPublishedTimeAsString();
                     }
                     break;
-                case ResourceName::NAME_PROPERTY:
+                case ResourceName::PROPERTY_NAME:
                     if (!in_array($this->getPageName(), [$this->getDefaultPageName(), null])) {
-                        $nonDefaultMetadatas[ResourceName::NAME_PROPERTY] = $this->getPageName();
+                        $nonDefaultMetadatas[ResourceName::PROPERTY_NAME] = $this->getPageName();
                     }
                     break;
                 case LdJson::OLD_ORGANIZATION_PROPERTY:
-                case LdJson::JSON_LD_META_PROPERTY:
+                case LdJson::PROPERTY_NAME:
                     if ($this->getLdJson() !== null) {
-                        $nonDefaultMetadatas[LdJson::JSON_LD_META_PROPERTY] = $this->getLdJson();
+                        $nonDefaultMetadatas[LdJson::PROPERTY_NAME] = $this->getLdJson();
                     }
                     break;
-                case PageLayout::LAYOUT_PROPERTY:
+                case PageLayout::PROPERTY_NAME:
                     if (!in_array($this->getLayout(), [$this->getDefaultLayout(), null])) {
-                        $nonDefaultMetadatas[PageLayout::LAYOUT_PROPERTY] = $this->getLayout();
+                        $nonDefaultMetadatas[PageLayout::PROPERTY_NAME] = $this->getLayout();
                     }
                     break;
-                case StartDate::DATE_START:
+                case StartDate::PROPERTY_NAME:
                     if ($this->getStartDate() !== null) {
-                        $nonDefaultMetadatas[StartDate::DATE_START] = $this->getStartDateAsString();
+                        $nonDefaultMetadatas[StartDate::PROPERTY_NAME] = $this->getStartDateAsString();
                     }
                     break;
-                case EndDate::DATE_END:
+                case EndDate::PROPERTY_NAME:
                     if ($this->getEndDate() !== null) {
-                        $nonDefaultMetadatas[EndDate::DATE_END] = $this->getEndDateAsString();
+                        $nonDefaultMetadatas[EndDate::PROPERTY_NAME] = $this->getEndDateAsString();
                     }
                     break;
                 case action_plugin_combo_metadescription::DESCRIPTION_META_KEY:
@@ -1986,29 +1986,29 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[action_plugin_combo_metadescription::DESCRIPTION_META_KEY] = $this->getDescription();
                     }
                     break;
-                case Slug::SLUG_ATTRIBUTE:
+                case Slug::PROPERTY_NAME:
                     if (!in_array($this->getSlug(), [$this->getDefaultSlug(), null])) {
-                        $nonDefaultMetadatas[Slug::SLUG_ATTRIBUTE] = $this->getSlug();
+                        $nonDefaultMetadatas[Slug::PROPERTY_NAME] = $this->getSlug();
                     }
                     break;
-                case QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
+                case QualityDynamicMonitoringOverwrite::PROPERTY_NAME:
                     if (!in_array($this->getQualityMonitoringIndicator(), [$this->getDefaultQualityMonitoring(), null])) {
-                        $nonDefaultMetadatas[QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR] = $this->getQualityMonitoringIndicator();
+                        $nonDefaultMetadatas[QualityDynamicMonitoringOverwrite::PROPERTY_NAME] = $this->getQualityMonitoringIndicator();
                     }
                     break;
-                case LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
+                case LowQualityPageOverwrite::PROPERTY_NAME:
                     if (!in_array($this->getCanBeOfLowQuality(), [true, null])) {
-                        $nonDefaultMetadatas[LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR] = $this->getCanBeOfLowQuality();
+                        $nonDefaultMetadatas[LowQualityPageOverwrite::PROPERTY_NAME] = $this->getCanBeOfLowQuality();
                     }
                     break;
-                case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:
+                case CacheExpirationFrequency::PROPERTY_NAME:
                     if ($this->getCacheExpirationFrequency() !== null) {
-                        $nonDefaultMetadatas[CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME] = $this->getCacheExpirationFrequency();
+                        $nonDefaultMetadatas[CacheExpirationFrequency::PROPERTY_NAME] = $this->getCacheExpirationFrequency();
                     }
                     break;
-                case PageKeywords::KEYWORDS_ATTRIBUTE:
+                case PageKeywords::PROPERTY_NAME:
                     if ($this->getKeywords() !== null && sizeof($this->getKeywords()) !== 0) {
-                        $nonDefaultMetadatas[PageKeywords::KEYWORDS_ATTRIBUTE] = implode(",", $this->getKeywords());
+                        $nonDefaultMetadatas[PageKeywords::PROPERTY_NAME] = implode(",", $this->getKeywords());
                     }
                     break;
                 default:

@@ -280,7 +280,7 @@ class DokuwikiUrl
     {
         $attributes = [];
         $attributes[self::ANCHOR_ATTRIBUTES] = $this->fragment;
-        $attributes[PagePath::PATH_ATTRIBUTE] = $this->pathOrId;
+        $attributes[PagePath::PROPERTY_NAME] = $this->pathOrId;
         return PluginUtility::mergeAttributes($attributes, $this->queryParameters);
     }
 

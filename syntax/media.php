@@ -292,7 +292,7 @@ class syntax_plugin_combo_media extends DokuWiki_Syntax_Plugin
         $type = $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE];
         $src = $attributes['src'];
         if ($src == null) {
-            $src = $attributes[PagePath::PATH_ATTRIBUTE];
+            $src = $attributes[PagePath::PROPERTY_NAME];
         }
         $title = $attributes['title'];
         $align = $attributes['align'];

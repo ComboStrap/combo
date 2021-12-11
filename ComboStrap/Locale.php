@@ -7,6 +7,8 @@ namespace ComboStrap;
 class Locale extends MetadataText
 {
 
+    const PROPERTY_NAME = "locale";
+
     public static function createForPage(Page $page)
     {
         return (new Locale())
@@ -50,7 +52,7 @@ class Locale extends MetadataText
 
     public function getName(): string
     {
-        return "locale";
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

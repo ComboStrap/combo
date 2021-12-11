@@ -17,7 +17,7 @@ class LowQualityPageOverwrite extends MetadataBoolean
      * that set a boolean to true or false
      * to tell if a page may be of low quality
      */
-    public const CAN_BE_LOW_QUALITY_PAGE_INDICATOR = 'low_quality_page';
+    public const PROPERTY_NAME = 'low_quality_page';
     public const CAN_BE_LOW_QUALITY_PAGE_DEFAULT = true;
 
     public static function createForPage(Page $page)
@@ -43,7 +43,7 @@ class LowQualityPageOverwrite extends MetadataBoolean
 
     public function getName(): string
     {
-        return self::CAN_BE_LOW_QUALITY_PAGE_INDICATOR;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

@@ -107,7 +107,7 @@ class FormMetaField
          * Mandatory attributes
          */
         $associative = [
-            ResourceName::NAME_PROPERTY => $this->name,
+            ResourceName::PROPERTY_NAME => $this->name,
             self::LABEL_ATTRIBUTE => $this->label,
             DataType::DATA_TYPE_ATTRIBUTE => $this->type
         ];

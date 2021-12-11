@@ -5,14 +5,13 @@ namespace ComboStrap;
 
 
 use action_plugin_combo_metadescription;
-use action_plugin_combo_metagoogle;
 use ModificationDate;
 use ReplicationDate;
 use Slug;
 
 abstract class Metadata
 {
-    const CANONICAL_PROPERTY = "page:metadata";
+    const CANONICAL = "page:metadata";
     const MUTABLE = "mutable";
     public const NOT_MODIFIABLE_METAS = [
         "date",
@@ -61,65 +60,65 @@ abstract class Metadata
          * TODO: this array could be build automatically by creating an object for each metadata
          */
         switch ($name) {
-            case Canonical::CANONICAL_PROPERTY:
+            case Canonical::PROPERTY_NAME:
                 return new Canonical();
-            case PageType::TYPE_META_PROPERTY:
+            case PageType::PROPERTY_NAME:
                 return new PageType();
-            case PageH1::H1_PROPERTY:
+            case PageH1::PROPERTY_NAME:
                 return new PageH1();
-            case Aliases::ALIAS_ATTRIBUTE:
+            case Aliases::PROPERTY_NAME:
                 return new Aliases();
-            case PageImages::IMAGE_META_PROPERTY:
+            case PageImages::PROPERTY_NAME:
                 return new PageImages();
             case Region::OLD_REGION_PROPERTY:
-            case Region::REGION_META_PROPERTY:
+            case Region::PROPERTY_NAME:
                 return new Region();
-            case Lang::LANG_ATTRIBUTES:
+            case Lang::PROPERTY_NAME:
                 return new Lang();
             case PageTitle::TITLE:
                 return new PageTitle();
             case PagePublicationDate::OLD_META_KEY:
-            case PagePublicationDate::DATE_PUBLISHED:
+            case PagePublicationDate::PROPERTY_NAME:
                 return new PagePublicationDate();
-            case ResourceName::NAME_PROPERTY:
+            case ResourceName::PROPERTY_NAME:
                 return new ResourceName();
             case LdJson::OLD_ORGANIZATION_PROPERTY:
-            case LdJson::JSON_LD_META_PROPERTY:
+            case LdJson::PROPERTY_NAME:
                 return new LdJson();
-            case PageLayout::LAYOUT_PROPERTY:
+            case PageLayout::PROPERTY_NAME:
                 return new PageLayout();
-            case StartDate::DATE_START:
+            case StartDate::PROPERTY_NAME:
                 return new StartDate();
-            case EndDate::DATE_END:
+            case EndDate::PROPERTY_NAME:
                 return new EndDate();
             case PageDescription::DESCRIPTION_PROPERTY:
                 return new PageDescription();
-            case Slug::SLUG_ATTRIBUTE:
+            case Slug::PROPERTY_NAME:
                 return new Slug();
-            case PageKeywords::KEYWORDS_ATTRIBUTE:
+            case PageKeywords::PROPERTY_NAME:
                 return new PageKeywords();
-            case CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME:
+            case CacheExpirationFrequency::PROPERTY_NAME:
                 return new CacheExpirationFrequency();
-            case QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR:
+            case QualityDynamicMonitoringOverwrite::PROPERTY_NAME:
                 return new QualityDynamicMonitoringOverwrite();
-            case LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR:
+            case LowQualityPageOverwrite::PROPERTY_NAME:
                 return new LowQualityPageOverwrite();
-            case PageId::PAGE_ID_ATTRIBUTE:
+            case PageId::PROPERTY_NAME:
                 return new PageId();
-            case PagePath::PATH_ATTRIBUTE:
+            case PagePath::PROPERTY_NAME:
                 return new PagePath();
-            case PageCreationDate::DATE_CREATED_PROPERTY:
+            case PageCreationDate::PROPERTY_NAME:
                 return new PageCreationDate();
-            case ModificationDate::DATE_MODIFIED_PROPERTY:
+            case ModificationDate::PROPERTY_NAME:
                 return new ModificationDate();
             case DokuwikiId::DOKUWIKI_ID_ATTRIBUTE:
                 return new DokuwikiId();
             default:
                 $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
                 if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionComboRuntime($msg, self::CANONICAL_PROPERTY);
+                    throw new ExceptionComboRuntime($msg, self::PROPERTY_NAME);
                 } else {
-                    LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
+                    LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
                 }
         }
         return null;
@@ -241,7 +240,7 @@ abstract class Metadata
         /**
          * The canonical to page metadata
          */
-        return self::CANONICAL_PROPERTY;
+        return self::CANONICAL;
     }
 
     /**
@@ -266,6 +265,8 @@ abstract class Metadata
 
     /**
      * @return string the name of the metadata (property)
+     * Used in all store such as database (therefore no minus please)
+     * Alphanumeric
      */
     public abstract function getName(): string;
 
@@ -275,42 +276,12 @@ abstract class Metadata
      */
     public abstract function toStoreValue();
 
-    /**
-     * @return FormMetaField the field for this metadata
-     * TODO: see a HTML form as a datastore where you send a retrieve data ?
-     */
-    public function toFormField(): FormMetaField
-    {
-        $field = FormMetaField::create($this->getName())
-            ->setType($this->getDataType())
-            ->setTab($this->getTab())
-            ->setCanonical($this->getCanonical())
-            ->setLabel($this->getLabel())
-            ->setDescription($this->getDescription())
-            ->setMutable($this->getMutable());
-        $possibleValues = $this->getPossibleValues();
-        if ($possibleValues !== null) {
-            $field->setDomainValues($possibleValues);
-        }
-        return $field;
-
-    }
-
-    /**
-     * @param $formData - the data received from the form
-     * @return mixed
-     * TODO: migrate to {@link buildFromStore}
-     *   with the store {@link MetadataFormDataStore}
-     */
-    public abstract function setFromFormData($formData);
-
 
     /**
      * @return mixed
      * The store default value is used to
-     * see if the value is the same than the default
+     * see if the value set is the same than the default one
      * It this is the case, the data is not stored
-     *
      */
     public abstract function toStoreDefaultValue();
 
@@ -357,10 +328,10 @@ abstract class Metadata
      * in the persistent metadata
      */
     const NOT_MODIFIABLE_PERSISTENT_METADATA = [
-        PagePath::PATH_ATTRIBUTE,
-        PageCreationDate::DATE_CREATED_PROPERTY,
-        ModificationDate::DATE_MODIFIED_PROPERTY,
-        PageId::PAGE_ID_ATTRIBUTE,
+        PagePath::PROPERTY_NAME,
+        PageCreationDate::PROPERTY_NAME,
+        ModificationDate::PROPERTY_NAME,
+        PageId::PROPERTY_NAME,
         "contributor",
         "creator",
         "date",
@@ -380,7 +351,7 @@ abstract class Metadata
         "format",
         "internal", // toc, cache, ...
         "relation",
-        ReplicationDate::DATE_REPLICATION,
+        ReplicationDate::PROPERTY_NAME,
         PageH1::H1_PARSED,
         LowQualityCalculatedIndicator::LOW_QUALITY_INDICATOR_CALCULATED
     ];
@@ -394,28 +365,28 @@ abstract class Metadata
      *   * or in the database
      */
     const MUTABLE_METADATA = [
-        Canonical::CANONICAL_PROPERTY,
-        PageType::TYPE_META_PROPERTY,
-        PageH1::H1_PROPERTY,
-        Aliases::ALIAS_ATTRIBUTE,
-        PageImages::IMAGE_META_PROPERTY,
-        Region::REGION_META_PROPERTY,
-        Lang::LANG_ATTRIBUTES,
+        Canonical::PROPERTY_NAME,
+        PageType::PROPERTY_NAME,
+        PageH1::PROPERTY_NAME,
+        Aliases::PROPERTY_NAME,
+        PageImages::PROPERTY_NAME,
+        Region::PROPERTY_NAME,
+        Lang::PROPERTY_NAME,
         PageTitle::TITLE,
         PagePublicationDate::OLD_META_KEY,
-        PagePublicationDate::DATE_PUBLISHED,
-        ResourceName::NAME_PROPERTY,
-        LdJson::JSON_LD_META_PROPERTY,
-        PageLayout::LAYOUT_PROPERTY,
+        PagePublicationDate::PROPERTY_NAME,
+        ResourceName::PROPERTY_NAME,
+        LdJson::PROPERTY_NAME,
+        PageLayout::PROPERTY_NAME,
         LdJson::OLD_ORGANIZATION_PROPERTY,
-        StartDate::DATE_START,
-        EndDate::DATE_END,
+        StartDate::PROPERTY_NAME,
+        EndDate::PROPERTY_NAME,
         action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
-        Slug::SLUG_ATTRIBUTE,
-        PageKeywords::KEYWORDS_ATTRIBUTE,
-        CacheExpirationFrequency::META_CACHE_EXPIRATION_FREQUENCY_NAME,
-        QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR,
-        LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR,
+        Slug::PROPERTY_NAME,
+        PageKeywords::PROPERTY_NAME,
+        CacheExpirationFrequency::PROPERTY_NAME,
+        QualityDynamicMonitoringOverwrite::PROPERTY_NAME,
+        LowQualityPageOverwrite::PROPERTY_NAME,
     ];
 
 

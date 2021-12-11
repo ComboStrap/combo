@@ -49,12 +49,12 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
 
     const ATTRIBUTES_IN_PAGE_TABLE = [
         "id",
-        Canonical::CANONICAL_PROPERTY,
-        PagePath::PATH_ATTRIBUTE,
-        ModificationDate::DATE_MODIFIED_PROPERTY,
-        PageCreationDate::DATE_CREATED_PROPERTY,
-        PagePublicationDate::DATE_PUBLISHED,
-        ResourceName::NAME_PROPERTY
+        Canonical::PROPERTY_NAME,
+        PagePath::PROPERTY_NAME,
+        ModificationDate::PROPERTY_NAME,
+        PageCreationDate::PROPERTY_NAME,
+        PagePublicationDate::PROPERTY_NAME,
+        ResourceName::PROPERTY_NAME
     ];
 
     const CANONICAL = "template";
@@ -361,7 +361,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                             $targetRow = [];
                             foreach ($variableNames as $variableName) {
 
-                                if ($variableName === PageImages::IMAGE_META_PROPERTY) {
+                                if ($variableName === PageImages::PROPERTY_NAME) {
                                     LogUtility::msg("To add an image, you must use the page image component, not the image metadata", LogUtility::LVL_MSG_ERROR, syntax_plugin_combo_pageimage::CANONICAL);
                                     continue;
                                 }

@@ -293,7 +293,7 @@ EOF;
                     'chars' => $statistics[AnalyticsDocument::CHAR_COUNT],
                     'external_links' => $statistics[AnalyticsDocument::EXTERNAL_LINK_COUNT],
                     'external_medias' => $statistics[AnalyticsDocument::EXTERNAL_MEDIA_COUNT],
-                    PageH1::H1_PROPERTY => $statistics[AnalyticsDocument::HEADING_COUNT][PageH1::H1_PROPERTY],
+                    PageH1::PROPERTY_NAME => $statistics[AnalyticsDocument::HEADING_COUNT][PageH1::PROPERTY_NAME],
                     'h2' => $statistics[AnalyticsDocument::HEADING_COUNT]['h2'],
                     'h3' => $statistics[AnalyticsDocument::HEADING_COUNT]['h3'],
                     'h4' => $statistics[AnalyticsDocument::HEADING_COUNT]['h4'],

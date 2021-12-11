@@ -2,16 +2,11 @@
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
-use ComboStrap\Alias;
 use ComboStrap\Aliases;
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\CacheExpirationDate;
 use ComboStrap\CacheExpirationFrequency;
-use ComboStrap\CacheManager;
 use ComboStrap\Canonical;
-use ComboStrap\DatabasePage;
 use ComboStrap\DataType;
-use ComboStrap\DokuPath;
 use ComboStrap\EndDate;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\FormMeta;
@@ -19,18 +14,14 @@ use ComboStrap\FormMetaField;
 use ComboStrap\FormMetaTab;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
-use ComboStrap\Iso8601Date;
 use ComboStrap\Json;
 use ComboStrap\Lang;
 use ComboStrap\LdJson;
-use ComboStrap\LowQualityPage;
 use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
-use ComboStrap\MetadataDateTime;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFormDataStore;
-use ComboStrap\MetadataJson;
 use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
@@ -39,21 +30,18 @@ use ComboStrap\PageCreationDate;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
 use ComboStrap\PageId;
-use ComboStrap\PageImage;
 use ComboStrap\PageImages;
 use ComboStrap\PageKeywords;
 use ComboStrap\PageLayout;
-use ComboStrap\ResourceName;
 use ComboStrap\PagePath;
+use ComboStrap\PagePublicationDate;
 use ComboStrap\PageTitle;
 use ComboStrap\PageType;
 use ComboStrap\PageUrlPath;
-use ComboStrap\Path;
 use ComboStrap\PluginUtility;
-use ComboStrap\PagePublicationDate;
 use ComboStrap\QualityDynamicMonitoringOverwrite;
 use ComboStrap\Region;
-use ComboStrap\Site;
+use ComboStrap\ResourceName;
 use ComboStrap\StartDate;
 
 if (!defined('DOKU_INC')) die();
@@ -251,60 +239,24 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
         /**
          * Boolean form field (default values)
-         * are not send back
+         * are not send back by the HTML form
          */
         $defaultBoolean = [
-            LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_INDICATOR => LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_DEFAULT,
-            QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR => QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
+            LowQualityPageOverwrite::PROPERTY_NAME => LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_DEFAULT,
+            QualityDynamicMonitoringOverwrite::PROPERTY_NAME => QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
         ];
         $post = array_merge($defaultBoolean, $post);
 
-        $processingMessages = [];
-
         /**
-         * Metadata processing of metadata with more than
-         * one key name
-         * Should be deleted when their {@link Metadata::buildFromStore()}
-         * takes the {@link \ComboStrap\MetadataFormDataStore} into account
-         */
-        try {
-            Aliases::createForPage($page)
-                ->setFromFormData($post)
-                ->persist();
-        } catch (ExceptionCombo $e) {
-            $processingMessages[] = Message::createErrorMessage($e->getMessage())
-                ->setCanonical($e->getCanonical());
-        }
-        try {
-            PageImages::createForPage($page)
-                ->setFromFormData($post)
-                ->persist();
-        } catch (ExceptionCombo $e) {
-            $processingMessages[] = Message::createErrorMessage($e->getMessage())
-                ->setCanonical($e->getCanonical());
-        }
-
-        /**
-         * When the migration to the new metadata system is done,
-         * this unset is no more needed
-         */
-        unset($post[Aliases::ALIAS_TYPE]);
-        unset($post[Aliases::ALIAS_PATH]);
-        unset($post[PageImages::IMAGE_PATH]);
-        unset($post[PageImages::IMAGE_USAGE]);
-
-        /**
-         * Metadata with only one key
+         * Processing
          */
         $formStore = MetadataFormDataStore::createForPage($page, $post);
         $transfer = MetadataStoreTransfer::createForPage($page)
             ->fromStore($formStore)
             ->toStore(MetadataDokuWikiStore::getOrCreate())
             ->process($post);
-        $upsertMessages = $transfer->getMessages();
+        $processingMessages = $transfer->getMessages();
 
-
-        $processingMessages = array_merge($upsertMessages, $processingMessages);
 
         $responseMessages = [];
         $responseStatus = HttpResponse::STATUS_ALL_GOOD;
@@ -520,124 +472,51 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta = FormMeta::create($page->getDokuwikiId())
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 
+        $store = MetadataFormDataStore::createForPage($page);
+        $page->setStore($store);
+
+        $formsMetadata = [
+            ResourceName::PROPERTY_NAME,
+            PageTitle::PROPERTY_NAME,
+            PageH1::PROPERTY_NAME,
+            PageDescription::PROPERTY_NAME,
+            PageKeywords::PROPERTY_NAME,
+            PagePath::PROPERTY_NAME,
+            Canonical::PROPERTY_NAME,
+            Slug::PROPERTY_NAME,
+            PageUrlPath::PROPERTY_NAME,
+            PageLayout::PROPERTY_NAME,
+            ModificationDate::PROPERTY_NAME,
+            PageCreationDate::PROPERTY_NAME,
+            PageImages::PROPERTY_NAME,
+            Aliases::PROPERTY_NAME,
+            PageType::PROPERTY_NAME,
+            PagePublicationDate::PROPERTY_NAME,
+            StartDate::PROPERTY_NAME,
+            EndDate::PROPERTY_NAME,
+            LdJson::PROPERTY_NAME,
+            LowQualityPageOverwrite::PROPERTY_NAME,
+            QualityDynamicMonitoringOverwrite::PROPERTY_NAME,
+            \ComboStrap\Locale::PROPERTY_NAME,
+            Lang::PROPERTY_NAME,
+            Region::PROPERTY_NAME,
+            ReplicationDate::PROPERTY_NAME,
+            PageId::PROPERTY_NAME,
+            CacheExpirationFrequency::PROPERTY_NAME,
+            CacheExpirationDate::PROPERTY_NAME,
+        ];
+
         /**
          * The manager
          */
-        // Name
-        $pageName = ResourceName::createForResource($page);
-        $formMeta->addField($pageName->toFormField());
+        foreach ($formsMetadata as $formsMetaDatum) {
+            $metadata = Metadata::getForName($formsMetaDatum)
+                ->setResource($page)
+                ->setStore($store);
+            $array = $metadata->toStoreValue();
+            $formMeta->addFieldData($array);
+        }
 
-
-        // Title (title of a component is an heading)
-        $title = PageTitle::createForPage($page);
-        $formMeta->addField($title->toFormField());
-
-        // H1
-        $h1 = PageH1::createForPage($page);
-        $formMeta->addField($h1->toFormField());
-
-        // Description
-        $description = PageDescription::createForPage($page);
-        $formMeta->addField($description->toFormField());
-
-        // Keywords
-        $keywords = PageKeywords::createForPage($page);
-        $formMeta->addField($keywords->toFormField());
-
-        // Path
-        $path = PagePath::createForPage($page);
-        $formMeta->addField($path->toFormField());
-
-        // Canonical
-        $canonical = Canonical::createForPage($page);
-        $formMeta->addField($canonical->toFormField());
-
-        // Slug
-        $slug = Slug::createForPage($page);
-        $formMeta->addField($slug->toFormField());
-
-        $formMeta->addField(PageUrlPath::createForPage($page)->toFormField());
-
-        // Layout
-        $formMeta->addField(PageLayout::createFromPage($page)->toFormField());
-
-        // Modified Date
-        $formMeta->addField(ModificationDate::createForPage($page)->toFormField());
-
-        // Created Date
-        $creationTime = PageCreationDate::createForPage($page);
-        $formMeta->addField($creationTime->toFormField());
-
-        /**
-         * Page Image Properties
-         */
-        $pageImages = PageImages::createForPage($page);
-        $formMeta->addField($pageImages->toFormField());
-
-        /**
-         * Aliases
-         */
-        $aliases = Aliases::createForPage($page);
-        $formMeta->addField($aliases->toFormField());
-
-        // Page Type
-        $pageType = PageType::createForPage($page);
-        $formMeta->addField($pageType->toFormField());
-
-        // Published Date
-        $publicationDate = PagePublicationDate::createFromPage($page);
-        $formMeta->addField($publicationDate->toFormField());
-
-        // Start Date
-        $startDate = StartDate::createFromPage($page);
-        $formMeta->addField($startDate->toFormField());
-
-        // End Date
-        $endDate = EndDate::createFromPage($page);
-        $formMeta->addField($endDate->toFormField());
-
-        // ld-json
-        $ldJson = LdJson::createForPage($page);
-        $formFieldLdJson = $ldJson->toFormField();
-        $formMeta->addField($formFieldLdJson);
-
-
-        // Is low quality page
-        $lowQualityOverwrite = LowQualityPageOverwrite::createForPage($page);
-        $formMeta->addField($lowQualityOverwrite->toFormField());
-
-        // Quality Monitoring
-        $formMeta->addField(
-            QualityDynamicMonitoringOverwrite::createFromPage($page)
-                ->toFormField()
-        );
-
-        // Locale
-        $locale = \ComboStrap\Locale::createForPage($page);
-        $formMeta->addField($locale->toFormField());
-
-        // Lang
-        $lang = Lang::createForPage($page);
-        $formMeta->addField($lang->toFormField());
-
-        // Country
-        $region = Region::createForPage($page);
-        $formMeta->addField($region->toFormField());
-
-        // database replication Date
-        $replicationDate = ReplicationDate::createFromPage($page);
-        $formMeta->addField($replicationDate->toFormField());
-
-        // Page Id
-        $pageId = PageId::createForPage($page);
-        $formMeta->addField($pageId->toFormField());
-
-        // Cache cron expiration expression
-        $formMeta->addField(CacheExpirationFrequency::createForPage($page)->toFormField());
-
-        // Cache expiration date
-        $cacheExpirationDate = CacheExpirationDate::createForPage($page);
-        $formMeta->addField($cacheExpirationDate->toFormField());
 
         /**
          * Tabs (for whatever reason, javascript keep the order of the properties

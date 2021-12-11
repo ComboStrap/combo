@@ -142,9 +142,9 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         /**
          * Page Id special
          */
-        if (isset($originalFrontMatterMetadata[PageId::PAGE_ID_ATTRIBUTE])) {
+        if (isset($originalFrontMatterMetadata[PageId::PROPERTY_NAME])) {
             if ($page->getPageId() !== null) {
-                $originalFrontMatterMetadata[PageId::PAGE_ID_ATTRIBUTE] = $page->getPageId();
+                $originalFrontMatterMetadata[PageId::PROPERTY_NAME] = $page->getPageId();
             }
         }
 
@@ -387,7 +387,7 @@ EOF;
                 foreach ($frontMatterJsonArray as $key => $value) {
 
                     $renderer->setAnalyticsMetaForReporting($key, $value);
-                    if ($key === PageImages::IMAGE_META_PROPERTY) {
+                    if ($key === PageImages::PROPERTY_NAME) {
                         $this->updateImageStatistics($value, $renderer);
                     }
 
@@ -411,14 +411,14 @@ EOF;
                  */
                 $page = Page::createPageFromId($ID);
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
-                if (isset($frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY])) {
-                    $value = $frontMatterJsonArray[PageImages::IMAGE_META_PROPERTY];
+                if (isset($frontMatterJsonArray[PageImages::PROPERTY_NAME])) {
+                    $value = $frontMatterJsonArray[PageImages::PROPERTY_NAME];
                     try {
                         $pageImages = PageImages::createForPage($page)
                             ->setFromStoreValue($value);
                         foreach ($pageImages->getValues() as $imageValue) {
                             $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
-                            $attributes = [PagePath::PATH_ATTRIBUTE => $imagePath];
+                            $attributes = [PagePath::PROPERTY_NAME => $imagePath];
                             if (media_isexternal($imagePath)) {
                                 $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
                             } else {

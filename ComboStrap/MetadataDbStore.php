@@ -32,7 +32,7 @@ class MetadataDbStore implements MetadataStore
     public function set(Metadata $metadata)
     {
         switch ($metadata->getName()) {
-            case Aliases::ALIAS_ATTRIBUTE:
+            case Aliases::PROPERTY_NAME:
                 $this->setAliases($metadata);
                 return;
             default:
@@ -49,7 +49,7 @@ class MetadataDbStore implements MetadataStore
 
 
         switch ($metadata->getName()) {
-            case Aliases::ALIAS_ATTRIBUTE:
+            case Aliases::PROPERTY_NAME:
                 return $this->getAliasesInPersistentValue($metadata);
             default:
                 $database = DatabasePage::createFromPageObject($resource);
@@ -106,7 +106,7 @@ class MetadataDbStore implements MetadataStore
     {
 
         $row = array(
-            PageId::PAGE_ID_ATTRIBUTE => $page->getPageId(),
+            PageId::PROPERTY_NAME => $page->getPageId(),
             Alias::ALIAS_PATH_PROPERTY => $alias[Alias::ALIAS_PATH_PROPERTY],
             Alias::ALIAS_TYPE_PROPERTY => $alias[Alias::ALIAS_TYPE_PROPERTY]
         );
@@ -130,8 +130,8 @@ class MetadataDbStore implements MetadataStore
      */
     private function deleteAlias(array $dbAliasPath, $page): void
     {
-        $pageIdAttributes = PageId::PAGE_ID_ATTRIBUTE;
-        $pathAttribute = PagePath::PATH_ATTRIBUTE;
+        $pageIdAttributes = PageId::PROPERTY_NAME;
+        $pathAttribute = PagePath::PROPERTY_NAME;
         $aliasTables = self::ALIAS_TABLE_NAME;
         $delete = <<<EOF
 delete from $aliasTables where $pageIdAttributes = ? and $pathAttribute = ?
@@ -180,7 +180,7 @@ EOF;
         }
         $aliases = Aliases::create()
             ->setResource($metadata->getResource());
-        $pageIdAttribute = strtoupper(PageId::PAGE_ID_ATTRIBUTE);
+        $pageIdAttribute = strtoupper(PageId::PROPERTY_NAME);
         $pathAttribute = strtoupper(Alias::ALIAS_PATH_PROPERTY);
         $typeAttribute = strtoupper(Alias::ALIAS_TYPE_PROPERTY);
         $tableAliases = self::ALIAS_TABLE_NAME;

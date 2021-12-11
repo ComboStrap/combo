@@ -190,9 +190,9 @@ abstract class MediaLink
          * Media id are not cleaned
          * They are always absolute ?
          */
-        if (isset($attributes[PagePath::PATH_ATTRIBUTE])) {
+        if (isset($attributes[PagePath::PROPERTY_NAME])) {
             // not sure why ?
-            unset($attributes[PagePath::PATH_ATTRIBUTE]);
+            unset($attributes[PagePath::PROPERTY_NAME]);
         }
 
 
@@ -466,7 +466,7 @@ abstract class MediaLink
          * src is a path (not an id)
          */
         $array = array(
-            PagePath::PATH_ATTRIBUTE => $this->getMedia()->getPath()->toString()
+            PagePath::PROPERTY_NAME => $this->getMedia()->getPath()->toString()
         );
 
 

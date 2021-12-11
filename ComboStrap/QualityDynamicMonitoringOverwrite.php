@@ -12,7 +12,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
     /**
      * Key in the frontmatter that disable the message
      */
-    public const EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR = "dynamic_quality_monitoring";
+    public const PROPERTY_NAME = "dynamic_quality_monitoring";
     public const EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT = true;
 
     public static function createFromPage(Page $page)
@@ -44,7 +44,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
 
     public function getName(): string
     {
-        return self::EXECUTE_DYNAMIC_QUALITY_MONITORING_INDICATOR;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

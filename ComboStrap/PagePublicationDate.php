@@ -25,7 +25,7 @@ class PagePublicationDate extends MetadataDateTime
     /**
      * The key that contains the published date
      */
-    const DATE_PUBLISHED = "date_published";
+    const PROPERTY_NAME = "date_published";
     const OLD_META_KEY = "published";
 
     /**
@@ -35,7 +35,7 @@ class PagePublicationDate extends MetadataDateTime
     const CONF_LATE_PUBLICATION_PROTECTION_MODE = "latePublicationProtectionMode";
     const CONF_LATE_PUBLICATION_PROTECTION_ENABLE = "latePublicationProtectionEnable";
     const LATE_PUBLICATION_CLASS_NAME = "late-publication";
-    const CANONICAL_PROPERTY = "published";
+
 
 
 
@@ -79,7 +79,7 @@ class PagePublicationDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return self::DATE_PUBLISHED;
+        return self::PROPERTY_NAME;
     }
 
 

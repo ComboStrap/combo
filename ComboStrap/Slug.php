@@ -10,7 +10,7 @@ use ComboStrap\ResourceCombo;
 class Slug extends MetadataWikiPath
 {
 
-    public const SLUG_ATTRIBUTE = "slug";
+    public const PROPERTY_NAME = "slug";
 
     public static function createForPage(ResourceCombo $resource)
     {
@@ -66,7 +66,7 @@ class Slug extends MetadataWikiPath
 
     public function getName(): string
     {
-        return self::SLUG_ATTRIBUTE;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

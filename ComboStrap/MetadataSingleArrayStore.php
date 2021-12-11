@@ -21,7 +21,7 @@ abstract class MetadataSingleArrayStore implements MetadataStore
      * @param ResourceCombo $page
      * @param array $data
      */
-    public function __construct(ResourceCombo $page, array $data)
+    public function __construct(ResourceCombo $page, array $data = [])
     {
         $this->page = $page;
         $this->data = $data;

@@ -30,21 +30,21 @@ class DatabasePage
             self::ROWID,
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
             self::ANALYTICS_ATTRIBUTE,
-            PageDescription::DESCRIPTION,
-            Canonical::CANONICAL_PROPERTY,
-            ResourceName::NAME_PROPERTY,
+            PageDescription::PROPERTY_NAME,
+            Canonical::PROPERTY_NAME,
+            ResourceName::PROPERTY_NAME,
             PageTitle::TITLE,
-            PageH1::H1_PROPERTY,
-            PagePublicationDate::DATE_PUBLISHED,
-            ModificationDate::DATE_MODIFIED_PROPERTY,
-            PageCreationDate::DATE_CREATED_PROPERTY,
-            PagePath::PATH_ATTRIBUTE,
-            StartDate::DATE_START,
-            EndDate::DATE_END,
-            Region::REGION_META_PROPERTY,
-            Lang::LANG_ATTRIBUTES,
-            PageType::TYPE_META_PROPERTY,
-            PageId::PAGE_ID_ATTRIBUTE
+            PageH1::PROPERTY_NAME,
+            PagePublicationDate::PROPERTY_NAME,
+            ModificationDate::PROPERTY_NAME,
+            PageCreationDate::PROPERTY_NAME,
+            PagePath::PROPERTY_NAME,
+            StartDate::PROPERTY_NAME,
+            EndDate::PROPERTY_NAME,
+            Region::PROPERTY_NAME,
+            Lang::PROPERTY_NAME,
+            PageType::PROPERTY_NAME,
+            PageId::PROPERTY_NAME
         ];
     const ANALYTICS_ATTRIBUTE = "ANALYTICS";
 
@@ -188,7 +188,7 @@ class DatabasePage
 
     private function addPageIdMeta(array &$metaRecord)
     {
-        $metaRecord[PageId::PAGE_ID_ATTRIBUTE] = $this->page->getPageIdOrGenerate();
+        $metaRecord[PageId::PROPERTY_NAME] = $this->page->getPageIdOrGenerate();
         $metaRecord[Page::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 
@@ -233,7 +233,7 @@ class DatabasePage
 
         DokuPath::addRootSeparatorIfNotPresent($canonical);
         $databasePage = new DatabasePage();
-        $row = $databasePage->getDatabaseRowFromAttribute(Canonical::CANONICAL_PROPERTY, $canonical);
+        $row = $databasePage->getDatabaseRowFromAttribute(Canonical::PROPERTY_NAME, $canonical);
         if ($row != null) {
             $databasePage->buildDatabaseObjectFields($row);
         }
@@ -268,7 +268,7 @@ class DatabasePage
 
     public function getPageId()
     {
-        return $this->getFromRow(PageId::PAGE_ID_ATTRIBUTE);
+        return $this->getFromRow(PageId::PROPERTY_NAME);
     }
 
     /**
@@ -486,7 +486,7 @@ class DatabasePage
         $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
         $record['BACKLINK_COUNT'] = $this->getBacklinkCount();
         $record['IS_HOME'] = ($page->isHomePage() === true ? 1 : 0);
-        $record[ReplicationDate::DATE_REPLICATION] = $replicationDate->toStoreValue();
+        $record[ReplicationDate::PROPERTY_NAME] = $replicationDate->toStoreValue();
 
 
         return $this->upsertAttributes($record);
@@ -664,13 +664,13 @@ EOF;
 
 
             $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPath()->getDokuwikiId();
-            $values[PagePath::PATH_ATTRIBUTE] = $this->page->getPath()->toAbsolutePath()->toString();
+            $values[PagePath::PROPERTY_NAME] = $this->page->getPath()->toAbsolutePath()->toString();
             $this->addPageIdAttribute($values);
 
             /**
              * Default implements the auto-canonical feature
              */
-            $values[Canonical::CANONICAL_PROPERTY] = $this->page->getCanonicalOrDefault();
+            $values[Canonical::PROPERTY_NAME] = $this->page->getCanonicalOrDefault();
             $res = $this->sqlite->storeEntry('PAGES', $values);
             $this->sqlite->res_close($res);
             if ($res === false) {
@@ -699,7 +699,7 @@ EOF;
 
     public function getPageName()
     {
-        return $this->getFromRow(ResourceName::NAME_PROPERTY);
+        return $this->getFromRow(ResourceName::PROPERTY_NAME);
     }
 
     public function exists(): bool
@@ -721,7 +721,7 @@ EOF;
         DokuPath::addRootSeparatorIfNotPresent($path);
         $attributes = [
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE => $targetId,
-            PagePath::PATH_ATTRIBUTE => $path
+            PagePath::PROPERTY_NAME => $path
         ];
 
         $this->upsertAttributes($attributes);
@@ -753,7 +753,7 @@ EOF;
 
     public function getCanonical()
     {
-        return $this->getFromRow(Canonical::CANONICAL_PROPERTY);
+        return $this->getFromRow(Canonical::PROPERTY_NAME);
     }
 
     /**
@@ -830,20 +830,20 @@ EOF;
         $targetStore = MetadataDbStore::getOrCreate();
 
         $record = array(
-            Canonical::CANONICAL_PROPERTY,
-            PagePath::PATH_ATTRIBUTE,
-            ResourceName::NAME_PROPERTY,
+            Canonical::PROPERTY_NAME,
+            PagePath::PROPERTY_NAME,
+            ResourceName::PROPERTY_NAME,
             PageTitle::TITLE,
-            PageH1::H1_PROPERTY,
-            PageDescription::DESCRIPTION,
-            PageCreationDate::DATE_CREATED_PROPERTY,
-            ModificationDate::DATE_MODIFIED_PROPERTY,
-            PagePublicationDate::DATE_PUBLISHED,
-            StartDate::DATE_START,
-            EndDate::DATE_END,
-            Region::REGION_META_PROPERTY,
-            Lang::LANG_ATTRIBUTES,
-            PageType::TYPE_META_PROPERTY,
+            PageH1::PROPERTY_NAME,
+            PageDescription::PROPERTY_NAME,
+            PageCreationDate::PROPERTY_NAME,
+            ModificationDate::PROPERTY_NAME,
+            PagePublicationDate::PROPERTY_NAME,
+            StartDate::PROPERTY_NAME,
+            EndDate::PROPERTY_NAME,
+            Region::PROPERTY_NAME,
+            Lang::PROPERTY_NAME,
+            PageType::PROPERTY_NAME,
             DokuwikiId::DOKUWIKI_ID_ATTRIBUTE,
         );
         $metaRecord = [];
@@ -881,7 +881,7 @@ EOF;
 
     private function getDatabaseRowFromPageId(string $pageId)
     {
-        $pageIdAttribute = PageId::PAGE_ID_ATTRIBUTE;
+        $pageIdAttribute = PageId::PROPERTY_NAME;
         $query = $this->getParametrizedLookupQuery($pageIdAttribute);
         $res = $this->sqlite->query($query, $pageId);
         if (!$res) {
@@ -938,7 +938,7 @@ EOF;
 
     private function getDatabaseRowFromCanonical($canonical)
     {
-        $query = $this->getParametrizedLookupQuery(Canonical::CANONICAL_PROPERTY);
+        $query = $this->getParametrizedLookupQuery(Canonical::PROPERTY_NAME);
         $res = $this->sqlite->query($query, $canonical);
         if (!$res) {
             LogUtility::msg("An exception has occurred with the page search from CANONICAL");
@@ -978,8 +978,8 @@ EOF;
                          */
                         $canonicalLastNamesCount = PluginUtility::getConfValue(Canonical::CONF_CANONICAL_LAST_NAMES_COUNT, 0);
                         if ($canonicalLastNamesCount > 0) {
-                            $this->page->unsetMetadata(Canonical::CANONICAL_PROPERTY);
-                            $duplicatePage->unsetMetadata(Canonical::CANONICAL_PROPERTY);
+                            $this->page->unsetMetadata(Canonical::PROPERTY_NAME);
+                            $duplicatePage->unsetMetadata(Canonical::PROPERTY_NAME);
                         }
 
                         $existingPages[] = $row;
@@ -998,7 +998,7 @@ EOF;
     private function getDatabaseRowFromPath(string $path): ?array
     {
         DokuPath::addRootSeparatorIfNotPresent($path);
-        return $this->getDatabaseRowFromAttribute(PagePath::PATH_ATTRIBUTE, $path);
+        return $this->getDatabaseRowFromAttribute(PagePath::PROPERTY_NAME, $path);
     }
 
     private function getDatabaseRowFromDokuWikiId(string $id): ?array
@@ -1060,7 +1060,7 @@ EOF;
     private function getDatabaseRowFromAlias($alias): ?array
     {
 
-        $pageIdAttribute = PageId::PAGE_ID_ATTRIBUTE;
+        $pageIdAttribute = PageId::PROPERTY_NAME;
         $buildFields = self::PAGE_BUILD_ATTRIBUTES;
         $fields = array_reduce($buildFields, function ($carry, $element) {
             if ($carry !== null) {
@@ -1091,7 +1091,7 @@ EOF;
                         $res2arr
                     )
                 );
-                LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, Aliases::ALIAS_ATTRIBUTE);
+                LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, Aliases::PROPERTY_NAME);
                 return $res2arr[0];
         }
     }
@@ -1119,7 +1119,7 @@ EOF;
     private function addPageIdAttribute(array &$values)
     {
 
-        $values[PageId::PAGE_ID_ATTRIBUTE] = $this->page->getPageIdOrGenerate();
+        $values[PageId::PROPERTY_NAME] = $this->page->getPageIdOrGenerate();
         $values[Page::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 

@@ -11,7 +11,7 @@ use RuntimeException;
 class PageId extends MetadataText
 {
 
-    public const PAGE_ID_ATTRIBUTE = "page_id";
+    public const PROPERTY_NAME = "page_id";
 
     /**
      * No separator, no uppercase to be consistent on the whole url
@@ -60,7 +60,7 @@ class PageId extends MetadataText
 
     public function getName(): string
     {
-        return self::PAGE_ID_ATTRIBUTE;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

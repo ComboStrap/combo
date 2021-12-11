@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use http\Exception\RuntimeException;
+
 /**
  * Class MetadataBoolean
  * @package ComboStrap
@@ -42,11 +44,27 @@ abstract class MetadataBoolean extends MetadataScalar
      */
     public function toStoreValue()
     {
+
         $store = $this->getStore();
         $value = $this->getValue();
+
+        if ($store instanceof MetadataFormDataStore) {
+            /**
+             * In a boolean form field, the data is returned only when the field is checked.
+             *
+             * By default, this is not checked, therefore, the default value is when this is not the default.
+             * It means that this is the inverse of the default value
+             */
+            $defaultValue = Boolean::toString(!$this->getDefaultValue());
+            $value = Boolean::toString($value);
+            throw new RuntimeException("Todo");
+            return;
+        }
+
         if ($store->isHierarchicalTextBased()) {
             $value = Boolean::toString($value);
         }
+
         return $value;
 
     }
@@ -54,42 +72,29 @@ abstract class MetadataBoolean extends MetadataScalar
     /**
      * @throws ExceptionCombo
      */
-    public function setFromStoreValue($value)
+    public
+    function setFromStoreValue($value)
     {
         $value = $this->toBoolean($value);
         return $this->setValue($value);
     }
 
 
-    public function toFormField(): FormMetaField
-    {
-        $this->buildCheck();
-        $formField = parent::toFormField();
-        /**
-         * In a boolean form field, the data is returned only when the field is checked.
-         *
-         * By default, this is not checked, therefore, the default value is when this is not the default.
-         * It means that this is the inverse of the default value
-         */
-        $defaultValue = Boolean::toString(!$this->getDefaultValue());
-        $formField->setValue($this->toStoreValue(), $defaultValue);
-
-        return $formField;
-    }
-
-
-    public function valueIsNotNull(): bool
+    public
+    function valueIsNotNull(): bool
     {
         return $this->value !== null;
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public
+    function buildFromStoreValue($value): Metadata
     {
         $this->value = $this->toBoolean($value);
         return $this;
     }
 
-    private function toBoolean($value): ?bool
+    private
+    function toBoolean($value): ?bool
     {
         /**
          * TODO: There is no validation

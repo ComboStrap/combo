@@ -7,7 +7,7 @@ namespace ComboStrap;
 class PageLayout extends MetadataText
 {
 
-    public const LAYOUT_PROPERTY = "layout";
+    public const PROPERTY_NAME = "layout";
     public const HOLY_LAYOUT_VALUE = "holy";
     public const MEDIAN_LAYOUT_VALUE = "median";
     public const LANDING_LAYOUT_VALUE = "landing";
@@ -41,7 +41,7 @@ class PageLayout extends MetadataText
 
     public function getName(): string
     {
-        return self::LAYOUT_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

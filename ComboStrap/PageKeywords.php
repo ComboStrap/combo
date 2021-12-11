@@ -7,7 +7,7 @@ namespace ComboStrap;
 class PageKeywords extends MetadataArray
 {
 
-    public const KEYWORDS_ATTRIBUTE = "keywords";
+    public const PROPERTY_NAME = "keywords";
     const SEPARATOR = ",";
 
     public static function createForPage(Page $page)
@@ -49,7 +49,7 @@ class PageKeywords extends MetadataArray
 
     public function getName(): string
     {
-        return self::KEYWORDS_ATTRIBUTE;
+        return self::PROPERTY_NAME;
     }
 
     public function toStoreValue()

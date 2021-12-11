@@ -15,7 +15,7 @@ class PageCreationDate extends MetadataDateTime
 {
 
 
-    public const DATE_CREATED_PROPERTY = 'date_created';
+    public const PROPERTY_NAME = 'date_created';
     const DOKUWIKI_MAIN_KEY = 'date';
     const DOKUWIKI_SUB_KEY = 'created';
 
@@ -78,7 +78,7 @@ class PageCreationDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return PageCreationDate::DATE_CREATED_PROPERTY;
+        return PageCreationDate::PROPERTY_NAME;
     }
 
 

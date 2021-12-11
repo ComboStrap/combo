@@ -2,6 +2,8 @@
 
 
 namespace ComboStrap;
+use http\Exception\RuntimeException;
+
 /**
  * Class FormMeta
  * @package ComboStrap
@@ -171,5 +173,10 @@ class FormMeta
             }
         }
 
+    }
+
+    public function addFieldData(?array $array)
+    {
+        throw new RuntimeException("Todo");
     }
 }

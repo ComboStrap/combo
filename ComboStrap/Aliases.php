@@ -9,7 +9,7 @@ use action_plugin_combo_metamanager;
 class Aliases extends Metadata
 {
 
-    public const ALIAS_ATTRIBUTE = "alias";
+    public const PROPERTY_NAME = "alias";
     public const ALIAS_PATH = "alias-path";
     public const ALIAS_TYPE = "alias-type";
 
@@ -97,12 +97,52 @@ class Aliases extends Metadata
 
     public function getName(): string
     {
-        return self::ALIAS_ATTRIBUTE;
+        return self::PROPERTY_NAME;
     }
 
     public function toStoreValue()
     {
         $this->buildCheck();
+
+        $store = $this->getStore();
+        if ($store instanceof MetadataFormDataStore) {
+
+            $aliasPath = FormMetaField::create(Aliases::ALIAS_PATH)
+                ->setCanonical(Alias::CANONICAL)
+                ->setLabel("Alias Path")
+                ->setDescription("The path of the alias");
+            $aliasType = FormMetaField::create(Aliases::ALIAS_TYPE)
+                ->setCanonical(Alias::CANONICAL)
+                ->setLabel("Alias Type")
+                ->setDescription("The type of the alias")
+                ->setDomainValues(Alias::getPossibleTypesValues());
+
+
+            $aliasesValues = $this->aliases;
+            if ($aliasesValues !== null) {
+                foreach ($aliasesValues as $alias) {
+                    $aliasPath->addValue($alias->getPath());
+                    $aliasType->addValue($alias->getType(), Alias::getDefaultType());
+                }
+            }
+            /**
+             * To be able to add one
+             */
+            $aliasPath->addValue(null);
+            $aliasType->addValue(null, Alias::getDefaultType());
+
+            $formField = parent::toFormField();
+            return $formField
+                ->addColumn($aliasPath)
+                ->addColumn($aliasType)
+                ->toAssociativeArray();
+
+        }
+
+
+        /**
+         * Default
+         */
         return self::toMetadataArray($this->aliases);
     }
 
@@ -288,61 +328,6 @@ class Aliases extends Metadata
         return "Page Aliases";
     }
 
-    public
-    function toFormField(): FormMetaField
-    {
-
-        $this->buildCheck();
-
-        $aliasPath = FormMetaField::create(Aliases::ALIAS_PATH)
-            ->setCanonical(Alias::CANONICAL)
-            ->setLabel("Alias Path")
-            ->setDescription("The path of the alias");
-        $aliasType = FormMetaField::create(Aliases::ALIAS_TYPE)
-            ->setCanonical(Alias::CANONICAL)
-            ->setLabel("Alias Type")
-            ->setDescription("The type of the alias")
-            ->setDomainValues(Alias::getPossibleTypesValues());
-
-
-        $aliasesValues = $this->aliases;
-        if ($aliasesValues !== null) {
-            foreach ($aliasesValues as $alias) {
-                $aliasPath->addValue($alias->getPath());
-                $aliasType->addValue($alias->getType(), Alias::getDefaultType());
-            }
-        }
-        /**
-         * To be able to add one
-         */
-        $aliasPath->addValue(null);
-        $aliasType->addValue(null, Alias::getDefaultType());
-
-        $formField = parent::toFormField();
-        return $formField
-            ->addColumn($aliasPath)
-            ->addColumn($aliasType);
-
-    }
-
-    public function setFromFormData($formData): Aliases
-    {
-        $pathData = $formData[self::ALIAS_PATH];
-        if ($pathData !== null && $pathData !== "") {
-            $this->aliases = [];
-            $typeData = $formData[self::ALIAS_TYPE];
-            $counter = 0;
-            foreach ($pathData as $path) {
-                if ($path !== "" && $path !== null) {
-                    $type = $typeData[$counter];
-                    $this->aliases[] = Alias::create($this->getResource(), $path)
-                        ->setType($type);
-                }
-                $counter++;
-            }
-        }
-        return $this;
-    }
 
     public
     function getMutable(): bool
@@ -371,8 +356,32 @@ class Aliases extends Metadata
 
     public function buildFromStoreValue($value): Metadata
     {
+        $store = $this->getStore();
+        if ($store instanceof MetadataFormDataStore) {
+            // formData got two metadata
+            $formData = $store->getData();
+            $pathData = $formData[self::ALIAS_PATH];
+            if ($pathData !== null && $pathData !== "") {
+                $this->aliases = [];
+                $typeData = $formData[self::ALIAS_TYPE];
+                $counter = 0;
+                foreach ($pathData as $path) {
+                    if ($path !== "" && $path !== null) {
+                        $type = $typeData[$counter];
+                        $this->aliases[] = Alias::create($this->getResource(), $path)
+                            ->setType($type);
+                    }
+                    $counter++;
+                }
+            }
+            return $this;
+        }
+
+
         $this->aliases = $this->toNativeAliasArray($value);
         return $this;
+
+
     }
 
 }

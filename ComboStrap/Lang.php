@@ -9,8 +9,7 @@ use dokuwiki\Cache\Cache;
 class Lang extends MetadataText
 {
 
-    const CANONICAL_PROPERTY = "lang";
-    public const LANG_ATTRIBUTES = "lang";
+    public const PROPERTY_NAME = "lang";
 
 
     /**
@@ -38,8 +37,8 @@ class Lang extends MetadataText
          * Adding the lang attribute
          * if set
          */
-        if ($attributes->hasComponentAttribute(self::LANG_ATTRIBUTES)) {
-            $langValue = $attributes->getValueAndRemove(self::LANG_ATTRIBUTES);
+        if ($attributes->hasComponentAttribute(self::PROPERTY_NAME)) {
+            $langValue = $attributes->getValueAndRemove(self::PROPERTY_NAME);
             $attributes->addHtmlAttributeValue("lang", $langValue);
 
             $languageDataCache = new Cache("combo_" . $langValue, ".json");
@@ -54,15 +53,15 @@ class Lang extends MetadataText
 
                     $numberOfByte = @file_put_contents($languageDataCache->cache, $filePointer);
                     if ($numberOfByte != false) {
-                        LogUtility::msg("The new language data ($langValue) was downloaded", LogUtility::LVL_MSG_INFO, self::CANONICAL_PROPERTY);
+                        LogUtility::msg("The new language data ($langValue) was downloaded", LogUtility::LVL_MSG_INFO, self::PROPERTY_NAME);
                         $cacheDataUsable = true;
                     } else {
-                        LogUtility::msg("Internal error: The language data ($langValue) could no be written to ($languageDataCache->cache)", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
+                        LogUtility::msg("Internal error: The language data ($langValue) could no be written to ($languageDataCache->cache)", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
                     }
 
                 } else {
 
-                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
+                    LogUtility::msg("The data for the language ($langValue) could not be found at ($downloadUrl).", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
 
                 }
             }
@@ -71,7 +70,7 @@ class Lang extends MetadataText
                 $jsonAsArray = true;
                 $languageData = json_decode(file_get_contents($languageDataCache->cache), $jsonAsArray);
                 if ($languageData == null) {
-                    LogUtility::msg("We could not read the data from the language ($langValue). No direction was set.", LogUtility::LVL_MSG_ERROR, self::CANONICAL_PROPERTY);
+                    LogUtility::msg("We could not read the data from the language ($langValue). No direction was set.", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
                     return;
                 }
                 $characterOrder = $languageData["main"][$langValue]["layout"]["orientation"]["characterOrder"];
@@ -81,7 +80,7 @@ class Lang extends MetadataText
                     $attributes->addHtmlAttributeValue("dir", "ltr");
                 }
             } else {
-                LogUtility::msg("The language direction cannot be set because no language data was found for the language ($langValue)", LogUtility::LVL_MSG_WARNING, self::CANONICAL_PROPERTY);
+                LogUtility::msg("The language direction cannot be set because no language data was found for the language ($langValue)", LogUtility::LVL_MSG_WARNING, self::PROPERTY_NAME);
             }
 
         }
@@ -129,7 +128,7 @@ class Lang extends MetadataText
 
     public function getName(): string
     {
-        return self::LANG_ATTRIBUTES;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string
@@ -156,7 +155,14 @@ class Lang extends MetadataText
             return;
         }
         if (!StringUtility::match($value, "^[a-zA-Z]{2}$")) {
-            throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters", "lang");
+            throw new ExceptionCombo("The lang value ($value) for the page ($this) does not have two letters", $this->getCanonical());
         }
     }
+
+    public function getCanonical(): string
+    {
+        return "lang";
+    }
+
+
 }

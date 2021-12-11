@@ -4,11 +4,15 @@
 namespace ComboStrap;
 
 
+
+
+use RuntimeException;
+
 class PageImages extends Metadata
 {
 
-    const CANONICAL_PROPERTY = "page:image";
-    public const IMAGE_META_PROPERTY = 'image';
+    const CANONICAL = "page:image";
+    public const PROPERTY_NAME = 'image';
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
     public const FIRST_IMAGE_META_RELATION = "firstimage";
     public const IMAGE_PATH = "image-path";
@@ -129,20 +133,61 @@ class PageImages extends Metadata
 
     public function getCanonical(): string
     {
-        return self::CANONICAL_PROPERTY;
+        return self::CANONICAL;
     }
 
     public function getName(): string
     {
-        return self::IMAGE_META_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     /**
      * @throws ExceptionCombo
      */
-    public function toStoreValue()
+    public function toStoreValue(): array
     {
         $this->buildCheck();
+        $store = $this->getStore();
+        if ($store instanceof MetadataFormDataStore) {
+
+            throw new RuntimeException("Todo");
+
+            $pageImagePath = FormMetaField::create(self::IMAGE_PATH)
+                ->setLabel("Path")
+                ->setCanonical($this->getCanonical())
+                ->setDescription("The path of the image")
+                ->setWidth(8);
+            $pageImageUsage = FormMetaField::create(self::IMAGE_USAGE)
+                ->setLabel("Usages")
+                ->setCanonical($this->getCanonical())
+                ->setDomainValues(PageImage::getUsageValues())
+                ->setWidth(4)
+                ->setMultiple(true)
+                ->setDescription("The possible usages of the image");
+
+
+            /** @noinspection PhpIfWithCommonPartsInspection */
+            if ($this->pageImages !== null) {
+                foreach ($this->pageImages as $pageImage) {
+                    $pageImagePathValue = $pageImage->getImage()->getPath()->getAbsolutePath();
+                    $pageImagePathUsage = $pageImage->getUsages();
+                    $pageImagePath->addValue($pageImagePathValue);
+                    $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
+                }
+                $pageImagePath->addValue(null);
+                $pageImageUsage->addValue(null, PageImage::DEFAULT);
+            } else {
+                $pageImageDefault = $this->getResource()->getDefaultPageImageObject()->getImage()->getPath()->getAbsolutePath();
+                $pageImagePath->addValue(null, $pageImageDefault);
+                $pageImageUsage->addValue(null, PageImage::DEFAULT);
+            }
+
+
+            // Image
+            return $formMeta
+                ->addColumn($pageImagePath)
+                ->addColumn($pageImageUsage);
+        }
         $this->checkImageExistence();
         return $this->toMetadataArray();
     }
@@ -221,73 +266,6 @@ class PageImages extends Metadata
         return "Page Images";
     }
 
-    public function toFormField(): FormMetaField
-    {
-        $this->buildCheck();
-        $pageImagePath = FormMetaField::create(self::IMAGE_PATH)
-            ->setLabel("Path")
-            ->setCanonical($this->getCanonical())
-            ->setDescription("The path of the image")
-            ->setWidth(8);
-        $pageImageUsage = FormMetaField::create(self::IMAGE_USAGE)
-            ->setLabel("Usages")
-            ->setCanonical($this->getCanonical())
-            ->setDomainValues(PageImage::getUsageValues())
-            ->setWidth(4)
-            ->setMultiple(true)
-            ->setDescription("The possible usages of the image");
-
-
-        /** @noinspection PhpIfWithCommonPartsInspection */
-        if ($this->pageImages !== null) {
-            foreach ($this->pageImages as $pageImage) {
-                $pageImagePathValue = $pageImage->getImage()->getPath()->getAbsolutePath();
-                $pageImagePathUsage = $pageImage->getUsages();
-                $pageImagePath->addValue($pageImagePathValue);
-                $pageImageUsage->addValue($pageImagePathUsage, PageImage::DEFAULT);
-            }
-            $pageImagePath->addValue(null);
-            $pageImageUsage->addValue(null, PageImage::DEFAULT);
-        } else {
-            $pageImageDefault = $this->getResource()->getDefaultPageImageObject()->getImage()->getPath()->getAbsolutePath();
-            $pageImagePath->addValue(null, $pageImageDefault);
-            $pageImageUsage->addValue(null, PageImage::DEFAULT);
-        }
-
-
-        // Image
-        $formMeta = parent::toFormField();
-        return $formMeta
-            ->addColumn($pageImagePath)
-            ->addColumn($pageImageUsage);
-
-    }
-
-
-    /**
-     * @throws ExceptionCombo
-     */
-    public function setFromFormData($formData)
-    {
-        $imagePaths = $formData[self::IMAGE_PATH];
-        if ($imagePaths !== null && $imagePaths !== "") {
-            $usages = $formData[self::IMAGE_USAGE];
-            $this->pageImages = [];
-            $counter = 0;
-            foreach ($imagePaths as $imagePath) {
-                $usage = $usages[$counter];
-                $usages = explode(",", $usage);
-                if ($imagePath !== null && $imagePath !== "") {
-                    $this->pageImages[] = PageImage::create($imagePath, $this->getResource())
-                        ->setUsages($usages);
-                }
-                $counter++;
-            }
-        }
-        $this->checkImageExistence();
-        $this->sendToStore();
-        return $this;
-    }
 
     public function getMutable(): bool
     {
@@ -307,7 +285,7 @@ class PageImages extends Metadata
      */
     private function checkImageExistence()
     {
-        if($this->pageImages!==null) {
+        if ($this->pageImages !== null) {
             foreach ($this->pageImages as $pageImage) {
                 if (!$pageImage->getImage()->exists()) {
                     throw new ExceptionCombo("The image ({$pageImage->getImage()}) does not exist", $this->getCanonical());
@@ -360,13 +338,35 @@ class PageImages extends Metadata
         return $this->pageImages !== null;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function buildFromStoreValue($value): Metadata
     {
-        try {
-            $this->pageImages = $this->toPageImageArray($value);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+        $store = $this->getStore();
+        if ($store instanceof MetadataFormDataStore) {
+            $formData = $store->getData();
+            $imagePaths = $formData[self::IMAGE_PATH];
+            if ($imagePaths !== null && $imagePaths !== "") {
+                $usages = $formData[self::IMAGE_USAGE];
+                $this->pageImages = [];
+                $counter = 0;
+                foreach ($imagePaths as $imagePath) {
+                    $usage = $usages[$counter];
+                    $usages = explode(",", $usage);
+                    if ($imagePath !== null && $imagePath !== "") {
+                        $this->pageImages[] = PageImage::create($imagePath, $this->getResource())
+                            ->setUsages($usages);
+                    }
+                    $counter++;
+                }
+            }
+            $this->checkImageExistence();
+            return $this;
         }
+
+        // Default
+        $this->pageImages = $this->toPageImageArray($value);
         return $this;
     }
 }

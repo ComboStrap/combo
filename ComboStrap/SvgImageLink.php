@@ -203,7 +203,7 @@ class SvgImageLink extends ImageLink
             /**
              * TODO: Title should be a node just below SVG
              */
-            $attributes->removeComponentAttributeIfPresent(PageTitle::TITLE_META_PROPERTY);
+            $attributes->removeComponentAttributeIfPresent(PageTitle::PROPERTY_NAME);
 
             $imageSize = FileSystems::getSize($image->getPath());
             if (

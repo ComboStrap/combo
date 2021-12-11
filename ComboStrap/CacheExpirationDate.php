@@ -18,7 +18,7 @@ class CacheExpirationDate extends MetadataDateTime
     /**
      * The meta key that has the expiration date
      */
-    public const META_CACHE_EXPIRATION_DATE_NAME = "date_cache_expiration";
+    public const PROPERTY_NAME = "date_cache_expiration";
 
 
     public static function createForPage(ResourceCombo $page): CacheExpirationDate
@@ -79,7 +79,7 @@ class CacheExpirationDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return self::META_CACHE_EXPIRATION_DATE_NAME;
+        return self::PROPERTY_NAME;
     }
 
 
@@ -91,7 +91,7 @@ class CacheExpirationDate extends MetadataDateTime
 
     public function getCanonical(): string
     {
-        return CacheExpirationFrequency::CANONICAL_PROPERTY;
+        return CacheExpirationFrequency::PROPERTY_NAME;
     }
 
     public function getTab(): string

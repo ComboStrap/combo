@@ -8,7 +8,7 @@ class ResourceName extends MetadataText
 {
 
 
-    public const NAME_PROPERTY = "name";
+    public const PROPERTY_NAME = "name";
 
     public static function createForResource($page): ResourceName
     {
@@ -33,7 +33,7 @@ class ResourceName extends MetadataText
 
     public function getName(): string
     {
-        return self::NAME_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

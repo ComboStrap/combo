@@ -347,7 +347,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                 if ($page === null) {
                     // or the length of the abbr has changed
                     $databasePage = new DatabasePage();
-                    $row = $databasePage->getDatabaseRowFromAttribute("substr(" . PageId::PAGE_ID_ATTRIBUTE . ", 1, " . strlen($pageId) . ")", $pageId);
+                    $row = $databasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
                     if ($row != null) {
                         $databasePage->buildDatabaseObjectFields($row);
                         $page = $databasePage->getPage();

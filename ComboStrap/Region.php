@@ -8,7 +8,7 @@ class Region extends MetadataText
 {
 
 
-    public const REGION_META_PROPERTY = "region";
+    public const PROPERTY_NAME = "region";
     public const OLD_REGION_PROPERTY = "country";
     public const CONF_SITE_LANGUAGE_REGION = "siteLanguageRegion";
 
@@ -53,7 +53,7 @@ class Region extends MetadataText
 
     public function getName(): string
     {
-        return self::REGION_META_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

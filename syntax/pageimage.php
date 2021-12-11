@@ -151,13 +151,13 @@ class syntax_plugin_combo_pageimage extends DokuWiki_Syntax_Plugin
             case 'xhtml':
 
                 $tagAttributes = TagAttributes::createFromCallStackArray($data[PluginUtility::ATTRIBUTES]);
-                if (!$tagAttributes->hasAttribute(PagePath::PATH_ATTRIBUTE)) {
+                if (!$tagAttributes->hasAttribute(PagePath::PROPERTY_NAME)) {
 
                     LogUtility::msg("The path is mandatory and was not found", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                     return false;
                 }
 
-                $path = $tagAttributes->getValueAndRemove(PagePath::PATH_ATTRIBUTE);
+                $path = $tagAttributes->getValueAndRemove(PagePath::PROPERTY_NAME);
                 DokuPath::addRootSeparatorIfNotPresent($path);
 
                 $page = Page::createPageFromQualifiedPath($path);

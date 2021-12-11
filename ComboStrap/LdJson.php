@@ -26,7 +26,7 @@ use action_plugin_combo_metagoogle;
 class LdJson extends MetadataJson
 {
 
-    public const JSON_LD_META_PROPERTY = "json-ld";
+    public const PROPERTY_NAME = "json-ld";
 
     public const SPEAKABLE = "speakable";
     public const NEWSARTICLE_SCHEMA_ORG_LOWERCASE = "newsarticle";
@@ -102,7 +102,7 @@ class LdJson extends MetadataJson
 
     public function getName(): string
     {
-        return self::JSON_LD_META_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

@@ -20,23 +20,7 @@ abstract class MetadataScalar extends Metadata
 {
 
 
-
-    public function toFormField(): FormMetaField
-    {
-
-        $this->buildCheck();
-        $formField = parent::toFormField();
-        $formField->setValue($this->toStoreValue(), $this->toStoreDefaultValue());
-        return $formField;
-
-    }
-
-    public function setFromFormData($formData)
-    {
-        $value = $formData[$this->getName()];
-        $this->setFromStoreValue($value);
-        return $this;
-    }
+      
 
     public abstract function getValue();
 
@@ -67,7 +51,6 @@ abstract class MetadataScalar extends Metadata
     public abstract function getDefaultValue();
 
 
-
     public
     function toStoreDefaultValue()
     {
@@ -77,6 +60,27 @@ abstract class MetadataScalar extends Metadata
     public
     function toStoreValue()
     {
+
+        $store = $this->getStore();
+        if ($store instanceof MetadataFormDataStore) {
+
+            $field = FormMetaField::create($this->getName())
+                ->setType($this->getDataType())
+                ->setTab($this->getTab())
+                ->setCanonical($this->getCanonical())
+                ->setLabel($this->getLabel())
+                ->setDescription($this->getDescription())
+                ->setMutable($this->getMutable())
+                ->addValue($this->getValue(),$this->getDefaultValue());
+            $possibleValues = $this->getPossibleValues();
+            if ($possibleValues !== null) {
+                $field->setDomainValues($possibleValues);
+            }
+            return $field
+                ->toAssociativeArray();
+
+        }
+
         return $this->getValue();
     }
 
@@ -85,8 +89,6 @@ abstract class MetadataScalar extends Metadata
     {
         return $this->setValue($value);
     }
-
-
 
 
 }

@@ -13,7 +13,7 @@ use ComboStrap\PageCreationDate;
 class ModificationDate extends MetadataDateTime
 {
 
-    public const DATE_MODIFIED_PROPERTY = 'date_modified';
+    public const PROPERTY_NAME = 'date_modified';
 
     public static function createForPage(Page $page)
     {
@@ -60,7 +60,7 @@ class ModificationDate extends MetadataDateTime
 
     public function getName(): string
     {
-        return self::DATE_MODIFIED_PROPERTY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

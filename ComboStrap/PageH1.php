@@ -39,8 +39,10 @@ class PageH1 extends MetadataText
 
     public function getPersistenceType(): string
     {
-        return Metadata::MUTABLE;
+        return Metadata::PERSISTENT_METADATA;
     }
+
+
 
     public function getMutable(): bool
     {

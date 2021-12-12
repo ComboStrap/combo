@@ -505,7 +505,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 
         $store = MetadataFormDataStore::createForPage($page);
-        $page->setStore($store);
+
 
         $formsMetadata = [
             ResourceName::PROPERTY_NAME,
@@ -606,7 +606,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                     ->setWidthLabel(6)
                     ->setWidthField(6)
             );
+
+
         return $formMeta;
+
     }
 
 

@@ -68,7 +68,7 @@ class MetadataStoreTransfer
         $messages = [];
 
         /**
-         * Pre-procesing
+         * Pre-processing
          * Check/ validity and list of metadata building
          */
         $metadatas = [];

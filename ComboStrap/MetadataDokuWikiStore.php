@@ -41,7 +41,7 @@ class MetadataDokuWikiStore implements MetadataStore
     private static $store;
 
 
-    const CANONICAL = Metadata::PROPERTY_NAME;
+    const CANONICAL = Metadata::CANONICAL;
 
 
     public static function getOrCreate(): MetadataDokuWikiStore

@@ -26,7 +26,7 @@ class PageUrlPath extends MetadataWikiPath
     /**
      * The canonical page for the page url
      */
-    public const PROPERTY_NAME = "page:url";
+    public const CANONICAL = "page:url";
     const PROPERTY_NAME = "page-url-path";
 
     public static function createForPage(Page $page)
@@ -127,7 +127,7 @@ class PageUrlPath extends MetadataWikiPath
 
     public function getCanonical(): string
     {
-        return self::PROPERTY_NAME;
+        return self::CANONICAL;
     }
 
 

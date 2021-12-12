@@ -95,7 +95,7 @@ class MetadataStoreTransfer
              */
             if (in_array($normalizedName, Metadata::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
-                    ->setCanonical(Metadata::PROPERTY_NAME);
+                    ->setCanonical(Metadata::CANONICAL);
                 continue;
             }
 

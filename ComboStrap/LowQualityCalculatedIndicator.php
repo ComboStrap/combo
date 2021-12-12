@@ -15,7 +15,7 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
             ->setResource($page);
     }
 
-    public function getTab()
+    public function getTab(): ?string
     {
         // not in a form
         return null;

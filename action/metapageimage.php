@@ -5,7 +5,7 @@ use ComboStrap\FileSystems;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
-use ComboStrap\Metadata;
+use ComboStrap\PageImages;
 
 /**
  * Class action_plugin_combo_metapageimage
@@ -36,7 +36,7 @@ class action_plugin_combo_metapageimage
     {
         $dokuwikiId = $event->data["page"];
         $page = Page::createPageFromId($dokuwikiId);
-        $pageImages = Metadata::createForPage($page);
+        $pageImages = PageImages::createForPage($page);
         foreach ($pageImages->getValues() as $pageImage){
             /**
              * {@link Doku_Renderer_metadata::_recordMediaUsage()}

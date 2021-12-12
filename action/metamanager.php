@@ -17,6 +17,7 @@ use ComboStrap\Identity;
 use ComboStrap\Json;
 use ComboStrap\Lang;
 use ComboStrap\LdJson;
+use ComboStrap\LogUtility;
 use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
@@ -30,7 +31,7 @@ use ComboStrap\PageCreationDate;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
 use ComboStrap\PageId;
-use ComboStrap\Metadata;
+use ComboStrap\PageImages;
 use ComboStrap\PageKeywords;
 use ComboStrap\PageLayout;
 use ComboStrap\PagePath;
@@ -79,6 +80,37 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const METADATA_CANONICAL = "metadata";
 
     const SUCCESS_MESSAGE = "The data were updated without errors.";
+
+    private static function buildFormMetaFieldRecursively(FormMetaField &$field, Metadata $metadata)
+    {
+
+
+        $field->setType($metadata->getDataType())
+            ->setTab($metadata->getTab())
+            ->setCanonical($metadata->getCanonical())
+            ->setLabel($metadata->getLabel())
+            ->setDescription($metadata->getDescription());
+        $childrenMetadata = $metadata->getChildren();
+        if ($childrenMetadata === null) {
+            $field
+                ->setMutable($metadata->getMutable())
+                ->addValue($metadata->toStoreValue(), $metadata->toStoreDefaultValue());
+            $formControlWidth = $metadata->getFormControlWidth();
+            if ($formControlWidth !== null) {
+                $field->setWidth($formControlWidth);
+            }
+            $possibleValues = $metadata->getPossibleValues();
+            if ($possibleValues !== null) {
+                $field->setDomainValues($possibleValues);
+            }
+        } else {
+            foreach ($childrenMetadata as $childMetadata) {
+                $childField = FormMetaField::create($childMetadata->getName());
+                $field->addColumn($childField);
+                self::buildFormMetaFieldRecursively($childField, $childMetadata);
+            }
+        }
+    }
 
 
     public function register(Doku_Event_Handler $controller)
@@ -488,7 +520,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             PageLayout::PROPERTY_NAME,
             ModificationDate::PROPERTY_NAME,
             PageCreationDate::PROPERTY_NAME,
-            Metadata::PROPERTY_NAME,
+            PageImages::PROPERTY_NAME,
             Aliases::PROPERTY_NAME,
             PageType::PROPERTY_NAME,
             PagePublicationDate::PROPERTY_NAME,
@@ -510,11 +542,18 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * The manager
          */
         foreach ($formsMetadata as $formsMetaDatum) {
-            $metadata = Metadata::getForName($formsMetaDatum)
-                ->setResource($page)
+
+            $metadata = Metadata::getForName($formsMetaDatum);
+            if ($metadata === null) {
+                LogUtility::msg("The metadata ($formsMetaDatum} was not found");
+                continue;
+            }
+            $metadata->setResource($page)
                 ->setStore($store);
-            $array = $metadata->toStoreValue();
-            $formMeta->addFieldData($array);
+
+            $field = FormMetaField::create($metadata->getName());
+            self::buildFormMetaFieldRecursively($field, $metadata);
+            $formMeta->addField($field);
         }
 
 

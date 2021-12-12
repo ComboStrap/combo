@@ -1694,7 +1694,7 @@ class Page extends ResourceComboAbs
          */
         $this->cacheExpirationDate = CacheExpirationDate::createForPage($this);
         $this->aliases = Aliases::createForPage($this);
-        $this->pageImages = Metadata::createForPage($this);
+        $this->pageImages = PageImages::createForPage($this);
         $this->pageName = ResourceName::createForResource($this);
         $this->cacheExpirationFrequency = CacheExpirationFrequency::createForPage($this);
         $this->ldJson = LdJson::createForPage($this);
@@ -1919,10 +1919,10 @@ class Page extends ResourceComboAbs
                         $nonDefaultMetadatas[Aliases::PROPERTY_NAME] = $this->aliases->toStoreValue();
                     }
                     break;
-                case Metadata::PROPERTY_NAME:
+                case PageImages::PROPERTY_NAME:
                     $images = $this->getPageImages();
                     if (sizeof($images) !== 0) {
-                        $nonDefaultMetadatas[Metadata::PROPERTY_NAME] = $this->pageImages->toStoreValue();
+                        $nonDefaultMetadatas[PageImages::PROPERTY_NAME] = $this->pageImages->toStoreValue();
                     }
                     break;
                 case Region::PROPERTY_NAME:

@@ -42,7 +42,7 @@ class PageImages extends MetadataTabular
     }
 
 
-    public static function createForPage(Page $page): Metadata
+    public static function createForPage(Page $page): PageImages
     {
         return (new PageImages())
             ->setResource($page);

@@ -13,10 +13,9 @@ class PageImagePath extends MetadataWikiPath
 
 
 
-    public static function createFromParent(Metadata $param): PageImagePath
+    public static function createFromParent(Metadata $metadata): PageImagePath
     {
-        return (new PageImagePath($param))
-            ->setResource($param->getResource());
+        return (new PageImagePath($metadata));
     }
 
 

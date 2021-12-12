@@ -5,7 +5,7 @@ namespace ComboStrap;
 
 
 use DateTime;
-use http\Exception\RuntimeException;
+use RuntimeException;
 
 abstract class MetadataDateTime extends MetadataScalar
 {
@@ -24,13 +24,6 @@ abstract class MetadataDateTime extends MetadataScalar
 
         $this->buildCheck();
         $value = $this->getValue();
-        $defaultValue = $this->getDefaultValue();
-
-        $store = $this->getStore();
-        if($store instanceof MetadataFormDataStore){
-            throw new RuntimeException("To do");
-        }
-
         return $this->toPersistentDateTimeUtility($value);
 
     }

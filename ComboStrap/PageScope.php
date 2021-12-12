@@ -44,7 +44,7 @@ class PageScope extends MetadataText
     }
 
 
-    public function getTab()
+    public function getTab(): ?string
     {
         return null;
     }

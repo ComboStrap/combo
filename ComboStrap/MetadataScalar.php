@@ -20,8 +20,6 @@ abstract class MetadataScalar extends Metadata
 {
 
 
-      
-
     public abstract function getValue();
 
     public function getValueFromStore()
@@ -60,27 +58,6 @@ abstract class MetadataScalar extends Metadata
     public
     function toStoreValue()
     {
-
-        $store = $this->getStore();
-        if ($store instanceof MetadataFormDataStore) {
-
-            $field = FormMetaField::create($this->getName())
-                ->setType($this->getDataType())
-                ->setTab($this->getTab())
-                ->setCanonical($this->getCanonical())
-                ->setLabel($this->getLabel())
-                ->setDescription($this->getDescription())
-                ->setMutable($this->getMutable())
-                ->addValue($this->getValue(),$this->getDefaultValue());
-            $possibleValues = $this->getPossibleValues();
-            if ($possibleValues !== null) {
-                $field->setDomainValues($possibleValues);
-            }
-            return $field
-                ->toAssociativeArray();
-
-        }
-
         return $this->getValue();
     }
 

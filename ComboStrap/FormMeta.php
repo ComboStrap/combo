@@ -8,13 +8,14 @@ use http\Exception\RuntimeException;
  * Class FormMeta
  * @package ComboStrap
  *
- * Represents form metadata sends via an ajx request
+ * Represents form metadata sends via an ajax request
  *
  * It makes sure that the data send
  * is coherent
  */
 class FormMeta
 {
+
     const FORM_TYPES = [self::FORM_NAV_TABS_TYPE, self::FORM_LIST_GROUP_TYPE];
     const FORM_NAV_TABS_TYPE = "nav-tabs";
     const FORM_LIST_GROUP_TYPE = "list-group";
@@ -175,8 +176,5 @@ class FormMeta
 
     }
 
-    public function addFieldData(?array $array)
-    {
-        throw new RuntimeException("Todo");
-    }
+
 }

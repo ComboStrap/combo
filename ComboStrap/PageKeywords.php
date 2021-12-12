@@ -146,4 +146,6 @@ class PageKeywords extends MetadataArray
 
         throw new ExceptionCombo("The keywords value is not an array or a string (value: $value)");
     }
+
+
 }

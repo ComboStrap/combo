@@ -66,7 +66,13 @@ abstract class MetadataArray extends Metadata
         return $this->getDefaultValues();
     }
 
-    abstract function getStringSeparator();
+    /**
+     * @return string - the separator used when we receive a string
+     */
+    function getStringSeparator(): string
+    {
+        return ",";
+    }
 
     public function buildFromStoreValue($value): Metadata
     {

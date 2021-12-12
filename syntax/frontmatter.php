@@ -31,7 +31,7 @@ use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\Page;
 use ComboStrap\PageId;
-use ComboStrap\Metadata;
+use ComboStrap\PageImages;
 use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 
@@ -387,7 +387,7 @@ EOF;
                 foreach ($frontMatterJsonArray as $key => $value) {
 
                     $renderer->setAnalyticsMetaForReporting($key, $value);
-                    if ($key === Metadata::PROPERTY_NAME) {
+                    if ($key === PageImages::PROPERTY_NAME) {
                         $this->updateImageStatistics($value, $renderer);
                     }
 
@@ -411,11 +411,11 @@ EOF;
                  */
                 $page = Page::createPageFromId($ID);
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
-                if (isset($frontMatterJsonArray[Metadata::PROPERTY_NAME])) {
-                    $value = $frontMatterJsonArray[Metadata::PROPERTY_NAME];
+                if (isset($frontMatterJsonArray[PageImages::PROPERTY_NAME])) {
+                    $value = $frontMatterJsonArray[PageImages::PROPERTY_NAME];
                     try {
-                        $pageImages = Metadata::createForPage($page)
-                            ->setFromStoreValue($value);
+                        $pageImages = PageImages::createForPage($page)
+                            ->buildFromStoreValue($value);
                         foreach ($pageImages->getValues() as $imageValue) {
                             $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
                             $attributes = [PagePath::PROPERTY_NAME => $imagePath];

@@ -125,9 +125,9 @@ abstract class Metadata
             default:
                 $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
                 if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionComboRuntime($msg, self::PROPERTY_NAME);
+                    throw new ExceptionComboRuntime($msg, self::CANONICAL);
                 } else {
-                    LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
+                    LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 }
         }
         return null;
@@ -185,7 +185,7 @@ abstract class Metadata
         return $this->store;
     }
 
-    public function getTab(): string
+    public function getTab(): ?string
     {
         return $this->getName();
     }
@@ -400,7 +400,7 @@ abstract class Metadata
         PageType::PROPERTY_NAME,
         PageH1::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,
-        Metadata::PROPERTY_NAME,
+        PageImages::PROPERTY_NAME,
         Region::PROPERTY_NAME,
         Lang::PROPERTY_NAME,
         PageTitle::TITLE,
@@ -542,6 +542,14 @@ abstract class Metadata
         if($this->getChildren()!==null){
             LogUtility::msg("An entity metadata should define a metadata that store the unique value");
         }
+        return null;
+    }
+
+    /**
+     * The width on a scale of 12 for the form field
+     * @return null
+     */
+    public function getFormControlWidth(){
         return null;
     }
 }

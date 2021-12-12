@@ -18,7 +18,7 @@ class Region extends MetadataText
             ->setResource($page);
     }
 
-    public function getTab()
+    public function getTab(): ?string
     {
         return \action_plugin_combo_metamanager::TAB_LANGUAGE_VALUE;
     }

@@ -104,45 +104,6 @@ class Aliases extends Metadata
     {
         $this->buildCheck();
 
-        $store = $this->getStore();
-        if ($store instanceof MetadataFormDataStore) {
-
-            $aliasPath = FormMetaField::create(Aliases::ALIAS_PATH)
-                ->setCanonical(Alias::CANONICAL)
-                ->setLabel("Alias Path")
-                ->setDescription("The path of the alias");
-            $aliasType = FormMetaField::create(Aliases::ALIAS_TYPE)
-                ->setCanonical(Alias::CANONICAL)
-                ->setLabel("Alias Type")
-                ->setDescription("The type of the alias")
-                ->setDomainValues(Alias::getPossibleTypesValues());
-
-
-            $aliasesValues = $this->aliases;
-            if ($aliasesValues !== null) {
-                foreach ($aliasesValues as $alias) {
-                    $aliasPath->addValue($alias->getPath());
-                    $aliasType->addValue($alias->getType(), Alias::getDefaultType());
-                }
-            }
-            /**
-             * To be able to add one
-             */
-            $aliasPath->addValue(null);
-            $aliasType->addValue(null, Alias::getDefaultType());
-
-            $formField = parent::toFormField();
-            return $formField
-                ->addColumn($aliasPath)
-                ->addColumn($aliasType)
-                ->toAssociativeArray();
-
-        }
-
-
-        /**
-         * Default
-         */
         return self::toMetadataArray($this->aliases);
     }
 

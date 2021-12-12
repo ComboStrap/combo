@@ -39,6 +39,24 @@ abstract class MetadataBoolean extends MetadataScalar
         return $this;
     }
 
+    public function toStoreDefaultValue()
+    {
+        $store = $this->getStore();
+
+        if ($store instanceof MetadataFormDataStore) {
+            /**
+             * In a boolean form field, the data is returned only when the field is checked.
+             *
+             * By default, this is not checked, therefore, the default value is when this is not the default.
+             * It means that this is the inverse of the default value
+             */
+            return Boolean::toString(!$this->getDefaultValue());
+
+        }
+        return parent::toStoreDefaultValue();
+    }
+
+
     /**
      * @return bool|string|null
      */
@@ -49,16 +67,7 @@ abstract class MetadataBoolean extends MetadataScalar
         $value = $this->getValue();
 
         if ($store instanceof MetadataFormDataStore) {
-            /**
-             * In a boolean form field, the data is returned only when the field is checked.
-             *
-             * By default, this is not checked, therefore, the default value is when this is not the default.
-             * It means that this is the inverse of the default value
-             */
-            $defaultValue = Boolean::toString(!$this->getDefaultValue());
-            $value = Boolean::toString($value);
-            throw new RuntimeException("Todo");
-            return;
+            return Boolean::toString($value);
         }
 
         if ($store->isHierarchicalTextBased()) {

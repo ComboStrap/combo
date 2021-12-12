@@ -845,10 +845,10 @@ class Page extends ResourceComboAbs
 
     /**
      *
-     * @return DateTime
+     * @return null|DateTime
      */
     public
-    function getModifiedTime(): \DateTime
+    function getModifiedTime(): ?\DateTime
     {
         return $this->modifiedTime->getValueFromStore();
     }
@@ -1395,7 +1395,7 @@ class Page extends ResourceComboAbs
      * @return PageImage[]
      */
     public
-    function getPageImages(): array
+    function getPageImages(): ?array
     {
         return $this->pageImages->getValues();
     }
@@ -1406,7 +1406,7 @@ class Page extends ResourceComboAbs
      * @deprecated for {@link LdJson}
      */
     public
-    function getLdJson(): ?array
+    function getLdJson(): ?string
     {
         return $this->ldJson->getValue();
 
@@ -1442,7 +1442,7 @@ class Page extends ResourceComboAbs
     public
     function getDefaultPageImageObject(): ?PageImage
     {
-        if (!PluginUtility::getConfValue(Metadata::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+        if (!PluginUtility::getConfValue(PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             $firstImage = $this->getFirstImage();
             if ($firstImage != null) {
                 if ($firstImage->getPath()->getScheme() == DokuFs::SCHEME) {

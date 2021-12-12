@@ -76,6 +76,11 @@ abstract class MetadataArray extends Metadata
 
     public function buildFromStoreValue($value): Metadata
     {
+
+        if($value===null){
+            return $this;
+        }
+
         /**
          * Array
          */

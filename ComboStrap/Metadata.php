@@ -122,6 +122,14 @@ abstract class Metadata
                 return new ModificationDate();
             case DokuwikiId::DOKUWIKI_ID_ATTRIBUTE:
                 return new DokuwikiId();
+            case PageUrlPath::PROPERTY_NAME:
+                return new PageUrlPath();
+            case Locale::PROPERTY_NAME:
+                return new Locale();
+            case ReplicationDate::PROPERTY_NAME:
+                return new ReplicationDate();
+            case CacheExpirationDate::PROPERTY_NAME:
+                return new CacheExpirationDate();
             default:
                 $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
                 if (PluginUtility::isDevOrTest()) {

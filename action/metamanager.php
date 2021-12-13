@@ -363,7 +363,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->sendMessage("Not Authorized (managers only)");
             return;
         }
-        $metadata = $page->getMetadatas();
+        $metadata = MetadataDokuWikiStore::createForPage($page)->getData();
         $persistent = $metadata[MetadataDokuWikiStore::PERSISTENT_METADATA];
         ksort($persistent);
         $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];

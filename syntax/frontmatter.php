@@ -470,7 +470,7 @@ EOF;
                     try {
                         $pageImages = PageImages::createForPage($page)
                             ->buildFromStoreValue($value);
-                        foreach ($pageImages->getValues() as $imageValue) {
+                        foreach ($pageImages->getValue() as $imageValue) {
                             $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
                             $attributes = [PagePath::PROPERTY_NAME => $imagePath];
                             if (media_isexternal($imagePath)) {

@@ -92,9 +92,20 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->setDescription($metadata->getDescription());
         $childrenMetadata = $metadata->getChildren();
         if ($childrenMetadata === null) {
+
+            // Data
+            $sourceStore = MetadataDokuWikiStore::getOrCreate();
+            $targetStore = MetadataFormDataStore::createForPage($metadata->getResource());
+            $metadata
+                ->setStore($sourceStore)
+                ->buildFromStore()
+                ->setStore($targetStore);
+            $value = $metadata->toStoreValue();
+            $defaultValue = $metadata->toStoreValue();
             $field
                 ->setMutable($metadata->getMutable())
-                ->addValue($metadata->toStoreValue(), $metadata->toStoreDefaultValue());
+                ->addValue($value, $defaultValue);
+
             $formControlWidth = $metadata->getFormControlWidth();
             if ($formControlWidth !== null) {
                 $field->setWidth($formControlWidth);
@@ -504,8 +515,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         $formMeta = FormMeta::create($page->getDokuwikiId())
             ->setType(FormMeta::FORM_NAV_TABS_TYPE);
 
-        $store = MetadataFormDataStore::createForPage($page);
-
 
         $formsMetadata = [
             ResourceName::PROPERTY_NAME,
@@ -548,9 +557,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 LogUtility::msg("The metadata ($formsMetaDatum} was not found");
                 continue;
             }
-            $metadata->setResource($page)
-                ->setStore($store);
-
+            $metadata->setResource($page);
             $field = FormMetaField::create($metadata->getName());
             self::buildFormMetaFieldRecursively($field, $metadata);
             $formMeta->addField($field);

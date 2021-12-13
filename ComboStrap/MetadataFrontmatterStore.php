@@ -217,7 +217,9 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     {
         $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
         $frontmatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
-        $jsonEncode = self::toFrontmatterJsonString($this->getData());
+        $jsonArray = $this->getData();
+        ksort($jsonArray);
+        $jsonEncode = self::toFrontmatterJsonString($jsonArray);
 
         return <<<EOF
 $frontmatterStartTag
@@ -227,6 +229,8 @@ EOF;
 
 
     }
+
+
 
 
 }

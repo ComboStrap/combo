@@ -20,9 +20,17 @@
  *
  */
 
+use ComboStrap\Aliases;
+use ComboStrap\CacheExpirationFrequency;
+use ComboStrap\Canonical;
+use ComboStrap\EndDate;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\ExceptionComboRuntime;
+use ComboStrap\FileSystems;
+use ComboStrap\Lang;
+use ComboStrap\LdJson;
 use ComboStrap\LogUtility;
+use ComboStrap\LowQualityPageOverwrite;
 use ComboStrap\MediaLink;
 use ComboStrap\Message;
 use ComboStrap\Metadata;
@@ -30,10 +38,20 @@ use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\Page;
+use ComboStrap\PageH1;
 use ComboStrap\PageId;
 use ComboStrap\PageImages;
+use ComboStrap\PageKeywords;
+use ComboStrap\PageLayout;
 use ComboStrap\PagePath;
+use ComboStrap\PagePublicationDate;
+use ComboStrap\PageTitle;
+use ComboStrap\PageType;
 use ComboStrap\PluginUtility;
+use ComboStrap\QualityDynamicMonitoringOverwrite;
+use ComboStrap\Region;
+use ComboStrap\ResourceName;
+use ComboStrap\StartDate;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
@@ -87,12 +105,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
          * Default update value for the frontmatter
          */
         $updateFrontMatter = PluginUtility::getConfValue(syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
-        $originalFrontMatterMetadata = [];
+        $originalFrontMatter = null;
 
         /**
          * If a frontmatter exists already, we update it
          */
-        $content = $page->getTextContent();
+        $content = FileSystems::getContent($page->getPath());
         $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
         if (strpos($content, $frontMatterStartTag) === 0) {
 
@@ -118,10 +136,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             }
 
             $frontMatterMatch = array_shift($split);
-            $originalFrontMatterMetadata = MetadataFrontmatterStore::frontMatterMatchToAssociativeArray($frontMatterMatch);
-            if ($originalFrontMatterMetadata === null) {
-                return Message::createErrorMessage("The existing frontmatter is not a valid json.");
+            try {
+                $originalFrontMatter = MetadataFrontmatterStore::createFromFrontmatter($page, $frontMatterMatch);
+            } catch (ExceptionCombo $e) {
+                return Message::createErrorMessage("The existing frontmatter is not valid");
             }
+
 
             /**
              * Building the document again
@@ -142,41 +162,70 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         /**
          * Page Id special
          */
-        if (isset($originalFrontMatterMetadata[PageId::PROPERTY_NAME])) {
-            if ($page->getPageId() !== null) {
-                $originalFrontMatterMetadata[PageId::PROPERTY_NAME] = $page->getPageId();
-            }
+        if (
+            !$originalFrontMatter->hasProperty(PageId::PROPERTY_NAME)
+            &&
+            $page->getPageId() !== null
+        ) {
+            $originalFrontMatter->setFromResourceAndName($page, PageId::PROPERTY_NAME, $page->getPageId());
         }
 
         /**
          * Update the mutable data
          * (ie delete insert)
          */
-        $nonDefaultMetadatasValuesInStorageFormat = $page->getNonDefaultMetadatasValuesInStorageFormat();
-        $userDefinedMetadata = Metadata::deleteMutableMetadata($originalFrontMatterMetadata);
-        $targetFrontMatterMetadata = array_merge($nonDefaultMetadatasValuesInStorageFormat, $userDefinedMetadata);
-        ksort($targetFrontMatterMetadata);
+        $hasChanged = false;
+        foreach (Metadata::MUTABLE_METADATA as $metaKey) {
+            $metadata = Metadata::getForName($metaKey);
+            if ($metadata === null) {
+                $msg = "The metadata $metaKey should be defined";
+                if (PluginUtility::isDevOrTest()) {
+                    throw new ExceptionComboRuntime($msg);
+                } else {
+                    LogUtility::msg($msg);
+                }
+            }
+            $metadata->setResource($page);
+
+            $sourceValue = $originalFrontMatter->get($metadata);
+            $targetValue = $metadata->toStoreValue();
+            $targetValueShouldBeStore = !in_array($targetValue, [$metadata->toStoreDefaultValue(), null]);
+            if ($targetValueShouldBeStore) {
+                if ($sourceValue !== $targetValue) {
+                    $hasChanged = true;
+                    try {
+                        $originalFrontMatter->set($metadata);
+                    } catch (ExceptionCombo $e) {
+                        return Message::createInfoMessage($e->getMessage())
+                            ->setStatus(self::UPDATE_EXIT_CODE_ERROR);
+                    }
+                }
+            } else {
+                if ($sourceValue !== null) {
+                    $hasChanged = true;
+                    $originalFrontMatter->remove($metadata);
+                }
+            }
+        }
+
 
         /**
          * Same ?
          */
-        if ($originalFrontMatterMetadata === $targetFrontMatterMetadata) {
+        if (!$hasChanged) {
             return Message::createInfoMessage("The frontmatter are the same (no update)")
                 ->setStatus(self::UPDATE_EXIT_CODE_NOT_CHANGED);
         }
 
 
-        $targetFrontMatterJsonString = \ComboStrap\Json::createFromArray($targetFrontMatterMetadata)->toFrontMatterFormat();
+        $targetFrontMatterJsonString = $originalFrontMatter->toFrontmatterString();
 
 
         /**
          * Build the new document
          */
-        $frontMatterEndTag = syntax_plugin_combo_frontmatter::END_TAG;
         $newPageContent = <<<EOF
-$frontMatterStartTag
-$targetFrontMatterJsonString
-$frontMatterEndTag$contentWithoutFrontMatter
+$targetFrontMatterJsonString$contentWithoutFrontMatter
 EOF;
         $page->upsertContent($newPageContent, "Metadata manager upsert");
 

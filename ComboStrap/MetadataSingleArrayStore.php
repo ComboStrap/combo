@@ -28,7 +28,6 @@ abstract class MetadataSingleArrayStore implements MetadataStore
     }
 
 
-
     public function set(Metadata $metadata)
     {
         $this->checkResource($metadata->getResource());
@@ -91,8 +90,20 @@ abstract class MetadataSingleArrayStore implements MetadataStore
     private function checkResource(ResourceCombo $requestedResource)
     {
         if ($this->page !== $requestedResource) {
-            throw new ExceptionComboRuntime("The page ($requestedResource) is unknown. We got data for the page ($this->page)",self::CANONICAL);
+            throw new ExceptionComboRuntime("The page ($requestedResource) is unknown. We got data for the page ($this->page)", self::CANONICAL);
         }
+    }
+
+    public function hasProperty(string $name): bool
+    {
+        return isset($this->data[$name]);
+    }
+
+    public function remove(Metadata $metadata): MetadataSingleArrayStore
+    {
+        $this->checkResource($metadata->getResource());
+        unset($this->data[$metadata->getName()]);
+        return $this;
     }
 
 }

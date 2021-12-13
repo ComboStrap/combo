@@ -408,5 +408,10 @@ class LdJson extends MetadataJson
         return $ldJson;
     }
 
+    public function getAliasNames(): array
+    {
+        return [LdJson::OLD_ORGANIZATION_PROPERTY];
+    }
+
 
 }

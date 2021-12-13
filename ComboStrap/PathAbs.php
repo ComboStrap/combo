@@ -30,6 +30,8 @@ abstract class PathAbs implements Path
                 return new Mime(Mime::JAVASCRIPT);
             case Json::EXTENSION:
                 return new Mime(Mime::JSON);
+            case "txt":
+                return new Mime(Mime::PLAIN_TEXT);
             default:
                 $mime = mimetype($this->getLastName(), true)[1];
                 if ($mime === null) {

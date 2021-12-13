@@ -8,6 +8,7 @@ use action_plugin_combo_metadescription;
 use ModificationDate;
 use ReplicationDate;
 use Slug;
+use syntax_plugin_combo_disqus;
 
 abstract class Metadata
 {
@@ -413,16 +414,15 @@ abstract class Metadata
         PageImages::PROPERTY_NAME,
         Region::PROPERTY_NAME,
         Lang::PROPERTY_NAME,
-        PageTitle::TITLE,
-        PagePublicationDate::OLD_META_KEY,
+        PageTitle::PROPERTY_NAME,
         PagePublicationDate::PROPERTY_NAME,
         ResourceName::PROPERTY_NAME,
         LdJson::PROPERTY_NAME,
         PageLayout::PROPERTY_NAME,
-        LdJson::OLD_ORGANIZATION_PROPERTY,
         StartDate::PROPERTY_NAME,
         EndDate::PROPERTY_NAME,
-        action_plugin_combo_metadescription::DESCRIPTION_META_KEY,
+        PageDescription::PROPERTY_NAME,
+        syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
         Slug::PROPERTY_NAME,
         PageKeywords::PROPERTY_NAME,
         CacheExpirationFrequency::PROPERTY_NAME,
@@ -561,5 +561,13 @@ abstract class Metadata
      */
     public function getFormControlWidth(){
         return null;
+    }
+
+    /**
+     * @return string[] - the old name if any
+     */
+    public function getAliasNames(): array
+    {
+        return [];
     }
 }

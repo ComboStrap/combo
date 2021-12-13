@@ -37,8 +37,6 @@ class PagePublicationDate extends MetadataDateTime
     const LATE_PUBLICATION_CLASS_NAME = "late-publication";
 
 
-
-
     public static function getLatePublicationProtectionMode()
     {
 
@@ -86,7 +84,7 @@ class PagePublicationDate extends MetadataDateTime
     public function buildFromStore(): MetadataDateTime
     {
         $store = $this->getStore();
-        if(!($store instanceof MetadataDokuWikiStore)){
+        if (!($store instanceof MetadataDokuWikiStore)) {
             return parent::buildFromStore();
         }
         $value = $store->get($this);
@@ -94,12 +92,12 @@ class PagePublicationDate extends MetadataDateTime
             /**
              * Old metadata key
              */
-            $value = $store->getFromResourceAndName($this->getResource(),PagePublicationDate::OLD_META_KEY);
+            $value = $store->getFromResourceAndName($this->getResource(), PagePublicationDate::OLD_META_KEY);
         }
         try {
             $this->setFromStoreValue($value);
         } catch (ExceptionCombo $e) {
-            LogUtility::msg($e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
         return $this;
     }
@@ -121,4 +119,11 @@ class PagePublicationDate extends MetadataDateTime
             ->setResource($this->getResource())
             ->getValueOrDefault();
     }
+
+    public function getAliasNames(): array
+    {
+        return [PagePublicationDate::OLD_META_KEY];
+    }
+
+
 }

@@ -493,7 +493,7 @@ class Page extends ResourceComboAbs
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
-        $metadata = $store->getFromResourceAndName($this, 'relation');
+        $metadata = $store->getFromName($this, 'relation');
         if ($metadata === null) {
             /**
              * Happens when no rendering has been made
@@ -736,7 +736,7 @@ class Page extends ResourceComboAbs
         }
         $medias = [];
 
-        $relation = $store->getFromResourceAndName($this, 'relation');
+        $relation = $store->getFromName($this, 'relation');
         if (isset($relation['media'])) {
             /**
              * The relation is
@@ -810,7 +810,7 @@ class Page extends ResourceComboAbs
             return null;
         }
 
-        return $store->getFromResourceAndName($this, 'creator');
+        return $store->getFromName($this, 'creator');
     }
 
     /**
@@ -826,7 +826,7 @@ class Page extends ResourceComboAbs
             return null;
         }
 
-        return $store->getFromResourceAndName($this, 'user');
+        return $store->getFromName($this, 'user');
 
     }
 
@@ -882,7 +882,7 @@ class Page extends ResourceComboAbs
          */
         $metadataStore = $this->getStoreOrDefault();
         $metadataStore
-            ->renderAndPersistForPage($this)
+            ->renderAndPersist($this)
             ->persist();
 
         /**
@@ -1892,9 +1892,6 @@ class Page extends ResourceComboAbs
     }
 
 
-
-
-
     public function getKeywords(): ?array
     {
         return $this->keywords->getValues();
@@ -2010,7 +2007,7 @@ class Page extends ResourceComboAbs
     public function getStoreOrDefault(): MetadataStore
     {
         if ($this->store === null) {
-            return MetadataDokuWikiStore::getOrCreate();
+            $this->store = MetadataDokuWikiStore::createForPage($this);
         }
         return $this->store;
     }

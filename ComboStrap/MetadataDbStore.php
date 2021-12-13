@@ -16,16 +16,21 @@ class MetadataDbStore implements MetadataStore
     const ALIAS_TABLE_NAME = "PAGE_ALIASES";
 
     const CANONICAL = "database";
+    private $resource;
 
-    private static $metaBdStore;
-
-
-    public static function getOrCreate(): MetadataDbStore
+    /**
+     * MetadataDbStore constructor.
+     */
+    public function __construct($resourceCombo)
     {
-        if (self::$metaBdStore === null) {
-            self::$metaBdStore = new MetadataDbStore();
-        }
-        return self::$metaBdStore;
+        $this->resource = $resourceCombo;
+    }
+
+
+    public static function createForPage(ResourceCombo $resourceCombo): MetadataDbStore
+    {
+
+        return  new MetadataDbStore($resourceCombo);
 
     }
 
@@ -219,13 +224,18 @@ EOF;
         throw new ExceptionComboRuntime("To implement");
     }
 
-    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
         throw new RuntimeException("Not implemented");
     }
 
-    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value)
+    public function setFromName(string $name, $value)
     {
         throw new RuntimeException("Not implemented");
+    }
+
+    public function getResource(): ResourceCombo
+    {
+        return $this->resource;
     }
 }

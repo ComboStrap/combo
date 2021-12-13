@@ -8,6 +8,7 @@ use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Page;
 use ComboStrap\Metadata;
+use ComboStrap\PageImages;
 use ComboStrap\PluginUtility;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -43,9 +44,10 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         $sourceImageId = $event->data["src_id"];
         $targetImageId = $event->data["dst_id"];
         foreach ($affectedPagesId as $affectedPageId) {
-            $affectedPage = Page::createPageFromId($affectedPageId)
-                ->setStore(MetadataDokuWikiStore::getOrCreate());
-            $pageImages = Metadata::createForPage($affectedPage);
+            $affectedPage = Page::createPageFromId($affectedPageId);
+            $store = MetadataDokuWikiStore::createForPage($affectedPage);
+            $affectedPage->setStore($store);
+            $pageImages = PageImages::createForPage($affectedPage);
             $removedPageImage = null;
 
             $removedPageImage = $pageImages->removeIfExists($sourceImageId);

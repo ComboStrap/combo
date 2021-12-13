@@ -89,7 +89,7 @@ class UrlManagerBestEndPage
                 Aliases::createForPage($page)
                     ->addAlias($missingPageId, Alias::REDIRECT)
                     ->sendToStore()
-                    ->setStore(MetadataDbStore::getOrCreate())
+                    ->setStore(MetadataDbStore::createForPage())
                     ->sendToStore();
                 $redirectType = action_plugin_combo_router::REDIRECT_PERMANENT_METHOD;
             }

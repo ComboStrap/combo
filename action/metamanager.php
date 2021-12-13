@@ -94,7 +94,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         if ($childrenMetadata === null) {
 
             // Data
-            $sourceStore = MetadataDokuWikiStore::getOrCreate();
+            $sourceStore = MetadataDokuWikiStore::createForPage($metadata->getResource());
             $targetStore = MetadataFormDataStore::createForPage($metadata->getResource());
             $metadata
                 ->setStore($sourceStore)
@@ -294,9 +294,10 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * Processing
          */
         $formStore = MetadataFormDataStore::createForPage($page, $post);
+        $targetStore = MetadataDokuWikiStore::createForPage($page);
         $transfer = MetadataStoreTransfer::createForPage($page)
             ->fromStore($formStore)
-            ->toStore(MetadataDokuWikiStore::getOrCreate())
+            ->toStore($targetStore)
             ->process($post);
         $processingMessages = $transfer->getMessages();
 
@@ -396,7 +397,9 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private function handleViewerPost(Doku_Event $event, Page $page, array $post)
     {
 
-        $meta = $page->getMetadatas();
+        $meta = MetadataDokuWikiStore::createForPage($page)
+            ->getData();
+
         /**
          * @var Message[]
          */

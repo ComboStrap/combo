@@ -377,6 +377,7 @@ abstract class Metadata
         PageCreationDate::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
         PageId::PROPERTY_NAME,
+        "user",
         "contributor",
         "creator",
         "date",

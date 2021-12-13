@@ -173,7 +173,7 @@ class DatabasePage
 
         Aliases::createForPage($this->page)
             ->buildFromStore()
-            ->setStore(MetadataDbStore::getOrCreate())
+            ->setStore(MetadataDbStore::createForPage())
             ->persist();
 
         /**
@@ -826,8 +826,8 @@ EOF;
      */
     private function getMetaRecord(): array
     {
-        $sourceStore = MetadataDokuWikiStore::getOrCreate();
-        $targetStore = MetadataDbStore::getOrCreate();
+        $sourceStore = MetadataDokuWikiStore::createForPage($this->page);
+        $targetStore = MetadataDbStore::createForPage($this->page);
 
         $record = array(
             Canonical::PROPERTY_NAME,

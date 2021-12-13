@@ -14,7 +14,7 @@ abstract class MetadataSingleArrayStore implements MetadataStore
 
 
     private $page;
-    private $data;
+    protected $data;
 
     /**
      * MetadataFormStore constructor.
@@ -25,6 +25,11 @@ abstract class MetadataSingleArrayStore implements MetadataStore
     {
         $this->page = $page;
         $this->data = $data;
+    }
+
+    public function getResource(): ResourceCombo
+    {
+        return $this->page;
     }
 
 
@@ -46,7 +51,7 @@ abstract class MetadataSingleArrayStore implements MetadataStore
 
     public function persist()
     {
-        if(PluginUtility::isDevOrTest()) {
+        if (PluginUtility::isDevOrTest()) {
             throw new ExceptionComboRuntime("Not yet implemented, use sendToStore");
         }
     }
@@ -68,9 +73,9 @@ abstract class MetadataSingleArrayStore implements MetadataStore
         $this->data = [];
     }
 
-    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
-        $this->checkResource($resource);
+
         $value = $this->data[$name];
         if ($value !== null) {
             return $value;
@@ -78,9 +83,9 @@ abstract class MetadataSingleArrayStore implements MetadataStore
         return $default;
     }
 
-    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value)
+    public function setFromName(string $name, $value)
     {
-        $this->checkResource($resource);
+
         if ($value === null || $value === "") {
             unset($this->data[$name]);
             return;
@@ -89,7 +94,7 @@ abstract class MetadataSingleArrayStore implements MetadataStore
 
     }
 
-    private function checkResource(ResourceCombo $requestedResource)
+    protected function checkResource(ResourceCombo $requestedResource)
     {
         if ($this->page !== $requestedResource) {
             throw new ExceptionComboRuntime("The page ($requestedResource) is unknown. We got data for the page ($this->page)", self::CANONICAL);

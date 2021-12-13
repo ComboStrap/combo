@@ -167,7 +167,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             &&
             $page->getPageId() !== null
         ) {
-            $originalFrontMatter->setFromResourceAndName($page, PageId::PROPERTY_NAME, $page->getPageId());
+            $originalFrontMatter->setFromName($page, PageId::PROPERTY_NAME, $page->getPageId());
         }
 
         /**
@@ -340,7 +340,7 @@ EOF;
             /**
              * Sync
              */
-            $targetStore = MetadataDokuWikiStore::getOrCreate();
+            $targetStore = MetadataDokuWikiStore::createForPage($page);
             $transfer = MetadataStoreTransfer::createForPage($page)
                 ->fromStore($frontMatterStore)
                 ->toStore($targetStore)

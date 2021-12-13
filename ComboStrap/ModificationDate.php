@@ -32,7 +32,7 @@ class ModificationDate extends MetadataDateTime
         if (!($store instanceof MetadataDokuWikiStore)) {
             return parent::buildFromStore();
         }
-        $createdMeta = $store->getFromResourceAndName($this->getResource(), 'date')['modified'];
+        $createdMeta = $store->getFromName($this->getResource(), 'date')['modified'];
         if (empty($createdMeta)) {
             return $this;
         }

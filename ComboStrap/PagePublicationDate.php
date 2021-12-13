@@ -92,7 +92,7 @@ class PagePublicationDate extends MetadataDateTime
             /**
              * Old metadata key
              */
-            $value = $store->getFromResourceAndName($this->getResource(), PagePublicationDate::OLD_META_KEY);
+            $value = $store->getFromName($this->getResource(), PagePublicationDate::OLD_META_KEY);
         }
         try {
             $this->setFromStoreValue($value);

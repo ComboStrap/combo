@@ -49,7 +49,7 @@ class PageCreationDate extends MetadataDateTime
             return parent::buildFromStore();
         }
 
-        $createdMeta = $store->getFromResourceAndName($this->getResource(), self::DOKUWIKI_MAIN_KEY)[self::DOKUWIKI_SUB_KEY];
+        $createdMeta = $store->getFromName($this->getResource(), self::DOKUWIKI_MAIN_KEY)[self::DOKUWIKI_SUB_KEY];
         if (empty($createdMeta)) {
             return $this;
         }

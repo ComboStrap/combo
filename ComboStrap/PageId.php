@@ -212,10 +212,11 @@ class PageId extends MetadataText
              */
             $metadataStore = $this->getStore();
             if (!($metadataStore instanceof MetadataDokuWikiStore)) {
+                $store = MetadataDokuWikiStore::createForPage($this->getResource());
                 $fsPageId = PageId::createForPage($this->getResource())
-                    ->setStore(MetadataDokuWikiStore::getOrCreate());
+                    ->setStore($store);
                 $value = $fsPageId->getValue();
-                if($value!==null){
+                if ($value !== null) {
                     throw new ExceptionComboRuntime("The file system metadata store has already the page id ($value) for the page ({$this->getResource()}");
                 }
                 $fsPageId->setValue($value)

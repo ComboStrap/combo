@@ -12,7 +12,7 @@ use dokuwiki\Extension\Event;
  *
  * Dokuwiki allows the creation of metadata via rendering {@link Page::renderMetadataAndFlush()}
  */
-class MetadataDokuWikiStore implements MetadataStore
+class MetadataDokuWikiStore extends MetadataSingleArrayStore
 {
 
     /**
@@ -35,21 +35,23 @@ class MetadataDokuWikiStore implements MetadataStore
      */
     public const PERSISTENT_METADATA = "persistent";
 
-    /**
-     * @var MetadataDokuWikiStore
-     */
-    private static $store;
-
 
     const CANONICAL = Metadata::CANONICAL;
 
 
-    public static function getOrCreate(): MetadataDokuWikiStore
+    /**
+     * @return MetadataDokuWikiStore
+     * We don't use a global static variable
+     * because we are working with php as cgi script
+     * and there is no notion of request
+     * to be able to flush the data on the disk
+     *
+     * The scope of the data will be then the store
+     */
+    public static function createForPage(ResourceCombo $resourceCombo): MetadataDokuWikiStore
     {
-        if (self::$store === null) {
-            self::$store = new MetadataDokuWikiStore();
-        }
-        return self::$store;
+        $data = p_read_metadata($resourceCombo->getDokuwikiId());
+        return new MetadataDokuWikiStore($resourceCombo, $data);
     }
 
     public function set(Metadata $metadata)
@@ -58,6 +60,7 @@ class MetadataDokuWikiStore implements MetadataStore
         $persistentValue = $metadata->toStoreValue();
         $defaultValue = $metadata->toStoreDefaultValue();
         $resource = $metadata->getResource();
+        $this->checkResource($resource);
         if ($resource === null) {
             throw new ExceptionComboRuntime("A resource is mandatory", self::CANONICAL);
         }
@@ -77,7 +80,9 @@ class MetadataDokuWikiStore implements MetadataStore
      */
     public function get(Metadata $metadata, $default = null)
     {
+
         $resource = $metadata->getResource();
+        $this->checkResource($resource);
         if ($resource === null) {
             throw new ExceptionComboRuntime("A resource is mandatory", self::CANONICAL);
         }
@@ -95,14 +100,13 @@ class MetadataDokuWikiStore implements MetadataStore
      *
      * This function is used primarily by derived / process metadata
      *
-     * @param ResourceCombo $resource
      * @param string $name
      * @param null $default
      * @return mixed
      */
-    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null)
+    public function getFromName(string $name, $default = null)
     {
-        $wikiId = $resource->getPath()->getDokuwikiId();
+        $wikiId = $this->getResource();
         return $this->getFromWikiId($wikiId, $name, $default);
     }
 
@@ -120,24 +124,23 @@ class MetadataDokuWikiStore implements MetadataStore
     }
 
     /**
-     * @param Page $resource
      * @param string $name
      * @param string|array $value
+     * @return MetadataDokuWikiStore
      */
-    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value)
+    public function setFromName(string $name, $value): MetadataDokuWikiStore
     {
-        $this->setFromWikiId($resource->getDokuwikiId(), $name, $value);
+        $this->setFromWikiId($this->getResource()->getDokuwikiId(), $name, $value);
+        return $this;
     }
 
     /**
-     * @param $dokuwikiId
      * @param $name
      * @return mixed|null
      */
-    private function getPersistentMetadata($dokuwikiId, $name)
+    private function getPersistentMetadata($name)
     {
-
-        $value = $this->getRawMetadatasFromWikiId($dokuwikiId)[self::PERSISTENT_METADATA][$name];
+        $value = $this->getData()[self::PERSISTENT_METADATA][$name];
         /**
          * Empty string return null
          * because Dokuwiki does not allow to delete keys
@@ -158,9 +161,9 @@ class MetadataDokuWikiStore implements MetadataStore
      * @deprecated we use now the {@link p_get_metadata()} function to {@link MetadataDokuWikiStore::getRawMetadatasFromWikiId()} retrieve the meta that {@link MetadataDokuWikiStore::getFlatMetadata()} the array
      */
     public
-    function getCurrentMetadata($dokuWikiId, $name)
+    function getCurrentMetadata($name)
     {
-        $value = $this->getRawMetadatasFromWikiId($dokuWikiId)[self::CURRENT_METADATA][$name];
+        $value = $this->getData()[self::CURRENT_METADATA][$name];
         /**
          * Empty string return null
          * because Dokuwiki does not allow to delete keys
@@ -173,26 +176,22 @@ class MetadataDokuWikiStore implements MetadataStore
     }
 
     /**
-     * @param Page $page
      * @return MetadataDokuWikiStore
      */
-    public function renderAndPersistForPage(Page $page): MetadataDokuWikiStore
+    public function renderAndPersist(): MetadataDokuWikiStore
     {
         /**
          * Read/render the metadata from the file
          * with parsing
          */
-        $dokuwikiId = $page->getPath()->getDokuwikiId();
-        $actualMeta = $this->getRawMetadatasFromWikiId($dokuwikiId);
+        $dokuwikiId = $this->getResource()->getDokuwikiId();
+        $actualMeta = $this->getData();
         $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
         p_save_metadata($dokuwikiId, $newMetadata);
+        $this->data = $newMetadata;
         return $this;
     }
 
-    private function getRawMetadatasFromWikiId($dokuwikiId): array
-    {
-        return p_read_metadata($dokuwikiId);
-    }
 
     /**
      * Change a meta on file
@@ -282,7 +281,7 @@ class MetadataDokuWikiStore implements MetadataStore
      */
     public function reset()
     {
-
+        $this->data = p_read_metadata($this->getResource()->getDokuWikiId());
     }
 
     private function getFromWikiId($dokuwikiId, string $name, $default = null)
@@ -310,7 +309,7 @@ class MetadataDokuWikiStore implements MetadataStore
          * Because there may be already a metadata in current for instance title
          * It will be returned, but we want only the persistent
          */
-        $value = $this->getPersistentMetadata($dokuwikiId, $name);
+        $value = $this->getPersistentMetadata($name);
 
         /**
          * Empty string return the default (null)
@@ -322,6 +321,7 @@ class MetadataDokuWikiStore implements MetadataStore
         }
         return $default;
     }
+
 
     /**
      * @param $dokuwikiId

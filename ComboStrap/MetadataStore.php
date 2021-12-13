@@ -29,23 +29,23 @@ interface MetadataStore
      */
     public function get(Metadata $metadata, $default = null);
 
+    public function getResource(): ResourceCombo;
+
     /**
      * This function permits to get a metadata value without creating a {@link Metadata} class
      *
-     * @param ResourceCombo $resource - the metadata is for this resource
      * @param string $name -  the {@link Metadata::getName()} of the metadata
      * @param null $default - the default value to return if no data is found
      * @return null|string|array|boolean
      */
-    public function getFromResourceAndName(ResourceCombo $resource, string $name, $default = null);
+    public function getFromName(string $name, $default = null);
 
     /**
      * This function permits to set a metadata value without creating a {@link Metadata} class
-     * @param ResourceCombo $resource - the metadata is for this resource
      * @param string $name - the {@link Metadata::getName()} of the metadata
      * @param null|string|array|boolean - $value
      */
-    public function setFromResourceAndName(ResourceCombo $resource, string $name, $value);
+    public function setFromName(string $name, $value);
 
     /**
      *

@@ -28,7 +28,7 @@ abstract class MetadataWikiPath extends MetadataText
      */
     public function buildFromStoreValue($value): Metadata
     {
-        if($value!==null) {
+        if ($value !== null && $value !=="") {
             $value = DokuPath::toValidAbsolutePath($value);
         }
         parent::buildFromStoreValue($value);

@@ -1397,7 +1397,7 @@ class Page extends ResourceComboAbs
     public
     function getPageImages(): ?array
     {
-        return $this->pageImages->getValues();
+        return $this->pageImages->getValue();
     }
 
 
@@ -1475,7 +1475,7 @@ class Page extends ResourceComboAbs
     public
     function getAliases(): array
     {
-        return $this->aliases->getAll();
+        return $this->aliases->getValue();
     }
 
     /**

@@ -188,8 +188,8 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             $metadata->setResource($page);
 
             $sourceValue = $originalFrontMatter->get($metadata);
-            $targetValue = $metadata->toStoreValue();
-            $targetValueShouldBeStore = !in_array($targetValue, [$metadata->toStoreDefaultValue(), null]);
+            $targetValue = $metadata->getValue();
+            $targetValueShouldBeStore = !in_array($targetValue, [$metadata->getDefaultValue(), null]);
             if ($targetValueShouldBeStore) {
                 if ($sourceValue !== $targetValue) {
                     $hasChanged = true;

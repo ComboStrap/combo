@@ -120,6 +120,7 @@ class PageDescription extends MetadataText
 
     public function buildFromStoreValue($value): Metadata
     {
+
         $metaDataStore = $this->getStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
             parent::buildFromStoreValue($value);

@@ -223,7 +223,7 @@ class PageImages extends MetadataTabular
     /**
      * @return PageImage[]
      */
-    public function getValues(): ?array
+    public function getValue(): ?array
     {
         $this->buildCheck();
         if ($this->pageImages === null) {

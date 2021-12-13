@@ -54,28 +54,20 @@ class PageKeywords extends MetadataArray
 
     public function toStoreValue()
     {
-        if ($this->getValues() === null) {
+        if ($this->getValue() === null) {
             return null;
         }
-        return implode(self::SEPARATOR, $this->getValues());
+        return implode(self::SEPARATOR, $this->getValue());
 
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    public function setFromFormData($formData)
-    {
-        $this->setFromStoreValue($formData);
-        return $this;
-    }
 
     public function toStoreDefaultValue()
     {
-        if ($this->getDefaultValues() === null) {
+        if ($this->getDefaultValue() === null) {
             return null;
         }
-        return implode(self::SEPARATOR, $this->getDefaultValues());
+        return implode(self::SEPARATOR, $this->getDefaultValue());
     }
 
 
@@ -84,7 +76,7 @@ class PageKeywords extends MetadataArray
      * in the hierarchy.
      * @return string[]|null
      */
-    public function getDefaultValues(): ?array
+    public function getDefaultValue(): ?array
     {
 
         $resource = $this->getResource();

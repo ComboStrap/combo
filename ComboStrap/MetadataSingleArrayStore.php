@@ -46,7 +46,9 @@ abstract class MetadataSingleArrayStore implements MetadataStore
 
     public function persist()
     {
-        throw new ExceptionComboRuntime("Not yet implemented, use sendToStore");
+        if(PluginUtility::isDevOrTest()) {
+            throw new ExceptionComboRuntime("Not yet implemented, use sendToStore");
+        }
     }
 
     public function isHierarchicalTextBased(): bool

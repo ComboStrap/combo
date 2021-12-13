@@ -79,6 +79,7 @@ require_once(__DIR__ . '/Cron.php');
 require_once(__DIR__ . '/DatabasePage.php');
 require_once(__DIR__ . '/DataType.php');
 require_once(__DIR__ . '/Dimension.php');
+require_once(__DIR__ . '/DisqusIdentifier.php');
 require_once(__DIR__ . '/DokuwikiUrl.php');
 require_once(__DIR__ . '/DokuwikiId.php');
 require_once(__DIR__ . '/EndDate.php');

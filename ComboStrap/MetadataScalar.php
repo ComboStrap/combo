@@ -20,7 +20,7 @@ abstract class MetadataScalar extends Metadata
 {
 
 
-    public abstract function getValue();
+
 
     public function getValueFromStore()
     {
@@ -44,9 +44,6 @@ abstract class MetadataScalar extends Metadata
         return $value;
 
     }
-
-
-    public abstract function getDefaultValue();
 
 
     public

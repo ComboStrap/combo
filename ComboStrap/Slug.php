@@ -18,9 +18,9 @@ class Slug extends MetadataWikiPath
             ->setResource($resource);
     }
 
-    public static function toSlugPath($string): string
+    public static function toSlugPath($string): ?string
     {
-        if (empty($string)) return ":";
+        if (empty($string)) return null;
         // Reserved word to space
         $slugWithoutReservedWord = str_replace(DokuPath::getReservedWords(), " ", $string);
         // Doubles spaces to space

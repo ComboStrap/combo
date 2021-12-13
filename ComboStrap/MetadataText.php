@@ -25,6 +25,9 @@ abstract class MetadataText extends MetadataScalar
     public function getValue(): ?string
     {
         $this->buildCheck();
+        if (is_array($this->value)) {
+            throw new ExceptionComboRuntime("bad");
+        }
         return $this->value;
     }
 
@@ -68,6 +71,13 @@ abstract class MetadataText extends MetadataScalar
 
     public function buildFromStoreValue($value): Metadata
     {
+        if ($value === null || $value === "") {
+            return $this;
+        }
+        if (!is_string($value)) {
+            LogUtility::msg("This value of a text metadata is not a string. ".var_export($value,true));
+            return $this;
+        }
         $this->value = $value;
         return $this;
     }

@@ -175,10 +175,15 @@ class Aliases extends Metadata
 
     }
 
+    public function getDefaultValue()
+    {
+        return null;
+    }
+
     /**
      * @return Alias[]
      */
-    public function getAll(): array
+    public function getValue(): array
     {
         $this->buildCheck();
 

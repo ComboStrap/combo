@@ -32,21 +32,23 @@ abstract class MetadataArray extends Metadata
         return DataType::ARRAY_TYPE_VALUE;
     }
 
-    public function getValues(): ?array
+    public function getValue(): ?array
     {
         $this->buildCheck();
         return $this->array;
     }
 
-    abstract function getDefaultValues();
+    public function getDefaultValue(){
+        return null;
+    }
 
     public function getValueOrDefaults(): array
     {
-        $value = $this->getValues();
+        $value = $this->getValue();
         if ($value !== null) {
             return $value;
         }
-        return $this->getDefaultValues();
+        return $this->getDefaultValue();
     }
 
 

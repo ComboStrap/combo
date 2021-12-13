@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\DisqusIdentifier;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataUtility;
 use ComboStrap\PluginUtility;
@@ -23,7 +24,6 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
 
     const TAG = 'disqus';
 
-    const META_DISQUS_IDENTIFIER = "disqus_identifier";
     const ATTRIBUTE_CATEGORY = "category";
 
     /**
@@ -132,7 +132,7 @@ class syntax_plugin_combo_disqus extends DokuWiki_Syntax_Plugin
                 /**
                  * @deprecated the page id is used
                  */
-                $disqusIdentifier = $page->getMetadata(self::META_DISQUS_IDENTIFIER);
+                $disqusIdentifier = $page->getMetadata(DisqusIdentifier::PROPERTY_NAME);
                 if (empty($disqusIdentifier)) {
 
                     $disqusIdentifier = $attributes[self::ATTRIBUTE_IDENTIFIER];

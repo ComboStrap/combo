@@ -13,7 +13,7 @@ use syntax_plugin_combo_disqus;
 abstract class Metadata
 {
     const CANONICAL = "page:metadata";
-    const MUTABLE = "mutable";
+
     public const NOT_MODIFIABLE_METAS = [
         "date",
         "user",
@@ -133,6 +133,8 @@ abstract class Metadata
                 return new ReplicationDate();
             case CacheExpirationDate::PROPERTY_NAME:
                 return new CacheExpirationDate();
+            case DisqusIdentifier::PROPERTY_NAME:
+                return new DisqusIdentifier();
             default:
                 $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
                 if (PluginUtility::isDevOrTest()) {
@@ -422,7 +424,7 @@ abstract class Metadata
         StartDate::PROPERTY_NAME,
         EndDate::PROPERTY_NAME,
         PageDescription::PROPERTY_NAME,
-        syntax_plugin_combo_disqus::META_DISQUS_IDENTIFIER,
+        DisqusIdentifier::PROPERTY_NAME,
         Slug::PROPERTY_NAME,
         PageKeywords::PROPERTY_NAME,
         CacheExpirationFrequency::PROPERTY_NAME,
@@ -570,4 +572,9 @@ abstract class Metadata
     {
         return [];
     }
+
+    public abstract function getValue();
+
+    public abstract function getDefaultValue();
+
 }

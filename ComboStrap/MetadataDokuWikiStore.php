@@ -158,10 +158,9 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      * @param $dokuWikiId
      * @param $name
      * @return mixed|null
-     * @deprecated we use now the {@link p_get_metadata()} function to {@link MetadataDokuWikiStore::getRawMetadatasFromWikiId()} retrieve the meta that {@link MetadataDokuWikiStore::getFlatMetadata()} the array
      */
     public
-    function getCurrentMetadata($name)
+    function getCurrentFromName($name)
     {
         $value = $this->getData()[self::CURRENT_METADATA][$name];
         /**

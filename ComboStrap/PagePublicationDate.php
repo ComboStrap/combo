@@ -87,12 +87,12 @@ class PagePublicationDate extends MetadataDateTime
         if (!($store instanceof MetadataDokuWikiStore)) {
             return parent::buildFromStoreValue($value);
         }
-        $value = $store->get($this);
+
         if ($value === null) {
             /**
              * Old metadata key
              */
-            $value = $store->getFromName($this->getResource(), PagePublicationDate::OLD_META_KEY);
+            $value = $store->getFromName(PagePublicationDate::OLD_META_KEY);
         }
 
         try {

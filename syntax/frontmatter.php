@@ -167,7 +167,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             &&
             $page->getPageId() !== null
         ) {
-            $originalFrontMatter->setFromName($page, PageId::PROPERTY_NAME, $page->getPageId());
+            $originalFrontMatter->setFromName(PageId::PROPERTY_NAME, $page->getPageId());
         }
 
         /**

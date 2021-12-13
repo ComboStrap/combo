@@ -171,9 +171,10 @@ class DatabasePage
 
         $this->replicateBacklinkPages();
 
+        $store = MetadataDbStore::createForPage($this->page);
         Aliases::createForPage($this->page)
             ->buildFromStore()
-            ->setStore(MetadataDbStore::createForPage())
+            ->setStore($store)
             ->persist();
 
         /**

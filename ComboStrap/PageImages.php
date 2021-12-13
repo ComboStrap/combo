@@ -336,7 +336,7 @@ class PageImages extends MetadataTabular
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
-        $relation = $store->getFromName($this->getResource(), 'relation');
+        $relation = $store->getCurrentFromName( 'relation');
         if (!isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
             return null;
         }

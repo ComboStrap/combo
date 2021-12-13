@@ -103,7 +103,7 @@ class MetadataStoreTransfer
              * Unknown meta
              */
             if ($metadata === null) {
-                $this->targetStore->setFromName($this->page, $name, $value);
+                $this->targetStore->setFromName($name, $value);
                 $this->normalizedData[$name] = $value;
             }
             /**

@@ -477,6 +477,7 @@ class Page extends ResourceComboAbs
     public
     function rebuild(): Page
     {
+        $this->store = null;
         $this->buildPropertiesFromFileSystem();
         $this->databasePage = null;
         return $this;
@@ -493,7 +494,7 @@ class Page extends ResourceComboAbs
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
-        $metadata = $store->getFromName($this, 'relation');
+        $metadata = $store->getCurrentFromName( 'relation');
         if ($metadata === null) {
             /**
              * Happens when no rendering has been made
@@ -736,7 +737,7 @@ class Page extends ResourceComboAbs
         }
         $medias = [];
 
-        $relation = $store->getFromName($this, 'relation');
+        $relation = $store->getCurrentFromName( 'relation');
         if (isset($relation['media'])) {
             /**
              * The relation is
@@ -810,7 +811,7 @@ class Page extends ResourceComboAbs
             return null;
         }
 
-        return $store->getFromName($this, 'creator');
+        return $store->getFromName( 'creator');
     }
 
     /**
@@ -826,7 +827,7 @@ class Page extends ResourceComboAbs
             return null;
         }
 
-        return $store->getFromName($this, 'user');
+        return $store->getFromName( 'user');
 
     }
 

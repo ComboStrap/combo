@@ -46,7 +46,7 @@ class PageUrlPath extends MetadataWikiPath
 
     public function getTab(): string
     {
-        return \action_plugin_combo_metamanager::TAB_REDIRECTION_VALUE;
+        return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
     public function getValue(): ?string

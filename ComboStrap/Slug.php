@@ -2,6 +2,7 @@
 
 
 use ComboStrap\DokuPath;
+use ComboStrap\MetaManagerForm;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataWikiPath;
 use ComboStrap\PageTitle;
@@ -45,7 +46,7 @@ class Slug extends MetadataWikiPath
 
     public function getTab(): string
     {
-        return action_plugin_combo_metamanager::TAB_REDIRECTION_VALUE;
+        return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
     public function getDescription(): string

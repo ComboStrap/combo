@@ -268,7 +268,7 @@ class PageImages extends MetadataTabular
 
     public function getTab(): string
     {
-        return \action_plugin_combo_metamanager::TAB_IMAGE_VALUE;
+        return MetaManagerForm::TAB_IMAGE_VALUE;
     }
 
     public function getDataType(): string

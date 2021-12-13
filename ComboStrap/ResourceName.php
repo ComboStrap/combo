@@ -18,7 +18,7 @@ class ResourceName extends MetadataText
 
     public function getTab(): string
     {
-        return \action_plugin_combo_metamanager::TAB_PAGE_VALUE;
+        return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
     public function getDescription(): string

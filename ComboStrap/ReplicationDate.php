@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\MetaManagerForm;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDateTime;
 use ComboStrap\Page;
@@ -22,7 +23,7 @@ class ReplicationDate extends MetadataDateTime
 
     public function getTab(): string
     {
-        return action_plugin_combo_metamanager::TAB_INTEGRATION_VALUE;
+        return MetaManagerForm::TAB_INTEGRATION_VALUE;
     }
 
     public function getDescription(): string

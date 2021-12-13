@@ -17,7 +17,7 @@ class Locale extends MetadataText
 
     public function getTab(): string
     {
-        return \action_plugin_combo_metamanager::TAB_LANGUAGE_VALUE;
+        return MetaManagerForm::TAB_LANGUAGE_VALUE;
     }
 
     public function getDescription(): string

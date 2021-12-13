@@ -96,7 +96,7 @@ class CacheExpirationDate extends MetadataDateTime
 
     public function getTab(): string
     {
-        return \action_plugin_combo_metamanager::TAB_CACHE_VALUE;
+        return MetaManagerForm::TAB_CACHE_VALUE;
     }
 
     public function getDescription(): string

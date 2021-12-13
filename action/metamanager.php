@@ -24,6 +24,7 @@ use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFormDataStore;
 use ComboStrap\MetadataStoreTransfer;
+use ComboStrap\MetaManagerForm;
 use ComboStrap\MetaManagerMenuItem;
 use ComboStrap\Mime;
 use ComboStrap\Page;
@@ -65,15 +66,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     //data type
     // width of the label / element
 
-    const TAB_TYPE_VALUE = "type";
-    const TAB_QUALITY_VALUE = "quality";
-    const TAB_PAGE_VALUE = "page";
-    const TAB_LANGUAGE_VALUE = "language";
-    const TAB_INTEGRATION_VALUE = "integration";
-    const TAB_IMAGE_VALUE = "image";
-    const TAB_REDIRECTION_VALUE = "redirection";
-    const TAB_CACHE_VALUE = "cache";
-
     /**
      * The canonical for the metadata page
      */
@@ -81,47 +73,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     const SUCCESS_MESSAGE = "The data were updated without errors.";
 
-    private static function buildFormMetaFieldRecursively(FormMetaField &$field, Metadata $metadata)
-    {
-
-
-        $field->setType($metadata->getDataType())
-            ->setTab($metadata->getTab())
-            ->setCanonical($metadata->getCanonical())
-            ->setLabel($metadata->getLabel())
-            ->setDescription($metadata->getDescription());
-        $childrenMetadata = $metadata->getChildren();
-        if ($childrenMetadata === null) {
-
-            // Data
-            $sourceStore = MetadataDokuWikiStore::createForPage($metadata->getResource());
-            $targetStore = MetadataFormDataStore::createForPage($metadata->getResource());
-            $metadata
-                ->setStore($sourceStore)
-                ->buildFromStore()
-                ->setStore($targetStore);
-            $value = $metadata->toStoreValue();
-            $defaultValue = $metadata->toStoreValue();
-            $field
-                ->setMutable($metadata->getMutable())
-                ->addValue($value, $defaultValue);
-
-            $formControlWidth = $metadata->getFormControlWidth();
-            if ($formControlWidth !== null) {
-                $field->setWidth($formControlWidth);
-            }
-            $possibleValues = $metadata->getPossibleValues();
-            if ($possibleValues !== null) {
-                $field->setDomainValues($possibleValues);
-            }
-        } else {
-            foreach ($childrenMetadata as $childMetadata) {
-                $childField = FormMetaField::create($childMetadata->getName());
-                $field->addColumn($childField);
-                self::buildFormMetaFieldRecursively($childField, $childMetadata);
-            }
-        }
-    }
 
 
     public function register(Doku_Event_Handler $controller)
@@ -343,7 +294,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private
     function handleManagerGet(Doku_Event $event, Page $page)
     {
-        $formMeta = $this->getFormMetadataForPage($page);
+        $formMeta = MetaManagerForm::createForPage($page)->toFormMeta();
         $payload = json_encode($formMeta->toAssociativeArray());
         HttpResponse::create(HttpResponse::STATUS_ALL_GOOD)
             ->setEvent($event)
@@ -496,132 +447,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
 
     }
 
-    /**
-     * @param Page $page
-     * @return FormMeta
-     * @throws ExceptionCombo
-     */
-    static function getFormMetadataForPage(Page $page): FormMeta
-    {
-
-        /**
-         * Case when the page was changed externally
-         * with a new frontmatter
-         * The frontmatter data should be first replicated into the metadata file
-         */
-        if (!$page->isParseCacheUsable()) {
-            $page->parse();
-        }
-
-        /**
-         * Creation
-         */
-        $formMeta = FormMeta::create($page->getDokuwikiId())
-            ->setType(FormMeta::FORM_NAV_TABS_TYPE);
-
-
-        $formsMetadata = [
-            ResourceName::PROPERTY_NAME,
-            PageTitle::PROPERTY_NAME,
-            PageH1::PROPERTY_NAME,
-            PageDescription::PROPERTY_NAME,
-            PageKeywords::PROPERTY_NAME,
-            PagePath::PROPERTY_NAME,
-            Canonical::PROPERTY_NAME,
-            Slug::PROPERTY_NAME,
-            PageUrlPath::PROPERTY_NAME,
-            PageLayout::PROPERTY_NAME,
-            ModificationDate::PROPERTY_NAME,
-            PageCreationDate::PROPERTY_NAME,
-            PageImages::PROPERTY_NAME,
-            Aliases::PROPERTY_NAME,
-            PageType::PROPERTY_NAME,
-            PagePublicationDate::PROPERTY_NAME,
-            StartDate::PROPERTY_NAME,
-            EndDate::PROPERTY_NAME,
-            LdJson::PROPERTY_NAME,
-            LowQualityPageOverwrite::PROPERTY_NAME,
-            QualityDynamicMonitoringOverwrite::PROPERTY_NAME,
-            \ComboStrap\Locale::PROPERTY_NAME,
-            Lang::PROPERTY_NAME,
-            Region::PROPERTY_NAME,
-            ReplicationDate::PROPERTY_NAME,
-            PageId::PROPERTY_NAME,
-            CacheExpirationFrequency::PROPERTY_NAME,
-            CacheExpirationDate::PROPERTY_NAME,
-        ];
-
-        /**
-         * The manager
-         */
-        foreach ($formsMetadata as $formsMetaDatum) {
-
-            $metadata = Metadata::getForName($formsMetaDatum);
-            if ($metadata === null) {
-                LogUtility::msg("The metadata ($formsMetaDatum} was not found");
-                continue;
-            }
-            $metadata->setResource($page);
-            $field = FormMetaField::create($metadata->getName());
-            self::buildFormMetaFieldRecursively($field, $metadata);
-            $formMeta->addField($field);
-        }
-
-
-        /**
-         * Tabs (for whatever reason, javascript keep the order of the properties
-         * and therefore the order of the tabs)
-         */
-        $formMeta
-            ->addTab(
-                FormMetaTab::create(self::TAB_PAGE_VALUE)
-                    ->setLabel("Page")
-                    ->setWidthLabel(3)
-                    ->setWidthField(9)
-            )
-            ->addTab(
-                FormMetaTab::create(self::TAB_TYPE_VALUE)
-                    ->setLabel("Page Type")
-                    ->setWidthLabel(3)
-                    ->setWidthField(9)
-            )
-            ->addTab(
-                FormMetaTab::create(self::TAB_REDIRECTION_VALUE)
-                    ->setLabel("Redirection")
-                    ->setWidthLabel(3)
-                    ->setWidthField(9)
-            )
-            ->addTab(
-                FormMetaTab::create(self::TAB_IMAGE_VALUE)
-                    ->setLabel("Image")
-                    ->setWidthField(12)
-            )
-            ->addTab(
-                FormMetaTab::create(self::TAB_QUALITY_VALUE)
-                    ->setLabel("Quality")
-                    ->setWidthLabel(6)
-                    ->setWidthField(6)
-            )->addTab(
-                FormMetaTab::create(self::TAB_LANGUAGE_VALUE)
-                    ->setLabel("Language")
-                    ->setWidthLabel(2)
-                    ->setWidthField(10)
-            )->addTab(
-                FormMetaTab::create(self::TAB_INTEGRATION_VALUE)
-                    ->setLabel("Integration")
-                    ->setWidthLabel(4)
-                    ->setWidthField(8)
-            )->addTab(
-                FormMetaTab::create(self::TAB_CACHE_VALUE)
-                    ->setLabel("Cache")
-                    ->setWidthLabel(6)
-                    ->setWidthField(6)
-            );
-
-
-        return $formMeta;
-
-    }
 
 
 }

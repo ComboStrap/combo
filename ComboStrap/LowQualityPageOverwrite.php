@@ -28,7 +28,7 @@ class LowQualityPageOverwrite extends MetadataBoolean
 
     public function getTab(): string
     {
-        return \action_plugin_combo_metamanager::TAB_QUALITY_VALUE;
+        return MetaManagerForm::TAB_QUALITY_VALUE;
     }
 
     public function getDescription(): string

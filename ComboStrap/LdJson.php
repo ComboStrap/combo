@@ -128,7 +128,7 @@ class LdJson extends MetadataJson
 
     public function getTab(): string
     {
-        return \action_plugin_combo_metamanager::TAB_TYPE_VALUE;
+        return MetaManagerForm::TAB_TYPE_VALUE;
     }
 
 

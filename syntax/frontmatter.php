@@ -152,6 +152,11 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             }
         } else {
             $contentWithoutFrontMatter = DOKU_LF . $content;
+            try {
+                $originalFrontMatter = MetadataFrontmatterStore::createFromFrontmatter($page);
+            } catch (ExceptionCombo $e) {
+                // no string, the frontmatter is good
+            }
         }
 
         if ($updateFrontMatter === 0) {

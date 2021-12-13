@@ -52,7 +52,7 @@ class DisqusIdentifier extends MetadataText
         return true;
     }
 
-    public function getDefaultValue(): string
+    public function getDefaultValue(): ?string
     {
 
         return $this->getResource()->getUid()->getValueOrDefault();

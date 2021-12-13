@@ -81,11 +81,11 @@ class PagePublicationDate extends MetadataDateTime
     }
 
 
-    public function buildFromStore(): MetadataDateTime
+    public function buildFromStoreValue($value): Metadata
     {
         $store = $this->getStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
-            return parent::buildFromStore();
+            return parent::buildFromStoreValue($value);
         }
         $value = $store->get($this);
         if ($value === null) {
@@ -94,11 +94,13 @@ class PagePublicationDate extends MetadataDateTime
              */
             $value = $store->getFromName($this->getResource(), PagePublicationDate::OLD_META_KEY);
         }
+
         try {
-            $this->setFromStoreValue($value);
+            $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
         } catch (ExceptionCombo $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
         }
+
         return $this;
     }
 

@@ -16,7 +16,7 @@ class PageCreationDate extends MetadataDateTime
 
 
     public const PROPERTY_NAME = 'date_created';
-    const DOKUWIKI_MAIN_KEY = 'date';
+    const DATE_DOKUWIKI_PROPERTY_NAME = 'date';
     const DOKUWIKI_SUB_KEY = 'created';
 
 
@@ -38,7 +38,6 @@ class PageCreationDate extends MetadataDateTime
     }
 
     /**
-     * @throws ExceptionCombo
      */
     public function buildFromStore(): MetadataDateTime
     {
@@ -49,7 +48,8 @@ class PageCreationDate extends MetadataDateTime
             return parent::buildFromStore();
         }
 
-        $createdMeta = $store->getFromName($this->getResource(), self::DOKUWIKI_MAIN_KEY)[self::DOKUWIKI_SUB_KEY];
+        $fromName = $store->getFromName(self::DATE_DOKUWIKI_PROPERTY_NAME);
+        $createdMeta = $fromName[self::DOKUWIKI_SUB_KEY];
         if (empty($createdMeta)) {
             return $this;
         }
@@ -71,7 +71,7 @@ class PageCreationDate extends MetadataDateTime
             return null;
         }
         return array(
-            self::DOKUWIKI_MAIN_KEY => [self::DOKUWIKI_SUB_KEY => $value->getTimestamp()]
+            self::DATE_DOKUWIKI_PROPERTY_NAME => [self::DOKUWIKI_SUB_KEY => $value->getTimestamp()]
         );
     }
 

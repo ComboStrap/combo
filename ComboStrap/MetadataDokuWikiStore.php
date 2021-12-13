@@ -106,7 +106,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      */
     public function getFromName(string $name, $default = null)
     {
-        $wikiId = $this->getResource();
+        $wikiId = $this->getResource()->getDokuwikiId();
         return $this->getFromWikiId($wikiId, $name, $default);
     }
 
@@ -215,6 +215,8 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         }
         if ($oldValue !== $value) {
 
+
+            $this->data[self::PERSISTENT_METADATA][$key]=$value;
             /**
              * Metadata in Dokuwiki is fucked up.
              *

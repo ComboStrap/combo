@@ -12,7 +12,7 @@ abstract class MetadataDateTime extends MetadataScalar
     /**
      * @var DateTime
      */
-    private $dateTimeValue;
+    protected $dateTimeValue;
 
 
     /**
@@ -71,7 +71,7 @@ abstract class MetadataDateTime extends MetadataScalar
     /**
      * @throws ExceptionCombo
      */
-    private function fromPersistentDateTimeUtility($value)
+    protected function fromPersistentDateTimeUtility($value)
     {
         if ($value === null || $value === "") {
             return null;

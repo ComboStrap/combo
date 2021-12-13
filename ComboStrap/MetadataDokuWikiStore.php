@@ -133,7 +133,6 @@ class MetadataDokuWikiStore implements MetadataStore
      * @param $dokuwikiId
      * @param $name
      * @return mixed|null
-     * @deprecated we use the {@link p_get_metadata()} directly
      */
     private function getPersistentMetadata($dokuwikiId, $name)
     {
@@ -304,7 +303,14 @@ class MetadataDokuWikiStore implements MetadataStore
         if ($value !== null) {
             return $value;
         }
-        $value = p_get_metadata($dokuwikiId, $name);
+
+        /**
+         * {@link p_get_metadata} flat out the metadata array and we loose the
+         * persistent and current information
+         * Because there may be already a metadata in current for instance title
+         * It will be returned, but we want only the persistent
+         */
+        $value = $this->getPersistentMetadata($dokuwikiId, $name);
 
         /**
          * Empty string return the default (null)

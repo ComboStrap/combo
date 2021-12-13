@@ -72,6 +72,7 @@ abstract class MetadataText extends MetadataScalar
     public function buildFromStoreValue($value): Metadata
     {
         if ($value === null || $value === "") {
+            $this->value = null;
             return $this;
         }
         if (!is_string($value)) {

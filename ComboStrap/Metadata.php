@@ -234,6 +234,7 @@ abstract class Metadata
     /** @noinspection PhpMissingReturnTypeInspection */
     public function buildFromStore()
     {
+        $this->wasBuild = true;
         $metadataStore = $this->getStore();
         if ($metadataStore === null) {
             LogUtility::msg("The metadata store is unknown. You need to define a resource or a store to build from it");

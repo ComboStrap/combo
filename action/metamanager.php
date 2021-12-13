@@ -337,6 +337,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     /**
      * @param Doku_Event $event
      * @param Page $page
+     * @throws ExceptionCombo
      */
     private
     function handleManagerGet(Doku_Event $event, Page $page)

@@ -57,8 +57,11 @@ class PageImages extends MetadataTabular
     /**
      * @return array
      */
-    private function toMetadataArray(): array
+    private function toMetadataArray(): ?array
     {
+        if ($this->pageImages === null) {
+            return null;
+        }
         $pageImagesMeta = [];
         ksort($this->pageImages);
         foreach ($this->pageImages as $pageImage) {
@@ -161,7 +164,7 @@ class PageImages extends MetadataTabular
     /**
      * @throws ExceptionCombo
      */
-    public function toStoreValue(): array
+    public function toStoreValue(): ?array
     {
         $this->buildCheck();
         $store = $this->getStore();

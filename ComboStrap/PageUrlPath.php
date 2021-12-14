@@ -54,43 +54,19 @@ class PageUrlPath extends MetadataWikiPath
 
         $page = $this->getResource();
         if (!($page instanceof Page)) {
-            LogUtility::msg("The Url Path is not implemented for the resource type (" . get_class($page) . ")");
+            LogUtility::msg("The Url Path is not implemented for the resource type (" . $page->getType() . ")");
             return null;
         }
 
         /**
          * Type of Url
          */
-        $urlType = PageUrlType::getOrCreateForPage($page)->getValueOrDefault();
-        $pagePath = $page->getPath()->toString();
-        switch ($urlType) {
-            case PageUrlType::CONF_VALUE_PAGE_PATH:
-                // the default
-                return $pagePath;
-            case PageUrlType::CONF_VALUE_PERMANENT_PAGE_PATH:
-                return $this->toPermanentUrlPath($pagePath);
-            case PageUrlType::CONF_VALUE_CANONICAL_PATH:
-                return $page->getCanonicalOrDefault();
-            case PageUrlType::CONF_VALUE_PERMANENT_CANONICAL_PATH:
-                return $this->toPermanentUrlPath($page->getCanonicalOrDefault());
-            case PageUrlType::CONF_VALUE_SLUG:
-                return $this->toPermanentUrlPath($page->getSlugOrDefault());
-            case PageUrlType::CONF_VALUE_HIERARCHICAL_SLUG:
-                $urlPath = $page->getSlugOrDefault();
-                while (($parent = $page->getParentPage()) != null) {
-                    $urlPath = Slug::toSlugPath($parent->getNameOrDefault()) . $urlPath;
-                }
-                return $this->toPermanentUrlPath($urlPath);
-            case PageUrlType::CONF_VALUE_HOMED_SLUG:
-                $urlPath = $page->getSlugOrDefault();
-                if (($parent = $page->getParentPage()) != null) {
-                    $urlPath = Slug::toSlugPath($parent->getNameOrDefault()) . $urlPath;
-                }
-                return $this->toPermanentUrlPath($urlPath);
-            default:
-                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
-                return null;
+        $urlType = PageUrlType::getOrCreateForPage($page)->getValue();
+        $urlTypeDefault = PageUrlType::getOrCreateForPage($page)->getDefaultValue();
+        if ($urlType === $urlTypeDefault) {
+            return null;
         }
+        return $this->getUrlPathFromType($urlType);
 
     }
 
@@ -122,7 +98,10 @@ class PageUrlPath extends MetadataWikiPath
 
     public function getDefaultValue()
     {
-        return $this->getResource()->getPath()->toString();
+
+        $urlTypeDefault = PageUrlType::getOrCreateForPage($this->getResource())->getDefaultValue();
+        return $this->getUrlPathFromType($urlTypeDefault);
+
     }
 
     public function getCanonical(): string
@@ -208,6 +187,45 @@ class PageUrlPath extends MetadataWikiPath
             return $resource;
         }
         return null;
+    }
+
+    private function getUrlPathFromType(?string $urlType)
+    {
+        $page = $this->getResource();
+        if((!$page instanceof Page)){
+            LogUtility::msg("The url path is only for page resources", LogUtility::LVL_MSG_ERROR, $this->getCanonical());
+            return null;
+        }
+
+        $pagePath = $page->getPath()->toString();
+        switch ($urlType) {
+            case PageUrlType::CONF_VALUE_PAGE_PATH:
+                // the default
+                return $pagePath;
+            case PageUrlType::CONF_VALUE_PERMANENT_PAGE_PATH:
+                return $this->toPermanentUrlPath($pagePath);
+            case PageUrlType::CONF_VALUE_CANONICAL_PATH:
+                return $page->getCanonicalOrDefault();
+            case PageUrlType::CONF_VALUE_PERMANENT_CANONICAL_PATH:
+                return $this->toPermanentUrlPath($page->getCanonicalOrDefault());
+            case PageUrlType::CONF_VALUE_SLUG:
+                return $this->toPermanentUrlPath($page->getSlugOrDefault());
+            case PageUrlType::CONF_VALUE_HIERARCHICAL_SLUG:
+                $urlPath = $page->getSlugOrDefault();
+                while (($parent = $page->getParentPage()) != null) {
+                    $urlPath = Slug::toSlugPath($parent->getNameOrDefault()) . $urlPath;
+                }
+                return $this->toPermanentUrlPath($urlPath);
+            case PageUrlType::CONF_VALUE_HOMED_SLUG:
+                $urlPath = $page->getSlugOrDefault();
+                if (($parent = $page->getParentPage()) != null) {
+                    $urlPath = Slug::toSlugPath($parent->getNameOrDefault()) . $urlPath;
+                }
+                return $this->toPermanentUrlPath($urlPath);
+            default:
+                LogUtility::msg("The url type ($urlType) is unknown and was unexpected", LogUtility::LVL_MSG_ERROR, self::PROPERTY_NAME);
+                return null;
+        }
     }
 
 }

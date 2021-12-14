@@ -15,7 +15,7 @@ class PagePath extends MetadataWikiPath
 {
 
 
-    public const DATE_CREATED = 'date_created';
+
     public const PROPERTY_NAME = "path";
 
 
@@ -50,7 +50,7 @@ class PagePath extends MetadataWikiPath
 
     public function getTab(): string
     {
-        return MetaManagerForm::TAB_PAGE_VALUE;
+        return MetaManagerForm::TAB_REDIRECTION_VALUE;
     }
 
     public function getDescription(): string
@@ -67,4 +67,11 @@ class PagePath extends MetadataWikiPath
     {
         return false;
     }
+
+    public function getCanonical(): string
+    {
+        return self::PROPERTY_NAME;
+    }
+
+
 }

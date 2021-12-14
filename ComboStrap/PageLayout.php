@@ -58,4 +58,11 @@ class PageLayout extends MetadataText
     {
         return self::HOLY_LAYOUT_VALUE;
     }
+
+    public function getCanonical(): string
+    {
+        return self::PROPERTY_NAME;
+    }
+
+
 }

@@ -19,6 +19,12 @@ class Slug extends MetadataWikiPath
             ->setResource($resource);
     }
 
+    public function getCanonical(): string
+    {
+        return self::PROPERTY_NAME;
+    }
+
+
     public static function toSlugPath($string): ?string
     {
         if (empty($string)) return null;

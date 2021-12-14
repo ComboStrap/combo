@@ -15,10 +15,7 @@ class PageImages extends MetadataTabular
     public const FIRST_IMAGE_META_RELATION = "firstimage";
 
 
-    /**
-     * @var PageImage[] with path as key
-     */
-    private $pageImages;
+
 
 
     /**
@@ -298,11 +295,6 @@ class PageImages extends MetadataTabular
         return Image::createImageFromId($firstImageId);
 
 
-    }
-
-    public function valueIsNotNull(): bool
-    {
-        return $this->pageImages !== null;
     }
 
 

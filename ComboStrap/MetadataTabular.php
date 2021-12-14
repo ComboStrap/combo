@@ -92,7 +92,7 @@ abstract class MetadataTabular extends Metadata
             // Single value
             if (is_string($item)) {
                 $identifierMetadata = Metadata::toChildMetadataObject($identifierMetadataClass, $this)
-                    ->buildFromStoreValue($value);
+                    ->buildFromStoreValue($item);
                 $this->rows[$item] = [$identifierName => $identifierMetadata];
                 continue;
             }
@@ -129,4 +129,8 @@ abstract class MetadataTabular extends Metadata
     }
 
 
+    public function valueIsNotNull(): bool
+    {
+        return $this->rows !== null;
+    }
 }

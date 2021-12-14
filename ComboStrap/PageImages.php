@@ -4,7 +4,6 @@
 namespace ComboStrap;
 
 
-
 class PageImages extends MetadataTabular
 {
 
@@ -13,9 +12,6 @@ class PageImages extends MetadataTabular
     public const PROPERTY_NAME = 'image';
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
     public const FIRST_IMAGE_META_RELATION = "firstimage";
-
-
-
 
 
     /**
@@ -184,19 +180,16 @@ class PageImages extends MetadataTabular
      */
     public function addImage(string $wikiImagePath, $usages = null): PageImages
     {
-        DokuPath::addRootSeparatorIfNotPresent($wikiImagePath);
-        $pageImage = PageImage::create($wikiImagePath, $this->getResource());
-        if (!$pageImage->getImage()->exists()) {
-            throw new ExceptionCombo("The image ($wikiImagePath) does not exists", $this->getCanonical());
-        }
-        if ($usages !== null) {
-            if (is_string($usages)) {
-                $usages = explode(",", $usages);
-            }
-            $pageImage->setUsages($usages);
-        }
 
-        $this->pageImages[$wikiImagePath] = $pageImage;
+        $pageImagePath = PageImagePath::createFromParent($this)
+            ->setFromStoreValue($wikiImagePath);
+        $row[PageImagePath::getPersistentName()] = $pageImagePath;
+        if ($usages !== null) {
+            $pageImageUsage = PageImageUsage::createFromParent($this)
+                ->setFromStoreValue($usages);
+            $row[PageImageUsage::getPersistentName()] = $pageImageUsage;
+        }
+        $this->rows[] = $row;
 
         /**
          * What fucked up is fucked up
@@ -296,7 +289,6 @@ class PageImages extends MetadataTabular
 
 
     }
-
 
 
     function getChildren(): array

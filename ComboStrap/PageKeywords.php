@@ -8,7 +8,7 @@ class PageKeywords extends MetadataArray
 {
 
     public const PROPERTY_NAME = "keywords";
-    const SEPARATOR = ",";
+
 
     public static function createForPage(Page $page)
     {
@@ -104,32 +104,14 @@ class PageKeywords extends MetadataArray
     public function buildFromStoreValue($value): Metadata
     {
         try {
-            $this->array = $this->toArray($value);
+            $this->array = $this->toArrayOrNull($value);
         } catch (ExceptionCombo $e) {
             LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getMessage());
         }
         return $this;
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    private function toArray($value)
-    {
-        if ($value === null || $value === "") {
-            return null;
-        }
 
-        if (is_array($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return explode(self::SEPARATOR, $value);
-        }
-
-        throw new ExceptionCombo("The keywords value is not an array or a string (value: $value)");
-    }
 
     public function getCanonical(): string
     {

@@ -88,5 +88,10 @@ class PageImageUsage extends MetadataArray
         return 4;
     }
 
+    public function getPossibleValues(): ?array
+    {
+        return static::getUsageValues();
+    }
+
 
 }

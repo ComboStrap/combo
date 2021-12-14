@@ -21,7 +21,7 @@ abstract class MetadataTabular extends Metadata
      * @var Metadata[][]
      * Each row has the key has value
      */
-    private $rows;
+    protected $rows;
 
     public function getDefaultValue()
     {

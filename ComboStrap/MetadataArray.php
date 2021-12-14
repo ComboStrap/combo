@@ -39,7 +39,8 @@ abstract class MetadataArray extends Metadata
         return $this->array;
     }
 
-    public function getDefaultValue(){
+    public function getDefaultValue()
+    {
         return null;
     }
 
@@ -77,33 +78,62 @@ abstract class MetadataArray extends Metadata
         return ",";
     }
 
-    public function buildFromStoreValue($value): Metadata
+    /**
+     * @throws ExceptionCombo
+     */
+    public function setFromStoreValue($value): Metadata
     {
+        $values = $this->toArrayOrNull($value);
+        $possibleValues = $this->getPossibleValues();
+        if ($possibleValues !== null) {
+            foreach ($values as $value) {
+                if (!in_array($value, $possibleValues)) {
+                    throw new ExceptionCombo("The value ($value) for ($this) is not a possible value (" . implode(",",$possibleValues) . ")", $this->getCanonical());
+                }
+            }
+        }
+        $this->array = $values;
+        return $this;
+    }
 
-        if($value===null){
-            return $this;
+    /**
+     * @throws ExceptionCombo
+     */
+    protected function toArrayOrNull($value): ?array
+    {
+        if ($value === null || $value === "") {
+            return null;
         }
 
         /**
          * Array
          */
         if (is_array($value)) {
-            $this->array = $value;
-            return $this;
+            return $value;
         }
 
         /**
          * String
          */
         if (!is_string($value)) {
-            LogUtility::msg("The value is not an array, nor a string");
+            LogUtility::msg("The value for $this is not an array, nor a string (value: $value)");
         }
         $stringSeparator = $this->getStringSeparator();
         if ($stringSeparator === null) {
             LogUtility::msg("This array value is a string but has no separator defined. Value: $value");
         }
-        $this->array = explode($stringSeparator, $value);
+        return explode($stringSeparator, $value);
 
+    }
+
+
+    public function buildFromStoreValue($value): Metadata
+    {
+        try {
+            $this->array = $this->toArrayOrNull($value);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), $e->getCanonical());
+        }
         return $this;
 
     }

@@ -336,7 +336,7 @@ class LdJson extends MetadataJson
                 $ldJson = array(
                     "@context" => "https://schema.org",
                     "@type" => "Event");
-                $eventName = $page->getPageName();
+                $eventName = $page->getName();
                 if (!blank($eventName)) {
                     $ldJson["name"] = $eventName;
                 } else {

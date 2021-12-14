@@ -23,7 +23,13 @@ class ResourceName extends MetadataText
 
     public function getDescription(): string
     {
-        return "The name is the shortest description. It should be at maximum a couple of words long. It's used mainly in navigational components.";
+        $resourceCombo = $this->getResource();
+        $resourceType = $resourceCombo->getType();
+        $desc = "The $resourceType name is the shortest $resourceType description. It should be at maximum a couple of words long.";
+        if ($resourceType === Page::TYPE) {
+            $desc = $desc . " It's used mainly in navigational components.";
+        }
+        return $desc;
     }
 
     public function getLabel(): string
@@ -52,9 +58,9 @@ class ResourceName extends MetadataText
         $resourceCombo = $this->getResource();
 
         $pathName = $resourceCombo->getPath()->getLastNameWithoutExtension();
-        switch ($resourceCombo->getResourceType()) {
+        switch ($resourceCombo->getType()) {
 
-            case Page::RESOURCE_TYPE:
+            case Page::TYPE:
                 /**
                  * If this is a home page, the default
                  * is the parent path name

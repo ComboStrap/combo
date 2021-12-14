@@ -69,7 +69,13 @@ abstract class Media extends ResourceComboAbs
         return $this->path;
     }
 
-    public function getName()
+    public function getName(): ?string
+    {
+        return ResourceName::createForResource($this)
+            ->getValue();
+    }
+
+    public function getNameOrDefault(): string
     {
         return ResourceName::createForResource($this)
             ->getValueOrDefault();
@@ -92,7 +98,7 @@ abstract class Media extends ResourceComboAbs
         throw new ExceptionComboRuntime("To implement");
     }
 
-    function getResourceType(): string
+    function getType(): string
     {
         return self::RESOURCE_TYPE;
     }

@@ -62,7 +62,7 @@ class PageTitle extends MetadataText
             if (!empty($resource->getH1OrDefault())) {
                 return $resource->getH1OrDefault();
             }
-            return $resource->getPageNameOrDefault();
+            return $resource->getNameOrDefault();
         }
         return null;
 

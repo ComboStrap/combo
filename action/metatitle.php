@@ -37,7 +37,7 @@ class action_plugin_combo_metatitle extends DokuWiki_Action_Plugin
         // Namespace name
         $parentPage = $currentPage->getParentPage();
         if($parentPage!=null){
-            $pageTitle .= self::TITLE_SEPARATOR . $parentPage->getPageNameOrDefault();
+            $pageTitle .= self::TITLE_SEPARATOR . $parentPage->getNameOrDefault();
         }
         // Site name
         if (!empty(Site::getName())) {

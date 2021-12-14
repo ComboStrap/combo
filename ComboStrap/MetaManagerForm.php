@@ -188,7 +188,7 @@ class MetaManagerForm
                 ->buildFromStore()
                 ->setStore($this->targetStore);
             $value = $metadata->toStoreValue();
-            $defaultValue = $metadata->toStoreValue();
+            $defaultValue = $metadata->toStoreDefaultValue();
             $field
                 ->setMutable($metadata->getMutable())
                 ->addValue($value, $defaultValue);

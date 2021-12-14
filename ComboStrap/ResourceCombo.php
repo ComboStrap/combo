@@ -44,6 +44,18 @@ interface ResourceCombo
      * Used to locate the data in a datastore
      * The table name for instance
      */
-    function getResourceType(): string;
+    function getType(): string;
+
+    /**
+     * @return string - the resource name
+     * (ie {@link ResourceName}
+     */
+    function getName(): ?string;
+
+    /**
+     * @return string - the name but not null
+     */
+    function getNameOrDefault(): string;
+
 
 }

@@ -52,7 +52,7 @@ class Page extends ResourceComboAbs
      * When the value of a metadata has changed
      */
     const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
-    const RESOURCE_TYPE = "page";
+    const TYPE = "page";
 
 
     /**
@@ -1091,7 +1091,7 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
-    public function getPageName(): ?string
+    public function getName(): ?string
     {
 
         return $this->pageName->getValueFromStore();
@@ -1099,7 +1099,7 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function getPageNameOrDefault(): string
+    function getNameOrDefault(): string
     {
         return $this->pageName->getValueFromStoreOrDefault();
     }
@@ -2045,9 +2045,9 @@ class Page extends ResourceComboAbs
         return DokuPath::PATH_SEPARATOR . $this->getDokuwikiId();
     }
 
-    function getResourceType(): string
+    function getType(): string
     {
-        return self::RESOURCE_TYPE;
+        return self::TYPE;
     }
 
 }

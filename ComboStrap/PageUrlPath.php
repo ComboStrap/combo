@@ -78,13 +78,13 @@ class PageUrlPath extends MetadataWikiPath
             case PageUrlType::CONF_VALUE_HIERARCHICAL_SLUG:
                 $urlPath = $page->getSlugOrDefault();
                 while (($parent = $page->getParentPage()) != null) {
-                    $urlPath = Slug::toSlugPath($parent->getPageNameOrDefault()) . $urlPath;
+                    $urlPath = Slug::toSlugPath($parent->getNameOrDefault()) . $urlPath;
                 }
                 return $this->toPermanentUrlPath($urlPath);
             case PageUrlType::CONF_VALUE_HOMED_SLUG:
                 $urlPath = $page->getSlugOrDefault();
                 if (($parent = $page->getParentPage()) != null) {
-                    $urlPath = Slug::toSlugPath($parent->getPageNameOrDefault()) . $urlPath;
+                    $urlPath = Slug::toSlugPath($parent->getNameOrDefault()) . $urlPath;
                 }
                 return $this->toPermanentUrlPath($urlPath);
             default:

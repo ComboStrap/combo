@@ -83,11 +83,11 @@ class PageKeywords extends MetadataArray
         if (!($resource instanceof Page)) {
             return null;
         }
-        $keyWords = explode(" ", $resource->getPageNameOrDefault());
+        $keyWords = explode(" ", $resource->getNameOrDefault());
         $actualPage = $resource;
         while (($parentPage = $actualPage->getParentPage()) !== null) {
             if (!$parentPage->isRootHomePage()) {
-                $parentKeyWords = explode(" ", $parentPage->getPageNameOrDefault());
+                $parentKeyWords = explode(" ", $parentPage->getNameOrDefault());
                 $keyWords = array_merge($keyWords, $parentKeyWords);
             }
             $actualPage = $parentPage;

@@ -552,7 +552,7 @@ abstract class MediaLink
                 $mediaLink->addHtmlAttributeValue("href", $src);
                 $title = $media->getTitle();
                 if (empty($title)) {
-                    $title = $media->getName();
+                    $title = $media->getType();
                 }
                 return $mediaLink->toHtmlEnterTag("a") . $title . "</a>";
             case self::LINKING_NOLINK_VALUE:

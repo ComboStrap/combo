@@ -61,7 +61,7 @@ abstract class MetadataText extends MetadataScalar
     /**
      * @throws ExceptionCombo
      */
-    public function setFromStoreValue($value)
+    public function setFromStoreValue($value): Metadata
     {
         return $this->setValue($value);
     }
@@ -73,11 +73,16 @@ abstract class MetadataText extends MetadataScalar
             return $this;
         }
         if (!is_string($value)) {
-            LogUtility::msg("This value of a text metadata is not a string. ".var_export($value,true));
+            LogUtility::msg("This value of a text metadata is not a string. " . var_export($value, true));
             return $this;
         }
         $this->value = $value;
         return $this;
+    }
+
+    public function getDefaultValue()
+    {
+        return null;
     }
 
 

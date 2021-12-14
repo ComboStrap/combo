@@ -19,23 +19,13 @@ class PageImages extends MetadataTabular
      * @var PageImage[] with path as key
      */
     private $pageImages;
-    /**
-     * @var PageImageUsage
-     */
-    private $pageImageUsages;
-    /**
-     * @var PageImagePath
-     */
-    private $pageImagePath;
+
 
     /**
      * PageImages constructor.
      */
     public function __construct()
     {
-        $this->pageImagePath = PageImagePath::createFromParent($this);
-        $this->pageImageUsages = PageImageUsage::createFromParent($this);;
-
         parent::__construct();
     }
 
@@ -319,7 +309,7 @@ class PageImages extends MetadataTabular
 
     function getChildren(): array
     {
-        return [$this->pageImagePath, $this->pageImageUsages];
+        return [PageImagePath::class, PageImageUsage::class];
     }
 
     public function getUid(): string

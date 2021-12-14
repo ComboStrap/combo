@@ -37,10 +37,9 @@ abstract class MetadataDateTime extends MetadataScalar
     /**
      * @throws ExceptionCombo
      */
-    public function setFromStoreValue($value): MetadataDateTime
+    public function setFromStoreValue($value): Metadata
     {
-        $this->setValue($this->fromPersistentDateTimeUtility($value));
-        return $this;
+        return $this->setValue($this->fromPersistentDateTimeUtility($value));
     }
 
     public function toStoreDefaultValue(): ?string

@@ -21,14 +21,6 @@ class PageKeywords extends MetadataArray
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    public function setFromStoreValue($value): PageKeywords
-    {
-        $this->setValue($this->toArray($value));
-        return $this;
-    }
 
     public function getDataType(): string
     {

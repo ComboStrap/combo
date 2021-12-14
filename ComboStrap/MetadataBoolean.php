@@ -82,7 +82,7 @@ abstract class MetadataBoolean extends MetadataScalar
      * @throws ExceptionCombo
      */
     public
-    function setFromStoreValue($value)
+    function setFromStoreValue($value): Metadata
     {
         $value = $this->toBoolean($value);
         return $this->setValue($value);

@@ -101,7 +101,7 @@ class Lang extends MetadataText
     /**
      * @throws ExceptionCombo
      */
-    public function setFromStoreValue($value)
+    public function setFromStoreValue($value): Metadata
     {
 
         $this->validityCheck($value);

@@ -48,17 +48,7 @@ class PageImagePath extends MetadataWikiPath
         return true;
     }
 
-    public function getDefaultValue()
-    {
-        return null;
-    }
-
-    public function getValue(): ?string
-    {
-        return null;
-    }
-
-    public function getFormControlWidth()
+    public function getFormControlWidth(): int
     {
         return 8;
     }

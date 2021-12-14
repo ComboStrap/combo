@@ -51,12 +51,12 @@ abstract class Metadata
         $this->parent = $parent;
     }
 
-    public static function toMetadataObject($childClass): MetadataScalar
+    public static function toChildMetadataObject($childClass, $parent): Metadata
     {
-        if(!is_a($childClass,MetadataScalar::class)){
+        if (!is_subclass_of($childClass, Metadata::class)) {
             throw new ExceptionComboRuntime("The child class ($childClass) is not a metadata class");
         }
-        return new $childClass();
+        return new $childClass($parent);
     }
 
     public function getParent(): ?Metadata
@@ -329,7 +329,6 @@ abstract class Metadata
     public static abstract function getName(): string;
 
 
-
     /**
      * @return string|array|null the value to be persisted by the store
      * the reverse action is {@link Metadata::setFromStoreValue()}
@@ -558,6 +557,17 @@ abstract class Metadata
      */
     public abstract function buildFromStoreValue($value): Metadata;
 
+    /**
+     * If you have quality problem to throw, you can use this function
+     * instead of {@link Metadata::buildFromStoreValue()}
+     * @param $value
+     * @return Metadata
+     */
+    public function setFromStoreValue($value): Metadata
+    {
+        return $this->buildFromStoreValue($value);
+    }
+
 
     /**
      * The id of an entity metadata (ie if the metadata has children / is a {@link Metadata::$parent}
@@ -568,7 +578,7 @@ abstract class Metadata
      */
     public function getUid(): ?string
     {
-        if($this->getChildren()!==null){
+        if ($this->getChildren() !== null) {
             LogUtility::msg("An entity metadata should define a metadata that store the unique value");
         }
         return null;
@@ -578,7 +588,8 @@ abstract class Metadata
      * The width on a scale of 12 for the form field
      * @return null
      */
-    public function getFormControlWidth(){
+    public function getFormControlWidth()
+    {
         return null;
     }
 

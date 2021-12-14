@@ -20,8 +20,6 @@ abstract class MetadataScalar extends Metadata
 {
 
 
-
-
     public function getValueFromStore()
     {
         $this->buildFromStoreValue($this->getStore()->get($this));
@@ -59,7 +57,7 @@ abstract class MetadataScalar extends Metadata
     }
 
 
-    public function setFromStoreValue($value)
+    public function setFromStoreValue($value): Metadata
     {
         return $this->setValue($value);
     }

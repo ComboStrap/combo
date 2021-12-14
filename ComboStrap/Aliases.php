@@ -256,12 +256,6 @@ class Aliases extends Metadata
         return sizeof($aliases);
     }
 
-    public
-    function setFromStoreValue($value): Aliases
-    {
-        $this->buildFromStoreValue($value);
-        return $this;
-    }
 
 
     public

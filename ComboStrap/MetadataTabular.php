@@ -33,6 +33,7 @@ abstract class MetadataTabular extends Metadata
      */
     public function getValue(): ?array
     {
+        $this->buildCheck();
         return $this->rows;
     }
 
@@ -41,14 +42,25 @@ abstract class MetadataTabular extends Metadata
     public abstract function getDefaultValueForColumn(Metadata $childMetadata);
 
 
-    public function toStoreValue()
+    public function toStoreValue(): ?array
     {
-
+        $rowsArray = [];
+        foreach ($this->rows as $row) {
+            $rowArray = [];
+            foreach ($row as $col => $metadata) {
+                $toStoreValue = $metadata->toStoreValue();
+                if ($toStoreValue !== null) {
+                    $rowArray[$metadata::getPersistentName()] = $toStoreValue;
+                }
+            }
+            $rowsArray[] = $rowArray;
+        }
+        return $rowsArray;
     }
 
     public function buildFromStoreValue($value): Metadata
     {
-        if ($value == null) {
+        if ($value === null) {
             return $this;
         }
         /**
@@ -79,8 +91,8 @@ abstract class MetadataTabular extends Metadata
             }
             // Single value
             if (is_string($item)) {
-                $identifierMetadata = Metadata::toMetadataObject($identifierMetadataClass)
-                    ->setFromStoreValue($value);
+                $identifierMetadata = Metadata::toChildMetadataObject($identifierMetadataClass, $this)
+                    ->buildFromStoreValue($value);
                 $this->rows[$item] = [$identifierName => $identifierMetadata];
                 continue;
             }
@@ -89,18 +101,22 @@ abstract class MetadataTabular extends Metadata
             }
             $row = [];
             $idValue = null;
+            $childObjects = [];
+            foreach ($this->getChildren() as $childClass) {
+                $objects = Metadata::toChildMetadataObject($childClass, $this);
+                $childObjects[$objects::getPersistentName()] = $objects;
+            }
             foreach ($item as $colName => $colValue) {
-                foreach ($this->getChildren() as $childClass) {
-                    $childObject = Metadata::toMetadataObject($childClass);
-                    if ($childObject::getPersistentName() === $colName) {
-                        $childObject->setFromStoreValue($colValue);
-                        $row[$childClass->getPersistentName()] = $childObject;
-                        if ($childClass->getName() === $identifierName) {
-                            $idValue = $colValue;
-                        }
-                    }
+                $childObject = $childObjects[$colName];
+                if ($childObject === null) {
+                    LogUtility::msg("The column does not have a metadata definition");
+                    continue;
                 }
-                LogUtility::msg("The property name ($colName) is not a column name");
+                $childObject->buildFromStoreValue($colValue);
+                $row[$childObject::getPersistentName()] = $childObject;
+                if ($childObject::getPersistentName() === $identifierName) {
+                    $idValue = $colValue;
+                }
             }
             if ($idValue === null) {
                 LogUtility::msg("The value for the identifier ($identifierName) was not found");

@@ -84,4 +84,11 @@ class ModificationDate extends MetadataDateTime
         return PageCreationDate::createForPage($this->getResource())->getValue();
 
     }
+
+    public function getCanonical(): string
+    {
+        return Metadata::CANONICAL;
+    }
+
+
 }

@@ -11,8 +11,6 @@ class PageImagePath extends MetadataWikiPath
     const PROPERTY_NAME = "page-image-path";
 
 
-
-
     public static function createFromParent(Metadata $metadata): PageImagePath
     {
         return (new PageImagePath($metadata));
@@ -51,6 +49,11 @@ class PageImagePath extends MetadataWikiPath
     }
 
     public function getDefaultValue()
+    {
+        return null;
+    }
+
+    public function getValue(): ?string
     {
         return null;
     }

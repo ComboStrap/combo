@@ -8,11 +8,10 @@ use action_plugin_combo_metadescription;
 use ModificationDate;
 use ReplicationDate;
 use Slug;
-use syntax_plugin_combo_disqus;
 
 abstract class Metadata
 {
-    const CANONICAL = "page:metadata";
+    const CANONICAL = "metadata";
 
     public const NOT_MODIFIABLE_METAS = [
         "date",

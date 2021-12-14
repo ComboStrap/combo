@@ -17,5 +17,9 @@ abstract class MetadataTabular extends Metadata
         return null;
     }
 
+    public abstract function getColumnValues(Metadata $childMetadata);
+
+    public abstract function getDefaultValueForColumn(Metadata $childMetadata);
+
 
 }

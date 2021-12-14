@@ -5,7 +5,6 @@ namespace ComboStrap;
 
 
 use DateTime;
-use RuntimeException;
 
 abstract class MetadataDateTime extends MetadataScalar
 {
@@ -102,7 +101,7 @@ abstract class MetadataDateTime extends MetadataScalar
 
     public function getCanonical(): string
     {
-        return ":date";
+        return "date";
     }
 
     public function valueIsNotNull(): bool

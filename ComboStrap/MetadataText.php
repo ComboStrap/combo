@@ -25,9 +25,6 @@ abstract class MetadataText extends MetadataScalar
     public function getValue(): ?string
     {
         $this->buildCheck();
-        if (is_array($this->value)) {
-            throw new ExceptionComboRuntime("bad");
-        }
         return $this->value;
     }
 

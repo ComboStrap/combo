@@ -336,7 +336,7 @@ class PageImages extends MetadataTabular
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
-        $relation = $store->getCurrentFromName( 'relation');
+        $relation = $store->getCurrentFromName('relation');
         if (!isset($relation[PageImages::FIRST_IMAGE_META_RELATION])) {
             return null;
         }
@@ -363,29 +363,6 @@ class PageImages extends MetadataTabular
      */
     public function buildFromStoreValue($value): Metadata
     {
-        $store = $this->getStore();
-        if ($store instanceof MetadataFormDataStore) {
-            $formData = $store->getData();
-            $imagePaths = $formData[self::IMAGE_PATH];
-            if ($imagePaths !== null && $imagePaths !== "") {
-                $usages = $formData[PageImageUsage::IMAGE_USAGE];
-                $this->pageImages = [];
-                $counter = 0;
-                foreach ($imagePaths as $imagePath) {
-                    $usage = $usages[$counter];
-                    $usages = explode(",", $usage);
-                    if ($imagePath !== null && $imagePath !== "") {
-                        $this->pageImages[] = PageImage::create($imagePath, $this->getResource())
-                            ->setUsages($usages);
-                    }
-                    $counter++;
-                }
-            }
-            $this->checkImageExistence();
-            return $this;
-        }
-
-        // Default
         $this->pageImages = $this->toPageImageArray($value);
         return $this;
     }
@@ -401,4 +378,28 @@ class PageImages extends MetadataTabular
     }
 
 
+    public function getColumnValues(Metadata $childMetadata): array
+    {
+        $value = [];
+        if ($this->pageImages !== null) {
+            foreach ($this->pageImages as $pageImage) {
+                switch ($childMetadata->getName()) {
+                    case PageImagePath::PROPERTY_NAME:
+                        $value[] = $pageImage->getImage()->getPath()->toString();
+                        break;
+                    case PageImageUsage::PROPERTY_NAME:
+                        $value[] = implode(",", $pageImage->getUsages());
+                        break;
+                    default:
+                        LogUtility::msg("Child Metadata not known");
+                }
+            }
+        }
+        return $value;
+    }
+
+    public function getDefaultValueForColumn($childMetadata): array
+    {
+        // TODO: Implement getDefaultValueForColumn() method.
+    }
 }

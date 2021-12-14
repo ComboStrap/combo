@@ -122,4 +122,9 @@ class PageCreationDate extends MetadataDateTime
          */
         return false;
     }
+
+    public function getCanonical(): string
+    {
+        return Metadata::CANONICAL;
+    }
 }

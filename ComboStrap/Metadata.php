@@ -342,7 +342,9 @@ abstract class Metadata
      * see if the value set is the same than the default one
      * It this is the case, the data is not stored
      */
-    public abstract function toStoreDefaultValue();
+    public function toStoreDefaultValue(){
+        return $this->getDefaultValue();
+    }
 
     /**
      * Data that should persist (this data should be in a backup)

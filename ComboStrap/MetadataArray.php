@@ -8,6 +8,9 @@ namespace ComboStrap;
  * @package ComboStrap
  * An array, ie list of value metadata
  * Multiple select if the possible values are set
+ * Ie:
+ *   * keyword1, keyword2
+ *   * usage1, usage2, ...
  */
 abstract class MetadataArray extends Metadata
 {
@@ -62,13 +65,9 @@ abstract class MetadataArray extends Metadata
     public function toStoreValue()
     {
         $this->buildCheck();
-        return $this->array;
+        return implode($this->getStringSeparator(), $this->array);
     }
 
-    public function toStoreDefaultValue()
-    {
-        return $this->getDefaultValues();
-    }
 
     /**
      * @return string - the separator used when we receive a string
@@ -88,7 +87,7 @@ abstract class MetadataArray extends Metadata
         if ($possibleValues !== null) {
             foreach ($values as $value) {
                 if (!in_array($value, $possibleValues)) {
-                    throw new ExceptionCombo("The value ($value) for ($this) is not a possible value (" . implode(",",$possibleValues) . ")", $this->getCanonical());
+                    throw new ExceptionCombo("The value ($value) for ($this) is not a possible value (" . implode(",", $possibleValues) . ")", $this->getCanonical());
                 }
             }
         }

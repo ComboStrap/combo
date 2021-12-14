@@ -11,8 +11,8 @@ namespace ComboStrap;
 class PageImageUsage extends MetadataArray
 {
 
-    public const PERSISTENT_NAME = "usage"; // storage name
-    public const IMAGE_USAGE = "image-usage"; // unique name
+    public const PERSISTENT_NAME = "usage";  // storage name
+    const PROPERTY_NAME = "page-image-usage"; // unique property name
 
     /**
      * Constant values
@@ -24,6 +24,7 @@ class PageImageUsage extends MetadataArray
     public const TWITTER = "twitter";
     public const GOOGLE = "google";
     public const DEFAULT = PageImageUsage::ALL;
+
 
 
     public static function getUsageValues(): array
@@ -57,6 +58,11 @@ class PageImageUsage extends MetadataArray
     }
 
     public function getName(): string
+    {
+        return self::PROPERTY_NAME;
+    }
+
+    public function getPersistentName(): string
     {
         return self::PERSISTENT_NAME;
     }

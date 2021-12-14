@@ -56,7 +56,10 @@ abstract class Metadata
         return $this->parent;
     }
 
-    public function getChildren()
+    /**
+     * @return null|Metadata[];
+     */
+    public function getChildren(): ?array
     {
         return null;
     }
@@ -309,7 +312,7 @@ abstract class Metadata
      * but when we store it hierarchically, the prefix `page-image` is not needed
      * and becomes simple `path`
      */
-    public function getStorageName(): string
+    public function getPersistentName(): string
     {
         return $this->getName();
     }

@@ -32,7 +32,7 @@ class PageImagePath extends MetadataWikiPath
         return self::PROPERTY_NAME;
     }
 
-    public function getStorageName(): string
+    public function getPersistentName(): string
     {
         return self::PERSISTENT_NAME;
     }

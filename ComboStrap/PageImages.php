@@ -177,7 +177,7 @@ class PageImages extends MetadataTabular
                 ->setCanonical($this->getCanonical())
                 ->setDescription("The path of the image")
                 ->setWidth(8);
-            $pageImageUsage = FormMetaField::create(PageImageUsage::IMAGE_USAGE)
+            $pageImageUsage = FormMetaField::create(PageImageUsage::PROPERTY_NAME)
                 ->setLabel("Usages")
                 ->setCanonical($this->getCanonical())
                 ->setDomainValues(PageImageUsage::getUsageValues())

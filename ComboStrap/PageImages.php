@@ -382,6 +382,12 @@ class PageImages extends MetadataTabular
     {
         $value = [];
         if ($this->pageImages !== null) {
+            /**
+             * TODO ? Use the Row data
+             *  // This function is used and tailored only for the form data store actually
+             *  // To make it generic, we could have also worked from the raw data
+             *  // created a PageImageUsage / Path object and got the output
+             */
             foreach ($this->pageImages as $pageImage) {
                 switch ($childMetadata->getName()) {
                     case PageImagePath::PROPERTY_NAME:

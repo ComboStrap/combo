@@ -20,6 +20,9 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      * This metadata can only be set when  {@link Syntax::render() rendering}
      * The data may be deleted
      * https://www.dokuwiki.org/devel:metadata#metadata_persistence
+     *
+     * This is generally where the default data is located
+     * if not found in the persistent
      */
     public const CURRENT_METADATA = "current";
     /**

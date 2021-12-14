@@ -36,6 +36,7 @@ class PageDescription extends MetadataText
      * (You may set it via the metadata manager and get this origin)
      */
     public const DESCRIPTION_COMBO_ORIGIN = syntax_plugin_combo_frontmatter::CANONICAL;
+    private $defaultValue;
 
     public static function createForPage($page): PageDescription
     {
@@ -86,35 +87,9 @@ class PageDescription extends MetadataText
     public function getDefaultValue(): ?string
     {
 
-        /**
-         * The default is the value generated from dokuwiki
-         * (
-         *  ie until the description is not set
-         *  ie until the origin is not set
-         * )
-         */
         $this->buildCheck();
-        if ($this->descriptionOrigin !== null &&
-            $this->descriptionOrigin !== self::DESCRIPTION_DOKUWIKI_ORIGIN
-        ) {
-            return null;
-        }
+        return $this->defaultValue;
 
-        /**
-         * Dokuwiki description
-         * With some trick
-         */
-        // suppress the carriage return
-        $description = str_replace("\n", " ", $this->getValue());
-        // suppress the h1
-        $resourceCombo = $this->getResource();
-        if ($resourceCombo instanceof Page) {
-            $description = str_replace($resourceCombo->getH1OrDefault(), "", $description);
-        }
-        // Suppress the star, the tab, About
-        $description = preg_replace('/(\*|\t|About)/im', "", $description);
-        // Suppress all double space and trim
-        return trim(preg_replace('/  /m', " ", $description));
     }
 
 
@@ -127,30 +102,10 @@ class PageDescription extends MetadataText
             return $this;
         }
 
-
-        $descriptionArray = $value;
-        if (empty($descriptionArray)) {
-            return $this;
-        }
-        if (!array_key_exists(self::ABSTRACT_KEY, $descriptionArray)) {
-            return $this;
-        }
-        $value = $descriptionArray[self::ABSTRACT_KEY];
-
-        /**
-         * If there is an origin, it means that it was set
-         * and therefore not the default description derived from the content
-         */
-        if (array_key_exists('origin', $descriptionArray)) {
-            $this->descriptionOrigin = $descriptionArray['origin'];
-            parent::buildFromStoreValue($value);
-            return $this;
-        }
-
         /**
          * Plugin Plugin Description Integration
          */
-        $value = $metaDataStore->getFromName( self::PLUGIN_DESCRIPTION_META);
+        $value = $metaDataStore->getFromName(self::PLUGIN_DESCRIPTION_META);
         if ($value !== null) {
             $keywords = $value["keywords"];
             if ($keywords !== null) {
@@ -164,6 +119,14 @@ class PageDescription extends MetadataText
          * No description set, null
          */
         parent::buildFromStoreValue(null);
+
+        /**
+         * Default value is derived from the meta store
+         * We need to set it at build time because the store may change
+         * after the build
+         */
+        $this->defaultValue = $this->getGeneratedValueFromDokuWikiStore($metaDataStore);
+
         return $this;
     }
 
@@ -235,6 +198,40 @@ class PageDescription extends MetadataText
     public function getDescriptionOrigin(): string
     {
         return $this->descriptionOrigin;
+    }
+
+    private function getGeneratedValueFromDokuWikiStore(MetadataDokuWikiStore $metaDataStore): ?string
+    {
+
+        /**
+         * The generated is in the current metadata
+         */
+        $descriptionArray = $metaDataStore->getCurrentFromName(self::PROPERTY_NAME);
+        if (empty($descriptionArray)) {
+            return null;
+        }
+        if (!array_key_exists(self::ABSTRACT_KEY, $descriptionArray)) {
+            return null;
+        }
+        $value = $descriptionArray[self::ABSTRACT_KEY];
+
+
+        /**
+         * Dokuwiki description
+         * With some trick
+         * TODO: Generate our own description ?
+         */
+        // suppress the carriage return
+        $description = str_replace("\n", " ", $value);
+        // suppress the h1
+        $resourceCombo = $this->getResource();
+        if ($resourceCombo instanceof Page) {
+            $description = str_replace($resourceCombo->getH1OrDefault(), "", $description);
+        }
+        // Suppress the star, the tab, About
+        $description = preg_replace('/(\*|\t|About)/im', "", $description);
+        // Suppress all double space and trim
+        return trim(preg_replace('/  /m', " ", $description));
     }
 
 

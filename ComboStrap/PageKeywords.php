@@ -139,5 +139,10 @@ class PageKeywords extends MetadataArray
         throw new ExceptionCombo("The keywords value is not an array or a string (value: $value)");
     }
 
+    public function getCanonical(): string
+    {
+        return self::PROPERTY_NAME;
+    }
+
 
 }

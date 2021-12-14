@@ -79,7 +79,7 @@ abstract class Metadata
                 return new Aliases();
             case PageImages::PROPERTY_NAME:
             case PageImagePath::PROPERTY_NAME:
-            case PageImageUsage::PROPERTY_NAME:
+            case PageImageUsage::PERSISTENT_NAME:
                 return new PageImages();
             case Region::OLD_REGION_PROPERTY:
             case Region::PROPERTY_NAME:

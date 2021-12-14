@@ -11,7 +11,7 @@ namespace ComboStrap;
 class PageImageUsage extends MetadataArray
 {
 
-    public const PROPERTY_NAME = "usage"; // storage name
+    public const PERSISTENT_NAME = "usage"; // storage name
     public const IMAGE_USAGE = "image-usage"; // unique name
 
     /**
@@ -58,7 +58,7 @@ class PageImageUsage extends MetadataArray
 
     public function getName(): string
     {
-        return self::PROPERTY_NAME;
+        return self::PERSISTENT_NAME;
     }
 
 

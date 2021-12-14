@@ -7,7 +7,7 @@ namespace ComboStrap;
 class PageImagePath extends MetadataWikiPath
 {
 
-    public const STORAGE_PROPERTY_NAME = "path";
+    public const PERSISTENT_NAME = "path";
     const PROPERTY_NAME = "page-image-path";
 
 
@@ -34,7 +34,7 @@ class PageImagePath extends MetadataWikiPath
 
     public function getStorageName(): string
     {
-        return self::STORAGE_PROPERTY_NAME;
+        return self::PERSISTENT_NAME;
     }
 
 

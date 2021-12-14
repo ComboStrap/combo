@@ -67,10 +67,10 @@ class PageImages extends MetadataTabular
         foreach ($this->pageImages as $pageImage) {
             $absolutePath = $pageImage->getImage()->getPath()->toAbsolutePath()->toString();
             $pageImagesMeta[$absolutePath] = [
-                PageImagePath::STORAGE_PROPERTY_NAME => $absolutePath
+                PageImagePath::PERSISTENT_NAME => $absolutePath
             ];
             if ($pageImage->getUsages() !== null && $pageImage->getUsages() !== $pageImage->getDefaultUsage()) {
-                $pageImagesMeta[$absolutePath][PageImageUsage::PROPERTY_NAME] = implode(", ", $pageImage->getUsages());
+                $pageImagesMeta[$absolutePath][PageImageUsage::PERSISTENT_NAME] = implode(", ", $pageImage->getUsages());
             }
         };
         return array_values($pageImagesMeta);
@@ -99,20 +99,20 @@ class PageImages extends MetadataTabular
                 $usage = null;
                 if (is_numeric($key)) {
                     if (is_array($value)) {
-                        if (isset($value[PageImageUsage::PROPERTY_NAME])) {
-                            $usage = $value[PageImageUsage::PROPERTY_NAME];
+                        if (isset($value[PageImageUsage::PERSISTENT_NAME])) {
+                            $usage = $value[PageImageUsage::PERSISTENT_NAME];
                             if (is_string($usage)) {
                                 $usage = explode(",", $usage);
                             }
                         }
-                        $imagePath = $value[PageImagePath::STORAGE_PROPERTY_NAME];
+                        $imagePath = $value[PageImagePath::PERSISTENT_NAME];
                     } else {
                         $imagePath = $value;
                     }
                 } else {
                     $imagePath = $key;
-                    if (is_array($value) && isset($value[PageImageUsage::PROPERTY_NAME])) {
-                        $usage = $value[PageImageUsage::PROPERTY_NAME];
+                    if (is_array($value) && isset($value[PageImageUsage::PERSISTENT_NAME])) {
+                        $usage = $value[PageImageUsage::PERSISTENT_NAME];
                         if (!is_array($usage)) {
                             $usage = explode(",", $usage);;
                         }
@@ -238,7 +238,7 @@ class PageImages extends MetadataTabular
     /**
      * @throws ExceptionCombo
      */
-    public function addImage(string $wikiImagePath, $usages = null): Metadata
+    public function addImage(string $wikiImagePath, $usages = null): PageImages
     {
         DokuPath::addRootSeparatorIfNotPresent($wikiImagePath);
         $pageImage = PageImage::create($wikiImagePath, $this->getResource());
@@ -393,7 +393,7 @@ class PageImages extends MetadataTabular
                     case PageImagePath::PROPERTY_NAME:
                         $value[] = $pageImage->getImage()->getPath()->toString();
                         break;
-                    case PageImageUsage::PROPERTY_NAME:
+                    case PageImageUsage::PERSISTENT_NAME:
                         $value[] = implode(",", $pageImage->getUsages());
                         break;
                     default:
@@ -407,5 +407,6 @@ class PageImages extends MetadataTabular
     public function getDefaultValueForColumn($childMetadata): array
     {
         // TODO: Implement getDefaultValueForColumn() method.
+        return [];
     }
 }

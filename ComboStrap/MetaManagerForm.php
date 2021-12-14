@@ -108,10 +108,11 @@ class MetaManagerForm
                 continue;
             }
             $metadata
-                ->setResource($this->page);
-            $field = FormMetaField::create($metadata->getName());
-            $this->buildFormMetaFieldAlmostRecursively($field, $metadata);
-            $formMeta->addField($field);
+                ->setResource($this->page)
+                ->setStore($this->sourceStore)
+                ->buildFromStore()
+                ->setStore($this->targetStore);
+            $formMeta->addFormFieldFromMetadata($metadata);
         }
 
 
@@ -170,63 +171,6 @@ class MetaManagerForm
 
     }
 
-    /**
-     * Almost because a form does not allow hierarchical data
-     * We send an error in this case
-     * @param FormMetaField $field
-     * @param Metadata $metadata
-     */
-    private function buildFormMetaFieldAlmostRecursively(FormMetaField &$field, Metadata $metadata)
-    {
-
-        $this->buildCommonDataField($field,$metadata);
-
-        $childrenMetadata = $metadata->getChildren();
-
-        if ($metadata->getParent() === null) {
-            /**
-             * Only the top field have a tab value
-             */
-            $field->setTab($metadata->getTab());
-        }
-
-        $metadata
-            ->setStore($this->sourceStore)
-            ->buildFromStore()
-            ->setStore($this->targetStore);
-
-        /**
-         * No children
-         */
-        if ($childrenMetadata === null) {
-
-            $this->buildLeadDataField($field,$metadata);
-
-            // Value
-            $value = $metadata->toStoreValue();
-            $defaultValue = $metadata->toStoreDefaultValue();
-            $field->addValue($value, $defaultValue);
-
-        } else {
-            if($metadata instanceof MetadataTabular){
-
-                foreach($metadata->getChildren() as $childMetadata){
-
-                    $childField = FormMetaField::create($childMetadata->getName());
-                    $this->buildCommonDataField($childField,$childMetadata);
-                    $this->buildLeadDataField($childField,$childMetadata);
-                    $field->addColumn($childField);
-                    $value = $metadata->getColumnValues($childMetadata);
-                    $defaultValue = $metadata->getDefaultValueForColumn($childMetadata);
-
-                }
-
-            } else {
-
-                LogUtility::msg("Hierarchical data is not supported in a form. Metadata ($metadata) has children and is not tabular");
-            }
-        }
-    }
 
 
     public function toFormData(): array
@@ -234,37 +178,9 @@ class MetaManagerForm
         return $this->toFormMeta()->toFormData();
     }
 
-    /**
-     * Common metadata to all field from a leaf to a tabular
-     * @param FormMetaField $field
-     * @param Metadata $metadata
-     */
-    private function buildCommonDataField(FormMetaField $field, Metadata $metadata)
-    {
-        $field->setType($metadata->getDataType())
-            ->setCanonical($metadata->getCanonical())
-            ->setLabel($metadata->getLabel())
-            ->setDescription($metadata->getDescription());
-    }
 
-    /**
-     * @param FormMetaField $field
-     * @param Metadata $metadata
-     * Add the field metadata that are only available for leaf metadata
-     */
-    private function buildLeadDataField(FormMetaField $field, Metadata $metadata)
-    {
-        $field->setMutable($metadata->getMutable());
 
-        $formControlWidth = $metadata->getFormControlWidth();
-        if ($formControlWidth !== null) {
-            $field->setWidth($formControlWidth);
-        }
-        $possibleValues = $metadata->getPossibleValues();
-        if ($possibleValues !== null) {
-            $field->setDomainValues($possibleValues);
-        }
-    }
+
 
 
 }

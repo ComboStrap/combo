@@ -267,7 +267,11 @@ class FormMeta
         $possibleValues = $metadata->getPossibleValues();
         if ($possibleValues !== null) {
             $field->setDomainValues($possibleValues);
+            if($metadata instanceof MetadataArray){
+                $field->setMultiple(true);
+            }
         }
+
     }
 
 }

@@ -126,7 +126,7 @@ class Lang extends MetadataText
         return "Language";
     }
 
-    public function getName(): string
+    public static function getName(): string
     {
         return self::PROPERTY_NAME;
     }

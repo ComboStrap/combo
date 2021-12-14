@@ -31,7 +31,7 @@ class EndDate extends MetadataDateTime
         return "End Date";
     }
 
-    public function getName(): string
+    public static function getName(): string
     {
         return self::PROPERTY_NAME;
     }

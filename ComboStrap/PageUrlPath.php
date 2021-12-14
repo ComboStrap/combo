@@ -81,7 +81,7 @@ class PageUrlPath extends MetadataWikiPath
         return "Url Path";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

@@ -59,7 +59,7 @@ class ModificationDate extends MetadataDateTime
         return "Modification Date";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

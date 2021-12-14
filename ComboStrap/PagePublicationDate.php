@@ -75,7 +75,7 @@ class PagePublicationDate extends MetadataDateTime
         return "Publication Date";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

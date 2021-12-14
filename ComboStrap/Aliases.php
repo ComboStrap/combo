@@ -95,7 +95,7 @@ class Aliases extends Metadata
         return array_values($array);
     }
 
-    public function getName(): string
+    public static function getName(): string
     {
         return self::PROPERTY_NAME;
     }

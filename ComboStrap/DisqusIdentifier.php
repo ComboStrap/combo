@@ -37,7 +37,7 @@ class DisqusIdentifier extends MetadataText
         return "Disqus Identifier";
     }
 
-    public function getName(): string
+    public static function getName(): string
     {
         return self::PROPERTY_NAME;
     }

@@ -47,7 +47,7 @@ class PageKeywords extends MetadataArray
         return "Keywords";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

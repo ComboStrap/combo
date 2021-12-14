@@ -31,7 +31,7 @@ class PageTitle extends MetadataText
         return "Title";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

@@ -100,7 +100,7 @@ class LdJson extends MetadataJson
         }
     }
 
-    public function getName(): string
+    public static function getName(): string
     {
         return self::PROPERTY_NAME;
     }

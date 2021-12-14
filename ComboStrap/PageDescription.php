@@ -59,7 +59,7 @@ class PageDescription extends MetadataText
         return "Description";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::DESCRIPTION_PROPERTY;
     }

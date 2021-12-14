@@ -7,6 +7,7 @@ namespace ComboStrap;
  * Class MetadataArray
  * @package ComboStrap
  * An array, ie list of value metadata
+ * Multiple select if the possible values are set
  */
 abstract class MetadataArray extends Metadata
 {

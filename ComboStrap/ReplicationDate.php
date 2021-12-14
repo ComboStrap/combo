@@ -41,7 +41,7 @@ class ReplicationDate extends MetadataDateTime
         return self::REPLICATION_CANONICAL;
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

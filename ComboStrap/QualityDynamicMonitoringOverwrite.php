@@ -42,7 +42,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
     }
 
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

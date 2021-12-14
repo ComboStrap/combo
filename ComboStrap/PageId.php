@@ -58,7 +58,7 @@ class PageId extends MetadataText
         return "Page Id";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

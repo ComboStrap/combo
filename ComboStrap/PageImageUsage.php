@@ -26,7 +26,6 @@ class PageImageUsage extends MetadataArray
     public const DEFAULT = PageImageUsage::ALL;
 
 
-
     public static function getUsageValues(): array
     {
         return [
@@ -57,12 +56,12 @@ class PageImageUsage extends MetadataArray
         return "Usages";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistentName(): string
+    static public function getPersistentName(): string
     {
         return self::PERSISTENT_NAME;
     }
@@ -84,8 +83,10 @@ class PageImageUsage extends MetadataArray
         return Metadata::PERSISTENT_METADATA;
     }
 
-    function getStringSeparator(): string
+    public function getFormControlWidth(): int
     {
-        return ",";
+        return 4;
     }
+
+
 }

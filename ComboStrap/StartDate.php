@@ -30,7 +30,7 @@ class StartDate extends MetadataDateTime
         return "Start Date";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

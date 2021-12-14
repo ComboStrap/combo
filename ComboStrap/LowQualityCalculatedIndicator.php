@@ -56,7 +56,7 @@ class LowQualityCalculatedIndicator extends MetadataBoolean
         return "Low Quality Indicator";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::LOW_QUALITY_INDICATOR_CALCULATED;
     }

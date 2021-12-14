@@ -27,12 +27,12 @@ class PageImagePath extends MetadataWikiPath
         return "Path";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }
 
-    public function getPersistentName(): string
+    static public function getPersistentName(): string
     {
         return self::PERSISTENT_NAME;
     }
@@ -57,4 +57,11 @@ class PageImagePath extends MetadataWikiPath
     {
         return null;
     }
+
+    public function getFormControlWidth()
+    {
+        return 8;
+    }
+
+
 }

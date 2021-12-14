@@ -49,7 +49,7 @@ class PageType extends MetadataText
         return "Page Type";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

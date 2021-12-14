@@ -39,7 +39,7 @@ class Canonical extends MetadataWikiPath
         return "Canonical Path";
     }
 
-    public function getName(): string
+    public static function getName(): string
     {
         return self::PROPERTY_NAME;
     }

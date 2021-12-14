@@ -34,7 +34,7 @@ class DokuwikiId extends MetadataText
     }
 
 
-    public function getName(): string
+    public static function getName(): string
     {
         return self::DOKUWIKI_ID_ATTRIBUTE;
     }

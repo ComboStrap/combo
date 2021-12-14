@@ -76,7 +76,7 @@ class PageCreationDate extends MetadataDateTime
     }
 
 
-    public function getName(): string
+    static public function getName(): string
     {
         return PageCreationDate::PROPERTY_NAME;
     }

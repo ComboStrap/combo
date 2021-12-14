@@ -32,7 +32,7 @@ class PageH1 extends MetadataText
         return "H1 (Heading 1)";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

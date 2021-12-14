@@ -51,7 +51,7 @@ class Region extends MetadataText
         return "Region";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return self::PROPERTY_NAME;
     }

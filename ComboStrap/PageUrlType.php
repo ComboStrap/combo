@@ -95,7 +95,7 @@ class PageUrlType extends MetadataText
         return "Page Url";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
         return PageUrlType::CONF_CANONICAL_URL_TYPE;
     }

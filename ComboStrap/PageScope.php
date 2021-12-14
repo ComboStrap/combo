@@ -19,7 +19,7 @@ class PageScope extends MetadataText
 {
 
 
-    public const SCOPE_KEY = "scope";
+    public const PROPERTY_NAME = "scope";
     /**
      * The special scope value current means the namespace of the requested page
      * The real scope value is then calculated before retrieving the cache
@@ -59,9 +59,9 @@ class PageScope extends MetadataText
         return "scope";
     }
 
-    public function getName(): string
+    static public function getName(): string
     {
-        return self::SCOPE_KEY;
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string

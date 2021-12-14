@@ -77,7 +77,7 @@ class CacheExpirationDate extends MetadataDateTime
     }
 
 
-    public function getName(): string
+    public static function getName(): string
     {
         return self::PROPERTY_NAME;
     }

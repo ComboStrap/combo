@@ -51,13 +51,22 @@ abstract class Metadata
         $this->parent = $parent;
     }
 
+    public static function toMetadataObject($childClass): MetadataScalar
+    {
+        if(!is_a($childClass,MetadataScalar::class)){
+            throw new ExceptionComboRuntime("The child class ($childClass) is not a metadata class");
+        }
+        return new $childClass();
+    }
+
     public function getParent(): ?Metadata
     {
         return $this->parent;
     }
 
     /**
-     * @return null|Metadata[];
+     * The class string of the child/columns metadata
+     * @return null|string[];
      */
     public function getChildren(): ?array
     {
@@ -189,6 +198,9 @@ abstract class Metadata
      * Return the store for this metadata
      * By default, this is the {@link ResourceCombo::getStoreOrDefault() default resource metadata store}
      *
+     * TODO: A metadata / resource (page) should have a input store and a output store. This way, it's easier to pass them
+     *   and to understand what's going on.
+     *
      * (ie a memory variable or a database)
      * @return MetadataStore|null
      */
@@ -298,24 +310,25 @@ abstract class Metadata
         return $this;
     }
 
-
-    /**
-     * @return string the name of the metadata (property)
-     * Used in all store such as database (therefore no minus please)
-     * Alphanumeric
-     */
-    public abstract function getName(): string;
-
     /**
      * @return string - the name use in the store
      * For instance, a {@link PageImagePath} has a unique name of `page-image-path`
      * but when we store it hierarchically, the prefix `page-image` is not needed
      * and becomes simple `path`
      */
-    public function getPersistentName(): string
+    public static function getPersistentName(): string
     {
-        return $this->getName();
+        return static::getName();
     }
+
+    /**
+     * @return string the name of the metadata (property)
+     * Used in all store such as database (therefore no minus please)
+     * Alphanumeric
+     */
+    public static abstract function getName(): string;
+
+
 
     /**
      * @return string|array|null the value to be persisted by the store
@@ -553,7 +566,7 @@ abstract class Metadata
      *
      * @return Metadata|null
      */
-    public function getUid(): ?Metadata
+    public function getUid(): ?string
     {
         if($this->getChildren()!==null){
             LogUtility::msg("An entity metadata should define a metadata that store the unique value");

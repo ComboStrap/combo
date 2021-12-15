@@ -465,23 +465,23 @@ EOF;
                  */
                 $page = Page::createPageFromId($ID);
                 $frontMatterJsonArray = $data[PluginUtility::ATTRIBUTES];
-                if (isset($frontMatterJsonArray[PageImages::PROPERTY_NAME])) {
-                    $value = $frontMatterJsonArray[PageImages::PROPERTY_NAME];
-                    try {
-                        $pageImages = PageImages::createForPage($page)
-                            ->buildFromStoreValue($value);
-                        foreach ($pageImages->getValue() as $imageValue) {
-                            $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
-                            $attributes = [PagePath::PROPERTY_NAME => $imagePath];
-                            if (media_isexternal($imagePath)) {
-                                $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
-                            } else {
-                                $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::INTERNAL_MEDIA_CALL_NAME;
-                            }
-                            syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
+                if (isset($frontMatterJsonArray[PageImages::getPersistentName()])) {
+                    $value = $frontMatterJsonArray[PageImages::getPersistentName()];
+
+                    /**
+                     * @var PageImages $pageImages
+                     */
+                    $pageImages = PageImages::createForPage($page)
+                        ->buildFromStoreValue($value);
+                    foreach ($pageImages->getValueAsPageImages() as $imageValue) {
+                        $imagePath = $imageValue->getImage()->getPath()->toAbsolutePath()->toString();
+                        $attributes = [PagePath::PROPERTY_NAME => $imagePath];
+                        if (media_isexternal($imagePath)) {
+                            $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::EXTERNAL_MEDIA_CALL_NAME;
+                        } else {
+                            $attributes[MediaLink::MEDIA_DOKUWIKI_TYPE] = MediaLink::INTERNAL_MEDIA_CALL_NAME;
                         }
-                    } catch (ExceptionCombo $e) {
-                        LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                        syntax_plugin_combo_media::registerImageMeta($attributes, $renderer);
                     }
 
                 }

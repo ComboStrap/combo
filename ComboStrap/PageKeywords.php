@@ -54,13 +54,7 @@ class PageKeywords extends MetadataArray
     }
 
 
-    public function toStoreDefaultValue()
-    {
-        if ($this->getDefaultValue() === null) {
-            return null;
-        }
-        return implode(self::SEPARATOR, $this->getDefaultValue());
-    }
+
 
 
     /**

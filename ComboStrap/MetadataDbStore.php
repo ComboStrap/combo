@@ -78,6 +78,10 @@ class MetadataDbStore implements MetadataStore
     {
 
         $aliasesToStore = $metadata->toStoreValue();
+        if($aliasesToStore===null){
+            return;
+        }
+
         $dbAliases = $this->getAliasesInPersistentValue($metadata);
         $dbAliasMap = [];
         if ($dbAliases !== null) {
@@ -185,9 +189,9 @@ EOF;
         }
         $aliases = Aliases::create()
             ->setResource($metadata->getResource());
-        $pageIdAttribute = strtoupper(PageId::PROPERTY_NAME);
-        $pathAttribute = strtoupper(AliasPath::PERSISTENT_NAME);
-        $typeAttribute = strtoupper(AliasType::PERSISTENT_NAME);
+        $pageIdAttribute = strtoupper(PageId::getPersistentName());
+        $pathAttribute = strtoupper(AliasPath::getPersistentName());
+        $typeAttribute = strtoupper(AliasType::getPersistentName());
         $tableAliases = self::ALIAS_TABLE_NAME;
 
         $query = "select $pathAttribute, $typeAttribute from $tableAliases where $pageIdAttribute = ? ";

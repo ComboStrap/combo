@@ -81,20 +81,22 @@ abstract class Metadata
          * TODO: this array could be build automatically by creating an object for each metadata
          */
         switch ($name) {
-            case Canonical::PROPERTY_NAME:
+            case Canonical::getName():
                 return new Canonical();
-            case PageType::PROPERTY_NAME:
+            case PageType::getName():
                 return new PageType();
-            case PageH1::PROPERTY_NAME:
+            case PageH1::getName():
                 return new PageH1();
-            case Aliases::PROPERTY_NAME:
+            case Aliases::getName():
+            case AliasPath::getName():
+            case AliasType::getName():
                 return new Aliases();
-            case PageImages::PROPERTY_NAME:
-            case PageImagePath::PROPERTY_NAME:
-            case PageImageUsage::PERSISTENT_NAME:
+            case PageImages::getName():
+            case PageImagePath::getName():
+            case PageImageUsage::getName():
                 return new PageImages();
             case Region::OLD_REGION_PROPERTY:
-            case Region::PROPERTY_NAME:
+            case Region::getName():
                 return new Region();
             case Lang::PROPERTY_NAME:
                 return new Lang();
@@ -598,7 +600,7 @@ abstract class Metadata
     /**
      * @return string[] - the old name if any
      */
-    public function getAliasNames(): array
+    public static function getOldNames(): array
     {
         return [];
     }

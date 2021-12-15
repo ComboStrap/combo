@@ -170,7 +170,7 @@ class Aliases extends MetadataTabular
     /**
      * @return Alias[]
      */
-    public function getValue(): array
+    public function getValue(): ?array
     {
         $this->buildCheck();
 

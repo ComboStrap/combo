@@ -68,6 +68,14 @@ abstract class MetadataArray extends Metadata
         return implode($this->getStringSeparator(), $this->array);
     }
 
+    public function toStoreDefaultValue()
+    {
+        if ($this->getDefaultValue() === null) {
+            return null;
+        }
+        return implode($this->getStringSeparator(), $this->getDefaultValue());
+    }
+
 
     /**
      * @return string - the separator used when we receive a string

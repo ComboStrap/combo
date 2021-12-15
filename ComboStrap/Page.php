@@ -153,7 +153,7 @@ class Page extends ResourceComboAbs
      */
     private $endDate;
     /**
-     * @var Metadata
+     * @var PageImages
      */
     private $pageImages;
     /**
@@ -1398,7 +1398,7 @@ class Page extends ResourceComboAbs
     public
     function getPageImages(): ?array
     {
-        return $this->pageImages->getValue();
+        return $this->pageImages->getValueAsPageImages();
     }
 
 

@@ -166,13 +166,35 @@ class PageImages extends MetadataTabular
     /**
      * @return PageImage[]
      */
-    public function getPageImages(): ?array
+    public function getValueAsPageImages(): ?array
     {
         $this->buildCheck();
-        if ($this->pageImages === null) {
+
+        $rows = parent::getValue();
+        if ($rows === null) {
             return null;
         }
-        return array_values($this->pageImages);
+        $pageImages = [];
+        foreach ($rows as $row) {
+            /**
+             * @var PageImagePath $pageImagePath
+             */
+            $pageImagePath = $row[PageImagePath::getPersistentName()];
+            $pageImage = PageImage::create($pageImagePath->getValue(), $this->getResource());
+            /**
+             * @var PageImageUsage $pageImageUsage
+             */
+            $pageImageUsage = $row[PageImageUsage::getPersistentName()];
+            if ($pageImageUsage !== null) {
+                try {
+                    $pageImage->setUsages($pageImageUsage->getValue());
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("Bad Usage value. Should not happen on get");
+                }
+            }
+            $pageImages[] = $pageImage;
+        }
+        return $pageImages;
     }
 
     /**

@@ -4,8 +4,6 @@
 namespace ComboStrap;
 
 
-use http\Exception\RuntimeException;
-
 /**
  * Class MetadataTabular
  * @package ComboStrap
@@ -44,6 +42,10 @@ abstract class MetadataTabular extends Metadata
 
     public function toStoreValue(): ?array
     {
+        if($this->rows===null){
+            return null;
+        }
+
         $rowsArray = [];
         foreach ($this->rows as $row) {
             $rowArray = [];
@@ -67,33 +69,75 @@ abstract class MetadataTabular extends Metadata
          * Value of the metadata id
          */
         $identifierMetadataClass = $this->getUid();
-        $identifierName = $identifierMetadataClass::getPersistentName();
+        $identifierPersistentName = $identifierMetadataClass::getPersistentName();
         if (is_string($value)) {
             /**
              * @var MetadataScalar $identifierMetadata
              */
             $identifierMetadata = (new $identifierMetadataClass());
             $identifierMetadata->setValue($value);
-            $this->rows[$value] = [$identifierName => $identifierMetadata];
+            $this->rows[$value] = [$identifierPersistentName => $identifierMetadata];
             return $this;
         }
         if (!is_array($value)) {
             LogUtility::msg("The tabular value is not a string nor an array");
             return $this;
         }
+
+
         /**
-         * Loop
+         * Determine the format of the tabular
          */
-        foreach ($value as $key => $item) {
-            // not a row (ie array of array), a single array
-            if (!is_numeric($key)) {
-                throw new RuntimeException("To implement");
+        $keys = array_keys($value);
+        $firstElement = array_shift($keys);
+
+        if (!is_numeric($firstElement)) {
+            /**
+             * List of row (Storage way)
+             */
+            $identifierName = $identifierMetadataClass::getName();
+            $identifierValues = $value[$identifierName];
+            if($identifierValues===null || $identifierValues===""){
+                // No data
+                return $this;
             }
+            $i = 0;
+            foreach ($identifierValues as $identifierValue) {
+                $row = [];
+                $row[$identifierPersistentName] = Metadata::toChildMetadataObject($identifierMetadataClass, $this)
+                    ->setFromStoreValue($identifierValue);
+                foreach ($this->getChildren() as $childClass) {
+                    if($childClass===$identifierMetadataClass){
+                        continue;
+                    }
+                    $metadataChildObject = Metadata::toChildMetadataObject($childClass, $this);
+                    $name = $metadataChildObject::getName();
+                    $childValue = $value[$name][$i];
+                    $metadataChildObject->setFromStoreValue($childValue);
+                    $row[$metadataChildObject::getPersistentName()]=$metadataChildObject;
+                }
+                $this->rows[] = $row;
+            }
+
+            return $this;
+        }
+
+        /**
+         * List of columns (HTML way)
+         */
+        // child object building
+        $childObjectsByPersistentName = [];
+        foreach ($this->getChildren() as $childClass) {
+            $metadataChildObject = Metadata::toChildMetadataObject($childClass, $this);
+            $childObjectsByPersistentName[$metadataChildObject::getPersistentName()] = $metadataChildObject;
+        }
+        foreach ($value as $item) {
+
             // Single value
             if (is_string($item)) {
                 $identifierMetadata = Metadata::toChildMetadataObject($identifierMetadataClass, $this)
                     ->buildFromStoreValue($item);
-                $this->rows[$item] = [$identifierName => $identifierMetadata];
+                $this->rows[$item] = [$identifierPersistentName => $identifierMetadata];
                 continue;
             }
             if (!is_array($item)) {
@@ -101,25 +145,20 @@ abstract class MetadataTabular extends Metadata
             }
             $row = [];
             $idValue = null;
-            $childObjects = [];
-            foreach ($this->getChildren() as $childClass) {
-                $objects = Metadata::toChildMetadataObject($childClass, $this);
-                $childObjects[$objects::getPersistentName()] = $objects;
-            }
             foreach ($item as $colName => $colValue) {
-                $childObject = $childObjects[$colName];
+                $childObject = $childObjectsByPersistentName[$colName];
                 if ($childObject === null) {
                     LogUtility::msg("The column does not have a metadata definition");
                     continue;
                 }
                 $childObject->buildFromStoreValue($colValue);
                 $row[$childObject::getPersistentName()] = $childObject;
-                if ($childObject::getPersistentName() === $identifierName) {
+                if ($childObject::getPersistentName() === $identifierPersistentName) {
                     $idValue = $colValue;
                 }
             }
             if ($idValue === null) {
-                LogUtility::msg("The value for the identifier ($identifierName) was not found");
+                LogUtility::msg("The value for the identifier ($identifierPersistentName) was not found");
                 continue;
             }
             $this->rows[$idValue] = $row;

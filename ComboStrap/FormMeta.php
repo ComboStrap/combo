@@ -214,9 +214,10 @@ class FormMeta
         } else {
             if ($metadata instanceof MetadataTabular) {
 
-                foreach ($metadata->getChildren() as $childMetadata) {
+                foreach ($metadata->getChildren() as $childMetadataClass) {
 
-                    $childField = FormMetaField::create($childMetadata->getName());
+                    $childMetadata = Metadata::toChildMetadataObject($childMetadataClass,$metadata);
+                    $childField = FormMetaField::create($childMetadata);
                     $this->setCommonDataToFieldFromMetadata($childField, $childMetadata);
                     $this->setLeafDataToFieldFromMetadata($childField, $childMetadata);
                     $field->addColumn($childField);

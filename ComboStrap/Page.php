@@ -1461,7 +1461,7 @@ class Page extends ResourceComboAbs
      * @deprecated for {@link Aliases}
      */
     public
-    function addAndGetAlias($aliasPath, string $aliasType = Alias::REDIRECT): Alias
+    function addAndGetAlias($aliasPath, string $aliasType = AliasType::REDIRECT): Alias
     {
 
         return $this->aliases->addAndGetAlias($aliasPath, $aliasType);

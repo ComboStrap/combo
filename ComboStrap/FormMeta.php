@@ -212,6 +212,7 @@ class FormMeta
             $field->addValue($value, $defaultValue);
 
         } else {
+
             if ($metadata instanceof MetadataTabular) {
 
                 $childFields = [];

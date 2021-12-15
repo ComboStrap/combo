@@ -35,9 +35,6 @@ abstract class MetadataTabular extends Metadata
         return $this->rows;
     }
 
-    public abstract function getColumnValues(Metadata $childMetadata);
-
-    public abstract function getDefaultValueForColumn(Metadata $childMetadata);
 
 
     public function toStoreValue(): ?array
@@ -174,6 +171,37 @@ abstract class MetadataTabular extends Metadata
 
     public function valueIsNotNull(): bool
     {
+        $this->buildCheck();
         return $this->rows !== null;
+    }
+
+    public
+    function remove($identifierValue)
+    {
+        $this->buildCheck();
+        if ($this->rows===null){
+            return;
+        }
+        unset($this->rows[$identifierValue]);
+    }
+
+    public
+    function has($identifierValue): bool
+    {
+        $this->buildCheck();
+        if ($this->rows===null){
+            return false;
+        }
+        return isset($this->rows[$identifierValue]);
+    }
+
+    public
+    function getSize(): int
+    {
+        $this->buildCheck();
+        if ($this->rows === null) {
+            return 0;
+        }
+        return sizeof($this->rows);
     }
 }

@@ -87,7 +87,7 @@ class UrlManagerBestEndPage
             if ($minimalScoreForARedirect != 0 && $bestScore >= $minimalScoreForARedirect) {
                 $page = Page::createPageFromId($bestPageId);
                 Aliases::createForPage($page)
-                    ->addAlias($missingPageId, Alias::REDIRECT)
+                    ->addAlias($missingPageId, AliasType::REDIRECT)
                     ->sendToStore()
                     ->setStore(MetadataDbStore::createForPage())
                     ->sendToStore();

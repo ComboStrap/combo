@@ -8,13 +8,7 @@ namespace ComboStrap;
 class Alias
 {
 
-    const ALIAS_PATH_PROPERTY = "path";
-    const ALIAS_TYPE_PROPERTY = "type";
-
-    const  REDIRECT = "redirect";
-    const SYNONYM = "synonym";
     const CANONICAL = "alias";
-    const ALIAS_TYPE_VALUES = [self::SYNONYM, self::REDIRECT];
 
 
     private $path; // the path of the alias
@@ -22,7 +16,7 @@ class Alias
     /**
      * @var string
      */
-    private $type = self::REDIRECT;
+    private $type = AliasType::REDIRECT;
 
     /**
      * Alias constructor.
@@ -54,12 +48,12 @@ class Alias
 
     public static function getPossibleTypesValues(): array
     {
-        return self::ALIAS_TYPE_VALUES;
+        return AliasType::ALIAS_TYPE_VALUES;
     }
 
     public static function getDefaultType()
     {
-        return self::REDIRECT;
+        return AliasType::REDIRECT;
     }
 
     /**

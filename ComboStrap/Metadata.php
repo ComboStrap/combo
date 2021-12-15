@@ -572,11 +572,11 @@ abstract class Metadata
 
 
     /**
-     * The id of an entity metadata (ie if the metadata has children / is a {@link Metadata::$parent}
+     * The class of an entity metadata (ie if the metadata has children / is a {@link Metadata::$parent}
      *
      * One id value = one row = one entity
      *
-     * @return Metadata|null
+     * @return string|null
      */
     public function getUid(): ?string
     {

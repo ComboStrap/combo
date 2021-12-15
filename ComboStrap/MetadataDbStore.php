@@ -82,13 +82,13 @@ class MetadataDbStore implements MetadataStore
         $dbAliasMap = [];
         if ($dbAliases !== null) {
             foreach ($dbAliases as $dbAlias) {
-                $dbAliasMap[$dbAlias[Alias::ALIAS_PATH_PROPERTY]] = $dbAlias;
+                $dbAliasMap[$dbAlias[AliasPath::PERSISTENT_NAME]] = $dbAlias;
             }
         }
         foreach ($aliasesToStore as $aliasToStore) {
 
-            if (isset($dbAliasMap[$aliasToStore[Alias::ALIAS_PATH_PROPERTY]])) {
-                unset($dbAliasMap[$aliasToStore[Alias::ALIAS_PATH_PROPERTY]]);
+            if (isset($dbAliasMap[$aliasToStore[AliasPath::PERSISTENT_NAME]])) {
+                unset($dbAliasMap[$aliasToStore[AliasPath::PERSISTENT_NAME]]);
             } else {
                 $this->addAlias($aliasToStore, $metadata->getResource());
             }
@@ -112,8 +112,8 @@ class MetadataDbStore implements MetadataStore
 
         $row = array(
             PageId::PROPERTY_NAME => $page->getPageId(),
-            Alias::ALIAS_PATH_PROPERTY => $alias[Alias::ALIAS_PATH_PROPERTY],
-            Alias::ALIAS_TYPE_PROPERTY => $alias[Alias::ALIAS_TYPE_PROPERTY]
+            AliasPath::PERSISTENT_NAME => $alias[AliasPath::PERSISTENT_NAME],
+            AliasType::PERSISTENT_NAME => $alias[AliasType::PERSISTENT_NAME]
         );
 
         // Page has change of location
@@ -144,7 +144,7 @@ EOF;
 
         $row = [
             $pageIdAttributes => $page->getPageId(),
-            $pathAttribute => $dbAliasPath[Alias::ALIAS_PATH_PROPERTY]
+            $pathAttribute => $dbAliasPath[AliasPath::PERSISTENT_NAME]
         ];
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query($delete, $row);
@@ -186,8 +186,8 @@ EOF;
         $aliases = Aliases::create()
             ->setResource($metadata->getResource());
         $pageIdAttribute = strtoupper(PageId::PROPERTY_NAME);
-        $pathAttribute = strtoupper(Alias::ALIAS_PATH_PROPERTY);
-        $typeAttribute = strtoupper(Alias::ALIAS_TYPE_PROPERTY);
+        $pathAttribute = strtoupper(AliasPath::PERSISTENT_NAME);
+        $typeAttribute = strtoupper(AliasType::PERSISTENT_NAME);
         $tableAliases = self::ALIAS_TABLE_NAME;
 
         $query = "select $pathAttribute, $typeAttribute from $tableAliases where $pageIdAttribute = ? ";

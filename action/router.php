@@ -4,6 +4,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 
 use ComboStrap\Alias;
+use ComboStrap\AliasType;
 use ComboStrap\DatabasePage;
 use ComboStrap\DokuPath;
 use ComboStrap\HttpResponse;
@@ -419,13 +420,13 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         ) {
             $buildAlias = $targetPage->getBuildAlias();
             switch ($buildAlias->getType()) {
-                case Alias::REDIRECT:
+                case AliasType::REDIRECT:
                     $res = $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;
                     }
                     break;
-                case Alias::SYNONYM:
+                case AliasType::SYNONYM:
                     $res = $this->executeTransparentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_ALIAS);
                     if ($res) {
                         return;

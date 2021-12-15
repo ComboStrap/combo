@@ -4,9 +4,7 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_metamanager;
-
-class Aliases extends Metadata
+class Aliases extends MetadataTabular
 {
 
     public const PROPERTY_NAME = "alias";
@@ -43,7 +41,7 @@ class Aliases extends Metadata
         $aliases = [];
         foreach ($aliasesPersistentValues as $key => $value) {
             if (is_array($value)) {
-                $path = $value[Alias::ALIAS_PATH_PROPERTY];
+                $path = $value[AliasPath::PERSISTENT_NAME];
                 if (empty($path)) {
                     if (is_string($key)) {
                         // Old way (deprecated)
@@ -52,7 +50,7 @@ class Aliases extends Metadata
                         LogUtility::msg("The path of the alias should not be empty to create a path", Alias::CANONICAL);
                     }
                 }
-                $type = $value[Alias::ALIAS_TYPE_PROPERTY];
+                $type = $value[AliasType::PERSISTENT_NAME];
 
                 /**
                  * We don't create via the {@link Aliases::addAlias()}
@@ -88,8 +86,8 @@ class Aliases extends Metadata
         $array = [];
         foreach ($aliases as $alias) {
             $array[$alias->getPath()] = [
-                Alias::ALIAS_PATH_PROPERTY => $alias->getPath(),
-                Alias::ALIAS_TYPE_PROPERTY => $alias->getType()
+                AliasPath::PERSISTENT_NAME => $alias->getPath(),
+                AliasType::PERSISTENT_NAME => $alias->getType()
             ];
         }
         return array_values($array);
@@ -100,17 +98,6 @@ class Aliases extends Metadata
         return self::PROPERTY_NAME;
     }
 
-    public function toStoreValue()
-    {
-        $this->buildCheck();
-
-        return self::toMetadataArray($this->aliases);
-    }
-
-    public function toStoreDefaultValue()
-    {
-        return null;
-    }
 
     public function getPersistenceType(): string
     {
@@ -148,7 +135,7 @@ class Aliases extends Metadata
             function ($row) use ($deprecatedAliases) {
                 $alias = $row['ALIAS'];
                 $deprecatedAliases[$alias] = Alias::create($this->getResource(), $alias)
-                    ->setType(Alias::REDIRECT);
+                    ->setType(AliasType::REDIRECT);
             },
             $deprecatedAliasInDb
         );
@@ -193,7 +180,7 @@ class Aliases extends Metadata
          * a cycle via the {@link Page::PAGE_METADATA_MUTATION_EVENT}
          */
         if (
-            $this->aliases === null
+            !$this->valueIsNotNull()
             &&
             $this->getStore() !== null
             &&
@@ -221,7 +208,7 @@ class Aliases extends Metadata
      * @throws ExceptionCombo
      */
     public
-    function addAlias(string $aliasPath, $aliasType = Alias::REDIRECT): Aliases
+    function addAlias(string $aliasPath, $aliasType = AliasType::REDIRECT): Aliases
     {
         $this->addAndGetAlias($aliasPath, $aliasType);
         return $this;
@@ -231,7 +218,7 @@ class Aliases extends Metadata
      * @throws ExceptionCombo
      */
     public
-    function addAndGetAlias($aliasPath, $aliasType = Alias::REDIRECT): Alias
+    function addAndGetAlias($aliasPath, $aliasType = AliasType::REDIRECT): Alias
     {
         $this->buildCheck();
         $alias = Alias::create($this->getResource(), $aliasPath);
@@ -243,19 +230,6 @@ class Aliases extends Metadata
         $this->aliases[$aliasPath] = $alias;
         return $alias;
     }
-
-
-    public
-    function getSize(): int
-    {
-        $this->buildCheck();
-        $aliases = $this->aliases;
-        if ($this->aliases === null) {
-            return 0;
-        }
-        return sizeof($aliases);
-    }
-
 
 
     public
@@ -295,53 +269,15 @@ class Aliases extends Metadata
         return true;
     }
 
-    public
-    function has(Alias $alias): bool
+    public function getUid(): ?string
     {
-        return isset($this->aliases[$alias->getPath()]);
+        return AliasPath::class;
     }
 
-    public
-    function remove(Alias $alias)
+    public function getChildren(): ?array
     {
-        unset($this->aliases[$alias->getPath()]);
+        return [AliasPath::class, AliasType::class];
     }
 
-
-    public function valueIsNotNull(): bool
-    {
-        return $this->aliases !== null;
-    }
-
-
-    public function buildFromStoreValue($value): Metadata
-    {
-        $store = $this->getStore();
-        if ($store instanceof MetadataFormDataStore) {
-            // formData got two metadata
-            $formData = $store->getData();
-            $pathData = $formData[self::ALIAS_PATH];
-            if ($pathData !== null && $pathData !== "") {
-                $this->aliases = [];
-                $typeData = $formData[self::ALIAS_TYPE];
-                $counter = 0;
-                foreach ($pathData as $path) {
-                    if ($path !== "" && $path !== null) {
-                        $type = $typeData[$counter];
-                        $this->aliases[] = Alias::create($this->getResource(), $path)
-                            ->setType($type);
-                    }
-                    $counter++;
-                }
-            }
-            return $this;
-        }
-
-
-        $this->aliases = $this->toNativeAliasArray($value);
-        return $this;
-
-
-    }
 
 }

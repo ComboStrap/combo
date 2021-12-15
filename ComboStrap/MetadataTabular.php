@@ -42,7 +42,7 @@ abstract class MetadataTabular extends Metadata
 
     public function toStoreValue(): ?array
     {
-        if($this->rows===null){
+        if ($this->rows === null) {
             return null;
         }
 
@@ -97,24 +97,28 @@ abstract class MetadataTabular extends Metadata
              */
             $identifierName = $identifierMetadataClass::getName();
             $identifierValues = $value[$identifierName];
-            if($identifierValues===null || $identifierValues===""){
+            if ($identifierValues === null || $identifierValues === "") {
                 // No data
                 return $this;
             }
             $i = 0;
             foreach ($identifierValues as $identifierValue) {
                 $row = [];
+                if ($identifierValue === "") {
+                    // an empty row in the table
+                    continue;
+                }
                 $row[$identifierPersistentName] = Metadata::toChildMetadataObject($identifierMetadataClass, $this)
                     ->setFromStoreValue($identifierValue);
                 foreach ($this->getChildren() as $childClass) {
-                    if($childClass===$identifierMetadataClass){
+                    if ($childClass === $identifierMetadataClass) {
                         continue;
                     }
                     $metadataChildObject = Metadata::toChildMetadataObject($childClass, $this);
                     $name = $metadataChildObject::getName();
                     $childValue = $value[$name][$i];
                     $metadataChildObject->setFromStoreValue($childValue);
-                    $row[$metadataChildObject::getPersistentName()]=$metadataChildObject;
+                    $row[$metadataChildObject::getPersistentName()] = $metadataChildObject;
                 }
                 $this->rows[] = $row;
             }

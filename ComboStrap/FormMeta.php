@@ -214,17 +214,28 @@ class FormMeta
         } else {
             if ($metadata instanceof MetadataTabular) {
 
+                $childFields = [];
                 foreach ($metadata->getChildren() as $childMetadataClass) {
 
-                    $childMetadata = Metadata::toChildMetadataObject($childMetadataClass,$metadata);
+                    $childMetadata = Metadata::toChildMetadataObject($childMetadataClass, $metadata);
                     $childField = FormMetaField::create($childMetadata);
                     $this->setCommonDataToFieldFromMetadata($childField, $childMetadata);
                     $this->setLeafDataToFieldFromMetadata($childField, $childMetadata);
                     $field->addColumn($childField);
-                    $value = $metadata->getColumnValues($childMetadata);
-                    $defaultValue = $metadata->getDefaultValueForColumn($childMetadata);
+                    $childFields[$childMetadata::getPersistentName()] = $childField;
 
                 }
+                $rows = $metadata->getValue();
+                foreach ($rows as $row) {
+                    foreach ($row as $colName => $colValue) {
+                        $childField = $childFields[$colName];
+                        $childField->addValue($colValue->toStoreValue(), $colValue->toStoreDefaultValue());
+                    }
+                }
+                foreach ($childFields as $childField){
+                    $childField->addValue(null, null);
+                }
+
 
             } else {
 
@@ -268,7 +279,7 @@ class FormMeta
         $possibleValues = $metadata->getPossibleValues();
         if ($possibleValues !== null) {
             $field->setDomainValues($possibleValues);
-            if($metadata instanceof MetadataArray){
+            if ($metadata instanceof MetadataArray) {
                 $field->setMultiple(true);
             }
         }

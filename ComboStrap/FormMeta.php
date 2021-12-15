@@ -226,10 +226,12 @@ class FormMeta
 
                 }
                 $rows = $metadata->getValue();
-                foreach ($rows as $row) {
-                    foreach ($row as $colName => $colValue) {
-                        $childField = $childFields[$colName];
-                        $childField->addValue($colValue->toStoreValue(), $colValue->toStoreDefaultValue());
+                if($rows!==null) {
+                    foreach ($rows as $row) {
+                        foreach ($row as $colName => $colValue) {
+                            $childField = $childFields[$colName];
+                            $childField->addValue($colValue->toStoreValue(), $colValue->toStoreDefaultValue());
+                        }
                     }
                 }
                 foreach ($childFields as $childField){

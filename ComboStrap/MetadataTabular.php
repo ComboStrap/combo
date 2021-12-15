@@ -130,10 +130,9 @@ abstract class MetadataTabular extends Metadata
          * List of columns (HTML way)
          */
         // child object building
-        $childObjectsByPersistentName = [];
+        $childClassesByPersistentName = [];
         foreach ($this->getChildren() as $childClass) {
-            $metadataChildObject = Metadata::toChildMetadataObject($childClass, $this);
-            $childObjectsByPersistentName[$metadataChildObject::getPersistentName()] = $metadataChildObject;
+            $childClassesByPersistentName[$childClass::getPersistentName()] = $childClass;
         }
         foreach ($value as $item) {
 
@@ -150,11 +149,12 @@ abstract class MetadataTabular extends Metadata
             $row = [];
             $idValue = null;
             foreach ($item as $colName => $colValue) {
-                $childObject = $childObjectsByPersistentName[$colName];
-                if ($childObject === null) {
+                $childClass = $childClassesByPersistentName[$colName];
+                if ($childClass === null) {
                     LogUtility::msg("The column does not have a metadata definition");
                     continue;
                 }
+                $childObject = Metadata::toChildMetadataObject($childClass, $this);
                 $childObject->buildFromStoreValue($colValue);
                 $row[$childObject::getPersistentName()] = $childObject;
                 if ($childObject::getPersistentName() === $identifierPersistentName) {

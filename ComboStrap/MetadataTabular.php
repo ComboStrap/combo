@@ -32,6 +32,9 @@ abstract class MetadataTabular extends Metadata
     public function getValue(): ?array
     {
         $this->buildCheck();
+        if($this->rows===null){
+            return null;
+        }
         return array_values($this->rows);
     }
 

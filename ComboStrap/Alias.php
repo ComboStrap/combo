@@ -46,15 +46,7 @@ class Alias
         return $this->path;
     }
 
-    public static function getPossibleTypesValues(): array
-    {
-        return AliasType::ALIAS_TYPE_VALUES;
-    }
 
-    public static function getDefaultType()
-    {
-        return AliasType::REDIRECT;
-    }
 
     /**
      * @return Page
@@ -84,7 +76,7 @@ class Alias
     public
     function setType(string $type): Alias
     {
-        if (!in_array($type, self::getPossibleTypesValues())) {
+        if (!in_array($type, AliasType::ALIAS_TYPE_VALUES)) {
             $pageAnchor = $this->getPage()->getAnchorLink();
             LogUtility::msg("Bad Alias Type. The alias type value ($type) for the alias path ({$this->getPath()}) of the page ({$pageAnchor})");
             return $this;

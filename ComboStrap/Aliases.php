@@ -198,17 +198,14 @@ class Aliases extends MetadataTabular
             }
         }
 
-        if ($this->aliases === null) {
-            return [];
-        }
-        return array_values($this->aliases);
+        return parent::getValue();
     }
 
     /**
      * @throws ExceptionCombo
      */
     public
-    function addAlias(string $aliasPath, $aliasType = AliasType::REDIRECT): Aliases
+    function addAlias(string $aliasPath, $aliasType = null): Aliases
     {
         $this->addAndGetAlias($aliasPath, $aliasType);
         return $this;
@@ -218,16 +215,23 @@ class Aliases extends MetadataTabular
      * @throws ExceptionCombo
      */
     public
-    function addAndGetAlias($aliasPath, $aliasType = AliasType::REDIRECT): Alias
+    function addAndGetAlias($aliasPath, $aliasType = null): Alias
     {
         $this->buildCheck();
-        $alias = Alias::create($this->getResource(), $aliasPath);
+        $path = Metadata::toChildMetadataObject(AliasPath::class,$this)
+            ->setFromStoreValue($aliasPath);
+        $row[$path::getPersistentName()] = $path;
 
-        if (!blank($aliasType)) {
+        $alias = Alias::create($this->getResource(),$path->getValue());
+
+        if($aliasType!==null){
+            $aliasObject = Metadata::toChildMetadataObject(AliasType::class,$this)
+                ->setFromStoreValue($aliasType);
+            $row[$aliasObject::getPersistentName()] = $aliasObject;
             $alias->setType($aliasType);
         }
+        $this->rows[$path->getValue()] = $row;
 
-        $this->aliases[$aliasPath] = $alias;
         return $alias;
     }
 

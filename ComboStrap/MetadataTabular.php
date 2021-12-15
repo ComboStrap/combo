@@ -32,7 +32,7 @@ abstract class MetadataTabular extends Metadata
     public function getValue(): ?array
     {
         $this->buildCheck();
-        return $this->rows;
+        return array_values($this->rows);
     }
 
 
@@ -171,7 +171,6 @@ abstract class MetadataTabular extends Metadata
 
     public function valueIsNotNull(): bool
     {
-        $this->buildCheck();
         return $this->rows !== null;
     }
 

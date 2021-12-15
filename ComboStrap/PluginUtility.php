@@ -52,6 +52,8 @@ require_once(__DIR__ . '/MetadataSingleArrayStore.php');
  */
 require_once(__DIR__ . '/AdsUtility.php');
 require_once(__DIR__ . '/Alias.php');
+require_once(__DIR__ . '/AliasPath.php');
+require_once(__DIR__ . '/AliasType.php');
 require_once(__DIR__ . '/Aliases.php');
 require_once(__DIR__ . '/Align.php');
 require_once(__DIR__ . '/AnalyticsDocument.php');

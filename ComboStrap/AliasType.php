@@ -4,12 +4,12 @@
 namespace ComboStrap;
 
 
-class AliasType extends MetadataArray
+class AliasType extends MetadataText
 {
 
 
-    const PROPERTY_NAME = "alias-type";
-    const PERSISTENT_NAME = "type";
+    private const PROPERTY_NAME = "alias-type";
+    private const PERSISTENT_NAME = "type";
     const REDIRECT = "redirect";
     const ALIAS_TYPE_VALUES = [AliasType::SYNONYM, AliasType::REDIRECT];
     const SYNONYM = "synonym";
@@ -55,4 +55,6 @@ class AliasType extends MetadataArray
     {
         return AliasType::REDIRECT;
     }
+
+
 }

@@ -9,6 +9,8 @@ namespace ComboStrap;
  * @package ComboStrap
  * A list of row represented as a list of column
  * ie an entity with a map that has a key
+ *
+ * The value of a tabular is an array of row (where a row is an associative array)
  */
 abstract class MetadataTabular extends Metadata
 {
@@ -22,19 +24,17 @@ abstract class MetadataTabular extends Metadata
     protected $rows;
 
 
-
     /**
      * @return array - the rows in array format
      */
     public function getValue(): ?array
     {
         $this->buildCheck();
-        if($this->rows===null){
+        if ($this->rows === null) {
             return null;
         }
         return array_values($this->rows);
     }
-
 
 
     public function toStoreValue(): ?array
@@ -178,7 +178,7 @@ abstract class MetadataTabular extends Metadata
     function remove($identifierValue)
     {
         $this->buildCheck();
-        if ($this->rows===null){
+        if ($this->rows === null) {
             return;
         }
         unset($this->rows[$identifierValue]);
@@ -188,7 +188,7 @@ abstract class MetadataTabular extends Metadata
     function has($identifierValue): bool
     {
         $this->buildCheck();
-        if ($this->rows===null){
+        if ($this->rows === null) {
             return false;
         }
         return isset($this->rows[$identifierValue]);

@@ -21,10 +21,7 @@ abstract class MetadataTabular extends Metadata
      */
     protected $rows;
 
-    public function getDefaultValue()
-    {
-        return null;
-    }
+
 
     /**
      * @return array - the rows in array format

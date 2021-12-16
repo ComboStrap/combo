@@ -67,6 +67,9 @@ abstract class MetadataMultiple extends Metadata
     public function toStoreValue()
     {
         $this->buildCheck();
+        if ($this->array === null) {
+            return null;
+        }
         return implode($this->getStringSeparator(), $this->array);
     }
 

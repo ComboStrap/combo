@@ -10,7 +10,6 @@ class PageImages extends MetadataTabular
 
     const CANONICAL = "page:image";
     public const PROPERTY_NAME = 'image';
-    public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
     public const FIRST_IMAGE_META_RELATION = "firstimage";
 
 
@@ -33,6 +32,27 @@ class PageImages extends MetadataTabular
     public static function create(): Metadata
     {
         return new PageImages();
+    }
+
+    /**
+     * Google accepts several images dimension and ratios
+     * for the same image
+     * We may get an array then
+     */
+    public function getValueAsPageImagesOrDefault(): array
+    {
+
+        $pageImages = $this->getValueAsPageImages();
+        if ($pageImages !== null) {
+            return $pageImages;
+        }
+
+        $defaultPageImage = $this->getDefaultImage();
+        if ($defaultPageImage !== null) {
+            return [PageImage::create($defaultPageImage, $this->getResource())];
+        }
+
+        return [];
     }
 
     /**
@@ -289,8 +309,21 @@ class PageImages extends MetadataTabular
         return $pageImage;
     }
 
+    public
+    function getDefaultImage(): ?Image
+    {
+        if (!PluginUtility::getConfValue(PageImagePath::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+            return $this->getFirstImage();
+        }
+        return null;
+    }
+
+    /**
+     * @return ImageRaster|ImageSvg|null - the first image of the page
+     */
     public function getFirstImage()
     {
+
         $store = $this->getStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
@@ -324,35 +357,20 @@ class PageImages extends MetadataTabular
     }
 
 
-    public function getColumnValues(Metadata $childMetadata): array
+    public function getDefaultValue(): array
     {
-        $value = [];
-        if ($this->pageImages !== null) {
-            /**
-             * TODO ? Use the Row data
-             *  // This function is used and tailored only for the form data store actually
-             *  // To make it generic, we could have also worked from the raw data
-             *  // created a PageImageUsage / Path object and got the output
-             */
-            foreach ($this->pageImages as $pageImage) {
-                switch ($childMetadata->getName()) {
-                    case PageImagePath::PROPERTY_NAME:
-                        $value[] = $pageImage->getImage()->getPath()->toString();
-                        break;
-                    case PageImageUsage::PERSISTENT_NAME:
-                        $value[] = implode(",", $pageImage->getUsages());
-                        break;
-                    default:
-                        LogUtility::msg("Child Metadata not known");
-                }
-            }
-        }
-        return $value;
-    }
 
-    public function getDefaultValueForColumn($childMetadata): array
-    {
-        // TODO: Implement getDefaultValueForColumn() method.
-        return [];
+        $pageImagePath = PageImagePath::createFromParent($this);
+        $defaultImage = $this->getDefaultImage();
+        if ($defaultImage !== null) {
+            $pageImagePath->buildFromStoreValue($defaultImage->getPath()->toString());
+        }
+        return [
+            [
+                PageImagePath::getPersistentName() => $pageImagePath,
+                PageImageUsage::getPersistentName() => PageImageUsage::createFromParent($this)->buildFromStoreValue([PageImageUsage::DEFAULT])
+            ]
+        ];
+
     }
 }

@@ -100,6 +100,96 @@ class FormMetaField
         return new FormMetaField($name);
     }
 
+    /**
+     * Almost because a form does not allow hierarchical data
+     * We send an error in this case
+     * @param Metadata $metadata
+     * @return FormMetaField
+     */
+    public static function createFromMetadata(Metadata $metadata): FormMetaField
+    {
+        $field = FormMetaField::create($metadata->getName());
+
+        self::setCommonDataToFieldFromMetadata($field, $metadata);
+
+        $childrenMetadata = $metadata->getChildren();
+
+        if ($metadata->getParent() === null) {
+            /**
+             * Only the top field have a tab value
+             */
+            $field->setTab($metadata->getTab());
+        }
+
+
+        /**
+         * No children
+         */
+        if ($childrenMetadata === null) {
+
+            static::setLeafDataToFieldFromMetadata($field, $metadata);
+
+            // Value
+            $value = $metadata->toStoreValue();
+            $defaultValue = $metadata->toStoreDefaultValue();
+            $field->addValue($value, $defaultValue);
+
+        } else {
+
+            if ($metadata instanceof MetadataTabular) {
+
+                $childFields = [];
+                foreach ($metadata->getChildren() as $childMetadataClass) {
+
+                    $childMetadata = Metadata::toChildMetadataObject($childMetadataClass, $metadata);
+                    $childField = FormMetaField::create($childMetadata);
+                    static::setCommonDataToFieldFromMetadata($childField, $childMetadata);
+                    static::setLeafDataToFieldFromMetadata($childField, $childMetadata);
+                    $field->addColumn($childField);
+                    $childFields[$childMetadata::getPersistentName()] = $childField;
+                }
+                $rows = $metadata->getValue();
+                if ($rows !== null) {
+                    foreach ($rows as $row) {
+                        foreach ($row as $colName => $colValue) {
+                            $childField = $childFields[$colName];
+                            $childField->addValue($colValue->toStoreValue(), $colValue->toStoreDefaultValue());
+                        }
+                    }
+
+                    // Add an empty row
+                    $defaultRows = $metadata->getDefaultValue();
+                    if($defaultRows!==null){
+                        $defaultRow = $defaultRows[0];
+                        foreach ($defaultRow as $colName => $colValue) {
+                            $childField = $childFields[$colName];
+                            $childField->addValue(null, $colValue->toStoreDefaultValue());
+                        }
+                    }
+
+                } else {
+
+                    // Show the default rows
+                    $rows = $metadata->getDefaultValue();
+                    foreach ($rows as $row) {
+                        foreach ($row as $colName => $colValue) {
+                            $childField = $childFields[$colName];
+                            $childField->addValue(null, $colValue->toStoreValue());
+                        }
+                    }
+
+                }
+
+
+            } else {
+
+                LogUtility::msg("Hierarchical data is not supported in a form. Metadata ($metadata) has children and is not tabular");
+            }
+        }
+        return $field;
+
+    }
+
 
     public function toAssociativeArray(): array
     {
@@ -338,5 +428,42 @@ class FormMetaField
 
     }
 
+    /**
+     * Common metadata to all field from a leaf to a tabular
+     * @param FormMetaField $field
+     * @param Metadata $metadata
+     */
+    private static
+    function setCommonDataToFieldFromMetadata(FormMetaField $field, Metadata $metadata)
+    {
+        $field->setType($metadata->getDataType())
+            ->setCanonical($metadata->getCanonical())
+            ->setLabel($metadata->getLabel())
+            ->setDescription($metadata->getDescription());
+    }
+
+    /**
+     * @param FormMetaField $field
+     * @param Metadata $metadata
+     * Add the field metadata that are only available for leaf metadata
+     */
+    private static
+    function setLeafDataToFieldFromMetadata(FormMetaField $field, Metadata $metadata)
+    {
+        $field->setMutable($metadata->getMutable());
+
+        $formControlWidth = $metadata->getFormControlWidth();
+        if ($formControlWidth !== null) {
+            $field->setWidth($formControlWidth);
+        }
+        $possibleValues = $metadata->getPossibleValues();
+        if ($possibleValues !== null) {
+            $field->setDomainValues($possibleValues);
+            if ($metadata instanceof MetadataMultiple) {
+                $field->setMultiple(true);
+            }
+        }
+
+    }
 
 }

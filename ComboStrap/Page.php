@@ -494,7 +494,7 @@ class Page extends ResourceComboAbs
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
-        $metadata = $store->getCurrentFromName( 'relation');
+        $metadata = $store->getCurrentFromName('relation');
         if ($metadata === null) {
             /**
              * Happens when no rendering has been made
@@ -737,7 +737,7 @@ class Page extends ResourceComboAbs
         }
         $medias = [];
 
-        $relation = $store->getCurrentFromName( 'relation');
+        $relation = $store->getCurrentFromName('relation');
         if (isset($relation['media'])) {
             /**
              * The relation is
@@ -763,22 +763,7 @@ class Page extends ResourceComboAbs
     function getPageImagesOrDefault(): array
     {
 
-        /**
-         * Google accepts several images dimension and ratios
-         * for the same image
-         * We may get an array then
-         */
-        $pageImages = $this->getPageImages();
-        if (empty($pageImages)) {
-            $defaultPageImage = $this->getDefaultPageImageObject();
-            if ($defaultPageImage != null) {
-                return [$defaultPageImage];
-            } else {
-                return [];
-            }
-        }
-        return $pageImages;
-
+        return $this->pageImages->getValueAsPageImagesOrDefault();
 
     }
 
@@ -811,7 +796,7 @@ class Page extends ResourceComboAbs
             return null;
         }
 
-        return $store->getFromName( 'creator');
+        return $store->getFromName('creator');
     }
 
     /**
@@ -827,7 +812,7 @@ class Page extends ResourceComboAbs
             return null;
         }
 
-        return $store->getFromName( 'user');
+        return $store->getFromName('user');
 
     }
 
@@ -882,9 +867,7 @@ class Page extends ResourceComboAbs
          * @var MetadataDokuWikiStore $metadataStore
          */
         $metadataStore = $this->getStoreOrDefault();
-        $metadataStore
-            ->renderAndPersist($this)
-            ->persist();
+        $metadataStore->renderAndPersist();
 
         /**
          * Return
@@ -1440,19 +1423,6 @@ class Page extends ResourceComboAbs
         return $this;
     }
 
-    public
-    function getDefaultPageImageObject(): ?PageImage
-    {
-        if (!PluginUtility::getConfValue(PageImages::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
-            $firstImage = $this->getFirstImage();
-            if ($firstImage != null) {
-                if ($firstImage->getPath()->getScheme() == DokuFs::SCHEME) {
-                    return PageImage::create($firstImage, $this);
-                }
-            }
-        }
-        return null;
-    }
 
     /**
      * @param $aliasPath

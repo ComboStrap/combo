@@ -281,6 +281,12 @@ abstract class Metadata
 
     public function getCanonical(): string
     {
+        if ($this->parent !== null) {
+            $canonical = $this->parent->getCanonical();
+            if ($canonical !== null) {
+                return $canonical;
+            }
+        }
         /**
          * The canonical to page metadata
          */
@@ -344,7 +350,8 @@ abstract class Metadata
      * see if the value set is the same than the default one
      * It this is the case, the data is not stored
      */
-    public function toStoreDefaultValue(){
+    public function toStoreDefaultValue()
+    {
         return $this->getDefaultValue();
     }
 

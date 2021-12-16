@@ -63,4 +63,11 @@ class LowQualityPageOverwrite extends MetadataBoolean
          */
         return self::CAN_BE_LOW_QUALITY_PAGE_DEFAULT;
     }
+
+    public function getCanonical(): string
+    {
+        return "low_quality_page";
+    }
+
+
 }

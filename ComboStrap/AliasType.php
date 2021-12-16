@@ -13,6 +13,12 @@ class AliasType extends MetadataText
     const REDIRECT = "redirect";
     const ALIAS_TYPE_VALUES = [AliasType::SYNONYM, AliasType::REDIRECT];
     const SYNONYM = "synonym";
+    const DEFAULT = self::REDIRECT;
+
+    public static function createForParent(Aliases $parent): AliasType
+    {
+        return new AliasType($parent);
+    }
 
     public function getDescription(): string
     {
@@ -53,7 +59,7 @@ class AliasType extends MetadataText
 
     public function getDefaultValue(): string
     {
-        return AliasType::REDIRECT;
+        return AliasType::DEFAULT;
     }
 
 

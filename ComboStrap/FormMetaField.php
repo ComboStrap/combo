@@ -186,6 +186,9 @@ class FormMetaField
                     if ($rows !== null) {
                         foreach ($rows as $row) {
                             foreach ($row as $colName => $colValue) {
+                                if ($colValue === null) {
+                                    continue;
+                                }
                                 $childField = $childFields[$colName];
                                 $childField->addValue(null, $colValue->toStoreValue());
                             }

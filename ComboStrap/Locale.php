@@ -69,4 +69,11 @@ class Locale extends MetadataText
     {
         return Site::getLocale();
     }
+
+    public function getCanonical(): string
+    {
+        return "locale";
+    }
+
+
 }

@@ -12,12 +12,12 @@ class AliasPath extends MetadataWikiPath
 
     public function getDescription(): string
     {
-        return "The alias wiki path";
+        return "The path of the alias";
     }
 
     public function getLabel(): string
     {
-        return "Alias path";
+        return "Alias Path";
     }
 
     public static function getName(): string

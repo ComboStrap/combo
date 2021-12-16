@@ -8,8 +8,7 @@ class Aliases extends MetadataTabular
 {
 
     public const PROPERTY_NAME = "alias";
-    public const ALIAS_PATH = "alias-path";
-    public const ALIAS_TYPE = "alias-type";
+
 
     /**
      * @var Alias[]
@@ -162,9 +161,15 @@ class Aliases extends MetadataTabular
 
     }
 
-    public function getDefaultValue()
+    public function getDefaultValue(): array
     {
-        return null;
+        return
+            [
+                [
+                    AliasPath::getPersistentName()=>null,
+                    AliasType::getPersistentName()=>AliasType::createForParent($this)->buildFromStoreValue(AliasType::DEFAULT)
+                ]
+            ];
     }
 
     /**
@@ -282,6 +287,8 @@ class Aliases extends MetadataTabular
     {
         return [AliasPath::class, AliasType::class];
     }
+
+
 
 
 }

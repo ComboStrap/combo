@@ -127,5 +127,10 @@ class PagePublicationDate extends MetadataDateTime
         return [PagePublicationDate::OLD_META_KEY];
     }
 
+    public function getCanonical(): string
+    {
+        return "published";
+    }
+
 
 }

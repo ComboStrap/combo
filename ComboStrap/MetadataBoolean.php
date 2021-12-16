@@ -50,7 +50,7 @@ abstract class MetadataBoolean extends MetadataScalar
              * By default, this is not checked, therefore, the default value is when this is not the default.
              * It means that this is the inverse of the default value
              */
-            return Boolean::toString(!$this->getDefaultValue());
+            return !$this->getDefaultValue();
 
         }
         return parent::toStoreDefaultValue();
@@ -67,7 +67,7 @@ abstract class MetadataBoolean extends MetadataScalar
         $value = $this->getValue();
 
         if ($store instanceof MetadataFormDataStore) {
-            return Boolean::toString($value);
+            return $value;
         }
 
         if ($store->isHierarchicalTextBased()) {

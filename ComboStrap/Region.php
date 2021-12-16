@@ -83,4 +83,11 @@ class Region extends MetadataText
             throw new ExceptionCombo("The region value ($value) for the page ({$this->getResource()}) does not have two letters (ISO 3166 alpha-2 region code)", $this->getCanonical());
         }
     }
+
+    public function getCanonical(): string
+    {
+        return "region";
+    }
+
+
 }

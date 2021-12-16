@@ -12,6 +12,7 @@ class PageImages extends MetadataTabular
     public const PROPERTY_NAME = 'page-image';
     public const PERSISTENT_NAME = 'image';
     public const FIRST_IMAGE_META_RELATION = "firstimage";
+    public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
 
 
     /**
@@ -318,7 +319,7 @@ class PageImages extends MetadataTabular
     public
     function getDefaultImage(): ?Image
     {
-        if (!PluginUtility::getConfValue(PageImagePath::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
+        if (!PluginUtility::getConfValue(self::CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE)) {
             return $this->getFirstImage();
         }
         return null;

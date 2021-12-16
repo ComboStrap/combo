@@ -174,8 +174,13 @@ class FormMetaField
                     // Add an extra empty row to allow adding an image
                     if ($defaultRow !== null) {
                         foreach ($defaultRow as $colName => $colValue) {
+                            $defaultColValue = null;
+                            if ($defaultColValue !== null) {
+                                $defaultColValue = $colValue->toStoreDefaultValue();
+                            }
                             $childField = $childFields[$colName];
-                            $childField->addValue(null, $colValue->toStoreDefaultValue());
+                            $childField->addValue(null, $defaultColValue);
+
                         }
                     }
 

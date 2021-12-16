@@ -9,7 +9,6 @@ class PageImagePath extends MetadataWikiPath
 
     public const PERSISTENT_NAME = "path";
     const PROPERTY_NAME = "page-image-path";
-    public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
 
 
     public static function createFromParent(Metadata $metadata): PageImagePath

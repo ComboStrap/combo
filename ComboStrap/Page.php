@@ -796,7 +796,7 @@ class Page extends ResourceComboAbs
             return null;
         }
 
-        return $store->getFromName('creator');
+        return $store->getFromPersistentName('creator');
     }
 
     /**
@@ -812,7 +812,7 @@ class Page extends ResourceComboAbs
             return null;
         }
 
-        return $store->getFromName('user');
+        return $store->getFromPersistentName('user');
 
     }
 

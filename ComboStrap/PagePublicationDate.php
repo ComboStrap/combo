@@ -92,7 +92,7 @@ class PagePublicationDate extends MetadataDateTime
             /**
              * Old metadata key
              */
-            $value = $store->getFromName(PagePublicationDate::OLD_META_KEY);
+            $value = $store->getFromPersistentName(PagePublicationDate::OLD_META_KEY);
         }
 
         try {

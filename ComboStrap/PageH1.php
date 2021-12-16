@@ -53,7 +53,7 @@ class PageH1 extends MetadataText
     {
         $store = $this->getStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $h1Parsed = $store->getFromName( self::H1_PARSED);
+            $h1Parsed = $store->getFromPersistentName( self::H1_PARSED);
             if (!empty($h1Parsed)) {
                 return $h1Parsed;
             }

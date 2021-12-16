@@ -60,7 +60,7 @@ class MetadataStoreTransfer
     }
 
     /**
-     * @param $data
+     * @param array $data
      * @return $this
      */
     public function process(array $data): MetadataStoreTransfer
@@ -72,10 +72,10 @@ class MetadataStoreTransfer
          * Check/ validity and list of metadata building
          */
         $metadatas = [];
-        foreach ($data as $name => $value) {
+        foreach ($data as $persistentName => $value) {
 
 
-            $metadata = Metadata::getForName($name);
+            $metadata = Metadata::getForName($persistentName);
 
             /**
              * Take old name or renaming into account
@@ -84,32 +84,33 @@ class MetadataStoreTransfer
              * (ie {@link \ComboStrap\PagePublicationDate::OLD_META_KEY}
              * by {@link \ComboStrap\PagePublicationDate::PROPERTY_NAME}
              */
-            $normalizedName = $name;
+            $name = $persistentName;
             if ($metadata !== null) {
-                $normalizedName = $metadata->getName();
+                $name = $metadata::getName();
             }
-            $this->normalizedData[$normalizedName] = $value;
+            $this->normalizedData[$name] = $value;
+
+            /**
+             * Unknown meta
+             */
+            if ($metadata === null) {
+                $this->targetStore->setFromPersistentName($name, $value);
+                continue;
+            }
 
             /**
              * Not modifiable meta check
              */
-            if (in_array($normalizedName, Metadata::NOT_MODIFIABLE_METAS)) {
+            if (in_array($name, Metadata::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
                     ->setCanonical(Metadata::CANONICAL);
                 continue;
             }
 
             /**
-             * Unknown meta
-             */
-            if ($metadata === null) {
-                $this->targetStore->setFromName($name, $value);
-                $this->normalizedData[$name] = $value;
-            }
-            /**
              * Valid meta to proceed in the next phase
              */
-            $metadatas[$metadata->getName()] = $metadata;
+            $metadatas[$name] = $metadata;
 
         }
 

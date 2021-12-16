@@ -36,13 +36,13 @@ abstract class MetadataSingleArrayStore implements MetadataStore
     public function set(Metadata $metadata)
     {
         $this->checkResource($metadata->getResource());
-        $this->data[$metadata->getName()] = $metadata->toStoreValue();
+        $this->data[$metadata::getPersistentName()] = $metadata->toStoreValue();
     }
 
     public function get(Metadata $metadata, $default = null)
     {
         $this->checkResource($metadata->getResource());
-        $value = $this->data[$metadata->getName()];
+        $value = $this->data[$metadata::getPersistentName()];
         if ($value !== null) {
             return $value;
         }
@@ -73,7 +73,7 @@ abstract class MetadataSingleArrayStore implements MetadataStore
         $this->data = [];
     }
 
-    public function getFromName(string $name, $default = null)
+    public function getFromPersistentName(string $name, $default = null)
     {
 
         $value = $this->data[$name];
@@ -83,7 +83,7 @@ abstract class MetadataSingleArrayStore implements MetadataStore
         return $default;
     }
 
-    public function setFromName(string $name, $value)
+    public function setFromPersistentName(string $name, $value)
     {
 
         if ($value === null || $value === "") {

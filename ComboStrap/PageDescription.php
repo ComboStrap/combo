@@ -105,7 +105,7 @@ class PageDescription extends MetadataText
         /**
          * Plugin Plugin Description Integration
          */
-        $value = $metaDataStore->getFromName(self::PLUGIN_DESCRIPTION_META);
+        $value = $metaDataStore->getFromPersistentName(self::PLUGIN_DESCRIPTION_META);
         if ($value !== null) {
             $keywords = $value["keywords"];
             if ($keywords !== null) {

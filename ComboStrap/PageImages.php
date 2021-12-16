@@ -9,7 +9,8 @@ class PageImages extends MetadataTabular
 
 
     const CANONICAL = "page:image";
-    public const PROPERTY_NAME = 'image';
+    public const PROPERTY_NAME = 'page-image';
+    public const PERSISTENT_NAME = 'image';
     public const FIRST_IMAGE_META_RELATION = "firstimage";
 
 
@@ -160,6 +161,11 @@ class PageImages extends MetadataTabular
     static public function getName(): string
     {
         return self::PROPERTY_NAME;
+    }
+
+    static public function getPersistentName(): string
+    {
+        return self::PERSISTENT_NAME;
     }
 
     /**

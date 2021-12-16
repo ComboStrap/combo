@@ -30,9 +30,9 @@ class PageImageUsage extends MetadataMultiple
     {
         return [
             self::ALL,
-            self::ICON,
-            self::GOOGLE,
             self::FACEBOOK,
+            self::GOOGLE,
+            self::ICON,
             PageImage::PAGE_IMAGE,
             self::SOCIAL,
             self::TWITTER,
@@ -73,7 +73,7 @@ class PageImageUsage extends MetadataMultiple
     }
 
 
-    function getDefaultValues(): array
+    function getDefaultValue(): array
     {
         return [self::ALL];
     }

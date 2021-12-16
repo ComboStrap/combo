@@ -150,17 +150,29 @@ class FormMetaField
                 }
                 $rows = $metadata->getValue();
                 if ($rows !== null) {
-                    foreach ($rows as $row) {
-                        foreach ($row as $colName => $colValue) {
-                            $childField = $childFields[$colName];
-                            $childField->addValue($colValue->toStoreValue(), $colValue->toStoreDefaultValue());
-                        }
+
+                    $defaultRow = null;
+                    $defaultRows = $metadata->getDefaultValue();
+                    if ($defaultRows !== null) {
+                        $defaultRow = $defaultRows[0];
                     }
 
-                    // Add an empty row
-                    $defaultRows = $metadata->getDefaultValue();
-                    if($defaultRows!==null){
-                        $defaultRow = $defaultRows[0];
+                    foreach ($rows as $row) {
+                        foreach ($childFields as $childName => $childField) {
+                            $colValue = $row[$childName];
+                            if ($colValue === null && $defaultRow !== null) {
+                                $colValue = $defaultRow[$childName];
+                                if ($colValue === null) {
+                                    continue;
+                                }
+                            }
+                            $childField->addValue($colValue->toStoreValue(), $colValue->toStoreDefaultValue());
+                        }
+
+                    }
+
+                    // Add an extra empty row to allow adding an image
+                    if ($defaultRow !== null) {
                         foreach ($defaultRow as $colName => $colValue) {
                             $childField = $childFields[$colName];
                             $childField->addValue(null, $colValue->toStoreDefaultValue());
@@ -171,10 +183,12 @@ class FormMetaField
 
                     // Show the default rows
                     $rows = $metadata->getDefaultValue();
-                    foreach ($rows as $row) {
-                        foreach ($row as $colName => $colValue) {
-                            $childField = $childFields[$colName];
-                            $childField->addValue(null, $colValue->toStoreValue());
+                    if ($rows !== null) {
+                        foreach ($rows as $row) {
+                            foreach ($row as $colName => $colValue) {
+                                $childField = $childFields[$colName];
+                                $childField->addValue(null, $colValue->toStoreValue());
+                            }
                         }
                     }
 
@@ -191,7 +205,8 @@ class FormMetaField
     }
 
 
-    public function toAssociativeArray(): array
+    public
+    function toAssociativeArray(): array
     {
         /**
          * Mandatory attributes
@@ -292,7 +307,8 @@ class FormMetaField
         return $this;
     }
 
-    public function setDescription(string $string): FormMetaField
+    public
+    function setDescription(string $string): FormMetaField
     {
         $this->description = $string;
         return $this;
@@ -303,7 +319,8 @@ class FormMetaField
      * @param null $defaultValuePlaceholderOrReturned - the value set as placeholder or return value for a checked checkbox
      * @return $this
      */
-    public function addValue($value, $defaultValuePlaceholderOrReturned = null): FormMetaField
+    public
+    function addValue($value, $defaultValuePlaceholderOrReturned = null): FormMetaField
     {
         $this->values[] = $value;
         $this->defaults[] = $defaultValuePlaceholderOrReturned;
@@ -345,17 +362,20 @@ class FormMetaField
         return $this;
     }
 
-    public function getTab(): string
+    public
+    function getTab(): string
     {
         return $this->tab;
     }
 
-    public function getName()
+    public
+    function getName()
     {
         return $this->name;
     }
 
-    public function getValue()
+    public
+    function getValue()
     {
         switch (sizeof($this->values)) {
             case 0:
@@ -371,22 +391,26 @@ class FormMetaField
         }
     }
 
-    public function isMutable(): bool
+    public
+    function isMutable(): bool
     {
         return $this->mutable;
     }
 
-    public function getChildren(): ?array
+    public
+    function getChildren(): ?array
     {
         return $this->children;
     }
 
-    public function getType(): string
+    public
+    function getType(): string
     {
         return $this->type;
     }
 
-    public function getDefaultValue()
+    public
+    function getDefaultValue()
     {
         switch (sizeof($this->defaults)) {
             case 0:
@@ -402,13 +426,15 @@ class FormMetaField
         }
     }
 
-    public function setMultiple(bool $bool): FormMetaField
+    public
+    function setMultiple(bool $bool): FormMetaField
     {
         $this->multiple = $bool;
         return $this;
     }
 
-    public function isMultiple(): bool
+    public
+    function isMultiple(): bool
     {
         return $this->multiple;
     }
@@ -420,7 +446,8 @@ class FormMetaField
      * @param null $default
      * @return $this
      */
-    public function setValue($value, $default = null): FormMetaField
+    public
+    function setValue($value, $default = null): FormMetaField
     {
         $this->values = [];
         $this->defaults = [];
@@ -433,7 +460,8 @@ class FormMetaField
      * @param FormMetaField $field
      * @param Metadata $metadata
      */
-    private static
+    private
+    static
     function setCommonDataToFieldFromMetadata(FormMetaField $field, Metadata $metadata)
     {
         $field->setType($metadata->getDataType())
@@ -447,7 +475,8 @@ class FormMetaField
      * @param Metadata $metadata
      * Add the field metadata that are only available for leaf metadata
      */
-    private static
+    private
+    static
     function setLeafDataToFieldFromMetadata(FormMetaField $field, Metadata $metadata)
     {
         $field->setMutable($metadata->getMutable());

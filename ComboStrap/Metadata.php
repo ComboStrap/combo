@@ -92,6 +92,7 @@ abstract class Metadata
             case AliasType::getName():
                 return new Aliases();
             case PageImages::getName():
+            case PageImages::getPersistentName():
             case PageImagePath::getName():
             case PageImageUsage::getName():
                 return new PageImages();

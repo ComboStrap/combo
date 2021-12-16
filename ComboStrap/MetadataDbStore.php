@@ -228,12 +228,12 @@ EOF;
         throw new ExceptionComboRuntime("To implement");
     }
 
-    public function getFromName(string $name, $default = null)
+    public function getFromPersistentName(string $name, $default = null)
     {
         throw new RuntimeException("Not implemented");
     }
 
-    public function setFromName(string $name, $value)
+    public function setFromPersistentName(string $name, $value)
     {
         throw new RuntimeException("Not implemented");
     }

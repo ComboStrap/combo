@@ -107,7 +107,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      * @param null $default
      * @return mixed
      */
-    public function getFromName(string $name, $default = null)
+    public function getFromPersistentName(string $name, $default = null)
     {
         $wikiId = $this->getResource()->getDokuwikiId();
         return $this->getFromWikiId($wikiId, $name, $default);
@@ -131,7 +131,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      * @param string|array $value
      * @return MetadataDokuWikiStore
      */
-    public function setFromName(string $name, $value): MetadataDokuWikiStore
+    public function setFromPersistentName(string $name, $value): MetadataDokuWikiStore
     {
         $this->setFromWikiId($this->getResource()->getDokuwikiId(), $name, $value);
         return $this;

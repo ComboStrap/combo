@@ -8,7 +8,7 @@ namespace ComboStrap;
  * @package ComboStrap
  * The usage for the image of a page
  */
-class PageImageUsage extends MetadataArray
+class PageImageUsage extends MetadataMultiple
 {
 
     public const PERSISTENT_NAME = "usage";  // storage name

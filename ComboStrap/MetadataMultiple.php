@@ -4,15 +4,17 @@
 namespace ComboStrap;
 
 /**
- * Class MetadataArray
  * @package ComboStrap
  * An array, ie list of value metadata
- * Multiple select if the possible values are set
+ *   * Multiple select if the possible values are set
+ *   * Text with a {@link  MetadataMultiple::getStringSeparator() separator}
  * Ie:
  *   * keyword1, keyword2
  *   * usage1, usage2, ...
+ *
+ * By default, the data type is text, if number, the implementation should overwrite the {@link MetadataMultiple::getDataType()}
  */
-abstract class MetadataArray extends Metadata
+abstract class MetadataMultiple extends Metadata
 {
 
     /**
@@ -24,7 +26,7 @@ abstract class MetadataArray extends Metadata
     /**
      * @throws ExceptionCombo
      */
-    public function setValue(?array $array): MetadataArray
+    public function setValue(?array $array): MetadataMultiple
     {
         $this->array = $array;
         $this->sendToStore();
@@ -33,7 +35,7 @@ abstract class MetadataArray extends Metadata
 
     public function getDataType(): string
     {
-        return DataType::ARRAY_TYPE_VALUE;
+        return DataType::TEXT_TYPE_VALUE;
     }
 
     public function getValue(): ?array
@@ -78,7 +80,7 @@ abstract class MetadataArray extends Metadata
 
 
     /**
-     * @return string - the separator used when we receive a string
+     * @return string - the separator used when we receive or store/send an element
      */
     function getStringSeparator(): string
     {

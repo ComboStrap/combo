@@ -4,7 +4,7 @@
 namespace ComboStrap;
 
 
-class PageKeywords extends MetadataArray
+class PageKeywords extends MetadataMultiple
 {
 
     public const PROPERTY_NAME = "keywords";

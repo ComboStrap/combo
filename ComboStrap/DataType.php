@@ -40,10 +40,7 @@ class DataType
      * A string but in Json
      */
     public const JSON_TYPE_VALUE = "json";
-    /**
-     * Multiple value can be chosen
-     */
-    public const ARRAY_TYPE_VALUE = "array";
+
 
     /**
      * The constant value
@@ -55,7 +52,6 @@ class DataType
         DataType::PARAGRAPH_TYPE_VALUE,
         DataType::JSON_TYPE_VALUE,
         DataType::BOOLEAN_TYPE_VALUE,
-        DataType::ARRAY_TYPE_VALUE,
     ];
 
 }

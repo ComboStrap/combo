@@ -307,7 +307,7 @@ class LdJson extends MetadataJson
                 /**
                  * Modified Time
                  */
-                $modifiedTime = $page->getModifiedTime();
+                $modifiedTime = $page->getModifiedTimeOrDefault();
                 if ($modifiedTime != null) {
                     $ldJson[self::DATE_MODIFIED_KEY] = $modifiedTime->format(Iso8601Date::getFormat());
                 };

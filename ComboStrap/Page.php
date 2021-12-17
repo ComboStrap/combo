@@ -839,6 +839,12 @@ class Page extends ResourceComboAbs
         return $this->modifiedTime->getValueFromStore();
     }
 
+    public
+    function getModifiedTimeOrDefault(): ?\DateTime
+    {
+        return $this->modifiedTime->getValueFromStoreOrDefault();
+    }
+
 
     /**
      * Refresh the metadata (used only in test)

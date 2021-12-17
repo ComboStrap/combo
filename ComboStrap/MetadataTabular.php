@@ -226,6 +226,9 @@ abstract class MetadataTabular extends Metadata
 
     public function getRow($id): ?array
     {
-        return $this->rows[$id];
+        $normalizedValue = $this->getUidObject()
+            ->buildFromStoreValue($id)
+            ->getValue();
+        return $this->rows[$normalizedValue];
     }
 }

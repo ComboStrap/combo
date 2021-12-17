@@ -80,7 +80,7 @@ class MetadataDbStore extends MetadataStoreAbs
 
         $uid = Metadata::toMetadataObject($metadata->getUidClass())
             ->setResource($metadata->getResource());
-        $sourceRows = $metadata->getValue();
+        $sourceRows = $metadata->toStoreValue();
         if ($sourceRows === null) {
             return;
         }

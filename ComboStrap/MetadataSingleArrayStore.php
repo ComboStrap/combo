@@ -7,29 +7,23 @@ namespace ComboStrap;
 /**
  * Class MetadataArrayStore
  * @package ComboStrap
- * A front matter based on a single array for a single page
+ * A store based on a single array for a single resource
  */
-abstract class MetadataSingleArrayStore implements MetadataStore
+abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 {
 
 
-    private $page;
     protected $data;
 
     /**
-     * MetadataFormStore constructor.
+     * MetadataSingleArrayStore constructor.
      * @param ResourceCombo $page
-     * @param array $data
+     * @param $data
      */
-    public function __construct(ResourceCombo $page, array $data = [])
+    public function __construct(ResourceCombo $page, $data)
     {
-        $this->page = $page;
         $this->data = $data;
-    }
-
-    public function getResource(): ResourceCombo
-    {
-        return $this->page;
+        parent::__construct($page);
     }
 
 
@@ -94,12 +88,6 @@ abstract class MetadataSingleArrayStore implements MetadataStore
 
     }
 
-    protected function checkResource(ResourceCombo $requestedResource)
-    {
-        if ($this->page !== $requestedResource) {
-            throw new ExceptionComboRuntime("The page ($requestedResource) is unknown. We got data for the page ($this->page)", self::CANONICAL);
-        }
-    }
 
     public function hasProperty(string $name): bool
     {

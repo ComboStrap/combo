@@ -4,7 +4,6 @@
 namespace ComboStrap;
 
 
-use action_plugin_combo_metamanager;
 use Hidehalo\Nanoid\Client;
 use RuntimeException;
 
@@ -37,7 +36,7 @@ class PageId extends MetadataText
      * @return MetadataText
      * @throws ExceptionCombo
      */
-    public function setValue(?string $value): MetadataText
+    public function setValue($value): Metadata
     {
         return $this->setValueWithOrWithoutForce($value);
     }

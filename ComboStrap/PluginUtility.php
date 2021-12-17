@@ -35,6 +35,7 @@ require_once(__DIR__ . '/MetadataText.php');
 require_once(__DIR__ . '/MetadataJson.php');
 require_once(__DIR__ . '/MetadataWikiPath.php');
 require_once(__DIR__ . '/MetadataStore.php');
+require_once(__DIR__ . '/MetadataStoreAbs.php');
 require_once(__DIR__ . '/MetadataSingleArrayStore.php');
 
 /**

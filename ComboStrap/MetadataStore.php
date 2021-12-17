@@ -13,6 +13,9 @@ namespace ComboStrap;
 interface MetadataStore
 {
 
+    const CANONICAL = "store";
+
+
     /**
      * Set the {@link Metadata::getValue()} for a {@link Metadata::getResource()}
      * with the name {@link Metadata::getName()}

@@ -38,7 +38,7 @@ class PageScope extends MetadataText
      * @return MetadataText
      * @throws ExceptionCombo
      */
-    public function setValue(?string $value): MetadataText
+    public function setValue($value): Metadata
     {
         return parent::setValue($value);
     }

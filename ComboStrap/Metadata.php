@@ -63,6 +63,8 @@ abstract class Metadata
         return new $childClass($parent);
     }
 
+
+
     public function getParent(): ?Metadata
     {
         return $this->parent;
@@ -175,10 +177,17 @@ abstract class Metadata
     }
 
 
-    public function setReadStore(MetadataStore $store): Metadata
+    /**
+     * @param $store
+     * @return $this
+     */
+    public function setReadStore($store): Metadata
     {
         if ($this->readStore !== null) {
             LogUtility::msg("The read store was already set.");
+        }
+        if (is_string($store) && !is_subclass_of($store, MetadataStore::class)) {
+            throw new ExceptionComboRuntime("The store class ($store) is not a metadata store class");
         }
         $this->readStore = $store;
         return $this;
@@ -223,9 +232,6 @@ abstract class Metadata
      * Return the store for this metadata
      * By default, this is the {@link ResourceCombo::getStoreOrDefault() default resource metadata store}
      *
-     * TODO: A metadata / resource (page) should have a input store and a output store. This way, it's easier to pass them
-     *   and to understand what's going on.
-     *
      * (ie a memory variable or a database)
      * @return MetadataStore|null
      */
@@ -233,6 +239,9 @@ abstract class Metadata
     {
         if ($this->readStore === null) {
             return $this->getResource()->getStoreOrDefault();
+        }
+        if (!$this->readStore instanceof MetadataFormDataStore) {
+            $this->readStore = MetadataStoreAbs::toMetadataStore($this->readStore, $this->getResource());
         }
         return $this->readStore;
     }

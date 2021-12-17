@@ -3,14 +3,13 @@
 
 namespace ComboStrap;
 
-use http\Exception\RuntimeException;
 
 /**
  * Class MetadataDbStore
  * @package ComboStrap
  * The database store
  */
-class MetadataDbStore implements MetadataStore
+class MetadataDbStore extends MetadataStoreAbs
 {
 
     const ALIAS_TABLE_NAME = "PAGE_ALIASES";

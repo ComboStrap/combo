@@ -34,7 +34,12 @@ class Region extends MetadataText
 
     }
 
-    public function setValue(?string $value): MetadataText
+    /**
+     * @param string|null $value
+     * @return Metadata
+     * @throws ExceptionCombo
+     */
+    public function setValue($value): Metadata
     {
         $this->validityCheck($value);
         return parent::setValue($value);

@@ -64,11 +64,16 @@ abstract class MetadataTabular extends Metadata
         }
 
         $rowsArray = [];
+        ksort($this->rows);
         foreach ($this->rows as $row) {
             $rowArray = [];
-            foreach ($row as $col => $metadata) {
+            foreach ($row as $metadata) {
                 $toStoreValue = $metadata->toStoreValue();
-                if ($toStoreValue !== null) {
+                $toDefaultStoreValue = $metadata->toStoreDefaultValue();
+                if (
+                    $toStoreValue !== null
+                    && $toStoreValue !== $toDefaultStoreValue
+                ) {
                     $rowArray[$metadata::getPersistentName()] = $toStoreValue;
                 }
             }

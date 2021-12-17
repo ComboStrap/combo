@@ -15,7 +15,7 @@ class PageImages extends MetadataTabular
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
 
     /**
-     * The name should be plural
+     * The name should be plural, this one was not
      */
     const OLD_PROPERTY_NAME = "image";
 

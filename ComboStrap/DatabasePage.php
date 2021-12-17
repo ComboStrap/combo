@@ -171,7 +171,7 @@ class DatabasePage
 
         $this->replicateBacklinkPages();
 
-        $store = MetadataDbStore::createForPage($this->page);
+        $store = MetadataDbStore::createFromResource($this->page);
         Aliases::createForPage($this->page)
             ->buildFromReadStore()
             ->setReadStore($store)
@@ -827,8 +827,8 @@ EOF;
      */
     private function getMetaRecord(): array
     {
-        $sourceStore = MetadataDokuWikiStore::createForPage($this->page);
-        $targetStore = MetadataDbStore::createForPage($this->page);
+        $sourceStore = MetadataDokuWikiStore::createFromResource($this->page);
+        $targetStore = MetadataDbStore::createFromResource($this->page);
 
         $record = array(
             Canonical::PROPERTY_NAME,

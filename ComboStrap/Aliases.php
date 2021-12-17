@@ -28,6 +28,31 @@ class Aliases extends MetadataTabular
         return new Aliases();
     }
 
+    public function getValueAsAlias()
+    {
+        $rows = $this->getValue();
+        if($rows===null){
+            return null;
+        }
+        $aliases = [];
+        foreach ($rows as $row){
+            /**
+             * @var AliasPath $aliasMeta
+             */
+            $aliasMeta = $row[AliasPath::getPersistentName()];
+            $alias = Alias::create($this->getResource(), $aliasMeta->getValue());
+            /**
+             * @var AliasType $aliasType
+             */
+            $aliasType = $row[AliasType::getPersistentName()];
+            if($aliasType!==null){
+                $alias->setType($aliasType->getValue());
+            }
+            $aliases[] = $alias;
+        }
+        return $aliases;
+    }
+
     /**
      * @param array|null $aliasesPersistentValues
      * return Alias[]
@@ -172,9 +197,7 @@ class Aliases extends MetadataTabular
             ];
     }
 
-    /**
-     * @return Alias[]
-     */
+
     public function getValue(): ?array
     {
         $this->buildCheck();

@@ -1441,12 +1441,11 @@ class Page extends ResourceComboAbs
 
     /**
      * @return Alias[]
-     * @deprecated for {@link Aliases}
      */
     public
     function getAliases(): array
     {
-        return $this->aliases->getValue();
+        return $this->aliases->getValueAsAlias();
     }
 
     /**

@@ -11,15 +11,24 @@ namespace ComboStrap;
 abstract class MetadataWikiPath extends MetadataText
 {
 
-    public function setValue(?string $value): MetadataText
+    /**
+     * @param string|null $value
+     * @return Metadata
+     * @throws ExceptionCombo
+     */
+    public function setValue($value): Metadata
     {
+        if ($value === null) {
+            parent::setValue($value);
+            return $this;
+        }
         if ($value === "" || $value === ":") {
             // form send empty string
             // for the root `:`, non canonical
-            $value = null;
-        } else {
-            $value = DokuPath::toValidAbsolutePath($value);
+            return $this;
         }
+
+        $value = DokuPath::toValidAbsolutePath($value);
         parent::setValue($value);
         return $this;
     }
@@ -28,14 +37,12 @@ abstract class MetadataWikiPath extends MetadataText
      */
     public function buildFromStoreValue($value): Metadata
     {
-        if ($value !== null && $value !=="") {
+        if ($value !== null && $value !== "") {
             $value = DokuPath::toValidAbsolutePath($value);
         }
         parent::buildFromStoreValue($value);
         return $this;
     }
-
-
 
 
 }

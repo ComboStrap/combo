@@ -141,9 +141,8 @@ class PageDescription extends MetadataText
 
     }
 
-    public function setValue(?string $value): MetadataText
+    public function setValue($value): Metadata
     {
-
 
         if ($value === "" || $value === null) {
 

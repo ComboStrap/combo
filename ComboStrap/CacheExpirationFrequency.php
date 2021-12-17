@@ -24,26 +24,35 @@ class CacheExpirationFrequency extends MetadataText
         return MetaManagerForm::TAB_CACHE_VALUE;
     }
 
-    /** @noinspection PhpParameterNameChangedDuringInheritanceInspection */
-    public function setValue(?string $cronExpression): MetadataText
+    /**
+     * @param string|null $value
+     * @return Metadata
+     * @throws ExceptionCombo
+     */
+    public function setValue($value): Metadata
     {
 
-        if ($cronExpression === "" || $cronExpression === null) {
+        if ($value === null){
+            parent::setValue($value);
+            return $this;
+        }
+
+        $value = trim($value);
+        if ($value === "") {
             // html form send an empty string
-            parent::setValue(null);
             return $this;
         }
 
         try {
-            $cacheExpirationCalculatedDate = Cron::getDate($cronExpression);
+            $cacheExpirationCalculatedDate = Cron::getDate($value);
             $cacheExpirationDate = CacheExpirationDate::createForPage($this->getResource());
             $cacheExpirationDate
                 ->setValue($cacheExpirationCalculatedDate)
                 ->persist();
-            parent::setValue($cronExpression);
+            parent::setValue($value);
             return $this;
         } catch (ExceptionCombo $e) {
-            throw new ExceptionCombo("The cache frequency expression ($cronExpression) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::PROPERTY_NAME);
+            throw new ExceptionCombo("The cache frequency expression ($value) is not a valid cron expression. <a href=\"https://crontab.guru/\">Validate it on this website</a>", CacheExpirationFrequency::PROPERTY_NAME);
         }
 
     }

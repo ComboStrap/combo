@@ -30,12 +30,19 @@ abstract class MetadataBoolean extends Metadata
 
 
     /**
-     * @throws ExceptionCombo
+     * @param null|boolean $value
+     * @return Metadata
      */
-    public function setValue(?bool $value): MetadataBoolean
+    public function setValue($value): Metadata
     {
+        if ($value === null) {
+            $this->value = null;
+            return $this;
+        }
+        if (!is_bool($value)) {
+            throw new ExceptionComboRuntime("The value is not a boolean: " . var_export($value, true));
+        }
         $this->value = $value;
-        $this->sendToStore();
         return $this;
     }
 

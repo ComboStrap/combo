@@ -35,17 +35,23 @@ abstract class MetadataText extends Metadata
 
 
     /**
+     * @param null|string $value
+     * @return $this
      * @throws ExceptionCombo
      */
-    public function setValue(?string $value): MetadataText
+    public function setValue($value): Metadata
     {
         if ($value !== null && !is_string($value)) {
             throw new ExceptionCombo("The value is not a string");
         }
         $value = trim($value);
         if ($value === "") {
-            // form don't return null only empty string
-            $value = null;
+            /**
+             * TODO: move this into the function {@link MetadataText::buildFromStoreValue()} ??
+             *   form don't return null only empty string
+             *   equivalent to null
+             */
+            return $this;
         }
         $possibleValues = $this->getPossibleValues();
         if ($possibleValues !== null && $value !== null && $value !== "") {

@@ -36,6 +36,25 @@ abstract class MetadataTabular extends Metadata
         return array_values($this->rows);
     }
 
+    public function setValue($value): Metadata
+    {
+        if ($value === null) {
+            return $this;
+        }
+        if (!is_array($value)) {
+            throw new ExceptionComboRuntime("The data set is not an array (The tabular data is an array of rows)");
+        }
+        $keys = array_keys($value);
+        foreach ($keys as $key) {
+            if (!is_numeric($key)) {
+                throw new ExceptionComboRuntime("The element of the array are not rows. The index ($key) should be numeric and is not");
+            }
+        }
+        $this->rows = $value;
+        return $this;
+
+    }
+
 
     public function toStoreValue(): ?array
     {

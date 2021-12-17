@@ -3,6 +3,7 @@
 
 namespace ComboStrap;
 
+
 /**
  * @package ComboStrap
  * An array, ie list of value metadata
@@ -24,12 +25,20 @@ abstract class MetadataMultiple extends Metadata
 
 
     /**
+     * @param null|array $value
+     * @return Metadata
      * @throws ExceptionCombo
      */
-    public function setValue(?array $array): MetadataMultiple
+    public function setValue($value): Metadata
     {
-        $this->array = $array;
-        $this->sendToStore();
+        if ($value === null) {
+            $this->array = $value;
+            return $this;
+        }
+        if (!is_array($value)) {
+            throw new ExceptionCombo("The value is not an array. Value: " . var_export($value, true));
+        }
+        $this->array = $value;
         return $this;
     }
 

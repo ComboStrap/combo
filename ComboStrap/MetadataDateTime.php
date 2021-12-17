@@ -27,9 +27,19 @@ abstract class MetadataDateTime extends Metadata
 
     }
 
-
-    public function setValue(?DateTime $value): MetadataDateTime
+    /**
+     * @param DateTime|null $value
+     * @return $this
+     */
+    public function setValue($value): Metadata
     {
+        if ($value === null) {
+            $this->dateTimeValue = null;
+            return $this;
+        }
+        if (!($value instanceof DateTime)) {
+            throw new ExceptionComboRuntime("The value is not a date time. Value: " . var_export($value, true));
+        }
         $this->dateTimeValue = $value;
         return $this;
     }

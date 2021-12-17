@@ -40,6 +40,12 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
         if ($value !== null) {
             return $value;
         }
+        foreach($metadata::getOldPersistentNames() as $name){
+            $value = $this->data[$name];
+            if ($value !== null) {
+                return $value;
+            }
+        }
         return $default;
     }
 

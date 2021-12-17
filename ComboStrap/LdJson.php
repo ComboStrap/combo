@@ -408,7 +408,7 @@ class LdJson extends MetadataJson
         return $ldJson;
     }
 
-    static public function getOldNames(): array
+    static public function getOldPersistentNames(): array
     {
         return [LdJson::OLD_ORGANIZATION_PROPERTY];
     }

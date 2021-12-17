@@ -305,21 +305,7 @@ class PageImages extends MetadataTabular
         }
     }
 
-    /**
-     * @param $sourceImagePath
-     * @return PageImage|null - the removed page image or null
-     */
-    public function removeIfExists($sourceImagePath): ?PageImage
-    {
-        $this->buildCheck();
-        DokuPath::addRootSeparatorIfNotPresent($sourceImagePath);
-        if (!isset($this->pageImages[$sourceImagePath])) {
-            return null;
-        }
-        $pageImage = $this->pageImages[$sourceImagePath];
-        unset($this->pageImages[$sourceImagePath]);
-        return $pageImage;
-    }
+
 
     public
     function getDefaultImage(): ?Image
@@ -386,7 +372,7 @@ class PageImages extends MetadataTabular
 
     }
 
-    public static function getOldNames(): array
+    public static function getOldPersistentNames(): array
     {
         return [self::OLD_PROPERTY_NAME];
     }

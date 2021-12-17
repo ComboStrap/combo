@@ -101,6 +101,7 @@ abstract class Metadata
             case AliasType::getName():
                 return new Aliases();
             case PageImages::getName():
+            case PageImages::OLD_PROPERTY_NAME:
             case PageImages::getPersistentName():
             case PageImagePath::getName():
             case PageImageUsage::getName():
@@ -649,7 +650,7 @@ abstract class Metadata
     /**
      * @return string[] - the old name if any
      */
-    public static function getOldNames(): array
+    public static function getOldPersistentNames(): array
     {
         return [];
     }

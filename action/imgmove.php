@@ -9,6 +9,7 @@ use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Page;
 use ComboStrap\Metadata;
 use ComboStrap\PageImages;
+use ComboStrap\PageImageUsage;
 use ComboStrap\PluginUtility;
 
 require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
@@ -29,7 +30,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
         $controller->register_hook('PLUGIN_MOVE_HANDLERS_REGISTER', 'BEFORE', $this, 'handle_move', array());
 
 
-        $controller->register_hook('PLUGIN_MOVE_MEDIA_RENAME', 'AFTER', $this, 'pageImageUpdate', array());
+        $controller->register_hook('PLUGIN_MOVE_MEDIA_RENAME', 'AFTER', $this, 'fileSystemStoreUpdate', array());
     }
 
     /**
@@ -37,27 +38,34 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
      * @param Doku_Event $event
      * @param $params
      */
-    function pageImageUpdate(Doku_Event $event, $params)
+    function fileSystemStoreUpdate(Doku_Event $event, $params)
     {
 
         $affectedPagesId = $event->data["affected_pages"];
         $sourceImageId = $event->data["src_id"];
         $targetImageId = $event->data["dst_id"];
         foreach ($affectedPagesId as $affectedPageId) {
-            $affectedPage = Page::createPageFromId($affectedPageId);
-            $store = MetadataDokuWikiStore::createForPage($affectedPage);
-            $affectedPage->setReadStore($store);
-            $pageImages = PageImages::createForPage($affectedPage);
-            $removedPageImage = null;
+            $affectedPage = Page::createPageFromId($affectedPageId)
+                ->setReadStore(MetadataDokuWikiStore::class);
 
-            $removedPageImage = $pageImages->removeIfExists($sourceImageId);
-            if ($removedPageImage === null) {
+            $pageImages = PageImages::createForPage($affectedPage);
+
+            $sourceImagePath = ":$sourceImageId";
+            $row = $pageImages->getRow($sourceImagePath);
+
+            if ($row === null) {
                 // This is a move of an image in the markup
                 continue;
             }
+            $pageImages->remove($sourceImagePath);
             try {
+                $imageUsage = $row[PageImageUsage::getPersistentName()];
+                $imageUsageValue = null;
+                if ($imageUsage !== null) {
+                    $imageUsageValue = $imageUsage->getValue();
+                }
                 $pageImages
-                    ->addImage($targetImageId, $removedPageImage->getUsages())
+                    ->addImage($targetImageId, $imageUsageValue)
                     ->persist();
             } catch (ExceptionCombo $e) {
                 LogUtility::log2file($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
@@ -126,9 +134,9 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
             LogUtility::msg("The frontmatter could not be loaded. " . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return $match;
         }
-        $pageImagesObject = Metadata::createForPage($page)
-            ->setStore($metadataFrontmatterStore);
-        $images = $pageImagesObject->getValues();
+        $pageImagesObject = PageImages::createForPage($page)
+            ->setReadStore($metadataFrontmatterStore);
+        $images = $pageImagesObject->getValueAsPageImages();
         if ($images === null) {
             return $match;
         }
@@ -144,12 +152,12 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
                 $before = $imageId;
                 $this->moveImage($imageId, $handler);
                 if ($before != $imageId) {
-                    $pageImagesObject->removeIfExists($before);
+                    $pageImagesObject->remove($before);
                     $pageImagesObject->addImage($imageId, $image->getUsages());
                 }
             }
 
-            $pageImagesObject->sendToStore();
+            $pageImagesObject->sendToWriteStore();
 
         } catch (ExceptionCombo $e) {
             // Could not resolve the image, image does not exist, ... return the data without modification
@@ -166,7 +174,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          * We don't modify the file system metadata for the page
          * because the handler does not give it unfortunately
          */
-        return $metadataFrontmatterStore->toFrontmatterString($page);
+        return $metadataFrontmatterStore->toFrontmatterString();
 
     }
 

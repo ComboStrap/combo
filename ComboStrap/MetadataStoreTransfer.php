@@ -87,14 +87,15 @@ class MetadataStoreTransfer
             $name = $persistentName;
             if ($metadata !== null) {
                 $name = $metadata::getName();
+                $persistentName = $metadata::getPersistentName();
             }
-            $this->normalizedData[$name] = $value;
+            $this->normalizedData[$persistentName] = $value;
 
             /**
              * Unknown meta
              */
             if ($metadata === null) {
-                $this->targetStore->setFromPersistentName($name, $value);
+                $this->targetStore->setFromPersistentName($persistentName, $value);
                 continue;
             }
 

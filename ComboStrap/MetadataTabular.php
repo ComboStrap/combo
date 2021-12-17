@@ -85,13 +85,13 @@ abstract class MetadataTabular extends Metadata
         /**
          * Value of the metadata id
          */
-        $identifierMetadataClass = $this->getUidClass();
-        $identifierPersistentName = $identifierMetadataClass::getPersistentName();
+        $identifierMetadataObject = $this->getUidObject();
+        $identifierPersistentName = $identifierMetadataObject::getPersistentName();
         if (is_string($value)) {
             /**
              * @var Metadata $identifierMetadata
              */
-            $identifierMetadata = (new $identifierMetadataClass());
+            $identifierMetadata = (new $identifierMetadataObject());
             $identifierMetadata->setValue($value);
             $this->rows[$value] = [$identifierPersistentName => $identifierMetadata];
             return $this;
@@ -112,7 +112,7 @@ abstract class MetadataTabular extends Metadata
             /**
              * List of row (Storage way)
              */
-            $identifierName = $identifierMetadataClass::getName();
+            $identifierName = $identifierMetadataObject::getName();
             $identifierValues = $value[$identifierName];
             if ($identifierValues === null || $identifierValues === "") {
                 // No data
@@ -125,10 +125,10 @@ abstract class MetadataTabular extends Metadata
                     // an empty row in the table
                     continue;
                 }
-                $row[$identifierPersistentName] = Metadata::toMetadataObject($identifierMetadataClass, $this)
+                $row[$identifierPersistentName] = Metadata::toMetadataObject($identifierMetadataObject, $this)
                     ->setFromStoreValue($identifierValue);
                 foreach ($this->getChildren() as $childClass) {
-                    if ($childClass === $identifierMetadataClass) {
+                    if ($childClass === $identifierMetadataObject) {
                         continue;
                     }
                     $metadataChildObject = Metadata::toMetadataObject($childClass, $this);
@@ -155,7 +155,7 @@ abstract class MetadataTabular extends Metadata
 
             // Single value
             if (is_string($item)) {
-                $identifierMetadata = Metadata::toMetadataObject($identifierMetadataClass, $this)
+                $identifierMetadata = Metadata::toMetadataObject($identifierMetadataObject, $this)
                     ->buildFromStoreValue($item);
                 $this->rows[$item] = [$identifierPersistentName => $identifierMetadata];
                 continue;
@@ -202,7 +202,9 @@ abstract class MetadataTabular extends Metadata
             return;
         }
         unset($this->rows[$identifierValue]);
+        return $this;
     }
+
 
     public
     function has($identifierValue): bool
@@ -226,6 +228,7 @@ abstract class MetadataTabular extends Metadata
 
     public function getRow($id): ?array
     {
+        $this->buildCheck();
         $normalizedValue = $this->getUidObject()
             ->buildFromStoreValue($id)
             ->getValue();

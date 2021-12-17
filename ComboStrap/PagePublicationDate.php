@@ -122,7 +122,7 @@ class PagePublicationDate extends MetadataDateTime
             ->getValueOrDefault();
     }
 
-    static public function getOldNames(): array
+    static public function getOldPersistentNames(): array
     {
         return [PagePublicationDate::OLD_META_KEY];
     }

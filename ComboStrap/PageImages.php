@@ -363,7 +363,7 @@ class PageImages extends MetadataTabular
         return [PageImagePath::class, PageImageUsage::class];
     }
 
-    public function getUid(): string
+    public function getUidClass(): string
     {
         return PageImagePath::class;
     }

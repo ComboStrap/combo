@@ -45,6 +45,10 @@ abstract class Metadata
      * @var MetadataStore
      */
     private $writeStore;
+    /**
+     * @var Metadata
+     */
+    private $uidObject;
 
     /**
      * The metadata may be just not stored
@@ -622,7 +626,7 @@ abstract class Metadata
      *
      * @return string|null
      */
-    public function getUid(): ?string
+    public function getUidClass(): ?string
     {
         if ($this->getChildren() !== null) {
             LogUtility::msg("An entity metadata should define a metadata that store the unique value");
@@ -691,6 +695,14 @@ abstract class Metadata
             return $this->getReadStore();
         }
         return $this->writeStore;
+    }
+
+    public function getUidObject(): Metadata
+    {
+        if($this->uidObject===null) {
+            $this->uidObject = Metadata::toChildMetadataObject($this->getUidClass(), $this->getResource());
+        }
+        return $this->uidObject;
     }
 
 }

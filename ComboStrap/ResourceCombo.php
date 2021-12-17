@@ -57,5 +57,10 @@ interface ResourceCombo
      */
     function getNameOrDefault(): string;
 
+    /**
+     * @return Metadata
+     */
+    public function getUidObject();
+
 
 }

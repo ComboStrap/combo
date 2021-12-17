@@ -278,7 +278,7 @@ class Aliases extends MetadataTabular
         return true;
     }
 
-    public function getUid(): ?string
+    public function getUidClass(): ?string
     {
         return AliasPath::class;
     }

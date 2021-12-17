@@ -85,7 +85,7 @@ abstract class MetadataTabular extends Metadata
         /**
          * Value of the metadata id
          */
-        $identifierMetadataClass = $this->getUid();
+        $identifierMetadataClass = $this->getUidClass();
         $identifierPersistentName = $identifierMetadataClass::getPersistentName();
         if (is_string($value)) {
             /**

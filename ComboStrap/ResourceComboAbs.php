@@ -8,6 +8,11 @@ abstract class ResourceComboAbs implements ResourceCombo
 {
 
 
+    /**
+     * @var Metadata
+     */
+    private $uidObject;
+
     public function exists(): bool
     {
         return FileSystems::exists($this->getPath());
@@ -33,4 +38,16 @@ abstract class ResourceComboAbs implements ResourceCombo
         $this->getStoreOrDefault()->persist();
         return $this;
     }
+
+    public function getUidObject()
+    {
+        if($this->uidObject===null){
+            $this->uidObject = Metadata::toChildMetadataObject($this->getUid(),$this);
+        }
+
+        return $this->uidObject;
+
+    }
+
+
 }

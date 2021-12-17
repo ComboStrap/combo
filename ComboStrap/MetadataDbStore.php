@@ -12,7 +12,6 @@ namespace ComboStrap;
 class MetadataDbStore extends MetadataStoreAbs
 {
 
-    const ALIAS_TABLE_NAME = "PAGE_ALIASES";
 
     const CANONICAL = "database";
     private $resource;
@@ -80,25 +79,26 @@ class MetadataDbStore extends MetadataStoreAbs
     private function syncTabular(MetadataTabular $metadata)
     {
 
-        $metadataRows = $metadata->getValue();
-        if ($metadataRows === null) {
+        $uid = Metadata::toChildMetadataObject($metadata->getUidClass(), $metadata->getResource());
+        $sourceRows = $metadata->getValue();
+        if ($sourceRows === null) {
             return;
         }
 
-        $dbRows = $this->getDbTabularData($metadata);
+        $targetRows = $this->getDbTabularData($metadata);
+        foreach ($targetRows as $targetRow) {
 
-        foreach ($metadataRows as $aliasToStore) {
-
-            if (isset($dbRows[$aliasToStore[AliasPath::PERSISTENT_NAME]])) {
-                unset($dbRows[$aliasToStore[AliasPath::PERSISTENT_NAME]]);
+            $targetRowId = $targetRow[$uid::getPersistentName()];
+            if (isset($sourceRows[$targetRowId])) {
+                unset($sourceRows[$targetRowId]);
             } else {
-                $this->addRow($aliasToStore, $metadata->getResource());
+                $this->deleteRow($targetRow, $metadata);
             }
 
         }
 
-        foreach ($dbRows as $dbAlias) {
-            $this->deleteRow($dbAlias, $metadata->getResource());
+        foreach ($sourceRows as $sourceRow) {
+            $this->addRow($sourceRow, $metadata);
         }
 
     }
@@ -131,28 +131,27 @@ class MetadataDbStore extends MetadataStoreAbs
     }
 
     /**
-     * @param array $dbAliasPath
-     * @param $page
-     * @return void
+     * @param array $row
+     * @param Metadata $metadata
      */
-    private function deleteRow(array $dbAliasPath, $page): void
+    private function deleteRow(array $row, Metadata $metadata): void
     {
-        $pageIdAttributes = PageId::PROPERTY_NAME;
-        $pathAttribute = PagePath::PROPERTY_NAME;
-        $aliasTables = self::ALIAS_TABLE_NAME;
+        $tableName = $this->getTableName($metadata);
+        $resourceIdAttribute = $metadata->getResource()->getUidObject()::getPersistentName();
+        $metadataIdAttribute = $metadata->getUidObject()::getPersistentName();
         $delete = <<<EOF
-delete from $aliasTables where $pageIdAttributes = ? and $pathAttribute = ?
+delete from $tableName where $resourceIdAttribute = ? and $metadataIdAttribute = ?
 EOF;
 
         $row = [
-            $pageIdAttributes => $page->getPageId(),
-            $pathAttribute => $dbAliasPath[AliasPath::PERSISTENT_NAME]
+            $resourceIdAttribute => $row[$resourceIdAttribute],
+            $metadataIdAttribute => $row[$metadataIdAttribute]
         ];
         $sqlite = Sqlite::getSqlite();
         $res = $sqlite->query($delete, $row);
         if ($res === false) {
             $message = Sqlite::getErrorMessage();
-            LogUtility::msg("There was a problem during the alias delete. $message");
+            LogUtility::msg("There was a problem during the row delete of $tableName. Message: $message");
             return;
         }
         $sqlite->res_close($res);
@@ -191,9 +190,9 @@ EOF;
         foreach ($metadata->getChildren() as $children) {
             $columns[] = strtoupper($children::getPersistentName());
         }
-        $tableAliases = $metadata->getResource()->getType() . "_" . $metadata::getPersistentName();
+        $tableName = $this->getTableName($metadata);
 
-        $query = "select " . implode(", ", $columns) . " from $tableAliases where $uidAttribute = ? ";
+        $query = "select " . implode(", ", $columns) . " from $tableName where $uidAttribute = ? ";
         $res = $sqlite->query($query, $pageId);
         if (!$res) {
             $message = Sqlite::getErrorMessage();
@@ -234,4 +233,13 @@ EOF;
     {
         return $this->resource;
     }
+
+    private function getTableName(Metadata $metadata): string
+    {
+        return $metadata->getResource()->getType() . "_" . $metadata::getPersistentName();
+
+    }
+
+
+
 }

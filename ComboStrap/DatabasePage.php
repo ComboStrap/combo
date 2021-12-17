@@ -174,7 +174,7 @@ class DatabasePage
         $store = MetadataDbStore::createForPage($this->page);
         Aliases::createForPage($this->page)
             ->buildFromStore()
-            ->setStore($store)
+            ->setReadStore($store)
             ->persist();
 
         /**
@@ -855,9 +855,9 @@ EOF;
             }
             $metaRecord[$name] = $metadata
                 ->setResource($this->page)
-                ->setStore($sourceStore)
+                ->setReadStore($sourceStore)
                 ->buildFromStore()
-                ->setStore($targetStore)
+                ->setReadStore($targetStore)
                 ->toStoreValueOrDefault();
         }
 

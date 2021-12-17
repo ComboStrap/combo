@@ -51,7 +51,7 @@ class PageH1 extends MetadataText
 
     public function getDefaultValue(): string
     {
-        $store = $this->getStore();
+        $store = $this->getReadStore();
         if ($store instanceof MetadataDokuWikiStore) {
             $h1Parsed = $store->getFromPersistentName( self::H1_PARSED);
             if (!empty($h1Parsed)) {

@@ -96,7 +96,7 @@ class PageDescription extends MetadataText
     public function buildFromStoreValue($value): Metadata
     {
 
-        $metaDataStore = $this->getStore();
+        $metaDataStore = $this->getReadStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
             parent::buildFromStoreValue($value);
             return $this;
@@ -147,12 +147,12 @@ class PageDescription extends MetadataText
 
         if ($value === "" || $value === null) {
 
-            if ($this->getStore() instanceof MetadataDokuWikiStore) {
+            if ($this->getReadStore() instanceof MetadataDokuWikiStore) {
                 // we need to know the origin of the actual description
                 if ($this->descriptionOrigin === null) {
                     /**
                      * we don't do {@link Metadata::buildCheck() build check} otherwise we get a loop
-                     * because it will use back this method {@link MetadataScalar::setValue()}
+                     * because it will use back this method {@link Metadata::setValue()}
                      */
                     $this->buildFromStore();
                 }
@@ -177,7 +177,7 @@ class PageDescription extends MetadataText
      */
     public function toStoreValue()
     {
-        $metaDataStore = $this->getStore();
+        $metaDataStore = $this->getReadStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
             return parent::toStoreValue();
         }

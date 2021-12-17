@@ -331,7 +331,7 @@ class PageImages extends MetadataTabular
     public function getFirstImage()
     {
 
-        $store = $this->getStore();
+        $store = $this->getReadStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }

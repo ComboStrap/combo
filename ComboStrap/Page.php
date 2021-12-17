@@ -206,7 +206,7 @@ class Page extends ResourceComboAbs
     /**
      * @var MetadataStore
      */
-    private $store;
+    private $readStore;
 
     /**
      * Page constructor.
@@ -477,7 +477,7 @@ class Page extends ResourceComboAbs
     public
     function rebuild(): Page
     {
-        $this->store = null;
+        $this->readStore = null;
         $this->buildPropertiesFromFileSystem();
         $this->databasePage = null;
         return $this;
@@ -1835,9 +1835,9 @@ class Page extends ResourceComboAbs
         }
     }
 
-    public function setStore(MetadataStore $store): Page
+    public function setReadStore(MetadataStore $store): Page
     {
-        $this->store = $store;
+        $this->readStore = $store;
         return $this;
     }
 
@@ -1977,10 +1977,10 @@ class Page extends ResourceComboAbs
 
     public function getStoreOrDefault(): MetadataStore
     {
-        if ($this->store === null) {
-            $this->store = MetadataDokuWikiStore::createForPage($this);
+        if ($this->readStore === null) {
+            $this->readStore = MetadataDokuWikiStore::createForPage($this);
         }
-        return $this->store;
+        return $this->readStore;
     }
 
     /**
@@ -2000,7 +2000,7 @@ class Page extends ResourceComboAbs
         return $this->getPath()->getDokuwikiId();
     }
 
-    public function getUid(): MetadataScalar
+    public function getUid(): Metadata
     {
         return $this->pageId;
     }

@@ -27,7 +27,6 @@ require_once(__DIR__ . '/ResourceComboAbs.php');
 require_once(__DIR__ . '/Media.php');
 require_once(__DIR__ . '/MediaLink.php');
 require_once(__DIR__ . '/Metadata.php');
-require_once(__DIR__ . '/MetadataScalar.php');
 require_once(__DIR__ . '/MetadataBoolean.php');
 require_once(__DIR__ . '/MetadataDateTime.php');
 require_once(__DIR__ . '/MetadataMultiple.php');

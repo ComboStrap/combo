@@ -20,7 +20,7 @@ abstract class MetadataJson extends MetadataText
     {
         $value = parent::toStoreValue();
 
-        if ($this->getStore()->isHierarchicalTextBased()) {
+        if ($this->getReadStore()->isHierarchicalTextBased()) {
             return Json::createFromString($value)->toArray();
         }
 

@@ -69,7 +69,7 @@ abstract class MetadataTabular extends Metadata
         $identifierPersistentName = $identifierMetadataClass::getPersistentName();
         if (is_string($value)) {
             /**
-             * @var MetadataScalar $identifierMetadata
+             * @var Metadata $identifierMetadata
              */
             $identifierMetadata = (new $identifierMetadataClass());
             $identifierMetadata->setValue($value);

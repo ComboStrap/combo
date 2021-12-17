@@ -9,7 +9,7 @@ use http\Exception\RuntimeException;
  * Class MetadataBoolean
  * @package ComboStrap
  */
-abstract class MetadataBoolean extends MetadataScalar
+abstract class MetadataBoolean extends Metadata
 {
 
     /**
@@ -41,7 +41,7 @@ abstract class MetadataBoolean extends MetadataScalar
 
     public function toStoreDefaultValue()
     {
-        $store = $this->getStore();
+        $store = $this->getReadStore();
 
         if ($store instanceof MetadataFormDataStore) {
             /**
@@ -63,7 +63,7 @@ abstract class MetadataBoolean extends MetadataScalar
     public function toStoreValue()
     {
 
-        $store = $this->getStore();
+        $store = $this->getReadStore();
         $value = $this->getValue();
 
         if ($store instanceof MetadataFormDataStore) {

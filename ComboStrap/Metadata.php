@@ -36,11 +36,15 @@ abstract class Metadata
     /**
      * @var MetadataStore
      */
-    private $store;
+    private $readStore;
     /**
      * @var Metadata|null
      */
     private $parent;
+    /**
+     * @var MetadataStore
+     */
+    private $writeStore;
 
     /**
      * The metadata may be just not stored
@@ -171,11 +175,29 @@ abstract class Metadata
     }
 
 
-    public function setStore(MetadataStore $store): Metadata
+    public function setReadStore(MetadataStore $store): Metadata
     {
-        $this->store = $store;
+        if ($this->readStore !== null) {
+            LogUtility::msg("The read store was already set.");
+        }
+        $this->readStore = $store;
         return $this;
     }
+
+    public function setWriteStore(MetadataStore $store): Metadata
+    {
+        if ($this->writeStore !== null) {
+            LogUtility::msg("The write store was already set.");
+        }
+        $this->writeStore = $store;
+        return $this;
+    }
+
+    /**
+     * @param mixed $value
+     * @return Metadata
+     */
+    public abstract function setValue($value): Metadata;
 
     /**
      * @return bool
@@ -186,7 +208,7 @@ abstract class Metadata
     public abstract function valueIsNotNull(): bool;
 
     /**
-     * If the {@link MetadataScalar::getValue()} is null and if the object was not already build
+     * If the {@link Metadata::getValue()} is null and if the object was not already build
      * this function will call the function {@link Metadata::buildFromStore()}
      */
     protected function buildCheck()
@@ -207,12 +229,12 @@ abstract class Metadata
      * (ie a memory variable or a database)
      * @return MetadataStore|null
      */
-    public function getStore(): ?MetadataStore
+    public function getReadStore(): ?MetadataStore
     {
-        if ($this->store === null) {
+        if ($this->readStore === null) {
             return $this->getResource()->getStoreOrDefault();
         }
-        return $this->store;
+        return $this->readStore;
     }
 
     public function getTab(): ?string
@@ -221,7 +243,7 @@ abstract class Metadata
     }
 
     /**
-     * This function sends the object value to the {@link Metadata::getStore() store}
+     * This function sends the object value to the {@link Metadata::getReadStore() store}
      *
      * This function should be used at the end of each setter/adder function
      *
@@ -234,7 +256,7 @@ abstract class Metadata
      */
     public function sendToStore(): Metadata
     {
-        $this->getStore()->set($this);
+        $this->getWriteStore()->set($this);
         return $this;
     }
 
@@ -252,7 +274,7 @@ abstract class Metadata
     public function buildFromStore()
     {
         $this->wasBuild = true;
-        $metadataStore = $this->getStore();
+        $metadataStore = $this->getReadStore();
         if ($metadataStore === null) {
             LogUtility::msg("The metadata store is unknown. You need to define a resource or a store to build from it");
             return $this;
@@ -342,7 +364,10 @@ abstract class Metadata
      * @return string|array|null the value to be persisted by the store
      * the reverse action is {@link Metadata::setFromStoreValue()}
      */
-    public abstract function toStoreValue();
+    public function toStoreValue()
+    {
+        return $this->getValue();
+    }
 
 
     /**
@@ -541,13 +566,13 @@ abstract class Metadata
 
     /**
      * An utility function to {@link Metadata::sendToStore()}
-     * and {@link MetadataStore::persist()} at the same time
+     * and {@link MetadataStore::persist()} at the same time in the {@link Metadata::getWriteStore() write store}
      * @throws ExceptionCombo
      */
     public function persist(): Metadata
     {
         $this->sendToStore();
-        $this->getStore()->persist();
+        $this->getWriteStore()->persist();
         return $this;
     }
 
@@ -613,8 +638,50 @@ abstract class Metadata
         return [];
     }
 
+    /**
+     * @return mixed - the memory value
+     */
     public abstract function getValue();
 
     public abstract function getDefaultValue();
+
+    /**
+     * @return mixed - set the memory value from the store and return ut
+     */
+    public function getValueFromStore()
+    {
+        $this->buildFromStoreValue($this->getReadStore()->get($this));
+        return $this->getValue();
+    }
+
+
+    public function getValueFromStoreOrDefault()
+    {
+        $this->buildFromStoreValue($this->getReadStore()->get($this));
+        return $this->getValueOrDefault();
+    }
+
+    public function getValueOrDefault()
+    {
+
+        $value = $this->getValue();
+        if ($value === null || $value === "") {
+            return $this->getDefaultValue();
+        }
+        return $value;
+
+    }
+
+
+    /**
+     * @return MetadataStore - the store where the metadata are persist (by default, the {@link Metadata::getReadStore()}
+     */
+    public function getWriteStore(): MetadataStore
+    {
+        if ($this->writeStore === null) {
+            return $this->getReadStore();
+        }
+        return $this->writeStore;
+    }
 
 }

@@ -109,9 +109,9 @@ class MetaManagerForm
             }
             $metadata
                 ->setResource($this->page)
-                ->setStore($this->sourceStore)
+                ->setReadStore($this->sourceStore)
                 ->buildFromStore()
-                ->setStore($this->targetStore);
+                ->setReadStore($this->targetStore);
             $formMeta->addFormFieldFromMetadata($metadata);
         }
 

@@ -189,7 +189,7 @@ class PageId extends MetadataText
          * and send to another store
          * We prevent the overwriting of a page id
          */
-        $actualStoreValue = $this->getStore()->get($this);
+        $actualStoreValue = $this->getReadStore()->get($this);
         $value = $this->getValue();
         if ($actualStoreValue !== null && $actualStoreValue !== $value) {
             throw new ExceptionComboRuntime("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
@@ -210,11 +210,11 @@ class PageId extends MetadataText
              * check that it does not exist already on the file system
              * and save it
              */
-            $metadataStore = $this->getStore();
+            $metadataStore = $this->getReadStore();
             if (!($metadataStore instanceof MetadataDokuWikiStore)) {
                 $store = MetadataDokuWikiStore::createForPage($this->getResource());
                 $fsPageId = PageId::createForPage($this->getResource())
-                    ->setStore($store);
+                    ->setReadStore($store);
                 $value = $fsPageId->getValue();
                 if ($value !== null) {
                     throw new ExceptionComboRuntime("The file system metadata store has already the page id ($value) for the page ({$this->getResource()}");

@@ -57,7 +57,9 @@ class MetadataDbStore implements MetadataStore
             case Aliases::PROPERTY_NAME:
                 return $this->getAliasesInPersistentValue($metadata);
             default:
-                $database = DatabasePage::createFromPageObject($resource);
+                $pageMetaFromFileSystem = Page::createPageFromQualifiedPath($resource->getPath()->toString())
+
+                $database = DatabasePage::createFromPageObject($pageMetaFromFileSystem);
                 if (!$database->exists()) {
                     return null;
                 }

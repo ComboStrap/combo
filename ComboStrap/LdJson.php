@@ -160,7 +160,7 @@ class LdJson extends MetadataJson
             if (($resourceCombo instanceof Page)) {
                 // Deprecated, old organization syntax
                 if ($resourceCombo->getTypeOrDefault() === PageType::ORGANIZATION_TYPE) {
-                    $store = $this->getStore();
+                    $store = $this->getReadStore();
                     $metadata = $store->getFromPersistentName( self::OLD_ORGANIZATION_PROPERTY);
                     if ($metadata !== null) {
                         $organization = array(

@@ -104,7 +104,7 @@ abstract class Media extends ResourceComboAbs
     }
 
 
-    public function getUid(): MetadataScalar
+    public function getUid(): Metadata
     {
         throw new ExceptionComboRuntime("To implement");
     }

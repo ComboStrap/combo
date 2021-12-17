@@ -26,7 +26,7 @@ interface ResourceCombo
     /**
      * @return mixed - the unique id
      */
-    public function getUid(): MetadataScalar;
+    public function getUid(): Metadata;
 
     /**
      * A buster value used in URL

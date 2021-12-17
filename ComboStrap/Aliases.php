@@ -187,9 +187,9 @@ class Aliases extends MetadataTabular
         if (
             !$this->valueIsNotNull()
             &&
-            $this->getStore() !== null
+            $this->getReadStore() !== null
             &&
-            $this->getStore() instanceof MetadataDokuWikiStore
+            $this->getReadStore() instanceof MetadataDokuWikiStore
         ) {
             $this->aliases = $this->getAndDeleteDeprecatedAlias();
             /**

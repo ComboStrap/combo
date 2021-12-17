@@ -6,7 +6,7 @@ namespace ComboStrap;
 
 use DateTime;
 
-abstract class MetadataDateTime extends MetadataScalar
+abstract class MetadataDateTime extends Metadata
 {
     /**
      * @var DateTime
@@ -57,7 +57,7 @@ abstract class MetadataDateTime extends MetadataScalar
 
     public function buildFromStore(): MetadataDateTime
     {
-        $value = $this->getStore()->get($this);
+        $value = $this->getReadStore()->get($this);
         try {
             $this->dateTimeValue = $this->fromPersistentDateTimeUtility($value);
         } catch (ExceptionCombo $e) {

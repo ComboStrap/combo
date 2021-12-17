@@ -29,7 +29,7 @@ class ModificationDate extends MetadataDateTime
 
     public function buildFromStore(): MetadataDateTime
     {
-        $store = $this->getStore();
+        $store = $this->getReadStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return parent::buildFromStore();
         }

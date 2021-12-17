@@ -8,7 +8,7 @@ namespace ComboStrap;
  * Class MetadataText
  * @package ComboStrap
  */
-abstract class MetadataText extends MetadataScalar
+abstract class MetadataText extends Metadata
 {
 
     /**

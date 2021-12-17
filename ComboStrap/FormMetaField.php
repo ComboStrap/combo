@@ -141,7 +141,7 @@ class FormMetaField
                 $childFields = [];
                 foreach ($metadata->getChildren() as $childMetadataClass) {
 
-                    $childMetadata = Metadata::toChildMetadataObject($childMetadataClass, $metadata);
+                    $childMetadata = Metadata::toMetadataObject($childMetadataClass, $metadata);
                     $childField = FormMetaField::create($childMetadata);
                     static::setCommonDataToFieldFromMetadata($childField, $childMetadata);
                     static::setLeafDataToFieldFromMetadata($childField, $childMetadata);

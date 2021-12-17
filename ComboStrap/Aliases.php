@@ -223,14 +223,14 @@ class Aliases extends MetadataTabular
     function addAndGetAlias($aliasPath, $aliasType = null): Alias
     {
         $this->buildCheck();
-        $path = Metadata::toChildMetadataObject(AliasPath::class,$this)
+        $path = Metadata::toMetadataObject(AliasPath::class,$this)
             ->setFromStoreValue($aliasPath);
         $row[$path::getPersistentName()] = $path;
 
         $alias = Alias::create($this->getResource(),$path->getValue());
 
         if($aliasType!==null){
-            $aliasObject = Metadata::toChildMetadataObject(AliasType::class,$this)
+            $aliasObject = Metadata::toMetadataObject(AliasType::class,$this)
                 ->setFromStoreValue($aliasType);
             $row[$aliasObject::getPersistentName()] = $aliasObject;
             $alias->setType($aliasType);

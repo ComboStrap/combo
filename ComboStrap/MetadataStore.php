@@ -13,7 +13,6 @@ namespace ComboStrap;
 interface MetadataStore
 {
 
-    const CANONICAL = "store";
 
 
     /**
@@ -81,5 +80,9 @@ interface MetadataStore
      */
     public function reset();
 
+    /**
+     * @return string
+     */
+    public function getCanonical(): string;
 
 }

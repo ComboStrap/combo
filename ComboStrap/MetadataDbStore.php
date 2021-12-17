@@ -13,7 +13,6 @@ class MetadataDbStore extends MetadataStoreAbs
 {
 
 
-    const CANONICAL = "database";
     private $resource;
 
     /**
@@ -79,7 +78,8 @@ class MetadataDbStore extends MetadataStoreAbs
     private function syncTabular(MetadataTabular $metadata)
     {
 
-        $uid = Metadata::toChildMetadataObject($metadata->getUidClass(), $metadata->getResource());
+        $uid = Metadata::toMetadataObject($metadata->getUidClass())
+            ->setResource($metadata->getResource());
         $sourceRows = $metadata->getValue();
         if ($sourceRows === null) {
             return;
@@ -105,24 +105,29 @@ class MetadataDbStore extends MetadataStoreAbs
 
 
     /**
-     * @param array $alias
-     * @param Page $page
+     * @param array $row
+     * @param Page $resource
      * @return void
      */
-    private function addRow(array $alias, ResourceCombo $page): void
+    private function addRow(array $row, Metadata $metadata): void
     {
 
-        $row = array(
-            PageId::PROPERTY_NAME => $page->getPageId(),
-            AliasPath::PERSISTENT_NAME => $alias[AliasPath::PERSISTENT_NAME],
-            AliasType::PERSISTENT_NAME => $alias[AliasType::PERSISTENT_NAME]
-        );
+        /**
+         * Add the id
+         */
+        $resourceCombo = $metadata->getResource();
+        $resourceUidObject = $resourceCombo->getUidObject();
+        $uidValue = $resourceUidObject->getValue();
+        if ($uidValue === null) {
+            throw new ExceptionComboRuntime("The uid should not be null for $resourceCombo");
+        }
+        $row[$resourceUidObject::getPersistentName()] = $uidValue;
 
         // Page has change of location
         // Creation of an alias
 
         $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->storeEntry(self::ALIAS_TABLE_NAME, $row);
+        $res = $sqlite->storeEntry($this->getTableName($metadata), $row);
         if (!$res) {
             LogUtility::msg("There was a problem during PAGE_ALIASES insertion");
         }
@@ -185,10 +190,10 @@ EOF;
             $pageId = $uid->getPageIdOrGenerate();
         }
 
-        $uidAttribute = strtoupper($uid::getPersistentName());
+        $uidAttribute = $uid::getPersistentName();
         $columns = [];
         foreach ($metadata->getChildren() as $children) {
-            $columns[] = strtoupper($children::getPersistentName());
+            $columns[] = $children::getPersistentName() . " as \"" . $children::getPersistentName() . "\"";
         }
         $tableName = $this->getTableName($metadata);
 
@@ -240,6 +245,10 @@ EOF;
 
     }
 
+    public function getCanonical(): string
+    {
+        return "database";
+    }
 
 
 }

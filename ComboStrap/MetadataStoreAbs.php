@@ -55,4 +55,10 @@ abstract class MetadataStoreAbs implements MetadataStore
         return $this->page;
     }
 
+    public function getCanonical(): string
+    {
+        return "store";
+    }
+
+
 }

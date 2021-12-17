@@ -59,14 +59,13 @@ abstract class Metadata
         $this->parent = $parent;
     }
 
-    public static function toChildMetadataObject($childClass, $parent): Metadata
+    public static function toMetadataObject($childClass, Metadata $parent = null): Metadata
     {
         if (!is_subclass_of($childClass, Metadata::class)) {
             throw new ExceptionComboRuntime("The child class ($childClass) is not a metadata class");
         }
         return new $childClass($parent);
     }
-
 
 
     public function getParent(): ?Metadata
@@ -197,7 +196,11 @@ abstract class Metadata
         return $this;
     }
 
-    public function setWriteStore(MetadataStore $store): Metadata
+    /**
+     * @param MetadataStore|string $store
+     * @return $this
+     */
+    public function setWriteStore($store): Metadata
     {
         if ($this->writeStore !== null) {
             LogUtility::msg("The write store was already set.");
@@ -694,13 +697,17 @@ abstract class Metadata
         if ($this->writeStore === null) {
             return $this->getReadStore();
         }
+        if (!$this->writeStore instanceof MetadataStore) {
+            $this->writeStore = MetadataStoreAbs::toMetadataStore($this->writeStore, $this->getResource());
+        }
         return $this->writeStore;
     }
 
     public function getUidObject(): Metadata
     {
-        if($this->uidObject===null) {
-            $this->uidObject = Metadata::toChildMetadataObject($this->getUidClass(), $this->getResource());
+        if ($this->uidObject === null) {
+            $this->uidObject = Metadata::toMetadataObject($this->getUidClass())
+                ->setResource($this->getResource());
         }
         return $this->uidObject;
     }

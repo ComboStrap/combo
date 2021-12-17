@@ -125,13 +125,13 @@ abstract class MetadataTabular extends Metadata
                     // an empty row in the table
                     continue;
                 }
-                $row[$identifierPersistentName] = Metadata::toChildMetadataObject($identifierMetadataClass, $this)
+                $row[$identifierPersistentName] = Metadata::toMetadataObject($identifierMetadataClass, $this)
                     ->setFromStoreValue($identifierValue);
                 foreach ($this->getChildren() as $childClass) {
                     if ($childClass === $identifierMetadataClass) {
                         continue;
                     }
-                    $metadataChildObject = Metadata::toChildMetadataObject($childClass, $this);
+                    $metadataChildObject = Metadata::toMetadataObject($childClass, $this);
                     $name = $metadataChildObject::getName();
                     $childValue = $value[$name][$i];
                     $metadataChildObject->setFromStoreValue($childValue);
@@ -155,7 +155,7 @@ abstract class MetadataTabular extends Metadata
 
             // Single value
             if (is_string($item)) {
-                $identifierMetadata = Metadata::toChildMetadataObject($identifierMetadataClass, $this)
+                $identifierMetadata = Metadata::toMetadataObject($identifierMetadataClass, $this)
                     ->buildFromStoreValue($item);
                 $this->rows[$item] = [$identifierPersistentName => $identifierMetadata];
                 continue;
@@ -168,10 +168,10 @@ abstract class MetadataTabular extends Metadata
             foreach ($item as $colName => $colValue) {
                 $childClass = $childClassesByPersistentName[$colName];
                 if ($childClass === null) {
-                    LogUtility::msg("The column does not have a metadata definition");
+                    LogUtility::msg("The column ($colName) does not have a metadata definition");
                     continue;
                 }
-                $childObject = Metadata::toChildMetadataObject($childClass, $this);
+                $childObject = Metadata::toMetadataObject($childClass, $this);
                 $childObject->buildFromStoreValue($colValue);
                 $row[$childObject::getPersistentName()] = $childObject;
                 if ($childObject::getPersistentName() === $identifierPersistentName) {

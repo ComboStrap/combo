@@ -44,18 +44,6 @@ class PageKeywords extends MetadataMultiple
         return self::PROPERTY_NAME;
     }
 
-    public function toStoreValue()
-    {
-        if ($this->getValue() === null) {
-            return null;
-        }
-        return implode(self::SEPARATOR, $this->getValue());
-
-    }
-
-
-
-
 
     /**
      * The default of dokuwiki is the recursive parts of all {@link ResourceName page name}

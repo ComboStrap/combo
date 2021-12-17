@@ -108,7 +108,7 @@ abstract class OutputDocument extends PageCompilerDocument
                 (Site::debugIsOn() || PluginUtility::isDevOrTest())
                 && $this->getExtension() === HtmlDocument::extension
             ) {
-                $result = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$this->getCachePath()->getAbsoluteFileSystemPath()}\"></div>" . $result;
+                $result = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$this->getCachePath()->toAbsolutePath()->toString()}\"></div>" . $result;
             }
         } else {
             $this->cache->removeCache(); // try to delete cachefile

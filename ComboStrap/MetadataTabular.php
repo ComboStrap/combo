@@ -25,7 +25,8 @@ abstract class MetadataTabular extends Metadata
 
 
     /**
-     * @return array - the rows in array format
+     * @return array - the rows in associate array format
+     * where the identifier value is the key
      */
     public function getValue(): ?array
     {
@@ -33,7 +34,7 @@ abstract class MetadataTabular extends Metadata
         if ($this->rows === null) {
             return null;
         }
-        return array_values($this->rows);
+        return $this->rows;
     }
 
     public function setValue($value): Metadata

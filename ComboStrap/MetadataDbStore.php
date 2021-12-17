@@ -29,7 +29,7 @@ class MetadataDbStore extends MetadataStoreAbs
     public static function createForPage(ResourceCombo $resourceCombo): MetadataDbStore
     {
 
-        return  new MetadataDbStore($resourceCombo);
+        return new MetadataDbStore($resourceCombo);
 
     }
 
@@ -37,7 +37,7 @@ class MetadataDbStore extends MetadataStoreAbs
     {
         switch ($metadata->getName()) {
             case Aliases::PROPERTY_NAME:
-                $this->setAliases($metadata);
+                $this->syncTabular($metadata);
                 return;
             default:
                 throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on set", self::CANONICAL);
@@ -54,7 +54,7 @@ class MetadataDbStore extends MetadataStoreAbs
 
         switch ($metadata->getName()) {
             case Aliases::PROPERTY_NAME:
-                return $this->getAliasesInPersistentValue($metadata);
+                return $this->getDbTabularData($metadata);
             default:
                 $pageMetaFromFileSystem = Page::createPageFromQualifiedPath($resource->getPath()->toString());
                 $fsStore = MetadataDokuWikiStore::createForPage($pageMetaFromFileSystem);
@@ -77,33 +77,28 @@ class MetadataDbStore extends MetadataStoreAbs
         }
     }
 
-    private function setAliases(Metadata $metadata)
+    private function syncTabular(MetadataTabular $metadata)
     {
 
-        $aliasesToStore = $metadata->toStoreValue();
-        if($aliasesToStore===null){
+        $metadataRows = $metadata->getValue();
+        if ($metadataRows === null) {
             return;
         }
 
-        $dbAliases = $this->getAliasesInPersistentValue($metadata);
-        $dbAliasMap = [];
-        if ($dbAliases !== null) {
-            foreach ($dbAliases as $dbAlias) {
-                $dbAliasMap[$dbAlias[AliasPath::PERSISTENT_NAME]] = $dbAlias;
-            }
-        }
-        foreach ($aliasesToStore as $aliasToStore) {
+        $dbRows = $this->getDbTabularData($metadata);
 
-            if (isset($dbAliasMap[$aliasToStore[AliasPath::PERSISTENT_NAME]])) {
-                unset($dbAliasMap[$aliasToStore[AliasPath::PERSISTENT_NAME]]);
+        foreach ($metadataRows as $aliasToStore) {
+
+            if (isset($dbRows[$aliasToStore[AliasPath::PERSISTENT_NAME]])) {
+                unset($dbRows[$aliasToStore[AliasPath::PERSISTENT_NAME]]);
             } else {
-                $this->addAlias($aliasToStore, $metadata->getResource());
+                $this->addRow($aliasToStore, $metadata->getResource());
             }
 
         }
 
-        foreach ($dbAliasMap as $dbAlias) {
-            $this->deleteAlias($dbAlias, $metadata->getResource());
+        foreach ($dbRows as $dbAlias) {
+            $this->deleteRow($dbAlias, $metadata->getResource());
         }
 
     }
@@ -114,7 +109,7 @@ class MetadataDbStore extends MetadataStoreAbs
      * @param Page $page
      * @return void
      */
-    private function addAlias(array $alias, ResourceCombo $page): void
+    private function addRow(array $alias, ResourceCombo $page): void
     {
 
         $row = array(
@@ -140,7 +135,7 @@ class MetadataDbStore extends MetadataStoreAbs
      * @param $page
      * @return void
      */
-    private function deleteAlias(array $dbAliasPath, $page): void
+    private function deleteRow(array $dbAliasPath, $page): void
     {
         $pageIdAttributes = PageId::PROPERTY_NAME;
         $pathAttribute = PagePath::PROPERTY_NAME;
@@ -169,7 +164,7 @@ EOF;
      * @return null
      * @var Metadata $metadata
      */
-    private function getAliasesInPersistentValue(Metadata $metadata)
+    private function getDbTabularData(Metadata $metadata)
     {
 
         $sqlite = Sqlite::getSqlite();
@@ -185,34 +180,28 @@ EOF;
         $pageId = $uid->getValue();
         if ($uid->getValue() === null) {
             if (!($uid instanceof PageId)) {
-                LogUtility::msg("The resource identifier is not a page id. We can't retrieve the aliases", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+                LogUtility::msg("The resource identifier has no id. We can't retrieve the database data", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                 return null;
             }
             $pageId = $uid->getPageIdOrGenerate();
         }
-        $aliases = Aliases::create()
-            ->setResource($metadata->getResource());
-        $pageIdAttribute = strtoupper(PageId::getPersistentName());
-        $pathAttribute = strtoupper(AliasPath::getPersistentName());
-        $typeAttribute = strtoupper(AliasType::getPersistentName());
-        $tableAliases = self::ALIAS_TABLE_NAME;
 
-        $query = "select $pathAttribute, $typeAttribute from $tableAliases where $pageIdAttribute = ? ";
+        $uidAttribute = strtoupper($uid::getPersistentName());
+        $columns = [];
+        foreach ($metadata->getChildren() as $children) {
+            $columns[] = strtoupper($children::getPersistentName());
+        }
+        $tableAliases = $metadata->getResource()->getType() . "_" . $metadata::getPersistentName();
+
+        $query = "select " . implode(", ", $columns) . " from $tableAliases where $uidAttribute = ? ";
         $res = $sqlite->query($query, $pageId);
         if (!$res) {
             $message = Sqlite::getErrorMessage();
             LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$metadata->getResource()}) selection query. Message: $message, Query: ($query");
         }
-        $rowAliases = $sqlite->res2arr($res);
+        $rows = $sqlite->res2arr($res);
         $sqlite->res_close($res);
-        foreach ($rowAliases as $row) {
-            try {
-                $aliases->addAlias($row[$pathAttribute], $row[$typeAttribute]);
-            } catch (ExceptionCombo $e) {
-                LogUtility::msg("Error while building the aliases from the Db." . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
-            }
-        }
-        return $aliases->toStoreValue();
+        return $rows;
 
     }
 
@@ -233,12 +222,12 @@ EOF;
 
     public function getFromPersistentName(string $name, $default = null)
     {
-        throw new RuntimeException("Not implemented");
+        throw new ExceptionComboRuntime("Not implemented");
     }
 
     public function setFromPersistentName(string $name, $value)
     {
-        throw new RuntimeException("Not implemented");
+        throw new ExceptionComboRuntime("Not implemented");
     }
 
     public function getResource(): ResourceCombo

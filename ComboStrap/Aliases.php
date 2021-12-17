@@ -7,7 +7,7 @@ namespace ComboStrap;
 class Aliases extends MetadataTabular
 {
 
-    public const PROPERTY_NAME = "alias";
+    public const PROPERTY_NAME = "aliases";
 
 
     /**

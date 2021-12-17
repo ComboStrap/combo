@@ -9,10 +9,15 @@ class PageImages extends MetadataTabular
 
 
     const CANONICAL = "page:image";
-    public const PROPERTY_NAME = 'page-image';
-    public const PERSISTENT_NAME = 'image';
+    public const PROPERTY_NAME = 'page-images';
+    public const PERSISTENT_NAME = 'images';
     public const FIRST_IMAGE_META_RELATION = "firstimage";
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";
+
+    /**
+     * The name should be plural
+     */
+    const OLD_PROPERTY_NAME = "image";
 
 
     /**
@@ -380,4 +385,11 @@ class PageImages extends MetadataTabular
         ];
 
     }
+
+    public static function getOldNames(): array
+    {
+        return [self::OLD_PROPERTY_NAME];
+    }
+
+
 }

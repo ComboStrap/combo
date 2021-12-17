@@ -51,7 +51,12 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     }
 
 
-    public function createFromArray(ResourceCombo $page, array $jsonArray): MetadataFrontmatterStore
+    public static function createFromResource(ResourceCombo $resourceCombo): MetadataStore
+    {
+        return new MetadataFrontmatterStore($resourceCombo, null);
+    }
+
+    public static function createFromArray(ResourceCombo $page, array $jsonArray): MetadataFrontmatterStore
     {
         return new MetadataFrontmatterStore($page, $jsonArray);
     }

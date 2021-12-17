@@ -102,6 +102,14 @@ class PageDescription extends MetadataText
             return $this;
         }
 
+        if ($value !== null && is_array($value)) {
+            $description = $value[self::ABSTRACT_KEY];
+            if ($description !== null) {
+                $this->descriptionOrigin = $value[self::DESCRIPTION_ORIGIN];
+                parent::buildFromStoreValue($description);
+                return $this;
+            }
+        }
         /**
          * Plugin Plugin Description Integration
          */
@@ -131,16 +139,6 @@ class PageDescription extends MetadataText
     }
 
 
-    public function toFormField(): FormMetaField
-    {
-
-        $this->buildCheck();
-        $formField = parent::toFormField();
-        $formField->setValue($this->getValue(), $this->getDefaultValue());
-        return $formField;
-
-    }
-
     public function setValue($value): Metadata
     {
 
@@ -153,7 +151,7 @@ class PageDescription extends MetadataText
                      * we don't do {@link Metadata::buildCheck() build check} otherwise we get a loop
                      * because it will use back this method {@link Metadata::setValue()}
                      */
-                    $this->buildFromStore();
+                    $this->buildFromReadStore();
                 }
                 if ($this->descriptionOrigin === PageDescription::DESCRIPTION_COMBO_ORIGIN) {
                     throw new ExceptionCombo("The description cannot be empty", PageDescription::DESCRIPTION_PROPERTY);
@@ -176,7 +174,7 @@ class PageDescription extends MetadataText
      */
     public function toStoreValue()
     {
-        $metaDataStore = $this->getReadStore();
+        $metaDataStore = $this->getWriteStore();
         if (!($metaDataStore instanceof MetadataDokuWikiStore)) {
             return parent::toStoreValue();
         }

@@ -204,7 +204,7 @@ class Page extends ResourceComboAbs
      */
     private $pageUrlPath;
     /**
-     * @var MetadataStore
+     * @var MetadataStore|string
      */
     private $readStore;
 
@@ -411,7 +411,7 @@ class Page extends ResourceComboAbs
     {
         $this->canonical
             ->setValue($canonical)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -490,7 +490,7 @@ class Page extends ResourceComboAbs
     public
     function getForwardLinks(): ?array
     {
-        $store = $this->getStoreOrDefault();
+        $store = $this->getReadStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
@@ -731,7 +731,7 @@ class Page extends ResourceComboAbs
     public function getMediasMetadata(): ?array
     {
 
-        $store = $this->getStoreOrDefault();
+        $store = $this->getReadStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
@@ -791,7 +791,7 @@ class Page extends ResourceComboAbs
      */
     public function getAuthor(): ?string
     {
-        $store = $this->getStoreOrDefault();
+        $store = $this->getReadStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
@@ -807,7 +807,7 @@ class Page extends ResourceComboAbs
     public function getAuthorID(): ?string
     {
 
-        $store = $this->getStoreOrDefault();
+        $store = $this->getReadStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return null;
         }
@@ -866,7 +866,7 @@ class Page extends ResourceComboAbs
         /**
          * @var MetadataDokuWikiStore $metadataStore
          */
-        $metadataStore = $this->getStoreOrDefault();
+        $metadataStore = $this->getReadStoreOrDefault();
         $metadataStore->renderAndPersist();
 
         /**
@@ -1257,7 +1257,7 @@ class Page extends ResourceComboAbs
 
         $this->pageId
             ->setValue($pageId)
-            ->sendToStore();
+            ->sendToWriteStore();
 
         return $this;
 
@@ -1349,7 +1349,7 @@ class Page extends ResourceComboAbs
             $beforeLowQualityPage = $this->isLowQualityPage();
             $lowQualityAttributeName
                 ->setValue($value)
-                ->sendToStore();
+                ->sendToWriteStore();
             $afterLowQualityPage = $this->isLowQualityPage();
             if ($beforeLowQualityPage !== $afterLowQualityPage) {
                 /**
@@ -1407,7 +1407,7 @@ class Page extends ResourceComboAbs
     {
         $this->ldJson
             ->setValue($jsonLd)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1419,7 +1419,7 @@ class Page extends ResourceComboAbs
     {
         $this->type
             ->setValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1517,7 +1517,7 @@ class Page extends ResourceComboAbs
 
         $this->description
             ->setValue($description)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1530,7 +1530,7 @@ class Page extends ResourceComboAbs
     {
         $this->endDate
             ->setFromStoreValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1543,7 +1543,7 @@ class Page extends ResourceComboAbs
     {
         $this->startDate
             ->setFromStoreValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1554,7 +1554,7 @@ class Page extends ResourceComboAbs
     {
         $this->publishedDate
             ->setFromStoreValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1568,7 +1568,7 @@ class Page extends ResourceComboAbs
     {
         $this->pageName
             ->setValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1581,7 +1581,7 @@ class Page extends ResourceComboAbs
     {
         $this->title
             ->setValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1593,7 +1593,7 @@ class Page extends ResourceComboAbs
     {
         $this->h1
             ->setValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1605,7 +1605,7 @@ class Page extends ResourceComboAbs
     {
         $this->region
             ->setFromStoreValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1618,7 +1618,7 @@ class Page extends ResourceComboAbs
 
         $this->lang
             ->setFromStoreValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1630,7 +1630,7 @@ class Page extends ResourceComboAbs
     {
         $this->layout
             ->setValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1757,7 +1757,7 @@ class Page extends ResourceComboAbs
     {
         $this->slug
             ->setFromStoreValue($slug)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1783,7 +1783,7 @@ class Page extends ResourceComboAbs
     {
         $this->scope
             ->setFromStoreValue($scope)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1794,7 +1794,7 @@ class Page extends ResourceComboAbs
     {
         $this->qualityMonitoringIndicator
             ->setFromStoreValue($boolean)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1835,7 +1835,11 @@ class Page extends ResourceComboAbs
         }
     }
 
-    public function setReadStore(MetadataStore $store): Page
+    /**
+     * @param MetadataStore|string $store
+     * @return $this
+     */
+    public function setReadStore($store): Page
     {
         $this->readStore = $store;
         return $this;
@@ -1881,7 +1885,7 @@ class Page extends ResourceComboAbs
     {
         $this->keywords
             ->setFromStoreValue($value)
-            ->sendToStore();
+            ->sendToWriteStore();
         return $this;
     }
 
@@ -1975,10 +1979,13 @@ class Page extends ResourceComboAbs
     }
 
 
-    public function getStoreOrDefault(): MetadataStore
+    public function getReadStoreOrDefault(): MetadataStore
     {
         if ($this->readStore === null) {
-            $this->readStore = MetadataDokuWikiStore::createForPage($this);
+            $this->readStore = MetadataDokuWikiStore::createFromResource($this);
+        }
+        if (!($this->readStore instanceof MetadataStore)) {
+            $this->readStore = MetadataStoreAbs::toMetadataStore($this->readStore, $this);
         }
         return $this->readStore;
     }

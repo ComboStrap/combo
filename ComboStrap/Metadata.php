@@ -218,26 +218,26 @@ abstract class Metadata
     /**
      * @return bool
      * used in the {@link Metadata::buildCheck()} function
-     * If the value is null, the {@link Metadata::buildFromStore()} will be performed
+     * If the value is null, the {@link Metadata::buildFromReadStore()} will be performed
      * otherwise, it will not
      */
     public abstract function valueIsNotNull(): bool;
 
     /**
      * If the {@link Metadata::getValue()} is null and if the object was not already build
-     * this function will call the function {@link Metadata::buildFromStore()}
+     * this function will call the function {@link Metadata::buildFromReadStore()}
      */
     protected function buildCheck()
     {
         if (!$this->wasBuild && !$this->valueIsNotNull()) {
             $this->wasBuild = true;
-            $this->buildFromStore();
+            $this->buildFromReadStore();
         }
     }
 
     /**
      * Return the store for this metadata
-     * By default, this is the {@link ResourceCombo::getStoreOrDefault() default resource metadata store}
+     * By default, this is the {@link ResourceCombo::getReadStoreOrDefault() default resource metadata store}
      *
      * (ie a memory variable or a database)
      * @return MetadataStore|null
@@ -245,9 +245,9 @@ abstract class Metadata
     public function getReadStore(): ?MetadataStore
     {
         if ($this->readStore === null) {
-            return $this->getResource()->getStoreOrDefault();
+            return $this->getResource()->getReadStoreOrDefault();
         }
-        if (!$this->readStore instanceof MetadataFormDataStore) {
+        if (!$this->readStore instanceof MetadataStore) {
             $this->readStore = MetadataStoreAbs::toMetadataStore($this->readStore, $this->getResource());
         }
         return $this->readStore;
@@ -270,7 +270,7 @@ abstract class Metadata
      * also made available on the resource level
      *
      */
-    public function sendToStore(): Metadata
+    public function sendToWriteStore(): Metadata
     {
         $this->getWriteStore()->set($this);
         return $this;
@@ -287,7 +287,7 @@ abstract class Metadata
     }
 
     /** @noinspection PhpMissingReturnTypeInspection */
-    public function buildFromStore()
+    public function buildFromReadStore()
     {
         $this->wasBuild = true;
         $metadataStore = $this->getReadStore();
@@ -581,13 +581,13 @@ abstract class Metadata
     }
 
     /**
-     * An utility function to {@link Metadata::sendToStore()}
+     * An utility function to {@link Metadata::sendToWriteStore()}
      * and {@link MetadataStore::persist()} at the same time in the {@link Metadata::getWriteStore() write store}
      * @throws ExceptionCombo
      */
     public function persist(): Metadata
     {
-        $this->sendToStore();
+        $this->sendToWriteStore();
         $this->getWriteStore()->persist();
         return $this;
     }
@@ -597,7 +597,7 @@ abstract class Metadata
      *
      * The inverse function is {@link Metadata::toStoreValue()}
      *
-     * The function used by {@link Metadata::buildFromStore()}
+     * The function used by {@link Metadata::buildFromReadStore()}
      * to build the value from the {@link MetadataStore::get()}
      * function.
      *

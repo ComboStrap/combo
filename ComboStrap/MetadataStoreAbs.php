@@ -30,9 +30,9 @@ abstract class MetadataStoreAbs implements MetadataStore
     /**
      * @param MetadataStore|string $readStore
      * @param $resource
-     * @return MetadataStore|mixed
+     * @return MetadataStore
      */
-    public static function toMetadataStore($readStore, $resource)
+    public static function toMetadataStore($readStore, $resource): MetadataStore
     {
         if ($readStore instanceof MetadataStore) {
             return $readStore;
@@ -46,7 +46,7 @@ abstract class MetadataStoreAbs implements MetadataStore
         if ($resource === null) {
             throw new ExceptionComboRuntime("The resource is null. You can't implement a store without a resource.");
         }
-        return new $readStore($resource);
+        return $readStore::createFromResource($resource);
 
     }
 

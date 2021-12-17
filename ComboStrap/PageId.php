@@ -181,7 +181,7 @@ class PageId extends MetadataText
         return parent::setValue($value);
     }
 
-    public function sendToStore(): Metadata
+    public function sendToWriteStore(): Metadata
     {
         /**
          * If the data was built with one store
@@ -193,7 +193,7 @@ class PageId extends MetadataText
         if ($actualStoreValue !== null && $actualStoreValue !== $value) {
             throw new ExceptionComboRuntime("The page id can not be modified once generated. The value in the store is $actualStoreValue while the new value is $value");
         }
-        parent::sendToStore();
+        parent::sendToWriteStore();
         return $this;
 
     }

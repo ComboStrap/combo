@@ -134,9 +134,9 @@ class MetadataStoreTransfer
                 $metadata
                     ->setResource($this->page)
                     ->setReadStore($this->sourceStore)
-                    ->buildFromStore()
-                    ->setReadStore($this->targetStore)
-                    ->sendToStore();
+                    ->buildFromReadStore()
+                    ->setWriteStore($this->targetStore)
+                    ->sendToWriteStore();
             } catch (ExceptionCombo $e) {
                 $messages[] = Message::createErrorMessage("Error while replicating the meta ($metadata) from the store ($this->sourceStore) to the store ($this->targetStore). Message: " . $e->getMessage())
                     ->setCanonical($metadata->getCanonical());

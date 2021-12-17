@@ -39,13 +39,13 @@ class PageCreationDate extends MetadataDateTime
 
     /**
      */
-    public function buildFromStore(): MetadataDateTime
+    public function buildFromReadStore(): MetadataDateTime
     {
 
         $store = $this->getReadStore();
 
         if (!($store instanceof MetadataDokuWikiStore)) {
-            return parent::buildFromStore();
+            return parent::buildFromReadStore();
         }
 
         $fromName = $store->getFromPersistentName(self::DATE_DOKUWIKI_PROPERTY_NAME);
@@ -62,7 +62,7 @@ class PageCreationDate extends MetadataDateTime
 
     public function toStoreValue()
     {
-        $store = $this->getReadStore();
+        $store = $this->getWriteStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
             return parent::toStoreValue();
         }

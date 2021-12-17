@@ -13,40 +13,28 @@ class MetadataDbStore extends MetadataStoreAbs
 {
 
 
-    private $resource;
-
-    /**
-     * MetadataDbStore constructor.
-     */
-    public function __construct($resourceCombo)
+    static function createFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
-        $this->resource = $resourceCombo;
-    }
-
-
-    public static function createForPage(ResourceCombo $resourceCombo): MetadataDbStore
-    {
-
         return new MetadataDbStore($resourceCombo);
-
     }
 
     public function set(Metadata $metadata)
     {
-        switch ($metadata->getName()) {
-            case Aliases::PROPERTY_NAME:
-                $this->syncTabular($metadata);
-                return;
-            default:
-                throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on set", self::CANONICAL);
+        if ($metadata instanceof MetadataTabular) {
+
+            $this->syncTabular($metadata);
+            return;
         }
+
+        throw new ExceptionComboRuntime("The metadata ($metadata) is not yet supported on set", self::CANONICAL);
+
     }
 
     public function get(Metadata $metadata, $default = null)
     {
         $resource = $metadata->getResource();
         if (!($resource instanceof Page)) {
-            throw new ExceptionComboRuntime("The resource type ({$resource->getPageType()}) is not yet supported for the database metadata store", self::CANONICAL);
+            throw new ExceptionComboRuntime("The resource type ({$resource->getType()}) is not yet supported for the database metadata store", self::CANONICAL);
         }
 
 
@@ -55,7 +43,7 @@ class MetadataDbStore extends MetadataStoreAbs
                 return $this->getDbTabularData($metadata);
             default:
                 $pageMetaFromFileSystem = Page::createPageFromQualifiedPath($resource->getPath()->toString());
-                $fsStore = MetadataDokuWikiStore::createForPage($pageMetaFromFileSystem);
+                $fsStore = MetadataDokuWikiStore::createFromResource($pageMetaFromFileSystem);
                 $pageMetaFromFileSystem->setReadStore($fsStore);
 
                 $database = DatabasePage::createFromPageObject($pageMetaFromFileSystem);

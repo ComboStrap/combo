@@ -85,4 +85,9 @@ interface MetadataStore
      */
     public function getCanonical(): string;
 
+    /**
+     * @param ResourceCombo $resourceCombo
+     * @return MetadataStore
+     */
+    static function createFromResource(ResourceCombo $resourceCombo): MetadataStore;
 }

@@ -65,7 +65,7 @@ abstract class MetadataDateTime extends Metadata
     }
 
 
-    public function buildFromStore(): MetadataDateTime
+    public function buildFromReadStore(): MetadataDateTime
     {
         $value = $this->getReadStore()->get($this);
         try {

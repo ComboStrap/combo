@@ -42,7 +42,7 @@ abstract class MetadataText extends Metadata
     public function setValue($value): Metadata
     {
         if ($value !== null && !is_string($value)) {
-            throw new ExceptionCombo("The value is not a string");
+            throw new ExceptionCombo("The value of the metadata ($this) is not a string", $this->getCanonical());
         }
         $value = trim($value);
         if ($value === "") {
@@ -90,6 +90,8 @@ abstract class MetadataText extends Metadata
     {
         return null;
     }
+
+
 
 
 }

@@ -173,7 +173,7 @@ class DatabasePage
 
         $store = MetadataDbStore::createForPage($this->page);
         Aliases::createForPage($this->page)
-            ->buildFromStore()
+            ->buildFromReadStore()
             ->setReadStore($store)
             ->persist();
 
@@ -856,8 +856,8 @@ EOF;
             $metaRecord[$name] = $metadata
                 ->setResource($this->page)
                 ->setReadStore($sourceStore)
-                ->buildFromStore()
-                ->setReadStore($targetStore)
+                ->buildFromReadStore()
+                ->setWriteStore($targetStore)
                 ->toStoreValueOrDefault();
         }
 
@@ -1109,7 +1109,7 @@ EOF;
         try {
             Aliases::createForPage($this->page)
                 ->addAlias($aliasPath)
-                ->sendToStore();
+                ->sendToWriteStore();
         } catch (ExceptionCombo $e) {
             // we don't throw while getting
             LogUtility::msg("Unable to add the alias ($aliasPath) for the page ($this->page)");

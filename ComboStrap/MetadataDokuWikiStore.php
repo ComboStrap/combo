@@ -51,9 +51,14 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      *
      * The scope of the data will be then the store
      */
-    public static function createForPage(ResourceCombo $resourceCombo): MetadataDokuWikiStore
+    public static function createFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
-        $data = p_read_metadata($resourceCombo->getDokuwikiId());
+        if (!($resourceCombo instanceof Page)) {
+            LogUtility::msg("The resource is not a page. File System store supports only page resources");
+            $data = null;
+        } else {
+            $data = p_read_metadata($resourceCombo->getDokuwikiId());
+        }
         return new MetadataDokuWikiStore($resourceCombo, $data);
     }
 
@@ -218,7 +223,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         if ($oldValue !== $value) {
 
 
-            $this->data[self::PERSISTENT_METADATA][$key]=$value;
+            $this->data[self::PERSISTENT_METADATA][$key] = $value;
             /**
              * Metadata in Dokuwiki is fucked up.
              *

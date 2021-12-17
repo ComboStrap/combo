@@ -20,7 +20,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
      * @param ResourceCombo $page
      * @param $data
      */
-    public function __construct(ResourceCombo $page, $data)
+    public function __construct(ResourceCombo $page, $data = null)
     {
         $this->data = $data;
         parent::__construct($page);
@@ -56,7 +56,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     }
 
 
-    public function getData(): array
+    public function getData(): ?array
     {
         return $this->data;
     }

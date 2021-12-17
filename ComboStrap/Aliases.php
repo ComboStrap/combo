@@ -197,7 +197,7 @@ class Aliases extends MetadataTabular
              * (the array may be empty)
              */
             try {
-                $this->sendToStore();
+                $this->sendToWriteStore();
             } catch (ExceptionCombo $e) {
                 LogUtility::msg("Error while persisting the new data");
             }

@@ -27,11 +27,11 @@ class ModificationDate extends MetadataDateTime
         return MetaManagerForm::TAB_PAGE_VALUE;
     }
 
-    public function buildFromStore(): MetadataDateTime
+    public function buildFromReadStore(): MetadataDateTime
     {
         $store = $this->getReadStore();
         if (!($store instanceof MetadataDokuWikiStore)) {
-            return parent::buildFromStore();
+            return parent::buildFromReadStore();
         }
         $createdMeta = $store->getFromPersistentName('date')['modified'];
         if (empty($createdMeta)) {

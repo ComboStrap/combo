@@ -223,4 +223,9 @@ abstract class MetadataTabular extends Metadata
         }
         return sizeof($this->rows);
     }
+
+    public function getRow($id): ?array
+    {
+        return $this->rows[$id];
+    }
 }

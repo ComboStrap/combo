@@ -11,9 +11,9 @@ class PageH1 extends MetadataText
     public const H1_PARSED = "h1_parsed";
     public const PROPERTY_NAME = "h1";
 
-    public static function createForPage($page): ResourceName
+    public static function createForPage($page): PageH1
     {
-        return (new ResourceName())
+        return (new PageH1())
             ->setResource($page);
     }
 
@@ -53,13 +53,18 @@ class PageH1 extends MetadataText
     {
         $store = $this->getReadStore();
         if ($store instanceof MetadataDokuWikiStore) {
-            $h1Parsed = $store->getFromPersistentName( self::H1_PARSED);
+            $h1Parsed = $store->getCurrentFromName( self::H1_PARSED);
             if (!empty($h1Parsed)) {
                 return $h1Parsed;
             }
+            // dokuwiki
+            $h1 = $store->getCurrentFromName( "title");
+            if (!empty($h1)) {
+                return $h1;
+            }
         }
         $title = PageTitle::createForPage($this->getResource())
-            ->getValueOrDefault();
+            ->getValue();
         if (!empty($title)) {
             return $title;
         }

@@ -173,8 +173,8 @@ final class PageSqlTreeListener implements ParseTreeListener
                         break;
                 }
                 break;
-            case PageSqlParser::AND:
-            case PageSqlParser::OR:
+            case PageSqlParser:: AND:
+            case PageSqlParser:: OR:
                 if ($this->ruleState === PageSqlParser::RULE_predicates) {
                     $this->physicalSql .= " {$text}\n";
                 }
@@ -283,16 +283,17 @@ final class PageSqlTreeListener implements ParseTreeListener
                 if ($tableName === self::BACKLINKS) {
                     $tableName = <<<EOF
     pages p
-    join page_references pr on pr.source_id = p.id
+    join page_references pr on pr.page_id = p.page_id
 where
-    pr.target_id = ?
+    pr.reference = ?
 
 EOF;
                     $id = PluginUtility::getMainPageDokuwikiId();
                     if (empty($id)) {
                         LogUtility::msg("The page id is unknown. A Page SQL with backlinks should be asked within a page request scope.", LogUtility::LVL_MSG_ERROR, PageSql::CANONICAL);
                     }
-                    $this->parameters[]=$id;
+                    DokuPath::addRootSeparatorIfNotPresent($id);
+                    $this->parameters[] = $id;
                 } else {
                     $tableName = "\t$tableName\n";
                 }

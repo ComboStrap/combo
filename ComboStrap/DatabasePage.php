@@ -169,13 +169,23 @@ class DatabasePage
 
         $this->replicatePage($replicationDateMeta);
 
-        $this->replicateBacklinkPages();
-
-        Aliases::createForPage($this->page)
-            ->setReadStore(MetadataDokuWikiStore::class)
-            ->buildFromReadStore()
-            ->setWriteStore(MetadataDbStore::class)
-            ->persist();
+        /**
+         * @var Metadata $tabularMetadataToSync
+         */
+        $tabularMetadataToSync = [
+            ( new References()),
+            (new Aliases())
+        ];
+        $fsStore = MetadataDokuWikiStore::createFromResource($this->page);
+        $dbStore = MetadataDbStore::createFromResource($this->page);
+        foreach($tabularMetadataToSync as $tabular){
+            $tabular
+                ->setResource($this->page)
+                ->setReadStore($fsStore)
+                ->buildFromReadStore()
+                ->setWriteStore($dbStore)
+                ->persist();
+        }
 
         /**
          * Set the replication date
@@ -485,57 +495,6 @@ class DatabasePage
 
     }
 
-    /**
-     * @throws ExceptionCombo
-     */
-    private function replicateBacklinkPages(): void
-    {
-        $referencedPagesIndex = $this->page->getLinkReferences();
-        if ($referencedPagesIndex == null) {
-            return;
-        }
-        $referencedPagesDb = $this->getInternalReferencedPages();
-        foreach ($referencedPagesIndex as $internalPageReference) {
-            if (!$internalPageReference->exists()) {
-                continue;
-            }
-            if (in_array($internalPageReference->getDokuwikiId(), array_keys($referencedPagesDb), true)) {
-                unset($referencedPagesDb[$internalPageReference->getDokuwikiId()]);
-            } else {
-                $record = [
-                    "SOURCE_ID" => $this->page->getDokuwikiId(),
-                    "TARGET_ID" => $internalPageReference->getDokuwikiId()
-                ];
-                $res = $this->sqlite->storeEntry('PAGE_REFERENCES', $record);
-                if ($res === false) {
-                    $errorMessage = Sqlite::getErrorMessage();
-                    throw new ExceptionCombo("There was a problem during the page references insert : {$errorMessage}");
-                }
-                $reason = "The page ($this->page) has added a backlink to the page {$internalPageReference}";
-                $internalPageReference->getDatabasePage()->createReplicationRequest($reason);
-            }
-        }
-        $delete = <<<EOF
-delete from PAGE_REFERENCES where SOURCE_ID = ? and TARGET_ID = ?
-EOF;
-
-        foreach ($referencedPagesDb as $internalPageReference) {
-            $row = [
-                "SOURCE_ID" => $this->page->getDokuwikiId(),
-                "TARGET_ID" => $internalPageReference->getDokuwikiId()
-            ];
-            $res = $this->sqlite->query($delete, $row);
-
-            if ($res === false) {
-                $message = Sqlite::getErrorMessage();
-                throw new ExceptionCombo("There was a problem during the reference delete. Message: $message");
-            }
-
-            $reason = "The page ($this->page) has deleted a a backlink to the page {$internalPageReference}";
-            $internalPageReference->getDatabasePage()->createReplicationRequest($reason);
-        }
-
-    }
 
     /**
      * Sqlite is much quicker than the Dokuwiki Internal Index
@@ -548,7 +507,7 @@ EOF;
         if ($this->sqlite === null) {
             return null;
         }
-        $res = $this->sqlite->query("select count(1) from PAGE_REFERENCES where TARGET_ID = ? ", $this->page->getPath()->getDokuwikiId());
+        $res = $this->sqlite->query("select count(1) from PAGE_REFERENCES where REFERENCE = ? ", $this->page->getPath()->toString());
         if (!$res) {
             LogUtility::msg("An exception has occurred with the backlinks count select ({$this->page})");
         }
@@ -558,29 +517,7 @@ EOF;
 
     }
 
-    /**
-     * @return Page[]
-     */
-    private function getInternalReferencedPages(): array
-    {
 
-        if ($this->sqlite === null) {
-            return [];
-        }
-        $res = $this->sqlite->query("select TARGET_ID from PAGE_REFERENCES where SOURCE_ID = ? ", $this->page->getDokuwikiId());
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the PAGE_REFERENCES ({$this->page}) selection query");
-        }
-        $targetPath = $this->sqlite->res2arr($res);
-        $this->sqlite->res_close($res);
-        $targetPaths = [];
-        foreach ($targetPath as $row) {
-            $targetId = $row["TARGET_ID"];
-            $targetPaths[$targetId] = Page::createPageFromId($targetId);
-        }
-        return $targetPaths;
-
-    }
 
     /**
      * @return bool when an update as occurred

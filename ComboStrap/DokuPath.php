@@ -319,7 +319,7 @@ class DokuPath extends PathAbs
 
     /**
      * If the path does not have a root separator,
-     * it's added (ie to transform an id)
+     * it's added (ie to transform an id to a path)
      * @param string $path
      */
     public static function addRootSeparatorIfNotPresent(string &$path)

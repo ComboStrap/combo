@@ -281,12 +281,6 @@ class Aliases extends MetadataTabular
     }
 
     public
-    function getDataType(): string
-    {
-        return DataType::TABULAR_TYPE_VALUE;
-    }
-
-    public
     function getDescription(): string
     {
         return "Aliases that will redirect to this page.";

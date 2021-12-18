@@ -507,7 +507,7 @@ class DatabasePage
      */
     private function replicateBacklinkPages(): void
     {
-        $referencedPagesIndex = $this->page->getForwardLinks();
+        $referencedPagesIndex = $this->page->getLinkReferences();
         if ($referencedPagesIndex == null) {
             return;
         }

@@ -488,7 +488,7 @@ class Page extends ResourceComboAbs
      * @return Page[]|null the internal links or null
      */
     public
-    function getForwardLinks(): ?array
+    function getLinkReferences(): ?array
     {
         $store = $this->getReadStoreOrDefault();
         if (!($store instanceof MetadataDokuWikiStore)) {

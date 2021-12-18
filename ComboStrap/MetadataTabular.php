@@ -239,4 +239,31 @@ abstract class MetadataTabular extends Metadata
             ->getValue();
         return $this->rows[$normalizedValue];
     }
+
+    public function getDataType(): string
+    {
+        return DataType::TABULAR_TYPE_VALUE;
+    }
+
+    /**
+     * @var Metadata[] $metas
+     */
+    public function addRow(array $metas): MetadataTabular
+    {
+        $row = [];
+        $identifier = null;
+        foreach ($metas as $meta) {
+            $row[$meta::getPersistentName()] = $meta;
+            if (get_class($meta) === $this->getUidClass()) {
+                $identifier = $meta->getValue();
+            }
+        }
+        if ($identifier === null) {
+            LogUtility::msg("The identifier value was not found in the row");
+            return $this;
+        }
+        $this->rows[$identifier] = $row;
+        return $this;
+    }
+
 }

@@ -40,6 +40,10 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
 
     const CANONICAL = Metadata::CANONICAL;
+    /**
+     * When the value of a metadata has changed
+     */
+    public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
 
 
     /**
@@ -202,7 +206,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
     /**
      * Change a meta on file
-     * and triggers the {@link Page::PAGE_METADATA_MUTATION_EVENT} event
+     * and triggers the {@link self::PAGE_METADATA_MUTATION_EVENT} event
      *
      * @param $wikiId
      * @param $key
@@ -259,7 +263,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
                 "new_value" => $value,
                 "old_value" => $oldValue
             ];
-            Event::createAndTrigger(Page::PAGE_METADATA_MUTATION_EVENT, $data);
+            Event::createAndTrigger(self::PAGE_METADATA_MUTATION_EVENT, $data);
         }
 
     }

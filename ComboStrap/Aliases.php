@@ -209,7 +209,7 @@ class Aliases extends MetadataTabular
         /**
          * We don't do that on build because
          * we are using a set a metadata method that creates
-         * a cycle via the {@link Page::PAGE_METADATA_MUTATION_EVENT}
+         * a cycle via the {@link MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT}
          */
         if (
             !$this->valueIsNotNull()

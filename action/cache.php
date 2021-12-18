@@ -10,6 +10,7 @@ use ComboStrap\File;
 use ComboStrap\Http;
 use ComboStrap\Iso8601Date;
 use ComboStrap\LogUtility;
+use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PageDescription;
 use ComboStrap\PageH1;
@@ -112,7 +113,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * To delete sidebar (cache) cache when a page was modified in a namespace
          * https://combostrap.com/sideslots
          */
-        $controller->register_hook(Page::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'sideSlotsCacheBurstingForMetadataMutation', array());
+        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'sideSlotsCacheBurstingForMetadataMutation', array());
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'BEFORE', $this, 'sideSlotsCacheBurstingForPageCreationAndDeletion', array());
 
     }

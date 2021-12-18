@@ -48,10 +48,6 @@ class Page extends ResourceComboAbs
     const PAGE_ID_ABBREV_LENGTH = 7;
 
 
-    /**
-     * When the value of a metadata has changed
-     */
-    const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
     const TYPE = "page";
 
 

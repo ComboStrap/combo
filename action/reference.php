@@ -34,6 +34,11 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
          */
         $controller->register_hook('PARSER_HANDLER_DONE', 'AFTER', $this, 'storeReference', array());
 
+        /**
+         * To delete the analytics
+         */
+        $controller->register_hook(MetadataDokuWikiStore::PAGE_METADATA_MUTATION_EVENT, 'AFTER', $this, 'backlinksUpdate', array());
+
     }
 
 
@@ -90,8 +95,8 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
             // page id check
             // because we are the end of the parse
             // if there is a frontmatter with a page id. It should have be set
-             PageId::createForPage($page)
-                 ->getPageIdOrGenerate();
+            PageId::createForPage($page)
+                ->getPageIdOrGenerate();
 
             $references
                 ->setWriteStore(MetadataDbStore::class)
@@ -103,5 +108,50 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
 
     }
 
+    /**
+     * Just delete the Analytics
+     * TODO: Put that in a pub/sub model via the PAGES_TO_REPLICATE
+     */
+    function backlinksUpdate(Doku_Event $event, $params)
+    {
+
+
+        $data = $event->data;
+
+        if ($data["name"] !== References::getPersistentName()) {
+            return;
+        };
+
+        $newRows = $data["new_value"];
+        $oldRows = $data["old_value"];
+
+        $newReferences = [];
+        if ($newRows !== null) {
+            foreach ($newRows as $rowNewValue) {
+                $reference = $rowNewValue[Reference::getPersistentName()];
+                $newReferences[$reference] = $reference;
+            }
+        }
+
+        if ($oldRows !== null) {
+            foreach ($oldRows as $oldRow) {
+                $oldReference = $oldRow[Reference::getPersistentName()];
+                if (isset($newReferences[$oldReference])) {
+                    unset($newReferences[$oldReference]);
+                } else {
+                    Page::createPageFromQualifiedPath($oldReference)
+                        ->getAnalyticsDocument()
+                        ->deleteIfExists();
+                }
+            }
+        }
+        foreach ($newReferences as $newReference){
+            Page::createPageFromQualifiedPath($newReference)
+                ->getAnalyticsDocument()
+                ->deleteIfExists();
+        }
+
+
+    }
 
 }

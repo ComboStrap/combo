@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use http\Exception\RuntimeException;
+
 /**
  * Class MetadataDbStore
  * @package ComboStrap
@@ -65,26 +67,37 @@ class MetadataDbStore extends MetadataStoreAbs
         }
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     private function syncTabular(MetadataTabular $metadata)
     {
 
-        $uid = Metadata::toMetadataObject($metadata->getUidClass())
+
+        $uidClass = $metadata->getUidClass();
+        if ($uidClass === null) {
+            throw new ExceptionCombo("The uid class should be defined for the metadata ($metadata)");
+        }
+        $uid = Metadata::toMetadataObject($uidClass)
             ->setResource($metadata->getResource());
+
         $sourceRows = $metadata->toStoreValue();
         if ($sourceRows === null) {
             return;
         }
 
         $targetRows = $this->getDbTabularData($metadata);
-        foreach ($targetRows as $targetRow) {
+        if($targetRows!==null) {
+            foreach ($targetRows as $targetRow) {
 
-            $targetRowId = $targetRow[$uid::getPersistentName()];
-            if (isset($sourceRows[$targetRowId])) {
-                unset($sourceRows[$targetRowId]);
-            } else {
-                $this->deleteRow($targetRow, $metadata);
+                $targetRowId = $targetRow[$uid::getPersistentName()];
+                if (isset($sourceRows[$targetRowId])) {
+                    unset($sourceRows[$targetRowId]);
+                } else {
+                    $this->deleteRow($targetRow, $metadata);
+                }
+
             }
-
         }
 
         foreach ($sourceRows as $sourceRow) {
@@ -109,7 +122,7 @@ class MetadataDbStore extends MetadataStoreAbs
         $resourceUidObject = $resourceCombo->getUidObject();
         $uidValue = $resourceUidObject->getValue();
         if ($uidValue === null) {
-            throw new ExceptionComboRuntime("The uid should not be null for $resourceCombo");
+            throw new ExceptionComboRuntime("The id ($resourceUidObject) is null for the resource $resourceCombo. We can't add a row in the database.");
         }
         $row[$resourceUidObject::getPersistentName()] = $uidValue;
 
@@ -182,8 +195,12 @@ EOF;
 
         $uidAttribute = $uid::getPersistentName();
         $columns = [];
-        foreach ($metadata->getChildren() as $children) {
-            $columns[] = $children::getPersistentName() . " as \"" . $children::getPersistentName() . "\"";
+        $children = $metadata->getChildren();
+        if($children===null){
+            throw new ExceptionCombo("The children of the tabular metadata ($metadata) should be set to synchronize into the database");
+        }
+        foreach ($children as $child) {
+            $columns[] = $child::getPersistentName() . " as \"" . $child::getPersistentName() . "\"";
         }
         $tableName = $this->getTableName($metadata);
 

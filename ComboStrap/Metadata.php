@@ -59,12 +59,21 @@ abstract class Metadata
         $this->parent = $parent;
     }
 
-    public static function toMetadataObject($childClass, Metadata $parent = null): Metadata
+    /**
+     * @param $class
+     * @param Metadata|null $parent
+     * @return Metadata
+     * @throws ExceptionCombo
+     */
+    public static function toMetadataObject($class, Metadata $parent = null): Metadata
     {
-        if (!is_subclass_of($childClass, Metadata::class)) {
-            throw new ExceptionComboRuntime("The child class ($childClass) is not a metadata class");
+        if($class===null){
+            throw new ExceptionCombo("The string class is empty");
         }
-        return new $childClass($parent);
+        if (!is_subclass_of($class, Metadata::class)) {
+            throw new ExceptionCombo("The class ($class) is not a metadata class");
+        }
+        return new $class($parent);
     }
 
 
@@ -203,9 +212,6 @@ abstract class Metadata
      */
     public function setWriteStore($store): Metadata
     {
-        if ($this->writeStore !== null) {
-            LogUtility::msg("The write store was already set.");
-        }
         $this->writeStore = $store;
         return $this;
     }

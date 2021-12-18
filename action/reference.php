@@ -8,6 +8,7 @@ use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
+use ComboStrap\PageId;
 use ComboStrap\Reference;
 use ComboStrap\References;
 
@@ -62,7 +63,10 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
             ->setReadStore(MetadataDokuWikiStore::class);
 
         while ($actualCall = $callStack->next()) {
-            if ($actualCall->getTagName() === syntax_plugin_combo_link::TAG) {
+            if (
+                $actualCall->getTagName() === syntax_plugin_combo_link::TAG
+                && $actualCall->getState() === DOKU_LEXER_ENTER
+            ) {
                 $ref = $actualCall->getAttribute(Reference::REF_PROPERTY);
                 $link = LinkUtility::createFromRef($ref);
                 if ($link->getType() === LinkUtility::TYPE_INTERNAL) {
@@ -82,6 +86,13 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
         }
 
         try {
+
+            // page id check
+            // because we are the end of the parse
+            // if there is a frontmatter with a page id. It should have be set
+             PageId::createForPage($page)
+                 ->getPageIdOrGenerate();
+
             $references
                 ->setWriteStore(MetadataDbStore::class)
                 ->persist();

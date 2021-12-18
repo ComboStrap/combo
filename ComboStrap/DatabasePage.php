@@ -280,23 +280,6 @@ class DatabasePage
         return $this->getFromRow(PageId::PROPERTY_NAME);
     }
 
-    /**
-     * Create a page id before insertion
-     * and when the row does not have any
-     * (Needed for the replication of the alias)
-     */
-    private function createPageIdIfNeeded()
-    {
-        if ($this->page != null) {
-            $pageId = $this->page->getPageId();
-            if ($pageId === null || !is_string($pageId)
-                || preg_match("/[-_A-Z]/", $pageId)
-            ) {
-                $pageId = PageId::generateUniquePageId();
-                $this->page->setPageId($pageId);
-            }
-        }
-    }
 
     public
     function shouldReplicate(): bool

@@ -201,6 +201,8 @@ require_once(__DIR__ . '/ThirdMediaLink.php');
 require_once(__DIR__ . '/ThirdPartyPlugins.php');
 require_once(__DIR__ . '/TocUtility.php');
 require_once(__DIR__ . '/Toggle.php');
+require_once(__DIR__ . '/References.php');
+require_once(__DIR__ . '/Reference.php');
 require_once(__DIR__ . '/Underline.php');
 require_once(__DIR__ . '/Unit.php');
 require_once(__DIR__ . '/Url.php');

@@ -44,4 +44,15 @@ class References extends MetadataTabular
         return null;
     }
 
+    public function getUidClass(): ?string
+    {
+        return Reference::class;
+    }
+
+    public function getChildren(): ?array
+    {
+        return [Reference::class];
+    }
+
+
 }

@@ -13,6 +13,7 @@
 namespace ComboStrap;
 
 
+use Composer\Package\Link;
 use Doku_Renderer_metadata;
 use Doku_Renderer_xhtml;
 use dokuwiki\Extension\PluginTrait;
@@ -276,9 +277,14 @@ class LinkUtility
 
     }
 
-    public static function createFromPageId($id, &$tagAttributes = null)
+    public static function createFromPageId($id, &$tagAttributes = null): LinkUtility
     {
         return new LinkUtility(":$id", $tagAttributes);
+    }
+
+    public static function createFromRef(string $ref, TagAttributes $tagAttributes = null): LinkUtility
+    {
+        return new LinkUtility($ref,$tagAttributes);
     }
 
     /**

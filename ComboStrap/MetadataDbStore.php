@@ -38,27 +38,29 @@ class MetadataDbStore extends MetadataStoreAbs
         }
 
 
-        switch ($metadata->getName()) {
-            case Aliases::PROPERTY_NAME:
-                return $this->getDbTabularData($metadata);
-            default:
-                $pageMetaFromFileSystem = Page::createPageFromQualifiedPath($resource->getPath()->toString());
-                $fsStore = MetadataDokuWikiStore::createFromResource($pageMetaFromFileSystem);
-                $pageMetaFromFileSystem->setReadStore($fsStore);
+        if ($metadata instanceof MetadataTabular) {
 
-                $database = DatabasePage::createFromPageObject($pageMetaFromFileSystem);
-                if (!$database->exists()) {
-                    return null;
-                }
-                $value = $database->getFromRow($metadata->getName());
-                if ($value === null) {
-                    /**
-                     * An attribute should be added to {@link DatabasePage::PAGE_BUILD_ATTRIBUTES}
-                     * or in the table
-                     */
-                    throw new ExceptionComboRuntime("The metadata ($metadata) was not found in the returned database row.", self::CANONICAL);
-                }
-                return $value;
+            return $this->getDbTabularData($metadata);
+
+        } else {
+
+            $pageMetaFromFileSystem = Page::createPageFromQualifiedPath($resource->getPath()->toString());
+            $fsStore = MetadataDokuWikiStore::createFromResource($pageMetaFromFileSystem);
+            $pageMetaFromFileSystem->setReadStore($fsStore);
+
+            $database = DatabasePage::createFromPageObject($pageMetaFromFileSystem);
+            if (!$database->exists()) {
+                return null;
+            }
+            $value = $database->getFromRow($metadata->getName());
+            if ($value === null) {
+                /**
+                 * An attribute should be added to {@link DatabasePage::PAGE_BUILD_ATTRIBUTES}
+                 * or in the table
+                 */
+                throw new ExceptionComboRuntime("The metadata ($metadata) was not found in the returned database row.", self::CANONICAL);
+            }
+            return $value;
 
         }
     }

@@ -28,14 +28,17 @@ class Aliases extends MetadataTabular
         return new Aliases();
     }
 
-    public function getValueAsAlias()
+    /**
+     * @return Alias[]|null
+     */
+    public function getValueAsAlias(): ?array
     {
         $rows = $this->getValue();
-        if($rows===null){
+        if ($rows === null) {
             return null;
         }
         $aliases = [];
-        foreach ($rows as $row){
+        foreach ($rows as $row) {
             /**
              * @var AliasPath $aliasMeta
              */
@@ -45,7 +48,8 @@ class Aliases extends MetadataTabular
              * @var AliasType $aliasType
              */
             $aliasType = $row[AliasType::getPersistentName()];
-            if($aliasType!==null){
+            $aliasTypeValue = $aliasType->getValue();
+            if ($aliasTypeValue !== null) {
                 $alias->setType($aliasType->getValue());
             }
             $aliases[] = $alias;
@@ -191,8 +195,8 @@ class Aliases extends MetadataTabular
         return
             [
                 [
-                    AliasPath::getPersistentName()=>null,
-                    AliasType::getPersistentName()=>AliasType::createForParent($this)->buildFromStoreValue(AliasType::DEFAULT)
+                    AliasPath::getPersistentName() => null,
+                    AliasType::getPersistentName() => AliasType::createForParent($this)->buildFromStoreValue(AliasType::DEFAULT)
                 ]
             ];
     }
@@ -246,14 +250,14 @@ class Aliases extends MetadataTabular
     function addAndGetAlias($aliasPath, $aliasType = null): Alias
     {
         $this->buildCheck();
-        $path = Metadata::toMetadataObject(AliasPath::class,$this)
+        $path = Metadata::toMetadataObject(AliasPath::class, $this)
             ->setFromStoreValue($aliasPath);
         $row[$path::getPersistentName()] = $path;
 
-        $alias = Alias::create($this->getResource(),$path->getValue());
+        $alias = Alias::create($this->getResource(), $path->getValue());
 
-        if($aliasType!==null){
-            $aliasObject = Metadata::toMetadataObject(AliasType::class,$this)
+        if ($aliasType !== null) {
+            $aliasObject = Metadata::toMetadataObject(AliasType::class, $this)
                 ->setFromStoreValue($aliasType);
             $row[$aliasObject::getPersistentName()] = $aliasObject;
             $alias->setType($aliasType);

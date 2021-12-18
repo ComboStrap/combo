@@ -171,10 +171,10 @@ class DatabasePage
 
         $this->replicateBacklinkPages();
 
-        $store = MetadataDbStore::createFromResource($this->page);
         Aliases::createForPage($this->page)
+            ->setReadStore(MetadataDokuWikiStore::class)
             ->buildFromReadStore()
-            ->setReadStore($store)
+            ->setWriteStore(MetadataDbStore::class)
             ->persist();
 
         /**
@@ -185,6 +185,14 @@ class DatabasePage
 
         return $this;
 
+    }
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public function replicateAndRebuild(){
+        $this->replicate();
+        $this->rebuild();
     }
 
     private function addPageIdMeta(array &$metaRecord)

@@ -222,7 +222,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                 /**
                  * Delete the separator `|` between the ref and the description if any
                  */
-                $tag = CallStack::createFromHandler( $handler);
+                $tag = CallStack::createFromHandler($handler);
                 $parent = $tag->moveToParent();
                 if ($parent->getTagName() == self::TAG) {
                     if (strpos($match, '|') === 0) {
@@ -298,7 +298,7 @@ class syntax_plugin_combo_link extends DokuWiki_Syntax_Plugin
                     case DOKU_LEXER_ENTER:
                         $tagAttributes = TagAttributes::createFromCallStackArray($callStackAttributes, self::TAG);
                         $ref = $tagAttributes->getValueAndRemove(LinkUtility::ATTRIBUTE_REF);
-                        $link = new LinkUtility($ref, $tagAttributes);
+                        $link = LinkUtility::createFromRef($ref, $tagAttributes);
 
                         /**
                          * Extra styling

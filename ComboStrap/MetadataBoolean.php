@@ -48,7 +48,7 @@ abstract class MetadataBoolean extends Metadata
 
     public function toStoreDefaultValue()
     {
-        $store = $this->getReadStore();
+        $store = $this->getWriteStore();
 
         if ($store instanceof MetadataFormDataStore) {
             /**
@@ -70,7 +70,7 @@ abstract class MetadataBoolean extends Metadata
     public function toStoreValue()
     {
 
-        $store = $this->getReadStore();
+        $store = $this->getWriteStore();
         $value = $this->getValue();
 
         if ($store instanceof MetadataFormDataStore) {

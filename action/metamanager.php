@@ -231,21 +231,31 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private function handleManagerPost($event, Page $page, array $post)
     {
 
+        $formStore = MetadataFormDataStore::createFromResource($page, $post);
+        $targetStore = MetadataDokuWikiStore::createFromResource($page);
+
         /**
          * Boolean form field (default values)
          * are not send back by the HTML form
          */
-        $defaultBoolean = [
-            LowQualityPageOverwrite::PROPERTY_NAME => LowQualityPageOverwrite::CAN_BE_LOW_QUALITY_PAGE_DEFAULT,
-            QualityDynamicMonitoringOverwrite::PROPERTY_NAME => QualityDynamicMonitoringOverwrite::EXECUTE_DYNAMIC_QUALITY_MONITORING_DEFAULT
+        $defaultBooleanMetadata = [
+            LowQualityPageOverwrite::PROPERTY_NAME ,
+            QualityDynamicMonitoringOverwrite::PROPERTY_NAME
         ];
+        $defaultBoolean = [];
+        foreach ($defaultBooleanMetadata as $booleanMeta){
+            $metadata = Metadata::getForName($booleanMeta)
+                ->setResource($page)
+                ->setReadStore($formStore)
+                ->setWriteStore($targetStore);
+            $defaultBoolean[$metadata::getName()] = $metadata->toStoreDefaultValue();
+        }
         $post = array_merge($defaultBoolean, $post);
 
         /**
          * Processing
          */
-        $formStore = MetadataFormDataStore::createForPage($page, $post);
-        $targetStore = MetadataDokuWikiStore::createForPage($page);
+
         $transfer = MetadataStoreTransfer::createForPage($page)
             ->fromStore($formStore)
             ->toStore($targetStore)
@@ -314,7 +324,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->sendMessage("Not Authorized (managers only)");
             return;
         }
-        $metadata = MetadataDokuWikiStore::createForPage($page)->getData();
+        $metadata = MetadataDokuWikiStore::createFromResource($page)->getData();
         $persistent = $metadata[MetadataDokuWikiStore::PERSISTENT_METADATA];
         ksort($persistent);
         $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
@@ -348,7 +358,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private function handleViewerPost(Doku_Event $event, Page $page, array $post)
     {
 
-        $meta = MetadataDokuWikiStore::createForPage($page)
+        $meta = MetadataDokuWikiStore::createFromResource($page)
             ->getData();
 
         /**

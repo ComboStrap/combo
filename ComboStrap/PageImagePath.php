@@ -8,7 +8,7 @@ class PageImagePath extends MetadataWikiPath
 {
 
     public const PERSISTENT_NAME = "path";
-    const PROPERTY_NAME = "page-image-path";
+    const PROPERTY_NAME = "image-path";
 
 
     public static function createFromParent(Metadata $metadata): PageImagePath

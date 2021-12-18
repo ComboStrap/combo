@@ -9,7 +9,7 @@ class PageImages extends MetadataTabular
 
 
     const CANONICAL = "page:image";
-    public const PROPERTY_NAME = 'page-images';
+    public const PROPERTY_NAME = 'images';
     public const PERSISTENT_NAME = 'images';
     public const FIRST_IMAGE_META_RELATION = "firstimage";
     public const CONF_DISABLE_FIRST_IMAGE_AS_PAGE_IMAGE = "disableFirstImageAsPageImage";

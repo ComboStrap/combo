@@ -12,7 +12,7 @@ class PageImageUsage extends MetadataMultiple
 {
 
     public const PERSISTENT_NAME = "usage";  // storage name
-    const PROPERTY_NAME = "page-image-usage"; // unique property name
+    const PROPERTY_NAME = "image-usage"; // unique property name
 
     /**
      * Constant values

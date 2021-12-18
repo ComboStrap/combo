@@ -175,12 +175,11 @@ class FormMetaField
                     if ($defaultRow !== null) {
                         foreach ($defaultRow as $colName => $colValue) {
                             $defaultColValue = null;
-                            if ($defaultColValue !== null) {
+                            if ($colValue !== null) {
                                 $defaultColValue = $colValue->toStoreDefaultValue();
                             }
                             $childField = $childFields[$colName];
                             $childField->addValue(null, $defaultColValue);
-
                         }
                     }
 

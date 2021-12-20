@@ -9,13 +9,18 @@ namespace ComboStrap;
  * Asynchronous pub/sub system
  *
  * Dokuwiki allows event but they are synchronous
- * because php does not live in multiple thred
+ * because php does not live in multiple thread
  *
  * With the help of Sqlite, we make them asynchronous
  */
 class Event
 {
-    const TABLE_NAME = "PAGES_TO_REPLICATE";
+
+    const EVENT_TABLE_NAME = "EVENTS_QUEUE";
+
+    const CANONICAL = "support";
+    const EVENT_NAME_ATTRIBUTE = "name";
+    const EVENT_DATA_ATTRIBUTE = "data";
 
     /**
      * process all replication request, created with {@link Event::createEvent()}
@@ -25,96 +30,99 @@ class Event
     public static function dispatchEvent($maxEvent = 10)
     {
 
-        $sqlite = Sqlite::createOrGetSqlite();
-        $tableName = self::TABLE_NAME;
-        $res = $sqlite->query("SELECT ID FROM $tableName");
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $rows = $sqlite->res2arr($res, true);
-        $sqlite->res_close($res);
-        if (sizeof($rows) === 0) {
-            LogUtility::msg("No replication requests found", LogUtility::LVL_MSG_INFO);
-            return;
+        $sqlite = Sqlite::createOrGetBackendSqlite();
+        $tableName = self::EVENT_TABLE_NAME;
+        $request = $sqlite->createRequest()
+            ->setQuery("SELECT ID FROM $tableName");
+
+        $rows = null;
+        try {
+            $result = $request->execute();
+            $rows = $result->getRows();
+            if (sizeof($rows) === 0) {
+                return;
+            }
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+        } finally {
+            $request->close();
         }
 
         /**
          * In case of a start or if there is a recursive bug
          * We don't want to take all the resources
          */
-        $maxRefreshLow = 2;
-        $pagesToRefresh = sizeof($rows);
-        if ($pagesToRefresh > $maxEvent) {
-            LogUtility::msg("There is {$pagesToRefresh} pages to refresh in the queue (table `PAGES_TO_REPLICATE`). This is more than {$maxEvent} pages. Batch background Analytics refresh was reduced to {$maxRefreshLow} pages to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
-            $maxEvent = $maxRefreshLow;
+        $maxBackgroundEventLow = 2;
+        $events = sizeof($rows);
+        if ($events > $maxEvent) {
+            $table = self::EVENT_TABLE_NAME;
+            LogUtility::msg("There is {$events} background event in the queue (table `{$table}`). This is more than {$maxEvent} pages. Batch event background was reduced to {$maxBackgroundEventLow} to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            $maxEvent = $maxBackgroundEventLow;
         }
-        $refreshCounter = 0;
-        $totalRequests = sizeof($rows);
+
+        $eventCounter = 0;
         foreach ($rows as $row) {
-            $refreshCounter++;
-            $id = $row['ID'];
-            $page = Page::createPageFromId($id);
-            /**
-             * The page may have moved
-             */
-            if ($page->exists()) {
-                $result = $page->getDatabasePage()->replicate();
-                if ($result) {
-                    LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
-                    $res = $sqlite->query("DELETE FROM PAGES_TO_REPLICATE where ID = ?", $id);
-                    if (!$res) {
-                        LogUtility::msg("There was a problem during the delete of the replication request: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-                    }
-                    $sqlite->res_close($res);
-                }
-                if ($refreshCounter >= $maxEvent) {
-                    break;
+            $eventCounter++;
+            $eventName = $row[self::EVENT_NAME_ATTRIBUTE];
+            $eventData = [];
+            $eventDataJson = $row[self::EVENT_DATA_ATTRIBUTE];
+            if ($eventDataJson !== null) {
+                try {
+                    $eventData = Json::createFromString($eventDataJson)->toArray();
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("The stored data for the event $eventName was not in the json format");
+                    continue;
                 }
             }
+            \dokuwiki\Extension\Event::createAndTrigger($eventName, $eventData);
+
+            if ($eventCounter >= $maxEvent) {
+                break;
+            }
+
         }
 
     }
 
     /**
      * Ask a replication in the background
-     * @param $reason - a string with the reason
-     * @param DatabasePage $databasePage
+     * @param string $name - a string with the reason
+     * @param array $data
      */
-    public
-    function createEvent($reason, DatabasePage $databasePage)
+    public static
+    function createEvent(string $name, array $data)
     {
-
-        if ($databasePage->sqlite === null) {
+        $sqlite = Sqlite::createOrGetBackendSqlite();
+        if ($sqlite === null) {
+            LogUtility::msg("Unable to create the event $name. Sqlite is not available");
             return;
         }
 
-        /**
-         * Check if exists
-         */
-        $eventTable = self::TABLE_NAME;
-        $res = $databasePage->sqlite->query("select count(1) from  where ID = ?", array('ID' => $databasePage->page->getDokuwikiId()));
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select PAGES_TO_REPLICATE: {$databasePage->sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $result = $databasePage->sqlite->res2single($res);
-        $databasePage->sqlite->res_close($res);
-        if ($result >= 1) {
-            return;
-        }
 
         /**
          * If not present
          */
         $entry = array(
-            "ID" => $databasePage->page->getDokuwikiId(),
-            "TIMESTAMP" => Iso8601Date::createFromNow()->toString(),
-            "REASON" => $reason
+            "event" => $name,
+            "timestamp" => Iso8601Date::createFromNow()->toString()
         );
-        $res = $databasePage->sqlite->storeEntry('PAGES_TO_REPLICATE', $entry);
-        if (!$res) {
-            LogUtility::msg("There was a problem during the insert into PAGES_TO_REPLICATE: {$databasePage->sqlite->getAdapter()->getDb()->errorInfo()}");
+
+        if ($data !== null) {
+            $entry["data"] = Json::createFromArray($data)->toPrettyJsonString();
         }
-        $databasePage->sqlite->res_close($res);
+
+        /**
+         * Execute
+         */
+        $request = $sqlite->createRequest()
+            ->storeIntoTable(self::EVENT_TABLE_NAME, $entry);
+        try {
+            $request->execute();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Unable to create the event $name. Error:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+        } finally {
+            $request->close();
+        }
 
 
     }

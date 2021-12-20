@@ -4,30 +4,37 @@
 namespace ComboStrap;
 
 
+
 class SqliteResult
 {
     private $res;
     /**
-     * @var Sqlite
+     * @var SqliteRequest
      */
     private $sqlite;
+    /**
+     * @var \helper_plugin_sqlite
+     */
+    private $sqlitePlugin;
 
     /**
      * SqliteResult constructor.
      */
-    public function __construct(Sqlite $sqlite, $res)
+    public function __construct(SqliteRequest $sqlite, $res)
     {
         $this->sqlite = $sqlite;
         $this->res = $res;
+        $this->sqlitePlugin = $this->sqlite->getSqliteConnection()->getSqlitePlugin();
+
     }
 
     public function getRows(): array
     {
-        return $this->sqlite->getSqlitePlugin()->res2arr($this->res);
+        return $this->sqlitePlugin->res2arr($this->res);
     }
 
     public function close(){
-        $this->sqlite->getSqlitePlugin()->res_close($this->res);
+        $this->sqlitePlugin->res_close($this->res);
     }
 
 

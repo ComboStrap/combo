@@ -33,7 +33,7 @@ class Sqlite
      * Backend Databse
      * (Log, Pub/Sub,...)
      */
-    private const  MAIN_DATABASE_NAME_WRITE = "back";
+    private const  BACK = "back";
 
     /**
      * @var helper_plugin_sqlite
@@ -125,6 +125,11 @@ class Sqlite
         self::$sqlites[$databaseName] = $sqlite;
         return $sqlite;
 
+    }
+
+    public static function createOrGetBackendSqlite(): ?Sqlite
+    {
+        return self::createOrGetSqlite(self::BACK);
     }
 
     /**
@@ -340,5 +345,10 @@ class Sqlite
     public function getSqlitePlugin(): helper_plugin_sqlite
     {
         return $this->sqlitePlugin;
+    }
+
+    public function createRequest(): SqliteRequest
+    {
+        return new SqliteRequest();
     }
 }

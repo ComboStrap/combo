@@ -2,6 +2,7 @@
 
 use ComboStrap\Call;
 use ComboStrap\CallStack;
+use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
@@ -149,6 +150,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
             Page::createPageFromQualifiedPath($newReference)
                 ->getAnalyticsDocument()
                 ->deleteIfExists();
+            Event::createEvent();
         }
 
 

@@ -1,7 +1,7 @@
-# Sqlite Database
+# Sqlite Back Database
 
 ## About
-The database can be found at meta/combo.sqlite3
+A database that can be locked
 
 ## Migration
 

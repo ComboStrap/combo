@@ -52,7 +52,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         if(PluginUtility::getConfValue(self::CONF_ENABLE_ENHANCED_LINK_WIZARD,1)===0){
             return;
         }
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         if ($sqlite === null) {
             return;
         }

@@ -147,7 +147,7 @@ class Aliases extends MetadataTabular
     private
     function getAndDeleteDeprecatedAlias(): array
     {
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         if ($sqlite === null) return [];
 
         $canonicalOrDefault = $this->getResource()->getCanonicalOrDefault();

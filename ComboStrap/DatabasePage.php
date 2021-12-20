@@ -76,65 +76,8 @@ class DatabasePage
         /**
          * Persist on the DB
          */
-        $this->sqlite = Sqlite::getSqlite();
+        $this->sqlite = Sqlite::createOrGetSqlite();
 
-
-    }
-
-    /**
-     * process all replication request, created with {@link DatabasePage::createReplicationRequest()}
-     *
-     * by default, there is 5 pages in a default dokuwiki installation in the wiki namespace)
-     */
-    public static function processReplicationRequest($maxRefresh = 10)
-    {
-
-        $sqlite = Sqlite::getSqlite();
-        $res = $sqlite->query("SELECT ID FROM PAGES_TO_REPLICATE");
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $rows = $sqlite->res2arr($res, true);
-        $sqlite->res_close($res);
-        if (sizeof($rows) === 0) {
-            LogUtility::msg("No replication requests found", LogUtility::LVL_MSG_INFO);
-            return;
-        }
-
-        /**
-         * In case of a start or if there is a recursive bug
-         * We don't want to take all the resources
-         */
-        $maxRefreshLow = 2;
-        $pagesToRefresh = sizeof($rows);
-        if ($pagesToRefresh > $maxRefresh) {
-            LogUtility::msg("There is {$pagesToRefresh} pages to refresh in the queue (table `PAGES_TO_REPLICATE`). This is more than {$maxRefresh} pages. Batch background Analytics refresh was reduced to {$maxRefreshLow} pages to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, "analytics");
-            $maxRefresh = $maxRefreshLow;
-        }
-        $refreshCounter = 0;
-        $totalRequests = sizeof($rows);
-        foreach ($rows as $row) {
-            $refreshCounter++;
-            $id = $row['ID'];
-            $page = Page::createPageFromId($id);
-            /**
-             * The page may have moved
-             */
-            if ($page->exists()) {
-                $result = $page->getDatabasePage()->replicate();
-                if ($result) {
-                    LogUtility::msg("The page `$page` ($refreshCounter / $totalRequests) was replicated by request", LogUtility::LVL_MSG_INFO);
-                    $res = $sqlite->query("DELETE FROM PAGES_TO_REPLICATE where ID = ?", $id);
-                    if (!$res) {
-                        LogUtility::msg("There was a problem during the delete of the replication request: {$sqlite->getAdapter()->getDb()->errorInfo()}");
-                    }
-                    $sqlite->res_close($res);
-                }
-                if ($refreshCounter >= $maxRefresh) {
-                    break;
-                }
-            }
-        }
 
     }
 
@@ -336,7 +279,7 @@ class DatabasePage
     function delete()
     {
 
-        $res = Sqlite::getSqlite()->query('delete from pages where id = ?', $this->page->getDokuwikiId());
+        $res = Sqlite::createOrGetSqlite()->query('delete from pages where id = ?', $this->page->getDokuwikiId());
         if (!$res) {
             LogUtility::msg("Something went wrong when deleting the page ({$this->page})");
         }
@@ -356,48 +299,6 @@ class DatabasePage
             return null;
         }
         return Json::createFromString($jsonString);
-
-    }
-
-    /**
-     * Ask a replication in the background
-     * @param $reason - a string with the reason
-     */
-    public
-    function createReplicationRequest($reason)
-    {
-
-        if ($this->sqlite === null) {
-            return;
-        }
-
-        /**
-         * Check if exists
-         */
-        $res = $this->sqlite->query("select count(1) from PAGES_TO_REPLICATE where ID = ?", array('ID' => $this->page->getDokuwikiId()));
-        if (!$res) {
-            LogUtility::msg("There was a problem during the select PAGES_TO_REPLICATE: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $result = $this->sqlite->res2single($res);
-        $this->sqlite->res_close($res);
-        if ($result >= 1) {
-            return;
-        }
-
-        /**
-         * If not present
-         */
-        $entry = array(
-            "ID" => $this->page->getDokuwikiId(),
-            "TIMESTAMP" => Iso8601Date::createFromNow()->toString(),
-            "REASON" => $reason
-        );
-        $res = $this->sqlite->storeEntry('PAGES_TO_REPLICATE', $entry);
-        if (!$res) {
-            LogUtility::msg("There was a problem during the insert into PAGES_TO_REPLICATE: {$this->sqlite->getAdapter()->getDb()->errorInfo()}");
-        }
-        $this->sqlite->res_close($res);
-
 
     }
 
@@ -810,6 +711,11 @@ class DatabasePage
 
     private function getDatabaseRowFromPageId(string $pageId)
     {
+
+        if ($this->sqlite===null){
+            return null;
+        }
+
         $pageIdAttribute = PageId::PROPERTY_NAME;
         $query = $this->getParametrizedLookupQuery($pageIdAttribute);
         $res = $this->sqlite->query($query, $pageId);

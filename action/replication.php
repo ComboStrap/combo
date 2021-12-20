@@ -2,6 +2,7 @@
 
 
 use ComboStrap\DatabasePage;
+use ComboStrap\Event;
 use ComboStrap\Page;
 
 /**
@@ -85,7 +86,7 @@ class action_plugin_combo_replication extends DokuWiki_Action_Plugin
         /**
          * Process the page to replicate
          */
-        DatabasePage::processReplicationRequest();
+        Event::dispatchEvent();
 
 
     }

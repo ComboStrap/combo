@@ -282,7 +282,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Without SQLite, this module does not work further
          */
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         if ($sqlite == null) {
             return;
         } else {
@@ -922,7 +922,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             "TYPE" => $algorithmic,
             "METHOD" => $method
         );
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->storeEntry('redirections_log', $row);
 
         if (!$res) {

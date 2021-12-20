@@ -1,4 +1,5 @@
-<?php
+<?php /** @noinspection SpellCheckingInspection */
+
 /**
  * Copyright (c) 2021. ComboStrap, Inc. and its affiliates. All Rights Reserved.
  *
@@ -20,35 +21,67 @@ use RuntimeException;
 class Sqlite
 {
 
-    /** @var helper_plugin_sqlite $sqlite */
-    private static $sqlite;
+    /** @var Sqlite[] $sqlite */
+    private static $sqlites;
+
+    /**
+     * Principal database
+     * (Backup)
+     */
+    private const  MAIN_DATABASE_NAME = "combo";
+    /**
+     * Backend Databse
+     * (Log, Pub/Sub,...)
+     */
+    private const  MAIN_DATABASE_NAME_WRITE = "back";
+
+    /**
+     * @var helper_plugin_sqlite
+     */
+    private $sqlitePlugin;
+
+    /**
+     * Sqlite constructor.
+     * @var helper_plugin_sqlite $sqlitePlugin
+     */
+    public function __construct(helper_plugin_sqlite $sqlitePlugin)
+    {
+        $this->sqlitePlugin = $sqlitePlugin;
+    }
+
 
     /**
      *
-     * @return helper_plugin_sqlite $sqlite
+     * @return Sqlite $sqlite
      */
-    public static function getSqlite()
+    public static function createOrGetSqlite($databaseName = self::MAIN_DATABASE_NAME): ?Sqlite
     {
-        $init = self::createNewInstance();
-        if (!$init) {
-            return Sqlite::$sqlite;
+
+        $sqlite = self::$sqlites[$databaseName];
+        if ($sqlite !== null) {
+            $res = $sqlite->doWeNeedToCreateNewInstance();
+            if ($res === false) {
+                return $sqlite;
+            }
         }
+
 
         /**
          * Init
+         * @var helper_plugin_sqlite $sqlitePlugin
          */
-        Sqlite::$sqlite = plugin_load('helper', 'sqlite');
+        $sqlitePlugin = plugin_load('helper', 'sqlite');
         /**
          * Not enabled / loaded
          */
-        if (Sqlite::$sqlite === null) {
+        if ($sqlitePlugin === null) {
 
             $sqliteMandatoryMessage = "The Sqlite Plugin is mandatory. Some functionalities of the ComboStrap Plugin may not work.";
             LogUtility::log2FrontEnd($sqliteMandatoryMessage, LogUtility::LVL_MSG_ERROR);
             return null;
         }
 
-        $adapter = Sqlite::$sqlite->getAdapter();
+        $adapter = $sqlitePlugin->getAdapter();
         if ($adapter == null) {
             self::sendMessageAsNotAvailable();
             return null;
@@ -56,18 +89,19 @@ class Sqlite
 
         $adapter->setUseNativeAlter(true);
 
-        // The name of the database (on windows, it should be
-        $dbname = strtolower(PluginUtility::PLUGIN_BASE_NAME);
         global $conf;
 
-        $oldDbName = '404manager';
-        $oldDbFile = $conf['metadir'] . "/{$oldDbName}.sqlite";
-        $oldDbFileSqlite3 = $conf['metadir'] . "/{$oldDbName}.sqlite3";
-        if (file_exists($oldDbFile) || file_exists($oldDbFileSqlite3)) {
-            $dbname = $oldDbName;
+        if ($databaseName === self::MAIN_DATABASE_NAME) {
+            $oldDbName = '404manager';
+            $oldDbFile = $conf['metadir'] . "/{$oldDbName}.sqlite";
+            $oldDbFileSqlite3 = $conf['metadir'] . "/{$oldDbName}.sqlite3";
+            if (file_exists($oldDbFile) || file_exists($oldDbFileSqlite3)) {
+                $databaseName = $oldDbName;
+            }
         }
 
-        $init = Sqlite::$sqlite->init($dbname, DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . '/db/');
+        $updatedir = DOKU_PLUGIN . PluginUtility::PLUGIN_BASE_NAME . "/db/$databaseName";
+        $init = $sqlitePlugin->init($databaseName, $updatedir);
         if (!$init) {
             # TODO: Message 'SqliteUnableToInitialize'
             $message = "Unable to initialize Sqlite";
@@ -76,7 +110,7 @@ class Sqlite
         }
         // regexp implementation
         // https://stackoverflow.com/questions/5071601/how-do-i-use-regex-in-a-sqlite-query/18484596#18484596
-        $adapter = Sqlite::$sqlite->getAdapter();
+        $adapter = $sqlitePlugin->getAdapter();
         $adapter->create_function('regexp',
             function ($pattern, $data, $delimiter = '~', $modifiers = 'isuS') {
                 if (isset($pattern, $data) === true) {
@@ -87,7 +121,9 @@ class Sqlite
             4
         );
 
-        return Sqlite::$sqlite;
+        $sqlite = new Sqlite($sqlitePlugin);
+        self::$sqlites[$databaseName] = $sqlite;
+        return $sqlite;
 
     }
 
@@ -95,12 +131,10 @@ class Sqlite
      * Print debug info to the console in order to resolve
      * RuntimeException: HY000 8 attempt to write a readonly database
      * https://phpunit.readthedocs.io/en/latest/writing-tests-for-phpunit.html#error-output
-     * @param helper_plugin_sqlite $sqlite
      */
-    public
-    static function printDbInfoAtConsole(helper_plugin_sqlite $sqlite)
+    public function printDbInfoAtConsole()
     {
-        $dbFile = $sqlite->getAdapter()->getDbFile();
+        $dbFile = $this->sqlitePlugin->getAdapter()->getDbFile();
         fwrite(STDERR, "Stderr DbFile: " . $dbFile . "\n");
         if (file_exists($dbFile)) {
             fwrite(STDERR, "File does exists\n");
@@ -124,40 +158,34 @@ class Sqlite
     /**
      * Json support
      */
-    public
-    static function supportJson(): bool
+    public function supportJson(): bool
     {
 
-        $sqlite = self::getSqlite();
-        if ($sqlite === null) {
-            self::sendMessageAsNotAvailable();
-            return false;
-        }
 
-        $res = $sqlite->query("PRAGMA compile_options");
+        $res = $this->sqlitePlugin->query("PRAGMA compile_options");
         $isJsonEnabled = false;
-        foreach ($sqlite->res2arr($res) as $row) {
+        foreach ($this->sqlitePlugin->res2arr($res) as $row) {
             if ($row["compile_option"] === "ENABLE_JSON1") {
                 $isJsonEnabled = true;
                 break;
             }
         };
-        $sqlite->res_close($res);
+        $this->sqlitePlugin->res_close($res);
         return $isJsonEnabled;
     }
 
     /**
-     * @param helper_plugin_sqlite $sqlite
      * @param string $executableSql
      * @param array $parameters
-     * @return bool|\PDOStatement|\SQLiteResult
+     * @return SqliteResult
      */
-    public
-    static function queryWithParameters(helper_plugin_sqlite $sqlite, string $executableSql, array $parameters)
+    public function queryWithParameters(string $executableSql, array $parameters): SqliteResult
     {
         $args = [$executableSql];
         $args = array_merge($args, $parameters);
-        return $sqlite->getAdapter()->query($args);
+        $res = $this->sqlitePlugin->getAdapter()->query($args);
+        return new SqliteResult($this, $res);
+
     }
 
     public
@@ -179,16 +207,12 @@ class Sqlite
      *
      *
      */
-    private
-    static function createNewInstance(): bool
+    private function doWeNeedToCreateNewInstance(): bool
     {
 
         global $conf;
         $metaDir = $conf['metadir'];
 
-        if (self::$sqlite === null) {
-            return true;
-        }
 
         /**
          * Adapter may be null
@@ -196,7 +220,7 @@ class Sqlite
          * are not installed
          * ie: SQLite & PDO SQLite support missing
          */
-        $adapter = self::$sqlite->getAdapter();
+        $adapter = $this->sqlitePlugin->getAdapter();
         if ($adapter === null) {
             return true;
         }
@@ -225,7 +249,7 @@ class Sqlite
          */
         $dbFile = $adapter->getDbFile();
         if (!file_exists($dbFile)) {
-            self::close();
+            $this->close();
             return true;
         }
         // the file is in the meta directory
@@ -233,44 +257,67 @@ class Sqlite
             // we are still in a class run
             return false;
         }
-        self::close();
+        $this->close();
         return true;
     }
 
     public
-    static function close()
+    function close()
     {
-        if (Sqlite::$sqlite !== null) {
-            $adapter = Sqlite::$sqlite->getAdapter();
-            if ($adapter !== null) {
-                /**
-                 * https://www.php.net/manual/en/pdo.connections.php#114822
-                 * You put the connection on null
-                 * CloseDb do that
-                 */
-                $adapter->closedb();
 
-                /**
-                 * Delete the file If we can't delete the file
-                 * there is a resource still open
-                 */
-                $sqliteFile = $adapter->getDbFile();
-                $result = unlink($sqliteFile);
-                if ($result === false){
-                    throw new RuntimeException("Unable to delete the file ($sqliteFile). Did you close all resources ?");
-                }
+        $adapter = $this->sqlitePlugin->getAdapter();
+        if ($adapter !== null) {
+            /**
+             * https://www.php.net/manual/en/pdo.connections.php#114822
+             * You put the connection on null
+             * CloseDb do that
+             */
+            $adapter->closedb();
 
-                /**
-                 * Set it to null
-                 */
-                Sqlite::$sqlite = null;
+            /**
+             * Delete the file If we can't delete the file
+             * there is a resource still open
+             */
+            $sqliteFile = $adapter->getDbFile();
+            $result = unlink($sqliteFile);
+            if ($result === false) {
+                throw new RuntimeException("Unable to delete the file ($sqliteFile). Did you close all resources ?");
             }
+
+        }
+        /**
+         * Forwhatever reason, closing in php
+         * is putting the variable to null
+         * We do it also in the static variable to be sure
+         */
+        self::$sqlites[$this->getDbName()] == null;
+
+
+    }
+
+    public function getDbName()
+    {
+        return $this->sqlitePlugin->getAdapter()->getName();
+    }
+
+    public static function closeAll()
+    {
+
+        $sqlites = self::$sqlites;
+        if($sqlites!==null) {
+            foreach ($sqlites as $sqlite) {
+                $sqlite->close();
+            }
+            /**
+             * Set it to null
+             */
+            Sqlite::$sqlites = null;
         }
     }
 
     public static function getErrorMessage(): string
     {
-        $adapter = Sqlite::getSqlite()->getAdapter();
+        $adapter = Sqlite::createOrGetSqlite()->getAdapter();
         if ($adapter === null) {
             LogUtility::msg("The database adapter is null, no error info can be retrieved");
             return "";
@@ -288,5 +335,10 @@ class Sqlite
         }
         $errorInfoAsString = var_export($errorInfo, true);
         return "$message. : {$errorInfoAsString}";
+    }
+
+    public function getSqlitePlugin(): helper_plugin_sqlite
+    {
+        return $this->sqlitePlugin;
     }
 }

@@ -319,7 +319,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     /**
                      * Sqlite available ?
                      */
-                    $sqlite = Sqlite::getSqlite();
+                    $sqlite = Sqlite::createOrGetSqlite();
                     if ($sqlite === null) {
                         LogUtility::msg("The iterator component needs Sqlite to be able to work", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return $returnedArray;
@@ -342,7 +342,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     try {
                         $executableSql = $pageSql->getExecutableSql();
                         $parameters = $pageSql->getParameters();
-                        $res = Sqlite::queryWithParameters($sqlite, $executableSql, $parameters);
+                        $res = $sqlite->queryWithParameters($executableSql, $parameters);
                         if (!$res) {
                             LogUtility::msg("The sql statement generated returns an error. Sql statement: $executableSql", LogUtility::LVL_MSG_ERROR);
                         }

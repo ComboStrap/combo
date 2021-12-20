@@ -13,6 +13,7 @@ if (!defined('DOKU_INC')) die();
 
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\DatabasePage;
+use ComboStrap\Event;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
@@ -221,7 +222,7 @@ EOF;
          * Process all backlinks
          */
         echo "Processing Replication Request\n";
-        DatabasePage::processReplicationRequest(PHP_INT_MAX);
+        Event::dispatchEvent(PHP_INT_MAX);
 
     }
 
@@ -317,7 +318,7 @@ EOF;
     private function sync()
     {
         LogUtility::msg("Sync started");
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query("select ID from pages");
         if (!$res) {
             throw new \RuntimeException("An exception has occurred with the alias selection query");

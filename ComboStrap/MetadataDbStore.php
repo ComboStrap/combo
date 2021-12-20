@@ -89,14 +89,12 @@ class MetadataDbStore extends MetadataStoreAbs
         $targetRows = $this->getDbTabularData($metadata);
         if($targetRows!==null) {
             foreach ($targetRows as $targetRow) {
-
                 $targetRowId = $targetRow[$uid::getPersistentName()];
                 if (isset($sourceRows[$targetRowId])) {
                     unset($sourceRows[$targetRowId]);
                 } else {
                     $this->deleteRow($targetRow, $metadata);
                 }
-
             }
         }
 
@@ -129,7 +127,7 @@ class MetadataDbStore extends MetadataStoreAbs
         // Page has change of location
         // Creation of an alias
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->storeEntry($this->getTableName($metadata), $row);
         if (!$res) {
             LogUtility::msg("There was a problem during PAGE_ALIASES insertion");
@@ -155,7 +153,7 @@ EOF;
             $resourceIdAttribute => $row[$resourceIdAttribute],
             $metadataIdAttribute => $row[$metadataIdAttribute]
         ];
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query($delete, $row);
         if ($res === false) {
             $message = Sqlite::getErrorMessage();
@@ -174,7 +172,7 @@ EOF;
     private function getDbTabularData(Metadata $metadata)
     {
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         if ($sqlite === null) {
             return null;
         }

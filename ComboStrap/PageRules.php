@@ -29,7 +29,7 @@ class PageRules
     function deleteRule($ruleId)
     {
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query('delete from PAGE_RULES where id = ?', $ruleId);
         if (!$res) {
             LogUtility::msg("Something went wrong when deleting the redirections");
@@ -50,7 +50,7 @@ class PageRules
         $id = strtolower($id);
 
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query("SELECT count(*) FROM PAGE_RULES where ID = ?", $id);
         $exists = null;
         if ($sqlite->res2single($res) == 1) {
@@ -73,7 +73,7 @@ class PageRules
     {
 
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query("SELECT count(*) FROM PAGE_RULES where MATCHER = ?", $pattern);
         $exists = null;
         if ($sqlite->res2single($res) == 1) {
@@ -120,7 +120,7 @@ class PageRules
             'priority' => $priority
         );
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->storeEntry('PAGE_RULES', $entry);
         if (!$res) {
             LogUtility::msg("There was a problem during insertion");
@@ -160,7 +160,7 @@ class PageRules
     function deleteAll()
     {
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query("delete from PAGE_RULES");
         if (!$res) {
             LogUtility::msg('Errors during delete of all redirections');
@@ -176,7 +176,7 @@ class PageRules
     function count()
     {
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query("select count(1) from PAGE_RULES");
         if (!$res) {
             LogUtility::msg('Errors during delete of all redirections');
@@ -194,7 +194,7 @@ class PageRules
     function getRules()
     {
 
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query("select * from PAGE_RULES order by PRIORITY asc");
         if (!$res) {
             throw new \RuntimeException('Errors during select of all redirections');
@@ -206,7 +206,7 @@ class PageRules
 
     public function getRule($id)
     {
-        $sqlite = Sqlite::getSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         $res = $sqlite->query("SELECT * FROM PAGE_RULES where ID = ?", $id);
 
         $array = $sqlite->res2row($res);

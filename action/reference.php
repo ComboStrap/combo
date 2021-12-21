@@ -10,6 +10,7 @@ use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PageId;
+use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
 use ComboStrap\References;
 
@@ -50,7 +51,9 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
     {
         global $ID;
         if ($ID === null) {
-            LogUtility::msg("The ID should be present");
+            if(!PluginUtility::isDevOrTest()) {
+                LogUtility::msg("The request ID was not set and should be present to store references.");
+            }
             return;
         }
 

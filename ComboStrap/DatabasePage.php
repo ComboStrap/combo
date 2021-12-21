@@ -116,12 +116,12 @@ class DatabasePage
          * @var Metadata $tabularMetadataToSync
          */
         $tabularMetadataToSync = [
-            ( new References()),
+            (new References()),
             (new Aliases())
         ];
         $fsStore = MetadataDokuWikiStore::createFromResource($this->page);
         $dbStore = MetadataDbStore::createFromResource($this->page);
-        foreach($tabularMetadataToSync as $tabular){
+        foreach ($tabularMetadataToSync as $tabular) {
             $tabular
                 ->setResource($this->page)
                 ->setReadStore($fsStore)
@@ -143,7 +143,8 @@ class DatabasePage
     /**
      * @throws ExceptionCombo
      */
-    public function replicateAndRebuild(){
+    public function replicateAndRebuild()
+    {
         $this->replicate();
         $this->rebuild();
     }
@@ -417,7 +418,6 @@ class DatabasePage
         return intval($count);
 
     }
-
 
 
     /**
@@ -712,21 +712,30 @@ class DatabasePage
     private function getDatabaseRowFromPageId(string $pageId)
     {
 
-        if ($this->sqlite===null){
+        if ($this->sqlite === null) {
             return null;
         }
 
         $pageIdAttribute = PageId::PROPERTY_NAME;
         $query = $this->getParametrizedLookupQuery($pageIdAttribute);
-        $res = $this->sqlite->query($query, $pageId);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the page search from page id");
+        $request = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setQueryParametrized($query, [$pageId]);
+        $rows = [];
+        try {
+            $rows = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+            return null;
+        } finally {
+            $request->close();
         }
-        $rows = $this->sqlite->res2arr($res);
-        $this->sqlite->res_close($res);
+
         switch (sizeof($rows)) {
             case 0:
-                break;
+                return null;
             case 1:
                 $id = $rows[0]["ID"];
                 /**
@@ -754,8 +763,9 @@ class DatabasePage
             default:
                 $existingPages = implode(", ", $rows);
                 LogUtility::msg("The pages ($existingPages) have all the same page id ($pageId)", LogUtility::LVL_MSG_ERROR);
+                return null;
         }
-        return null;
+
     }
 
 

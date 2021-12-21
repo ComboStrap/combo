@@ -183,6 +183,7 @@ require_once(__DIR__ . '/Snippet.php');
 require_once(__DIR__ . '/SnippetManager.php');
 require_once(__DIR__ . '/Spacing.php');
 require_once(__DIR__ . '/Sqlite.php');
+require_once(__DIR__ . '/SqliteRequest.php');
 require_once(__DIR__ . '/SqliteResult.php');
 require_once(__DIR__ . '/StringUtility.php');
 require_once(__DIR__ . '/StartDate.php');

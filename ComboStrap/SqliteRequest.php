@@ -27,6 +27,10 @@ class SqliteRequest
      */
     private $query;
     private $sqlitePlugin;
+    /**
+     * @var array|string[]
+     */
+    private $queryParametrized;
 
     /**
      * SqliteRequest constructor.
@@ -52,26 +56,54 @@ class SqliteRequest
     {
         $res = null;
         $requestType = "";
-        if($this->data!==null && $this->tableName!==null) {
+        if ($this->data !== null && $this->tableName !== null) {
             $res = $this->sqlitePlugin->storeEntry($this->tableName, $this->data);
             $requestType = "Upsert";
         }
 
-        if($this->query!==null){
+        if ($this->query !== null) {
             $res = $this->sqlitePlugin->query($this->query);
             $requestType = "Query";
         }
 
-        if($res===null) {
-            throw new ExceptionCombo("The request is not known");
+        if($this->queryParametrized!==null){
+            $res = $this->sqlitePlugin->getAdapter()->query($this->queryParametrized);
+            $requestType = "Query Parametrized";
         }
 
-        if($res===false){
-            throw new ExceptionCombo("Error in the $requestType: {$this->sqlitePlugin->getAdapter()->getDb()->errorInfo()}");
+        if ($res === null) {
+            throw new ExceptionCombo("No Sql request was found to be executed");
+        }
+
+        if ($res === false) {
+            $message = $this->getErrorMessage();
+            throw new ExceptionCombo("Error in the $requestType: {$message}");
         }
 
         $this->result = new SqliteResult($this, $res);
         return $this->result;
+    }
+
+    public function getErrorMessage(): string
+    {
+        $adapter = $this->sqlitePlugin->getAdapter();
+        if ($adapter === null) {
+            LogUtility::msg("The database adapter is null, no error info can be retrieved");
+            return "";
+        }
+        $do = $adapter->getDb();
+        if ($do === null) {
+            LogUtility::msg("The database object is null, it seems that the database connection has been closed");
+            return "";
+        }
+        $errorInfo = $do->errorInfo();
+        $message = "";
+        $errorCode = $errorInfo[0];
+        if ($errorCode === '0000') {
+            $message = ("No rows were deleted");
+        }
+        $errorInfoAsString = var_export($errorInfo, true);
+        return "$message. : {$errorInfoAsString}";
     }
 
     public function getSqliteConnection(): Sqlite
@@ -82,16 +114,31 @@ class SqliteRequest
     public function close()
     {
 
-        if($this->result!==null){
+        if ($this->result !== null) {
             $this->result->close();
+            $this->result = null;
         }
 
     }
 
-    public function setQuery(string $string)
+    public function setQuery(string $string): SqliteRequest
     {
         $this->query = $string;
         return $this;
+    }
+
+    /**
+     * @param string $executableSql
+     * @param array $parameters
+     * @return SqliteResult
+     */
+    public function setQueryParametrized(string $executableSql, array $parameters): SqliteRequest
+    {
+
+        $args = [$executableSql];
+        $this->queryParametrized = array_merge($args, $parameters);
+        return $this;
+
     }
 
 }

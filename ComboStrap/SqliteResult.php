@@ -4,7 +4,6 @@
 namespace ComboStrap;
 
 
-
 class SqliteResult
 {
     private $res;
@@ -33,8 +32,10 @@ class SqliteResult
         return $this->sqlitePlugin->res2arr($this->res);
     }
 
-    public function close(){
+    public function close()
+    {
         $this->sqlitePlugin->res_close($this->res);
+        $this->res = null;
     }
 
 

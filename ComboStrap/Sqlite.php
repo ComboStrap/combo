@@ -179,19 +179,6 @@ class Sqlite
         return $isJsonEnabled;
     }
 
-    /**
-     * @param string $executableSql
-     * @param array $parameters
-     * @return SqliteResult
-     */
-    public function queryWithParameters(string $executableSql, array $parameters): SqliteResult
-    {
-        $args = [$executableSql];
-        $args = array_merge($args, $parameters);
-        $res = $this->sqlitePlugin->getAdapter()->query($args);
-        return new SqliteResult($this, $res);
-
-    }
 
     public
     static function sendMessageAsNotAvailable(): void
@@ -284,9 +271,11 @@ class Sqlite
              * there is a resource still open
              */
             $sqliteFile = $adapter->getDbFile();
-            $result = unlink($sqliteFile);
-            if ($result === false) {
-                throw new RuntimeException("Unable to delete the file ($sqliteFile). Did you close all resources ?");
+            if (file_exists($sqliteFile)) {
+                $result = unlink($sqliteFile);
+                if ($result === false) {
+                    throw new RuntimeException("Unable to delete the file ($sqliteFile). Did you close all resources ?");
+                }
             }
 
         }
@@ -300,7 +289,7 @@ class Sqlite
 
     }
 
-    public function getDbName()
+    public function getDbName(): string
     {
         return $this->sqlitePlugin->getAdapter()->getName();
     }
@@ -309,7 +298,7 @@ class Sqlite
     {
 
         $sqlites = self::$sqlites;
-        if($sqlites!==null) {
+        if ($sqlites !== null) {
             foreach ($sqlites as $sqlite) {
                 $sqlite->close();
             }
@@ -320,27 +309,6 @@ class Sqlite
         }
     }
 
-    public static function getErrorMessage(): string
-    {
-        $adapter = Sqlite::createOrGetSqlite()->getAdapter();
-        if ($adapter === null) {
-            LogUtility::msg("The database adapter is null, no error info can be retrieved");
-            return "";
-        }
-        $do = $adapter->getDb();
-        if ($do === null) {
-            LogUtility::msg("The database object is null, it seems that the database connection has been closed");
-            return "";
-        }
-        $errorInfo = $do->errorInfo();
-        $message = "";
-        $errorCode = $errorInfo[0];
-        if ($errorCode === '0000') {
-            $message = ("No rows were deleted");
-        }
-        $errorInfoAsString = var_export($errorInfo, true);
-        return "$message. : {$errorInfoAsString}";
-    }
 
     public function getSqlitePlugin(): helper_plugin_sqlite
     {
@@ -349,6 +317,6 @@ class Sqlite
 
     public function createRequest(): SqliteRequest
     {
-        return new SqliteRequest();
+        return new SqliteRequest($this);
     }
 }

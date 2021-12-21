@@ -58,7 +58,7 @@ class DatabasePage
      */
     private $page;
     /**
-     * @var \helper_plugin_sqlite|null
+     * @var Sqlite|null
      */
     private $sqlite;
 
@@ -784,12 +784,20 @@ class DatabasePage
     private function getDatabaseRowFromCanonical($canonical)
     {
         $query = $this->getParametrizedLookupQuery(Canonical::PROPERTY_NAME);
-        $res = $this->sqlite->query($query, $canonical);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the page search from CANONICAL");
+        $request = $this->sqlite
+            ->createRequest()
+            ->setQueryParametrized($query, [$canonical]);
+        $rows = [];
+        try {
+            $rows = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("An exception has occurred with the page search from CANONICAL. " . $e->getMessage());
+            return null;
+        } finally {
+            $request->close();
         }
-        $rows = $this->sqlite->res2arr($res);
-        $this->sqlite->res_close($res);
 
         switch (sizeof($rows)) {
             case 0:
@@ -854,12 +862,21 @@ class DatabasePage
     public function getDatabaseRowFromAttribute(string $attribute, string $value)
     {
         $query = $this->getParametrizedLookupQuery($attribute);
-        $res = $this->sqlite->query($query, $value);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the page search from a PATH");
+        $request = $this->sqlite
+            ->createRequest()
+            ->setQueryParametrized($query, [$value]);
+        $rows = [];
+        try {
+            $rows = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("An exception has occurred with the page search from a PATH: " . $e->getMessage());
+            return null;
+        } finally {
+            $request->close();
         }
-        $rows = $this->sqlite->res2arr($res);
-        $this->sqlite->res_close($res);
+
         switch (sizeof($rows)) {
             case 0:
                 return null;

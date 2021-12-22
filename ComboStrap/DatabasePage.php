@@ -1007,13 +1007,20 @@ class DatabasePage
 
     public function getFromRow(string $attribute)
     {
-        // don't know why but the sqlite plugin returns them uppercase
-        $name = strtoupper($attribute);
-        if ($attribute === self::ROWID) {
-            // rowid is returned lowercase from the sqlite plugin
-            $name = self::ROWID;
+        if ($this->row === null) {
+            return null;
         }
-        return $this->row[$name];
+        $value = $this->row[$attribute];
+
+        if($value!==null){
+            return $value;
+        }
+
+        // don't know why but the sqlite plugin returns them uppercase
+        // rowid is returned lowercase from the sqlite plugin
+        $upperAttribute = strtoupper($attribute);
+        return $this->row[$upperAttribute];
+
     }
 
 

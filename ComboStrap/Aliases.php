@@ -153,14 +153,22 @@ class Aliases extends MetadataTabular
         if ($sqlite === null) return [];
 
         $canonicalOrDefault = $this->getResource()->getCanonicalOrDefault();
-        $res = $sqlite->query("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", $canonicalOrDefault);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the deprecated alias selection query", LogUtility::LVL_MSG_ERROR);
-            return [];
-        }
-        $deprecatedAliasInDb = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
+        $request = $sqlite
+            ->createRequest()
+            ->setStatementParametrized("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", [$canonicalOrDefault]);
         $deprecatedAliases = [];
+        $deprecatedAliasInDb = [];
+        try {
+            $deprecatedAliasInDb = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("An exception has occurred with the deprecated alias selection query. {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
+            return [];
+        } finally {
+            $request->close();
+        }
+
         array_map(
             function ($row) use ($deprecatedAliases) {
                 $alias = $row['ALIAS'];
@@ -173,17 +181,20 @@ class Aliases extends MetadataTabular
         /**
          * Delete them
          */
-        try {
-            if (sizeof($deprecatedAliasInDb) > 0) {
-                $res = $sqlite->query("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", $canonicalOrDefault);
-                if (!$res) {
-                    LogUtility::msg("An exception has occurred with the delete deprecated alias statement", LogUtility::LVL_MSG_ERROR);
-                }
-                $sqlite->res_close($res);
+
+        if (sizeof($deprecatedAliasInDb) > 0) {
+            $request = $sqlite
+                ->createRequest()
+                ->setStatementParametrized("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", [$canonicalOrDefault]);
+            try {
+                $request->execute();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("An exception has occurred with the delete deprecated alias statement. {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
+            } finally {
+                $request->close();
             }
-        } catch (\Exception $e) {
-            LogUtility::msg("An exception has occurred with the deletion of deprecated aliases. Message: {$e->getMessage()}", LogUtility::LVL_MSG_ERROR);
         }
+
 
         /**
          * Return

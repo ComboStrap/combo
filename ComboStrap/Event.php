@@ -31,9 +31,10 @@ class Event
     {
 
         $sqlite = Sqlite::createOrGetBackendSqlite();
-        $tableName = self::EVENT_TABLE_NAME;
+        $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, "rowid"];
+        $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME,$attributes);
         $request = $sqlite->createRequest()
-            ->setStatement("SELECT ID FROM $tableName");
+            ->setStatement($select);
 
         $rows = null;
         try {

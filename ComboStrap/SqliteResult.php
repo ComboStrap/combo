@@ -32,10 +32,11 @@ class SqliteResult
         return $this->sqlitePlugin->res2arr($this->res);
     }
 
-    public function close()
+    public function close(): SqliteResult
     {
         $this->sqlitePlugin->res_close($this->res);
         $this->res = null;
+        return $this;
     }
 
     public function getInsertId(): string

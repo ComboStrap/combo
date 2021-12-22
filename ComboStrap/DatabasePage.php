@@ -242,7 +242,7 @@ class DatabasePage
         /**
          * When the file does not exist
          */
-        $modifiedTime = $this->page->getAnalyticsDocument()->getCachePath()->getModifiedTime();
+        $modifiedTime = FileSystems::getModifiedTime($this->page->getAnalyticsDocument()->getCachePath());
         if ($modifiedTime === null) {
             return true;
         }
@@ -748,7 +748,7 @@ class DatabasePage
             case 0:
                 return null;
             case 1:
-                $id = $rows[0]["ID"];
+                $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 /**
                  * Page Id Collision detection
                  */
@@ -782,8 +782,8 @@ class DatabasePage
 
     private function getParametrizedLookupQuery(string $pageIdAttribute): string
     {
-        $databaseFields = implode(self::PAGE_BUILD_ATTRIBUTES, ", ");
-        return "select $databaseFields from pages where $pageIdAttribute = ?";
+        $select = Sqlite::createSelectFromTableAndColumns("pages", self::PAGE_BUILD_ATTRIBUTES);
+        return "$select where $pageIdAttribute = ?";
     }
 
 
@@ -814,7 +814,7 @@ class DatabasePage
             case 0:
                 return null;
             case 1:
-                $id = $rows[0]["ID"];
+                $id = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 if ($this->page !== null && $id !== $this->page->getDokuwikiId()) {
                     $duplicatePage = Page::createPageFromId($id);
                     if (!$duplicatePage->exists()) {
@@ -828,7 +828,7 @@ class DatabasePage
             default:
                 $existingPages = [];
                 foreach ($rows as $row) {
-                    $id = $row["ID"];
+                    $id = $row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                     $duplicatePage = Page::createPageFromId($id);
                     if (!$duplicatePage->exists()) {
 
@@ -892,7 +892,7 @@ class DatabasePage
             case 0:
                 return null;
             case 1:
-                $value = $rows[0]["ID"];
+                $value = $rows[0][DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                 if ($this->page != null && $value !== $this->page->getDokuwikiId()) {
                     $duplicatePage = Page::createPageFromId($value);
                     if (!$duplicatePage->exists()) {
@@ -905,7 +905,7 @@ class DatabasePage
             default:
                 $existingPages = [];
                 foreach ($rows as $row) {
-                    $value = $row["ID"];
+                    $value = $row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
                     $duplicatePage = Page::createPageFromId($value);
                     if (!$duplicatePage->exists()) {
 

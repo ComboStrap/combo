@@ -132,6 +132,21 @@ class Sqlite
         return self::createOrGetSqlite(self::BACK);
     }
 
+    public static function createSelectFromTableAndColumns(string $tableName, array $columns = null): string
+    {
+        if($columns === null){
+            $columnStatement = "*";
+        } else {
+            $columnsStatement = [];
+            foreach ($columns as $columnName) {
+                $columnsStatement[] = "$columnName as \"$columnName\"";
+            }
+            $columnStatement = implode(", ", $columnsStatement);
+        }
+        return "select $columnStatement from $tableName";
+
+    }
+
     /**
      * Print debug info to the console in order to resolve
      * RuntimeException: HY000 8 attempt to write a readonly database

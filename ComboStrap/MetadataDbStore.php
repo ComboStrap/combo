@@ -200,17 +200,17 @@ EOF;
         }
 
         $uidAttribute = $uid::getPersistentName();
-        $columns = [];
         $children = $metadata->getChildrenObject();
         if ($children === null) {
             throw new ExceptionCombo("The children of the tabular metadata ($metadata) should be set to synchronize into the database");
         }
+        $attributes = [];
         foreach ($children as $child) {
-            $columns[] = $child::getPersistentName() . " as \"" . $child::getPersistentName() . "\"";
+            $attributes[] = $child::getPersistentName();
         }
         $tableName = $this->getTableName($metadata);
-
-        $query = "select " . implode(", ", $columns) . " from $tableName where $uidAttribute = ? ";
+        $query = Sqlite::createSelectFromTableAndColumns($tableName,$attributes);
+        $query = "$query where $uidAttribute = ? ";
         $res = $sqlite
             ->createRequest()
             ->setStatementParametrized($query, [$pageId]);

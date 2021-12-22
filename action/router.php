@@ -390,7 +390,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Identifier is a Canonical ?
          */
-        $targetPage = DatabasePage::createFromCanonical($identifier)->getPage();
+        $databasePage = DatabasePage::createFromCanonical($identifier);
+        $targetPage = $databasePage->getPage();
         if ($targetPage !== null && $targetPage->exists()) {
             $res = $this->executePermanentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_CANONICAL);
             if ($res) {

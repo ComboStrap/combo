@@ -21,6 +21,8 @@ class PageId extends MetadataText
      * Length to get the same probability than uuid v4. Too much ?
      */
     public const PAGE_ID_LENGTH = 21;
+    public const PAGE_ID_ABBREV_LENGTH = 7;
+    public const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
 
     public static function createForPage(ResourceCombo $resource): PageId
     {

@@ -44,7 +44,8 @@ class DatabasePage
             Region::PROPERTY_NAME,
             Lang::PROPERTY_NAME,
             PageType::PROPERTY_NAME,
-            PageId::PROPERTY_NAME
+            PageId::PROPERTY_NAME,
+            PageId::PAGE_ID_ABBR_ATTRIBUTE
         ];
     const ANALYTICS_ATTRIBUTE = "ANALYTICS";
 
@@ -153,7 +154,7 @@ class DatabasePage
     private function addPageIdMeta(array &$metaRecord)
     {
         $metaRecord[PageId::PROPERTY_NAME] = $this->page->getPageIdOrGenerate();
-        $metaRecord[Page::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
+        $metaRecord[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 
     public static function createFromPageId(string $pageId): DatabasePage
@@ -180,7 +181,7 @@ class DatabasePage
     public static function createFromPageIdAbbr(string $pageIdAbbr): DatabasePage
     {
         $databasePage = new DatabasePage();
-        $row = $databasePage->getDatabaseRowFromAttribute(Page::PAGE_ID_ABBR_ATTRIBUTE, $pageIdAbbr);
+        $row = $databasePage->getDatabaseRowFromAttribute(PageId::PAGE_ID_ABBR_ATTRIBUTE, $pageIdAbbr);
         if ($row != null) {
             $databasePage->buildDatabaseObjectFields($row);
         }
@@ -928,6 +929,12 @@ class DatabasePage
 
     public function getPage(): ?Page
     {
+        if(
+            $this->page===null
+            && $this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE]!==null
+        ){
+            $this->page = Page::createPageFromId($this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE]);
+        }
         return $this->page;
     }
 
@@ -1002,7 +1009,7 @@ class DatabasePage
     {
 
         $values[PageId::PROPERTY_NAME] = $this->page->getPageIdOrGenerate();
-        $values[Page::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
+        $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 
     public function getFromRow(string $attribute)

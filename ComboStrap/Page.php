@@ -30,8 +30,6 @@ class Page extends ResourceComboAbs
 {
 
 
-    const PAGE_ID_ABBR_ATTRIBUTE = "page_id_abbr";
-
     // The page id abbreviation is used in the url
     // to make them unique.
     //
@@ -45,7 +43,6 @@ class Page extends ResourceComboAbs
     // (You need to create 876k pages).
     // with the 36 alphabet
     // https://datacadamia.com/crypto/hash/collision
-    const PAGE_ID_ABBREV_LENGTH = 7;
 
 
     const TYPE = "page";
@@ -1700,7 +1697,7 @@ class Page extends ResourceComboAbs
     {
 
         if ($this->getPageId() === null) return null;
-        return substr($this->getPageId(), 0, Page::PAGE_ID_ABBREV_LENGTH);
+        return substr($this->getPageId(), 0, PageId::PAGE_ID_ABBREV_LENGTH);
 
     }
 

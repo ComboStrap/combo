@@ -115,7 +115,7 @@ class Event
          * Execute
          */
         $request = $sqlite->createRequest()
-            ->storeIntoTable(self::EVENT_TABLE_NAME, $entry);
+            ->setTableRow(self::EVENT_TABLE_NAME, $entry);
         try {
             $request->execute();
         } catch (ExceptionCombo $e) {

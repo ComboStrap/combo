@@ -42,7 +42,7 @@ class SqliteRequest
         $this->sqlitePlugin = $sqlite->getSqlitePlugin();
     }
 
-    public function storeIntoTable(string $tableName, array $data): SqliteRequest
+    public function setTableRow(string $tableName, array $data): SqliteRequest
     {
         $this->tableName = $tableName;
         $this->data = $data;
@@ -66,9 +66,9 @@ class SqliteRequest
             $requestType = "Query";
         }
 
-        if($this->queryParametrized!==null){
+        if ($this->queryParametrized !== null) {
             $res = $this->sqlitePlugin->getAdapter()->query($this->queryParametrized);
-            $requestType = "Query Parametrized";
+            $requestType = "Statement Parametrized";
         }
 
         if ($res === null) {
@@ -100,7 +100,7 @@ class SqliteRequest
         $message = "";
         $errorCode = $errorInfo[0];
         if ($errorCode === '0000') {
-            $message = ("No rows were deleted");
+            $message = ("No rows were deleted or updated");
         }
         $errorInfoAsString = var_export($errorInfo, true);
         return "$message. : {$errorInfoAsString}";
@@ -132,7 +132,7 @@ class SqliteRequest
      * @param array $parameters
      * @return SqliteResult
      */
-    public function setQueryParametrized(string $executableSql, array $parameters): SqliteRequest
+    public function setStatementParametrized(string $executableSql, array $parameters): SqliteRequest
     {
 
         $args = [$executableSql];

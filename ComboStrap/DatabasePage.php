@@ -409,12 +409,19 @@ class DatabasePage
         if ($this->sqlite === null) {
             return null;
         }
-        $res = $this->sqlite->query("select count(1) from PAGE_REFERENCES where REFERENCE = ? ", $this->page->getPath()->toString());
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the backlinks count select ({$this->page})");
+        $request = $this->sqlite
+            ->createRequest()
+            ->setStatementParametrized("select count(1) from PAGE_REFERENCES where REFERENCE = ? ", [$this->page->getPath()->toString()]);
+        $count = 0;
+        try {
+            $count = $request
+                ->execute()
+                ->getFirstCellValue();
+        } catch (ExceptionCombo $e){
+            LogUtility::msg($e->getMessage(),LogUtility::LVL_MSG_ERROR);
+        } finally {
+            $request->close();
         }
-        $count = $this->sqlite->res2single($res);
-        $this->sqlite->res_close($res);
         return intval($count);
 
     }
@@ -471,24 +478,23 @@ class DatabasePage
             $values[] = $rowId;
 
             $updateStatement = "update PAGES SET " . implode($columnClauses, ", ") . " where ROWID = ?";
-            $res = $this->sqlite->query($updateStatement, $values);
-            if ($res === false) {
-                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
-                $message = "";
-                $errorCode = $errorInfo[0];
-                if ($errorCode === '0000') {
-                    $message = ("No rows were updated");
-                }
-                $errorInfoAsString = var_export($errorInfo, true);
-                $this->sqlite->res_close($res);
-                LogUtility::msg("There was a problem during the page attribute updates. $message. : {$errorInfoAsString}");
+            $request = $this->sqlite
+                ->createRequest()
+                ->setStatementParametrized($updateStatement, $values);
+            $countChanges = 0;
+            try {
+                $countChanges = $request
+                    ->execute()
+                    ->getChangeCount();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("There was a problem during the page attribute updates. : {$e->getMessage()}");
                 return false;
+            } finally {
+                $request->close();
             }
-            $countChanges = $this->sqlite->countChanges($res);
             if ($countChanges !== 1) {
                 LogUtility::msg("The database replication has not updated exactly 1 record but ($countChanges) record", LogUtility::LVL_MSG_ERROR, ReplicationDate::REPLICATION_CANONICAL);
             }
-            $this->sqlite->res_close($res);
 
         } else {
 
@@ -501,21 +507,26 @@ class DatabasePage
              * Default implements the auto-canonical feature
              */
             $values[Canonical::PROPERTY_NAME] = $this->page->getCanonicalOrDefault();
-            $res = $this->sqlite->storeEntry('PAGES', $values);
-            $this->sqlite->res_close($res);
-            if ($res === false) {
-                $errorInfo = $this->sqlite->getAdapter()->getDb()->errorInfo();
-                $errorInfoAsString = var_export($errorInfo, true);
-                LogUtility::msg("There was a problem during the updateAttributes insert. : {$errorInfoAsString}");
-                return false;
-            } else {
+            $request = $this->sqlite
+                ->createRequest()
+                ->setTableRow('PAGES', $values);
+            try {
                 /**
                  * rowid is used in {@link DatabasePage::exists()}
                  * to check if the page exists in the database
                  * We update it
                  */
-                $this->row[self::ROWID] = $this->sqlite->getAdapter()->getDb()->lastInsertId();
+                $this->row[self::ROWID] = $request
+                    ->execute()
+                    ->getInsertId();
+                $this->row = array_merge($values, $this->row);
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("There was a problem during the updateAttributes insert. : {$e->getMessage()}");
+                return false;
+            } finally {
+                $request->close();
             }
+
         }
         return true;
 
@@ -720,7 +731,7 @@ class DatabasePage
         $query = $this->getParametrizedLookupQuery($pageIdAttribute);
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setQueryParametrized($query, [$pageId]);
+            ->setStatementParametrized($query, [$pageId]);
         $rows = [];
         try {
             $rows = $request
@@ -786,7 +797,7 @@ class DatabasePage
         $query = $this->getParametrizedLookupQuery(Canonical::PROPERTY_NAME);
         $request = $this->sqlite
             ->createRequest()
-            ->setQueryParametrized($query, [$canonical]);
+            ->setStatementParametrized($query, [$canonical]);
         $rows = [];
         try {
             $rows = $request
@@ -864,7 +875,7 @@ class DatabasePage
         $query = $this->getParametrizedLookupQuery($attribute);
         $request = $this->sqlite
             ->createRequest()
-            ->setQueryParametrized($query, [$value]);
+            ->setStatementParametrized($query, [$value]);
         $rows = [];
         try {
             $rows = $request

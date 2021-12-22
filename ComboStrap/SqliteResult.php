@@ -38,5 +38,20 @@ class SqliteResult
         $this->res = null;
     }
 
+    public function getInsertId(): string
+    {
+        return $this->sqlitePlugin->getAdapter()->getDb()->lastInsertId();
+    }
+
+    public function getChangeCount()
+    {
+        return $this->sqlitePlugin->countChanges($this->res);
+    }
+
+    public function getFirstCellValue()
+    {
+        return $this->sqlitePlugin->res2single($this->res);
+    }
+
 
 }

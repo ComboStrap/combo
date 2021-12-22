@@ -76,7 +76,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     const NAME = 'Url Manager';
     const CANONICAL = 'router';
     const PAGE_404 = "<html lang=\"en\"><body></body></html>";
-    const REFRESH_HEADER_PREFIX = 'Refresh: 0;url=';
+    const REFRESH_HEADER_NAME = "Refresh";
+    const REFRESH_HEADER_PREFIX = self::REFRESH_HEADER_NAME . ': 0;url=';
     const LOCATION_HEADER_NAME = "Location";
     const LOCATION_HEADER_PREFIX = self::LOCATION_HEADER_NAME . ": ";
     public const URL_MANAGER_NAME = "Router";
@@ -275,7 +276,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     {
 
         global $ACT;
-        if ($ACT != 'show') return;
+        if ($ACT !== 'show') return;
 
 
         global $ID;
@@ -376,19 +377,8 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
                 }
                 // permanent url not yet in the database
-
-
-                // permanent id test
-                $identifier = $targetPage->getParentId();
-                $permanentIdPage = Page::createPageFromId($identifier);
-                if ($permanentIdPage->exists()) {
-                    $this->executeTransparentRedirect($permanentIdPage->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
-                    return;
-                }
-
                 // Other permanent such as permanent canonical ?
                 // We let the process go with the new identifier
-
 
             }
 

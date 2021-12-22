@@ -22,7 +22,10 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
      */
     public function __construct(ResourceCombo $page, $data = null)
     {
-        $this->data = $data;
+        foreach ($data as $key => $value) {
+            $key = $this->toNormalizedKey($key);
+            $this->data[$key] = $value;
+        }
         parent::__construct($page);
     }
 
@@ -40,10 +43,10 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
         if ($value !== null) {
             return $value;
         }
-        foreach($metadata::getOldPersistentNames() as $name){
+        foreach ($metadata::getOldPersistentNames() as $name) {
             $value = $this->data[$name];
             if ($value !== null) {
-                $this->data[$metadata::getPersistentName()]=$value;
+                $this->data[$metadata::getPersistentName()] = $value;
                 unset($this->data[$name]);
                 return $value;
             }
@@ -87,7 +90,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     public function setFromPersistentName(string $name, $value)
     {
-
+        $name = $this->toNormalizedKey($name);
         if ($value === null || $value === "") {
             unset($this->data[$name]);
             return;
@@ -107,6 +110,11 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
         $this->checkResource($metadata->getResource());
         unset($this->data[$metadata->getName()]);
         return $this;
+    }
+
+    private function toNormalizedKey(string $key): string
+    {
+        return trim($key);
     }
 
 }

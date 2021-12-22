@@ -147,6 +147,7 @@ class DatabasePage
     {
         $this->replicate();
         $this->rebuild();
+        return $this;
     }
 
     private function addPageIdMeta(array &$metaRecord)

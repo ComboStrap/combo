@@ -1445,7 +1445,7 @@ class Page extends ResourceComboAbs
      * @return Alias[]
      */
     public
-    function getAliases(): array
+    function getAliases(): ?array
     {
         return $this->aliases->getValueAsAlias();
     }
@@ -1712,23 +1712,7 @@ class Page extends ResourceComboAbs
     }
 
     /**
-     * The path (ie id attribute in the url) in a absolute format (ie with root)
      *
-     * url path: name for ns + slug (title) + page id
-     * or
-     * url path: canonical path + page id
-     * or
-     * url path: page path + page id
-     *
-     *
-     *   - slug
-     *   - hierarchical slug
-     *   - permanent canonical path (page id)
-     *   - canonical path
-     *   - permanent page path (page id)
-     *   - page path
-     *
-     * This is not the URL of the page but of the generated HTML web page with all pages (slots)
      * TODO: Move to {@link HtmlDocument} ?
      */
     public
@@ -1769,11 +1753,6 @@ class Page extends ResourceComboAbs
         return DokuPath::toDokuwikiId($this->getUrlPath());
     }
 
-    private
-    function getDefaultDescription(): ?string
-    {
-        return $this->description->getDefaultValue();
-    }
 
     /**
      * @param string $scope {@link PageScope::SCOPE_CURRENT_VALUE} or a namespace...
@@ -2026,6 +2005,11 @@ class Page extends ResourceComboAbs
     function getType(): string
     {
         return self::TYPE;
+    }
+
+    public function getUrlPathObject(): PageUrlPath
+    {
+        return $this->pageUrlPath;
     }
 
 }

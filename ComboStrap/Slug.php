@@ -65,9 +65,19 @@ class Slug extends MetadataWikiPath
         return "Slug Path";
     }
 
-    public function toStoreValue()
+    public function setFromStoreValue($value): Metadata
     {
-        return self::toSlugPath(parent::toStoreValue());
+        return $this->buildFromStoreValue($value);
+    }
+
+    public function setValue($value): Metadata
+    {
+        return $this->buildFromStoreValue($value);
+    }
+
+    public function buildFromStoreValue($value): Metadata
+    {
+        return parent::buildFromStoreValue(self::toSlugPath($value));
     }
 
 

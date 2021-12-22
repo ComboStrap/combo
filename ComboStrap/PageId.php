@@ -79,6 +79,7 @@ class PageId extends MetadataText
         // if the instructions are old, render them to parse the frontmatter
         if ($resource->getInstructionsDocument()->shouldProcess()) {
             $resource->getInstructionsDocument()->process();
+            $metadataFileSystemStore->reset(); // the data may have changed
             $value = $metadataFileSystemStore->get($this);
             if ($value !== null) {
                 parent::buildFromStoreValue($value);

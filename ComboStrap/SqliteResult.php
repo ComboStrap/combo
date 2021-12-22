@@ -58,5 +58,14 @@ class SqliteResult
         return intval($this->getFirstCellValue());
     }
 
+    public function getFirstRow()
+    {
+        $rows = $this->getRows();
+        if(sizeof($rows)>=1){
+            return $rows[0];
+        }
+        return [];
+    }
+
 
 }

@@ -78,18 +78,21 @@ class PageRules
     {
 
 
-        $sqlite = Sqlite::createOrGetSqlite()
+        $request = Sqlite::createOrGetSqlite()
             ->createRequest()
             ->setStatementParametrized("SELECT count(*) FROM PAGE_RULES where MATCHER = ?", [$pattern]);
+        $count = 0;
         try {
-            $count = $sqlite->execute()
-                ->getFirstCellValue();
+            $count = $request->execute()
+                ->getFirstCellValueAsInt();
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Error during pattern exists query: {$e->getMessage()}");
             return false;
+        } finally {
+            $request->close();
         }
 
-        return $count === "1";
+        return $count === 1;
 
 
     }
@@ -127,18 +130,18 @@ class PageRules
             'priority' => $priority
         );
 
-        $sqlite = Sqlite::createOrGetSqlite()
+        $request = Sqlite::createOrGetSqlite()
             ->createRequest()
             ->setTableRow('PAGE_RULES', $entry);
         $lastInsertId = null;
         try {
-            $lastInsertId = $sqlite->execute()
+            $lastInsertId = $request->execute()
                 ->getInsertId();
         } catch (ExceptionCombo $e) {
             LogUtility::msg("There was a problem during Pages Rule insertion. " . $e->getMessage());
             return null;
         } finally {
-            $sqlite->close();
+            $request->close();
         }
 
         return $lastInsertId;
@@ -174,15 +177,15 @@ class PageRules
     function deleteAll()
     {
 
-        $sqlite = Sqlite::createOrGetSqlite()
+        $request = Sqlite::createOrGetSqlite()
             ->createRequest()
             ->setStatement("delete from PAGE_RULES");
         try {
-            $sqlite->execute();
+            $request->execute();
         } catch (ExceptionCombo $e) {
             LogUtility::msg('Errors during delete of all redirections. ' . $e->getMessage());
         } finally {
-            $sqlite->close();
+            $request->close();
         }
 
 
@@ -245,7 +248,7 @@ class PageRules
             ->setStatementParametrized("SELECT * FROM PAGE_RULES where ID = ?", [$id]);
         try {
             return $request->execute()
-                ->getRows();
+                ->getFirstRow();
         } catch (ExceptionCombo $e) {
             LogUtility::msg("getRule Error {$e->getMessage()}");
             return [];

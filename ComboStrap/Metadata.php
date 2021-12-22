@@ -49,6 +49,10 @@ abstract class Metadata
      * @var Metadata
      */
     private $uidObject;
+    /**
+     * @var Metadata[]
+     */
+    private $childrenObject;
 
     /**
      * The metadata may be just not stored
@@ -67,7 +71,7 @@ abstract class Metadata
      */
     public static function toMetadataObject($class, Metadata $parent = null): Metadata
     {
-        if($class===null){
+        if ($class === null) {
             throw new ExceptionCombo("The string class is empty");
         }
         if (!is_subclass_of($class, Metadata::class)) {
@@ -86,7 +90,7 @@ abstract class Metadata
      * The class string of the child/columns metadata
      * @return null|string[];
      */
-    public function getChildren(): ?array
+    public function getChildrenClass(): ?array
     {
         return null;
     }
@@ -187,6 +191,26 @@ abstract class Metadata
             return $value;
         }
         return $this->toStoreDefaultValue();
+    }
+
+    public function getChildrenObject()
+    {
+        if ($this->getChildrenClass() === null) {
+            return null;
+        }
+        if ($this->childrenObject !== null) {
+            return $this->childrenObject;
+        }
+        foreach ($this->getChildrenClass() as $childrenClass) {
+            try {
+                $this->childrenObject[] = Metadata::toMetadataObject($childrenClass)
+                    ->setResource($this->getResource());
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Unable to build the metadata children object: " . $e->getMessage());
+            }
+        }
+        return $this->childrenObject;
+
     }
 
 
@@ -638,7 +662,7 @@ abstract class Metadata
      */
     public function getUidClass(): ?string
     {
-        if ($this->getChildren() !== null) {
+        if ($this->getChildrenClass() !== null) {
             LogUtility::msg("An entity metadata should define a metadata that store the unique value");
         }
         return null;

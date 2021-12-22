@@ -49,7 +49,7 @@ class References extends MetadataTabular
         return Reference::class;
     }
 
-    public function getChildren(): ?array
+    public function getChildrenClass(): ?array
     {
         return [Reference::class];
     }

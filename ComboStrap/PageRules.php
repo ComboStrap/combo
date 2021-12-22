@@ -6,7 +6,6 @@ namespace ComboStrap;
  * The manager that handles the redirection metadata
  *
  */
-
 class PageRules
 {
 
@@ -19,23 +18,23 @@ class PageRules
     const TIMESTAMP_NAME = 'TIMESTAMP';
 
 
-
-
-
     /**
      * Delete Redirection
      * @param string $ruleId
      */
-    function deleteRule($ruleId)
+    function deleteRule(string $ruleId)
     {
 
-        $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->query('delete from PAGE_RULES where id = ?', $ruleId);
-        if (!$res) {
-            LogUtility::msg("Something went wrong when deleting the redirections");
+        $sqlite = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setStatementParametrized('delete from PAGE_RULES where id = ?', $ruleId);
+        try {
+            $sqlite->execute();
+        } catch (ExceptionCombo $e){
+            LogUtility::msg("Something went wrong when deleting the redirections. {$e->getMessage()}");
+        } finally {
+            $sqlite->close();
         }
-        $sqlite->res_close($res);
-
 
     }
 
@@ -45,44 +44,53 @@ class PageRules
      * @param integer $id
      * @return boolean
      */
-    function ruleExists($id)
+    function ruleExists($id): bool
     {
         $id = strtolower($id);
 
 
-        $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM PAGE_RULES where ID = ?", $id);
-        $exists = null;
-        if ($sqlite->res2single($res) == 1) {
-            $exists = true;
-        } else {
-            $exists = false;
+        $request = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setStatementParametrized("SELECT count(*) FROM PAGE_RULES where ID = ?", $id);
+        $count = 0;
+        try {
+            $count = $request
+                ->execute()
+                ->getFirstCellValue();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error during pattern exist statement. {$e->getMessage()}");
+            return false;
+        } finally {
+            $request->close();
         }
-        $sqlite->res_close($res);
-        return $exists;
+
+        return $count === 1;
 
 
     }
 
     /**
      * Is Redirection of a page Id Present
-     * @param integer $pattern
+     * @param string $pattern
      * @return boolean
      */
-    function patternExists($pattern)
+    function patternExists(string $pattern): bool
     {
 
 
-        $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->query("SELECT count(*) FROM PAGE_RULES where MATCHER = ?", $pattern);
-        $exists = null;
-        if ($sqlite->res2single($res) == 1) {
-            $exists = true;
-        } else {
-            $exists = false;
+        $sqlite = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setStatementParametrized("SELECT count(*) FROM PAGE_RULES where MATCHER = ?", [$pattern]);
+        $count = null;
+        try {
+            $count = $sqlite->execute()
+                ->getFirstCellValue();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error during pattern exists query: {$e->getMessage()}");
+            return false;
         }
-        $sqlite->res_close($res);
-        return $exists;
+
+        return $count == 1;
 
 
     }
@@ -110,7 +118,7 @@ class PageRules
      * @param $creationDate
      * @return int - the last id
      */
-    function addRuleWithDate($matcher, $target, $priority, $creationDate)
+    function addRuleWithDate($matcher, $target, $priority, $creationDate): ?int
     {
 
         $entry = array(
@@ -120,13 +128,20 @@ class PageRules
             'priority' => $priority
         );
 
-        $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->storeEntry('PAGE_RULES', $entry);
-        if (!$res) {
-            LogUtility::msg("There was a problem during insertion");
+        $sqlite = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setTableRow('PAGE_RULES', $entry);
+        $lastInsertId = null;
+        try {
+            $lastInsertId = $sqlite->execute()
+                ->getInsertId();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("There was a problem during Pages Rule insertion. " . $e->getMessage());
+            return null;
+        } finally {
+            $sqlite->close();
         }
-        $lastInsertId = $sqlite->getAdapter()->getDb()->lastInsertId();
-        $sqlite->res_close($res);
+
         return $lastInsertId;
 
     }
@@ -160,12 +175,17 @@ class PageRules
     function deleteAll()
     {
 
-        $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->query("delete from PAGE_RULES");
-        if (!$res) {
-            LogUtility::msg('Errors during delete of all redirections');
+        $sqlite = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setQuery("delete from PAGE_RULES");
+        try {
+            $sqlite->execute();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg('Errors during delete of all redirections. ' . $e->getMessage());
+        } finally {
+            $sqlite->close();
         }
-        $sqlite->res_close($res);
+
 
     }
 
@@ -214,8 +234,6 @@ class PageRules
         return $array;
 
     }
-
-
 
 
 }

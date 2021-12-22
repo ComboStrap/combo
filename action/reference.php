@@ -10,6 +10,7 @@ use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PageId;
+use ComboStrap\PagePath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Reference;
 use ComboStrap\References;
@@ -51,7 +52,7 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
     {
         global $ID;
         if ($ID === null) {
-            if(!PluginUtility::isDevOrTest()) {
+            if (!PluginUtility::isDevOrTest()) {
                 LogUtility::msg("The request ID was not set and should be present to store references.");
             }
             return;
@@ -146,14 +147,15 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
                     Page::createPageFromQualifiedPath($oldReference)
                         ->getAnalyticsDocument()
                         ->deleteIfExists();
+                    Event::createEvent('BACKLINK_MUTATION', [PagePath::getPersistentName() => $oldReference]);
                 }
             }
         }
-        foreach ($newReferences as $newReference){
+        foreach ($newReferences as $newReference) {
             Page::createPageFromQualifiedPath($newReference)
                 ->getAnalyticsDocument()
                 ->deleteIfExists();
-            Event::createEvent();
+            Event::createEvent('BACKLINK_MUTATION', [PagePath::getPersistentName() => $newReference]);
         }
 
 

@@ -87,7 +87,7 @@ class MetadataDbStore extends MetadataStoreAbs
         }
 
         $targetRows = $this->getDbTabularData($metadata);
-        if($targetRows!==null) {
+        if ($targetRows !== null) {
             foreach ($targetRows as $targetRow) {
                 $targetRowId = $targetRow[$uid::getPersistentName()];
                 if (isset($sourceRows[$targetRowId])) {
@@ -124,15 +124,18 @@ class MetadataDbStore extends MetadataStoreAbs
         }
         $row[$resourceUidObject::getPersistentName()] = $uidValue;
 
-        // Page has change of location
-        // Creation of an alias
-
-        $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->storeEntry($this->getTableName($metadata), $row);
-        if (!$res) {
-            LogUtility::msg("There was a problem during PAGE_ALIASES insertion");
+        $tableName = $this->getTableName($metadata);
+        $request = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setTableRow($tableName, $row);
+        try {
+            $request->execute();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("There was a problem during rows insertion for the table ($tableName)" . $e->getMessage());
+        } finally {
+            $request->close();
         }
-        $sqlite->res_close($res);
+
 
     }
 
@@ -153,23 +156,28 @@ EOF;
             $resourceIdAttribute => $row[$resourceIdAttribute],
             $metadataIdAttribute => $row[$metadataIdAttribute]
         ];
-        $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->query($delete, $row);
-        if ($res === false) {
-            $message = Sqlite::getErrorMessage();
-            LogUtility::msg("There was a problem during the row delete of $tableName. Message: $message");
+        $request = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setStatementParametrized($delete,$row);
+        try {
+            $request->execute();
+        } catch (ExceptionCombo $e){
+            LogUtility::msg("There was a problem during the row delete of $tableName. Message: {$e->getMessage()}");
             return;
+        } finally {
+            $request->close();
         }
-        $sqlite->res_close($res);
+
 
     }
 
 
     /**
      * @return null
+     * @throws ExceptionCombo
      * @var Metadata $metadata
      */
-    private function getDbTabularData(Metadata $metadata)
+    private function getDbTabularData(Metadata $metadata): ?array
     {
 
         $sqlite = Sqlite::createOrGetSqlite();
@@ -193,8 +201,8 @@ EOF;
 
         $uidAttribute = $uid::getPersistentName();
         $columns = [];
-        $children = $metadata->getChildren();
-        if($children===null){
+        $children = $metadata->getChildrenObject();
+        if ($children === null) {
             throw new ExceptionCombo("The children of the tabular metadata ($metadata) should be set to synchronize into the database");
         }
         foreach ($children as $child) {
@@ -203,13 +211,20 @@ EOF;
         $tableName = $this->getTableName($metadata);
 
         $query = "select " . implode(", ", $columns) . " from $tableName where $uidAttribute = ? ";
-        $res = $sqlite->query($query, $pageId);
-        if (!$res) {
-            $message = Sqlite::getErrorMessage();
-            LogUtility::msg("An exception has occurred with the PAGE_ALIASES ({$metadata->getResource()}) selection query. Message: $message, Query: ($query");
+        $res = $sqlite
+            ->createRequest()
+            ->setStatementParametrized($query, [$pageId]);
+        $rows = [];
+        try {
+            $rows = $res
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("An exception has occurred with the $tableName ({$metadata->getResource()}) selection query. Message: {$e->getMessage()}, Query: ($query");
+            return null;
+        } finally {
+            $res->close();
         }
-        $rows = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
         return $rows;
 
     }

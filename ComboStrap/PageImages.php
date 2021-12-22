@@ -340,7 +340,7 @@ class PageImages extends MetadataTabular
     }
 
 
-    function getChildren(): array
+    function getChildrenClass(): array
     {
         return [PageImagePath::class, PageImageUsage::class];
     }

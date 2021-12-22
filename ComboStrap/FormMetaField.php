@@ -112,7 +112,7 @@ class FormMetaField
 
         self::setCommonDataToFieldFromMetadata($field, $metadata);
 
-        $childrenMetadata = $metadata->getChildren();
+        $childrenMetadata = $metadata->getChildrenClass();
 
         if ($metadata->getParent() === null) {
             /**
@@ -139,7 +139,7 @@ class FormMetaField
             if ($metadata instanceof MetadataTabular) {
 
                 $childFields = [];
-                foreach ($metadata->getChildren() as $childMetadataClass) {
+                foreach ($metadata->getChildrenClass() as $childMetadataClass) {
 
                     $childMetadata = Metadata::toMetadataObject($childMetadataClass, $metadata);
                     $childField = FormMetaField::create($childMetadata);

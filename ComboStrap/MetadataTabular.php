@@ -132,7 +132,7 @@ abstract class MetadataTabular extends Metadata
                 }
                 $row[$identifierPersistentName] = Metadata::toMetadataObject($identifierMetadataObject, $this)
                     ->setFromStoreValue($identifierValue);
-                foreach ($this->getChildren() as $childClass) {
+                foreach ($this->getChildrenClass() as $childClass) {
                     if ($childClass === $identifierMetadataObject) {
                         continue;
                     }
@@ -153,7 +153,7 @@ abstract class MetadataTabular extends Metadata
          */
         // child object building
         $childClassesByPersistentName = [];
-        foreach ($this->getChildren() as $childClass) {
+        foreach ($this->getChildrenClass() as $childClass) {
             $childClassesByPersistentName[$childClass::getPersistentName()] = $childClass;
         }
         foreach ($value as $item) {

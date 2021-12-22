@@ -68,7 +68,7 @@ class SqliteRequest
 
         if ($this->queryParametrized !== null) {
             $res = $this->sqlitePlugin->getAdapter()->query($this->queryParametrized);
-            $requestType = "Statement Parametrized";
+            $requestType = "Statement Parametrized"; // delete, insert, update, query
         }
 
         if ($res === null) {

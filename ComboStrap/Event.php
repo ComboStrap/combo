@@ -92,6 +92,7 @@ class Event
     public static
     function createEvent(string $name, array $data)
     {
+
         $sqlite = Sqlite::createOrGetBackendSqlite();
         if ($sqlite === null) {
             LogUtility::msg("Unable to create the event $name. Sqlite is not available");
@@ -103,7 +104,7 @@ class Event
          * If not present
          */
         $entry = array(
-            "event" => $name,
+            "name" => $name,
             "timestamp" => Iso8601Date::createFromNow()->toString()
         );
 

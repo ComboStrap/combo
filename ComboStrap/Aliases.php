@@ -306,7 +306,7 @@ class Aliases extends MetadataTabular
         return AliasPath::class;
     }
 
-    public function getChildren(): ?array
+    public function getChildrenClass(): ?array
     {
         return [AliasPath::class, AliasType::class];
     }

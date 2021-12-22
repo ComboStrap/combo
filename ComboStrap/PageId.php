@@ -43,6 +43,57 @@ class PageId extends MetadataText
         return $this->setValueWithOrWithoutForce($value);
     }
 
+    /**
+     * Page Id cannot be null when build
+     *
+     * Check how to handle a move id to avoid creating an id for a page that is moving with the
+     * move plugin {@link \action_plugin_combo_linkmove::handle_rename_after()}
+     *
+     * @param $value
+     * @return Metadata
+     */
+    public function buildFromStoreValue($value): Metadata
+    {
+
+        if ($value !== null) {
+            parent::buildFromStoreValue($value);
+            return $this;
+        }
+
+
+        $resource = $this->getResource();
+        if (!($resource instanceof Page)) {
+            LogUtility::msg("Page Id is for now only for the page, this is not a page but {$this->getResource()->getType()}");
+            return $this;
+        }
+
+        $metadataFileSystemStore = MetadataDokuWikiStore::createFromResource($resource);
+
+        // The page Id can be into the frontmatter
+        // if the instructions are old, render them to parse the frontmatter
+        if ($resource->getInstructionsDocument()->shouldProcess()) {
+            $resource->getInstructionsDocument()->process();
+            $value = $metadataFileSystemStore->get($this);
+            if ($value !== null) {
+                parent::buildFromStoreValue($value);
+                return $this;
+            }
+        }
+
+        // Value is still null, generate and store
+        $actualValue = self::generateUniquePageId();
+        parent::buildFromStoreValue($actualValue);
+
+        try {
+            $metadataFileSystemStore->set($this);
+        } catch (ExceptionCombo $e) {
+            throw new ExceptionComboRuntime("Unable to persist the generated page id", $this->getCanonical(), 0, $e);
+        }
+
+        return $this;
+
+    }
+
 
     public function getTab(): string
     {
@@ -74,7 +125,10 @@ class PageId extends MetadataText
         return false;
     }
 
-    public function getDefaultValue()
+    /**
+     * @return string|null
+     */
+    public function getDefaultValue(): ?string
     {
         return null;
     }
@@ -84,27 +138,8 @@ class PageId extends MetadataText
         return $this->getName();
     }
 
-    /**
-     * This function should be:
-     *   * used only in an replication process between internal system (mostly the database) to create a page id the most later after a page creation
-     *   * not be used in rendering (just don't render temporarily)
-     *
-     * It's to avoid creating an id for a page that is moving with the
-     * move plugin {@link \action_plugin_combo_linkmove::handle_rename_after()}
-     *
-     *
-     * @return string get the page id or generate id if needed
-     */
-    public function getPageIdOrGenerate(): ?string
-    {
-        $actualValue = $this->getValue();
-        if ($actualValue === null) {
-            $actualValue = $this
-                ->generate()
-                ->getValue();
-        }
-        return $actualValue;
-    }
+
+
 
     /**
      * For, there is no real replication between website.

@@ -97,12 +97,6 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
 
         try {
 
-            // page id check
-            // because we are the end of the parse
-            // if there is a frontmatter with a page id. It should have be set
-            PageId::createForPage($page)
-                ->getPageIdOrGenerate();
-
             $references
                 ->setWriteStore(MetadataDbStore::class)
                 ->persist();

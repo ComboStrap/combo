@@ -158,10 +158,10 @@ EOF;
         ];
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatementParametrized($delete,$row);
+            ->setStatementParametrized($delete, $row);
         try {
             $request->execute();
-        } catch (ExceptionCombo $e){
+        } catch (ExceptionCombo $e) {
             LogUtility::msg("There was a problem during the row delete of $tableName. Message: {$e->getMessage()}");
             return;
         } finally {
@@ -192,11 +192,10 @@ EOF;
         $uid = $metadata->getResource()->getUid();
         $pageId = $uid->getValue();
         if ($uid->getValue() === null) {
-            if (!($uid instanceof PageId)) {
-                LogUtility::msg("The resource identifier has no id. We can't retrieve the database data", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                return null;
-            }
-            $pageId = $uid->getPageIdOrGenerate();
+
+            LogUtility::msg("The resource identifier has no id. We can't retrieve the database data", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            return null;
+
         }
 
         $uidAttribute = $uid::getPersistentName();
@@ -209,7 +208,7 @@ EOF;
             $attributes[] = $child::getPersistentName();
         }
         $tableName = $this->getTableName($metadata);
-        $query = Sqlite::createSelectFromTableAndColumns($tableName,$attributes);
+        $query = Sqlite::createSelectFromTableAndColumns($tableName, $attributes);
         $query = "$query where $uidAttribute = ? ";
         $res = $sqlite
             ->createRequest()

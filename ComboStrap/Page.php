@@ -1991,7 +1991,7 @@ class Page extends ResourceComboAbs
 
     public function getPageIdOrGenerate(): string
     {
-        return $this->pageId->getPageIdOrGenerate();
+
     }
 
     public function getAbsolutePath(): string

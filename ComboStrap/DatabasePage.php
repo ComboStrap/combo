@@ -262,13 +262,15 @@ class DatabasePage
         /**
          * When the file does not exist
          */
-        $modifiedTime = FileSystems::getModifiedTime($this->page->getAnalyticsDocument()->getCachePath());
-        if ($modifiedTime === null) {
+        $exist = FileSystems::exists($this->page->getAnalyticsDocument()->getCachePath());
+        if (!$exist) {
             return true;
         }
+
         /**
          * When the file exists
          */
+        $modifiedTime = FileSystems::getModifiedTime($this->page->getAnalyticsDocument()->getCachePath());
         $dateReplication = $this->getReplicationDate();
         if ($modifiedTime > $dateReplication) {
             return true;
@@ -300,9 +302,15 @@ class DatabasePage
     function delete()
     {
 
-        $res = Sqlite::createOrGetSqlite()->query('delete from pages where id = ?', $this->page->getDokuwikiId());
-        if (!$res) {
-            LogUtility::msg("Something went wrong when deleting the page ({$this->page})");
+        $request = Sqlite::createOrGetSqlite()
+            ->createRequest()
+            ->setStatementParametrized('delete from pages where id = ?', [$this->page->getDokuwikiId()]);
+        try {
+            $request->execute();
+        } catch (ExceptionCombo $e){
+            LogUtility::msg("Something went wrong when deleting the page ({$this->page}) from the database");
+        } finally {
+            $request->close();
         }
         $this->buildInitObjectFields();
 
@@ -319,7 +327,12 @@ class DatabasePage
         if ($jsonString === null) {
             return null;
         }
-        return Json::createFromString($jsonString);
+        try {
+            return Json::createFromString($jsonString);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while building back the analytics JSON object. {$e->getMessage()}");
+            return null;
+        }
 
     }
 

@@ -417,8 +417,8 @@ class DatabasePage
             $count = $request
                 ->execute()
                 ->getFirstCellValue();
-        } catch (ExceptionCombo $e){
-            LogUtility::msg($e->getMessage(),LogUtility::LVL_MSG_ERROR);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR);
         } finally {
             $request->close();
         }
@@ -943,29 +943,37 @@ class DatabasePage
             }
         }, null);
         $query = "select {$fields} from PAGES p, PAGE_ALIASES pa where p.{$pageIdAttribute} = pa.{$pageIdAttribute} and pa.PATH = ? ";
-        $res = $this->sqlite->query($query, $alias);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the alias selection query");
+        $request = $this->sqlite
+            ->createRequest()
+            ->setStatementParametrized($query, [$alias]);
+        $rows = [];
+        try {
+            $rows = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("An exception has occurred with the alias selection query. {$e->getMessage()}");
+            return null;
+        } finally {
+            $request->close();
         }
-        $res2arr = $this->sqlite->res2arr($res);
-        $this->sqlite->res_close($res);
-        switch (sizeof($res2arr)) {
+        switch (sizeof($rows)) {
             case 0:
                 return null;
             case 1:
-                return $res2arr[0];
+                return $rows[0];
             default:
-                $id = $res2arr[0]['ID'];
+                $id = $rows[0]['ID'];
                 $pages = implode(",",
                     array_map(
                         function ($row) {
                             return $row['ID'];
                         },
-                        $res2arr
+                        $rows
                     )
                 );
                 LogUtility::msg("For the alias $alias, there is more than one page defined ($pages), the first one ($id) was used", LogUtility::LVL_MSG_ERROR, Aliases::PROPERTY_NAME);
-                return $res2arr[0];
+                return $rows[0];
         }
     }
 

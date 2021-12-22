@@ -121,7 +121,7 @@ class SqliteRequest
 
     }
 
-    public function setQuery(string $string): SqliteRequest
+    public function setStatement(string $string): SqliteRequest
     {
         $this->query = $string;
         return $this;

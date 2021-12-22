@@ -53,5 +53,10 @@ class SqliteResult
         return $this->sqlitePlugin->res2single($this->res);
     }
 
+    public function getFirstCellValueAsInt(): int
+    {
+        return intval($this->getFirstCellValue());
+    }
+
 
 }

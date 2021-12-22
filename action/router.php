@@ -7,6 +7,7 @@ use ComboStrap\Alias;
 use ComboStrap\AliasType;
 use ComboStrap\DatabasePage;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\HttpResponse;
 use ComboStrap\Identity;
 use ComboStrap\LogUtility;
@@ -782,7 +783,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
 
             $targetUrl = wl($link[0], $urlParams, true, '&');
             // %3A back to :
-            $targetUrl = str_replace("%3A",":",$targetUrl);
+            $targetUrl = str_replace("%3A", ":", $targetUrl);
             if ($link[1]) {
                 $targetUrl .= '#' . rawurlencode($link[1]);
             }
@@ -922,12 +923,18 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             "TYPE" => $algorithmic,
             "METHOD" => $method
         );
-        $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->storeEntry('redirections_log', $row);
-
-        if (!$res) {
-            LogUtility::msg("An error occurred");
+        $request = Sqlite::createOrGetBackendSqlite()
+            ->createRequest()
+            ->setTableRow('redirections_log', $row);
+        try {
+            $request
+                ->execute();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Redirection Log Insert Error. {$e->getMessage()}");
+        } finally {
+            $request->close();
         }
+
 
     }
 

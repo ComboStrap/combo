@@ -1,7 +1,7 @@
 # Sqlite Back Database
 
 ## About
-A database that can be locked
+A database that you don't need to backup
 
 ## Migration
 

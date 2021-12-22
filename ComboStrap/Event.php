@@ -33,7 +33,7 @@ class Event
         $sqlite = Sqlite::createOrGetBackendSqlite();
         $tableName = self::EVENT_TABLE_NAME;
         $request = $sqlite->createRequest()
-            ->setQuery("SELECT ID FROM $tableName");
+            ->setStatement("SELECT ID FROM $tableName");
 
         $rows = null;
         try {

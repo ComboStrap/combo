@@ -111,6 +111,10 @@ class DatabasePage
         $replicationDateMeta = ReplicationDate::createFromPage($this->page)
             ->setValue(new \DateTime());
 
+
+        /**
+         * Page Replication should appears
+         */
         $this->replicatePage($replicationDateMeta);
 
         /**
@@ -130,6 +134,20 @@ class DatabasePage
                 ->setWriteStore($dbStore)
                 ->persist();
         }
+
+        /**
+         * Analytics (derived)
+         * Should appear at the end of the replication because it is based
+         * on the previous replication (ie backlink count)
+         */
+        $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
+        $analyticsJsonAsString = $analyticsJson->toPrettyJsonString();
+        $analyticsJsonAsArray = $analyticsJson->toArray();
+        $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
+        $record['IS_LOW_QUALITY'] = ($this->page->isLowQualityPage() === true ? 1 : 0);
+        $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
+        $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[BacklinkCount::getPersistentName()];
+        $this->upsertAttributes($record);
 
         /**
          * Set the replication date
@@ -378,19 +396,9 @@ class DatabasePage
 
 
         /**
-         * Render and save on the file system
-         */
-        $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
-        $analyticsJsonAsString = $analyticsJson->toPrettyJsonString();
-        $analyticsJsonAsArray = $analyticsJson->toArray();
-        /**
          * Same data as {@link Page::getMetadataForRendering()}
          */
         $record = $this->getMetaRecord();
-        $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
-        $record['IS_LOW_QUALITY'] = ($page->isLowQualityPage() === true ? 1 : 0);
-        $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
-        $record['BACKLINK_COUNT'] = $this->getBacklinkCount();
         $record['IS_HOME'] = ($page->isHomePage() === true ? 1 : 0);
         $record[ReplicationDate::PROPERTY_NAME] = $replicationDate->toStoreValue();
 
@@ -400,33 +408,7 @@ class DatabasePage
     }
 
 
-    /**
-     * Sqlite is much quicker than the Dokuwiki Internal Index
-     * We use it every time that we can
-     *
-     * @return int|null
-     */
-    public function getBacklinkCount(): ?int
-    {
-        if ($this->sqlite === null) {
-            return null;
-        }
-        $request = $this->sqlite
-            ->createRequest()
-            ->setStatementParametrized("select count(1) from PAGE_REFERENCES where REFERENCE = ? ", [$this->page->getPath()->toString()]);
-        $count = 0;
-        try {
-            $count = $request
-                ->execute()
-                ->getFirstCellValue();
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR);
-        } finally {
-            $request->close();
-        }
-        return intval($count);
 
-    }
 
 
     /**

@@ -41,6 +41,11 @@ class DataType
      */
     public const JSON_TYPE_VALUE = "json";
 
+    /**
+     * Integer
+     */
+    public const INTEGER_TYPE_VALUE = "integer";
+
 
     /**
      * The constant value
@@ -53,5 +58,6 @@ class DataType
         DataType::JSON_TYPE_VALUE,
         DataType::BOOLEAN_TYPE_VALUE,
     ];
+
 
 }

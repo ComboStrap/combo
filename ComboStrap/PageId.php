@@ -213,7 +213,7 @@ class PageId extends MetadataText
              */
             $metadataStore = $this->getReadStore();
             if (!($metadataStore instanceof MetadataDokuWikiStore)) {
-                $store = MetadataDokuWikiStore::createForPage($this->getResource());
+                $store = MetadataDokuWikiStore::createFromResource($this->getResource());
                 $fsPageId = PageId::createForPage($this->getResource())
                     ->setReadStore($store);
                 $value = $fsPageId->getValue();

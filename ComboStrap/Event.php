@@ -128,4 +128,22 @@ class Event
 
 
     }
+
+    /**
+     * @param $pageId
+     *
+     * This is equivalent to {@link TaskRunner}
+     *
+     * lib/exe/taskrunner.php?id='.rawurlencode($ID)
+     * $taskRunner = new \dokuwiki\TaskRunner();
+     * $taskRunner->run();
+     *
+     */
+    public static function startTaskRunnerForPage($pageId)
+    {
+        $tmp = []; // No event data
+        $tmp['page'] = $pageId;
+        $evt = new \dokuwiki\Extension\Event('INDEXER_TASKS_RUN', $tmp);
+        $evt->advise_after();
+    }
 }

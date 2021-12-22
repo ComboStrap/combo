@@ -62,6 +62,7 @@ require_once(__DIR__ . '/Animation.php');
 require_once(__DIR__ . '/ArrayCaseInsensitive.php');
 require_once(__DIR__ . '/ArrayUtility.php');
 require_once(__DIR__ . '/Background.php');
+require_once(__DIR__ . '/BacklinkCount.php');
 require_once(__DIR__ . '/Boldness.php');
 require_once(__DIR__ . '/Boolean.php');
 require_once(__DIR__ . '/Bootstrap.php');

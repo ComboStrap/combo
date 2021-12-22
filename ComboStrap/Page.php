@@ -1989,10 +1989,6 @@ class Page extends ResourceComboAbs
         return $this->pageId;
     }
 
-    public function getPageIdOrGenerate(): string
-    {
-
-    }
 
     public function getAbsolutePath(): string
     {

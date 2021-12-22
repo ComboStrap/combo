@@ -73,7 +73,8 @@ class InstructionsDocument extends PageCompilerDocument
          * Get the instructions
          * Adapted from {@link p_cached_instructions()}
          */
-        $instructions = p_get_instructions($this->getPage()->getTextContent());
+        $text = $this->getPage()->getTextContent();
+        $instructions = p_get_instructions($text);
 
         // close restore ID
         $ID = $oldId;

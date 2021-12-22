@@ -55,12 +55,15 @@ class action_plugin_combo_syntaxanalytics extends DokuWiki_Action_Plugin
                     }
                 }
             }
-            $pluginAnalyticsCall = Call::createComboCall(
-                syntax_plugin_combo_analytics::TAG,
-                DOKU_LEXER_SPECIAL,
-                $tagUsed
-            );
-            $callStack->insertAfter($pluginAnalyticsCall);
+            // empty text
+            if(sizeof($tagUsed)>0) {
+                $pluginAnalyticsCall = Call::createComboCall(
+                    syntax_plugin_combo_analytics::TAG,
+                    DOKU_LEXER_SPECIAL,
+                    $tagUsed
+                );
+                $callStack->insertAfter($pluginAnalyticsCall);
+            }
         }
 
     }

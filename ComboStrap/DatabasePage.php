@@ -171,7 +171,7 @@ class DatabasePage
 
     private function addPageIdMeta(array &$metaRecord)
     {
-        $metaRecord[PageId::PROPERTY_NAME] = $this->page->getPageIdOrGenerate();
+        $metaRecord[PageId::PROPERTY_NAME] = $this->page->getPageId();
         $metaRecord[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 
@@ -1003,7 +1003,7 @@ class DatabasePage
     private function addPageIdAttribute(array &$values)
     {
 
-        $values[PageId::PROPERTY_NAME] = $this->page->getPageIdOrGenerate();
+        $values[PageId::PROPERTY_NAME] = $this->page->getPageId();
         $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 

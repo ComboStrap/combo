@@ -67,6 +67,12 @@ class PageId extends MetadataText
             return $this;
         }
 
+        // no id for non-existing page
+        if(!FileSystems::exists($resource->getPath())){
+            parent::buildFromStoreValue($value);
+            return $this;
+        }
+
         $metadataFileSystemStore = MetadataDokuWikiStore::createFromResource($resource);
 
         // The page Id can be into the frontmatter
@@ -267,6 +273,11 @@ class PageId extends MetadataText
         }
         return $this;
 
+    }
+
+    public function getValueFromStore()
+    {
+        return $this->getReadStore()->get($this);
     }
 
 

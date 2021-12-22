@@ -2,6 +2,7 @@
 
 
 use ComboStrap\AnalyticsDocument;
+use ComboStrap\BacklinkCount;
 use ComboStrap\Canonical;
 use ComboStrap\LinkUtility;
 use ComboStrap\Page;
@@ -398,7 +399,7 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * If the dokuwiki index is not up to date, we may got
          * inconsistency
          */
-        $countBacklinks = Page::createPageFromId($ID)->getDatabasePage()->getBacklinkCount();
+        $countBacklinks = BacklinkCount::createFromResource($this->page)->calculateBacklinkCount();
         $statExport[AnalyticsDocument::INTERNAL_BACKLINK_COUNT] = $countBacklinks;
         $backlinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_BACKLINK_FACTOR, 1);
         if ($countBacklinks == 0) {

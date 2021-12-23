@@ -14,13 +14,23 @@ abstract class ImageLink extends MediaLink
 {
 
 
-    function getDefaultImage(): Image
+    /**
+     * @return Image
+     */
+    function getDefaultImage(): ?Image
     {
         if (!($this->getMedia() instanceof Image)) {
             LogUtility::msg("The media ($this) is not an image", LogUtility::LVL_MSG_ERROR);
         }
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getMedia();
+        /**
+         *
+         */
+        $media = $this->getMedia();
+        if($media instanceof Image){
+            return $media;
+        } else {
+            return null;
+        }
     }
 
     /**

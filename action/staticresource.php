@@ -239,14 +239,23 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Use x-sendfile header to pass the delivery to compatible web servers
          * (Taken over from SendFile)
          */
-        http_sendfile($mediaToSend->getAbsoluteFileSystemPath());
+        http_sendfile($mediaToSend->toAbsolutePath()->toString());
 
         /**
          * Send the file
          */
-        $filePointer = @fopen($mediaToSend->getAbsoluteFileSystemPath(), "rb");
+        $filePointer = @fopen($mediaToSend->toAbsolutePath()->toString(), "rb");
         if ($filePointer) {
-            http_rangeRequest($filePointer, $mediaToSend->getSize(), $mime);
+            http_rangeRequest($filePointer, FileSystems::getSize($mediaToSend), $mime->toString());
+            /**
+             * For test because the {@link HttpResponse} cannot yet send an blob
+             */
+            if(PluginUtility::isDevOrTest()) {
+                $testRequest = TestRequest::getRunning();
+                if ($testRequest !== null) {
+                    $testRequest->addData(HttpResponse::EXIT_KEY, "File Send");
+                }
+            }
         } else {
             HttpResponse::create(HttpResponse::STATUS_INTERNAL_ERROR)
                 ->sendMessage("Could not read $mediaToSend - bad permissions?");

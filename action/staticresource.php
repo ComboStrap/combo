@@ -162,11 +162,6 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         }
         $mediaToSend = LocalPath::createFromPath($physicalFile);
 
-        /**
-         * The mime
-         */
-        $mime = $mediaToSend->getMime();
-        header("Content-Type: {$mime}");
 
         /**
          * The cache instructions
@@ -218,8 +213,9 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
          * Download or display feature
          * (Taken over from SendFile)
          */
+        $mime = $mediaToSend->getMime();
         $download = $event->data["download"];
-        if ($download && $mime !== "image/svg+xml") {
+        if ($download && $mime->toString() !== "image/svg+xml") {
             header('Content-Disposition: attachment;' . rfc2231_encode(
                     'filename', PhpString::basename($originalFile)) . ';'
             );
@@ -248,12 +244,23 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         if ($filePointer) {
             http_rangeRequest($filePointer, FileSystems::getSize($mediaToSend), $mime->toString());
             /**
-             * For test because the {@link HttpResponse} cannot yet send an blob
+             * The {@link http_rangeRequest} exit not on test
+             * Trying to stop the dokuwiki processing of {@link sendFile()}
+             * Until {@link HttpResponse} can send resource
+             * TODO: integrate it in {@link HttpResponse}
              */
             if(PluginUtility::isDevOrTest()) {
+                /**
+                 * Add test info into the request
+                 */
                 $testRequest = TestRequest::getRunning();
+
                 if ($testRequest !== null) {
                     $testRequest->addData(HttpResponse::EXIT_KEY, "File Send");
+                }
+                if ($event !== null) {
+                    $event->stopPropagation();
+                    $event->preventDefault();
                 }
             }
         } else {

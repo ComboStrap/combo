@@ -88,7 +88,7 @@ class HttpResponse
         /**
          * Payload
          */
-        if ($payload != null) {
+        if ($payload !== null) {
             echo $payload;
         }
 

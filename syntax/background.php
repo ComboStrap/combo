@@ -2,20 +2,16 @@
 
 
 // must be run within Dokuwiki
-use ComboStrap\AnalyticsDocument;
 use ComboStrap\Background;
 use ComboStrap\CacheMedia;
 use ComboStrap\CallStack;
 use ComboStrap\ColorUtility;
 use ComboStrap\Dimension;
-use ComboStrap\DokuPath;
 use ComboStrap\LinkUtility;
 use ComboStrap\MediaLink;
 use ComboStrap\PagePath;
-use ComboStrap\Path;
 use ComboStrap\PluginUtility;
 use ComboStrap\Position;
-use ComboStrap\TagAttributes;
 
 if (!defined('DOKU_INC')) die();
 

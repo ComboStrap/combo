@@ -19,7 +19,8 @@ abstract class PathAbs implements Path
      */
     public function getMime(): ?Mime
     {
-        switch ($this->getExtension()) {
+        $extension = $this->getExtension();
+        switch ($extension) {
             case ImageSvg::EXTENSION:
                 /**
                  * Svg is authorized when viewing but is not part
@@ -35,6 +36,8 @@ abstract class PathAbs implements Path
             case "xhtml":
             case "html":
                 return new Mime(Mime::HTML);
+            case "png":
+                return new Mime(Mime::PNG);
             default:
                 $mime = mimetype($this->getLastName(), true)[1];
                 if ($mime === null || $mime === false) {

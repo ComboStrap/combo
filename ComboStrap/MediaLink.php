@@ -186,19 +186,20 @@ abstract class MediaLink
             LogUtility::msg("The `attributes` parameter is not an array. Value ($attributes)", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
 
-        /**
-         * Media id are not cleaned
-         * They are always absolute ?
-         */
-        if (isset($attributes[PagePath::PROPERTY_NAME])) {
-            // not sure why ?
-            unset($attributes[PagePath::PROPERTY_NAME]);
-        }
-
-
         $tagAttributes = TagAttributes::createFromCallStackArray($attributes);
 
         $src = $attributes[self::DOKUWIKI_SRC];
+        if ($src === null) {
+            /**
+             * Dokuwiki parse already the src and create the path and the attributes
+             * The new model will not, we check if we are in the old mode
+             */
+            $src = $attributes[PagePath::PROPERTY_NAME];
+            if ($src === null) {
+                LogUtility::msg("src is mandatory for an image link and was not passed");
+                return null;
+            }
+        }
         $dokuUrl = DokuwikiUrl::createFromUrl($src);
         $scheme = $dokuUrl->getScheme();
         switch ($scheme) {

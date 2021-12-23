@@ -695,7 +695,7 @@ class DatabasePage
                 ->setReadStore($sourceStore)
                 ->buildFromReadStore()
                 ->setWriteStore($targetStore)
-                ->toStoreValueOrDefault();
+                ->toStoreValueOrDefault(); // used by the template, the value is or default
         }
 
         if ($this->page->getPageId() !== null) {

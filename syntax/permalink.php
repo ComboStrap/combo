@@ -9,6 +9,7 @@ use ComboStrap\Canonical;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\Page;
+use ComboStrap\PageUrlPath;
 use ComboStrap\PluginUtility;
 use ComboStrap\Site;
 use ComboStrap\TagAttributes;
@@ -98,7 +99,7 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $returnArray[PluginUtility::PAYLOAD] = $errorMessage;
                             return $returnArray;
                         }
-                        $permanentValue = Page::encodePageId($pageId);
+                        $permanentValue = PageUrlPath::encodePageId($pageId);
                         $url = Site::getBaseUrl() . "$permanentValue";
                         if ($fragment != null) {
                             $url .= "#$fragment";
@@ -113,8 +114,8 @@ class syntax_plugin_combo_permalink extends DokuWiki_Syntax_Plugin
                             $errorMessage = "The page ($page) does not have a $documentationUrlForCanonical. We can't create a named permalink";
                             $returnArray[PluginUtility::PAYLOAD] = $errorMessage;
                         } else {
-                            $canonicalUrl = $page->getCanonicalUrl();
-                            if ($fragment != null) {
+                            $canonicalUrl = $page->getCanonicalUrl([],true);
+                            if ($fragment !== null) {
                                 $canonicalUrl .= "#$fragment";
                             }
                             $attributes->addComponentAttributeValue(LinkUtility::ATTRIBUTE_REF, $canonicalUrl);

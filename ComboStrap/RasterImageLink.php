@@ -296,6 +296,12 @@ class RasterImageLink extends ImageLink
             $attributes->removeAttributeIfPresent(TagAttributes::TITLE_KEY);
 
             /**
+             * Old model where the src is parsed and the path
+             * is in the attributes
+             */
+            $attributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
+
+            /**
              * Create the img element
              */
             $htmlAttributes = $attributes->toHTMLAttributeString();

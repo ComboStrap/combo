@@ -17,7 +17,6 @@ class ImageSvg extends Image
     const CANONICAL = "svg";
 
 
-
     public function __construct($path, $tagAttributes = null)
     {
         parent::__construct($path, $tagAttributes);
@@ -131,6 +130,16 @@ class ImageSvg extends Image
             LogUtility::msg("The Url of a image not in the media library is not yet supported", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             return "";
         }
+
+        /**
+         * Old model where all parameters are parsed
+         * and src is not given entirely to the renderer
+         * path may be still present
+         */
+        if (isset($att[PagePath::PROPERTY_NAME])) {
+            unset($att[PagePath::PROPERTY_NAME]);
+        }
+
         return ml($this->getPath()->getDokuwikiId(), $att, $direct, $ampersand, true);
 
 
@@ -171,7 +180,6 @@ class ImageSvg extends Image
     {
         return $this->getSvgFile()->getBuster();
     }
-
 
 
 }

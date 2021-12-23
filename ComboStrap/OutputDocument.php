@@ -40,10 +40,21 @@ abstract class OutputDocument extends PageCompilerDocument
 
             $path = $page->getPath();
             $id = $path->getDokuwikiId();
-            if ($path instanceof DokuPath) {
-                $path = $path->toLocalPath();
-            }
-            $localFile = $path->toAbsolutePath()->toString();
+
+            /**
+             * The local path is part of the key cache and should be the same
+             * than dokuwiki
+             *
+             * For whatever reason, Dokuwiki uses:
+             *   * `/` as separator on Windows
+             *   * and Windows short path `GERARD~1` not gerardnico
+             * See {@link wikiFN()}
+             * There is also a cache in the function
+             *
+             * We can't use our {@link Path} class because the
+             * path is on windows format without the short path format
+             */
+            $localFile = wikiFN($id);
             $this->cache = new CacheRenderer($id, $localFile, $this->getExtension());
 
         }

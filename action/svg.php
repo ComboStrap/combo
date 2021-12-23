@@ -113,8 +113,7 @@ class action_plugin_combo_svg extends DokuWiki_Action_Plugin
 
         $dokuPath = DokuPath::createMediaPathFromId($id,$rev);
 
-        $svgImage = new ImageSvg($dokuPath->getAbsoluteFileSystemPath(),  $tagAttributes);
-        $svgImage->setDokuPath($dokuPath);
+        $svgImage = new ImageSvg($dokuPath,  $tagAttributes);
         try {
             $event->data['file'] = $svgImage->getSvgFile()->getAbsoluteFileSystemPath();
         } catch (RuntimeException $e) {

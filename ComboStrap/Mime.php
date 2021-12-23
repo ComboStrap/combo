@@ -9,6 +9,7 @@ class Mime
 
     public const JSON = "application/json";
     public const HTML = "text/html";
+    public const XHTML = self::HTML;
     const PLAIN_TEXT = "text/plain";
     const HEADER_CONTENT_TYPE = "Content-Type";
     public const SVG = "image/svg+xml";
@@ -33,6 +34,9 @@ class Mime
      */
     public function __construct(string $mime)
     {
+        if (trim($mime) === "") {
+            LogUtility::msg("The mime should not be an empty string");
+        }
         $this->mime = $mime;
     }
 

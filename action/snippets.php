@@ -1,10 +1,12 @@
 <?php
 
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
 use ComboStrap\Site;
+use ComboStrap\Snippet;
 use dokuwiki\Cache\CacheParser;
 use dokuwiki\Cache\CacheRenderer;
 
@@ -163,15 +165,26 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                 $data = $cache->retrieveCache();
                 if (!empty($data)) {
 
-                    $snippets = json_decode($data, true);
-                    $snippetManager->addSnippetsFromCacheForBar($slotId, $snippets);
+                    $jsonDecodeSnippets = json_decode($data, true);
+                    $nativeSnippets = [];
+                    foreach ($jsonDecodeSnippets as $type => $snippets) {
+                        foreach ($snippets as $snippetId => $snippetArray) {
+                            try {
+                                $nativeSnippets[$type][$snippetId] = Snippet::createFromJson($snippetArray);
+                            } catch (ExceptionCombo $e) {
+                                LogUtility::msg("The snippet json array cannot be build into a snippet object. " . $e->getMessage());
+                            }
+                        }
+                    }
+                    $snippetManager->addSnippetsFromCacheForBar($slotId, $nativeSnippets);
 
                 }
 
             } else {
-                $snippets = $snippetManager->getSnippetsForBar($slotId);
-                if ($snippets !== null) {
-                    $cache->storeCache(json_encode($snippets));
+                $jsonDecodeSnippets = $snippetManager->getSnippetsForBar($slotId);
+                if ($jsonDecodeSnippets !== null) {
+                    $data1 = json_encode($jsonDecodeSnippets);
+                    $cache->storeCache($data1);
                 }
             }
 

@@ -70,7 +70,7 @@ abstract class PageCompilerDocument implements CachedDocument
             ) {
                 $logicalId = $this->getPage()->getLogicalId();
                 $scope = $this->getPage()->getScope();
-                $content = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$this->getCachePath()->getAbsoluteFileSystemPath()}\"></div>" . $content;
+                $content = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$this->getCachePath()->toString()}\"></div>" . $content;
             }
             return $content;
         }

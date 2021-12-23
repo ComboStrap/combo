@@ -157,7 +157,7 @@ class SnippetManager
     /**
      * @return array of node type and an array of array of html attributes
      */
-    public function getSnippets()
+    public function getSnippets(): array
     {
         /**
          * Distinct Snippet
@@ -462,7 +462,7 @@ class SnippetManager
     }
 
 
-    private function mergeSnippetArray($left, $right)
+    private function mergeSnippetArray($left, $right): array
     {
 
         $distinctSnippetIdByType = $left;
@@ -471,6 +471,11 @@ class SnippetManager
              * @var $snippetObject Snippet
              */
             foreach ($right[$snippetContentType] as $snippetObject) {
+
+                if(!$snippetObject instanceof Snippet){
+                    LogUtility::msg("The value is not a snippet object");
+                    continue;
+                }
                 /**
                  * Snippet is an object
                  */

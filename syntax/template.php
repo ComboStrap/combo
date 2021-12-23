@@ -6,6 +6,7 @@ use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\Canonical;
 use ComboStrap\DokuPath;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\PageCreationDate;
 use ComboStrap\Metadata;
 use ComboStrap\PageImages;
@@ -342,13 +343,22 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                     try {
                         $executableSql = $pageSql->getExecutableSql();
                         $parameters = $pageSql->getParameters();
-                        $res = $sqlite->queryWithParameters($executableSql, $parameters);
-                        if (!$res) {
+                        $request = $sqlite
+                            ->createRequest()
+                            ->setStatementParametrized($executableSql, $parameters);
+                        $rowsInDb = [];
+                        try{
+                            $rowsInDb = $request
+                                ->execute()
+                                ->getRows();
+                        } catch (ExceptionCombo $e){
                             LogUtility::msg("The sql statement generated returns an error. Sql statement: $executableSql", LogUtility::LVL_MSG_ERROR);
+                        } finally {
+                            $request->close();
                         }
-                        $res2arr = $sqlite->res2arr($res);
+
                         $rows = [];
-                        foreach ($res2arr as $sourceRow) {
+                        foreach ($rowsInDb as $sourceRow) {
                             $analytics = $sourceRow["ANALYTICS"];
                             /**
                              * @deprecated
@@ -404,7 +414,6 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                             }
                             $rows[] = $targetRow;
                         }
-                        $sqlite->res_close($res);
                     } catch (Exception $e) {
                         LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         return $returnedArray;

@@ -167,7 +167,7 @@ class FsWikiUtility
     public static function getPages($startPath, int $depth = 0): array
     {
 
-        if($startPath === null || $startPath==="" ){
+        if ($startPath === null || $startPath === "") {
             throw new \RuntimeException("A start path is mandatory");
         }
 

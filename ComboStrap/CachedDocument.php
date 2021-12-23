@@ -51,6 +51,11 @@ interface CachedDocument
     public function getContent();
 
     /**
+     * @return mixed - store the processed content on disk
+     */
+    public function storeContent($content);
+
+    /**
      * @return string - the file extension / format
      * For instance:
      *   * "xhtml" for an html document

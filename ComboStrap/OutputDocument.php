@@ -19,7 +19,10 @@ abstract class OutputDocument extends PageCompilerDocument
      * @var Path Cache/Output file
      */
     private $path;
-
+    /**
+     * @var mixed
+     */
+    private $cacheStillEnabledAfterRendering;
 
 
     /**
@@ -100,47 +103,37 @@ abstract class OutputDocument extends PageCompilerDocument
          */
         $instructions = $this->getPage()->getInstructionsDocument()->getOrProcessContent();
 
-        /**
-         * Due to the instructions parsing, they may have been changed
-         * by a component
-         */
-        $logicalId = $this->getPage()->getLogicalId();
-        $scope = $this->getPage()->getScope();
 
         /**
          * Render
          */
         $result = p_render($this->getRendererName(), $instructions, $info);
+        $this->cacheStillEnabledAfterRendering = $info['cache'];
 
         // restore ID
         $ID = $keep;
 
-        /**
-         * Store
-         * if the cache is not on, don't store
-         */
-        $enabledCache = $info['cache'];
-        if ($enabledCache && $this->cache->storeCache($result)) {
-            if (
-                (Site::debugIsOn() || PluginUtility::isDevOrTest())
-                && $this->getExtension() === HtmlDocument::extension
-            ) {
-                $result = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$this->getCachePath()->toAbsolutePath()->toString()}\"></div>" . $result;
-            }
-        } else {
-            $this->cache->removeCache(); // try to delete cachefile
-            if (
-                (Site::debugIsOn() || PluginUtility::isDevOrTest())
-                && $this->getExtension() === HtmlDocument::extension
-            ) {
-                $result = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\"></div>" . $result;
-            }
-        }
+
 
         $this->setContent($result);
         return $this;
 
     }
+
+    public function storeContent($content)
+    {
+        /**
+         * Store
+         * if the cache is not on, don't store
+         */
+        if ($this->cacheStillEnabledAfterRendering) {
+            $this->cache->storeCache($content);
+        } else {
+            $this->cache->removeCache(); // try to delete cachefile
+        }
+        return $this;
+    }
+
 
     public function getCachePath(): Path
     {
@@ -158,8 +151,6 @@ abstract class OutputDocument extends PageCompilerDocument
 
 
     }
-
-
 
 
 }

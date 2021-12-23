@@ -75,12 +75,12 @@ abstract class PageCompilerDocument implements CachedDocument
      */
     public function getContent()
     {
+
         if ($this->content !== null) {
             return $this->content;
         } else {
             return $this->getFileContent();
         }
-
 
     }
 
@@ -104,9 +104,15 @@ abstract class PageCompilerDocument implements CachedDocument
         return $this;
     }
 
+    /**
+     * @param $content
+     * @return mixed
+     */
     protected function setContent($content)
     {
         $this->content = $content;
+        $this->storeContent($content);
+        return $this;
     }
 
 

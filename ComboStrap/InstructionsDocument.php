@@ -15,10 +15,7 @@ class InstructionsDocument extends PageCompilerDocument
      * @var CacheInstructionsByLogicalKey|CacheInstructions
      */
     private $cache;
-    /**
-     * @var array
-     */
-    private $instructions;
+
 
 
     /**
@@ -34,7 +31,7 @@ class InstructionsDocument extends PageCompilerDocument
             /**
              * @noinspection PhpIncompatibleReturnTypeInspection
              * No inspection because this is not the same object interface
-             * because we can't overide the constructor of {@link CacheInstructions}
+             * because we can't override the constructor of {@link CacheInstructions}
              * but they should used the same interface (ie manipulate array data)
              */
             $this->cache = new CacheInstructionsByLogicalKey($page);
@@ -43,11 +40,21 @@ class InstructionsDocument extends PageCompilerDocument
 
             $path = $page->getPath();
             $id = $path->getDokuwikiId();
-            if($path instanceof DokuPath){
-                $path = $path->toLocalPath();
-            }
-            $fileAbsolutePath = $path->toAbsolutePath()->toString();
-            $this->cache = new CacheInstructions($id, $fileAbsolutePath);
+            /**
+             * The local path is part of the key cache and should be the same
+             * than dokuwiki
+             *
+             * For whatever reason, Dokuwiki uses:
+             *   * `/` as separator on Windows
+             *   * and Windows short path `GERARD~1` not gerardnico
+             * See {@link wikiFN()}
+             * There is also a cache in the function
+             *
+             * We can't use our {@link Path} class because the
+             * path is on windows format without the short path format
+             */
+            $localFile = wikiFN($id);
+            $this->cache = new CacheInstructions($id, $localFile);
 
         }
         $this->path = LocalPath::createFromPath($this->cache->cache);
@@ -86,25 +93,18 @@ class InstructionsDocument extends PageCompilerDocument
         if (!$this->cache->storeCache($instructions)) {
             $message = 'Unable to save the parsed instructions cache file. Hint: disk full; file permissions; safe_mode setting ?';
             LogUtility::msg($message, LogUtility::LVL_MSG_ERROR);
-            return [];
+            $this->setContent([]);
+            return $this;
         }
 
         // the parsing may have set new metadata values
         $this->getPage()->rebuild();
 
-        $this->instructions = $instructions;
+        $this->setContent($instructions);
         return $this;
 
     }
 
-    public function getContent()
-    {
-        if($this->instructions!==null) {
-            return $this->instructions;
-        } else {
-            return $this->getFileContent();
-        }
-    }
 
 
     public function getFileContent()
@@ -134,4 +134,9 @@ class InstructionsDocument extends PageCompilerDocument
     }
 
 
+    public function storeContent($content)
+    {
+        $this->cache->storeCache($content);
+        return $this;
+    }
 }

@@ -192,17 +192,32 @@ class syntax_plugin_combo_pageexplorer extends DokuWiki_Syntax_Plugin
                     switch ($type) {
                         case self::LIST_TYPE:
                             $requestedPage = Page::createPageFromRequestedPage();
-                            $namespacePath = $requestedPage->getNamespacePath();
+                            $parent = $requestedPage->getPath()->getParent();
+                            if($parent!==null){
+                                $namespacePath = $parent->toString();
+                            } else {
+                                $namespacePath = "";
+                            }
                             $scope = PageScope::SCOPE_CURRENT_VALUE;
                             break;
                         case self::TYPE_TREE:
-                            $namespacePath = $renderedPage->getNamespacePath();
+                            $parent = $renderedPage->getPath()->getParent();
+                            if($parent!==null){
+                                $namespacePath = $parent->toString();
+                            } else {
+                                $namespacePath = "";
+                            }
                             $scope = $namespacePath;
                             break;
                         default:
                             // Should never happens but yeah
                             LogUtility::msg("The type of the page explorer ($type) is unknown");
-                            $namespacePath = $renderedPage->getNamespacePath();
+                            $parent = $renderedPage->getPath()->getParent();
+                            if($parent!==null){
+                                $namespacePath = $parent->toString();
+                            } else {
+                                $namespacePath = "";
+                            }
                             $scope = $namespacePath;
                             break;
                     }

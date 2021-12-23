@@ -142,10 +142,14 @@ abstract class OutputDocument extends PageCompilerDocument
 
     public function shouldProcess(): bool
     {
-        if (!FileSystems::exists($this->getCachePath())) {
-            return true;
-        }
-        return $this->cache->useCache() === false;
+
+        /**
+         * Use cache should be always called because it trigger
+         * the event coupled to the cache (ie PARSER_CACHE_USE)
+         */
+        return ($this->cache->useCache() === false);
+
+
     }
 
 

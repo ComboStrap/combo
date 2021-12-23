@@ -473,6 +473,8 @@ class Page extends ResourceComboAbs
         $this->readStore = null;
         $this->buildPropertiesFromFileSystem();
         $this->databasePage = null;
+        $this->htmlDocument = null;
+        $this->instructionsDocument = null;
         return $this;
     }
 

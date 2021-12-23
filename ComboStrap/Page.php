@@ -992,7 +992,7 @@ class Page extends ResourceComboAbs
             return DOKU_URL;
         }
 
-        return wl($this->getUrlId(), $urlParameters, $absoluteUrl, '&');
+        return wl($this->getUrlId(), $urlParameters, $absoluteUrl, DokuwikiUrl::AMPERSAND_CHARACTER);
 
 
     }

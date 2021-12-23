@@ -107,7 +107,7 @@ class ImageRaster extends Image
 
     }
 
-    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED)
+    public function getUrl(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML)
     {
         return $this->getUrlAtBreakpoint($ampersand);
     }
@@ -130,7 +130,7 @@ class ImageRaster extends Image
     {
         if (PluginUtility::isTest()) {
             // The test library does not support ampersand character
-            return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_URL_ENCODED, $breakpoint);
+            return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML, $breakpoint);
         }
         return $this->getUrlAtBreakpoint(DokuwikiUrl::AMPERSAND_CHARACTER, $breakpoint);
     }
@@ -140,7 +140,7 @@ class ImageRaster extends Image
      * @param int|null $breakpointWidth - the breakpoint width - use for responsive image
      * @return string|null
      */
-    public function getUrlAtBreakpoint(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED, int $breakpointWidth = null)
+    public function getUrlAtBreakpoint(string $ampersand = DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML, int $breakpointWidth = null)
     {
 
         /**

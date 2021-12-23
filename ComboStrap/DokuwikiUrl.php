@@ -15,6 +15,7 @@ class DokuwikiUrl
 
     /**
      * In HTML (not in css)
+     *
      * Because ampersands are used to denote HTML entities,
      * if you want to use them as literal characters, you must escape them as entities,
      * e.g.  &amp;.
@@ -33,7 +34,7 @@ class DokuwikiUrl
      * https://daringfireball.net/projects/markdown/syntax#autoescape
      *
      */
-    const AMPERSAND_URL_ENCODED = '&amp;';
+    const AMPERSAND_URL_ENCODED_FOR_HTML = '&amp;';
 
     /**
      * Used in dokuwiki syntax & in CSS attribute

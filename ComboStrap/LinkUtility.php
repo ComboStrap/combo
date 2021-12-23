@@ -284,7 +284,7 @@ class LinkUtility
 
     public static function createFromRef(string $ref, TagAttributes $tagAttributes = null): LinkUtility
     {
-        return new LinkUtility($ref,$tagAttributes);
+        return new LinkUtility($ref, $tagAttributes);
     }
 
     /**
@@ -379,7 +379,7 @@ class LinkUtility
             case self::TYPE_INTERNAL:
                 if (!$this->dokuwikiUrl->hasQueryParameter("do")) {
                     foreach ($this->getDokuwikiUrl()->getQueryParameters() as $key => $value) {
-                        if ($key != self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
+                        if ($key !== self::SEARCH_HIGHLIGHT_QUERY_PROPERTY) {
                             $this->attributes->addComponentAttributeValue($key, $value);
                         }
                     }
@@ -414,7 +414,7 @@ class LinkUtility
             case self::TYPE_INTERWIKI:
 
                 // normal link for the `this` wiki
-                if($this->getWiki()!="this") {
+                if ($this->getWiki() != "this") {
                     PluginUtility::getSnippetManager()->attachCssSnippetForBar(self::TYPE_INTERWIKI);
                 }
                 /**
@@ -883,6 +883,7 @@ EOF;
         switch ($this->getType()) {
             case self::TYPE_INTERNAL:
                 $page = $this->getInternalPage();
+
                 /**
                  * Styling attribute
                  * may be passed via parameters
@@ -900,30 +901,34 @@ EOF;
                 } else {
 
                     /**
+                     * No parameters by default known
+                     */
+                    $url = wl($page->getDokuwikiId());
+
+                    /**
                      * The search term
                      * Code adapted found at {@link Doku_Renderer_xhtml::internallink()}
                      * We can't use the previous {@link wl function}
                      * because it encode too much
                      */
-                    $urlParams = [];
                     $searchTerms = $this->dokuwikiUrl->getQueryParameter(self::SEARCH_HIGHLIGHT_QUERY_PROPERTY);
-                    if ($searchTerms != null) {
+                    if ($searchTerms !== null) {
+                        $url .= DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML;
                         PluginUtility::getSnippetManager()->attachCssSnippetForBar("search");
                         if (is_array($searchTerms)) {
                             /**
                              * To verify, do we really need the []
                              * to get an array in php ?
                              */
-                            array_map(function($element) use ($urlParams){
-                                $urlParams['s[]'] = $element;
-                            },$searchTerms);
-
+                            $searchTermsQuery = [];
+                            foreach ($searchTerms as $searchTerm) {
+                                $searchTermsQuery[] = "s[]=$searchTerm";
+                            }
+                            $url .= implode(DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML, $searchTermsQuery);
                         } else {
-                            $urlParams['s'] = $searchTerms;
+                            $url .= "s=$searchTerms";
                         }
                     }
-
-                    $url = $page->getCanonicalUrl($urlParams);
 
 
                 }
@@ -938,8 +943,8 @@ EOF;
             case self::TYPE_INTERWIKI:
                 $wiki = $this->wiki;
                 $extendedPath = $this->dokuwikiUrl->getPath();
-                if($this->dokuwikiUrl->getFragment()!==null){
-                    $extendedPath.="#{$this->dokuwikiUrl->getFragment()}";
+                if ($this->dokuwikiUrl->getFragment() !== null) {
+                    $extendedPath .= "#{$this->dokuwikiUrl->getFragment()}";
                 }
                 $url = $this->renderer->_resolveInterWiki($wiki, $extendedPath);
                 break;

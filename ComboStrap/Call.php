@@ -150,7 +150,7 @@ class Call
         if ($payload != null) {
             $data[PluginUtility::PAYLOAD] = $payload;
         }
-        $positionInText = null;
+        $positionInText = $position;
 
         $call = [
             "plugin",

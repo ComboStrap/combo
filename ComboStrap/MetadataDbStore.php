@@ -193,7 +193,7 @@ EOF;
         $pageId = $uid->getValue();
         if ($uid->getValue() === null) {
 
-            LogUtility::msg("The resource identifier has no id. We can't retrieve the database data", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+            LogUtility::msg("The resource identifier has no id. We can't retrieve the database data", LogUtility::LVL_MSG_ERROR, $this->getCanonical());
             return null;
 
         }

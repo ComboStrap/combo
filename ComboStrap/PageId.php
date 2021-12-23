@@ -68,7 +68,10 @@ class PageId extends MetadataText
         }
 
         // no id for non-existing page
-        if(!FileSystems::exists($resource->getPath())){
+        if (!FileSystems::exists($resource->getPath())) {
+            if (PluginUtility::isDevOrTest()) {
+                LogUtility::msg("You can't ask a `page id` when the page does not exist", LogUtility::LVL_MSG_WARNING, $this->getCanonical());
+            }
             parent::buildFromStoreValue($value);
             return $this;
         }
@@ -78,7 +81,7 @@ class PageId extends MetadataText
         // The page Id can be into the frontmatter
         // if the instructions are old, render them to parse the frontmatter
         // frontmatter is the first element that is processed during a run
-        if(!\action_plugin_combo_parser::isParserRunning()) {
+        if (!\action_plugin_combo_parser::isParserRunning()) {
             if ($resource->getInstructionsDocument()->shouldProcess()) {
                 $resource->getInstructionsDocument()->process();
                 $metadataFileSystemStore->reset(); // the data may have changed
@@ -147,8 +150,6 @@ class PageId extends MetadataText
     {
         return $this->getName();
     }
-
-
 
 
     /**

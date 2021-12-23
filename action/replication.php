@@ -26,10 +26,6 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 class action_plugin_combo_replication extends DokuWiki_Action_Plugin
 {
 
-    /**
-     * @var array
-     */
-    protected $linksBeforeByPage = array();
 
     public function register(Doku_Event_Handler $controller)
     {

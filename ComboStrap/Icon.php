@@ -128,7 +128,7 @@ class Icon
         } else {
 
             // It may be a icon already downloaded
-            $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE,self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
+            $iconNameSpace = PluginUtility::getConfValue(self::CONF_ICONS_MEDIA_NAMESPACE, self::CONF_ICONS_MEDIA_NAMESPACE_DEFAULT);
             if (substr($iconNameSpace, 0, 1) != DokuPath::PATH_SEPARATOR) {
                 $iconNameSpace = DokuPath::PATH_SEPARATOR . $iconNameSpace;
             }
@@ -140,13 +140,13 @@ class Icon
 
             // Bug: null file created when the stream could not get any byte
             // We delete them
-            if ($mediaDokuPath->exists()) {
-                if ($mediaDokuPath->getSize() == 0) {
-                    $mediaDokuPath->remove();
+            if (FileSystems::exists($mediaDokuPath)) {
+                if (FileSystems::getSize($mediaDokuPath) == 0) {
+                    FileSystems::delete($mediaDokuPath);
                 }
             }
 
-            if (!$mediaDokuPath->exists()) {
+            if (!FileSystems::exists($mediaDokuPath)) {
 
                 /**
                  * Download the icon
@@ -154,9 +154,10 @@ class Icon
 
                 // Create the target directory if it does not exist
                 $iconDir = $mediaDokuPath->getParent();
-                if (!$iconDir->exists()) {
-                    $filePointer = $iconDir->createAsDirectory();
-                    if ($filePointer == false) {
+                if (!FileSystems::exists($iconDir)) {
+                    try {
+                        FileSystems::createDirectory($iconDir);
+                    } catch (ExceptionCombo $e) {
                         LogUtility::msg("The icon directory ($iconDir) could not be created.", LogUtility::LVL_MSG_ERROR, self::NAME);
                         return false;
                     }
@@ -191,7 +192,7 @@ class Icon
                 $filePointer = @fopen($downloadUrl, 'r');
                 if ($filePointer != false) {
 
-                    $numberOfByte = @file_put_contents($mediaDokuPath->getAbsoluteFileSystemPath(), $filePointer);
+                    $numberOfByte = @file_put_contents($mediaDokuPath->toLocalPath()->toAbsolutePath()->toString(), $filePointer);
                     if ($numberOfByte != false) {
                         LogUtility::msg("The icon ($iconName) from the library ($library) was downloaded to ($mediaPathId)", LogUtility::LVL_MSG_INFO, self::NAME);
                     } else {

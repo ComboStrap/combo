@@ -73,4 +73,15 @@ class LocalFs implements FileSystem
         return filesize($path->toAbsolutePath()->toString());
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public function createDirectory(Path $dirPath)
+    {
+        $result = mkdir($dirPath->toAbsolutePath()->toString(), $mode = 0770, $recursive = true);
+        if($result===false){
+            throw new ExceptionCombo("Unable to create the directory path ($dirPath)");
+        }
+    }
+
 }

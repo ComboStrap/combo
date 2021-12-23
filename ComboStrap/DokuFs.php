@@ -73,4 +73,13 @@ class DokuFs implements FileSystem
     {
         return FileSystems::getSize($path->toLocalPath());
     }
+
+    /**
+     * @param DokuPath $dirPath
+     * @return mixed
+     */
+    public function createDirectory(Path $dirPath)
+    {
+        return FileSystems::createDirectory($dirPath->toLocalPath());
+    }
 }

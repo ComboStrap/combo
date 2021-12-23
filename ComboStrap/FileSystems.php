@@ -94,4 +94,21 @@ class FileSystems
                 throw new ExceptionComboRuntime("File system ($scheme) unknown");
         }
     }
+
+
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createDirectory(Path $dirPath)
+    {
+        $scheme = $dirPath->getScheme();
+        switch ($scheme) {
+            case LocalFs::SCHEME:
+                return LocalFs::getOrCreate()->createDirectory($dirPath);
+            case DokuFs::SCHEME:
+                return DokuFs::getOrCreate()->createDirectory($dirPath);
+            default:
+                throw new ExceptionComboRuntime("File system ($scheme) unknown");
+        }
+    }
 }

@@ -1,7 +1,6 @@
 <?php
 
 use ComboStrap\PluginUtility;
-use ComboStrap\TagAttributes;
 
 
 /**

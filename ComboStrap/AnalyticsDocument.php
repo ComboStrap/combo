@@ -70,6 +70,7 @@ class AnalyticsDocument extends OutputDocument
      *
      * @return Json
      * @throws ExceptionCombo
+     * @deprecated use {@link AnalyticsDocument::getOrProcessJson()}
      */
     public function getJson(): Json
     {

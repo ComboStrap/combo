@@ -55,6 +55,9 @@ class AnalyticsDocument extends OutputDocument
     const FAILED_MANDATORY_RULES = 'failed_mandatory_rules';
     const METADATA = 'metadata';
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function getOrProcessJson(): Json
     {
         $content = parent::getOrProcessContent();

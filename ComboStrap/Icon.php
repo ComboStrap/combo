@@ -115,7 +115,7 @@ class Icon
 
             // loop through candidates until a match was found:
             // May be an icon from the templates
-            if (!$mediaDokuPath->exists()) {
+            if (!FileSystems::exists($mediaDokuPath)) {
 
                 // Trying to see if it's not in the template images directory
                 $message = "The media file could not be found in the media library. If you want an icon from an icon library, indicate a name without extension.";
@@ -210,7 +210,7 @@ class Icon
 
         }
 
-        if ($mediaDokuPath->exists()) {
+        if (FileSystems::exists($mediaDokuPath)) {
 
 
             /**

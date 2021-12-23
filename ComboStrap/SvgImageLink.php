@@ -172,6 +172,11 @@ class SvgImageLink extends ImageLink
         }
 
         /**
+         * Old model where dokuwiki parses the src in handle
+         */
+        $responseAttributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
+
+        /**
          * Return the image
          */
         return '<img ' . $responseAttributes->toHTMLAttributeString() . '/>';

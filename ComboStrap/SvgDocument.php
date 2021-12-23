@@ -316,6 +316,12 @@ class SvgDocument extends XmlDocument
         }
 
         /**
+         * Old model where the src was parsed in the render
+         * When the attributes are in the {@link Path} we can delete this
+         */
+        $localTagAttributes->removeAttributeIfPresent(PagePath::PROPERTY_NAME);
+
+        /**
          * Set the attributes to the root
          */
         $toHtmlArray = $localTagAttributes->toHtmlArray();

@@ -15,6 +15,10 @@ class InstructionsDocument extends PageCompilerDocument
      * @var CacheInstructionsByLogicalKey|CacheInstructions
      */
     private $cache;
+    /**
+     * @var array
+     */
+    private $instructions;
 
 
     /**
@@ -54,11 +58,11 @@ class InstructionsDocument extends PageCompilerDocument
         return "i";
     }
 
-    function process()
+    function process(): CachedDocument
     {
 
         if (!$this->shouldProcess()) {
-            return $this->getFileContent();
+            return $this;
         }
 
         /**
@@ -88,9 +92,20 @@ class InstructionsDocument extends PageCompilerDocument
         // the parsing may have set new metadata values
         $this->getPage()->rebuild();
 
-        return $instructions;
+        $this->instructions = $instructions;
+        return $this;
 
     }
+
+    public function getContent()
+    {
+        if($this->instructions!==null) {
+            return $this->instructions;
+        } else {
+            return $this->getFileContent();
+        }
+    }
+
 
     public function getFileContent()
     {

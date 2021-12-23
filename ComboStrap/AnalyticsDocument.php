@@ -66,6 +66,7 @@ class AnalyticsDocument extends OutputDocument
      * Return the JSON analytics data
      *
      * @return Json
+     * @throws ExceptionCombo
      */
     public function getJson(): Json
     {
@@ -80,7 +81,7 @@ class AnalyticsDocument extends OutputDocument
         if(!FileSystems::exists($this->getCachePath())){
             return Json::createEmpty();
         }
-        return Json::createFromString(parent::getFileContent());
+        return Json::createFromString(parent::getContent());
 
     }
 
@@ -94,4 +95,8 @@ class AnalyticsDocument extends OutputDocument
     {
         return renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
     }
+
+
+
+
 }

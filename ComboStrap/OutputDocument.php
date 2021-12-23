@@ -20,6 +20,8 @@ abstract class OutputDocument extends PageCompilerDocument
      */
     private $path;
 
+
+
     /**
      *
      * OutputDocument constructor.
@@ -63,11 +65,15 @@ abstract class OutputDocument extends PageCompilerDocument
 
     }
 
+    /**
+     * @return OutputDocument
+     * @noinspection PhpMissingReturnTypeInspection
+     */
     function process()
     {
 
         if (!$this->getPage()->exists()) {
-            return "";
+            return $this;
         }
 
         if (
@@ -131,7 +137,8 @@ abstract class OutputDocument extends PageCompilerDocument
             }
         }
 
-        return $result;
+        $this->setContent($result);
+        return $this;
 
     }
 
@@ -151,6 +158,8 @@ abstract class OutputDocument extends PageCompilerDocument
 
 
     }
+
+
 
 
 }

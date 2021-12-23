@@ -19,7 +19,7 @@ interface CachedDocument
      *   * optimization
      * And stores the output in the {@link PageCompilerDocument::getCachePath() cache file}
      * if the cache is enabled
-     * @return mixed
+     * @return mixed - the object
      */
     public function process();
 
@@ -41,9 +41,14 @@ interface CachedDocument
 
     /**
      * @return mixed - a simple method to get the cache content
-     * or generate it
+     * or process it and get it in once
      */
     public function getOrProcessContent();
+
+    /**
+     * @return mixed - a simple method to get the content
+     */
+    public function getContent();
 
     /**
      * @return string - the file extension / format

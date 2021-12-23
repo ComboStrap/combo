@@ -17,6 +17,11 @@ abstract class PageCompilerDocument implements CachedDocument
     private $page;
 
     /**
+     * @var string|null
+     */
+    protected $content;
+
+    /**
      * Document constructor.
      * @param Page $page
      */
@@ -46,42 +51,43 @@ abstract class PageCompilerDocument implements CachedDocument
      * Get the data from the cache file
      * or compile the content
      *
-     * @return false|mixed|string
+     * @return mixed - array ({@link InstructionsDocument)) or string
      */
     public function getOrProcessContent()
     {
+
         if ($this->shouldProcess()) {
 
             /**
              * Cache Miss
              */
-            return $this->process();
+            $this->process();
 
-        } else {
-
-            $content = $this->getFileContent();
-
-            /**
-             * Cache hit
-             */
-            if (
-                (Site::debugIsOn() || PluginUtility::isDevOrTest())
-                && $this->getExtension() === HtmlDocument::extension
-            ) {
-                $logicalId = $this->getPage()->getLogicalId();
-                $scope = $this->getPage()->getScope();
-                $content = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"hit\" data-cache-file=\"{$this->getCachePath()->toString()}\"></div>" . $content;
-            }
-            return $content;
         }
+
+        return $this->getContent();
 
 
     }
 
     /**
+     * @return array|string|null
+     */
+    public function getContent()
+    {
+        if ($this->content !== null) {
+            return $this->content;
+        } else {
+            return $this->getFileContent();
+        }
+
+
+    }
+
+
+    /**
      *
      * @return null|mixed the content of the file (by default in a text format)
-     * @noinspection PhpReturnDocTypeMismatchInspection
      */
     public function getFileContent()
     {
@@ -97,5 +103,11 @@ abstract class PageCompilerDocument implements CachedDocument
         FileSystems::deleteIfExists($this->getCachePath());
         return $this;
     }
+
+    protected function setContent($content)
+    {
+        $this->content = $content;
+    }
+
 
 }

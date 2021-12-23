@@ -43,33 +43,37 @@ class HtmlDocument extends OutputDocument
         return parent::shouldProcess();
     }
 
-    public function getOrProcessContent()
+    public function getOrProcessContent(): string
     {
 
         $debug = "";
-        $logicalId = $this->getPage()->getLogicalId();
-        $scope = $this->getPage()->getScope();
+
 
         if ($this->shouldProcess()) {
             $this->process();
 
+            /**
+             * Scope may change during processing
+             * And therefore logical id also
+             */
+            $scope = $this->getPage()->getScope();
+            $logicalId = $this->getPage()->getLogicalId();
+
             if (
-                (Site::debugIsOn() || PluginUtility::isDevOrTest())
+            (Site::debugIsOn() || PluginUtility::isDevOrTest())
             ) {
-                /**
-                 * Due to the instructions parsing, they may have been changed
-                 * by a component
-                 */
-                $debug = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$this->getCachePath()->toAbsolutePath()->toString()}\"></div>";
+                $cachePath = $this->getCachePath()->toAbsolutePath()->toString();
+                $debug = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"created\" data-cache-file=\"{$cachePath}\"></div>";
             }
 
         } else {
 
-
+            $scope = $this->getPage()->getScope();
+            $logicalId = $this->getPage()->getLogicalId();
             if (
-                (Site::debugIsOn() || PluginUtility::isDevOrTest())
+            (Site::debugIsOn() || PluginUtility::isDevOrTest())
             ) {
-                $debug = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\"></div>" ;
+                $debug = "<div id=\"{$this->getPage()->getCacheHtmlId()}\" style=\"display:none;\" data-logical-Id=\"$logicalId\" data-scope=\"$scope\" data-cache-op=\"forbidden\"></div>";
             }
 
         }

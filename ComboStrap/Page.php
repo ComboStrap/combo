@@ -376,7 +376,7 @@ class Page extends ResourceComboAbs
             if ($scopePath !== ":") {
                 return $scopePath . DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
             } else {
-                return DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName()();
+                return DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
             }
 
 

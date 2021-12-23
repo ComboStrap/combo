@@ -15,10 +15,7 @@ abstract class OutputDocument extends PageCompilerDocument
      */
     protected $cache;
 
-    /**
-     * @var Path Cache/Output file
-     */
-    private $path;
+
     /**
      * @var mixed
      */
@@ -64,7 +61,7 @@ abstract class OutputDocument extends PageCompilerDocument
 
         }
 
-        $this->path = LocalPath::createFromPath($this->cache->cache);
+
 
     }
 
@@ -137,7 +134,8 @@ abstract class OutputDocument extends PageCompilerDocument
 
     public function getCachePath(): Path
     {
-        return $this->path;
+        $path = $this->cache->cache;
+        return LocalPath::createFromPath($path);
     }
 
     public function shouldProcess(): bool

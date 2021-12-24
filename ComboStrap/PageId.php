@@ -67,10 +67,10 @@ class PageId extends MetadataText
             return $this;
         }
 
-        // no id for non-existing page
+        // null for non-existing page
         if (!FileSystems::exists($resource->getPath())) {
             if (PluginUtility::isDevOrTest()) {
-                LogUtility::msg("You can't ask a `page id` when the page does not exist", LogUtility::LVL_MSG_WARNING, $this->getCanonical());
+                LogUtility::msg("You can't ask a `page id`, the page ({$this->getResource()}) does not exist", LogUtility::LVL_MSG_INFO, $this->getCanonical());
             }
             parent::buildFromStoreValue($value);
             return $this;

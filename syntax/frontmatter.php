@@ -327,7 +327,7 @@ EOF;
              * Rare case, we delete all mutable meta if present
              */
             $frontmatterData = $frontMatterStore->getData();
-            if (sizeof($frontmatterData) === 0) {
+            if ($frontmatterData !== null && sizeof($frontmatterData) === 0) {
                 global $ID;
                 $meta = p_read_metadata($ID);
                 foreach (Metadata::MUTABLE_METADATA as $metaKey) {

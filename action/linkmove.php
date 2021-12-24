@@ -10,6 +10,7 @@ use ComboStrap\File;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
+use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PageId;
 use ComboStrap\PluginUtility;
@@ -56,6 +57,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          * To rewrite the page meta in the database
          */
         $controller->register_hook('PLUGIN_MOVE_PAGE_RENAME', 'BEFORE', $this, 'handle_rename_before', array());
+        $controller->register_hook('PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this, 'handle_rename_after', array());
 
         /**
          * To rewrite the link
@@ -124,14 +126,14 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
          * src_id ⇒ string – the original ID of the page
          * dst_id ⇒ string – the new ID of the page
          */
-        $id = $event->data["src_id"];
+        $sourceId = $event->data["src_id"];
         $targetId = $event->data["dst_id"];
         try {
 
             /**
              * Update the dokuwiki id and path
              */
-            $databasePage = DatabasePage::createFromDokuWikiId($id);
+            $databasePage = DatabasePage::createFromDokuWikiId($sourceId);
             if (!$databasePage->exists()) {
                 return;
             }
@@ -140,22 +142,26 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             /**
              * Check page id
              */
-            $page = Page::createPageFromId($targetId);
-            $pageIdDefaultStore = PageId::createForPage($page);
+            $targetPage = Page::createPageFromId($targetId);
+            $targetPageId = PageId::createForPage($targetPage);
+            $targetPageIdValue = $targetPageId->getValueFromStore();
+            $databasePageIdValue = $databasePage->getPageId();
 
-            $pageIdDatabase = $databasePage->getPageId();
-            if($pageIdDatabase!==$pageIdDefaultStore->getValue()){
-                $pageIdDefaultStore->setValueForce($pageIdDefaultStore->getValue());
+            if ($databasePageIdValue !== $targetPageIdValue) {
+                $targetPageId->setValueForce($targetPageIdValue);
             }
 
             /**
              * Add the alias
              */
-            Aliases::createForPage($page)
-                ->addAlias($id)
+            Aliases::createForPage($targetPage)
+                ->addAlias($sourceId)
+                ->setWriteStore(MetadataDokuWikiStore::class)
                 ->sendToWriteStore()
-                ->setReadStore(MetadataDbStore::createForPage())
-                ->sendToWriteStore();
+                ->persist()
+                ->setReadStore(MetadataDbStore::class)
+                ->sendToWriteStore()
+                ->persist();
 
 
         } catch (Exception $exception) {

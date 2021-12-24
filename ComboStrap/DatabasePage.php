@@ -351,7 +351,7 @@ class DatabasePage
 
         // Do we have a page attached to this page id
         $pageId = $page->getPageId();
-        if ($pageId != null) {
+        if ($pageId !== null) {
             $row = $this->getDatabaseRowFromPageId($pageId);
             if ($row !== null) {
                 return $row;
@@ -651,7 +651,9 @@ class DatabasePage
         if ($this->page != null) {
             $this->page->rebuild();
             $row = $this->getDatabaseRowFromPage($this->page);
-            $this->buildDatabaseObjectFields($row);
+            if($row!==null) {
+                $this->buildDatabaseObjectFields($row);
+            }
         }
         return $this;
 

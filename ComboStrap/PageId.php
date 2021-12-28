@@ -81,16 +81,15 @@ class PageId extends MetadataText
         // The page Id can be into the frontmatter
         // if the instructions are old, render them to parse the frontmatter
         // frontmatter is the first element that is processed during a run
-        if (!\action_plugin_combo_parser::isParserRunning()) {
-            if ($resource->getInstructionsDocument()->shouldProcess()) {
-                $resource->getInstructionsDocument()->process();
-                $metadataFileSystemStore->reset(); // the data may have changed
-                $value = $metadataFileSystemStore->get($this);
-                if ($value !== null) {
-                    parent::buildFromStoreValue($value);
-                    return $this;
-                }
+        try {
+            $frontmatter = MetadataFrontmatterStore::createFromPage($resource);
+            $value = $frontmatter->getFromPersistentName(self::getPersistentName());
+            if ($value !== null) {
+                return $value;
             }
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while reading the frontmatter");
+            return $this;
         }
 
         // Value is still null, generate and store
@@ -100,7 +99,7 @@ class PageId extends MetadataText
         try {
             $metadataFileSystemStore->set($this);
         } catch (ExceptionCombo $e) {
-            throw new ExceptionComboRuntime("Unable to persist the generated page id", $this->getCanonical(), 0, $e);
+            LogUtility::msg("Unable to persist the generated page id");
         }
 
         return $this;
@@ -223,7 +222,8 @@ class PageId extends MetadataText
             }
         } else {
             if (PluginUtility::isDevOrTest()) {
-                throw new ExceptionComboRuntime("Forcing of the page id should not happen", $this->getCanonical());
+                // this should never happened (exception in test/dev)
+                throw new ExceptionComboRuntime("Forcing of the page id should not happen in dev/test", $this->getCanonical());
             }
         }
         return parent::setValue($value);

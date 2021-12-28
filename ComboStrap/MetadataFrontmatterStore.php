@@ -12,15 +12,29 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     const NAME = "frontmatter";
     const CANONICAL = self::NAME;
 
+    /**
+     * @var bool Do we have a frontmatter on the page
+     */
+    private $isPresent = false;
+    /**
+     * @var string
+     */
+    private $contentWithoutFrontMatter;
+
+
+    public function isPresent(): bool
+    {
+        return $this->isPresent;
+    }
 
     /**
      * MetadataFrontmatterStore constructor.
      * @param ResourceCombo $page
-     * @param array $data
+     * @param array|null $data
      */
-    public function __construct(ResourceCombo $page, array $data)
+    public function __construct(ResourceCombo $page, array $data = null)
     {
-        parent::__construct($page,$data);
+        parent::__construct($page, $data);
     }
 
     /**
@@ -64,9 +78,9 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     /**
      * @throws ExceptionCombo
      */
-    public static function createFromFrontmatter($page, $frontmatter = null): MetadataFrontmatterStore
+    public static function createFromFrontmatterString($page, $frontmatter = null): MetadataFrontmatterStore
     {
-        if($frontmatter===null){
+        if ($frontmatter === null) {
             return new MetadataFrontmatterStore($page, []);
         }
         $jsonArray = self::frontMatterMatchToAssociativeArray($frontmatter);
@@ -76,7 +90,49 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
         return new MetadataFrontmatterStore($page, $jsonArray);
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
+    public static function createFromPage(Page $page): MetadataFrontmatterStore
+    {
+        $content = FileSystems::getContent($page->getPath());
+        $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
+        if (strpos($content, $frontMatterStartTag) === 0) {
 
+            /**
+             * Extract the actual values
+             */
+            $pattern = syntax_plugin_combo_frontmatter::PATTERN;
+            $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
+
+            /**
+             * The split normally returns an array
+             * where the first element is empty followed by the frontmatter
+             */
+            $emptyString = array_shift($split);
+            if (!empty($emptyString)) {
+                throw new ExceptionCombo("The frontmatter is not the first element");
+            }
+
+            $frontMatterMatch = array_shift($split);
+            /**
+             * Building the document again
+             */
+            $contentWithoutFrontMatter = "";
+            while (($element = array_shift($split)) != null) {
+                $contentWithoutFrontMatter .= $element;
+            }
+
+            return MetadataFrontmatterStore::createFromFrontmatterString($page, $frontMatterMatch)
+                ->setIsPresent(true)
+                ->setContentWithoutFrontMatter($contentWithoutFrontMatter);
+
+        }
+        return (new MetadataFrontmatterStore($page))
+            ->setIsPresent(false)
+            ->setContentWithoutFrontMatter($content);
+
+    }
 
 
     public function __toString()
@@ -216,8 +272,6 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     }
 
 
-
-
     public function toFrontmatterString(): string
     {
         $frontmatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
@@ -235,7 +289,38 @@ EOF;
 
     }
 
+    private function setIsPresent(bool $bool): MetadataFrontmatterStore
+    {
+        $this->isPresent = $bool;
+        return $this;
+    }
 
+    public function persist()
+    {
+        if ($this->contentWithoutFrontMatter === null) {
+            LogUtility::msg("The content without frontmatter should have been set. Did you you use the createFromPage constructor");
+            return $this;
+        }
+        $targetFrontMatterJsonString = $this->toFrontmatterString();
+
+        /**
+         * Build the new document
+         */
+        $newPageContent = <<<EOF
+$targetFrontMatterJsonString$this->contentWithoutFrontMatter
+EOF;
+        $resourceCombo = $this->getResource();
+        if ($resourceCombo instanceof Page) {
+            $resourceCombo->upsertContent($newPageContent, "Metadata frontmatter store upsert");
+        }
+        return $this;
+    }
+
+    private function setContentWithoutFrontMatter(string $contentWithoutFrontMatter): MetadataFrontmatterStore
+    {
+        $this->contentWithoutFrontMatter = $contentWithoutFrontMatter;
+        return $this;
+    }
 
 
 }

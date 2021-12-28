@@ -13,6 +13,11 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 {
 
 
+    /**
+     * @var bool
+     */
+    protected $hasChanged = false;
+
     protected $data;
 
     /**
@@ -22,9 +27,11 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
      */
     public function __construct(ResourceCombo $page, $data = null)
     {
-        foreach ($data as $key => $value) {
-            $key = $this->toNormalizedKey($key);
-            $this->data[$key] = $value;
+        if($data!==null) {
+            foreach ($data as $key => $value) {
+                $key = $this->toNormalizedKey($key);
+                $this->data[$key] = $value;
+            }
         }
         parent::__construct($page);
     }
@@ -33,7 +40,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     public function set(Metadata $metadata)
     {
         $this->checkResource($metadata->getResource());
-        $this->data[$metadata::getPersistentName()] = $metadata->toStoreValue();
+        $this->setFromPersistentName($metadata::getPersistentName(), $metadata->toStoreValue());
     }
 
     public function get(Metadata $metadata, $default = null)
@@ -90,8 +97,14 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     public function setFromPersistentName(string $name, $value)
     {
+        $actualValue = $this->data[$name];
+        if ($actualValue !== $value) {
+            $this->hasChanged = true;
+        }
+
         $name = $this->toNormalizedKey($name);
         if ($value === null || $value === "") {
+            // remove
             unset($this->data[$name]);
             return;
         }
@@ -108,7 +121,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     public function remove(Metadata $metadata): MetadataSingleArrayStore
     {
         $this->checkResource($metadata->getResource());
-        unset($this->data[$metadata->getName()]);
+        $this->setFromPersistentName($metadata->getName(), null);
         return $this;
     }
 
@@ -124,7 +137,18 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
      */
     public function setData($data)
     {
+        if ($data !== $this->data) {
+            $this->hasChanged = true;
+        }
         $this->data = $data;
+    }
+
+    /**
+     * @return bool - true if the data has changed
+     */
+    public function hasStateChanged(): bool
+    {
+        return $this->hasChanged;
     }
 
 }

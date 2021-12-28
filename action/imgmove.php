@@ -129,7 +129,7 @@ class action_plugin_combo_imgmove extends DokuWiki_Action_Plugin
          */
         $page = Page::createPageFromId("move-fake-id");
         try {
-            $metadataFrontmatterStore = MetadataFrontmatterStore::createFromFrontmatter($page, $match);
+            $metadataFrontmatterStore = MetadataFrontmatterStore::createFromFrontmatterString($page, $match);
         } catch (ExceptionCombo $e) {
             LogUtility::msg("The frontmatter could not be loaded. " . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
             return $match;

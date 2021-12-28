@@ -13,8 +13,8 @@ use dokuwiki\Extension\Event;
  *
  * It mimics an in-memory store where data are
  *      * read at the store creation
- *      * refreshed when the metadata render runs (Ie dokuwiki modifies the metadata files this way) {@link MetadataDokuWikiStore::renderAndPersist()}
- *      * written immediately on the disk (few write)
+ *      * refreshed when the metadata render runs (See {@link  \action_plugin_combo_metasync}) (Ie dokuwiki modifies the metadata files this way) {@link MetadataDokuWikiStore::renderAndPersist()}
+ *      * written immediately on the disk (few write) with the {@link p_set_metadata()}
  *
  * Why ?
  * Php is a CGI script meaning that it starts and end for each request
@@ -98,7 +98,6 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         return $metadataStore;
 
     }
-
 
 
     /**
@@ -189,7 +188,10 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
     public function getData(): ?array
     {
-        if ($this->data === null) {
+        if (
+            $this->data === null
+            || sizeof($this->data[self::PERSISTENT_METADATA]) === 0 // move
+        ) {
             $this->data = p_read_metadata($this->getResource()->getDokuwikiId());
         }
         return parent::getData();

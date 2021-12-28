@@ -148,6 +148,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             $databasePageIdValue = $databasePage->getPageId();
 
             if ($databasePageIdValue !== $targetPageIdValue) {
+                // this should never happened in test/dev
                 $targetPageId->setValueForce($targetPageIdValue);
             }
 

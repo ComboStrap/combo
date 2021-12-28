@@ -105,81 +105,73 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
          * Default update value for the frontmatter
          */
         $updateFrontMatter = PluginUtility::getConfValue(syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
-        $originalFrontMatter = null;
 
         /**
          * If a frontmatter exists already, we update it
          */
-        $content = FileSystems::getContent($page->getPath());
-        $frontMatterStartTag = syntax_plugin_combo_frontmatter::START_TAG;
-        if (strpos($content, $frontMatterStartTag) === 0) {
-
-            /**
-             * We update it
-             */
-            $updateFrontMatter = 1;
-
-            /**
-             * Extract the actual values
-             */
-            $pattern = syntax_plugin_combo_frontmatter::PATTERN;
-            $split = preg_split("/($pattern)/ms", $content, 2, PREG_SPLIT_DELIM_CAPTURE);
-
-            /**
-             * The split normally returns an array
-             * where the first element is empty followed by the frontmatter
-             */
-            $emptyString = array_shift($split);
-            if (!empty($emptyString)) {
-                return Message::createErrorMessage("The frontmatter is not the first element")
-                    ->setStatus(self::UPDATE_EXIT_CODE_ERROR);
-            }
-
-            $frontMatterMatch = array_shift($split);
-            try {
-                $originalFrontMatter = MetadataFrontmatterStore::createFromFrontmatter($page, $frontMatterMatch);
-            } catch (ExceptionCombo $e) {
-                return Message::createErrorMessage("The existing frontmatter is not valid");
-            }
-
-
-            /**
-             * Building the document again
-             */
-            $contentWithoutFrontMatter = "";
-            while (($element = array_shift($split)) != null) {
-                $contentWithoutFrontMatter .= $element;
-            }
-        } else {
-            $contentWithoutFrontMatter = DOKU_LF . $content;
-            try {
-                $originalFrontMatter = MetadataFrontmatterStore::createFromFrontmatter($page);
-            } catch (ExceptionCombo $e) {
-                // no string, the frontmatter is good
-            }
+        try {
+            $originalFrontMatter = MetadataFrontmatterStore::createFromPage($page);
+        } catch (ExceptionCombo $e) {
+            return Message::createInfoMessage($e->getMessage())
+                ->setStatus(self::UPDATE_EXIT_CODE_ERROR);
         }
+        if ($originalFrontMatter->isPresent()) {
+            $updateFrontMatter = 1;
+        }
+
 
         if ($updateFrontMatter === 0) {
             return Message::createInfoMessage("The frontmatter is not enabled")
                 ->setStatus(self::UPDATE_EXIT_CODE_NOT_ENABLED);
         }
 
+
+        try {
+            self::sync($originalFrontMatter);
+        } catch (ExceptionCombo $e) {
+            return Message::createInfoMessage($e->getMessage())
+                ->setStatus(self::UPDATE_EXIT_CODE_ERROR);
+        }
+
+
         /**
-         * Page Id special
+         * Same ?
          */
+        if (!$originalFrontMatter->hasStateChanged()) {
+            return Message::createInfoMessage("The frontmatter are the same (no update)")
+                ->setStatus(self::UPDATE_EXIT_CODE_NOT_CHANGED);
+        }
+
+        $originalFrontMatter->persist();
+
+        return Message::createInfoMessage("The frontmatter was changed")
+            ->setStatus(self::UPDATE_EXIT_CODE_DONE);
+
+    }
+
+    /**
+     * @param MetadataFrontmatterStore $frontmatter
+     * @throws ExceptionCombo
+     */
+    private static function sync(MetadataFrontmatterStore $frontmatter)
+    {
+
+        /**
+         * Resource Id special
+         */
+        $guidObject = $frontmatter->getResource()->getUidObject();
         if (
-            !$originalFrontMatter->hasProperty(PageId::PROPERTY_NAME)
+            !$frontmatter->hasProperty($guidObject::getPersistentName())
             &&
-            $page->getPageId() !== null
+            $guidObject->getValue() !== null
         ) {
-            $originalFrontMatter->setFromPersistentName(PageId::PROPERTY_NAME, $page->getPageId());
+            $frontmatter->setFromPersistentName($guidObject::getPersistentName(), $guidObject->getValue());
         }
 
         /**
          * Update the mutable data
          * (ie delete insert)
          */
-        $hasChanged = false;
         foreach (Metadata::MUTABLE_METADATA as $metaKey) {
             $metadata = Metadata::getForName($metaKey);
             if ($metadata === null) {
@@ -190,53 +182,24 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                     LogUtility::msg($msg);
                 }
             }
-            $metadata->setResource($page);
+            $metadata
+                ->setResource($frontmatter->getResource())
+                ->setReadStore(MetadataDokuWikiStore::class)
+                ->setWriteStore($frontmatter);
 
-            $sourceValue = $originalFrontMatter->get($metadata);
+            $sourceValue = $frontmatter->get($metadata);
             $targetValue = $metadata->getValue();
             $targetValueShouldBeStore = !in_array($targetValue, [$metadata->getDefaultValue(), null]);
             if ($targetValueShouldBeStore) {
                 if ($sourceValue !== $targetValue) {
-                    $hasChanged = true;
-                    try {
-                        $originalFrontMatter->set($metadata);
-                    } catch (ExceptionCombo $e) {
-                        return Message::createInfoMessage($e->getMessage())
-                            ->setStatus(self::UPDATE_EXIT_CODE_ERROR);
-                    }
+                    $frontmatter->set($metadata);
                 }
             } else {
                 if ($sourceValue !== null) {
-                    $hasChanged = true;
-                    $originalFrontMatter->remove($metadata);
+                    $frontmatter->remove($metadata);
                 }
             }
         }
-
-
-        /**
-         * Same ?
-         */
-        if (!$hasChanged) {
-            return Message::createInfoMessage("The frontmatter are the same (no update)")
-                ->setStatus(self::UPDATE_EXIT_CODE_NOT_CHANGED);
-        }
-
-
-        $targetFrontMatterJsonString = $originalFrontMatter->toFrontmatterString();
-
-
-        /**
-         * Build the new document
-         */
-        $newPageContent = <<<EOF
-$targetFrontMatterJsonString$contentWithoutFrontMatter
-EOF;
-        $page->upsertContent($newPageContent, "Metadata manager upsert");
-
-        return Message::createInfoMessage("The frontmatter was changed")
-            ->setStatus(self::UPDATE_EXIT_CODE_DONE);
-
     }
 
 
@@ -313,7 +276,7 @@ EOF;
             $result = [];
             $page = Page::createPageFromGlobalDokuwikiId();
             try {
-                $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatter($page, $match);
+                $frontMatterStore = MetadataFrontmatterStore::createFromFrontmatterString($page, $match);
                 $result[self::STATUS] = self::PARSING_STATE_SUCCESSFUL;
             } catch (ExceptionCombo $e) {
                 // Decode problem

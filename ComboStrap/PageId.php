@@ -76,7 +76,7 @@ class PageId extends MetadataText
             return $this;
         }
 
-        $metadataFileSystemStore = MetadataDokuWikiStore::createFromResource($resource);
+        $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
 
         // The page Id can be into the frontmatter
         // if the instructions are old, render them to parse the frontmatter
@@ -259,7 +259,7 @@ class PageId extends MetadataText
              */
             $metadataStore = $this->getReadStore();
             if (!($metadataStore instanceof MetadataDokuWikiStore)) {
-                $store = MetadataDokuWikiStore::createFromResource($this->getResource());
+                $store = MetadataDokuWikiStore::getOrCreateFromResource($this->getResource());
                 $fsPageId = PageId::createForPage($this->getResource())
                     ->setReadStore($store);
                 $value = $fsPageId->getValue();

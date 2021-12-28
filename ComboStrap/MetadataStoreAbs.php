@@ -22,8 +22,8 @@ abstract class MetadataStoreAbs implements MetadataStore
 
     protected function checkResource(ResourceCombo $requestedResource)
     {
-        if ($this->page !== $requestedResource) {
-            throw new ExceptionComboRuntime("The page ($requestedResource) is unknown. We got data for the page ($this->page)", self::CANONICAL);
+        if ($this->page->getPath()->toString() !== $requestedResource->getPath()->toString()) {
+            throw new ExceptionComboRuntime("The page ($requestedResource) is unknown. We got data for the page ($this->page)", $this->getCanonical());
         }
     }
 
@@ -46,7 +46,7 @@ abstract class MetadataStoreAbs implements MetadataStore
         if ($resource === null) {
             throw new ExceptionComboRuntime("The resource is null. You can't implement a store without a resource.");
         }
-        return $readStore::createFromResource($resource);
+        return $readStore::getOrCreateFromResource($resource);
 
     }
 

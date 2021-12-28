@@ -65,8 +65,8 @@ class MetaManagerForm
     public function __construct($page)
     {
         $this->page = $page;
-        $this->sourceStore = MetadataDokuWikiStore::createFromResource($page);
-        $this->targetStore = MetadataFormDataStore::createFromResource($page);
+        $this->sourceStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
+        $this->targetStore = MetadataFormDataStore::getOrCreateFromResource($page);
     }
 
     public static function createForPage(Page $page): MetaManagerForm

@@ -2,7 +2,6 @@
 
 
 use ComboStrap\FileSystems;
-use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PageImages;

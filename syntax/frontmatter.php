@@ -345,7 +345,7 @@ EOF;
             /**
              * Sync
              */
-            $targetStore = MetadataDokuWikiStore::createFromResource($page);
+            $targetStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
             $transfer = MetadataStoreTransfer::createForPage($page)
                 ->fromStore($frontMatterStore)
                 ->toStore($targetStore)

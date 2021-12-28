@@ -231,8 +231,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private function handleManagerPost($event, Page $page, array $post)
     {
 
-        $formStore = MetadataFormDataStore::createFromResource($page, $post);
-        $targetStore = MetadataDokuWikiStore::createFromResource($page);
+        $formStore = MetadataFormDataStore::getOrCreateFromResource($page, $post);
+        $targetStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
 
         /**
          * Boolean form field (default values)
@@ -324,7 +324,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->sendMessage("Not Authorized (managers only)");
             return;
         }
-        $metadata = MetadataDokuWikiStore::createFromResource($page)->getData();
+        $metadata = MetadataDokuWikiStore::getOrCreateFromResource($page)->getData();
         $persistent = $metadata[MetadataDokuWikiStore::PERSISTENT_METADATA];
         ksort($persistent);
         $current = $metadata[MetadataDokuWikiStore::CURRENT_METADATA];
@@ -358,7 +358,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private function handleViewerPost(Doku_Event $event, Page $page, array $post)
     {
 
-        $meta = MetadataDokuWikiStore::createFromResource($page)
+        $meta = MetadataDokuWikiStore::getOrCreateFromResource($page)
             ->getData();
 
         /**

@@ -1961,7 +1961,7 @@ class Page extends ResourceComboAbs
     public function getReadStoreOrDefault(): MetadataStore
     {
         if ($this->readStore === null) {
-            $this->readStore = MetadataDokuWikiStore::createFromResource($this);
+            $this->readStore = MetadataDokuWikiStore::getOrCreateFromResource($this);
         }
         if (!($this->readStore instanceof MetadataStore)) {
             $this->readStore = MetadataStoreAbs::toMetadataStore($this->readStore, $this);

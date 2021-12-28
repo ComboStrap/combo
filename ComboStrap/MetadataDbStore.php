@@ -15,7 +15,7 @@ class MetadataDbStore extends MetadataStoreAbs
 {
 
 
-    static function createFromResource(ResourceCombo $resourceCombo): MetadataStore
+    static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
         return new MetadataDbStore($resourceCombo);
     }
@@ -47,7 +47,7 @@ class MetadataDbStore extends MetadataStoreAbs
         } else {
 
             $pageMetaFromFileSystem = Page::createPageFromQualifiedPath($resource->getPath()->toString());
-            $fsStore = MetadataDokuWikiStore::createFromResource($pageMetaFromFileSystem);
+            $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($pageMetaFromFileSystem);
             $pageMetaFromFileSystem->setReadStore($fsStore);
 
             $database = DatabasePage::createFromPageObject($pageMetaFromFileSystem);

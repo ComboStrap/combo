@@ -8,9 +8,26 @@ use dokuwiki\Extension\Event;
 /**
  * Class MetadataFileSystemStore
  * @package ComboStrap
- * The meta file system store
  *
- * Dokuwiki allows the creation of metadata via rendering {@link Page::renderMetadataAndFlush()}
+ * The meta file system store.
+ *
+ * It mimics an in-memory store where data are
+ *      * read at the store creation
+ *      * refreshed when the metadata render runs (Ie dokuwiki modifies the metadata files this way) {@link MetadataDokuWikiStore::renderAndPersist()}
+ *      * written immediately on the disk (few write)
+ *
+ * Why ?
+ * Php is a CGI script meaning that it starts and end for each request
+ * on the server.
+ * But in test, this is not the case, as the script starts for the first test
+ * and end with the last test.
+ *
+ * If the data store is local scoped, we get then a lot of inconsistency
+ *   - the data for one page is not the same than another
+ *   - the metadata object {@link PageId} (from {@link ResourceCombo::getUidObject()} may be null while it was created with another {@link Metadata} creating it twice
+ *
+ * This implementation has a cache object
+ *
  */
 class MetadataDokuWikiStore extends MetadataSingleArrayStore
 {
@@ -45,6 +62,12 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      */
     public const PAGE_METADATA_MUTATION_EVENT = "PAGE_METADATA_MUTATION_EVENT";
 
+    /**
+     *
+     * @var MetadataDokuWikiStore[] a cache of store
+     */
+    private static $storesByPage;
+
 
     /**
      * @return MetadataDokuWikiStore
@@ -55,19 +78,40 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
      *
      * The scope of the data will be then the store
      */
-    public static function createFromResource(ResourceCombo $resourceCombo): MetadataStore
+    public static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
+
+        $path = $resourceCombo->getPath()->toString();
+        if (isset(self::$storesByPage[$path])) {
+            return self::$storesByPage[$path];
+        }
+
         if (!($resourceCombo instanceof Page)) {
             LogUtility::msg("The resource is not a page. File System store supports only page resources");
             $data = null;
         } else {
             $data = p_read_metadata($resourceCombo->getDokuwikiId());
         }
-        return new MetadataDokuWikiStore($resourceCombo, $data);
+
+        $metadataStore = new MetadataDokuWikiStore($resourceCombo, $data);
+        self::$storesByPage[$path] = $metadataStore;
+        return $metadataStore;
+
+    }
+
+
+
+    /**
+     * @return MetadataDokuWikiStore[]
+     */
+    public static function getStores(): array
+    {
+        return self::$storesByPage;
     }
 
     public function set(Metadata $metadata)
     {
+
         $name = $metadata->getName();
         $persistentValue = $metadata->toStoreValue();
         $defaultValue = $metadata->toStoreDefaultValue();
@@ -127,10 +171,7 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
     {
 
         /**
-         * Metadata can be changed by other part of the dokuwiki
-         * framework, even cached in a global variable in {@link p_get_metadata()}
-         * We don't use a memory store then
-         * only the function of dokuwiki
+         * Done on set via the dokuwiki function
          */
 
     }
@@ -145,6 +186,15 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         $this->setFromWikiId($this->getResource()->getDokuwikiId(), $name, $value);
         return $this;
     }
+
+    public function getData(): ?array
+    {
+        if ($this->data === null) {
+            $this->data = p_read_metadata($this->getResource()->getDokuwikiId());
+        }
+        return parent::getData();
+    }
+
 
     /**
      * @param $name
@@ -289,13 +339,6 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         return "DokuMeta";
     }
 
-    /**
-     * Delete the memory data
-     */
-    public function reset()
-    {
-        $this->data = p_read_metadata($this->getResource()->getDokuWikiId());
-    }
 
     private function getFromWikiId($dokuwikiId, string $name, $default = null)
     {
@@ -309,6 +352,8 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          *
          * $METADATA_RENDERERS: A global cache variable where the persistent data is set
          * with {@link p_set_metadata()} and that you can't retrieve with {@link p_get_metadata()}
+         *
+         * This variable is unset at the end function of {@link p_render_metadata()}
          */
         global $METADATA_RENDERERS;
         $value = $METADATA_RENDERERS[$dokuwikiId][MetadataDokuWikiStore::PERSISTENT_METADATA][$name];

@@ -75,7 +75,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     public function reset()
     {
-        $this->data = [];
+        $this->data = null;
     }
 
     public function getFromPersistentName(string $name, $default = null)
@@ -115,6 +115,16 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
     private function toNormalizedKey(string $key): string
     {
         return trim($key);
+    }
+
+    /**
+     * Used to update the data from an other external process
+     * (ie metadata renderer)
+     * @param $data
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
     }
 
 }

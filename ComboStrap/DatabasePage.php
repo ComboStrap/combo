@@ -124,8 +124,8 @@ class DatabasePage
             (new References()),
             (new Aliases())
         ];
-        $fsStore = MetadataDokuWikiStore::createFromResource($this->page);
-        $dbStore = MetadataDbStore::createFromResource($this->page);
+        $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
+        $dbStore = MetadataDbStore::getOrCreateFromResource($this->page);
         foreach ($tabularMetadataToSync as $tabular) {
             $tabular
                 ->setResource($this->page)
@@ -666,8 +666,8 @@ class DatabasePage
      */
     private function getMetaRecord(): array
     {
-        $sourceStore = MetadataDokuWikiStore::createFromResource($this->page);
-        $targetStore = MetadataDbStore::createFromResource($this->page);
+        $sourceStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
+        $targetStore = MetadataDbStore::getOrCreateFromResource($this->page);
 
         $record = array(
             Canonical::PROPERTY_NAME,

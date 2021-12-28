@@ -89,5 +89,5 @@ interface MetadataStore
      * @param ResourceCombo $resourceCombo
      * @return MetadataStore
      */
-    static function createFromResource(ResourceCombo $resourceCombo): MetadataStore;
+    static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore;
 }

@@ -13,7 +13,7 @@ class MetadataFormDataStore extends MetadataSingleArrayStore
 {
 
 
-    public static function createFromResource(ResourceCombo $resourceCombo, array $formData = []): MetadataStore
+    public static function getOrCreateFromResource(ResourceCombo $resourceCombo, array $formData = []): MetadataStore
     {
         return new MetadataFormDataStore($resourceCombo, $formData);
     }

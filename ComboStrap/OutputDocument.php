@@ -142,10 +142,22 @@ abstract class OutputDocument extends PageCompilerDocument
     {
 
         /**
-         * Use cache should be always called because it trigger
-         * the event coupled to the cache (ie PARSER_CACHE_USE)
+         * The cache is stored by requested
+         * page scope
          */
-        return ($this->cache->useCache() === false);
+        global $ID;
+        $keep = $ID;
+        $ID = $this->getPage()->getPath()->getDokuwikiId();
+        try {
+            /**
+             * Use cache should be always called because it trigger
+             * the event coupled to the cache (ie PARSER_CACHE_USE)
+             */
+            return ($this->cache->useCache() === false);
+        } finally {
+            $ID = $keep;
+        }
+
 
 
     }

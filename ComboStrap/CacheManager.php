@@ -154,11 +154,26 @@ class CacheManager
         global $_REQUEST;
         $requestedPage = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
 
-        if ($requestedPage === null) {
-            LogUtility::msg("The requested page should be known to register a page cache result");
-            $requestedPage = "unknown";
+        if ($requestedPage !== null) {
+            return $requestedPage;
         }
-        return $requestedPage;
+
+        /**
+         * We are not on a HTTP request
+         * but may be on a {@link Page::renderMetadataAndFlush() metadata rendering request}
+         */
+        global $ID;
+        if ($ID !== null) {
+            return $ID;
+        }
+
+        LogUtility::msg("The requested page should be known to register a page cache result");
+        return "unknown";
+    }
+
+    public function isEmpty(): bool
+    {
+        return sizeof($this->cacheResults) === 0;
     }
 
 

@@ -257,9 +257,16 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
          */
         $dokuwikiId = $this->getResource()->getDokuwikiId();
         $actualMeta = $this->getData();
-        $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
-        p_save_metadata($dokuwikiId, $newMetadata);
-        $this->data = $newMetadata;
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = $dokuwikiId;
+            $newMetadata = p_render_metadata($dokuwikiId, $actualMeta);
+            p_save_metadata($dokuwikiId, $newMetadata);
+            $this->data = $newMetadata;
+        } finally {
+            $ID = $keep;
+        }
         return $this;
     }
 

@@ -114,10 +114,15 @@ class PageId extends MetadataText
 
         // Value is still null, generate and store
         $actualValue = self::generateUniquePageId();
-        $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
-        $metadataFileSystemStore->setFromPersistentName(self::getPersistentName(), $actualValue);
+        parent::buildFromStoreValue($actualValue);
+        try {
+            MetadataDokuWikiStore::getOrCreateFromResource($resource)
+                ->set($this);
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Unable to store the page id generated. Message:" . $e->getMessage());
+        }
 
-        return parent::buildFromStoreValue($actualValue);
+        return $this;
 
     }
 

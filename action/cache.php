@@ -156,7 +156,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
         $pageId = $data->page;
 
         /**
-         * For whatever reason, the cache file of XHMTL
+         * For whatever reason, the cache file of XHTML
          * may be empty - No error found on the web server or the log.
          *
          * We just delete it then.

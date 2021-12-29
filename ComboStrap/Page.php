@@ -696,7 +696,20 @@ class Page extends ResourceComboAbs
     public
     function addToIndex()
     {
-        idx_addPage($this->getPath()->getDokuwikiId());
+        /**
+         * Add to index check the metadata cache
+         * Because we log the cache at the requested page level, we need to
+         * set the global ID
+         */
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = $this->getPath()->getDokuwikiId();
+            idx_addPage($ID);
+        } finally {
+            $ID = $keep;
+        }
+
     }
 
     /**

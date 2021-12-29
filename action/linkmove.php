@@ -4,7 +4,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
 use ComboStrap\Aliases;
-use ComboStrap\DatabasePage;
+use ComboStrap\DatabasePageRow;
 use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\File;
 use ComboStrap\LinkUtility;
@@ -133,7 +133,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             /**
              * Update the dokuwiki id and path
              */
-            $databasePage = DatabasePage::createFromDokuWikiId($sourceId);
+            $databasePage = DatabasePageRow::createFromDokuWikiId($sourceId);
             if (!$databasePage->exists()) {
                 return;
             }

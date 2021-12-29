@@ -1,7 +1,7 @@
 <?php
 
 
-use ComboStrap\DatabasePage;
+use ComboStrap\DatabasePageRow;
 use ComboStrap\Event;
 use ComboStrap\Page;
 

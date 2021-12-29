@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../ComboStrap/PluginUtility.php');
 
 use ComboStrap\Alias;
 use ComboStrap\AliasType;
-use ComboStrap\DatabasePage;
+use ComboStrap\DatabasePageRow;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\HttpResponse;
@@ -333,7 +333,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         if ($shortPageId !== null) {
             $pageId = PageUrlPath::decodePageId($shortPageId);
             if ($targetPage->getParentPage() === null && $pageId !== null) {
-                $page = DatabasePage::createFromPageId($pageId)->getPage();
+                $page = DatabasePageRow::createFromPageId($pageId)->getPage();
                 if ($page !== null && $page->exists()) {
                     $this->executePermanentRedirect($page->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK);
                 }
@@ -346,13 +346,13 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
             if (
                 $pageId !== null
             ) {
-                $page = DatabasePage::createFromPageIdAbbr($pageId)->getPage();
+                $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getPage();
                 if ($page === null) {
                     // or the length of the abbr has changed
-                    $databasePage = new DatabasePage();
+                    $databasePage = new DatabasePageRow();
                     $row = $databasePage->getDatabaseRowFromAttribute("substr(" . PageId::PROPERTY_NAME . ", 1, " . strlen($pageId) . ")", $pageId);
                     if ($row != null) {
-                        $databasePage->buildDatabaseObjectFields($row);
+                        $databasePage->setRow($row);
                         $page = $databasePage->getPage();
                     }
                 }
@@ -390,7 +390,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Identifier is a Canonical ?
          */
-        $databasePage = DatabasePage::createFromCanonical($identifier);
+        $databasePage = DatabasePageRow::createFromCanonical($identifier);
         $targetPage = $databasePage->getPage();
         if ($targetPage !== null && $targetPage->exists()) {
             $res = $this->executePermanentRedirect($targetPage->getDokuwikiId(), self::TARGET_ORIGIN_CANONICAL);
@@ -402,7 +402,7 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
         /**
          * Identifier is an alias
          */
-        $targetPage = DatabasePage::createFromAlias($identifier)->getPage();
+        $targetPage = DatabasePageRow::createFromAlias($identifier)->getPage();
         if (
             $targetPage !== null
             && $targetPage->exists()

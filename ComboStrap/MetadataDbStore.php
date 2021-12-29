@@ -14,6 +14,10 @@ use http\Exception\RuntimeException;
 class MetadataDbStore extends MetadataStoreAbs
 {
 
+    /**
+     * @var DatabasePageRow[]
+     */
+    private static $dbRows = [];
 
     static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
@@ -50,14 +54,14 @@ class MetadataDbStore extends MetadataStoreAbs
             $fsStore = MetadataDokuWikiStore::getOrCreateFromResource($pageMetaFromFileSystem);
             $pageMetaFromFileSystem->setReadStore($fsStore);
 
-            $database = DatabasePage::createFromPageObject($pageMetaFromFileSystem);
+            $database = DatabasePageRow::createFromPageObject($pageMetaFromFileSystem);
             if (!$database->exists()) {
                 return null;
             }
             $value = $database->getFromRow($metadata->getName());
             if ($value === null) {
                 /**
-                 * An attribute should be added to {@link DatabasePage::PAGE_BUILD_ATTRIBUTES}
+                 * An attribute should be added to {@link DatabasePageRow::PAGE_BUILD_ATTRIBUTES}
                  * or in the table
                  */
                 throw new ExceptionComboRuntime("The metadata ($metadata) was not found in the returned database row.", self::CANONICAL);
@@ -107,7 +111,7 @@ class MetadataDbStore extends MetadataStoreAbs
 
     /**
      * @param array $row
-     * @param Page $resource
+     * @param Metadata $metadata
      * @return void
      */
     private function addRow(array $row, Metadata $metadata): void
@@ -245,7 +249,12 @@ EOF;
 
     public function getFromPersistentName(string $name, $default = null)
     {
-        throw new ExceptionComboRuntime("Not implemented");
+        $row = $this->getDatabaseRow();
+        $value = $row->getFromRow($name);
+        if ($value !== null) {
+            return $value;
+        }
+        return $default;
     }
 
     public function setFromPersistentName(string $name, $value)
@@ -253,10 +262,6 @@ EOF;
         throw new ExceptionComboRuntime("Not implemented");
     }
 
-    public function getResource(): ResourceCombo
-    {
-        return $this->resource;
-    }
 
     private function getTableName(Metadata $metadata): string
     {
@@ -267,6 +272,21 @@ EOF;
     public function getCanonical(): string
     {
         return "database";
+    }
+
+    private function getDatabaseRow(): DatabasePageRow
+    {
+        $mapKey = $this->getResource()->getPath()->toString();
+        $row = self::$dbRows[$mapKey];
+        if ($row === null) {
+            $page = $this->getResource();
+            if (!($page instanceof Page)) {
+                throw new ExceptionComboRuntime("The resource should be a page, {$page->getType()} is not supported");
+            }
+            $row = DatabasePageRow::createFromPageObject($page);
+            self::$dbRows[$mapKey] = $row;
+        }
+        return $row;
     }
 
 

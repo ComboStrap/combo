@@ -1,6 +1,6 @@
 <?php
 
-use ComboStrap\DatabasePage;
+use ComboStrap\DatabasePageRow;
 use ComboStrap\FileSystems;
 use ComboStrap\Page;
 use ComboStrap\PageUrlPath;
@@ -43,7 +43,7 @@ class action_plugin_combo_metalang extends DokuWiki_Action_Plugin
             // Is it a permanent link
             $pageId = PageUrlPath::decodePageId($page->getPath()->getLastName());
             if ($pageId !== null) {
-                $page = DatabasePage::createFromPageIdAbbr($pageId)->getPage();
+                $page = DatabasePageRow::createFromPageIdAbbr($pageId)->getPage();
                 if ($page === null) {
                     return;
                 }

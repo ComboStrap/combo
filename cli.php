@@ -12,7 +12,7 @@
 if (!defined('DOKU_INC')) die();
 
 use ComboStrap\AnalyticsDocument;
-use ComboStrap\DatabasePage;
+use ComboStrap\DatabasePageRow;
 use ComboStrap\Event;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;

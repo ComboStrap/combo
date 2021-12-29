@@ -108,6 +108,14 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         return self::$storesByPage;
     }
 
+    /**
+     * Delete the in-memory data store
+     */
+    public static function resetAll()
+    {
+        self::$storesByPage = [];
+    }
+
     public function set(Metadata $metadata)
     {
 

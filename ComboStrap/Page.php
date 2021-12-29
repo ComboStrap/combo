@@ -60,7 +60,7 @@ class Page extends ResourceComboAbs
      */
     private $requestedId;
     /**
-     * @var DatabasePage
+     * @var DatabasePageRow
      */
     private $databasePage;
     /**
@@ -1222,10 +1222,10 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function getDatabasePage(): DatabasePage
+    function getDatabasePage(): DatabasePageRow
     {
         if ($this->databasePage == null) {
-            $this->databasePage = DatabasePage::createFromPageObject($this);
+            $this->databasePage = DatabasePageRow::createFromPageObject($this);
         }
         return $this->databasePage;
     }
@@ -1704,7 +1704,7 @@ class Page extends ResourceComboAbs
     }
 
     public
-    function setDatabasePage(DatabasePage $databasePage): Page
+    function setDatabasePage(DatabasePageRow $databasePage): Page
     {
         $this->databasePage = $databasePage;
         return $this;

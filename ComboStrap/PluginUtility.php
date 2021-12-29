@@ -79,7 +79,7 @@ require_once(__DIR__ . '/Canonical.php');
 require_once(__DIR__ . '/ColorUtility.php');
 require_once(__DIR__ . '/ConditionalValue.php');
 require_once(__DIR__ . '/Cron.php');
-require_once(__DIR__ . '/DatabasePage.php');
+require_once(__DIR__ . '/DatabasePageRow.php');
 require_once(__DIR__ . '/DataType.php');
 require_once(__DIR__ . '/Dimension.php');
 require_once(__DIR__ . '/DisqusIdentifier.php');

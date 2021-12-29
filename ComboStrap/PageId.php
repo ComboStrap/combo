@@ -56,8 +56,7 @@ class PageId extends MetadataText
     {
 
         if ($value !== null) {
-            parent::buildFromStoreValue($value);
-            return $this;
+            return parent::buildFromStoreValue($value);
         }
 
 
@@ -72,11 +71,23 @@ class PageId extends MetadataText
             if (PluginUtility::isDevOrTest()) {
                 LogUtility::msg("You can't ask a `page id`, the page ({$this->getResource()}) does not exist", LogUtility::LVL_MSG_INFO, $this->getCanonical());
             }
-            parent::buildFromStoreValue($value);
-            return $this;
+            return parent::buildFromStoreValue($value);
         }
 
-        $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
+
+        /**
+         * If the store is not the file system store
+         * check that it does not exist already on the file system
+         * and save it
+         */
+        $readStore = $this->getReadStore();
+        if (!($readStore instanceof MetadataDokuWikiStore)) {
+            $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
+            $value = $metadataFileSystemStore->getFromPersistentName(self::getPersistentName());
+            if ($value !== null) {
+                return parent::buildFromStoreValue($value);
+            }
+        }
 
         // The page Id can be into the frontmatter
         // if the instructions are old, render them to parse the frontmatter
@@ -85,24 +96,33 @@ class PageId extends MetadataText
             $frontmatter = MetadataFrontmatterStore::createFromPage($resource);
             $value = $frontmatter->getFromPersistentName(self::getPersistentName());
             if ($value !== null) {
-                return $value;
+                return parent::buildFromStoreValue($value);
             }
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Error while reading the frontmatter");
             return $this;
         }
 
+        // datastore
+        if(!($readStore instanceof MetadataDbStore)){
+            $dbStore = MetadataDbStore::getOrCreateFromResource($resource);
+            $value = $dbStore->getFromPersistentName(self::getPersistentName());
+            if ($value !== null) {
+                return parent::buildFromStoreValue($value);
+            }
+        }
+
         // Value is still null, generate and store
         $actualValue = self::generateUniquePageId();
-        parent::buildFromStoreValue($actualValue);
-
         try {
+            $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
             $metadataFileSystemStore->set($this);
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Unable to persist the generated page id");
+            return $this;
         }
 
-        return $this;
+        return parent::buildFromStoreValue($actualValue);
 
     }
 
@@ -159,7 +179,7 @@ class PageId extends MetadataText
      * at the database level
      *
      * Return a page id collision free
-     * for the page already {@link DatabasePage::replicatePage() replicated}
+     * for the page already {@link DatabasePageRow::replicatePage() replicated}
      *
      * https://zelark.github.io/nano-id-cc/
      *
@@ -176,12 +196,12 @@ class PageId extends MetadataText
     {
         /**
          * Collision detection happens just after the use of this function on the
-         * creation of the {@link DatabasePage::getDatabaseRowFromPage() databasePage object}
+         * creation of the {@link DatabasePageRow::getDatabaseRowFromPage() databasePage object}
          *
          */
         $nanoIdClient = new Client();
         $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
-        while (DatabasePage::createFromPageId($pageId)->exists()) {
+        while (DatabasePageRow::createFromPageId($pageId)->exists()) {
             $pageId = ($nanoIdClient)->formattedId(self::PAGE_ID_ALPHABET, self::PAGE_ID_LENGTH);
         }
         return $pageId;
@@ -246,39 +266,6 @@ class PageId extends MetadataText
 
     }
 
-    private function generate(): PageId
-    {
-        try {
-
-            $actualValue = self::generateUniquePageId();
-
-            /**
-             * If the store is not the file system store
-             * check that it does not exist already on the file system
-             * and save it
-             */
-            $metadataStore = $this->getReadStore();
-            if (!($metadataStore instanceof MetadataDokuWikiStore)) {
-                $store = MetadataDokuWikiStore::getOrCreateFromResource($this->getResource());
-                $fsPageId = PageId::createForPage($this->getResource())
-                    ->setReadStore($store);
-                $value = $fsPageId->getValue();
-                if ($value !== null) {
-                    throw new ExceptionComboRuntime("The file system metadata store has already the page id ($value) for the page ({$this->getResource()}");
-                }
-                $fsPageId->setValue($value)
-                    ->persist();
-            }
-
-            $this->setValue($actualValue)
-                ->persist();
-
-        } catch (ExceptionCombo $e) {
-            throw new RuntimeException($e);
-        }
-        return $this;
-
-    }
 
     public function getValueFromStore()
     {

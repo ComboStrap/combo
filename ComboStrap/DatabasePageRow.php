@@ -15,14 +15,14 @@ use ReplicationDate;
  * The database can also be seen as a {@link MetadataStore}
  * and an {@link Index}
  */
-class DatabasePage
+class DatabasePageRow
 {
 
 
     /**
      * The list of attributes that are set
      * at build time
-     * used in the build functions such as {@link DatabasePage::getDatabaseRowFromPage()}
+     * used in the build functions such as {@link DatabasePageRow::getDatabaseRowFromPage()}
      * to build the sql
      */
     private const PAGE_BUILD_ATTRIBUTES =
@@ -95,7 +95,7 @@ class DatabasePage
      *
      * @throws ExceptionCombo
      */
-    public function replicate(): DatabasePage
+    public function replicate(): DatabasePageRow
     {
         if ($this->sqlite === null) {
             throw new ExceptionCombo("Sqlite is mandatory for database replication");
@@ -175,33 +175,33 @@ class DatabasePage
         $metaRecord[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
     }
 
-    public static function createFromPageId(string $pageId): DatabasePage
+    public static function createFromPageId(string $pageId): DatabasePageRow
     {
-        $databasePage = new DatabasePage();
+        $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromPageId($pageId);
         if ($row != null) {
-            $databasePage->buildDatabaseObjectFields($row);
+            $databasePage->setRow($row);
         }
         return $databasePage;
     }
 
-    public static function createFromPageObject(Page $page): DatabasePage
+    public static function createFromPageObject(Page $page): DatabasePageRow
     {
 
-        $databasePage = new DatabasePage();
+        $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromPage($page);
         if ($row !== null) {
-            $databasePage->buildDatabaseObjectFields($row);
+            $databasePage->setRow($row);
         }
         return $databasePage;
     }
 
-    public static function createFromPageIdAbbr(string $pageIdAbbr): DatabasePage
+    public static function createFromPageIdAbbr(string $pageIdAbbr): DatabasePageRow
     {
-        $databasePage = new DatabasePage();
+        $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromAttribute(PageId::PAGE_ID_ABBR_ATTRIBUTE, $pageIdAbbr);
         if ($row != null) {
-            $databasePage->buildDatabaseObjectFields($row);
+            $databasePage->setRow($row);
         }
         return $databasePage;
 
@@ -209,42 +209,42 @@ class DatabasePage
 
     /**
      * @param $canonical
-     * @return DatabasePage
+     * @return DatabasePageRow
      */
-    public static function createFromCanonical($canonical): DatabasePage
+    public static function createFromCanonical($canonical): DatabasePageRow
     {
 
         DokuPath::addRootSeparatorIfNotPresent($canonical);
-        $databasePage = new DatabasePage();
+        $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromAttribute(Canonical::PROPERTY_NAME, $canonical);
         if ($row != null) {
-            $databasePage->buildDatabaseObjectFields($row);
+            $databasePage->setRow($row);
         }
         return $databasePage;
 
 
     }
 
-    public static function createFromAlias($alias): DatabasePage
+    public static function createFromAlias($alias): DatabasePageRow
     {
 
         DokuPath::addRootSeparatorIfNotPresent($alias);
-        $databasePage = new DatabasePage();
+        $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromAlias($alias);
         if ($row != null) {
-            $databasePage->buildDatabaseObjectFields($row);
+            $databasePage->setRow($row);
             $databasePage->getPage()->setBuildAliasPath($alias);
         }
         return $databasePage;
 
     }
 
-    public static function createFromDokuWikiId($id): DatabasePage
+    public static function createFromDokuWikiId($id): DatabasePageRow
     {
-        $databasePage = new DatabasePage();
+        $databasePage = new DatabasePageRow();
         $row = $databasePage->getDatabaseRowFromDokuWikiId($id);
         if ($row !== null) {
-            $databasePage->buildDatabaseObjectFields($row);
+            $databasePage->setRow($row);
         }
         return $databasePage;
     }
@@ -509,7 +509,7 @@ class DatabasePage
                 ->setTableRow('PAGES', $values);
             try {
                 /**
-                 * rowid is used in {@link DatabasePage::exists()}
+                 * rowid is used in {@link DatabasePageRow::exists()}
                  * to check if the page exists in the database
                  * We update it
                  */
@@ -598,7 +598,7 @@ class DatabasePage
      * Set the field to their values
      * @param $row
      */
-    public function buildDatabaseObjectFields($row)
+    public function setRow($row)
     {
         if ($row === null) {
             LogUtility::msg("A row should not be null");
@@ -614,28 +614,6 @@ class DatabasePage
          */
         $this->row = $row;
 
-        if ($this->page !== null) {
-            /**
-             * Get back the id from the database if the metadata file was deleted
-             */
-            if ($this->page->getPageId() === null
-                && $this->getPageId() !== ""
-                && $this->getPageId() !== null
-            ) {
-                try {
-                    $this->page->setPageId($this->getPageId());
-                } catch (ExceptionCombo $e) {
-                    $message = "The page id of the page was null and we tried to update it with the page id of the database ({$this->getPageId()}) but we got an error: " . $e->getMessage();
-                    if (PluginUtility::isDevOrTest()) {
-                        throw new ExceptionComboRuntime($message);
-                    } else {
-                        LogUtility::msg($message);
-                    }
-
-                }
-            }
-        }
-
 
     }
 
@@ -645,14 +623,14 @@ class DatabasePage
 
     }
 
-    public function rebuild(): DatabasePage
+    public function rebuild(): DatabasePageRow
     {
 
         if ($this->page != null) {
             $this->page->rebuild();
             $row = $this->getDatabaseRowFromPage($this->page);
             if($row!==null) {
-                $this->buildDatabaseObjectFields($row);
+                $this->setRow($row);
             }
         }
         return $this;
@@ -706,7 +684,7 @@ class DatabasePage
         return $metaRecord;
     }
 
-    public function deleteIfExist(): DatabasePage
+    public function deleteIfExist(): DatabasePageRow
     {
         if ($this->exists()) {
             $this->delete();

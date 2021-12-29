@@ -14,6 +14,11 @@ class CacheManager
     public const APPLICATION_COMBO_CACHE_JSON = "application/combo+cache+json";
 
     /**
+     * @var CacheManager
+     */
+    private static $cacheManager;
+
+    /**
      * Just an utility variable to tracks the slot processed
      * @var array the processed slot
      */
@@ -23,32 +28,24 @@ class CacheManager
     /**
      * @return CacheManager
      */
-    public static function get(): CacheManager
+    public static function getOrCreate(): CacheManager
     {
-        global $comboCacheManagerScript;
-        if (empty($comboCacheManagerScript)) {
-            self::init();
+        if (self::$cacheManager === null) {
+            self::$cacheManager = new CacheManager();
         }
-        return $comboCacheManagerScript;
+        return self::$cacheManager;
     }
 
-    public static function init()
-    {
-        global $comboCacheManagerScript;
-        $comboCacheManagerScript = new CacheManager();
-
-    }
 
     /**
      * In test, we may run more than once
      * This function delete the cache manager
      * and is called when Dokuwiki close (ie {@link \action_plugin_combo_cache::close()})
      */
-    public static function close()
+    public static function reset()
     {
 
-        global $comboCacheManagerScript;
-        unset($comboCacheManagerScript);
+        self::$cacheManager = null;
 
     }
 

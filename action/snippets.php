@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\CacheManager;
 use ComboStrap\DokuPath;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
@@ -126,7 +127,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
         $this->headerOutputWasCalled = true;
 
         $snippetManager = PluginUtility::getSnippetManager();
-        $cacheManager = PluginUtility::getCacheManager();
+        $cacheManager = CacheManager::getOrCreate();
 
         /**
          * For each processed bar in the page

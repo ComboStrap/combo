@@ -254,7 +254,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
 
     function close(Doku_Event $event, $params)
     {
-        CacheManager::close();
+        CacheManager::reset();
     }
 
 

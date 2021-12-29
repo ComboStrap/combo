@@ -1084,7 +1084,7 @@ class PluginUtility
      * @return SnippetManager
      */
     public
-    static function getSnippetManager()
+    static function getSnippetManager(): SnippetManager
     {
         return SnippetManager::get();
     }
@@ -1092,7 +1092,7 @@ class PluginUtility
     public
     static function initStaticManager()
     {
-        CacheManager::init();
+        CacheManager::reset();
         SnippetManager::init();
     }
 
@@ -1417,9 +1417,9 @@ class PluginUtility
     }
 
 
-    public static function getCacheManager()
+    public static function getCacheManager(): CacheManager
     {
-        return CacheManager::get();
+        return CacheManager::getOrCreate();
     }
 
     public static function getModeFromPluginName($name)

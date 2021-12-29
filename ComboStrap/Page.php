@@ -1067,11 +1067,12 @@ class Page extends ResourceComboAbs
 
     /**
      * @return $this
+     * @deprecated use {@link MetadataDokuWikiStore::deleteAndFlush()}
      */
     public function deleteMetadatasAndFlush(): Page
     {
-        $meta = [MetadataDokuWikiStore::CURRENT_METADATA => [], MetadataDokuWikiStore::PERSISTENT_METADATA => []];
-        p_save_metadata($this->getPath()->getDokuwikiId(), $meta);
+        MetadataDokuWikiStore::getOrCreateFromResource($this)
+            ->deleteAndFlush();
         return $this;
     }
 

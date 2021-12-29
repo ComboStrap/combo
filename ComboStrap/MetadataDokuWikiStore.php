@@ -400,5 +400,14 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
         return p_get_metadata($dokuwikiId, '', METADATA_DONT_RENDER);
     }
 
+    public function deleteAndFlush()
+    {
+        $emptyMeta = [MetadataDokuWikiStore::CURRENT_METADATA => [], MetadataDokuWikiStore::PERSISTENT_METADATA => []];
+        $dokuwikiId = $this->getResource()->getDokuwikiId();
+        p_save_metadata($dokuwikiId, $emptyMeta);
+        $this->data = $emptyMeta;
+
+    }
+
 
 }

@@ -1045,21 +1045,6 @@ class PluginUtility
         return DOKU_URL . 'lib/plugins/' . PluginUtility::PLUGIN_BASE_NAME . '/resources';
     }
 
-    /**
-     * @param $TAG - the name of the tag that should correspond to the name of the css file in the style directory
-     * @return string - a inline style element to inject in the page or blank if no file exists
-     */
-    public
-    static function getTagStyle($TAG)
-    {
-        $script = self::getCssRules($TAG);
-        if (!empty($script)) {
-            return "<style>" . $script . "</style>";
-        } else {
-            return "";
-        }
-
-    }
 
 
     public

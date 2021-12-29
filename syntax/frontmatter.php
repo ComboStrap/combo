@@ -290,14 +290,12 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
              * Rare case, we delete all mutable meta if present
              */
             $frontmatterData = $frontMatterStore->getData();
-            if ($frontmatterData !== null && sizeof($frontmatterData) === 0) {
+            if ($frontmatterData === null) {
                 global $ID;
                 $meta = p_read_metadata($ID);
                 foreach (Metadata::MUTABLE_METADATA as $metaKey) {
-                    if (!array_key_exists($metaKey, $frontmatterData)) {
-                        if (isset($meta['persistent'][$metaKey])) {
-                            unset($meta['persistent'][$metaKey]);
-                        }
+                    if (isset($meta['persistent'][$metaKey])) {
+                        unset($meta['persistent'][$metaKey]);
                     }
                 }
                 p_save_metadata($ID, $meta);

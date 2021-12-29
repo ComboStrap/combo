@@ -1,5 +1,6 @@
 <?php
 
+use ComboStrap\ExceptionCombo;
 use ComboStrap\Json;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
@@ -15,6 +16,7 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
 {
 
     const CONF_ENABLE_ENHANCED_LINK_WIZARD = "enableEnhancedLinkWizard";
+    const CANONICAL = "linkwizard";
 
     /**
      * @param Doku_Event_Handler $controller
@@ -63,16 +65,24 @@ class action_plugin_combo_linkwizard extends DokuWiki_Action_Plugin
         $pattern = "*$id*";
         $patterns = [$pattern,$pattern,$pattern,$pattern];
         $query = <<<EOF
-select id, title from pages where id glob ? or H1 glob ? or title glob ? or name glob ? order by id ASC;
+select id as "id", title as "title" from pages where id glob ? or H1 glob ? or title glob ? or name glob ? order by id ASC;
 EOF;
-        $res = $sqlite->query($query, $patterns);
-        if (!$res) {
-            LogUtility::msg("An exception has occurred with the link wizard query with the pattern ($pattern)");
-            return;
+        $rows = [];
+        $request = $sqlite
+            ->createRequest()
+            ->setStatementParametrized($query, $patterns);
+        try{
+            $rows = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCombo $e){
+            LogUtility::msg("Error while trying to retrieve a list of page", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
+        } finally {
+            $request->close();
         }
-        $rows = $sqlite->res2arr($res);
+
         foreach ($rows as $row) {
-            $event->result[$row["ID"]] = $row["TITLE"];
+            $event->result[$row["id"]] = $row["title"];
         }
 
 

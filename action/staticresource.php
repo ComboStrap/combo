@@ -2,11 +2,9 @@
 
 use ComboStrap\CacheMedia;
 use ComboStrap\DokuPath;
-use ComboStrap\File;
 use ComboStrap\FileSystems;
 use ComboStrap\Http;
 use ComboStrap\HttpResponse;
-use ComboStrap\JavascriptLibrary;
 use ComboStrap\LocalPath;
 use ComboStrap\Path;
 use ComboStrap\PluginUtility;
@@ -76,7 +74,7 @@ class action_plugin_combo_staticresource extends DokuWiki_Action_Plugin
         }
         $mediaId = $event->data['media'];
         $mediaPath = DokuPath::createDokuPath($mediaId, $type);
-        $event->data['file'] = $mediaPath->toAbsolutePath()->toString();
+        $event->data['file'] = $mediaPath->toLocalPath()->toAbsolutePath()->toString();
         if (FileSystems::exists($mediaPath)) {
             $event->data['status'] = HttpResponse::STATUS_ALL_GOOD;
             $event->data['statusmessage'] = '';

@@ -132,9 +132,9 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          */
         $data = $event->data;
         $result = $event->result;
-        $pageId = $data->page;
+        $slotId = $data->page;
         $cacheManager = PluginUtility::getCacheManager();
-        $cacheManager->addSlot($pageId, $result, $data);
+        $cacheManager->addSlotForRequestedPage($slotId, $result, $data);
 
 
     }
@@ -180,7 +180,7 @@ class action_plugin_combo_cache extends DokuWiki_Action_Plugin
          * The first will be purged, the other one not
          * because they can't use the first one
          */
-        if (!PluginUtility::getCacheManager()->isCacheLogPresent($pageId, $data->mode)) {
+        if (!PluginUtility::getCacheManager()->isCacheLogPresentForSlot($pageId, $data->mode)) {
             $page = Page::createPageFromId($pageId);
             $cacheExpirationFrequency = $page->getCacheExpirationFrequency();
             if ($cacheExpirationFrequency === null) {

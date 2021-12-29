@@ -19,10 +19,12 @@ class CacheManager
     private static $cacheManager;
 
     /**
-     * Just an utility variable to tracks the slot processed
-     * @var array the processed slot
+     * Just an utility variable to tracks the cache result of each slot
+     * @var array the processed slot by:
+     *   * requested page id, (to avoid inconsistency  on multiple page run in one test)
+     *   * slot id
      */
-    private $cacheDataBySlots = array();
+    private $cacheResults = array();
 
 
     /**
@@ -50,16 +52,21 @@ class CacheManager
     }
 
     /**
-     * Keep track of the parsed bar (ie page in page)
-     * @param $pageId
+     * Keep track of the parsed slot (ie page in page)
+     * @param $slotId
      * @param $result
      * @param CacheParser $cacheParser
      */
-    public function addSlot($pageId, $result, $cacheParser)
+    public function addSlotForRequestedPage($slotId, $result, CacheParser $cacheParser)
     {
-        if (!isset($this->cacheDataBySlots[$pageId])) {
-            $this->cacheDataBySlots[$pageId] = [];
+
+        $requestedPageSlotResults = &$this->getCacheSlotResultsForRequestedPage();
+
+
+        if (!isset($requestedPageSlotResults[$slotId])) {
+            $requestedPageSlotResults[$slotId] = [];
         }
+
         /**
          * Metadata and other rendering may occurs
          * recursively in one request
@@ -67,12 +74,12 @@ class CacheManager
          * We record only the first one because the second call one will use the first
          * one
          */
-        if (!isset($this->cacheDataBySlots[$pageId][$cacheParser->mode])) {
+        if (!isset($requestedPageSlotResults[$slotId][$cacheParser->mode])) {
             $date = null;
             if (file_exists($cacheParser->cache)) {
                 $date = Iso8601Date::createFromTimestamp(filemtime($cacheParser->cache))->getDateTime();
             }
-            $this->cacheDataBySlots[$pageId][$cacheParser->mode] = [
+            $requestedPageSlotResults[$slotId][$cacheParser->mode] = [
                 self::RESULT_STATUS => $result,
                 self::DATE_MODIFIED => $date
             ];
@@ -80,34 +87,53 @@ class CacheManager
 
     }
 
-    public function getXhtmlRenderCacheSlotResults(): array
+    public function getXhtmlCacheSlotResultsForRequestedPage(): array
     {
+        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
+        if ($cacheSlotResultsForRequestedPage === null) {
+            return [];
+        }
         $xhtmlRenderResult = [];
-        foreach ($this->cacheDataBySlots as $pageId => $modes) {
+        foreach ($cacheSlotResultsForRequestedPage as $slotId => $modes) {
             foreach ($modes as $mode => $values) {
                 if ($mode === "xhtml") {
-                    $xhtmlRenderResult[$pageId] = $this->cacheDataBySlots[$pageId][$mode][self::RESULT_STATUS];
+                    $xhtmlRenderResult[$slotId] = $values[self::RESULT_STATUS];
                 }
             }
         }
         return $xhtmlRenderResult;
     }
 
-    public function getCacheSlotResults(): array
+    private function &getCacheSlotResultsForRequestedPage(): ?array
     {
-        return $this->cacheDataBySlots;
+        $requestedPage = $this->getRequestedPage();
+        $requestedPageSlotResults = &$this->cacheResults[$requestedPage];
+        if (!isset($requestedPageSlotResults)) {
+            $requestedPageSlotResults = [];
+        }
+        return $requestedPageSlotResults;
     }
 
-    public function isCacheLogPresent($pageId, $mode): bool
+    public function isCacheLogPresentForSlot($slotId, $mode): bool
     {
-        return isset($this->cacheDataBySlots[$pageId][$mode]);
+        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
+        return isset($cacheSlotResultsForRequestedPage[$slotId][$mode]);
     }
 
 
-    public function getCacheSlotResultsAsHtmlDataBlockArray()
+    /**
+     * @return array - a array that will be transformed as json HTML data block
+     * to be included in a HTML page
+     */
+    public function getCacheSlotResultsAsHtmlDataBlockArray(): array
     {
         $htmlDataBlock = [];
-        foreach ($this->getCacheSlotResults() as $pageId => $resultByFormat) {
+        $cacheSlotResultsForRequestedPage = $this->getCacheSlotResultsForRequestedPage();
+        if ($cacheSlotResultsForRequestedPage === null) {
+            LogUtility::msg("No page slot results were found");
+            return [];
+        }
+        foreach ($cacheSlotResultsForRequestedPage as $pageId => $resultByFormat) {
             foreach ($resultByFormat as $format => $result) {
                 $modifiedDate = $result[self::DATE_MODIFIED];
                 if ($modifiedDate !== null) {
@@ -121,6 +147,18 @@ class CacheManager
 
         }
         return $htmlDataBlock;
+    }
+
+    private function getRequestedPage()
+    {
+        global $_REQUEST;
+        $requestedPage = $_REQUEST[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE];
+
+        if ($requestedPage === null) {
+            LogUtility::msg("The requested page should be known to register a page cache result");
+            $requestedPage = "unknown";
+        }
+        return $requestedPage;
     }
 
 

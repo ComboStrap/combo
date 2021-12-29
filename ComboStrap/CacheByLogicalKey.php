@@ -3,6 +3,8 @@
 
 namespace ComboStrap;
 
+use dokuwiki\Cache\CacheParser;
+
 /**
  * Class BarCache
  * @package ComboStrap
@@ -41,18 +43,9 @@ namespace ComboStrap;
  *
  * and they would not share the same cache.
  */
-class CacheByLogicalKey extends \dokuwiki\Cache\Cache
+class CacheByLogicalKey extends CacheParser
 {
 
-    public $file;
-    public $mode;
-
-    /**
-     * To be compatible with
-     * {@link action_plugin_move_rewrite::handle_cache()} line 88
-     * that expect the $page with the id
-     */
-    public $page;
 
     /**
      * @var Page $pageObject The page object
@@ -71,17 +64,14 @@ class CacheByLogicalKey extends \dokuwiki\Cache\Cache
     {
 
         $this->pageObject = $pageObject;
-        $this->mode = $mode;
 
-
-        $this->setEvent('PARSER_CACHE_USE');
+        parent::__construct($pageObject->getDokuwikiId(), $this->pageObject->getLogicalId(), $mode);
 
         /**
-         * Needed by the move plugin
+         * the cache parser constructor takes the logical id as the file
+         * we overwrite it
          */
-        $this->page = $pageObject->getDokuwikiId();
-
-        parent::__construct($this->getCacheKey(), $this->getExt());
+        $this->file = $this->getCacheFile();
 
     }
 

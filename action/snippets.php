@@ -134,7 +134,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          *   * retrieve the snippets from the cache or store the process one
          *   * add the cache information in meta
          */
-        $slots = $cacheManager->getXhtmlRenderCacheSlotResults();
+        $slots = $cacheManager->getXhtmlCacheSlotResultsForRequestedPage();
         foreach ($slots as $slotId => $servedFromCache) {
 
             /**
@@ -146,12 +146,12 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
                 ->toString();
 
             /**
-             * Using a cache renderer, set the page id and will trigger
+             * Using a cache parser, set the page id and will trigger
              * the parser cache use event in order to log/report the cache usage
              * At {@link action_plugin_combo_cache::logCacheUsage()}
              */
             $cache = new CacheParser($slotId, $slotLocalFilePath, "snippet.json");
-            $cache->setEvent('PARSER_CACHE_USE');
+            $cache->setEvent('PARSER_CACHE_USE'); // cache parser use already this event, just FYI
             $dependencies = array(
                 "files" => [
                     $slotLocalFilePath,
@@ -202,7 +202,6 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
             }
 
         }
-
 
         $snippetManager->close();
 

@@ -4,12 +4,12 @@
 namespace ComboStrap;
 
 
-use http\Exception\RuntimeException;
-
 /**
  * Class MetadataDbStore
  * @package ComboStrap
  * The database store
+ * TODO: {@link DatabasePageRow} should be integrated into MetadataDbStore
+ *   A tabular metadata should be created to get all {@link DatabasePageRow::getMetaRecord()}
  */
 class MetadataDbStore extends MetadataStoreAbs
 {
@@ -19,9 +19,15 @@ class MetadataDbStore extends MetadataStoreAbs
      */
     private static $dbRows = [];
 
+
     static function getOrCreateFromResource(ResourceCombo $resourceCombo): MetadataStore
     {
         return new MetadataDbStore($resourceCombo);
+    }
+
+    public static function resetAll()
+    {
+        self::$dbRows = [];
     }
 
     public function set(Metadata $metadata)

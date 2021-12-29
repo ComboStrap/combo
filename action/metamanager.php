@@ -74,7 +74,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     const SUCCESS_MESSAGE = "The data were updated without errors.";
 
 
-
     public function register(Doku_Event_Handler $controller)
     {
 
@@ -239,11 +238,11 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          * are not send back by the HTML form
          */
         $defaultBooleanMetadata = [
-            LowQualityPageOverwrite::PROPERTY_NAME ,
+            LowQualityPageOverwrite::PROPERTY_NAME,
             QualityDynamicMonitoringOverwrite::PROPERTY_NAME
         ];
         $defaultBoolean = [];
-        foreach ($defaultBooleanMetadata as $booleanMeta){
+        foreach ($defaultBooleanMetadata as $booleanMeta) {
             $metadata = Metadata::getForName($booleanMeta)
                 ->setResource($page)
                 ->setReadStore($formStore)
@@ -358,8 +357,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
     private function handleViewerPost(Doku_Event $event, Page $page, array $post)
     {
 
-        $meta = MetadataDokuWikiStore::getOrCreateFromResource($page)
-            ->getData();
+        $metadataStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
+        $metaData = $metadataStore->getData();
 
         /**
          * @var Message[]
@@ -376,7 +375,7 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
                 ->sendMessage("The metadata $persistentMetadataType should be in json format");
             return;
         }
-        $persistentPageMeta = &$meta[$persistentMetadataType];
+        $persistentPageMeta = &$metaData[$persistentMetadataType];
 
 
         $managedMetaMessageSuffix = "is a managed metadata, you need to use the metadata manager to delete it";
@@ -441,7 +440,8 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
          */
         Metadata::deleteIfPresent($persistentPageMeta, Metadata::RUNTIME_META);
 
-        p_save_metadata($page->getDokuwikiId(), $meta);
+        p_save_metadata($page->getDokuwikiId(), $metaData);
+        $metadataStore->setData($metaData);
 
         if (sizeof($messages) !== 0) {
             $messagesToSend = [];
@@ -456,7 +456,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             ->sendMessage($messagesToSend);
 
     }
-
 
 
 }

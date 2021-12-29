@@ -132,7 +132,7 @@ abstract class MetadataSingleArrayStore extends MetadataStoreAbs
 
     /**
      * Used to update the data from an other external process
-     * (ie metadata renderer)
+     * (ie metadata renderer or metadata manager)
      * @param $data
      */
     public function setData($data)

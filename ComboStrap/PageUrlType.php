@@ -28,12 +28,11 @@ class PageUrlType extends MetadataText
     ];
 
 
-
     public static function getOrCreateForPage(ResourceCombo $page): PageUrlType
     {
         $path = $page->getPath()->toString();
         $urlType = self::$urlTypeInstanceCache[$path];
-        if($urlType===null){
+        if ($urlType === null) {
             $urlType = self::createFromPage($page);
             self::$urlTypeInstanceCache[$path] = $urlType;
         }
@@ -49,11 +48,12 @@ class PageUrlType extends MetadataText
 
     public function getValue(): ?string
     {
+
         $resourceCombo = $this->getResource();
         if (!$resourceCombo->exists()) {
             return PageUrlType::CONF_VALUE_PAGE_PATH;
         }
-        if(!($resourceCombo instanceof Page)){
+        if (!($resourceCombo instanceof Page)) {
             LogUtility::msg("The page type is only for page");
             return PageUrlType::CONF_VALUE_PAGE_PATH;
         }
@@ -62,20 +62,12 @@ class PageUrlType extends MetadataText
         $confDefaultValue = $this->getDefaultValue();
         $urlType = PluginUtility::getConfValue($confCanonicalType, $confDefaultValue);
         if (!in_array($urlType, self::CONF_VALUES)) {
-            $urlType = $confDefaultValue;
             LogUtility::msg("The canonical configuration ($confCanonicalType) value ($urlType) is unknown and was set to the default one", LogUtility::LVL_MSG_ERROR, PageUrlPath::PROPERTY_NAME);
+            return $confDefaultValue;
         }
 
-        // Not yet sync with the database
-        // No permanent canonical url
-        if ($resourceCombo->getPageIdAbbr() === null) {
-            if ($urlType === self::CONF_VALUE_PERMANENT_CANONICAL_PATH) {
-                $urlType = self::CONF_VALUE_CANONICAL_PATH;
-            } else {
-                $urlType = PageUrlType::CONF_VALUE_PAGE_PATH;
-            }
-        }
         return $urlType;
+
 
     }
 

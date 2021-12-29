@@ -307,7 +307,7 @@ class DatabasePageRow
             ->setStatementParametrized('delete from pages where id = ?', [$this->page->getDokuwikiId()]);
         try {
             $request->execute();
-        } catch (ExceptionCombo $e){
+        } catch (ExceptionCombo $e) {
             LogUtility::msg("Something went wrong when deleting the page ({$this->page}) from the database");
         } finally {
             $request->close();
@@ -421,9 +421,6 @@ class DatabasePageRow
     }
 
 
-
-
-
     /**
      * @return bool when an update as occurred
      *
@@ -437,7 +434,7 @@ class DatabasePageRow
 
     }
 
-    private function upsertAttributes(array $attributes): bool
+    public function upsertAttributes(array $attributes): bool
     {
 
         if ($this->sqlite === null) {
@@ -495,15 +492,24 @@ class DatabasePageRow
 
         } else {
 
-
+            /**
+             * Creation
+             */
+            if ($this->page === null) {
+                LogUtility::msg("The page should be defined to create a page row");
+                return false;
+            }
             $values[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] = $this->page->getPath()->getDokuwikiId();
             $values[PagePath::PROPERTY_NAME] = $this->page->getPath()->toAbsolutePath()->toString();
-            $this->addPageIdAttribute($values);
-
             /**
              * Default implements the auto-canonical feature
              */
             $values[Canonical::PROPERTY_NAME] = $this->page->getCanonicalOrDefault();
+            /**
+             * Page Id / Abbr are mandatory for url redirection
+             */
+            $this->addPageIdAttributeIfNeeded($values);
+
             $request = $this->sqlite
                 ->createRequest()
                 ->setTableRow('PAGES', $values);
@@ -529,18 +535,21 @@ class DatabasePageRow
 
     }
 
-    public function getDescription()
+    public
+    function getDescription()
     {
         return $this->getFromRow(PageDescription::DESCRIPTION_PROPERTY);
     }
 
 
-    public function getPageName()
+    public
+    function getPageName()
     {
         return $this->getFromRow(ResourceName::PROPERTY_NAME);
     }
 
-    public function exists(): bool
+    public
+    function exists(): bool
     {
         return $this->getFromRow(self::ROWID) !== null;
     }
@@ -549,7 +558,8 @@ class DatabasePageRow
      * Called when a page is moved
      * @param $targetId
      */
-    public function updatePathAndDokuwikiId($targetId)
+    public
+    function updatePathAndDokuwikiId($targetId)
     {
         if (!$this->exists()) {
             LogUtility::msg("The `database` page ($this) does not exist and cannot be moved to ($targetId)", LogUtility::LVL_MSG_ERROR);
@@ -566,7 +576,8 @@ class DatabasePageRow
 
     }
 
-    public function __toString()
+    public
+    function __toString()
     {
         return $this->page->__toString();
     }
@@ -579,7 +590,8 @@ class DatabasePageRow
      * @param Page $page
      * @deprecated 2012-10-28
      */
-    private function deleteIfExistsAndAddRedirectAlias(Page $page): void
+    private
+    function deleteIfExistsAndAddRedirectAlias(Page $page): void
     {
 
         if ($this->page != null) {
@@ -589,7 +601,8 @@ class DatabasePageRow
 
     }
 
-    public function getCanonical()
+    public
+    function getCanonical()
     {
         return $this->getFromRow(Canonical::PROPERTY_NAME);
     }
@@ -598,7 +611,8 @@ class DatabasePageRow
      * Set the field to their values
      * @param $row
      */
-    public function setRow($row)
+    public
+    function setRow($row)
     {
         if ($row === null) {
             LogUtility::msg("A row should not be null");
@@ -617,19 +631,21 @@ class DatabasePageRow
 
     }
 
-    private function buildInitObjectFields()
+    private
+    function buildInitObjectFields()
     {
         $this->row = null;
 
     }
 
-    public function rebuild(): DatabasePageRow
+    public
+    function rebuild(): DatabasePageRow
     {
 
         if ($this->page != null) {
             $this->page->rebuild();
             $row = $this->getDatabaseRowFromPage($this->page);
-            if($row!==null) {
+            if ($row !== null) {
                 $this->setRow($row);
             }
         }
@@ -642,7 +658,8 @@ class DatabasePageRow
      * Therefore quick to insert/update
      *
      */
-    private function getMetaRecord(): array
+    private
+    function getMetaRecord(): array
     {
         $sourceStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
         $targetStore = MetadataDbStore::getOrCreateFromResource($this->page);
@@ -680,11 +697,12 @@ class DatabasePageRow
 
         if ($this->page->getPageId() !== null) {
             $this->addPageIdMeta($metaRecord);
-        };
+        }
         return $metaRecord;
     }
 
-    public function deleteIfExist(): DatabasePageRow
+    public
+    function deleteIfExist(): DatabasePageRow
     {
         if ($this->exists()) {
             $this->delete();
@@ -692,12 +710,14 @@ class DatabasePageRow
         return $this;
     }
 
-    public function getRowId()
+    public
+    function getRowId()
     {
         return $this->getFromRow(self::ROWID);
     }
 
-    private function getDatabaseRowFromPageId(string $pageId)
+    private
+    function getDatabaseRowFromPageId(string $pageId)
     {
 
         if ($this->sqlite === null) {
@@ -757,19 +777,22 @@ class DatabasePageRow
     }
 
 
-    private function getParametrizedLookupQuery(string $pageIdAttribute): string
+    private
+    function getParametrizedLookupQuery(string $pageIdAttribute): string
     {
         $select = Sqlite::createSelectFromTableAndColumns("pages", self::PAGE_BUILD_ATTRIBUTES);
         return "$select where $pageIdAttribute = ?";
     }
 
 
-    private function setPage(Page $page)
+    public function setPage(Page $page)
     {
         $this->page = $page;
+        return $this;
     }
 
-    private function getDatabaseRowFromCanonical($canonical)
+    private
+    function getDatabaseRowFromCanonical($canonical)
     {
         $query = $this->getParametrizedLookupQuery(Canonical::PROPERTY_NAME);
         $request = $this->sqlite
@@ -836,18 +859,21 @@ class DatabasePageRow
         }
     }
 
-    private function getDatabaseRowFromPath(string $path): ?array
+    private
+    function getDatabaseRowFromPath(string $path): ?array
     {
         DokuPath::addRootSeparatorIfNotPresent($path);
         return $this->getDatabaseRowFromAttribute(PagePath::PROPERTY_NAME, $path);
     }
 
-    private function getDatabaseRowFromDokuWikiId(string $id): ?array
+    private
+    function getDatabaseRowFromDokuWikiId(string $id): ?array
     {
         return $this->getDatabaseRowFromAttribute(DokuwikiId::DOKUWIKI_ID_ATTRIBUTE, $id);
     }
 
-    public function getDatabaseRowFromAttribute(string $attribute, string $value)
+    public
+    function getDatabaseRowFromAttribute(string $attribute, string $value)
     {
         $query = $this->getParametrizedLookupQuery($attribute);
         $request = $this->sqlite
@@ -902,18 +928,20 @@ class DatabasePageRow
         }
     }
 
-    public function getPage(): ?Page
+    public
+    function getPage(): ?Page
     {
-        if(
-            $this->page===null
-            && $this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE]!==null
-        ){
+        if (
+            $this->page === null
+            && $this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE] !== null
+        ) {
             $this->page = Page::createPageFromId($this->row[DokuwikiId::DOKUWIKI_ID_ATTRIBUTE]);
         }
         return $this->page;
     }
 
-    private function getDatabaseRowFromAlias($alias): ?array
+    private
+    function getDatabaseRowFromAlias($alias): ?array
     {
 
         $pageIdAttribute = PageId::PROPERTY_NAME;
@@ -965,7 +993,8 @@ class DatabasePageRow
      * Utility function
      * @param Page $pageAlias
      */
-    private function addRedirectAliasWhileBuildingRow(Page $pageAlias)
+    private
+    function addRedirectAliasWhileBuildingRow(Page $pageAlias)
     {
 
         $aliasPath = $pageAlias->getPath()->toString();
@@ -980,21 +1009,26 @@ class DatabasePageRow
 
     }
 
-    private function addPageIdAttribute(array &$values)
+    private
+    function addPageIdAttributeIfNeeded(array &$values)
     {
-
-        $values[PageId::PROPERTY_NAME] = $this->page->getPageId();
-        $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
+        if (!isset($values[PageId::getPersistentName()])) {
+            $values[PageId::getPersistentName()] = $this->page->getPageId();
+        }
+        if (!isset($values[PageId::PAGE_ID_ABBR_ATTRIBUTE])) {
+            $values[PageId::PAGE_ID_ABBR_ATTRIBUTE] = $this->page->getPageIdAbbr();
+        }
     }
 
-    public function getFromRow(string $attribute)
+    public
+    function getFromRow(string $attribute)
     {
         if ($this->row === null) {
             return null;
         }
         $value = $this->row[$attribute];
 
-        if($value!==null){
+        if ($value !== null) {
             return $value;
         }
 

@@ -68,37 +68,18 @@ class CacheByLogicalKey extends CacheParser
         parent::__construct($pageObject->getDokuwikiId(), $this->pageObject->getLogicalId(), $mode);
 
         /**
-         * the cache parser constructor takes the logical id as the file
+         * The cache parser constructor takes the logical id as the file
          * we overwrite it
+         *
+         * The source (added as dependency at {@link CacheParser::addDependencies()}
          */
-        $this->file = $this->getCacheFile();
+        $this->file = $pageObject->getPath()->toLocalPath()->toAbsolutePath()->toString();
 
     }
 
     protected function addDependencies()
     {
-
-        /**
-         * Configuration
-         * File when they are touched the cache should be stale
-         */
-        $files = getConfigFiles('main');
-        /**
-         * The original file
-         */
-        $path = $this->pageObject->getPath();
-        if ($path instanceof DokuPath) {
-            $path = $path->toLocalPath();
-        }
-        $files[] = $path->toAbsolutePath()->toString();
-
-        /**
-         * Update the dependency
-         */
-        $this->depends = ["files" => $files];
-
         parent::addDependencies();
-
     }
 
     public function storeCache($data): bool
@@ -135,6 +116,11 @@ class CacheByLogicalKey extends CacheParser
     private function getExt(): string
     {
         return '.' . $this->mode;
+    }
+
+    public function makeDefaultCacheDecision(): bool
+    {
+        return parent::makeDefaultCacheDecision();
     }
 
 

@@ -112,12 +112,20 @@ class PageId extends MetadataText
             }
         }
 
-        // Value is still null, generate and store
+        // Value is still null, not in the the frontmatter, not in the database
+        // generate and store
         $actualValue = self::generateUniquePageId();
         parent::buildFromStoreValue($actualValue);
         try {
+            // Store the page id on the file system
             MetadataDokuWikiStore::getOrCreateFromResource($resource)
                 ->set($this);
+            /**
+             * Create the row in the database (to allow permanent url redirection {@link PageUrlType})
+             */
+            (new DatabasePageRow())
+                ->setPage($resource)
+                ->upsertAttributes([PageId::getPersistentName() => $actualValue]);
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Unable to store the page id generated. Message:" . $e->getMessage());
         }

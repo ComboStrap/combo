@@ -104,7 +104,7 @@ class PageId extends MetadataText
         }
 
         // datastore
-        if(!($readStore instanceof MetadataDbStore)){
+        if (!($readStore instanceof MetadataDbStore)) {
             $dbStore = MetadataDbStore::getOrCreateFromResource($resource);
             $value = $dbStore->getFromPersistentName(self::getPersistentName());
             if ($value !== null) {
@@ -114,13 +114,8 @@ class PageId extends MetadataText
 
         // Value is still null, generate and store
         $actualValue = self::generateUniquePageId();
-        try {
-            $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
-            $metadataFileSystemStore->set($this);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Unable to persist the generated page id");
-            return $this;
-        }
+        $metadataFileSystemStore = MetadataDokuWikiStore::getOrCreateFromResource($resource);
+        $metadataFileSystemStore->setFromPersistentName(self::getPersistentName(), $actualValue);
 
         return parent::buildFromStoreValue($actualValue);
 

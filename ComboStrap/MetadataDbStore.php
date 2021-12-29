@@ -84,12 +84,11 @@ class MetadataDbStore extends MetadataStoreAbs
     {
 
 
-        $uidClass = $metadata->getUidClass();
-        if ($uidClass === null) {
+        $uid = $metadata->getUidObject();
+        if ($uid === null) {
             throw new ExceptionCombo("The uid class should be defined for the metadata ($metadata)");
         }
-        $uid = Metadata::toMetadataObject($uidClass)
-            ->setResource($metadata->getResource());
+
 
         $sourceRows = $metadata->toStoreValue();
         if ($sourceRows === null) {

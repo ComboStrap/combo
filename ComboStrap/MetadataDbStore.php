@@ -64,15 +64,7 @@ class MetadataDbStore extends MetadataStoreAbs
             if (!$database->exists()) {
                 return null;
             }
-            $value = $database->getFromRow($metadata->getName());
-            if ($value === null) {
-                /**
-                 * An attribute should be added to {@link DatabasePageRow::PAGE_BUILD_ATTRIBUTES}
-                 * or in the table
-                 */
-                throw new ExceptionComboRuntime("The metadata ($metadata) was not found in the returned database row.", self::CANONICAL);
-            }
-            return $value;
+            return $database->getFromRow($metadata->getName());
 
         }
     }

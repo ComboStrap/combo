@@ -1026,6 +1026,15 @@ class DatabasePageRow
         if ($this->row === null) {
             return null;
         }
+
+        if(!array_key_exists($attribute, $this->row)){
+            /**
+             * An attribute should be added to {@link DatabasePageRow::PAGE_BUILD_ATTRIBUTES}
+             * or in the table
+             */
+            throw new ExceptionComboRuntime("The metadata ($attribute) was not found in the returned database row.", $this->getCanonical());
+        }
+
         $value = $this->row[$attribute];
 
         if ($value !== null) {

@@ -903,7 +903,11 @@ EOF;
                     /**
                      * No parameters by default known
                      */
-                    $url = wl($page->getDokuwikiId());
+                    $url = $page->getCanonicalUrl(
+                        [],
+                        false,
+                        DokuwikiUrl::AMPERSAND_URL_ENCODED_FOR_HTML
+                    );
 
                     /**
                      * The search term

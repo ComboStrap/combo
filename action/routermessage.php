@@ -124,6 +124,11 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     $message = Message::createInfoMessage()
                         ->addHtmlContent("<p>" . $this->lang['message_redirected_to_edit_mode'] . "</p>");
                     break;
+                case action_plugin_combo_router::TARGET_ORIGIN_PERMALINK_EXTENDED:
+                case action_plugin_combo_router::TARGET_ORIGIN_PERMALINK:
+                    $message = Message::createInfoMessage()
+                        ->addHtmlContent("<p>" . $this->lang['message_redirected_from_permalink'] . "</p>");
+                    break;
                 default:
                     LogUtility::msg("The redirection source ($redirectSource) is unknown. It was not expected", LogUtility::LVL_MSG_ERROR, action_plugin_combo_router::CANONICAL);
                     return;

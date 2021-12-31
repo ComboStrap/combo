@@ -981,10 +981,11 @@ class Page extends ResourceComboAbs
      *   * in the canonical ref
      *   * in the site map
      * @param array $urlParameters
-     * @param bool $absoluteUrl - by default, dokuwiki allows the canonical to be relative but it's mandatory to be absolute for the HTML meta
+     * @param bool $absoluteUrlMandatory - by default, dokuwiki allows the canonical to be relative but it's mandatory to be absolute for the HTML meta
+     * @param string $separator - HTML encoded or not ampersand
      * @return string|null
      */
-    public function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrl = false): ?string
+    public function getCanonicalUrl(array $urlParameters = [], bool $absoluteUrlMandatory = false, string $separator = DokuwikiUrl::AMPERSAND_CHARACTER): ?string
     {
 
         /**
@@ -992,20 +993,20 @@ class Page extends ResourceComboAbs
          */
         $urlType = PageUrlType::getOrCreateForPage($this)->getValue();
         if ($urlType === PageUrlType::CONF_VALUE_PAGE_PATH) {
-            $absolutePath = Site::getCanonicalConfForRelativeVsAsboluteUrl();
+            $absolutePath = Site::getCanonicalConfForRelativeVsAbsoluteUrl();
             if ($absolutePath === 1) {
-                $absoluteUrl = true;
+                $absoluteUrlMandatory = true;
             }
         }
 
         /**
          * Dokuwiki Methodology Taken from {@link tpl_metaheaders()}
          */
-        if ($absoluteUrl && $this->isRootHomePage()) {
+        if ($absoluteUrlMandatory && $this->isRootHomePage()) {
             return DOKU_URL;
         }
 
-        return wl($this->getUrlId(), $urlParameters, $absoluteUrl, DokuwikiUrl::AMPERSAND_CHARACTER);
+        return wl($this->getUrlId(), $urlParameters, $absoluteUrlMandatory, $separator);
 
 
     }

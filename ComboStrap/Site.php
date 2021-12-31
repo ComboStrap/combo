@@ -360,7 +360,7 @@ class Site
      * Absolute vs Relative URL
      * https://www.dokuwiki.org/config:canonical
      */
-    public static function getCanonicalConfForRelativeVsAsboluteUrl()
+    public static function getCanonicalConfForRelativeVsAbsoluteUrl()
     {
         global $conf;
         return $conf['canonical'];

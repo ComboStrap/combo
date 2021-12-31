@@ -51,9 +51,18 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
     // Where the target id value comes from
     const TARGET_ORIGIN_WELL_KNOWN = 'well-known';
     const TARGET_ORIGIN_PAGE_RULES = 'pageRules';
+    /**
+     * Named Permalink (canonical)
+     */
     const TARGET_ORIGIN_CANONICAL = 'canonical';
     const TARGET_ORIGIN_ALIAS = 'alias';
+    /**
+     * Identifier Permalink (full page id)
+     */
     const TARGET_ORIGIN_PERMALINK = "permalink";
+    /**
+     * Extended Permalink (abbreviated page id at the end)
+     */
     const TARGET_ORIGIN_PERMALINK_EXTENDED = "extendedPermalink";
     const TARGET_ORIGIN_START_PAGE = 'startPage';
     const TARGET_ORIGIN_BEST_PAGE_NAME = 'bestPageName';

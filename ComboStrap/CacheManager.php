@@ -167,7 +167,14 @@ class CacheManager
             return $ID;
         }
 
-        LogUtility::msg("The requested page should be known to register a page cache result");
+        if(PluginUtility::isTest()) {
+            /**
+             * {@link p_get_metadata()} check the cache and is used
+             * also in several place such as {@link feed.php}
+             * where we don't have any influence
+             */
+            LogUtility::msg("The requested page should be known to register a page cache result");
+        }
         return "unknown";
     }
 

@@ -7,13 +7,27 @@ namespace ComboStrap;
 class Console
 {
 
+    static $on = false;
+
     /**
      * Print to the console even if OB (Output buffer) is used
      * @param $message
      */
     public static function log($message)
     {
-        fputs(STDOUT, $message . PHP_EOL);
+        if (self::$on) {
+            fputs(STDOUT, "Console Info: " . $message . PHP_EOL);
+        }
+    }
+
+    public static function setOff()
+    {
+        self::$on = false;
+    }
+
+    public static function setOn()
+    {
+        self::$on = true;
     }
 
 }

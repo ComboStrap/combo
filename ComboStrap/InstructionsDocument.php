@@ -130,7 +130,15 @@ class InstructionsDocument extends PageCompilerDocument
 
     public function shouldProcess(): bool
     {
-        return $this->cache->useCache() === false;
+
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = $this->getPage()->getDokuwikiId();
+            return $this->cache->useCache() === false;
+        } finally {
+            $ID = $keep;
+        }
     }
 
 

@@ -61,49 +61,58 @@ class  action_plugin_combo_webcode extends DokuWiki_Action_Plugin
          */
         global $conf;
         $conf["renderer_xhtml"] = "xhtml";
-        $mainContent = p_render('xhtml', p_get_instructions($marki), $info);
 
-        /**
-         * Html
-         */
-        $htmlBeforeHeads = '<!DOCTYPE html>' . DOKU_LF;
-        $htmlBeforeHeads .= '<html>' . DOKU_LF;
-        $htmlBeforeHeads .= '<head>' . DOKU_LF;
-        $htmlBeforeHeads .= "  <title>$title</title>" . DOKU_LF;
-        // we echo because the tpl function just flush
-        echo $htmlBeforeHeads;
-
-        if (Site::isStrapTemplate()) {
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = "ajax_webcode_" . md5($marki);
+            $mainContent = p_render('xhtml', p_get_instructions($marki), $info);
 
             /**
-             * The strap header function
+             * Html
              */
-            $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
-            if($loaded) {
-                TplUtility::registerHeaderHandler();
+            $htmlBeforeHeads = '<!DOCTYPE html>' . DOKU_LF;
+            $htmlBeforeHeads .= '<html>' . DOKU_LF;
+            $htmlBeforeHeads .= '<head>' . DOKU_LF;
+            $htmlBeforeHeads .= "  <title>$title</title>" . DOKU_LF;
+            // we echo because the tpl function just flush
+            echo $htmlBeforeHeads;
+
+            if (Site::isStrapTemplate()) {
+
+                /**
+                 * The strap header function
+                 */
+                $loaded = PluginUtility::loadStrapUtilityTemplateIfPresentAndSameVersion();
+                if ($loaded) {
+                    TplUtility::registerHeaderHandler();
+                }
             }
+
+            /**
+             * To delete the not needed headers for an export
+             * such as manifest, alternate, ...
+             */
+            global $EVENT_HANDLER;
+            $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, '_delete_not_needed_headers');
+
+            /**
+             * meta headers
+             */
+            tpl_metaheaders();
+
+
+            $htmlAfterHeads = '</head>' . DOKU_LF;
+            $htmlAfterHeads .= '<body>' . DOKU_LF;
+            $htmlAfterHeads .= $mainContent . DOKU_LF;
+            $htmlAfterHeads .= '</body>' . DOKU_LF;
+            $htmlAfterHeads .= '</html>' . DOKU_LF;
+            echo $htmlAfterHeads;
+            http_response_code(200);
+
+        } finally {
+            $ID = $keep;
         }
-
-        /**
-         * To delete the not needed headers for an export
-         * such as manifest, alternate, ...
-         */
-        global $EVENT_HANDLER;
-        $EVENT_HANDLER->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this, '_delete_not_needed_headers');
-
-        /**
-         * meta headers
-         */
-        tpl_metaheaders();
-
-
-        $htmlAfterHeads = '</head>' . DOKU_LF;
-        $htmlAfterHeads .= '<body>' . DOKU_LF;
-        $htmlAfterHeads .= $mainContent . DOKU_LF;
-        $htmlAfterHeads .= '</body>' . DOKU_LF;
-        $htmlAfterHeads .= '</html>' . DOKU_LF;
-        echo $htmlAfterHeads;
-        http_response_code(200);
 
     }
 

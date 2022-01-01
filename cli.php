@@ -394,7 +394,7 @@ EOF;
 
         if (sizeof($pagesWithChanges) > 0) {
             echo "\n";
-            echo "The following pages had changed";
+            echo "The following pages had changed:\n";
             $pageCounter = 0;
             $totalNumberOfPages = sizeof($pagesWithChanges);
             foreach ($pagesWithChanges as $id) {

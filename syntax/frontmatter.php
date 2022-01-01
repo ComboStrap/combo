@@ -157,9 +157,15 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
     {
 
         /**
+         * @var Page $resourceCombo
+         */
+        $resourceCombo = $frontmatter->getResource();
+
+        /**
          * Resource Id special
          */
-        $guidObject = $frontmatter->getResource()->getUidObject();
+
+        $guidObject = $resourceCombo->getUidObject();
         if (
             !$frontmatter->hasProperty($guidObject::getPersistentName())
             &&
@@ -171,13 +177,18 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         /**
          * Read store
          */
-        $dokuwikiStore = MetadataDokuWikiStore::getOrCreateFromResource($frontmatter->getResource());
+        $dokuwikiStore = MetadataDokuWikiStore::getOrCreateFromResource($resourceCombo);
         $metaFilePath = $dokuwikiStore->getMetaFilePath();
         if ($metaFilePath !== null) {
             $metaModifiedTime = FileSystems::getModifiedTime($metaFilePath);
-            $pageModifiedTime = FileSystems::getModifiedTime($frontmatter->getResource()->getPath());
-            if ($pageModifiedTime > $metaModifiedTime) {
-                throw new ExceptionCombo("The page is newer than the metadata file. No frontmatter update");
+            $pageModifiedTime = FileSystems::getModifiedTime($resourceCombo->getPath());
+            $diff = $pageModifiedTime->diff($metaModifiedTime);
+            if($diff===false){
+                throw new ExceptionCombo("Unable to calculate the diff between the page and metadata file");
+            }
+            $secondDiff = intval($diff->format('%s'));
+            if ($secondDiff > 0) {
+                $resourceCombo->renderMetadataAndFlush();
             }
         }
         /**
@@ -195,7 +206,7 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
                 }
             }
             $metadata
-                ->setResource($frontmatter->getResource())
+                ->setResource($resourceCombo)
                 ->setReadStore($dokuwikiStore)
                 ->setWriteStore($frontmatter);
 

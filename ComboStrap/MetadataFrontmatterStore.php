@@ -306,10 +306,21 @@ EOF;
         $targetFrontMatterJsonString = $this->toFrontmatterString();
 
         /**
+         * EOL for the first frontmatter
+         */
+        $sep = "";
+        if (strlen($this->contentWithoutFrontMatter) > 0) {
+            $firstChar = $this->contentWithoutFrontMatter[0];
+            if (!in_array($firstChar, ["\n", "\r"])) {
+                $sep = "\n";
+            }
+        }
+
+        /**
          * Build the new document
          */
         $newPageContent = <<<EOF
-$targetFrontMatterJsonString$this->contentWithoutFrontMatter
+$targetFrontMatterJsonString$sep$this->contentWithoutFrontMatter
 EOF;
         $resourceCombo = $this->getResource();
         if ($resourceCombo instanceof Page) {

@@ -187,6 +187,7 @@ EOF;
      * @param array $namespaces
      * @param bool $rebuild
      * @param int $depth recursion depth. 0 for unlimited
+     * @throws \ComboStrap\ExceptionCombo
      */
     private function replicate($namespaces = array(), $rebuild = false, $depth = 0)
     {
@@ -380,12 +381,12 @@ EOF;
 
         if (sizeof($pagesWithError) > 0) {
             echo "\n";
-            echo "The following pages had errors";
+            echo "The following pages had errors\n";
             $pageCounter = 0;
             $totalNumberOfPages = sizeof($pagesWithError);
             foreach ($pagesWithError as $id => $message) {
                 $pageCounter++;
-                LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages) " . $message, LogUtility::LVL_MSG_ERROR);
+                LogUtility::msg("Page {$id} ($pageCounter / $totalNumberOfPages): " . $message, LogUtility::LVL_MSG_ERROR);
             }
         } else {
             echo "No error\n";

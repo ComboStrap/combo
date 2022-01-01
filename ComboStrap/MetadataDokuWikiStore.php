@@ -343,12 +343,18 @@ class MetadataDokuWikiStore extends MetadataSingleArrayStore
 
     /**
      *
-     * @return string - the full path to the meta file
+     * @return Path - the full path to the meta file
      */
     public
-    function getMetaFile($dokuwikiId)
+    function getMetaFilePath(): ?Path
     {
-        return metaFN($dokuwikiId, '.meta');
+        $resource = $this->getResource();
+        if(!($resource instanceof Page)){
+            LogUtility::msg("The resource type ({$resource->getType()}) meta file is unknown and can't be retrieved.");
+            return null;
+        }
+        $dokuwikiId = $resource->getPath()->getDokuWikiId();
+        return LocalPath::create(metaFN($dokuwikiId, '.meta'));
     }
 
     public function __toString()

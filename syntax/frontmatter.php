@@ -169,6 +169,18 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
         }
 
         /**
+         * Read store
+         */
+        $dokuwikiStore = MetadataDokuWikiStore::getOrCreateFromResource($frontmatter->getResource());
+        $metaFilePath = $dokuwikiStore->getMetaFilePath();
+        if ($metaFilePath !== null) {
+            $metaModifiedTime = FileSystems::getModifiedTime($metaFilePath);
+            $pageModifiedTime = FileSystems::getModifiedTime($frontmatter->getResource()->getPath());
+            if ($pageModifiedTime > $metaModifiedTime) {
+                throw new ExceptionCombo("The page is newer than the metadata file. No frontmatter update");
+            }
+        }
+        /**
          * Update the mutable data
          * (ie delete insert)
          */
@@ -177,19 +189,20 @@ class syntax_plugin_combo_frontmatter extends DokuWiki_Syntax_Plugin
             if ($metadata === null) {
                 $msg = "The metadata $metaKey should be defined";
                 if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionComboRuntime($msg);
+                    throw new ExceptionCombo($msg);
                 } else {
                     LogUtility::msg($msg);
                 }
             }
             $metadata
                 ->setResource($frontmatter->getResource())
-                ->setReadStore(MetadataDokuWikiStore::class)
+                ->setReadStore($dokuwikiStore)
                 ->setWriteStore($frontmatter);
 
             $sourceValue = $frontmatter->get($metadata);
             $targetValue = $metadata->getValue();
-            $targetValueShouldBeStore = !in_array($targetValue, [$metadata->getDefaultValue(), null]);
+            $defaultValue = $metadata->getDefaultValue();
+            $targetValueShouldBeStore = !in_array($targetValue, [$defaultValue, null]);
             if ($targetValueShouldBeStore) {
                 if ($sourceValue !== $targetValue) {
                     $frontmatter->set($metadata);

@@ -308,7 +308,7 @@ class DokuPath extends PathAbs
     public static function createMediaPathFromId($id, $rev = ''): DokuPath
     {
         DokuPath::addRootSeparatorIfNotPresent($id);
-        return self::createMediaPathFromAbsolutePath( $id, $rev);
+        return self::createMediaPathFromAbsolutePath($id, $rev);
     }
 
 
@@ -606,6 +606,12 @@ class DokuPath extends PathAbs
         return new DokuPath($this->absolutePath, $this->finalType, $this->rev);
     }
 
+    /**
+     * The parent path is a directory (namespace)
+     * The parent of page in the root does return the root namespace.
+     *
+     * @return DokuPath|null
+     */
     function getParent(): ?Path
     {
 
@@ -613,14 +619,16 @@ class DokuPath extends PathAbs
          * Same as {@link getNS()}
          */
         $names = $this->getNames();
-        if (sizeof($names) === 1) {
-            return null;
+        switch (sizeof($names)) {
+            case 0:
+                return null;
+            case 1:
+                return new DokuPath(DokuPath::PATH_SEPARATOR, $this->finalType, $this->rev);
+            default:
+                $names = array_slice($names, 0, sizeof($names) - 1);
+                $path = implode(DokuPath::PATH_SEPARATOR, $names);
+                return new DokuPath($path, $this->finalType, $this->rev);
         }
-        $names = array_slice($names, 0, sizeof($names) - 1);
-        $path = implode(DokuPath::PATH_SEPARATOR, $names);
-
-        return new DokuPath($path, $this->finalType, $this->rev);
-
 
     }
 

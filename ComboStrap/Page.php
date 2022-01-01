@@ -354,6 +354,11 @@ class Page extends ResourceComboAbs
         return substr($this->getLogicalPath(), 1);
     }
 
+    /**
+     * @return string - the logical path (requested path) of the resource
+     * This is used for sidebar component that may have another logical environment
+     * (namespace) than its storage location.
+     */
     public function getLogicalPath(): string
     {
 
@@ -370,10 +375,11 @@ class Page extends ResourceComboAbs
 
             if ($scopePath == PageScope::SCOPE_CURRENT_VALUE) {
                 $requestPage = Page::createPageFromRequestedPage();
-                $scopePath = $requestPage->getNamespacePath();
+                $parentPath = $requestPage->getPath()->getParent();
+                $scopePath = $parentPath->toString();
             }
 
-            if ($scopePath !== ":") {
+            if ($scopePath !== DokuPath::PATH_SEPARATOR) {
                 return $scopePath . DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
             } else {
                 return DokuPath::PATH_SEPARATOR . $this->getPath()->getLastName();
@@ -933,9 +939,6 @@ class Page extends ResourceComboAbs
             return true;
         } else {
             $namespace = $this->dokuPath->getParent();
-            if ($namespace === null) {
-                return false;
-            }
             if ($namespace->getLastName() === $this->getPath()->getLastName()) {
                 /**
                  * page named like the NS inside the NS
@@ -1049,12 +1052,15 @@ class Page extends ResourceComboAbs
     /**
      * Without the `:` at the end
      * @return string
-     * @deprecated for {@link DokuPath::getParent()}
+     * @deprecated / shortcut for {@link DokuPath::getParent()}
+     * Because a page has always a parent, the string is never null.
      */
     public
     function getNamespacePath(): string
     {
-        return $this->dokuPath->getParent()->toString();
+
+        return  $this->dokuPath->getParent()->toString();
+
     }
 
 
@@ -1488,6 +1494,14 @@ class Page extends ResourceComboAbs
         return $this->slug->getDefaultValue();
     }
 
+    /**
+     * The parent page is the parent in the page tree directory
+     *
+     * If the page is at the root, the parent page is the root home
+     * Only the root home does not have any parent page and return null.
+     *
+     * @return Page|null
+     */
     public
     function getParentPage(): ?Page
     {

@@ -311,8 +311,6 @@ class PluginUtility
         self::$URL_APEX = "https://" . parse_url(self::$INFO_PLUGIN['url'], PHP_URL_HOST);
         self::$VERSION = self::$INFO_PLUGIN['version'];
 
-        PluginUtility::initStaticData();
-
     }
 
     /**
@@ -1075,15 +1073,7 @@ class PluginUtility
         return SnippetManager::get();
     }
 
-    /**
-     * @deprecated for {@link \ComboTest::deleteInMemoryMeta()}
-     */
-    public
-    static function initStaticData()
-    {
-        \ComboTest::deleteInMemoryMeta();
 
-    }
 
     /**
      * Function used in a render

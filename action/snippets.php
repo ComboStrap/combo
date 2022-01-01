@@ -6,10 +6,9 @@ use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
 use ComboStrap\PluginUtility;
 use ComboStrap\Resources;
-use ComboStrap\Site;
 use ComboStrap\Snippet;
+use ComboStrap\SnippetManager;
 use dokuwiki\Cache\CacheParser;
-use dokuwiki\Cache\CacheRenderer;
 
 if (!defined('DOKU_INC')) die();
 
@@ -78,7 +77,7 @@ class action_plugin_combo_snippets extends DokuWiki_Action_Plugin
          * Fighting the fact that in 7.2,
          * there is still a cache
          */
-        PluginUtility::initStaticData();
+        SnippetManager::init();
 
     }
 

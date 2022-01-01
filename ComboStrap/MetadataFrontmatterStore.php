@@ -144,7 +144,9 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
     public function getJsonString(): string
     {
 
-        return self::toFrontmatterJsonString($this->getData());
+        $jsonArray = $this->getData();
+        ksort($jsonArray);
+        return self::toFrontmatterJsonString($jsonArray);
 
     }
 

@@ -669,7 +669,7 @@ class Page extends ResourceComboAbs
 
     /**
      * @return string
-     * @deprecated for {@link FileSystems::getContent()} with {@link DokuPath}
+     * A wrapper around {@link FileSystems::getContent()} with {@link DokuPath}
      */
     public
     function getTextContent(): string

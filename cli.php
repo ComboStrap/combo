@@ -14,8 +14,10 @@ if (!defined('DOKU_INC')) die();
 use ComboStrap\AnalyticsDocument;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\Event;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
+use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\Page;
 use ComboStrap\PageH1;
 use ComboStrap\Sqlite;
@@ -187,7 +189,7 @@ EOF;
      * @param array $namespaces
      * @param bool $rebuild
      * @param int $depth recursion depth. 0 for unlimited
-     * @throws \ComboStrap\ExceptionCombo
+     * @throws ExceptionCombo
      */
     private function replicate($namespaces = array(), $rebuild = false, $depth = 0)
     {
@@ -326,7 +328,7 @@ EOF;
         }
         $res2arr = $sqlite->res2arr($res);
         $sqlite->res_close($res);
-        $counter=0;
+        $counter = 0;
         foreach ($res2arr as $row) {
             $counter++;
             $id = $row['ID'];
@@ -352,26 +354,29 @@ EOF;
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
             $page = Page::createPageFromId($id);
-            LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
             $pageCounter++;
-            $message = syntax_plugin_combo_frontmatter::updateFrontmatter($page);
+            LogUtility::msg("Processing page {$id} ($pageCounter / $totalNumberOfPages) ", LogUtility::LVL_MSG_INFO);
+            try {
+                $message = MetadataFrontmatterStore::createFromPage($page)
+                    ->sync();
+                switch ($message->getStatus()) {
+                    case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_NOT_CHANGED:
+                        $notChangedCounter++;
+                        break;
+                    case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_DONE:
+                        $pagesWithChanges[] = $id;
+                        break;
+                    case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_ERROR:
+                        $pagesWithError[$id] = $message->getPlainTextContent();
+                        break;
+                    default:
+                        $pagesWithOthers[$id] = $message->getPlainTextContent();
+                        break;
 
-            switch ($message->getStatus()) {
-                case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_NOT_CHANGED:
-                    $notChangedCounter++;
-                    break;
-                case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_DONE:
-                    $pagesWithChanges[] = $id;
-                    break;
-                case syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_ERROR:
-                    $pagesWithError[$id] = $message->getPlainTextContent();
-                    break;
-                default:
-                    $pagesWithOthers[$id] = $message->getPlainTextContent();
-                    break;
-
+                }
+            } catch (ExceptionCombo $e) {
+                $pagesWithError[$id] = $e->getMessage();
             }
-
 
         }
 

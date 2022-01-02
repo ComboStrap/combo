@@ -326,7 +326,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                 && $ID != Site::getHomePageName()
                 && !isset($_REQUEST["rev"])
             ) {
-                $this->executePermanentRedirect($targetPage->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                $this->executePermanentRedirect(
+                    $targetPage->getCanonicalUrl([], true),
+                    self::TARGET_ORIGIN_PERMALINK_EXTENDED
+                );
             }
             return;
         }
@@ -378,7 +381,10 @@ class action_plugin_combo_router extends DokuWiki_Action_Plugin
                         // (for instance, http://example.com/home, http://home.example.com, or http://www.example.com),
                         // it's a good idea to pick one of those URLs as your preferred (canonical) destination,
                         // and use redirects to send traffic from the other URLs to your preferred URL.
-                        $this->executePermanentRedirect($page->getCanonicalUrl(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);
+                        $this->executePermanentRedirect(
+                            $page->getCanonicalUrl([], true),
+                            self::TARGET_ORIGIN_PERMALINK_EXTENDED
+                        );
                         return;
                     }
                     $this->executeTransparentRedirect($page->getDokuwikiId(), self::TARGET_ORIGIN_PERMALINK_EXTENDED);

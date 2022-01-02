@@ -23,6 +23,7 @@ use ComboStrap\Message;
 use ComboStrap\Metadata;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\MetadataFormDataStore;
+use ComboStrap\MetadataFrontmatterStore;
 use ComboStrap\MetadataStoreTransfer;
 use ComboStrap\MetaManagerForm;
 use ComboStrap\MetaManagerMenuItem;
@@ -254,7 +255,6 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
         /**
          * Processing
          */
-
         $transfer = MetadataStoreTransfer::createForPage($page)
             ->fromStore($formStore)
             ->toStore($targetStore)
@@ -281,8 +281,13 @@ class action_plugin_combo_metamanager extends DokuWiki_Action_Plugin
             $responseMessages[] = self::SUCCESS_MESSAGE;
         }
 
-        $frontMatterMessage = syntax_plugin_combo_frontmatter::updateFrontmatter($page);
-        $responseMessages[] = $frontMatterMessage->getPlainTextContent();
+        try {
+            $frontMatterMessage = MetadataFrontmatterStore::createFromPage($page)
+                ->sync();
+            $responseMessages[] = $frontMatterMessage->getPlainTextContent();
+        } catch (ExceptionCombo $e) {
+            $responseMessages[] = $e->getMessage();
+        }
 
 
         /**

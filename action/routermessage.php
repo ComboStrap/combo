@@ -161,10 +161,10 @@ class action_plugin_combo_routermessage extends ActionPlugin
 
     /**
      * Add the page with the same page name but in an other location
-     * @param $message
+     * @param Message $message
      * @param $pageIdOrigin
      */
-    function addToMessagePagesWithSameName($message, $pageIdOrigin)
+    function addToMessagePagesWithSameName(Message $message, $pageIdOrigin)
     {
 
         if ($this->getConf(self::CONF_SHOW_PAGE_NAME_IS_NOT_UNIQUE) == 1) {
@@ -179,11 +179,11 @@ class action_plugin_combo_routermessage extends ActionPlugin
                 $message->setType(Message::TYPE_WARNING);
 
                 // Assign the value to a variable to be able to use the construct .=
-                if ($message->getContent() <> '') {
-                    $message->addContent('<br/><br/>');
+                if ($message->getPlainTextContent() <> '') {
+                    $message->addHtmlContent('<br/><br/>');
                 }
-                $message->addContent($this->lang['message_pagename_exist_one']);
-                $message->addContent('<ul>');
+                $message->addHtmlContent($this->lang['message_pagename_exist_one']);
+                $message->addHtmlContent('<ul>');
 
                 $i = 0;
                 foreach ($pagesWithSameName as $pageId => $title) {
@@ -192,7 +192,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     }
                     $i++;
                     if ($i > 10) {
-                        $message->addContent('<li>' .
+                        $message->addHtmlContent('<li>' .
                             tpl_link(
                                 wl($pageIdOrigin) . "?do=search&q=" . rawurldecode($pageName),
                                 "More ...",
@@ -204,7 +204,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                     if ($title == null) {
                         $title = $pageId;
                     }
-                    $message->addContent('<li>' .
+                    $message->addHtmlContent('<li>' .
                         tpl_link(
                             wl($pageId),
                             $title,
@@ -212,7 +212,7 @@ class action_plugin_combo_routermessage extends ActionPlugin
                             $return = true
                         ) . '</li>');
                 }
-                $message->addContent('</ul>');
+                $message->addHtmlContent('</ul>');
             }
         }
     }

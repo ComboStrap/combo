@@ -54,6 +54,8 @@ class DatabasePageRow
      */
     const ROWID = "rowid";
 
+    const CANONICAL = MetadataDbStore::CANONICAL;
+
     /**
      * @var Page
      */
@@ -760,7 +762,7 @@ class DatabasePageRow
                         // of if the sqlite database was deleted and rebuilt.
                         // The chance is really, really low
                         $errorMessage = "The page ($this->page) and the page ($id) have the same page id ($pageId)";
-                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR);
+                        LogUtility::msg($errorMessage, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
                         // What to do ?
                         // The database does not allow two page id with the same value
                         // If it happens, ugh, ugh, ..., a replication process between website may be.

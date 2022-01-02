@@ -174,11 +174,7 @@ abstract class Metadata
                 return new DisqusIdentifier();
             default:
                 $msg = "The metadata ($name) can't be retrieved in the list of metadata. It should be defined";
-                if (PluginUtility::isDevOrTest()) {
-                    throw new ExceptionComboRuntime($msg, self::CANONICAL);
-                } else {
-                    LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-                }
+                LogUtility::msg($msg, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
         }
         return null;
 

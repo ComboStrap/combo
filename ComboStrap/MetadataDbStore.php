@@ -13,6 +13,7 @@ namespace ComboStrap;
  */
 class MetadataDbStore extends MetadataStoreAbs
 {
+    const CANONICAL = "database";
 
     /**
      * @var DatabasePageRow[]
@@ -268,7 +269,7 @@ EOF;
 
     public function getCanonical(): string
     {
-        return "database";
+        return self::CANONICAL;
     }
 
     private function getDatabaseRow(): DatabasePageRow

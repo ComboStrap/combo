@@ -105,9 +105,13 @@ class Message
     }
 
     public
-    function getPlainTextContent(): string
+    function getPlainTextContent(): ?string
     {
-        return implode($this->content[Mime::PLAIN_TEXT], DOKU_LF);
+        $plainTextLines = $this->content[Mime::PLAIN_TEXT];
+        if($plainTextLines===null){
+            return null;
+        }
+        return implode(DOKU_LF, $plainTextLines);
     }
 
     public
@@ -249,6 +253,12 @@ EOF;
     public function getStatus(): int
     {
         return $this->status;
+    }
+
+    public function setType(string $type): Message
+    {
+        $this->type = $type;
+        return $this;
     }
 
 }

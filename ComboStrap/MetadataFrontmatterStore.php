@@ -21,6 +21,131 @@ class MetadataFrontmatterStore extends MetadataSingleArrayStore
      */
     private $contentWithoutFrontMatter;
 
+    /**
+     * @throws ExceptionCombo
+     */
+    private function syncData()
+    {
+
+        /**
+         * @var Page $resourceCombo
+         */
+        $resourceCombo = $this->getResource();
+
+        /**
+         * Resource Id special
+         */
+        $guidObject = $resourceCombo->getUidObject();
+        if (
+            !$this->hasProperty($guidObject::getPersistentName())
+            &&
+            $guidObject->getValue() !== null
+        ) {
+            $this->setFromPersistentName($guidObject::getPersistentName(), $guidObject->getValue());
+        }
+
+        /**
+         * Read store
+         */
+        $dokuwikiStore = MetadataDokuWikiStore::getOrCreateFromResource($resourceCombo);
+        $metaFilePath = $dokuwikiStore->getMetaFilePath();
+        if ($metaFilePath !== null) {
+            $metaModifiedTime = FileSystems::getModifiedTime($metaFilePath);
+            $pageModifiedTime = FileSystems::getModifiedTime($resourceCombo->getPath());
+            $diff = $pageModifiedTime->diff($metaModifiedTime);
+            if ($diff === false) {
+                throw new ExceptionCombo("Unable to calculate the diff between the page and metadata file");
+            }
+            $secondDiff = intval($diff->format('%s'));
+            if ($secondDiff > 0) {
+                $resourceCombo->renderMetadataAndFlush();
+            }
+        }
+        /**
+         * Update the mutable data
+         * (ie delete insert)
+         */
+        foreach (Metadata::MUTABLE_METADATA as $metaKey) {
+            $metadata = Metadata::getForName($metaKey);
+            if ($metadata === null) {
+                $msg = "The metadata $metaKey should be defined";
+                if (PluginUtility::isDevOrTest()) {
+                    throw new ExceptionCombo($msg);
+                } else {
+                    LogUtility::msg($msg);
+                }
+            }
+            $metadata
+                ->setResource($resourceCombo)
+                ->setReadStore($dokuwikiStore)
+                ->setWriteStore($this);
+
+            $sourceValue = $this->get($metadata);
+            $targetValue = $metadata->getValue();
+            $defaultValue = $metadata->getDefaultValue();
+            /**
+             * Strict because otherwise the comparison `false = null` is true
+             */
+            $targetValueShouldBeStore = !in_array($targetValue, [$defaultValue, null], true);
+            if ($targetValueShouldBeStore) {
+                if ($sourceValue !== $targetValue) {
+                    $this->set($metadata);
+                }
+            } else {
+                if ($sourceValue !== null) {
+                    $this->remove($metadata);
+                }
+            }
+        }
+    }
+
+    /**
+     * Update the frontmatter with the managed metadata
+     * Used after a submit from the form
+     * @return Message
+     */
+    public function sync(): Message
+    {
+
+        /**
+         * Default update value for the frontmatter
+         */
+        $updateFrontMatter = PluginUtility::getConfValue(syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT, syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT_DEFAULT);
+
+
+        if ($this->isPresent()) {
+            $updateFrontMatter = 1;
+        }
+
+
+        if ($updateFrontMatter === 0) {
+            return Message::createInfoMessage("The frontmatter is not enabled")
+                ->setStatus(syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_NOT_ENABLED);
+        }
+
+        try {
+            $this->syncData();
+        } catch (ExceptionCombo $e) {
+            return Message::createInfoMessage($e->getMessage())
+                ->setStatus(syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_ERROR);
+        }
+
+
+        /**
+         * Same ?
+         */
+        if (!$this->hasStateChanged()) {
+            return Message::createInfoMessage("The frontmatter are the same (no update)")
+                ->setStatus(syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_NOT_CHANGED);
+        }
+
+        $this->persist();
+
+        return Message::createInfoMessage("The frontmatter was changed")
+            ->setStatus(syntax_plugin_combo_frontmatter::UPDATE_EXIT_CODE_DONE);
+
+    }
+
 
     public function isPresent(): bool
     {

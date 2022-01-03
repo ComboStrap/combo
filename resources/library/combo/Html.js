@@ -22,4 +22,12 @@ export default class Html {
         return nanoid();
     }
 
+    static toEntities(text) {
+        let entities = [];
+        for (let i = 0; i < text.length; i++) {
+            let entity = `&#${text[i].charCodeAt()};`
+            entities.push(entity);
+        }
+        return entities.join('');
+    }
 }

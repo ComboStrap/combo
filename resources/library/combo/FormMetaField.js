@@ -1,5 +1,6 @@
 import Boolean from "./Boolean";
 import Logger from "./Logger";
+import Html from "./Html";
 
 
 /**
@@ -386,6 +387,7 @@ export default class FormMetaField {
             }
 
             if (!(defaultValue === null || defaultValue === undefined)) {
+                defaultValue = Html.toEntities(defaultValue)
                 htmlPlaceholder = `placeholder="${defaultValue}"`;
             }
             let htmlValue = "";
@@ -434,6 +436,7 @@ export default class FormMetaField {
                 case FormMetaField.PARAGRAPH:
                     htmlTag = "textarea";
                     if (value !== null) {
+                        value = Html.toEntities(value);
                         htmlValue = `${value}`;
                     }
                     break;
@@ -441,6 +444,7 @@ export default class FormMetaField {
                     htmlTag = "textarea";
                     if (value !== null) {
                         value = JSON.stringify(JSON.parse(value), null, 2);
+                        value = Html.toEntities(value);
                         htmlValue = `${value}`;
                     }
                     rows = 15;
@@ -461,7 +465,6 @@ export default class FormMetaField {
 
                     htmlPlaceholder = "";
                     break;
-                case "line":
                 default:
                     inputType = "text";
                     if (!(value === null || value === undefined)) {

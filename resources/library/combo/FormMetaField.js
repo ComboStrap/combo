@@ -379,17 +379,25 @@ export default class FormMetaField {
 
         } else {
 
-            let htmlPlaceholder = '';
+            /**
+             * Placeholder default
+             * @type {string}
+             */
+            let placeholderValue = `No value`;
             if (mutable) {
-                htmlPlaceholder = `placeholder="Enter a ${this.getLabel()}"`;
-            } else {
-                htmlPlaceholder = `placeholder="No value"`;
+                placeholderValue = `Enter a ${this.getLabel()}`;
             }
-
+            // value
             if (!(defaultValue === null || defaultValue === undefined)) {
-                defaultValue = Html.toEntities(defaultValue)
-                htmlPlaceholder = `placeholder="${defaultValue}"`;
+                if (typeof defaultValue === 'string' || defaultValue instanceof String) {
+                    // json data for instance
+                    placeholderValue = Html.toEntities(defaultValue);
+                } else {
+                    placeholderValue = defaultValue;
+                }
             }
+            let htmlPlaceholder = `placeholder="${placeholderValue}"`;
+
             let htmlValue = "";
             let inputType;
             let name = this.getName();

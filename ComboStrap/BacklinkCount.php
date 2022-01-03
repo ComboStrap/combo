@@ -119,7 +119,7 @@ class BacklinkCount extends Metadata
      *
      * @return int|null
      */
-    public function calculateBacklinkCount(): ?int
+    private function calculateBacklinkCount(): ?int
     {
 
         $sqlite = Sqlite::createOrGetSqlite();

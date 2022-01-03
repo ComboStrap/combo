@@ -3,9 +3,15 @@
 
 namespace ComboStrap;
 
-
+/**
+ * Class BacklinkCount
+ * @package ComboStrap
+ * Internal backlink count
+ */
 class BacklinkCount extends Metadata
 {
+
+
     /**
      * @var int
      */
@@ -62,20 +68,31 @@ class BacklinkCount extends Metadata
         return false;
     }
 
-    public function buildFromStoreValue($value): Metadata
+    public function buildFromReadStore(): Metadata
     {
-        try {
-            $this->value = $this->toInt($value);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg($e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+
+        $storeClass = get_class($this->getReadStore());
+        switch ($storeClass) {
+            case MetadataDokuWikiStore::class:
+                $resource = $this->getResource();
+                if (!($resource instanceof Page)) {
+                    LogUtility::msg("Backlink count is not supported on the resource type ({$resource->getType()}");
+                    return $this;
+                }
+                $backlinks = $resource->getBacklinks();
+                $this->value = sizeof($backlinks);
+                return $this;
+            case MetadataDbStore::class:
+                $this->value = $this->calculateBacklinkCount();
+                return $this;
+            default:
+                LogUtility::msg("The store ($storeClass) does not support backlink count");
+                return $this;
         }
-        return $this;
+
+
     }
 
-    public function getValue()
-    {
-        return $this->value;
-    }
 
     public function getDefaultValue(): int
     {
@@ -105,7 +122,7 @@ class BacklinkCount extends Metadata
     public function calculateBacklinkCount(): ?int
     {
 
-        $sqlite= Sqlite::createOrGetSqlite();
+        $sqlite = Sqlite::createOrGetSqlite();
         if ($sqlite === null) {
             return null;
         }
@@ -125,4 +142,23 @@ class BacklinkCount extends Metadata
         return intval($count);
 
     }
+
+    public function getValue()
+    {
+        $this->buildCheck();
+        return $this->value;
+    }
+
+    public function buildFromStoreValue($value): Metadata
+    {
+        /**
+         * not used because
+         * the data is not stored in the database
+         * We overwrite and build the value {@link BacklinkCount::buildFromReadStore()}
+         */
+        return $this;
+    }
+
+
+
 }

@@ -23,7 +23,6 @@ class AnalyticsDocument extends OutputDocument
      * Constant in Key or value
      */
     const HEADER_POSITION = 'header_id';
-    const INTERNAL_BACKLINK_COUNT = "internal_backlink_count";
     const WORD_COUNT = 'word_count';
     const INTERNAL_LINK_DISTANCE = 'internal_link_distance';
     const INTERWIKI_LINK_COUNT = "interwiki_link_count";

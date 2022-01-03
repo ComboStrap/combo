@@ -45,11 +45,11 @@ class MetadataDbStore extends MetadataStoreAbs
 
     public function get(Metadata $metadata, $default = null)
     {
+
         $resource = $metadata->getResource();
         if (!($resource instanceof Page)) {
             throw new ExceptionComboRuntime("The resource type ({$resource->getType()}) is not yet supported for the database metadata store", self::CANONICAL);
         }
-
 
         if ($metadata instanceof MetadataTabular) {
 

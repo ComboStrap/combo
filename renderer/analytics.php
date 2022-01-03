@@ -5,6 +5,7 @@ use ComboStrap\AnalyticsDocument;
 use ComboStrap\BacklinkCount;
 use ComboStrap\Canonical;
 use ComboStrap\LinkUtility;
+use ComboStrap\MetadataDbStore;
 use ComboStrap\Page;
 use ComboStrap\PageTitle;
 use ComboStrap\StringUtility;
@@ -399,16 +400,20 @@ class renderer_plugin_combo_analytics extends Doku_Renderer
          * If the dokuwiki index is not up to date, we may got
          * inconsistency
          */
-        $countBacklinks = BacklinkCount::createFromResource($this->page)->calculateBacklinkCount();
-        $statExport[AnalyticsDocument::INTERNAL_BACKLINK_COUNT] = $countBacklinks;
+        $countBacklinks = BacklinkCount::createFromResource($this->page)
+            ->setReadStore(MetadataDbStore::class)
+            ->getValueOrDefault();
+        $statExport[BacklinkCount::getPersistentName()] = $countBacklinks;
         $backlinkScore = $this->getConf(self::CONF_QUALITY_SCORE_INTERNAL_BACKLINK_FACTOR, 1);
         if ($countBacklinks == 0) {
-            $qualityScores[AnalyticsDocument::INTERNAL_BACKLINK_COUNT] = 0;
+
+            $qualityScores[BacklinkCount::getPersistentName()] = 0;
             $ruleResults[self::RULE_INTERNAL_BACKLINKS_MIN] = self::FAILED;
             $ruleInfo[self::RULE_INTERNAL_BACKLINKS_MIN] = "Add backlinks for {$backlinkScore} point each";
+
         } else {
 
-            $qualityScores[AnalyticsDocument::INTERNAL_BACKLINK_COUNT] = $countBacklinks * $backlinkScore;
+            $qualityScores[BacklinkCount::getPersistentName()] = $countBacklinks * $backlinkScore;
             $ruleResults[self::RULE_INTERNAL_BACKLINKS_MIN] = self::PASSED;
         }
 

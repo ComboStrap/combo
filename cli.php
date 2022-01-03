@@ -12,6 +12,7 @@
 if (!defined('DOKU_INC')) die();
 
 use ComboStrap\AnalyticsDocument;
+use ComboStrap\BacklinkCount;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
@@ -291,7 +292,7 @@ EOF;
                 $statistics = $data[AnalyticsDocument::STATISTICS];
                 $row = array(
                     'id' => $id,
-                    'backlinks' => $statistics[AnalyticsDocument::INTERNAL_BACKLINK_COUNT],
+                    'backlinks' => $statistics[BacklinkCount::getPersistentName()],
                     'broken_links' => $statistics[AnalyticsDocument::INTERNAL_LINK_BROKEN_COUNT],
                     'changes' => $statistics[AnalyticsDocument::EDITS_COUNT],
                     'chars' => $statistics[AnalyticsDocument::CHAR_COUNT],

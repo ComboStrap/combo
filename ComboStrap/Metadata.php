@@ -22,6 +22,7 @@ abstract class Metadata
     ];
 
 
+
     /**
      * @var bool
      */
@@ -322,7 +323,8 @@ abstract class Metadata
             LogUtility::msg("The metadata store is unknown. You need to define a resource or a store to build from it");
             return $this;
         }
-        $this->buildFromStoreValue($metadataStore->get($this));
+        $value = $metadataStore->get($this);
+        $this->buildFromStoreValue($value);
         return $this;
     }
 
@@ -429,7 +431,7 @@ abstract class Metadata
      */
     public const PERSISTENT_METADATA = "persistent";
     /**
-     * Data that are derived from other
+     * Data that are derived from other and stored
      */
     public const DERIVED_METADATA = "derived";
     /**
@@ -438,12 +440,14 @@ abstract class Metadata
      */
     const RUNTIME_METADATA = "runtime";
 
+
     /**
      *
      * Return the type of metadata.
      *   * {@link Metadata::PERSISTENT_METADATA}
      *   * {@link Metadata::DERIVED_METADATA}
      *   * {@link Metadata::RUNTIME_METADATA}
+     *   *
      *
      * Backup: Only the {@link Metadata::PERSISTENT_METADATA} got a backup
      *

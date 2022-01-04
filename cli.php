@@ -62,7 +62,7 @@ class cli_plugin_combo extends DokuWiki_CLI_Plugin
 
     const METADATA_TO_DATABASE = "metadata-to-database";
     const ANALYTICS = "analytics";
-    const METADATA_FRONTMATTER = "metadata-to-frontmatter";
+    const METADATA_TO_FRONTMATTER = "metadata-to-frontmatter";
     const SYNC = "sync";
     const PLUGINS_TO_UPDATE = "plugins-to-update";
 
@@ -103,7 +103,7 @@ EOF;
         $options->registerCommand(self::METADATA_TO_DATABASE, "Replicate the file system metadata into the database");
         $options->registerCommand(self::ANALYTICS, "Start the analytics and export optionally the data");
         $options->registerCommand(self::PLUGINS_TO_UPDATE, "List the plugins to update");
-        $options->registerCommand(self::METADATA_FRONTMATTER, "Replicate the file system metadata into the page frontmatter");
+        $options->registerCommand(self::METADATA_TO_FRONTMATTER, "Replicate the file system metadata into the page frontmatter");
         $options->registerCommand(self::SYNC, "Delete the non-existing pages in the database");
         $options->registerArgument(
             'path',
@@ -143,9 +143,9 @@ EOF;
             case self::METADATA_TO_DATABASE:
                 $startPath = $this->getStartPath($args);
                 $force = $options->getOpt('force', false);
-                $this->replicate($startPath, $force, $depth);
+                $this->index($startPath, $force, $depth);
                 break;
-            case self::METADATA_FRONTMATTER:
+            case self::METADATA_TO_FRONTMATTER:
                 $startPath = $this->getStartPath($args);
                 $this->frontmatter($startPath, $depth);
                 break;
@@ -156,7 +156,7 @@ EOF;
                 $this->analytics($startPath, $output, $depth);
                 break;
             case self::SYNC:
-                $this->sync();
+                $this->deleteNonExistingPageFromDatabase();
                 break;
             case self::PLUGINS_TO_UPDATE:
                 /**
@@ -192,7 +192,7 @@ EOF;
      * @param int $depth recursion depth. 0 for unlimited
      * @throws ExceptionCombo
      */
-    private function replicate($namespaces = array(), $rebuild = false, $depth = 0)
+    private function index($namespaces = array(), $rebuild = false, $depth = 0)
     {
 
         /**
@@ -210,17 +210,16 @@ EOF;
         $totalNumberOfPages = sizeof($pages);
         while ($pageArray = array_shift($pages)) {
             $id = $pageArray['id'];
-            $page = Page::createPageFromId($id);
-
-            $pageCounter++;
-            $replicate = $page->getDatabasePage();
-            if ($replicate->shouldReplicate() || $rebuild) {
-                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) was replicated", LogUtility::LVL_MSG_INFO);
-                $replicate->replicate();
+            /**
+             * Indexing the page start the database replication
+             * See {@link action_plugin_combo_fulldatabasereplication}
+             */
+            $result = idx_addPage($id);
+            if($result){
+                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) was indexed and replicated", LogUtility::LVL_MSG_INFO);
             } else {
-                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) was up to date", LogUtility::LVL_MSG_INFO);
+                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error", LogUtility::LVL_MSG_ERROR);
             }
-
         }
         /**
          * Process all backlinks
@@ -319,20 +318,28 @@ EOF;
     }
 
 
-    private function sync()
+    private function deleteNonExistingPageFromDatabase()
     {
-        LogUtility::msg("Sync started");
+        LogUtility::msg("Starting: Deleting non-existing page from database");
         $sqlite = Sqlite::createOrGetSqlite();
-        $res = $sqlite->query("select ID from pages");
-        if (!$res) {
-            throw new \RuntimeException("An exception has occurred with the alias selection query");
+        $request = $sqlite
+            ->createRequest()
+            ->setStatement("select id as \"id\" from pages");
+        $rows = [];
+        try{
+            $rows = $request
+                ->execute()
+                ->getRows();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while getting the id pages. {$e->getMessage()}");
+            return;
+        } finally {
+            $request->close();
         }
-        $res2arr = $sqlite->res2arr($res);
-        $sqlite->res_close($res);
         $counter = 0;
-        foreach ($res2arr as $row) {
+        foreach ($rows as $row) {
             $counter++;
-            $id = $row['ID'];
+            $id = $row['id'];
             if (!page_exists($id)) {
                 echo 'Page does not exist on the file system. Deleted from the database (' . $id . ")\n";
                 Page::createPageFromId($id)->getDatabasePage()->delete();

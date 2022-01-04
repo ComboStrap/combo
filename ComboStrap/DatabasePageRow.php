@@ -281,8 +281,8 @@ class DatabasePageRow
         /**
          * When the database version file is higher
          */
-        $version = File::createFromPath(__DIR__ . "/../db/latest.version");
-        $versionModifiedTime = $version->getModifiedTime();
+        $version = LocalPath::createFromPath(__DIR__ . "/../db/latest.version");
+        $versionModifiedTime = FileSystems::getModifiedTime($version);
         if ($versionModifiedTime > $dateReplication) {
             return true;
         }
@@ -290,8 +290,8 @@ class DatabasePageRow
         /**
          * When the class date time is higher
          */
-        $code = File::createFromPath(__DIR__ . "/DatabasePage.php");
-        $codeModified = $code->getModifiedTime();
+        $code = LocalPath::createFromPath(__DIR__ . "/DatabasePage.php");
+        $codeModified = FileSystems::getModifiedTime($code);
         if ($codeModified > $dateReplication) {
             return true;
         }

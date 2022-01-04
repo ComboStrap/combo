@@ -28,6 +28,8 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
 {
 
 
+    const CANONICAL = "replication";
+
     public function register(Doku_Event_Handler $controller)
     {
 

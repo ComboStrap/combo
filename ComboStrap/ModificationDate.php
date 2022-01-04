@@ -33,18 +33,32 @@ class ModificationDate extends MetadataDateTime
         if (!($store instanceof MetadataDokuWikiStore)) {
             return parent::buildFromReadStore();
         }
-        $createdMeta = $store->getFromPersistentName('date')['modified'];
-        if (empty($createdMeta)) {
+
+        $modificationTime = FileSystems::getModifiedTime($this->getResource()->getPath());
+        if ($modificationTime !== null) {
+            $this->setValue($modificationTime);
             return $this;
+        }
+
+        /**
+         * Dokuwiki
+         * Why do they store the date of the file while it's in the file system ?
+         */
+        $createdMeta = $store->getCurrentFromName('date')['modified'];
+        if (empty($createdMeta)) {
+            $createdMeta = $store->getFromPersistentName('date')['modified'];
+            if (empty($createdMeta)) {
+                return $this;
+            }
         }
         // the data in dokuwiki is saved as timestamp
         $datetime = new DateTime();
-        $datetime->setTimestamp($createdMeta);
-        try {
-            $this->setValue($datetime);
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg("Error when setting the time from the store. Message".$e->getMessage(),LogUtility::LVL_MSG_ERROR,$e->getCanonical());
+        if(!is_int($createdMeta)){
+            LogUtility::msg("The modification time in the dokuwiki meta is not an integer");
+            return $this;
         }
+        $datetime->setTimestamp($createdMeta);
+        $this->setValue($datetime);
         return $this;
     }
 

@@ -27,6 +27,8 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
 {
 
 
+    const CANONICAL = "move";
+
     private static function checkAndSendAMessageIfLockFilePresent(): bool
     {
         $lockFile = File::createFromPath(Site::getDataDirectory() . "/locks_plugin_move.lock");
@@ -172,7 +174,7 @@ class action_plugin_combo_linkmove extends DokuWiki_Action_Plugin
             if (PluginUtility::isDevOrTest()) {
                 throw new RuntimeException($exception);
             } else {
-                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, ReplicationDate::REPLICATION_CANONICAL);
+                LogUtility::msg($message, LogUtility::LVL_MSG_ERROR, self::CANONICAL);
             }
         }
 

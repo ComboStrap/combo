@@ -3,9 +3,7 @@
 
 namespace ComboStrap;
 
-use http\Exception\RuntimeException;
 use ModificationDate;
-use ReplicationDate;
 
 /**
  * The class that manage the replication
@@ -110,9 +108,9 @@ class DatabasePageRow
         /**
          * Replication Date
          */
-        $replicationDateMeta = ReplicationDate::createFromPage($this->page)
+        $replicationDateMeta = \ReplicationDate::createFromPage($this->page)
+            ->setWriteStore(MetadataDbStore::class)
             ->setValue(new \DateTime());
-
 
         /**
          * Page Replication should appears
@@ -151,11 +149,6 @@ class DatabasePageRow
         $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[BacklinkCount::getPersistentName()];
         $this->upsertAttributes($record);
 
-        /**
-         * Set the replication date
-         */
-        $replicationDateMeta
-            ->persist();
 
         return $this;
 
@@ -387,17 +380,16 @@ class DatabasePageRow
 
     public function getReplicationDate(): ?\DateTime
     {
-        return ReplicationDate::createFromPage($this->page)
-            ->getValue();
+        return $this->getFromRow(\ReplicationDate::getPersistentName());
 
     }
 
     /**
-     * @param ReplicationDate $replicationDate
+     * @param \ReplicationDate $replicationDate
      * @return bool
      * @throws ExceptionCombo
      */
-    public function replicatePage(ReplicationDate $replicationDate): bool
+    public function replicatePage(\ReplicationDate $replicationDate): bool
     {
 
         if (!$this->page->exists()) {
@@ -415,8 +407,7 @@ class DatabasePageRow
          */
         $record = $this->getMetaRecord();
         $record['IS_HOME'] = ($page->isHomePage() === true ? 1 : 0);
-        $record[ReplicationDate::PROPERTY_NAME] = $replicationDate->toStoreValue();
-
+        $record[$replicationDate::getPersistentName()] = $replicationDate->toStoreValue();
 
         return $this->upsertAttributes($record);
 
@@ -489,7 +480,7 @@ class DatabasePageRow
                 $request->close();
             }
             if ($countChanges !== 1) {
-                LogUtility::msg("The database replication has not updated exactly 1 record but ($countChanges) record", LogUtility::LVL_MSG_ERROR, ReplicationDate::REPLICATION_CANONICAL);
+                LogUtility::msg("The database replication has not updated exactly 1 record but ($countChanges) record", LogUtility::LVL_MSG_ERROR, \action_plugin_combo_fulldatabasereplication::CANONICAL);
             }
 
         } else {
@@ -1029,7 +1020,7 @@ class DatabasePageRow
             return null;
         }
 
-        if(!array_key_exists($attribute, $this->row)){
+        if (!array_key_exists($attribute, $this->row)) {
             /**
              * An attribute should be added to {@link DatabasePageRow::PAGE_BUILD_ATTRIBUTES}
              * or in the table

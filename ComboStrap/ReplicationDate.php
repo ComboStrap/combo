@@ -6,6 +6,10 @@ use ComboStrap\Metadata;
 use ComboStrap\MetadataDateTime;
 use ComboStrap\Page;
 
+/**
+ * Class ReplicationDate
+ * Modification date of the database row
+ */
 class ReplicationDate extends MetadataDateTime
 {
 
@@ -28,7 +32,7 @@ class ReplicationDate extends MetadataDateTime
 
     public function getDescription(): string
     {
-        return "The last date of database replication";
+        return "The modification date of the database row";
     }
 
     public function getLabel(): string
@@ -58,6 +62,6 @@ class ReplicationDate extends MetadataDateTime
 
     public function getDefaultValue()
     {
-        // TODO: Implement getDefaultValue() method.
+        return null;
     }
 }

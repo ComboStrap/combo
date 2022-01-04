@@ -32,6 +32,7 @@ class MetaManagerForm
         PageUrlPath::PROPERTY_NAME,
         PageLayout::PROPERTY_NAME,
         ModificationDate::PROPERTY_NAME,
+        ReplicationDate::PROPERTY_NAME,
         PageCreationDate::PROPERTY_NAME,
         PageImages::PROPERTY_NAME,
         Aliases::PROPERTY_NAME,
@@ -45,19 +46,15 @@ class MetaManagerForm
         Locale::PROPERTY_NAME,
         Lang::PROPERTY_NAME,
         Region::PROPERTY_NAME,
-        ReplicationDate::PROPERTY_NAME,
         PageId::PROPERTY_NAME,
         CacheExpirationFrequency::PROPERTY_NAME,
         CacheExpirationDate::PROPERTY_NAME
     ];
-    /**
-     * @var MetadataDokuWikiStore
-     */
-    private $sourceStore;
+
     /**
      * @var MetadataFormDataStore
      */
-    private $targetStore;
+    private $targetFormDataStore;
 
     /**
      * MetaManager constructor.
@@ -65,8 +62,7 @@ class MetaManagerForm
     public function __construct($page)
     {
         $this->page = $page;
-        $this->sourceStore = MetadataDokuWikiStore::getOrCreateFromResource($page);
-        $this->targetStore = MetadataFormDataStore::getOrCreateFromResource($page);
+        $this->targetFormDataStore = MetadataFormDataStore::getOrCreateFromResource($page);
     }
 
     public static function createForPage(Page $page): MetaManagerForm
@@ -100,6 +96,7 @@ class MetaManagerForm
         /**
          * The manager
          */
+        $dokuwikiFsStore = MetadataDokuWikiStore::getOrCreateFromResource($this->page);
         foreach (self::FORM_METADATA_LIST as $formsMetaDatum) {
 
             $metadata = Metadata::getForName($formsMetaDatum);
@@ -109,9 +106,9 @@ class MetaManagerForm
             }
             $metadata
                 ->setResource($this->page)
-                ->setReadStore($this->sourceStore)
+                ->setReadStore($dokuwikiFsStore)
                 ->buildFromReadStore()
-                ->setWriteStore($this->targetStore);
+                ->setWriteStore($this->targetFormDataStore);
             $formMeta->addFormFieldFromMetadata($metadata);
         }
 
@@ -172,15 +169,10 @@ class MetaManagerForm
     }
 
 
-
     public function toFormData(): array
     {
         return $this->toFormMeta()->toFormData();
     }
-
-
-
-
 
 
 }

@@ -6,7 +6,6 @@ namespace ComboStrap;
 
 use action_plugin_combo_metadescription;
 use ModificationDate;
-use ReplicationDate;
 use Slug;
 
 abstract class Metadata
@@ -167,10 +166,10 @@ abstract class Metadata
                 return new PageUrlPath();
             case Locale::PROPERTY_NAME:
                 return new Locale();
-            case ReplicationDate::PROPERTY_NAME:
-                return new ReplicationDate();
             case CacheExpirationDate::PROPERTY_NAME:
                 return new CacheExpirationDate();
+            case \ReplicationDate::getName():
+                return new \ReplicationDate();
             case DisqusIdentifier::PROPERTY_NAME:
                 return new DisqusIdentifier();
             default:
@@ -436,7 +435,7 @@ abstract class Metadata
     public const DERIVED_METADATA = "derived";
     /**
      * A runtime metadata is created for the purpose of a process
-     * Example {@link ReplicationDate}
+     * Example {@link PageScope}
      */
     const RUNTIME_METADATA = "runtime";
 
@@ -495,7 +494,6 @@ abstract class Metadata
         "format",
         "internal", // toc, cache, ...
         "relation",
-        ReplicationDate::PROPERTY_NAME,
         PageH1::H1_PARSED,
         LowQualityCalculatedIndicator::LOW_QUALITY_INDICATOR_CALCULATED
     ];

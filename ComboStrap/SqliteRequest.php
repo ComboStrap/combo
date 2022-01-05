@@ -26,11 +26,17 @@ class SqliteRequest
      * @var string
      */
     private $query;
+
     private $sqlitePlugin;
     /**
      * @var array|string[]
      */
     private $queryParametrized;
+    /**
+     * A statement that is not a query
+     * @var string
+     */
+    private $statement;
 
     /**
      * SqliteRequest constructor.
@@ -63,12 +69,17 @@ class SqliteRequest
 
         if ($this->query !== null) {
             $res = $this->sqlitePlugin->query($this->query);
-            $requestType = "Query";
+            $requestType = "Query Simple";
         }
 
         if ($this->queryParametrized !== null) {
             $res = $this->sqlitePlugin->getAdapter()->query($this->queryParametrized);
-            $requestType = "Statement Parametrized"; // delete, insert, update, query
+            $requestType = "Query Parametrized"; // delete, insert, update, query
+        }
+
+        if($this->statement!==null){
+            $res = $this->sqlitePlugin->getAdapter()->getDb()->exec($this->statement);
+            $requestType = "statement";
         }
 
         if ($res === null) {
@@ -77,7 +88,7 @@ class SqliteRequest
 
         if ($res === false) {
             $message = $this->getErrorMessage();
-            throw new ExceptionCombo("Error in the $requestType: {$message}");
+            throw new ExceptionCombo("Error in the $requestType. Message: {$message}");
         }
 
         $this->result = new SqliteResult($this, $res);
@@ -102,7 +113,7 @@ class SqliteRequest
         if ($errorCode === '0000') {
             $message = ("No rows were deleted or updated");
         }
-        $errorInfoAsString = var_export($errorInfo, true);
+        $errorInfoAsString = implode(", ",$errorInfo);
         return "$message. : {$errorInfoAsString}";
     }
 
@@ -121,7 +132,7 @@ class SqliteRequest
 
     }
 
-    public function setStatement(string $string): SqliteRequest
+    public function setQuery(string $string): SqliteRequest
     {
         $this->query = $string;
         return $this;
@@ -132,13 +143,23 @@ class SqliteRequest
      * @param array $parameters
      * @return SqliteResult
      */
-    public function setStatementParametrized(string $executableSql, array $parameters): SqliteRequest
+    public function setQueryParametrized(string $executableSql, array $parameters): SqliteRequest
     {
 
         $args = [$executableSql];
         $this->queryParametrized = array_merge($args, $parameters);
         return $this;
 
+    }
+
+    /**
+     * @param string $statement
+     * @return $this - a statement that will execute
+     */
+    public function setStatement(string $statement): SqliteRequest
+    {
+        $this->statement = $statement;
+        return $this;
     }
 
 }

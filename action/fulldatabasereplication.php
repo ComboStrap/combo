@@ -1,6 +1,7 @@
 <?php
 
 
+use ComboStrap\Console;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LogUtility;
@@ -33,25 +34,22 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
     public function register(Doku_Event_Handler $controller)
     {
 
+
         /**
-         * Analytics to refresh because they have lost or gain a backlinks
-         * are done via Sqlite table (The INDEXER_TASKS_RUN gives a way to
-         * manipulate this queue)
-         *
-         * There is no need to do it at page write
-         * https://www.dokuwiki.org/devel:event:io_wikipage_write
-         * because after the page is written, the page is shown and trigger the index tasks run
-         *
          * We do it after because if there is an error
          * We will not stop the Dokuwiki Processing
          */
-        $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_background_refresh_analytics', array());
+        $controller->register_hook('INDEXER_PAGE_ADD', 'AFTER', $this, 'handle_db_replication', array());
 
 
+        $controller->register_hook('INDEXER_TASKS_RUN', 'AFTER', $this, 'handle_async_event', array());
 
     }
 
-    public function handle_background_refresh_analytics(Doku_Event $event, $param)
+    /**
+     * @throws ExceptionCombo
+     */
+    public function handle_db_replication(Doku_Event $event, $param)
     {
 
 
@@ -81,12 +79,26 @@ class action_plugin_combo_fulldatabasereplication extends DokuWiki_Action_Plugin
             try {
                 $databasePage->replicate();
             } catch (ExceptionCombo $e) {
-                LogUtility::msg("Error with the database replication for the page ($page)");
+                $message = "Error with the database replication for the page ($page). ".$e->getMessage();
+                if(Console::isConsoleRun()) {
+                    throw new ExceptionCombo($message);
+                } else {
+                    LogUtility::msg($message);
+                }
             }
         }
 
+
+    }
+
+    /**
+     */
+    public function handle_async_event(Doku_Event $event, $param)
+    {
+
+
         /**
-         * Process the page to replicate
+         * Process the async event
          */
         Event::dispatchEvent();
 

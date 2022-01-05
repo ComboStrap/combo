@@ -35,6 +35,8 @@ class Sqlite
      */
     private const  BACK = "back";
 
+    private static $sqliteVersion;
+
     /**
      * @var helper_plugin_sqlite
      */
@@ -134,7 +136,7 @@ class Sqlite
 
     public static function createSelectFromTableAndColumns(string $tableName, array $columns = null): string
     {
-        if($columns === null){
+        if ($columns === null) {
             $columnStatement = "*";
         } else {
             $columnsStatement = [];
@@ -333,5 +335,39 @@ class Sqlite
     public function createRequest(): SqliteRequest
     {
         return new SqliteRequest($this);
+    }
+
+    public function getVersion()
+    {
+        if (self::$sqliteVersion === null) {
+            try {
+                self::$sqliteVersion = $this->createRequest()
+                    ->setQuery("select sqlite_version()")
+                    ->execute()
+                    ->getFirstCellValue();
+            } catch (ExceptionCombo $e) {
+                self::$sqliteVersion = "unknown";
+            }
+        }
+        return self::$sqliteVersion;
+    }
+
+    /**
+     * @param string $option
+     * @return bool - true if the option is available
+     */
+    public function hasOption(string $option): bool
+    {
+        try {
+            $present = $this->createRequest()
+                ->setQueryParametrized("select count(1) from pragma_compile_options() where compile_options = ?", $option)
+                ->execute()
+                ->getFirstCellValueAsInt();
+            return $present === 1;
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Error while trying to see if the sqlite option is available");
+            return false;
+        }
+
     }
 }

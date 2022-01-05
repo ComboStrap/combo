@@ -16,6 +16,7 @@ use ComboStrap\BacklinkCount;
 use ComboStrap\DatabasePageRow;
 use ComboStrap\Event;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\ExceptionComboRuntime;
 use ComboStrap\FsWikiUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataFrontmatterStore;
@@ -214,11 +215,20 @@ EOF;
              * Indexing the page start the database replication
              * See {@link action_plugin_combo_fulldatabasereplication}
              */
-            $result = idx_addPage($id);
-            if($result){
-                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) was indexed and replicated", LogUtility::LVL_MSG_INFO);
-            } else {
-                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error", LogUtility::LVL_MSG_ERROR);
+            $pageCounter++;
+            try {
+                /**
+                 * If the page does not need to be indexed, there is no run
+                 * and false is returned
+                 */
+                $indexedOrNot = idx_addPage($id, true, true);
+                if ($indexedOrNot) {
+                    LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) was indexed and replicated", LogUtility::LVL_MSG_INFO);
+                } else {
+                    LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error", LogUtility::LVL_MSG_ERROR);
+                }
+            } catch (ExceptionComboRuntime $e) {
+                LogUtility::msg("The page {$id} ($pageCounter / $totalNumberOfPages) has an error: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);
             }
         }
         /**
@@ -324,9 +334,9 @@ EOF;
         $sqlite = Sqlite::createOrGetSqlite();
         $request = $sqlite
             ->createRequest()
-            ->setStatement("select id as \"id\" from pages");
+            ->setQuery("select id as \"id\" from pages");
         $rows = [];
-        try{
+        try {
             $rows = $request
                 ->execute()
                 ->getRows();

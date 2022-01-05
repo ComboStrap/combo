@@ -155,7 +155,7 @@ class Aliases extends MetadataTabular
         $canonicalOrDefault = $this->getResource()->getCanonicalOrDefault();
         $request = $sqlite
             ->createRequest()
-            ->setStatementParametrized("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", [$canonicalOrDefault]);
+            ->setQueryParametrized("select ALIAS from DEPRECATED_PAGES_ALIAS where CANONICAL = ?", [$canonicalOrDefault]);
         $deprecatedAliases = [];
         $deprecatedAliasInDb = [];
         try {
@@ -185,7 +185,7 @@ class Aliases extends MetadataTabular
         if (sizeof($deprecatedAliasInDb) > 0) {
             $request = $sqlite
                 ->createRequest()
-                ->setStatementParametrized("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", [$canonicalOrDefault]);
+                ->setQueryParametrized("delete from DEPRECATED_PAGE_ALIASES where CANONICAL = ?", [$canonicalOrDefault]);
             try {
                 $request->execute();
             } catch (ExceptionCombo $e) {

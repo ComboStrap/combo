@@ -70,7 +70,7 @@ EOF;
         $rows = [];
         $request = $sqlite
             ->createRequest()
-            ->setStatementParametrized($query, $patterns);
+            ->setQueryParametrized($query, $patterns);
         try{
             $rows = $request
                 ->execute()

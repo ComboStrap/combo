@@ -345,7 +345,7 @@ class syntax_plugin_combo_template extends DokuWiki_Syntax_Plugin
                         $parameters = $pageSql->getParameters();
                         $request = $sqlite
                             ->createRequest()
-                            ->setStatementParametrized($executableSql, $parameters);
+                            ->setQueryParametrized($executableSql, $parameters);
                         $rowsInDb = [];
                         try{
                             $rowsInDb = $request

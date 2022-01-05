@@ -27,7 +27,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatementParametrized('delete from PAGE_RULES where id = ?', $ruleId);
+            ->setQueryParametrized('delete from PAGE_RULES where id = ?', $ruleId);
         try {
             $request->execute();
         } catch (ExceptionCombo $e) {
@@ -51,7 +51,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatementParametrized("SELECT count(*) FROM PAGE_RULES where ID = ?", [$id]);
+            ->setQueryParametrized("SELECT count(*) FROM PAGE_RULES where ID = ?", [$id]);
         $count = 0;
         try {
             $count = $request
@@ -80,7 +80,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatementParametrized("SELECT count(*) FROM PAGE_RULES where MATCHER = ?", [$pattern]);
+            ->setQueryParametrized("SELECT count(*) FROM PAGE_RULES where MATCHER = ?", [$pattern]);
         $count = 0;
         try {
             $count = $request->execute()
@@ -179,7 +179,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatement("delete from PAGE_RULES");
+            ->setQuery("delete from PAGE_RULES");
         try {
             $request->execute();
         } catch (ExceptionCombo $e) {
@@ -200,7 +200,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatement("select count(1) from PAGE_RULES");
+            ->setQuery("select count(1) from PAGE_RULES");
 
         $count = 0;
         try {
@@ -226,7 +226,7 @@ class PageRules
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatement("select * from PAGE_RULES order by PRIORITY asc");
+            ->setQuery("select * from PAGE_RULES order by PRIORITY asc");
 
         try {
             return $request->execute()
@@ -245,7 +245,7 @@ class PageRules
     {
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatementParametrized("SELECT * FROM PAGE_RULES where ID = ?", [$id]);
+            ->setQueryParametrized("SELECT * FROM PAGE_RULES where ID = ?", [$id]);
         try {
             return $request->execute()
                 ->getFirstRow();

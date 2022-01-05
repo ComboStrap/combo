@@ -10,6 +10,7 @@ namespace ComboStrap;
  */
 class BacklinkCount extends Metadata
 {
+    const PROPERTY_NAME = 'backlink_count';
 
 
     /**
@@ -55,7 +56,7 @@ class BacklinkCount extends Metadata
 
     public static function getName(): string
     {
-        return 'backlink_count';
+        return self::PROPERTY_NAME;
     }
 
     public function getPersistenceType(): string
@@ -128,7 +129,7 @@ class BacklinkCount extends Metadata
         }
         $request = $sqlite
             ->createRequest()
-            ->setStatementParametrized("select count(1) from PAGE_REFERENCES where REFERENCE = ? ", [$this->getResource()->getPath()->toString()]);
+            ->setQueryParametrized("select count(1) from PAGE_REFERENCES where REFERENCE = ? ", [$this->getResource()->getPath()->toString()]);
         $count = 0;
         try {
             $count = $request

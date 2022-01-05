@@ -31,35 +31,53 @@ class Event
     {
 
         $sqlite = Sqlite::createOrGetBackendSqlite();
-        $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, "rowid"];
-        $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME,$attributes);
-        $request = $sqlite->createRequest()
-            ->setStatement($select);
-
-        $rows = null;
-        try {
-            $result = $request->execute();
-            $rows = $result->getRows();
-            if (sizeof($rows) === 0) {
-                return;
-            }
-        } catch (ExceptionCombo $e) {
-            LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
-        } finally {
-            $request->close();
+        if ($sqlite === null) {
+            LogUtility::msg("Sqlite is mandatory for asynchronous event");
+            return;
         }
 
         /**
          * In case of a start or if there is a recursive bug
          * We don't want to take all the resources
          */
-        $maxBackgroundEventLow = 2;
-        $events = sizeof($rows);
-        if ($events > $maxEvent) {
-            $table = self::EVENT_TABLE_NAME;
-            LogUtility::msg("There is {$events} background event in the queue (table `{$table}`). This is more than {$maxEvent} pages. Batch event background was reduced to {$maxBackgroundEventLow} to not hit the computer resources.", LogUtility::LVL_MSG_ERROR, self::CANONICAL);
-            $maxEvent = $maxBackgroundEventLow;
+        $maxBackgroundEventLow = 10;
+
+        $version = $sqlite->getVersion();
+        $rows = [];
+        if ($version > "3.35.0") {
+
+            // returning clause is available since 3.35 on delete
+            // https://www.sqlite.org/lang_returning.html
+
+            $eventTableName = self::EVENT_TABLE_NAME;
+            $statement = "delete from {$eventTableName} returning *";
+            // https://www.sqlite.org/lang_delete.html#optional_limit_and_order_by_clauses
+            if ($sqlite->hasOption("SQLITE_ENABLE_UPDATE_DELETE_LIMIT")) {
+                $statement .= "order by timestamp limit {$maxBackgroundEventLow}";
+            }
+            $request = $sqlite->createRequest()
+                ->setStatement($statement);
+            try {
+                $rows = $request->execute()
+                    ->getRows();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                return;
+            } finally {
+                $request->close();
+            }
+
+        } else {
+
+            // technically the lock system of dokuwiki does not allow two process to run on
+            // the indexer, we trust it
+
         }
+
+        if (sizeof($rows) === 0) {
+            return;
+        }
+
 
         $eventCounter = 0;
         foreach ($rows as $row) {
@@ -146,4 +164,32 @@ class Event
         $evt = new \dokuwiki\Extension\Event('INDEXER_TASKS_RUN', $tmp);
         $evt->advise_after();
     }
+
+    public static function getQueueSize()
+    {
+        $sqlite = Sqlite::createOrGetBackendSqlite();
+        if ($sqlite === null) {
+            LogUtility::msg("Unable to count the number of event in the queue. Sqlite is not available");
+            return;
+        }
+
+
+        /**
+         * Execute
+         */
+        $request = $sqlite->createRequest()
+            ->setQuery("select count(1) from " . self::EVENT_TABLE_NAME);
+        $count = 0;
+        try {
+            $count = $request->execute()
+                ->getFirstCellValueAsInt();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Unable to count the number of event in the queue. Error:" . $e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+        } finally {
+            $request->close();
+        }
+        return $count;
+    }
+
+
 }

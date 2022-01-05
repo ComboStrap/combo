@@ -160,7 +160,7 @@ EOF;
         ];
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatementParametrized($delete, $row);
+            ->setQueryParametrized($delete, $row);
         try {
             $request->execute();
         } catch (ExceptionCombo $e) {
@@ -214,7 +214,7 @@ EOF;
         $query = "$query where $uidAttribute = ? ";
         $res = $sqlite
             ->createRequest()
-            ->setStatementParametrized($query, [$pageId]);
+            ->setQueryParametrized($query, [$pageId]);
         $rows = [];
         try {
             $rows = $res

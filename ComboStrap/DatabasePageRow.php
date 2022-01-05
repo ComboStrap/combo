@@ -43,7 +43,9 @@ class DatabasePageRow
             Lang::PROPERTY_NAME,
             PageType::PROPERTY_NAME,
             PageId::PROPERTY_NAME,
-            PageId::PAGE_ID_ABBR_ATTRIBUTE
+            PageId::PAGE_ID_ABBR_ATTRIBUTE,
+            \ReplicationDate::PROPERTY_NAME,
+            BacklinkCount::PROPERTY_NAME
         ];
     const ANALYTICS_ATTRIBUTE = "ANALYTICS";
 
@@ -105,17 +107,11 @@ class DatabasePageRow
             throw new ExceptionCombo("You can't replicate the non-existing page ($this->page) on the file system");
         }
 
-        /**
-         * Replication Date
-         */
-        $replicationDateMeta = \ReplicationDate::createFromPage($this->page)
-            ->setWriteStore(MetadataDbStore::class)
-            ->setValue(new \DateTime());
 
         /**
          * Page Replication should appears
          */
-        $this->replicatePage($replicationDateMeta);
+        $this->replicatePage();
 
         /**
          * @var Metadata $tabularMetadataToSync
@@ -140,14 +136,7 @@ class DatabasePageRow
          * Should appear at the end of the replication because it is based
          * on the previous replication (ie backlink count)
          */
-        $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
-        $analyticsJsonAsString = $analyticsJson->toPrettyJsonString();
-        $analyticsJsonAsArray = $analyticsJson->toArray();
-        $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
-        $record['IS_LOW_QUALITY'] = ($this->page->isLowQualityPage() === true ? 1 : 0);
-        $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
-        $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[BacklinkCount::getPersistentName()];
-        $this->upsertAttributes($record);
+        $this->replicateAnalytics();
 
 
         return $this;
@@ -299,7 +288,7 @@ class DatabasePageRow
 
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatementParametrized('delete from pages where id = ?', [$this->page->getDokuwikiId()]);
+            ->setQueryParametrized('delete from pages where id = ?', [$this->page->getDokuwikiId()]);
         try {
             $request->execute();
         } catch (ExceptionCombo $e) {
@@ -378,23 +367,36 @@ class DatabasePageRow
 
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function getReplicationDate(): ?\DateTime
     {
-        return $this->getFromRow(\ReplicationDate::getPersistentName());
+        $dateString = $this->getFromRow(\ReplicationDate::getPersistentName());
+        if ($dateString === null) {
+            return null;
+        }
+        return Iso8601Date::createFromString($dateString)->getDateTime();
 
     }
 
     /**
-     * @param \ReplicationDate $replicationDate
      * @return bool
      * @throws ExceptionCombo
      */
-    public function replicatePage(\ReplicationDate $replicationDate): bool
+    public function replicatePage(): bool
     {
 
         if (!$this->page->exists()) {
             throw new ExceptionCombo("You can't replicate the page ($this->page) because it does not exists.");
         }
+
+        /**
+         * Replication Date
+         */
+        $replicationDate = \ReplicationDate::createFromPage($this->page)
+            ->setWriteStore(MetadataDbStore::class)
+            ->setValue(new \DateTime());
 
         /**
          * Convenient variable
@@ -467,7 +469,7 @@ class DatabasePageRow
             $updateStatement = "update PAGES SET " . implode($columnClauses, ", ") . " where ROWID = ?";
             $request = $this->sqlite
                 ->createRequest()
-                ->setStatementParametrized($updateStatement, $values);
+                ->setQueryParametrized($updateStatement, $values);
             $countChanges = 0;
             try {
                 $countChanges = $request
@@ -721,7 +723,7 @@ class DatabasePageRow
         $query = $this->getParametrizedLookupQuery($pageIdAttribute);
         $request = Sqlite::createOrGetSqlite()
             ->createRequest()
-            ->setStatementParametrized($query, [$pageId]);
+            ->setQueryParametrized($query, [$pageId]);
         $rows = [];
         try {
             $rows = $request
@@ -790,7 +792,7 @@ class DatabasePageRow
         $query = $this->getParametrizedLookupQuery(Canonical::PROPERTY_NAME);
         $request = $this->sqlite
             ->createRequest()
-            ->setStatementParametrized($query, [$canonical]);
+            ->setQueryParametrized($query, [$canonical]);
         $rows = [];
         try {
             $rows = $request
@@ -871,7 +873,7 @@ class DatabasePageRow
         $query = $this->getParametrizedLookupQuery($attribute);
         $request = $this->sqlite
             ->createRequest()
-            ->setStatementParametrized($query, [$value]);
+            ->setQueryParametrized($query, [$value]);
         $rows = [];
         try {
             $rows = $request
@@ -949,7 +951,7 @@ class DatabasePageRow
         $query = "select {$fields} from PAGES p, PAGE_ALIASES pa where p.{$pageIdAttribute} = pa.{$pageIdAttribute} and pa.PATH = ? ";
         $request = $this->sqlite
             ->createRequest()
-            ->setStatementParametrized($query, [$alias]);
+            ->setQueryParametrized($query, [$alias]);
         $rows = [];
         try {
             $rows = $request
@@ -1039,6 +1041,41 @@ class DatabasePageRow
         $upperAttribute = strtoupper($attribute);
         return $this->row[$upperAttribute];
 
+    }
+
+
+    private function replicateAnalytics()
+    {
+
+        try {
+            $analyticsJson = $this->page->getAnalyticsDocument()->getOrProcessJson();
+        } catch (ExceptionCombo $e) {
+            LogUtility::msg("Unable to replicate the analytics: " . $e->getMessage());
+            return;
+        }
+
+        /**
+         * Replication Date
+         */
+        $replicationDateMeta = \ReplicationDate::createFromPage($this->page)
+            ->setWriteStore(MetadataDbStore::class)
+            ->setValue(new \DateTime());
+
+        /**
+         * Analytics
+         */
+        $analyticsJsonAsString = $analyticsJson->toPrettyJsonString();
+        $analyticsJsonAsArray = $analyticsJson->toArray();
+
+        /**
+         * Record
+         */
+        $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
+        $record['IS_LOW_QUALITY'] = ($this->page->isLowQualityPage() === true ? 1 : 0);
+        $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
+        $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[BacklinkCount::getPersistentName()];
+        $record[$replicationDateMeta::getPersistentName()] = $replicationDateMeta->toStoreValue();
+        $this->upsertAttributes($record);
     }
 
 

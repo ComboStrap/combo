@@ -154,7 +154,7 @@ class LogUtility
          * we test that the message comes in the front end
          * (example {@link \plugin_combo_frontmatter_test}
          */
-        $isTerminal = (php_sapi_name() === 'cli');
+        $isTerminal = Console::isConsoleRun();
         if ($isTerminal) {
             if (!defined('DOKU_UNITTEST')) {
                 /**

@@ -30,4 +30,9 @@ class Console
         self::$on = true;
     }
 
+    public static function isConsoleRun(): bool
+    {
+        return (php_sapi_name() === 'cli');
+    }
+
 }

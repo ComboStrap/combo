@@ -60,22 +60,67 @@ class Event
             try {
                 $rows = $request->execute()
                     ->getRows();
+                if (sizeof($rows) === 0) {
+                    return;
+                }
             } catch (ExceptionCombo $e) {
                 LogUtility::msg($e->getMessage(), LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+            } finally {
+                $request->close();
+            }
+
+        }
+
+        /**
+         * Error in the block before or not the good version
+         * We try to get the records with a select/delete
+         */
+        if (sizeof($rows) === 0) {
+
+
+            // technically the lock system of dokuwiki does not allow two process to run on
+            // the indexer, we trust it
+            $attributes = [self::EVENT_NAME_ATTRIBUTE, self::EVENT_DATA_ATTRIBUTE, DatabasePageRow::ROWID];
+            $select = Sqlite::createSelectFromTableAndColumns(self::EVENT_TABLE_NAME, $attributes);
+            $request = $sqlite->createRequest()
+                ->setQuery($select);
+
+            $rowsSelected = [];
+            try {
+                $rowsSelected = $request->execute()
+                    ->getRows();
+                if (sizeof($rowsSelected) === 0) {
+                    return;
+                }
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while retrieving the event {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
                 return;
             } finally {
                 $request->close();
             }
 
-        } else {
+            $eventTableName = self::EVENT_TABLE_NAME;
+            $rows = [];
+            foreach ($rowsSelected as $row) {
+                $request = $sqlite->createRequest()
+                    ->setQueryParametrized("delete from $eventTableName where rowid = ? ", [$row[DatabasePageRow::ROWID]]);
+                try {
+                    $changeCount = $request->execute()
+                        ->getChangeCount();
+                    if ($changeCount !== 1) {
+                        LogUtility::msg("The delete of the event was not successful or it was deleted by another process", LogUtility::LVL_MSG_ERROR);
+                    } else {
+                        $rows[] = $row;
+                    }
+                } catch (ExceptionCombo $e) {
+                    LogUtility::msg("Error while deleting the event. Message {$e->getMessage()}", LogUtility::LVL_MSG_ERROR, $e->getCanonical());
+                    return;
+                } finally {
+                    $request->close();
+                }
+            }
 
-            // technically the lock system of dokuwiki does not allow two process to run on
-            // the indexer, we trust it
 
-        }
-
-        if (sizeof($rows) === 0) {
-            return;
         }
 
 

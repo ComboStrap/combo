@@ -340,13 +340,16 @@ class Sqlite
     public function getVersion()
     {
         if (self::$sqliteVersion === null) {
+            $request = $this->createRequest()
+                ->setQuery("select sqlite_version()");
             try {
-                self::$sqliteVersion = $this->createRequest()
-                    ->setQuery("select sqlite_version()")
+                self::$sqliteVersion = $request
                     ->execute()
                     ->getFirstCellValue();
             } catch (ExceptionCombo $e) {
                 self::$sqliteVersion = "unknown";
+            } finally {
+                $request->close();
             }
         }
         return self::$sqliteVersion;

@@ -65,11 +65,13 @@ class AnalyticsDocument extends OutputDocument
 
 
     /**
-     * Return the JSON analytics data
+     * Return the JSON analytics data without any processing
+     *
+     * Data Type Wrapper around {@link AnalyticsDocument::getContent()}
+     * to return a json object
      *
      * @return Json
      * @throws ExceptionCombo
-     * @deprecated use {@link AnalyticsDocument::getOrProcessJson()}
      */
     public function getJson(): Json
     {
@@ -81,25 +83,29 @@ class AnalyticsDocument extends OutputDocument
          * will set it {@link Page::setLowQualityIndicatorCalculation()}
          * creating a loop
          */
-        if(!FileSystems::exists($this->getCachePath())){
+        if (!FileSystems::exists($this->getCachePath())) {
             return Json::createEmpty();
         }
         return Json::createFromString(parent::getContent());
+
 
     }
 
 
     function getExtension(): string
     {
-        return renderer_plugin_combo_analytics::RENDERER_FORMAT.".json";
+        /**
+         * Unfortunately, you can add a json extension
+         * because the format is used to locate the
+         * class {@link renderer_plugin_combo_analytics}
+         */
+        return  renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
     }
 
     function getRendererName(): string
     {
         return renderer_plugin_combo_analytics::RENDERER_NAME_MODE;
     }
-
-
 
 
 }

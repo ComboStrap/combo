@@ -1,7 +1,9 @@
 <?php
 
 use ComboStrap\AnalyticsDocument;
+use ComboStrap\ExceptionCombo;
 use ComboStrap\Identity;
+use ComboStrap\LogUtility;
 use ComboStrap\Message;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -102,7 +104,14 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
 
         if ($page->exists()) {
 
-            $analyticsArray = $page->getAnalyticsDocument()->getJson()->toArray();
+
+            try {
+                $analyticsArray = $page->getAnalyticsDocument()->getJson()->toArray();
+            } catch (ExceptionCombo $e) {
+                LogUtility::msg("Error while trying to read the JSON analytics document. {$e->getMessage()}");
+                return null;
+            }
+
             $rules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::RULES];
 
 
@@ -145,8 +154,9 @@ class action_plugin_combo_qualitymessage extends DokuWiki_Action_Plugin
                 $message = Message::createInfoMessage()
                     ->addHtmlContent("<p>Well played, you got a " . PluginUtility::getDocumentationHyperLink("quality:score", "quality score") . " of {$qualityScore} !</p>");
 
-                if ($page->isLowQualityPage()) {
-                    $analyticsArray = $page->getAnalyticsDocument()->getJson()->toArray();
+                $lowQuality = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::LOW];
+                if ($lowQuality) {
+
                     $mandatoryFailedRules = $analyticsArray[AnalyticsDocument::QUALITY][AnalyticsDocument::FAILED_MANDATORY_RULES];
                     $rulesUrl = PluginUtility::getDocumentationHyperLink("quality:rule", "rules");
                     $lqPageUrl = PluginUtility::getDocumentationHyperLink("low_quality_page", "low quality page");

@@ -4,6 +4,8 @@
 namespace ComboStrap;
 
 
+use renderer_plugin_combo_analytics;
+
 abstract class PathAbs implements Path
 {
 
@@ -29,6 +31,7 @@ abstract class PathAbs implements Path
                 return new Mime(Mime::SVG);
             case JavascriptLibrary::EXTENSION:
                 return new Mime(Mime::JAVASCRIPT);
+            case renderer_plugin_combo_analytics::RENDERER_NAME_MODE:
             case Json::EXTENSION:
                 return new Mime(Mime::JSON);
             case "txt":

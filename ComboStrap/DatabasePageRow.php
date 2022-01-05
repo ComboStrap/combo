@@ -1044,7 +1044,7 @@ class DatabasePageRow
     }
 
 
-    private function replicateAnalytics()
+    public function replicateAnalytics()
     {
 
         try {
@@ -1072,8 +1072,8 @@ class DatabasePageRow
          */
         $record[self::ANALYTICS_ATTRIBUTE] = $analyticsJsonAsString;
         $record['IS_LOW_QUALITY'] = ($this->page->isLowQualityPage() === true ? 1 : 0);
-        $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::WORD_COUNT];
-        $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[BacklinkCount::getPersistentName()];
+        $record['WORD_COUNT'] = $analyticsJsonAsArray[AnalyticsDocument::STATISTICS][AnalyticsDocument::WORD_COUNT];
+        $record[BacklinkCount::getPersistentName()] = $analyticsJsonAsArray[AnalyticsDocument::STATISTICS][BacklinkCount::getPersistentName()];
         $record[$replicationDateMeta::getPersistentName()] = $replicationDateMeta->toStoreValue();
         $this->upsertAttributes($record);
     }

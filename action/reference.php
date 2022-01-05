@@ -5,6 +5,7 @@ use ComboStrap\CallStack;
 use ComboStrap\ExceptionCombo;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
+use ComboStrap\MetadataDbStore;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PluginUtility;
@@ -90,6 +91,8 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
         try {
             $references
                 ->setWriteStore(MetadataDokuWikiStore::class)
+                ->persist()
+                ->setWriteStore(MetadataDbStore::class)
                 ->persist();
         } catch (ExceptionCombo $e) {
             LogUtility::msg("Reference error when persisting to the file system store: " . $e->getMessage(), LogUtility::LVL_MSG_ERROR);

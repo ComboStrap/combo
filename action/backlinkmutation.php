@@ -1,6 +1,8 @@
 <?php
 
 use ComboStrap\Event;
+use ComboStrap\ExceptionCombo;
+use ComboStrap\FileSystems;
 use ComboStrap\MetadataDokuWikiStore;
 use ComboStrap\Page;
 use ComboStrap\PagePath;
@@ -41,6 +43,14 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
     public function handle_backlink_mutation(Doku_Event $event, $param)
     {
 
+
+        $data = $event->data;
+        $pagePath = $data[PagePath::getPersistentName()];
+        $page = Page::createPageFromQualifiedPath($pagePath);
+
+        // delete analytics
+        FileSystems::deleteIfExists($page->getAnalyticsDocument()->getCachePath());
+        $page->getDatabasePage()->replicateAnalytics();
 
 
     }

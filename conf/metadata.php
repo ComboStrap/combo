@@ -328,3 +328,8 @@ $meta[PageUrlType::CONF_CANONICAL_URL_TYPE] = array('multichoice', '_choices' =>
  * Frontmatter on sumbit
  */
 $meta[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = array("onoff");
+
+/**
+ * Heading
+ */
+$meta[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE] = array("onoff");

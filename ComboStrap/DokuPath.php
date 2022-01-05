@@ -378,6 +378,16 @@ class DokuPath extends PathAbs
         return $names[sizeOf($names) - 1];
     }
 
+    /**
+     * A doku path has no extension for now
+     * @return string
+     */
+    public function getLastNameWithoutExtension(): string
+    {
+        return $this->getLastName();
+    }
+
+
     public
     function getNames()
     {

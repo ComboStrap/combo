@@ -11,21 +11,18 @@ use ComboStrap\LazyLoad;
 use ComboStrap\LinkUtility;
 use ComboStrap\LowQualityPage;
 use ComboStrap\MediaLink;
-use ComboStrap\Page;
-use ComboStrap\Metadata;
 use ComboStrap\PageImages;
+use ComboStrap\PagePublicationDate;
 use ComboStrap\PageType;
+use ComboStrap\PageUrlType;
 use ComboStrap\PluginUtility;
 use ComboStrap\Prism;
-use ComboStrap\PagePublicationDate;
 use ComboStrap\RasterImageLink;
 use ComboStrap\Region;
 use ComboStrap\Shadow;
-use ComboStrap\Site;
 use ComboStrap\SvgDocument;
 use ComboStrap\SvgImageLink;
 use ComboStrap\UrlManagerBestEndPage;
-use ComboStrap\PageUrlType;
 
 
 /**
@@ -256,5 +253,10 @@ $lang[PageUrlType::CONF_CANONICAL_URL_TYPE] = PluginUtility::getDocumentationHyp
  * Frontmatter
  */
 $lang[syntax_plugin_combo_frontmatter::CONF_ENABLE_FRONT_MATTER_ON_SUBMIT] = PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_frontmatter::CANONICAL, "If checked, the metadata manager will create a frontmatter on submit.");
+
+/**
+ * Heading
+ */
+$lang[syntax_plugin_combo_headingwiki::CONF_WIKI_HEADING_ENABLE]= PluginUtility::getDocumentationHyperLink(syntax_plugin_combo_heading::CANONICAL, "If unchecked, the combo wiki heading is disabled (You cannot add extra formatting syntax)");
 
 ?>

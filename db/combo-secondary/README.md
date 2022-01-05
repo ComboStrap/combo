@@ -1,4 +1,4 @@
-# Sqlite Back Database
+# Sqlite Combo Secondary Database
 
 ## About
 A database that you don't need to backup

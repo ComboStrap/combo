@@ -47,6 +47,7 @@ class syntax_plugin_combo_heading extends DokuWiki_Syntax_Plugin
     const TYPE_TITLE = "title";
 
     const CANONICAL = "heading";
+
     const SYNTAX_TYPE = 'baseonly';
     const SYNTAX_PTYPE = 'block';
 

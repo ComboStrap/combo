@@ -33,7 +33,7 @@ class Sqlite
      * Backend Databse
      * (Log, Pub/Sub,...)
      */
-    private const  BACK = "back";
+    private const  SECONDARY_DB = "combo-secondary";
 
     private static $sqliteVersion;
 
@@ -131,7 +131,7 @@ class Sqlite
 
     public static function createOrGetBackendSqlite(): ?Sqlite
     {
-        return self::createOrGetSqlite(self::BACK);
+        return self::createOrGetSqlite(self::SECONDARY_DB);
     }
 
     public static function createSelectFromTableAndColumns(string $tableName, array $columns = null): string

@@ -715,6 +715,7 @@ class Page extends ResourceComboAbs
         } finally {
             $ID = $keep;
         }
+        return $this;
 
     }
 

@@ -3,6 +3,7 @@
 use ComboStrap\Call;
 use ComboStrap\CallStack;
 use ComboStrap\ExceptionCombo;
+use ComboStrap\FileSystems;
 use ComboStrap\LinkUtility;
 use ComboStrap\LogUtility;
 use ComboStrap\MetadataDbStore;
@@ -60,16 +61,25 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
         }
 
         /**
+         * @var Call[] $links
+         */
+        $page = Page::createPageFromId($ID);
+
+        /**
+         * {@link \ComboStrap\PageId} is given only when the page exists
+         * This event can be called even if the page does not exist
+         */
+        if (FileSystems::exists($page->getPath())) {
+            return;
+        }
+
+        /**
          * @var Doku_Handler $handler
          */
         $handler = $event->data;
         $callStack = CallStack::createFromHandler($handler);
         $callStack->moveToStart();
 
-        /**
-         * @var Call[] $links
-         */
-        $page = Page::createPageFromId($ID);
         $references = References::createFromResource($page)
             ->setReadStore(MetadataDokuWikiStore::class);
 
@@ -99,7 +109,6 @@ class action_plugin_combo_reference extends DokuWiki_Action_Plugin
         }
 
     }
-
 
 
 }

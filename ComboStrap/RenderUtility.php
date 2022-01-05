@@ -26,7 +26,14 @@ class RenderUtility
     public static function renderText2XhtmlAndStripPEventually($content, $strip = true)
     {
         $instructions = self::getInstructionsAndStripPEventually($content, $strip);
-        return p_render('xhtml', $instructions, $info);
+        global $ID;
+        $keep = $ID;
+        try {
+            $ID = "combo_dynamic_render_id";
+            return p_render('xhtml', $instructions, $info);
+        } finally {
+            $ID = $keep;
+        }
     }
 
     /**

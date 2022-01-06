@@ -29,6 +29,8 @@ class QualityMenuItem extends AbstractItem
 
     const CLASS_HTML = "combo-quality-item";
     const CANONICAL = "quality";
+    const CLASS_HTML_LOW = "combo-quality-item-low";
+
     /**
      * @var Page
      */
@@ -43,6 +45,9 @@ class QualityMenuItem extends AbstractItem
         $snippetManager->attachJavascriptComboLibrary();
         $snippetManager->attachJavascriptSnippetForRequest(self::CANONICAL);
         $this->page = Page::createPageFromRequestedPage();
+        if($this->page->isLowQualityPage()){
+            $snippetManager->attachCssSnippetForRequest(self::CANONICAL);
+        }
         parent::__construct();
 
     }
@@ -71,6 +76,9 @@ class QualityMenuItem extends AbstractItem
          * breakpoint and at another in another breakpoint
          */
         $linkAttributes['class'] = self::CLASS_HTML;
+        if ($this->page->isLowQualityPage()) {
+            $linkAttributes['class'] .= " ".self::CLASS_HTML_LOW;
+        }
 
         return $linkAttributes;
     }

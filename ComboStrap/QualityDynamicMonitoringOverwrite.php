@@ -33,7 +33,7 @@ class QualityDynamicMonitoringOverwrite extends MetadataBoolean
 
     public function getLabel(): string
     {
-        return "Disable the quality message of this page";
+        return "Disable the quality control of this page";
     }
 
     public function getCanonical(): string

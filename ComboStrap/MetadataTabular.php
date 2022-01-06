@@ -82,6 +82,9 @@ abstract class MetadataTabular extends Metadata
         return $rowsArray;
     }
 
+    /**
+     * @throws ExceptionCombo
+     */
     public function buildFromStoreValue($value): Metadata
     {
         if ($value === null) {
@@ -158,11 +161,12 @@ abstract class MetadataTabular extends Metadata
         }
         foreach ($value as $item) {
 
-            // Single value
+            // Single value, this is the identifier
             if (is_string($item)) {
                 $identifierMetadata = Metadata::toMetadataObject($identifierMetadataObject, $this)
-                    ->buildFromStoreValue($item);
-                $this->rows[$item] = [$identifierPersistentName => $identifierMetadata];
+                    ->setFromStoreValue($item);
+                $identifierValue = $identifierMetadata->getValue(); // normalize if any
+                $this->rows[$identifierValue] = [$identifierPersistentName => $identifierMetadata];
                 continue;
             }
             if (!is_array($item)) {

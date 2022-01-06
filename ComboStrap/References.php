@@ -54,5 +54,32 @@ class References extends MetadataTabular
         return [Reference::class];
     }
 
+    public function buildFromReadStore(): References
+    {
+        $metadataStore = $this->getReadStore();
+        if ($metadataStore === null) {
+            LogUtility::msg("The metadata store is unknown. You need to define a resource or a store to build from it");
+            return $this;
+        }
+        if ($metadataStore instanceof MetadataDokuWikiStore) {
+
+            $relation = $metadataStore->getCurrentFromName("relation");
+            if ($relation !== null) {
+
+                $this->wasBuild = true;
+                $referencesArray = $relation["references"];
+                if($referencesArray!==null) {
+                    $references = array_keys($referencesArray);
+                }
+                $this->buildFromStoreValue($references);
+                return $this;
+
+            }
+
+        }
+
+        return parent::buildFromReadStore();
+    }
+
 
 }

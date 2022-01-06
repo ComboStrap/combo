@@ -143,7 +143,7 @@ class FormMeta
 
                 $value = $field->getValue();
                 if ($field->getType() === DataType::BOOLEAN_TYPE_VALUE) {
-                    if ($value === $field->getDefaultValue()) {
+                    if ($value === $field->getDefaultValue() || $value === null) {
                         continue;
                     }
                 }

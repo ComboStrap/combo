@@ -88,6 +88,10 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
                     unset($afterReferences[$beforeReference]);
                 } else {
                     Event::createEvent(action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME, [PagePath::getPersistentName() => $beforeReference]);
+                    /**
+                     * Delete the analytics
+                     */
+                    FileSystems::deleteIfExists(Page::createPageFromQualifiedPath($beforeReference)->getAnalyticsDocument()->getCachePath());
                 }
             }
         }
@@ -96,6 +100,10 @@ class action_plugin_combo_backlinkmutation extends DokuWiki_Action_Plugin
                 ->getAnalyticsDocument()
                 ->deleteIfExists();
             Event::createEvent(action_plugin_combo_backlinkmutation::BACKLINK_MUTATION_EVENT_NAME, [PagePath::getPersistentName() => $newReference]);
+            /**
+             * Delete the analytics
+             */
+            FileSystems::deleteIfExists(Page::createPageFromQualifiedPath($newReference)->getAnalyticsDocument()->getCachePath());
         }
 
 

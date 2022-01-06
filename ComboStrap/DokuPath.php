@@ -642,7 +642,7 @@ class DokuPath extends PathAbs
 
     }
 
-    function getMime(): Mime
+    function getMime(): ?Mime
     {
         if ($this->finalType === self::PAGE_TYPE) {
             return new Mime(Mime::PLAIN_TEXT);

@@ -92,19 +92,19 @@ class MetadataStoreTransfer
             $this->normalizedData[$persistentName] = $value;
 
             /**
-             * Unknown meta
-             */
-            if ($metadata === null) {
-                $this->targetStore->setFromPersistentName($persistentName, $value);
-                continue;
-            }
-
-            /**
              * Not modifiable meta check
              */
             if (in_array($name, Metadata::NOT_MODIFIABLE_METAS)) {
                 $messages[] = Message::createWarningMessage("The metadata ($name) is a protected metadata and cannot be modified")
                     ->setCanonical(Metadata::CANONICAL);
+                continue;
+            }
+
+            /**
+             * Unknown meta
+             */
+            if ($metadata === null) {
+                $this->targetStore->setFromPersistentName($persistentName, $value);
                 continue;
             }
 
